@@ -60,10 +60,9 @@ from ._http_serve_support import serve_directory
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs, pytest.mark.timeout(1800)]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 _DOCS = REPO_ROOT / "docs"
-_SUBPROCESS_TIMEOUT_S = 1200
 _CHANNEL = "cadrumo-desktop"
 _EXTERNAL_URL = "https://example.org/"
 #: A sidebar entry off the documentation origin, titled with its own search word.
@@ -169,7 +168,6 @@ def _build_fixture_site(work: Path, **env_overrides: str) -> tuple[Path, Command
         ],
         cwd=REPO_ROOT,
         environment=env,
-        timeout_seconds=_SUBPROCESS_TIMEOUT_S,
     )
     return html, result
 

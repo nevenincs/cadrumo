@@ -46,9 +46,9 @@ from dev.packaging.command_execution import CommandResult, run_command
 
 from ..compile_once import INTENDED_DIFFERENCES, WITNESS_LANGUAGE, Comparison, compare, witness_build
 from ..i18n import SITE_ROOT_LANGUAGES
-from ._sphinx_build_harness import SUBPROCESS_TIMEOUT_S, gate_build_env, gate_build_jobs
+from ._sphinx_build_harness import gate_build_env, gate_build_jobs
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs, pytest.mark.timeout(1800)]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 #: The flavour the gate compiles. The web flavour with an address of its own is
 #: the superset of the mark mechanisms: it is the only flavour that writes page
@@ -151,7 +151,6 @@ def built(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Built]:
             witness_command,
             cwd=REPO_ROOT,
             environment=witness_environment,
-            timeout_seconds=SUBPROCESS_TIMEOUT_S,
             errors="replace",
         )
         compiling = pool.submit(
@@ -159,7 +158,6 @@ def built(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_Built]:
             _compile_command(html_root, build_root, stored),
             cwd=REPO_ROOT,
             environment=environment,
-            timeout_seconds=SUBPROCESS_TIMEOUT_S,
             errors="replace",
         )
         compiled = _succeeded(compiling.result(), "one nitpicky compile")

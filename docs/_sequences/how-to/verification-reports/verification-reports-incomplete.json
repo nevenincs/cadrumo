@@ -315,7 +315,7 @@
             {"casilla_id":"83","help_text":"Box 83 of modelo 303, tax year 2022.","input_kind":"manual","label":"Transactions carried out in the year - Exempt transactions with no right to deduct","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"83","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
             {"casilla_id":"84","help_text":"Box 84 of modelo 303, tax year 2022.","input_kind":"manual","label":"Transactions carried out in the year - Transactions not subject under place-of-supply rules (except those in box 126)","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"84","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
             {"casilla_id":"86","help_text":"Box 86 of modelo 303, tax year 2022.","input_kind":"manual","label":"Transactions carried out in the year - Transactions under the simplified regime","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"86","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
-            {"casilla_id":"88","help_text":"Box 88 of modelo 303, tax year 2022.","input_kind":"manual","label":"Transactions carried out in the year - Total turnover","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"88","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
+            {"casilla_id":"88","help_text":"Box 88 of modelo 303, tax year 2022.","input_kind":"computed","label":"Transactions carried out in the year - Total turnover","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"88","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
             {"casilla_id":"89","help_text":"Box 89 of modelo 303, tax year 2022.","input_kind":"manual","label":"Territorial taxation information: Álava","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"89","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
             {"casilla_id":"90","help_text":"Box 90 of modelo 303, tax year 2022.","input_kind":"manual","label":"Territorial taxation information: Gipuzkoa","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"90","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
             {"casilla_id":"91","help_text":"Box 91 of modelo 303, tax year 2022.","input_kind":"manual","label":"Territorial taxation information: Bizkaia","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"91","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
@@ -537,7 +537,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "64a695258f472ca7437e1f26c4eb75d96cb3cb2557b4027c4e7bf3930956f6be",
+          "calculation_revision_id": "834994574e1729ab884a45d5d39867ef2ee8000a6fa25281a23ef31e8336de02",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -644,7 +644,7 @@
             "83": "0",
             "84": "0",
             "86": "0",
-            "88": "0",
+            "88": "0.00",
             "89": "0",
             "90": "0",
             "91": "0",
@@ -882,7 +882,7 @@
             {"absent_by_design":false,"casilla_id":"83","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"84","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"86","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"88","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"88","formula_id":"modelo-303-volumen-operaciones-anual","legal_refs":["ley-37-1992:art-121","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"subtract","operand_casilla_refs":["80","81","93","94","83","84","125","126","127","128","86","95","96","97","98","79","99"],"operand_refs":["80","81","93","94","83","84","125","126","127","128","86","95","96","97","98","79","99"],"operand_values":["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],"source_refs":["boe-modelo-303-2026-form-pdf","aeat-dr-303-2026"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"89","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"90","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"91","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
@@ -1105,7 +1105,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 64a695258f472ca7437e1f26c4eb75d96cb3cb2557b4027c4e7bf3930956f6be (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 834994574e1729ab884a45d5d39867ef2ee8000a6fa25281a23ef31e8336de02 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",

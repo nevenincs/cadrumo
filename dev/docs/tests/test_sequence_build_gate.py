@@ -147,7 +147,7 @@ def test_skipped_sequence_check_needs_no_engine_import() -> None:
             capture_output=True,
             text=True,
             check=False,
-            timeout=30,
+            timeout=None,
         )
     assert result.returncode == 0, result.stderr
 

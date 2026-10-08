@@ -54,7 +54,7 @@ def _load_binary_artifacts(
     artifacts = tuple(
         zip(
             PRODUCT_IDENTITY.cohort_distributions,
-            (cohort.root_wheel, cohort.manuals_wheel, cohort.official_wheel),
+            cohort.product_wheels,
             strict=True,
         )
     )
@@ -68,8 +68,8 @@ def _source_artifacts(
     """Build source artifacts from one isolated tree snapshot and hash them."""
     build_root = build_root_snapshot(repo_root, work_dir / "source-snapshot")
     sdist = build_sdist(work_dir, require_executable("uv"), build_root=build_root)
-    manuals, official = build_companion_wheels(work_dir, require_executable("uv"), build_root=build_root)
-    artifacts = tuple(zip(PRODUCT_IDENTITY.cohort_distributions, (sdist, manuals, official), strict=True))
+    manuals, official, normatives = build_companion_wheels(work_dir, require_executable("uv"), build_root=build_root)
+    artifacts = tuple(zip(PRODUCT_IDENTITY.cohort_distributions, (sdist, manuals, official, normatives), strict=True))
     digests = {name: sha256_path(path) for name, path in artifacts}
     # The snapshot is a private, per-probe copy nobody else writes to, so its
     # content digest names exactly the bytes the builders above consumed.

@@ -227,7 +227,7 @@ def scan_form_layout_heading_keys() -> frozenset[str]:
     def _walk(node: object) -> None:
         if isinstance(node, dict):
             for key, value in node.items():
-                if key == "heading_key" and isinstance(value, str):
+                if key == "heading_key" and isinstance(value, str) and is_form_layout_heading_candidate(value):
                     keys.add(value)
                 _walk(value)
         elif isinstance(node, list):

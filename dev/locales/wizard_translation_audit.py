@@ -28,6 +28,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from dev.first_party_source import is_test_source
 from dev.quality.source_import_analysis import module_name_for, resolve_relative_import
 
 from ._paths import SRC_DIR
@@ -147,7 +148,7 @@ def cli_keys_referenced_in_source() -> tuple[str, ...]:
         # leak-detection sentinel in `not in label` checks). Those are
         # introspection literals, not `tr()` call sites; auditing them
         # as required catalogue entries would fabricate dead translations.
-        if module.name.startswith(("test_", "_test_")):
+        if is_test_source(module, root=_cli_entrypoints_root()):
             continue
         source = module.read_text(encoding=UTF_8_ENCODING)
         tree = ast.parse(source, filename=str(module))

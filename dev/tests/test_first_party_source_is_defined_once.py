@@ -296,7 +296,7 @@ def test_vulture_excludes_exactly_what_the_authority_rejects() -> None:
     patterns = [pattern if any(char in pattern for char in "*?[") else f"*{pattern}*" for pattern in configured]
 
     def excluded(path: str) -> bool:
-        return any(fnmatch(str(Path(path)), pattern) for pattern in patterns)
+        return any(fnmatch(str(REPO_ROOT / path), pattern) for pattern in patterns)
 
     assert _misclassified(_python_files(PRODUCT_PACKAGE), excluded) == []
 

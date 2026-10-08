@@ -18,6 +18,7 @@ from datetime import UTC, datetime
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
+from typing import override
 from uuid import UUID, uuid4
 
 import keyring
@@ -32,6 +33,7 @@ from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
 from cadrumo.application.runtime.contracts import (
+    RuntimeByteChannel,
     RuntimeRefusalCode,
     RuntimeRefusalError,
 )
@@ -66,6 +68,16 @@ from dev.docs.sequences.receipt_fixture import RECEIPT_FIXTURE_DIRECTORY, Sequen
 
 SANDBOX_INSTANT: datetime = datetime(2026, 4, 1, 9, 0, 0, tzinfo=UTC)
 """The canonical frozen instant for docs sequences and their profile workers."""
+
+
+class _SequenceRuntimeTransportServer(RetainedRuntimeTransportServer):
+    """Pin the fixture clock in the host's separate connection threads too."""
+
+    @override
+    def _connection(self, channel: RuntimeByteChannel) -> None:
+        with frozen_clock(SANDBOX_INSTANT):
+            super()._connection(channel)
+
 
 _EXPORT_VERSION_FILE = "docs-export-version.json"
 _EXPORT_VERSION_BYTES = 256
@@ -223,7 +235,7 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
             wall_clock=lambda: SANDBOX_INSTANT,
         )
         profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
+        server = _SequenceRuntimeTransportServer(
             endpoint,
             product_version=version("cadrumo"),
             stop=stop,
@@ -238,10 +250,13 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
         running = pool.submit(serve)
         owner.running = running
         owner.server = server
-        if not server.ready.wait(5):
+        # Poll terminal state without imposing an elapsed startup deadline.
+        # A slow host can finish binding; a failed server still reports its
+        # original exception instead of leaving the readiness wait parked.
+        while not server.ready.wait(0.1):
             if running.done():
                 running.result()
-            raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_NOT_READY)
+                raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_NOT_READY)
         if signed_in_profile is not None:
             _establish_synthetic_sign_in(signed_in_profile)
         yield server

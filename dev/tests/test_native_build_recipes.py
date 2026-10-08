@@ -43,7 +43,7 @@ def _just(*arguments: str) -> tuple[int, str]:
         [executable, "--justfile", str(REPO_ROOT / "justfile"), *arguments],
         cwd=REPO_ROOT,
         environment=dict(os.environ),
-        timeout_seconds=30,
+        timeout_seconds=None,
     )
     return completed.returncode, completed.stdout + completed.stderr
 

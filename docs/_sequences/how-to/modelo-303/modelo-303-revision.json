@@ -217,7 +217,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\n467cbb01ef93\t188eab579e6d21e60fbc7bf28ce7afa0b9ec7e40cc5a65782a76467cbb01ef93\taf6b2264dd9d\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\tborrador\t2026-04-01T09:00:00+00:00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\n36bfde789229\tbc62c76cc9d86a02cce13064fe9be6688f3246205d5c6949c75336bfde789229\taf6b2264dd9d\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\tborrador\t2026-04-01T09:00:00+00:00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -302,7 +302,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "188eab579e6d21e60fbc7bf28ce7afa0b9ec7e40cc5a65782a76467cbb01ef93",
+          "calculation_revision_id": "bc62c76cc9d86a02cce13064fe9be6688f3246205d5c6949c75336bfde789229",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -409,7 +409,7 @@
             "83": "0",
             "84": "0",
             "86": "0",
-            "88": "0",
+            "88": "0.00",
             "89": "0",
             "90": "0",
             "91": "0",
@@ -639,7 +639,7 @@
             {"absent_by_design":false,"casilla_id":"83","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"84","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"86","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"88","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"88","formula_id":"modelo-303-volumen-operaciones-anual","legal_refs":["ley-37-1992:art-121","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"subtract","operand_casilla_refs":["80","81","93","94","83","84","125","126","127","128","86","95","96","97","98","79","99"],"operand_refs":["80","81","93","94","83","84","125","126","127","128","86","95","96","97","98","79","99"],"operand_values":["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],"source_refs":["boe-modelo-303-2026-form-pdf","aeat-dr-303-2026"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"89","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"90","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"91","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},

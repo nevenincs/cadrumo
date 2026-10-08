@@ -45,13 +45,14 @@ def _cohort(
     wheel_cadrumo = python_sha["cadrumo"]
     wheel_manuals = python_sha["cadrumo-data-manuals"]
     wheel_official = python_sha["cadrumo-data-official"]
+    wheel_normatives = python_sha["cadrumo-data-normatives"]
     sdist_cadrumo = python_sha["cadrumo-sdist"]
     (root / "scoop" / "cadrumo.json").write_text(
         json.dumps(
             {
                 "version": scoop_version or version,
                 "architecture": {
-                    "64bit": {"hash": scoop_hashes or [wheel_cadrumo, wheel_manuals, wheel_official]},
+                    "64bit": {"hash": scoop_hashes or [wheel_cadrumo, wheel_manuals, wheel_official, wheel_normatives]},
                 },
             },
         ),
@@ -97,6 +98,20 @@ def test_scoop_version_drift_is_named(tmp_path: Path) -> None:
 def test_scoop_digest_drift_is_named(tmp_path: Path) -> None:
     """A Scoop 64bit hash that is not the cohort wheel digest fails, surface named."""
     cohort = _cohort(tmp_path / "cohort", scoop_hashes=["e" * 64, _WHEEL_MANUALS, _WHEEL_OFFICIAL])
+    check = check_generated_surface_versions(tmp_path, cohort_directory=cohort)
+    assert not check.passed
+    assert "scoop 64bit hashes" in check.detail
+
+
+def test_scoop_cannot_bind_the_retired_three_distribution_cohort(tmp_path: Path) -> None:
+    """Even correct old-member hashes cannot omit the normative wheel."""
+    cohort = _cohort(tmp_path / "cohort")
+    manifest = cohort / "scoop" / "cadrumo.json"
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    hashes = payload["architecture"]["64bit"]["hash"]
+    assert len(hashes) == 4
+    hashes.pop()
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
     check = check_generated_surface_versions(tmp_path, cohort_directory=cohort)
     assert not check.passed
     assert "scoop 64bit hashes" in check.detail

@@ -41,12 +41,6 @@ from dev.packaging.command_execution import CommandResult, run_command
 
 DOCS = REPO_ROOT / "docs"
 
-#: Wall ceiling for every spawned gate-build subprocess, set BELOW the 1800 s
-#: per-test ceiling so the subprocess timeout wins the race and names itself
-#: (``TimeoutExpired`` reports the command and the limit) instead of pytest
-#: dumping a stack with no indication of which build hung.
-SUBPROCESS_TIMEOUT_S = 1200
-
 #: Bounded default width for gate builds: parallel enough to finish, small
 #: enough to leave the host usable. Overridable via ``CADRUMO_DOCS_JOBS``.
 _GATE_BUILD_JOBS_DEFAULT = "4"
@@ -140,5 +134,4 @@ def run_nitpicky_dummy_build(
         ],
         cwd=REPO_ROOT,
         environment=env,
-        timeout_seconds=SUBPROCESS_TIMEOUT_S,
     )

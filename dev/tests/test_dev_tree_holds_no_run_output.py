@@ -87,6 +87,12 @@ _CURATED_DEV_DESTINATIONS: Final[dict[str, str]] = {
     "dev/registry/conformance_vectors/modelo_200_2025_y_siguientes.toml": (
         "a pinned vector the export proof compares against"
     ),
+    "dev/registry/form_layout/official_headings.toml": (
+        "authored official heading rulings grounded in captured form evidence; its diff is reviewed"
+    ),
+    "dev/registry/form_layout/stability_acknowledgements.toml": (
+        "authored acknowledgements of intentional form presentation changes; its diff is reviewed"
+    ),
     "dev/registry/pipeline/generated_export_bootstrap_targets.toml": "the authored targets candidate staging reads",
     "dev/registry/pipeline/generated_tree_dispositions.toml": "the authored dispositions the tree screens read",
     "dev/release/burned_versions.json": "the release ledger of burned versions; durable state",

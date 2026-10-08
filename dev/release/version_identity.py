@@ -15,7 +15,7 @@ answer with the destination that owns the version rather than a bare refusal:
 Uploads there are irreversible, so a complete set is the collision with no
 remedy: nothing is left to send and the run could only attempt bytes the index
 will not take back. A set only SOME of the projects carry is a different state
-and is permitted -- six files go up and that upload is not atomic, so a refused
+and is permitted -- eight files go up and that upload is not atomic, so a refused
 publisher registration or a dropped connection leaves part of the cohort
 published. Re-running the same tag is how that converges, and a partial set
 read as a collision would refuse the remedy and spend the version for a cause
@@ -121,7 +121,7 @@ _INDEX_SCHEMES: Final[frozenset[str]] = frozenset({"http", "https"})
 #: A Git object name: forty hex digits and nothing else.
 _OBJECT_NAME: Final[re.Pattern[str]] = re.compile(r"[0-9a-f]{40}")
 
-#: The three projects one cohort publishes together, and so the set the index
+#: The four projects one cohort publishes together, and so the set the index
 #: question is asked about: a version is owned there when every one of them
 #: carries it, and part-way is a release still being delivered.
 
@@ -265,7 +265,7 @@ def version_conflicts(
 
     The index refuses a COMPLETE set only. Every project carrying the version
     leaves nothing to upload, so the run can only be an overwrite attempt. A
-    partial set is the state a non-atomic six-file upload leaves behind, and
+    partial set is the state a non-atomic eight-file upload leaves behind, and
     re-running the same tag is its remedy, so it is permitted here and reported
     by :func:`index_convergence_notice` instead. A version that belongs to some
     other release is still caught by the tag and release namespaces below.

@@ -96,11 +96,19 @@ def _literal_sequence_bindings(tree: ast.Module) -> Mapping[str, tuple[str, ...]
     """Return simple module bindings that preserve a literal path-part sequence."""
     bindings: dict[str, tuple[str, ...]] = {}
     for node in tree.body:
-        if not isinstance(node, ast.Assign) or len(node.targets) != 1 or not isinstance(node.targets[0], ast.Name):
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            name = node.targets[0].id
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.value is not None:
+            name = node.target.id
+        else:
+            continue
+        if node.value is None:
             continue
         sequence = _literal_string_sequence(node.value, bindings)
         if sequence is not None:
-            bindings[node.targets[0].id] = sequence
+            bindings[name] = sequence
+        else:
+            bindings.pop(name, None)
     return bindings
 
 
@@ -487,3 +495,29 @@ def test_detector_rejects_builtin_loader_and_source_wide_s80_exception_bypasses(
         )
         == ()
     )
+
+
+@pytest.mark.parametrize(
+    "parts,allowed",
+    [
+        ("('calculation_summary_pdf', 'color', 'profile.icc')", True),
+        ("('registry', 'aeat', 'facts')", False),
+        ("resolve_path()", False),
+    ],
+)
+def test_annotated_literal_path_is_classified_without_admitting_dynamic_or_governed_reads(
+    parts: str, allowed: bool
+) -> None:
+    source = (
+        "from typing import Final\n"
+        "from cadrumo.core.resources.bundled_data import packaged_data\n"
+        f"PARTS: Final[tuple[str, ...]] = {parts}\n"
+        "packaged_data(*PARTS).read_bytes()\n"
+    )
+    findings = _runtime_violations(
+        ast.parse(source),
+        importer_module="cadrumo.adapters.test_reader",
+        importer_is_package=False,
+        source="src/cadrumo/adapters/test_reader.py",
+    )
+    assert bool(findings) is not allowed

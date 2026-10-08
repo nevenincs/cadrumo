@@ -254,6 +254,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         ),
         *_aeat_sync_label_registrations(),
         *_declarations_workspace_registrations(),
+        *_own_account_registrations(),
         *_modelo_review_filter_registrations(),
         *_generated_docs_registrations(),
         FStringKeyRegistration(
@@ -387,6 +388,67 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         *_custody_stdin_registrations(),
         *_modelo_work_help_registrations(),
         *_modelo_workbench_registrations(),
+    )
+
+
+def _own_account_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Enumerate account and import copy from its exact authored command and model vocabularies."""
+    from cadrumo.application.ledger.import_operation import LedgerImportFileRefusal
+    from cadrumo.domain.transactions.own_accounts import OwnAccountHolding, OwnAccountRole, OwnBankAccountDetails
+    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+
+    specs = (
+        COMMAND_GRAPH.spec("app_ledger_account"),
+        *COMMAND_GRAPH.children("app_ledger_account"),
+        COMMAND_GRAPH.spec("app_modelo_m360"),
+        *COMMAND_GRAPH.children("app_modelo_m360"),
+    )
+
+    command_keys = tuple(
+        dict.fromkeys(
+            key.value
+            for spec in specs
+            for key in (spec.help_key, *(parameter.help_key for parameter in spec.parameters))
+            if key is not None
+        )
+    )
+    return (
+        FStringKeyRegistration("authored own-account and M360 command help", lambda key: key, command_keys),
+        FStringKeyRegistration(
+            "tui.ledger.import.refusal.* (LedgerImportFileRefusal literal union)",
+            lambda value: f"tui.ledger.import.refusal.{value}",
+            tuple(str(value) for value in get_args(LedgerImportFileRefusal.model_fields["reason_code"].annotation)),
+        ),
+        FStringKeyRegistration(
+            "tui.ledger.own_accounts.role.* (OwnAccountRole)",
+            lambda value: f"tui.ledger.own_accounts.role.{value}",
+            _enum_values(OwnAccountRole),
+        ),
+        FStringKeyRegistration(
+            "tui.ledger.own_accounts.holding.* (OwnAccountHolding)",
+            lambda value: f"tui.ledger.own_accounts.holding.{value}",
+            _enum_values(OwnAccountHolding),
+        ),
+        FStringKeyRegistration(
+            "tui.ledger.own_accounts.field_name.* (OwnBankAccountDetails fields)",
+            lambda value: f"tui.ledger.own_accounts.field_name.{value}",
+            tuple(OwnBankAccountDetails.model_fields),
+        ),
+        FStringKeyRegistration(
+            "tui.ledger.own_accounts.detail.* (presence choice)",
+            lambda value: f"tui.ledger.own_accounts.detail.{value}",
+            ("present", "absent"),
+        ),
+        FStringKeyRegistration(
+            "tui.modelo.export.account.* (OwnAccountRole labels)",
+            lambda value: f"tui.modelo.export.account.{value}_label",
+            _enum_values(OwnAccountRole),
+        ),
+        FStringKeyRegistration(
+            "tui.modelo.export.result.label.* (OwnAccountRole accounts)",
+            lambda value: f"tui.modelo.export.result.label.{value}_account",
+            _enum_values(OwnAccountRole),
+        ),
     )
 
 

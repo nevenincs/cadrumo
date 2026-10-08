@@ -39,13 +39,13 @@ def _translation_wrapper_names(modules: list[tuple[Path, ast.Module]]) -> frozen
             if parameters:
                 definitions.append((node.name, parameters[0].arg, node))
 
-    known = {"tr", "t"}
+    known = {"tr", "t", "lookup_translation"}
     while True:
         discovered = set()
         for name, first, node in definitions:
             discover_translator_wrapper(name, first, node, known, discovered)
         if not discovered:
-            return frozenset[str](known - {"tr", "t"})
+            return frozenset[str](known - {"tr", "t", "lookup_translation"})
         known |= discovered
 
 
@@ -142,12 +142,54 @@ def _translation_key_parameter_positions(
     index would otherwise be off by one for every method.
     """
     per_definition: dict[str, list[set[int]]] = {}
+    forwarded_calls: list[tuple[str, tuple[int | None, ...], frozenset[int], set[int]]] = []
     for _path, tree in modules:
         for node in _walk_nodes(tree):
             collect_translation_key_parameter_positions(node, per_definition)
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                parameters = [argument.arg for argument in [*node.args.posonlyargs, *node.args.args]]
+                if parameters and parameters[0] in {"self", "cls"}:
+                    parameters = parameters[1:]
+                parameter_positions = {name: index for index, name in enumerate(parameters)}
+                positions = per_definition[node.name][-1]
+                for call in _walk_nodes(node):
+                    if not isinstance(call, ast.Call):
+                        continue
+                    callee = getattr(call.func, "id", getattr(call.func, "attr", None))
+                    if not isinstance(callee, str):
+                        continue
+                    positional = tuple(
+                        parameter_positions.get(argument.id) if isinstance(argument, ast.Name) else None
+                        for argument in call.args
+                    )
+                    keywords = frozenset(
+                        parameter_positions[keyword.value.id]
+                        for keyword in call.keywords
+                        if keyword.arg in _TRANSLATION_KEY_KWARGS
+                        and isinstance(keyword.value, ast.Name)
+                        and keyword.value.id in parameter_positions
+                    )
+                    if any(index is not None for index in positional) or keywords:
+                        forwarded_calls.append((callee, positional, keywords, positions))
+    while True:
+        known = {name: set.intersection(*positions) for name, positions in per_definition.items()}
+        known.update({name: {0} for name in ("tr", "t", "lookup_translation")})
+        changed = False
+        for callee, positional, keywords, positions in forwarded_calls:
+            candidates = set(keywords)
+            candidates.update(
+                parameter
+                for index in known.get(callee, ())
+                if index < len(positional) and (parameter := positional[index]) is not None
+            )
+            if candidates - positions:
+                positions.update(candidates)
+                changed = True
+        if not changed:
+            break
     agreed: dict[str, frozenset[int]] = {}
-    for name, definitions in per_definition.items():
-        shared = set.intersection(*definitions) if definitions else set()
+    for name, definition_positions in per_definition.items():
+        shared = set.intersection(*definition_positions) if definition_positions else set()
         if shared:
             agreed[name] = frozenset(shared)
     return agreed

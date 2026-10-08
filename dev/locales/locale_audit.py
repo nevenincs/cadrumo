@@ -97,7 +97,7 @@ def _audit_locale_file(
         locale_file=locale_file,
         codebase_missing=codebase_missing,
         codebase_extra=codebase_extra,
-        inter_locale_missing=tuple(sorted(key for key in all_locale_keys - keys if not is_delta_keyed_leaf(key))),
+        inter_locale_missing=tuple(sorted(key for key in all_locale_keys - keys if not _covered_by_namespace(key, ()))),
         scalar_violations=violations,
         revision_moves=moves.candidates,
         move_accounted_missing=moves.accounted_missing,

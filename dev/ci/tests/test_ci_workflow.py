@@ -73,14 +73,7 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 
 _REPOSITORY_ROOT = REPO_ROOT
 
-# A hang guard, not a speed budget: each nested `uv run pytest --collect-only`
-# starts an interpreter and collects in a fresh process, which under the merge
-# gate's full xdist lane outlasted thirty seconds without anything being wrong.
-_NESTED_COLLECTION_HANG_GUARD_SECONDS = 180
 _PYPROJECT = _REPOSITORY_ROOT / "pyproject.toml"
-#: Explicit deadline for the harness lane's combined real-proof pass. Its
-#: child pytest collects the whole first-party corpus and can take minutes.
-_HARNESS_WALL_CEILING_SECONDS = 900
 
 
 def _declared_harness_members() -> tuple[str, ...]:
@@ -176,8 +169,8 @@ def test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously()
     assert members, "no justfile recipe named test-pytest-harness declares any member"
     commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-pytest-harness")
 
-    # A lane names only what SELECTS it: markers, paths, worker count, and the
-    # wall ceiling. How pytest REPORTS is declared once in
+    # A lane names what SELECTS it: markers, paths, and worker count.
+    # How pytest REPORTS is declared once in
     # `[tool.pytest.ini_options] addopts` and asserted there instead, so this
     # pin cannot drift from the reporting decision the way it did while every
     # lane restated `-rsf --tb=short`.
@@ -188,7 +181,7 @@ def test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously()
     # finishes instantly and has nothing to stream, so it stays quiet.
     assert commands == (
         *(f"uv run --no-sync pytest -q -m integration --collect-only -n0 {member}" for member in members),
-        f"uv run --no-sync pytest -v -m integration -n0 --timeout={_HARNESS_WALL_CEILING_SECONDS} {' '.join(members)}",
+        f"uv run --no-sync pytest -v -m integration -n0 {' '.join(members)}",
     )
 
     # The other half of that contract: the reporting flags must actually be in
@@ -210,14 +203,15 @@ def test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously()
     assert all("||" not in command and ";" not in command for command in commands)
 
 
-def test_the_harness_real_proof_owns_its_explicit_deadline() -> None:
-    """The real-proof deadline is explicit and independent of any shared pytest setting."""
+def test_harness_proofs_run_to_completion_without_an_implicit_deadline() -> None:
+    """Every ordinary harness invocation leaves elapsed limits to an explicit caller."""
     commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-pytest-harness")
-    real_proof = commands[-1]
 
-    assert f"--timeout={_HARNESS_WALL_CEILING_SECONDS}" in real_proof
-    assert all("--timeout=" not in command for command in commands[:-1]), (
-        "only the combined real-proof pass sets this deadline; collection preflights must not inherit it"
+    assert commands, "the harness recipe must expose its real proof invocations"
+    assert all(
+        argument != "--timeout" and not argument.startswith("--timeout=")
+        for command in commands
+        for argument in shlex.split(command)
     )
 
 
@@ -270,7 +264,7 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
     aggregate = run_command(
         [*invocation, str(populated_member), str(empty_member)],
         cwd=_REPOSITORY_ROOT,
-        timeout_seconds=_NESTED_COLLECTION_HANG_GUARD_SECONDS,
+        timeout_seconds=None,
     )
     assert aggregate.returncode == 0, (
         "the populated control must make aggregate collection non-empty\n"
@@ -281,7 +275,7 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
     empty_preflight = run_command(
         [*invocation, str(empty_member)],
         cwd=_REPOSITORY_ROOT,
-        timeout_seconds=_NESTED_COLLECTION_HANG_GUARD_SECONDS,
+        timeout_seconds=None,
     )
     assert empty_preflight.returncode == 5, (
         "the per-member collect preflight must preserve pytest exit 5 for an empty member\n"
@@ -694,6 +688,53 @@ def test_former_aeat_product_forms_are_rejected(surface: str, expected_family: s
 
 
 _RELEASE = _WORKFLOWS_DIR / "release.yml"
+
+_DISTRIBUTION_STAGING_STEPS = {
+    "Refuse a distribution over the index file cap": "var/release-dist",
+    "Select the sealed distribution bytes": "dist",
+}
+
+
+def _distribution_count_gate_violations(document: dict[str, Any]) -> list[str]:
+    """Require both release boundaries to count exactly four wheels and four sdists."""
+    failures: list[str] = []
+    for name, directory in _DISTRIBUTION_STAGING_STEPS.items():
+        matches = [
+            step for job in document["jobs"].values() for step in job.get("steps", ()) if step.get("name") == name
+        ]
+        if len(matches) != 1:
+            failures.append(f"{name}: expected exactly one staging step")
+            continue
+        expected = (
+            f'test "$(find {directory} -maxdepth 1 -type f '
+            r"\( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)"
+            '" -eq 8'
+        )
+        if expected not in executed_text((matches[0].get("run"),)).splitlines():
+            failures.append(f"{name}: requires the exact eight-artifact wheel/sdist guard")
+    return failures
+
+
+def test_release_distribution_staging_requires_the_complete_four_project_cohort() -> None:
+    document = yaml.safe_load(_RELEASE.read_text(encoding="utf-8"))
+    assert _distribution_count_gate_violations(document) == []
+
+
+@pytest.mark.parametrize("replacement", ("-eq 6", "-eq 7", "-eq 9", "-ge 8", ""))
+def test_distribution_staging_refuses_incomplete_extra_and_weakened_count_guards(replacement: str) -> None:
+    """Neither a retired roster nor a permissive or missing guard proves completeness."""
+    document = yaml.safe_load(_RELEASE.read_text(encoding="utf-8"))
+    assert _distribution_count_gate_violations(document) == []
+    for job in document["jobs"].values():
+        for step in job.get("steps", ()):
+            if step.get("name") in _DISTRIBUTION_STAGING_STEPS:
+                body = step["run"]
+                assert body.count("-eq 8") == 1
+                step["run"] = body.replace("-eq 8", replacement)
+    failures = _distribution_count_gate_violations(document)
+    assert len(failures) == 2
+    assert all("exact eight-artifact" in finding for finding in failures)
+
 
 #: The dispatched commit. A run's cache token writes into the scope of the ref it
 #: was dispatched on, so this is the only commit whose code a release job may run

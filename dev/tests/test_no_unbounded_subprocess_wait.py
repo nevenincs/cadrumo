@@ -1,25 +1,24 @@
-"""No development test may block forever waiting on a child process.
+"""Direct development-test Popen handles retain a visible completion owner.
 
-The repository sets a 300-second per-test ceiling, and its own configuration
-records what that ceiling cannot do: a test whose thread is blocked in
-``subprocess.wait()`` is not interruptible by the thread timeout method, so the
-worker exits uncleanly rather than reporting. With ``--max-worker-restart=0``
-that stops the whole session, naming the test the worker died on -- which is
-rarely the test that hung. One unbounded wait therefore costs a result set, not
-a test.
+Ordinary test completion may wait without an elapsed-time ceiling. A timeout
+argument does not establish child ownership, and its absence is not a defect.
+This structural screen instead requires a direct Popen launch to have a visible
+wait/communicate call, a Popen context manager, or an explicit return that
+transfers its handle to a caller. An unnamed kill discards its reaping owner.
 
-``subprocess.run`` without ``timeout=`` blocks the same way. It is not gated
-here because sixty of them are ``git`` invocations that return promptly, and a
-gate nobody can make pass gets deleted rather than obeyed. ``Popen`` is the
-narrow, unambiguous case: the caller has already taken responsibility for the
-child's lifetime, so leaving the wait unbounded is a decision rather than a
-default.
+Only test_*.py modules under dev and direct Popen spellings are inspected. This
+is not control-flow proof that every exception closes pipes or reaps children;
+real owning cleanup/cancellation tests retain those obligations. Audited/async
+process runners, returned-handle callers, src tests and native custody are not
+certified by this screen. Product deadlines and deliberate expiry proofs remain
+governed by their actual owners.
 """
 
 from __future__ import annotations
 
 import ast
 import pathlib
+from collections.abc import Iterator
 
 import pytest
 
@@ -28,12 +27,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _DEV_ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
-def _is_popen_call(node: ast.expr | None) -> bool:
-    """Is this ``subprocess.Popen(...)`` or a bare imported ``Popen(...)``?
-
-    Matching only the attribute spelling makes ``from subprocess import Popen``
-    invisible, and an invisible constructor means an invisible handle.
-    """
+def _is_popen_call(node: ast.AST | None) -> bool:
+    """Recognize direct attribute and bare imported Popen constructors."""
     if not isinstance(node, ast.Call):
         return False
     callee = node.func
@@ -42,53 +37,71 @@ def _is_popen_call(node: ast.expr | None) -> bool:
     return isinstance(callee, ast.Name) and callee.id == "Popen"
 
 
-def _popen_names(function: ast.FunctionDef | ast.AsyncFunctionDef) -> set[str]:
-    """Return the local names bound to a ``subprocess.Popen`` result.
+def _local_nodes(function: ast.FunctionDef | ast.AsyncFunctionDef) -> Iterator[ast.AST]:
+    """Keep nested function/class scopes from claiming an outer handle."""
+    pending: list[ast.AST] = list(reversed(function.body))
+    while pending:
+        node = pending.pop()
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            continue
+        yield node
+        pending.extend(reversed(list(ast.iter_child_nodes(node))))
 
-    Every binding form counts, not just the plain assignment this screen once
-    looked for. An annotated assignment is an ``AnnAssign`` and never an
-    ``Assign``; the form the standard library documentation recommends --
-    ``with subprocess.Popen(...) as child:`` -- is a ``With`` item; and a bare
-    imported ``Popen`` leaves a ``Name`` callee rather than an ``Attribute``.
-    A handle this screen cannot name is a ``child.wait()`` it cannot see, so
-    the gate below would report clean over precisely the wait it forbids.
+
+def _bound_names(parent: ast.AST | None) -> set[str]:
+    if isinstance(parent, ast.Assign):
+        return {target.id for target in parent.targets if isinstance(target, ast.Name)}
+    if isinstance(parent, ast.AnnAssign) and isinstance(parent.target, ast.Name):
+        return {parent.target.id}
+    return set()
+
+
+def _unowned_popen_handles(tree: ast.Module) -> list[tuple[int, str]]:
+    """Find direct function-local launches with no visible completion owner.
+
+    A visible owner is structural evidence only: conditional or exceptional
+    reachability, aliases and interprocedural lifetime are not inferred here.
     """
-    names: set[str] = set()
-    for node in ast.walk(function):
-        if isinstance(node, ast.Assign) and _is_popen_call(node.value):
-            names.update(target.id for target in node.targets if isinstance(target, ast.Name))
-        elif isinstance(node, ast.AnnAssign) and _is_popen_call(node.value):
-            if isinstance(node.target, ast.Name):
-                names.add(node.target.id)
-        elif isinstance(node, (ast.With, ast.AsyncWith)):
-            for item in node.items:
-                if _is_popen_call(item.context_expr) and isinstance(item.optional_vars, ast.Name):
-                    names.add(item.optional_vars.id)
-    return names
-
-
-def _unbounded_waits(tree: ast.Module) -> list[tuple[int, str]]:
-    """Return ``(lineno, name)`` for every unbounded wait on a Popen handle."""
     found: list[tuple[int, str]] = []
-    for function in [n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]:
-        handles = _popen_names(function)
-        for node in ast.walk(function):
-            if not isinstance(node, ast.Call):
+    for function in ast.walk(tree):
+        if not isinstance(function, ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        nodes = tuple(_local_nodes(function))
+        parents = {child: node for node in nodes for child in ast.iter_child_nodes(node)}
+        for node in nodes:
+            if not isinstance(node, ast.Call) or not _is_popen_call(node):
                 continue
-            callee = node.func
-            if not (isinstance(callee, ast.Attribute) and callee.attr == "wait"):
+            parent = parents.get(node)
+            if isinstance(parent, ast.withitem | ast.Return):
+                # Popen.__exit__ closes its streams and waits; returning the
+                # handle is an explicit transfer, not a local completion claim.
                 continue
-            if isinstance(callee.value, ast.Name) and callee.value.id in handles:
-                handle = callee.value.id
-            elif _is_popen_call(callee.value):
-                # A handle nobody bound still owns a child process; waiting on
-                # it unbounded costs the run just the same.
-                handle = "Popen(...)"
-            else:
+            if (
+                isinstance(parent, ast.Attribute)
+                and parent.attr in {"wait", "communicate"}
+                and isinstance(parents.get(parent), ast.Call)
+            ):
                 continue
-            if not any(keyword.arg == "timeout" for keyword in node.keywords) and not node.args:
-                found.append((node.lineno, handle))
-    return found
+            names = _bound_names(parent)
+            completed = any(
+                isinstance(candidate, ast.Call)
+                and candidate.lineno >= node.lineno
+                and isinstance(candidate.func, ast.Attribute)
+                and candidate.func.attr in {"wait", "communicate"}
+                and isinstance(candidate.func.value, ast.Name)
+                and candidate.func.value.id in names
+                for candidate in nodes
+            )
+            transferred = any(
+                isinstance(candidate, ast.Return)
+                and candidate.lineno >= node.lineno
+                and isinstance(candidate.value, ast.Name)
+                and candidate.value.id in names
+                for candidate in nodes
+            )
+            if not completed and not transferred:
+                found.append((node.lineno, ", ".join(sorted(names)) or "Popen(...)"))
+    return sorted(found)
 
 
 def _test_modules() -> tuple[pathlib.Path, ...]:
@@ -96,76 +109,72 @@ def _test_modules() -> tuple[pathlib.Path, ...]:
 
 
 def test_the_walk_reaches_a_real_population() -> None:
-    """Anti-vacuity: an empty walk would pass this file over any tree at all."""
+    """Anti-vacuity: an empty walk cannot establish a clean ownership result."""
     modules = _test_modules()
-
     assert len(modules) > 100, f"only {len(modules)} development test modules found under {_DEV_ROOT}"
 
 
-def test_no_development_test_waits_unbounded_on_a_child_process() -> None:
-    """A bare ``wait()`` on a Popen handle costs the run, not the test."""
+def test_development_popen_handles_have_a_visible_completion_owner() -> None:
+    """An elapsed limit cannot substitute for child completion ownership."""
     offenders: list[str] = []
     unreadable: list[str] = []
-
     for module in _test_modules():
         try:
             tree = ast.parse(module.read_text(encoding="utf-8"))
         except (SyntaxError, OSError) as refusal:
-            # A sibling agent mid-write is not this gate's finding, but a file
-            # this screen could not read is not evidence of absence either.
             unreadable.append(f"{module}: {refusal}")
             continue
         offenders.extend(
-            f"{module.relative_to(_DEV_ROOT.parent).as_posix()}:{line} {name}.wait() has no timeout"
-            for line, name in _unbounded_waits(tree)
+            f"{module.relative_to(_DEV_ROOT.parent).as_posix()}:{line} {name} has no visible completion owner"
+            for line, name in _unowned_popen_handles(tree)
         )
-
     assert not offenders, (
-        "an unbounded wait on a child process cannot be interrupted by the per-test "
-        "ceiling; the worker dies and the session stops naming an unrelated test:\n" + "\n".join(offenders)
+        "direct child handles need a wait/communicate, context manager or explicit transfer:\n" + "\n".join(offenders)
     )
-    assert not unreadable, (
-        "this screen could not read every test module, so its clean result covers less "
-        "than it appears to:\n" + "\n".join(unreadable)
-    )
+    assert not unreadable, "the ownership screen could not read every test module:\n" + "\n".join(unreadable)
 
 
 def _planted(body: str) -> ast.Module:
-    """Parse a one-function module around a planted handler body."""
-    return ast.parse("import subprocess" + chr(10) + chr(10) + "def helper():" + chr(10) + "    " + body + chr(10))
+    """Parse grammar fixtures without executing any child process."""
+    return ast.parse("import subprocess\n\ndef helper():\n    " + body + "\n")
 
 
 _BOUND_FORMS = {
-    "plain assignment": "child = subprocess.Popen(['x'])" + chr(10) + "    child.wait(",
-    "bare imported Popen": "child = Popen(['x'])" + chr(10) + "    child.wait(",
-    "annotated assignment": "child: object = subprocess.Popen(['x'])" + chr(10) + "    child.wait(",
-    "context manager": "with subprocess.Popen(['x']) as child:" + chr(10) + "        child.wait(",
-    "unnamed handle": "subprocess.Popen(['x']).wait(",
+    "plain assignment": "child = subprocess.Popen(['x'])\n    child",
+    "bare imported Popen": "child = Popen(['x'])\n    child",
+    "annotated assignment": "child: object = subprocess.Popen(['x'])\n    child",
+    "context manager": "with subprocess.Popen(['x']) as child:\n        child",
+    "unnamed handle": "subprocess.Popen(['x'])",
 }
 
 
 @pytest.mark.parametrize("label", sorted(_BOUND_FORMS))
-def test_the_screen_sees_a_child_handle_however_it_was_bound(label: str) -> None:
-    """Teeth: an absence claim is only as wide as the spellings it can parse.
-
-    Each of these is a real way to hold a child process, and each was once
-    invisible here -- the screen matched a plain assignment of an attribute
-    call and nothing else, so a wait bound any other way passed unread. The
-    bounded twin proves the case fails for the reason named rather than
-    because the form parses to nothing at all.
-    """
-    body = _BOUND_FORMS[label]
-
-    assert _unbounded_waits(_planted(body + ")")), f"an unbounded wait bound by {label} went unseen"
-    assert _unbounded_waits(_planted(body + "timeout=60)")) == [], f"a bounded wait bound by {label} was reported"
+@pytest.mark.parametrize("completion", ["wait", "communicate"])
+@pytest.mark.parametrize("arguments", ["", "timeout=None", "timeout=60"])
+def test_completion_ownership_is_independent_of_elapsed_limits(label: str, completion: str, arguments: str) -> None:
+    assert _unowned_popen_handles(_planted(_BOUND_FORMS[label] + f".{completion}({arguments})")) == []
 
 
-def test_the_screen_detects_a_planted_unbounded_wait() -> None:
-    """Teeth: the gate above is worthless if it cannot see the defect it forbids."""
-    planted = ast.parse("import subprocess\n\ndef helper():\n    child = subprocess.Popen(['x'])\n    child.wait()\n")
-    bounded = ast.parse(
-        "import subprocess\n\ndef helper():\n    child = subprocess.Popen(['x'])\n    child.wait(timeout=60)\n"
-    )
+@pytest.mark.parametrize("label", sorted(set(_BOUND_FORMS) - {"context manager"}))
+def test_the_screen_detects_a_child_killed_without_a_reaping_owner(label: str) -> None:
+    assert _unowned_popen_handles(_planted(_BOUND_FORMS[label] + ".kill()"))
 
-    assert _unbounded_waits(planted) == [(5, "child")]
-    assert _unbounded_waits(bounded) == []
+
+def test_a_popen_context_manager_owns_reaping_after_kill() -> None:
+    assert _unowned_popen_handles(_planted(_BOUND_FORMS["context manager"] + ".kill()")) == []
+
+
+@pytest.mark.parametrize(
+    "body", ["return subprocess.Popen(['x'])", "child = subprocess.Popen(['x'])\n    return child"]
+)
+def test_returned_handles_explicitly_transfer_completion_ownership(body: str) -> None:
+    assert _unowned_popen_handles(_planted(body)) == []
+
+
+def test_a_nested_function_cannot_claim_completion_of_an_outer_handle() -> None:
+    tree = _planted("child = subprocess.Popen(['x'])\n    def never_called():\n        child.wait()")
+    assert _unowned_popen_handles(tree) == [(4, "child")]
+
+
+def test_a_standalone_child_launch_has_no_completion_owner() -> None:
+    assert _unowned_popen_handles(_planted("subprocess.Popen(['x'])")) == [(4, "Popen(...)")]

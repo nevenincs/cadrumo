@@ -19,22 +19,25 @@ from ..pypi_publication_state import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_FILES = (
-    "cadrumo-1.2.0-py3-none-any.whl",
-    "cadrumo-1.2.0.tar.gz",
-    "cadrumo_data_manuals-1.2.0-py3-none-any.whl",
-    "cadrumo_data_manuals-1.2.0.tar.gz",
-)
+_FILES = {
+    "cadrumo": ("cadrumo-1.2.0-py3-none-any.whl", "cadrumo-1.2.0.tar.gz"),
+    "cadrumo-data-manuals": ("cadrumo_data_manuals-1.2.0-py3-none-any.whl", "cadrumo_data_manuals-1.2.0.tar.gz"),
+    "cadrumo-data-official": ("cadrumo_data_official-1.2.0-py3-none-any.whl", "cadrumo_data_official-1.2.0.tar.gz"),
+    "cadrumo-data-normatives": (
+        "cadrumo_data_normatives-1.2.0-py3-none-any.whl",
+        "cadrumo_data_normatives-1.2.0.tar.gz",
+    ),
+}
 
 
 def _sealed(directory: Path) -> dict[str, dict[str, str]]:
     """Write a sealed set and return the index view that serves exactly it."""
     served: dict[str, dict[str, str]] = {}
-    for name in _FILES:
-        payload = f"bytes of {name}".encode()
-        (directory / name).write_bytes(payload)
-        project = "cadrumo" if name.startswith("cadrumo-") else "cadrumo-data-manuals"
-        served.setdefault(project, {})[name] = hashlib.sha256(payload).hexdigest()
+    for project, filenames in _FILES.items():
+        for name in filenames:
+            payload = f"bytes of {name}".encode()
+            (directory / name).write_bytes(payload)
+            served.setdefault(project, {})[name] = hashlib.sha256(payload).hexdigest()
     return served
 
 
@@ -52,6 +55,14 @@ def test_a_partial_upload_with_matching_digests_proceeds(tmp_path: Path) -> None
     served = _sealed(tmp_path)
     del served["cadrumo-data-manuals"]
     assert publication_state(local_files(tmp_path), served) is PublicationState.PARTIAL
+
+
+def test_a_normative_upload_is_required_to_complete_the_sealed_set(tmp_path: Path) -> None:
+    served = _sealed(tmp_path)
+    del served["cadrumo-data-normatives"]
+    files = local_files(tmp_path)
+    assert len(files) == 8
+    assert publication_state(files, served) is PublicationState.PARTIAL
 
 
 def test_a_differing_digest_refuses(tmp_path: Path) -> None:

@@ -47,11 +47,11 @@ def _translation_call_names(tree: ast.AST) -> frozenset[str]:
     is invisible to the scanner, so its genuinely-live locale keys are wrongly
     reported as orphans and pruned.
     """
-    names = {"tr", "t"}
+    names = {"tr", "t", "lookup_translation"}
     for node in _walk_nodes(tree):
         if isinstance(node, ast.ImportFrom):
             for alias in node.names:
-                if alias.name in {"tr", "t"} and alias.asname:
+                if alias.name in {"tr", "t", "lookup_translation"} and alias.asname:
                     names.add(alias.asname)
     return frozenset(names)
 

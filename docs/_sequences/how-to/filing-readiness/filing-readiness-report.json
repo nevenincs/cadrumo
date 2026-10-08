@@ -32,20 +32,20 @@
           "cadence": "quarterly",
           "casilla_count": 229,
           "code": "303",
-          "computed_casilla_count": 39,
+          "computed_casilla_count": 40,
           "filing_period": {
             "code": "1T",
             "filing_year": 2026
           },
           "filing_year": 2026,
-          "formula_count": 39,
+          "formula_count": 40,
           "jurisdiction": "ES-AEAT",
           "legal_refs": [
             "rd-1624-1992:art-71",
             "orden-eha-3786-2008:art-1",
             "orden-eha-3786-2008:art-7"
           ],
-          "manual_casilla_count": 75,
+          "manual_casilla_count": 74,
           "official_name": "Modelo 303. Value Added Tax. Self-assessment.",
           "operation": "modelo.describe",
           "period": "1T",
@@ -148,7 +148,7 @@
           }
         ],
         "result": {
-          "authority_generation": "a8f14a1c31a55bf48e8a383ba3bd4c6e5d9a574778115ec99f1497e3bc7cdc60",
+          "authority_generation": "42e62ee73726f19454b09145623dc2de95adf043cd60d8d42ba97d926b65e7b3",
           "binding_ready": false,
           "filing_year": 2026,
           "ledger_checked_transaction_count": 0,

@@ -94,7 +94,8 @@
                     "dispatch_table": null,
                     "literal": "0",
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   },
                   {
                     "args": [
@@ -106,7 +107,8 @@
                         "dispatch_table": null,
                         "literal": null,
                         "op": null,
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       }
                     ],
                     "binding": null,
@@ -115,7 +117,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": "negate",
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   }
                 ],
                 "binding": null,
@@ -124,7 +127,8 @@
                 "dispatch_table": null,
                 "literal": null,
                 "op": "max",
-                "parameter": null
+                "parameter": null,
+                "text_literal": null
               },
               "formula_id": "modelo-130-saldo-negativo-fin-periodo",
               "input_bindings": [],
@@ -156,7 +160,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   },
                   {
                     "args": [],
@@ -166,7 +171,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   }
                 ],
                 "binding": null,
@@ -175,7 +181,8 @@
                 "dispatch_table": null,
                 "literal": null,
                 "op": "subtract",
-                "parameter": null
+                "parameter": null,
+                "text_literal": null
               },
               "formula_id": "modelo-130-rendimiento-neto",
               "input_bindings": [],
@@ -208,7 +215,8 @@
                     "dispatch_table": null,
                     "literal": "0",
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   },
                   {
                     "args": [
@@ -220,7 +228,8 @@
                         "dispatch_table": null,
                         "literal": null,
                         "op": null,
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       },
                       {
                         "args": [],
@@ -230,7 +239,8 @@
                         "dispatch_table": null,
                         "literal": null,
                         "op": null,
-                        "parameter": "irpf.direct_estimation_fractional_payment_rate"
+                        "parameter": "irpf.direct_estimation_fractional_payment_rate",
+                        "text_literal": null
                       }
                     ],
                     "binding": null,
@@ -239,7 +249,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": "percent",
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   }
                 ],
                 "binding": null,
@@ -248,7 +259,8 @@
                 "dispatch_table": null,
                 "literal": null,
                 "op": "max",
-                "parameter": null
+                "parameter": null,
+                "text_literal": null
               },
               "formula_id": "modelo-130-pago-fraccionado-directa",
               "input_bindings": [],
@@ -284,7 +296,8 @@
                         "dispatch_table": null,
                         "literal": null,
                         "op": null,
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       },
                       {
                         "args": [],
@@ -294,7 +307,8 @@
                         "dispatch_table": null,
                         "literal": null,
                         "op": null,
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       }
                     ],
                     "binding": null,
@@ -303,7 +317,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": "subtract",
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   },
                   {
                     "args": [],
@@ -313,7 +328,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   }
                 ],
                 "binding": null,
@@ -322,7 +338,8 @@
                 "dispatch_table": null,
                 "literal": null,
                 "op": "subtract",
-                "parameter": null
+                "parameter": null,
+                "text_literal": null
               },
               "formula_id": "modelo-130-resultado-apartado-i",
               "input_bindings": [],
@@ -356,7 +373,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   },
                   {
                     "args": [],
@@ -366,7 +384,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": "irpf.agriculture_fractional_payment_rate"
+                    "parameter": "irpf.agriculture_fractional_payment_rate",
+                    "text_literal": null
                   }
                 ],
                 "binding": null,
@@ -375,7 +394,8 @@
                 "dispatch_table": null,
                 "literal": null,
                 "op": "percent",
-                "parameter": null
+                "parameter": null,
+                "text_literal": null
               },
               "formula_id": "modelo-130-pago-fraccionado-agrario",
               "input_bindings": [],
@@ -409,7 +429,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   },
                   {
                     "args": [],
@@ -419,7 +440,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   }
                 ],
                 "binding": null,
@@ -428,7 +450,8 @@
                 "dispatch_table": null,
                 "literal": null,
                 "op": "subtract",
-                "parameter": null
+                "parameter": null,
+                "text_literal": null
               },
               "formula_id": "modelo-130-resultado-apartado-ii",
               "input_bindings": [],
@@ -461,7 +484,8 @@
                     "dispatch_table": null,
                     "literal": "0",
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   },
                   {
                     "args": [
@@ -473,7 +497,8 @@
                         "dispatch_table": null,
                         "literal": null,
                         "op": null,
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       },
                       {
                         "args": [],
@@ -483,7 +508,8 @@
                         "dispatch_table": null,
                         "literal": null,
                         "op": null,
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       }
                     ],
                     "binding": null,
@@ -492,7 +518,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": "add",
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   }
                 ],
                 "binding": null,
@@ -501,7 +528,8 @@
                 "dispatch_table": null,
                 "literal": null,
                 "op": "max",
-                "parameter": null
+                "parameter": null,
+                "text_literal": null
               },
               "formula_id": "modelo-130-suma-parciales",
               "input_bindings": [],
@@ -534,7 +562,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   },
                   {
                     "args": [],
@@ -544,7 +573,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   }
                 ],
                 "binding": null,
@@ -553,7 +583,8 @@
                 "dispatch_table": null,
                 "literal": null,
                 "op": "subtract",
-                "parameter": null
+                "parameter": null,
+                "text_literal": null
               },
               "formula_id": "modelo-130-neto-tras-minoracion",
               "input_bindings": [],
@@ -586,7 +617,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   },
                   {
                     "args": [
@@ -598,7 +630,8 @@
                         "dispatch_table": null,
                         "literal": "0",
                         "op": null,
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       },
                       {
                         "args": [],
@@ -608,7 +641,8 @@
                         "dispatch_table": null,
                         "literal": null,
                         "op": null,
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       }
                     ],
                     "binding": null,
@@ -617,7 +651,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": "max",
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   }
                 ],
                 "binding": null,
@@ -626,7 +661,8 @@
                 "dispatch_table": null,
                 "literal": null,
                 "op": "min",
-                "parameter": null
+                "parameter": null,
+                "text_literal": null
               },
               "formula_id": "modelo-130-resultados-negativos-anteriores-cap",
               "input_bindings": [
@@ -662,7 +698,8 @@
                         "dispatch_table": null,
                         "literal": null,
                         "op": null,
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       },
                       {
                         "args": [],
@@ -672,7 +709,8 @@
                         "dispatch_table": null,
                         "literal": null,
                         "op": null,
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       }
                     ],
                     "binding": null,
@@ -681,7 +719,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": "subtract",
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   },
                   {
                     "args": [],
@@ -691,7 +730,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   }
                 ],
                 "binding": null,
@@ -700,7 +740,8 @@
                 "dispatch_table": null,
                 "literal": null,
                 "op": "subtract",
-                "parameter": null
+                "parameter": null,
+                "text_literal": null
               },
               "formula_id": "modelo-130-diferencia",
               "input_bindings": [],
@@ -734,7 +775,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   },
                   {
                     "args": [],
@@ -744,7 +786,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   }
                 ],
                 "binding": null,
@@ -753,7 +796,8 @@
                 "dispatch_table": null,
                 "literal": null,
                 "op": "subtract",
-                "parameter": null
+                "parameter": null,
+                "text_literal": null
               },
               "formula_id": "modelo-130-resultado-final",
               "input_bindings": [],
@@ -788,7 +832,8 @@
                         "dispatch_table": null,
                         "literal": null,
                         "op": null,
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       },
                       {
                         "args": [],
@@ -798,7 +843,8 @@
                         "dispatch_table": null,
                         "literal": "9000",
                         "op": null,
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       }
                     ],
                     "binding": null,
@@ -807,7 +853,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": "less_equal",
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   },
                   {
                     "args": [],
@@ -817,7 +864,8 @@
                     "dispatch_table": null,
                     "literal": "100",
                     "op": null,
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   },
                   {
                     "args": [
@@ -831,7 +879,8 @@
                             "dispatch_table": null,
                             "literal": null,
                             "op": null,
-                            "parameter": null
+                            "parameter": null,
+                            "text_literal": null
                           },
                           {
                             "args": [],
@@ -841,7 +890,8 @@
                             "dispatch_table": null,
                             "literal": "10000",
                             "op": null,
-                            "parameter": null
+                            "parameter": null,
+                            "text_literal": null
                           }
                         ],
                         "binding": null,
@@ -850,7 +900,8 @@
                         "dispatch_table": null,
                         "literal": null,
                         "op": "less_equal",
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       },
                       {
                         "args": [],
@@ -860,7 +911,8 @@
                         "dispatch_table": null,
                         "literal": "75",
                         "op": null,
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       },
                       {
                         "args": [
@@ -874,7 +926,8 @@
                                 "dispatch_table": null,
                                 "literal": null,
                                 "op": null,
-                                "parameter": null
+                                "parameter": null,
+                                "text_literal": null
                               },
                               {
                                 "args": [],
@@ -884,7 +937,8 @@
                                 "dispatch_table": null,
                                 "literal": "11000",
                                 "op": null,
-                                "parameter": null
+                                "parameter": null,
+                                "text_literal": null
                               }
                             ],
                             "binding": null,
@@ -893,7 +947,8 @@
                             "dispatch_table": null,
                             "literal": null,
                             "op": "less_equal",
-                            "parameter": null
+                            "parameter": null,
+                            "text_literal": null
                           },
                           {
                             "args": [],
@@ -903,7 +958,8 @@
                             "dispatch_table": null,
                             "literal": "50",
                             "op": null,
-                            "parameter": null
+                            "parameter": null,
+                            "text_literal": null
                           },
                           {
                             "args": [
@@ -917,7 +973,8 @@
                                     "dispatch_table": null,
                                     "literal": null,
                                     "op": null,
-                                    "parameter": null
+                                    "parameter": null,
+                                    "text_literal": null
                                   },
                                   {
                                     "args": [],
@@ -927,7 +984,8 @@
                                     "dispatch_table": null,
                                     "literal": "12000",
                                     "op": null,
-                                    "parameter": null
+                                    "parameter": null,
+                                    "text_literal": null
                                   }
                                 ],
                                 "binding": null,
@@ -936,7 +994,8 @@
                                 "dispatch_table": null,
                                 "literal": null,
                                 "op": "less_equal",
-                                "parameter": null
+                                "parameter": null,
+                                "text_literal": null
                               },
                               {
                                 "args": [],
@@ -946,7 +1005,8 @@
                                 "dispatch_table": null,
                                 "literal": "25",
                                 "op": null,
-                                "parameter": null
+                                "parameter": null,
+                                "text_literal": null
                               },
                               {
                                 "args": [],
@@ -956,7 +1016,8 @@
                                 "dispatch_table": null,
                                 "literal": "0",
                                 "op": null,
-                                "parameter": null
+                                "parameter": null,
+                                "text_literal": null
                               }
                             ],
                             "binding": null,
@@ -965,7 +1026,8 @@
                             "dispatch_table": null,
                             "literal": null,
                             "op": "if_then_else",
-                            "parameter": null
+                            "parameter": null,
+                            "text_literal": null
                           }
                         ],
                         "binding": null,
@@ -974,7 +1036,8 @@
                         "dispatch_table": null,
                         "literal": null,
                         "op": "if_then_else",
-                        "parameter": null
+                        "parameter": null,
+                        "text_literal": null
                       }
                     ],
                     "binding": null,
@@ -983,7 +1046,8 @@
                     "dispatch_table": null,
                     "literal": null,
                     "op": "if_then_else",
-                    "parameter": null
+                    "parameter": null,
+                    "text_literal": null
                   }
                 ],
                 "binding": null,
@@ -992,7 +1056,8 @@
                 "dispatch_table": null,
                 "literal": null,
                 "op": "if_then_else",
-                "parameter": null
+                "parameter": null,
+                "text_literal": null
               },
               "formula_id": "modelo-130-minoracion-rendimientos-netos",
               "input_bindings": [

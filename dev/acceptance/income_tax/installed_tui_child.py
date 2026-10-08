@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Final, cast, overload
 
 from cadrumo.core.hashing import sha256_file
+from dev.first_party_source import PRODUCT_PACKAGE
 from dev.packaging.installed_wheel_binding import environment_interpreter
 from dev.product_environment import clean_product_env
 
@@ -108,7 +109,7 @@ def is_installed_product_origin(*, product_init: Path, workspace_root: Path) -> 
     imports from ``<checkout>/src/cadrumo``.
     """
     resolved_product = product_init.resolve()
-    source_package = (workspace_root.resolve() / "src" / "cadrumo").resolve()
+    source_package = (workspace_root.resolve() / PRODUCT_PACKAGE).resolve()
     return not resolved_product.is_relative_to(source_package)
 
 
@@ -337,8 +338,11 @@ async def _submit_visible_runtime_login(
         raise InstalledTuiChildError("installed runtime login has no selected profile")
     query_public_selector(pilot, "#runtime-login-method", Select).value = RuntimeLoginMethod.PASSWORD
     await pilot.pause()
-    query_public_selector(pilot, "#runtime-login-credential", Input).value = passphrase
-    await pilot.click("#runtime-login-submit")
+    credential = query_public_selector(pilot, "#runtime-login-credential", Input)
+    credential.value = passphrase
+    credential.focus()
+    await pilot.pause()
+    await pilot.press("enter")
 
     def received_handoff() -> bool:
         handoff = getattr(pilot.app, "handoff", None)

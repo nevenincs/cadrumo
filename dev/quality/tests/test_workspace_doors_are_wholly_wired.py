@@ -78,11 +78,51 @@ def partially_wired_doors(controller: str, launcher: str) -> dict[str, tuple[str
     """Return, per area, the required fields production forgot beside those it gave."""
     supplied = supplied_fields(launcher)
     partial: dict[str, tuple[str, ...]] = {}
-    for area, required in door_requirements(controller).items():
-        given = required & supplied
-        if given and given != required:
+    requirements = door_requirements(controller)
+    for node in ast.walk(ast.parse(controller)):
+        if not isinstance(node, ast.BoolOp) or not isinstance(node.op, ast.And):
+            continue
+        selectors = [value for value in node.values if _area_selector(value) is not None]
+        if len(selectors) != 1:
+            continue
+        area = _area_selector(selectors[0])
+        assert area is not None
+        required = requirements[area]
+        if required & supplied and all(
+            _dependency_missing(value, supplied) for value in node.values if value not in selectors
+        ):
             partial[area] = tuple(sorted(required - supplied))
     return partial
+
+
+def _area_selector(node: ast.AST) -> str | None:
+    if (
+        isinstance(node, ast.Compare)
+        and len(node.comparators) == 1
+        and isinstance(node.comparators[0], ast.Attribute)
+        and isinstance(node.comparators[0].value, ast.Name)
+        and node.comparators[0].value.id == "LedgerWorkspaceArea"
+    ):
+        return node.comparators[0].attr
+    return None
+
+
+def _dependency_missing(node: ast.AST, supplied: frozenset[str]) -> bool:
+    """Evaluate the actual refusal Boolean, preserving alternative capabilities."""
+    if isinstance(node, ast.BoolOp):
+        values = tuple(_dependency_missing(value, supplied) for value in node.values)
+        return all(values) if isinstance(node.op, ast.And) else any(values)
+    if isinstance(node, ast.Compare) and len(node.ops) == 1 and isinstance(node.ops[0], ast.Is):
+        if isinstance(node.comparators[0], ast.Constant) and node.comparators[0].value is None:
+            operand = node.left
+        else:
+            raise AssertionError("unsupported dependency comparison in workspace guard")
+    elif isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+        operand = node.operand
+    else:
+        raise AssertionError("unsupported dependency expression in workspace guard")
+    assert isinstance(operand, ast.Attribute) and isinstance(operand.value, ast.Name) and operand.value.id == "self"
+    return operand.attr not in supplied
 
 
 def test_the_guard_still_yields_areas_and_their_dependencies() -> None:
@@ -151,3 +191,30 @@ def test_an_area_supplied_not_at_all_is_left_alone() -> None:
     launcher = "def make():\n    return ledger_screen_factory(p, review_action=r)\n"
 
     assert partially_wired_doors(controller, launcher) == {}
+
+
+@pytest.mark.parametrize("source", ["evidence_items", "evidence_door"])
+def test_either_complete_evidence_source_opens_the_door(source: str) -> None:
+    controller = (
+        "def route(self, area):\n"
+        "    return area is LedgerWorkspaceArea.EVIDENCE and (\n"
+        "        self.evidence_action is None or (self.evidence_items is None and self.evidence_door is None))\n"
+    )
+    launcher = f"ledger_screen_factory(p, evidence_action=a, {source}=s)"
+    assert partially_wired_doors(controller, launcher) == {}
+
+
+@pytest.mark.parametrize(
+    "keywords,missing",
+    [
+        ("evidence_action=a", ("evidence_door", "evidence_items")),
+        ("evidence_door=d", ("evidence_action", "evidence_items")),
+    ],
+)
+def test_evidence_alternatives_still_require_an_action_and_a_source(keywords: str, missing: tuple[str, ...]) -> None:
+    controller = (
+        "def route(self, area):\n"
+        "    return area is LedgerWorkspaceArea.EVIDENCE and (\n"
+        "        self.evidence_action is None or (self.evidence_items is None and self.evidence_door is None))\n"
+    )
+    assert partially_wired_doors(controller, f"ledger_screen_factory(p, {keywords})") == {"EVIDENCE": missing}

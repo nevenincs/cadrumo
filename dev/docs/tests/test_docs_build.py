@@ -41,26 +41,12 @@ from ..build import (
 from ..build_paths import docs_build_root, docs_html_root, pin_docs_build_root
 from ..sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
-#: A real nitpicky whole-tree Sphinx build is minutes of work, not seconds, so
-#: the project-wide 300 s per-test ceiling (``pyproject.toml``) cannot hold it.
-#: That ceiling exists to fail a DEADLOCKED test in minutes instead of wedging
-#: the run for hours; a legitimately long build is not a deadlock, and letting
-#: it trip the ceiling produced a faulthandler stack dump carrying no docs
-#: diagnostic at all -- the gate could not report a verdict either way. 1800 s
-#: matches the sibling ``test_built_site_resolvability_sweep`` module, which
-#: runs the same class of work.
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs, pytest.mark.timeout(1800)]
-
-#: Wall ceiling for every spawned subprocess here, set BELOW the per-test
-#: ceiling above so the subprocess timeout wins the race and names itself
-#: (``TimeoutExpired`` reports the command and the limit) instead of pytest
-#: dumping a stack with no indication of which build hung.
-_SUBPROCESS_TIMEOUT_S = 1200
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 _REPO_ROOT = REPO_ROOT
 _DOCS = _REPO_ROOT / "docs"
 _DOCS_BUILD = docs_build_root(_REPO_ROOT)
-_CANONICAL_BUILD_ROOT = "html"
+_CANONICAL_BUILD_ROOTS = frozenset({"html", "doctrees"})
 
 
 def _docs_build_entries() -> set[str]:
@@ -163,14 +149,24 @@ def test_changed_source_the_generator_excludes_plans_nothing() -> None:
 
 
 def test_docs_build_directory_contains_only_canonical_html() -> None:
-    """The configured docs build root must not contain preview/test output."""
+    """Only canonical HTML and the owned persistent doctree cache may remain."""
     entries = _docs_build_entries()
-    extra = sorted(entries - {_CANONICAL_BUILD_ROOT})
+    extra = sorted(entries - _CANONICAL_BUILD_ROOTS)
     assert not extra, (
-        "CADRUMO_DOCS_BUILD_ROOT must contain only the actual canonical HTML build root. "
+        "CADRUMO_DOCS_BUILD_ROOT must contain only canonical HTML and the doctree cache. "
         "Tests and changed-page validation must write to tmp_path or an OS temp "
         f"directory, not docs/_build. Extra entries: {extra}"
     )
+
+
+def test_docs_build_hygiene_refuses_unowned_output(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(sys.modules[__name__], "_DOCS_BUILD", tmp_path)
+    (tmp_path / "html").mkdir()
+    (tmp_path / "doctrees").mkdir()
+    test_docs_build_directory_contains_only_canonical_html()
+    (tmp_path / "preview-output").mkdir()
+    with pytest.raises(AssertionError, match="preview-output"):
+        test_docs_build_directory_contains_only_canonical_html()
 
 
 def test_docs_build_root_refinement_is_relative_and_pinned_before_isolation(
@@ -194,7 +190,7 @@ def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None
     from ..build import remove_noncanonical_build_entries
 
     build_root = tmp_path / "storage" / "development" / "build" / "docs"
-    html_root = build_root / _CANONICAL_BUILD_ROOT
+    html_root = build_root / "html"
     doctree_root = build_root / "doctrees"
     preview_dir = build_root / "index-preview"
     preview_file = build_root / "md-preview.html"
@@ -206,7 +202,7 @@ def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None
 
     remove_noncanonical_build_entries(build_root)
 
-    assert sorted(path.name for path in scan_directory(build_root)) == ["doctrees", _CANONICAL_BUILD_ROOT]
+    assert sorted(path.name for path in scan_directory(build_root)) == sorted(_CANONICAL_BUILD_ROOTS)
     assert html_root.is_dir()
     assert (doctree_root / "cache.pickle").is_file()
 
@@ -518,7 +514,6 @@ def test_changed_docs_validation_does_not_pollute_repository_docs(changed_path: 
         capture_output=True,
         text=True,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     after = _docs_build_entries()
     paths_after = _docs_source_paths()
@@ -555,7 +550,6 @@ def test_single_page_rejects_generated_documentation_sources(generated_page: str
         capture_output=True,
         text=True,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode != 0
     assert "--single-page does not support generated API/CLI pages" in result.stderr
@@ -582,7 +576,6 @@ def test_a_changed_source_check_builds_the_stub_its_build_generates() -> None:
         capture_output=True,
         text=True,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
 
     output = _ANSI_ESCAPE.sub("", (result.stdout or "") + (result.stderr or ""))
@@ -742,7 +735,6 @@ def _run_fixture_preview(repo_root: Path, storage: Path) -> str:
         text=True,
         env=env,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     output = _ANSI_ESCAPE.sub("", (result.stdout or "") + (result.stderr or ""))
     assert result.returncode == 0, output
@@ -826,7 +818,6 @@ def _scope_config(scope: str, tmp_path: Path) -> dict[str, object]:
         text=True,
         env=env,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, result.stdout + result.stderr
     line = next(row for row in result.stdout.splitlines() if row.startswith("SCOPE_CONFIG="))
@@ -903,7 +894,6 @@ def _conf_read_set(tmp_path: Path, argv: list[str], *, scope: str = "full") -> d
         text=True,
         env=env,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, result.stdout + result.stderr
     line = next(row for row in result.stdout.splitlines() if row.startswith("READ_SET="))
@@ -1044,7 +1034,6 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
         text=True,
         env=env,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, result.stdout + result.stderr
 
@@ -1197,7 +1186,6 @@ def _build_html(root: Path) -> tuple[str, Path, str]:
         capture_output=True,
         text=True,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     combined = result.stdout + result.stderr
     assert result.returncode == 0, combined

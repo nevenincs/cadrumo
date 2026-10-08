@@ -29,7 +29,7 @@ from __future__ import annotations
 import hashlib
 import os
 import shutil
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Literal
@@ -41,6 +41,7 @@ from ._paths import REPO_ROOT, UTF_8
 __all__ = [
     "content_digest",
     "ignored_paths",
+    "member_content_digest",
     "normalised_content",
     "normalised_contents",
     "repository_files",
@@ -258,11 +259,21 @@ def content_digest(root: Path, files: Sequence[str]) -> str:
     with the same digest hold the same files with the same committed bytes.
     """
     rules = _attribute_rules(root, files)
+    return member_content_digest(files, lambda relative: normalised_content(root, relative, attributes=rules))
+
+
+def member_content_digest(files: Sequence[str], read_bytes: Callable[[str], bytes]) -> str:
+    """Name exact member bytes with the repository's source identity framing.
+
+    Live source callers normalize through ``content_digest``. Captured trees
+    and archives already contain their chosen bytes and must not apply a
+    potentially changed attribute policy for a second time.
+    """
     digest = hashlib.sha256()
     for relative in sorted(files):
         digest.update(relative.encode(UTF_8))
         digest.update(b"\0")
-        digest.update(hashlib.sha256(normalised_content(root, relative, attributes=rules)).digest())
+        digest.update(hashlib.sha256(read_bytes(relative)).digest())
         digest.update(b"\n")
     return digest.hexdigest()
 

@@ -3072,6 +3072,7 @@
         "cadrumo.entrypoints.runtime.bootstrap_reset",
         "cadrumo.entrypoints.runtime.enrollment_connections",
         "cadrumo.entrypoints.runtime.enrollment_offer",
+        "cadrumo.entrypoints.runtime.lifecycle_guard",
         "cadrumo.entrypoints.runtime.linux_worker_guardian",
         "cadrumo.entrypoints.runtime.macos_worker_guardian",
         "cadrumo.entrypoints.runtime.main",

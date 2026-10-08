@@ -39,6 +39,7 @@ from grimp.exceptions import GrimpException
 
 from dev._paths import REPO_ROOT
 from dev.docs.sequences.verdict_cache import engine_import_closure
+from dev.first_party_source import DEVELOPMENT_TOOLING, HARNESS_PACKAGE, PACKAGING_HOOKS, PRODUCT_PACKAGE
 
 __all__ = [
     "CHANGE_CLASS_RULES",
@@ -372,7 +373,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     arguments = parser.parse_args(argv)
     if arguments.changed_files is None:
         scope = ChangeScope(
-            targets=("src/cadrumo", "src/cadrumo_harness", "dev", "native", "packaging"),
+            targets=(PRODUCT_PACKAGE, HARNESS_PACKAGE, DEVELOPMENT_TOOLING, "native", PACKAGING_HOOKS),
             ci_contracts=True,
             sequence_goldens=True,
             too_broad=False,

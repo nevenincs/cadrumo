@@ -249,7 +249,9 @@ def test_declaration_list_families_cover_the_live_producer_vocabularies() -> Non
     from cadrumo.entrypoints.tui.declarations.portfolio_rendering import DECLARATION_GROUP_LOCALE_KEYS
     from cadrumo.entrypoints.tui.declarations.row_words import row_lines
 
-    producer = ast.parse(inspect.getsource(declaration_list_rows))
+    producer_module = inspect.getmodule(declaration_list_rows)
+    assert producer_module is not None
+    producer = ast.parse(inspect.getsource(producer_module))
     states = {member.value for member in DeclarationSummaryState}
     for node in ast.walk(producer):
         if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "state" for t in node.targets):
@@ -538,7 +540,14 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # Registered reads materialize translated projections within a with-block
         # using the exact request language. ContextVar settings are restored before
         # the result leaves the worker; no CLI callback owns these read scopes.
-        ("application/user_profile/view_operation.py", "read_profile_view_page"),
+        ("application/user_profile/view_reader.py", "read_profile_view_page"),
+        ("application/modelo/query_read_operation.py", "_read_requires"),
+        ("application/modelo/query_read_operation.py", "read_modelo_readiness"),
+        ("application/modelo/wizard_attempt_operation.py", "follow_up"),
+        ("application/modelo/wizard_context_operation.py", "discover"),
+        ("application/overview/pipeline_operation.py", "_capture_overview_pipeline"),
+        ("application/overview/read_operation.py", "_capture"),
+        ("application/review/read_operation.py", "_capture"),
         ("entrypoints/runtime/operation_host.py", "capture"),
     },
 )
@@ -562,7 +571,14 @@ _CTX_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
 # stored/transported values. Pin the with-block as well as the defining site.
 _PROJECTION_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
     {
-        ("application/user_profile/view_operation.py", "read_profile_view_page"),
+        ("application/user_profile/view_reader.py", "read_profile_view_page"),
+        ("application/modelo/query_read_operation.py", "_read_requires"),
+        ("application/modelo/query_read_operation.py", "read_modelo_readiness"),
+        ("application/modelo/wizard_attempt_operation.py", "follow_up"),
+        ("application/modelo/wizard_context_operation.py", "discover"),
+        ("application/overview/pipeline_operation.py", "_capture_overview_pipeline"),
+        ("application/overview/read_operation.py", "_capture"),
+        ("application/review/read_operation.py", "_capture"),
         ("entrypoints/runtime/operation_host.py", "capture"),
     }
 )

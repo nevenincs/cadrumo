@@ -95,11 +95,9 @@ def _budget_constants(tree: ast.Module) -> frozenset[str]:
     return frozenset(names)
 
 
-#: Calls that read a clock. A constant named for seconds is a TIME budget only
-#: in a module that measures time -- ``test_ci_workflow.py`` declares
-#: ``_HARNESS_WALL_CEILING_SECONDS`` and asserts it against a recipe string and
-#: an ini value, which is configuration agreement and not a measurement, so
-#: requiring both conditions is what keeps this rule from reporting it.
+#: Calls that read a clock. A constant named for seconds can describe
+#: configuration alone. Requiring a clock read prevents configuration
+#: agreement assertions from being treated as performance measurements.
 _CLOCK_READS: Final[frozenset[str]] = frozenset({"process_time", "perf_counter", "monotonic"})
 
 #: The canonical home for load-immune measurement. A module that imports from

@@ -238,7 +238,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "188eab579e6d21e60fbc7bf28ce7afa0b9ec7e40cc5a65782a76467cbb01ef93"
+          "value": "bc62c76cc9d86a02cce13064fe9be6688f3246205d5c6949c75336bfde789229"
         }
       ],
       "envelope": {
@@ -308,7 +308,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "188eab579e6d21e60fbc7bf28ce7afa0b9ec7e40cc5a65782a76467cbb01ef93",
+          "calculation_revision_id": "bc62c76cc9d86a02cce13064fe9be6688f3246205d5c6949c75336bfde789229",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -415,7 +415,7 @@
             "83": "0",
             "84": "0",
             "86": "0",
-            "88": "0",
+            "88": "0.00",
             "89": "0",
             "90": "0",
             "91": "0",
@@ -653,7 +653,7 @@
             {"absent_by_design":false,"casilla_id":"83","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"84","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"86","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"88","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"88","formula_id":"modelo-303-volumen-operaciones-anual","legal_refs":["ley-37-1992:art-121","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"subtract","operand_casilla_refs":["80","81","93","94","83","84","125","126","127","128","86","95","96","97","98","79","99"],"operand_refs":["80","81","93","94","83","84","125","126","127","128","86","95","96","97","98","79","99"],"operand_values":["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],"source_refs":["boe-modelo-303-2026-form-pdf","aeat-dr-303-2026"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"89","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"90","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"91","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
@@ -876,7 +876,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 188eab579e6d21e60fbc7bf28ce7afa0b9ec7e40cc5a65782a76467cbb01ef93 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision bc62c76cc9d86a02cce13064fe9be6688f3246205d5c6949c75336bfde789229 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -937,7 +937,7 @@
         "modelo",
         "work",
         "verify",
-        "188eab579e6d21e60fbc7bf28ce7afa0b9ec7e40cc5a65782a76467cbb01ef93"
+        "bc62c76cc9d86a02cce13064fe9be6688f3246205d5c6949c75336bfde789229"
       ],
       "captures": [],
       "envelope": {
@@ -971,7 +971,7 @@
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
               "severity": "warning",
               "source_kind_code": "output_iva_evidence",
-              "source_refs": "aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late"
+              "source_refs": "aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late, boe-modelo-303-2026-form-pdf"
             },
             "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
             "severity": "warning"
@@ -985,7 +985,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "188eab579e6d21e60fbc7bf28ce7afa0b9ec7e40cc5a65782a76467cbb01ef93",
+          "calculation_revision_id": "bc62c76cc9d86a02cce13064fe9be6688f3246205d5c6949c75336bfde789229",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1020,7 +1020,8 @@
                 "boe-modelo-303-2008-form",
                 "aeat-dr-303-2026",
                 "aeat-dr-303-2024-early",
-                "aeat-dr-303-2024-late"
+                "aeat-dr-303-2024-late",
+                "boe-modelo-303-2026-form-pdf"
               ]
             }
           ],
@@ -1035,7 +1036,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "953ee6c43fe7001b6a7f8f5576c628aed530fe10e39cee9511f34f6d0ce60f6c",
+          "verification_report_id": "9751c34cc633278a47454f26d2569c347a6b751a3129b92b97c9a6f807569b31",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1067,7 +1068,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.file\nfiling_record_id\ta41912731ea90dd576d47a9b196b6713acfe3c2ed96cd5c5ed52e686bfbef2c5\nwork_unit_id\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\ncalculation_revision_id\t188eab579e6d21e60fbc7bf28ce7afa0b9ec7e40cc5a65782a76467cbb01ef93\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.file\nfiling_record_id\t9d8e5980141242a91b7409f17c975e17f63f199630e07dfba90b9d977b04ece9\nwork_unit_id\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\ncalculation_revision_id\tbc62c76cc9d86a02cce13064fe9be6688f3246205d5c6949c75336bfde789229\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -1124,10 +1125,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "9eecb109ee414a80452fecd588d830633251d9f7534a2346ede87af19e7022d3",
+          "bucket_event_id": "89692482a9ca23867fe1a7e22ba5b410cb31c4fb11938d5770a3c590b21207a9",
           "bucket_id": "<bucket-id>",
           "byte_size": 2948,
-          "calculation_revision_id": "188eab579e6d21e60fbc7bf28ce7afa0b9ec7e40cc5a65782a76467cbb01ef93",
+          "calculation_revision_id": "bc62c76cc9d86a02cce13064fe9be6688f3246205d5c6949c75336bfde789229",
           "file_sha256": "310281eedac7a2d810c82addcf66519d9a522aad42908c40d9739311bf5fb16a",
           "filing_year": 2026,
           "format": "fichero-boe",

@@ -10,6 +10,7 @@ from typing import Final
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.logging import get_logger
 from dev._paths import UTF_8
+from dev.first_party_source import is_test_source
 from dev.quality.unread_inputs import report_unread
 
 from ._ast_key_calls import _extract_error_constructor_keys
@@ -43,7 +44,7 @@ def declares_locale_keys(module: Path) -> bool:
     """
     if module.name in _UNSCANNED_MODULE_NAMES:
         return False
-    return not (module.name.startswith("test_") or module.name.startswith("_test_") or "/tests/" in module.as_posix())
+    return not is_test_source(module, root=Path(module.anchor))
 
 
 def _parse_module_source(source: str, filename: str) -> ast.Module | None:

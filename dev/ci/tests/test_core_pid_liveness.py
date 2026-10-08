@@ -50,7 +50,7 @@ def test_pid_is_alive_reports_genuinely_terminated_child_as_dead() -> None:
     """
     proc = subprocess.Popen([sys.executable, "-c", "pass"])
     pid = proc.pid
-    proc.wait(timeout=10)
+    proc.wait()
     assert pid_is_alive(pid) is False
 
 

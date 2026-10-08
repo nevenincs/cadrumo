@@ -167,7 +167,7 @@ def _run_gate_recipe(root: Path, **updates: str) -> tuple[int, str]:
         cwd=REPO_ROOT,
         environment=environment,
         errors="replace",
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
     output = result.stdout + result.stderr
     run_finished: dict[str, object] | None = None

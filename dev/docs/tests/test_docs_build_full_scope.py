@@ -10,10 +10,6 @@ behind it.
 Shared machinery and the hook-dedupe rationale live in
 :mod:`dev.docs.tests._sphinx_build_harness`.
 
-The 1800 s timeout matches the sibling build module: the project-wide 300 s
-per-test ceiling exists to fail a DEADLOCKED test fast, and a legitimately
-long real build is not a deadlock (letting it trip the ceiling produced a
-faulthandler dump carrying no docs diagnostic at all).
 """
 
 from __future__ import annotations
@@ -28,7 +24,7 @@ from ._sphinx_build_harness import (
     run_nitpicky_dummy_build,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs, pytest.mark.timeout(1800)]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 
 def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:

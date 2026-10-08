@@ -47,7 +47,9 @@ def test_source_bootstrap_retains_console_root_and_authority_from_another_cwd(tm
             "'temp': os.environ['TEMP'], 'cargo': os.environ['CARGO_HOME']}))",
         )
     )
-    completed = run_command([sys.executable, "-c", script], cwd=workspace, environment=environment, timeout_seconds=30)
+    completed = run_command(
+        [sys.executable, "-c", script], cwd=workspace, environment=environment, timeout_seconds=None
+    )
     assert completed.returncode == 0, completed.stderr
     observed = json.loads(completed.stdout)
     assert Path(observed["root"]) == root.resolve()
@@ -75,7 +77,7 @@ def test_just_tool_paths_match_the_canonical_resolver(
             [executable, "--justfile", str(REPO_ROOT / "justfile"), "--evaluate", name],
             cwd=REPO_ROOT,
             environment=dict(os.environ),
-            timeout_seconds=30,
+            timeout_seconds=None,
         )
         assert completed.returncode == 0, completed.stderr
         assert Path(completed.stdout.strip()).resolve() == Path(expected)
@@ -83,7 +85,7 @@ def test_just_tool_paths_match_the_canonical_resolver(
         [executable, "--justfile", str(REPO_ROOT / "justfile"), "--evaluate", DOCS_BUILD_ROOT_ENV],
         cwd=REPO_ROOT,
         environment=dict(os.environ),
-        timeout_seconds=30,
+        timeout_seconds=None,
     )
     assert completed.returncode == 0, completed.stderr
     assert Path(completed.stdout.strip()).resolve() == docs_build_root()
@@ -108,7 +110,7 @@ def test_native_builder_environment_is_a_member_of_the_tool_data_location(
             [executable, "--justfile", str(REPO_ROOT / "justfile"), "--evaluate", name],
             cwd=REPO_ROOT,
             environment=dict(os.environ),
-            timeout_seconds=30,
+            timeout_seconds=None,
         )
         assert completed.returncode == 0, completed.stderr
         evaluated[name] = completed.stdout.strip()

@@ -338,6 +338,10 @@ def refresh_sequences(
             continue  # all-@static: nothing runs, so there is no golden to write
         try:
             with _sequence_progress_scope(item.page), _execute_in_fresh_sandbox(item.sequence) as transcript:
+                expectation_problems = evaluate_expectations(item.sequence, transcript, page=item.page)
+                if expectation_problems:
+                    all_problems.extend(expectation_problems)
+                    continue
                 evidence_problems = validate_live_export_evidence(transcript, page=item.page)
                 if evidence_problems:
                     all_problems.extend(evidence_problems)
@@ -448,7 +452,7 @@ def _positive_finite_timeout(value: str) -> float:
     return timeout
 
 
-def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
+def _run_check_child(command: list[str], *, timeout: float | None) -> tuple[str, ...]:
     """Run one check child; return its report tuple (empty on a clean pass).
 
     Raises:
@@ -469,6 +473,8 @@ def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
                 timeout_seconds=timeout,
             )
         except subprocess.TimeoutExpired as exc:
+            if timeout is None:
+                raise
             raise SequenceEngineError(_timeout_progress_diagnostic(journal, timeout=timeout)) from exc
     if result.returncode == 0:
         return ()
@@ -503,7 +509,7 @@ def _check_pages_in_subprocesses(
     docs_root: Path | None,
     goldens_root: Path | None,
     jobs: int,
-    timeout: float,
+    timeout: float | None,
     coherence: bool = False,
 ) -> tuple[str, ...]:
     """Shard the unscoped check across page-scoped children, ``jobs`` at a time.
@@ -551,7 +557,7 @@ def check_sequences_in_subprocess(
     goldens_root: Path | None = None,
     page: str | None = None,
     sequence_id: str | None = None,
-    timeout: float = 3600,
+    timeout: float | None = None,
     jobs: int = 1,
 ) -> tuple[str, ...]:
     """Run the golden check in fresh English-pinned interpreter(s).
@@ -567,6 +573,9 @@ def check_sequences_in_subprocess(
     run as concurrent page-scoped children (each sequence keeps its own fresh
     hermetic sandbox, so execution is unchanged — only the scheduling is).
     A scoped call, or ``jobs=1``, keeps the single-child path.
+
+    Children run to completion unless the caller explicitly supplies an
+    elapsed-time deadline; correctness does not depend on host speed.
 
     Returns:
         An empty tuple on success, or the complete child diagnostic report(s)
@@ -602,7 +611,7 @@ def check_page_coherence_in_subprocess(
     *,
     docs_root: Path | None = None,
     page: str | None = None,
-    timeout: float = 3600,
+    timeout: float | None = None,
     jobs: int = 1,
 ) -> tuple[str, ...]:
     """Run the page-coherence tier in English-pinned child interpreter(s).
@@ -612,6 +621,9 @@ def check_page_coherence_in_subprocess(
     coherence is a strictly page-scoped property (one sandbox per page, state
     accumulating only within the page), so pages are independent and shard
     cleanly.
+
+    Children run to completion unless the caller explicitly supplies an
+    elapsed-time deadline.
 
     Returns:
         An empty tuple on success, or the complete diagnostic report(s).

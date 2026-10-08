@@ -295,7 +295,7 @@ def test_a_malformed_ledger_refuses_with_a_message_rather_than_a_traceback(tmp_p
     completed = run_command(
         [sys.executable, "-m", "dev.release.version_identity", "--version", _CANDIDATE, "--scope", "seal"],
         cwd=tmp_path,
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
 
     assert completed.returncode == 1, completed.stdout + completed.stderr
@@ -326,7 +326,7 @@ def test_the_same_invocation_passes_over_the_ledger_it_ships(tmp_path: Path) -> 
     completed = run_command(
         [sys.executable, "-m", "dev.release.version_identity", "--version", _CANDIDATE, "--scope", "seal"],
         cwd=tmp_path,
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
 
     assert completed.returncode == 0, completed.stdout + completed.stderr

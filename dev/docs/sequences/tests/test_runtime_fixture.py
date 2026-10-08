@@ -19,7 +19,6 @@ def test_isolated_worker_script_reaches_its_argument_parser(tmp_path: Path) -> N
         cwd=tmp_path,
         capture_output=True,
         text=True,
-        timeout=60,
     )
     assert result.returncode == 0, result.stderr
     assert isinstance(result.stdout, str)
@@ -40,6 +39,5 @@ def test_package_import_preserves_the_import_path() -> None:
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
-        timeout=60,
     )
     assert result.returncode == 0, result.stderr

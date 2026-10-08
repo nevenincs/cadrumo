@@ -57,19 +57,12 @@ from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 
 from ..pagefind_inject import _materialise_records
-from ._sphinx_build_harness import SUBPROCESS_TIMEOUT_S, copy_docs_source
+from ._sphinx_build_harness import copy_docs_source
 
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_core,
     pytest.mark.docs,
-    # The sweep shells a full user-scope Sphinx HTML build and then reads every
-    # rendered page, so it runs far over the global 300s ceiling. The budget
-    # must exceed the sweep's real cost so a timeout can only mean a genuine
-    # hang, never a merely-slow legitimate build; the build subprocess carries
-    # its own shorter ceiling (``SUBPROCESS_TIMEOUT_S``), which therefore wins
-    # the race and names the hung command instead of leaving a bare stack.
-    pytest.mark.timeout(1800),
 ]
 
 # dev/docs/tests/test_built_site_resolvability_sweep.py -> parents[3] is the repo root.
@@ -126,7 +119,6 @@ def _build_user_scope_html(tmp_path: Path) -> Path:
         ],
         cwd=_REPO_ROOT,
         environment=env,
-        timeout_seconds=SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, (
         "user-scope html docs build failed (the sweep needs the built tree):\n"

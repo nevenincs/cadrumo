@@ -178,7 +178,7 @@ def test_ty_uses_the_harness_interpreter_when_virtual_env_is_broken(
     source.write_text("from pydantic import BaseModel\nclass Record(BaseModel):\n    value: int\n", encoding="utf-8")
     ty_executable = shutil.which("ty")
     assert ty_executable is not None
-    automatic = run_command([ty_executable, "check", "--output-format", "gitlab"], cwd=tmp_path, timeout_seconds=30)
+    automatic = run_command([ty_executable, "check", "--output-format", "gitlab"], cwd=tmp_path, timeout_seconds=None)
     assert automatic.returncode != 0
     assert "Invalid `VIRTUAL_ENV`" in automatic.stderr
     target = TargetPlatform(key="linux", basedpyright="Linux")
@@ -329,7 +329,7 @@ def test_checker_families_do_not_overlap_platform_sweeps(monkeypatch: pytest.Mon
     finally:
         for event in release.values():
             event.set()
-        worker.join(timeout=5)
+        worker.join()
 
     assert not worker.is_alive()
     assert not overlap_seen

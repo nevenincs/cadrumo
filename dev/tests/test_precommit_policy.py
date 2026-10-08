@@ -26,7 +26,9 @@ def test_setup_has_no_git_hook_installer_or_git_configuration_mutation() -> None
     justfile = (REPO_ROOT / "justfile").read_text(encoding="utf-8")
     setup = _recipe_body(justfile, "setup")
     commands = f"{setup}\n{_recipe_body(justfile, 'init')}"
-    assert "uv sync" in setup
+    assert "python -m dev.init all" in setup
+    initializer = (REPO_ROOT / "dev/init/plan.py").read_text(encoding="utf-8")
+    assert '"sync"' in initializer
     assert "prek install" not in commands
     assert "pre-commit install" not in commands
     assert "git config" not in commands

@@ -47,9 +47,8 @@ def _lane_paths() -> tuple[Path, ...]:
     justfile = (REPO_ROOT / "justfile").read_text(encoding="utf-8")
     selecting = [line for line in executed_lines(justfile) if f"-m {_MARKER}" in line and "pytest" in line]
     assert selecting, "no recipe selects the os_keychain marker; this gate would measure nothing"
-    assert len(selecting) == 1, f"expected exactly one os_keychain selector, found {len(selecting)}"
-    tokens = [token for token in selecting[0].split() if token.startswith("src/")]
-    assert tokens, f"the os_keychain selector names no paths: {selecting[0].strip()}"
+    tokens = list(dict.fromkeys(token for line in selecting for token in line.split() if token.startswith("src/")))
+    assert tokens, "the os_keychain selectors name no package paths"
     return tuple(REPO_ROOT / token for token in tokens)
 
 

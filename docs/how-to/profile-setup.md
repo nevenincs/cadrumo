@@ -46,8 +46,8 @@ to the profile already selected. The refusal is deliberate - guessing which
 taxpayer you meant is how filings end up under the wrong one.
 
 Log out with `aeat config logout` when you finish. Logout closes the storage
-session and clears the active profile, so log in again by name. It deletes
-nothing.
+session and keeps the selected profile. Log in again by name to reopen its
+session. It deletes nothing.
 
 ## Decide your facts before you start
 

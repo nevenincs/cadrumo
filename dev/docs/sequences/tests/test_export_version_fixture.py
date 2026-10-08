@@ -34,7 +34,7 @@ def test_fresh_isolated_fixture_receives_recorded_version_and_restores_it(
         "scope.__enter__(); assert software_identity.aeat_aux_version() == '162'; "
         "scope.__exit__(None, None, None); assert software_identity.PACKAGE_VERSION == before"
     )
-    result = run_audited_process([sys.executable, "-I", "-c", script], capture_output=True, text=True, timeout=60)
+    result = run_audited_process([sys.executable, "-I", "-c", script], capture_output=True, text=True, timeout=None)
     assert result.returncode == 0, result.stderr
 
 

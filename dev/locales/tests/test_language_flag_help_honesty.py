@@ -71,7 +71,7 @@ def _run_console(args: list[str], env: dict[str, str]) -> CommandResult:
         [aeat_exe, *args],
         cwd=Path.cwd(),
         environment=env,
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
 
 

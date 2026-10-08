@@ -72,8 +72,10 @@ _BLOCKER_LABEL: Final = "priority:P0-blocker"
 _GH_TIMEOUT_SECONDS: Final = 15
 _PROJECT_NAME_PATHS: Final = (
     (Path("pyproject.toml"), PRODUCT_IDENTITY.distribution),
-    (Path("packaging/cadrumo_data_manuals/pyproject.toml"), PRODUCT_IDENTITY.companion_distributions[0]),
-    (Path("packaging/cadrumo_data_official/pyproject.toml"), PRODUCT_IDENTITY.companion_distributions[1]),
+    *(
+        (Path("packaging") / distribution.replace("-", "_") / "pyproject.toml", distribution)
+        for distribution in PRODUCT_IDENTITY.companion_distributions
+    ),
 )
 
 
@@ -129,11 +131,7 @@ def _check_scoop_cohort_bindings(
         )
         if str(scoop.get("version")) != version:
             failures.append(f"scoop version {scoop.get('version')!r} != cohort {version!r}")
-        expected_hashes = [
-            python_sha["cadrumo"],
-            python_sha["cadrumo-data-manuals"],
-            python_sha["cadrumo-data-official"],
-        ]
+        expected_hashes = [python_sha[distribution] for distribution in PRODUCT_IDENTITY.cohort_distributions]
         scoop_architecture = _require_json_object(scoop.get("architecture"), surface="scoop architecture")
         scoop_64bit = _require_json_object(scoop_architecture.get("64bit"), surface="scoop 64bit architecture")
         actual_hashes = scoop_64bit.get("hash")
@@ -239,7 +237,7 @@ def _read_project_name(project_file: Path) -> str:
 
 
 def check_project_names_are_canonical(repo_root: Path) -> ReadinessCheck:
-    """Require the root and both companion distributions to use the Cadrumo tuple."""
+    """Require the root and every companion distribution to use the Cadrumo tuple."""
     observed = tuple(
         (relative, _read_project_name(repo_root / relative), expected) for relative, expected in _PROJECT_NAME_PATHS
     )

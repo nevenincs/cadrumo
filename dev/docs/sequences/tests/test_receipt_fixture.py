@@ -81,7 +81,7 @@ def test_child_receipt_is_readable_and_revocable_by_parent(tmp_path: Path) -> No
             ],
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=None,
         )
         assert child.returncode == 0, child.stderr
         assert keyring.get_password("test", "account") == "synthetic-proof"

@@ -98,6 +98,10 @@ class _AdmissionClient(RuntimeFrontendClient):
     def close(self) -> None:
         self.closed = True
 
+    @override
+    def resume_receipt(self, *, timeout: float = 20) -> RuntimeProfileStatus:
+        raise RuntimeFrontendRefusedError("profile_session_absent")
+
 
 class _AdmittedRoot(App[None]):
     """A public Home marker for the separate root callback contract."""
@@ -111,11 +115,15 @@ class _AdmittedRoot(App[None]):
 async def test_admission_autopilot_transfers_exact_login_before_running_separate_root() -> None:
     first, selected = uuid4(), uuid4()
     client = _AdmissionClient(selected)
+    receipt_probe = _AdmissionClient(selected)
+    openings = 0
     workflows: list[object] = []
 
     async def open_client(profile_id: UUID) -> RuntimeFrontendClient:
+        nonlocal openings
         assert profile_id == selected
-        return client
+        openings += 1
+        return receipt_probe if openings == 1 else client
 
     async def workflow(pilot) -> None:
         assert isinstance(pilot.app, _AdmittedRoot)
@@ -144,6 +152,7 @@ async def test_admission_autopilot_transfers_exact_login_before_running_separate
             assert workflows == [root]
             assert not client.closed
     assert client.closed
+    assert receipt_probe.closed
 
 
 @pytest.mark.asyncio
@@ -165,7 +174,9 @@ async def test_admission_autopilot_refusal_never_runs_workflow_and_closes_login_
                 choices=(ProfileLoginChoice(profile_id=str(selected), label="Selected"),),
                 open_client=open_client,
                 headless=True,
-                auto_pilot=admitted_session_autopilot(passphrase=_ADMISSION_SECRET, drive_after_home=workflow, polls=3),
+                auto_pilot=admitted_session_autopilot(
+                    passphrase=_ADMISSION_SECRET, drive_after_home=workflow, polls=30
+                ),
             ):
                 pytest.fail("a refused login must never transfer ownership")
     assert client.password_calls == 1

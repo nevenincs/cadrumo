@@ -82,6 +82,12 @@ _ALLOWED_SDIST_FILES = frozenset(
         "SECURITY.md",
         "THIRD_PARTY_NOTICES.md",
         "pyproject.toml",
+        # The source distribution must rebuild publisher OAuth provisioning
+        # without borrowing the editable checkout. These exact inert package
+        # modules supply the hook's build helper; none belongs in a wheel.
+        "dev/__init__.py",
+        "dev/packaging/__init__.py",
+        "dev/packaging/google_oauth.py",
     }
 )
 _ALLOWED_SDIST_PREFIXES = ("src/cadrumo/", "src/cadrumo_harness/", "packaging/authority/")
@@ -420,6 +426,15 @@ def test_distributions_ship_only_the_product_package(
     )
     for archive_kind, offenders in unexpected_by_archive:
         assert not offenders, f"{archive_kind} delivers members outside the fixed product policy: {offenders[:10]!r}"
+
+
+def test_oauth_build_source_admission_does_not_admit_other_development_modules() -> None:
+    """The three rebuild dependencies cannot turn into a development package allowance."""
+    helpers = frozenset({"dev/__init__.py", "dev/packaging/__init__.py", "dev/packaging/google_oauth.py"})
+    assert _unexpected_sdist_members(helpers) == []
+    stranger = "dev/packaging/release_cohort.py"
+    assert _unexpected_sdist_members(helpers | {stranger}) == [stranger]
+    assert _unexpected_wheel_members(helpers) == sorted(helpers)
 
 
 def test_distribution_allowlist_rejects_policy_widening() -> None:

@@ -28,20 +28,10 @@ from dev._paths import REPO_ROOT
 
 from ..i18n import TARGET_LANGUAGES, extract_pot, user_scope_source_pages
 
-#: The 1800 s ceiling matches every sibling Sphinx-shelling docs gate. It is not
-#: a speed budget: the project-wide 300 s per-test ceiling exists to fail a
-#: DEADLOCKED test fast, and it sits BELOW this module's 900 s subprocess bound
-#: (``dev.docs.i18n._SHELL_TIMEOUT_S``), so pytest won the race and killed the
-#: test with a faulthandler stack carrying no docs diagnostic at all - while
-#: leaving the shelled Sphinx build orphaned and still running. Raising the
-#: per-test ceiling above the subprocess bound lets the bound win and name
-#: itself, which is the whole point of having it
-#: (``dev/docs/tests/_sphinx_build_harness.py`` records the same rationale).
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_core,
     pytest.mark.docs,
-    pytest.mark.timeout(1800),
 ]
 
 _REPO_ROOT = REPO_ROOT

@@ -245,7 +245,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "afc90d9a133360122b30e63d5fe0c87d82ce8c2d9647dcd6ec2cdaa2cbf7774c"
+          "value": "d33597344c0ae0902c0cb7a84c980d5a094ebdeb13a1c18b35fd308067b9ce92"
         }
       ],
       "envelope": {
@@ -285,7 +285,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "afc90d9a133360122b30e63d5fe0c87d82ce8c2d9647dcd6ec2cdaa2cbf7774c",
+          "calculation_revision_id": "d33597344c0ae0902c0cb7a84c980d5a094ebdeb13a1c18b35fd308067b9ce92",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -421,7 +421,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision afc90d9a133360122b30e63d5fe0c87d82ce8c2d9647dcd6ec2cdaa2cbf7774c (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision d33597344c0ae0902c0cb7a84c980d5a094ebdeb13a1c18b35fd308067b9ce92 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -482,7 +482,7 @@
         "modelo",
         "work",
         "revision",
-        "afc90d9a133360122b30e63d5fe0c87d82ce8c2d9647dcd6ec2cdaa2cbf7774c"
+        "d33597344c0ae0902c0cb7a84c980d5a094ebdeb13a1c18b35fd308067b9ce92"
       ],
       "captures": [],
       "envelope": {
@@ -506,7 +506,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "afc90d9a133360122b30e63d5fe0c87d82ce8c2d9647dcd6ec2cdaa2cbf7774c",
+          "calculation_revision_id": "d33597344c0ae0902c0cb7a84c980d5a094ebdeb13a1c18b35fd308067b9ce92",
           "casilla_values": {
             "01": "1000",
             "02": "500",

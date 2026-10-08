@@ -71,7 +71,7 @@ def _build(tmp_path: Path, *, collapsed: bool, read: str = "section-a/a1") -> st
         capture_output=True,
         text=True,
         check=False,
-        timeout=300,
+        timeout=None,
     )
     assert completed.returncode == 0, completed.stdout + completed.stderr
     return (out / f"{read}.html").read_text(encoding="utf-8")

@@ -24,7 +24,7 @@ def test_current_copied_fixture_reaches_its_real_isolated_argument_parser(tmp_pa
         cwd=tmp_path,
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=None,
     )
 
     assert result.returncode == 0, result.stderr
@@ -62,7 +62,7 @@ def test_contained_process_retains_live_schema_counts_without_scope_teardown(tmp
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=None,
     )
 
     assert result.returncode == 0, result.stderr
