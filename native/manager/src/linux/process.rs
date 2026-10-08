@@ -5,6 +5,7 @@ use std::{
     fs,
     io::{self, Read},
     os::fd::{AsRawFd, FromRawFd, OwnedFd},
+    os::unix::net::UnixStream,
     path::PathBuf,
 };
 
@@ -23,6 +24,88 @@ pub struct Identity {
 }
 
 impl Process {
+    pub fn pid(&self) -> u32 {
+        self.pid
+    }
+
+    /// Bind the actual connected peer using a kernel-returned pidfd. Opening a
+    /// numeric SO_PEERCRED PID separately would permit exit/PID-reuse races.
+    pub fn peer(stream: &UnixStream) -> io::Result<Self> {
+        let mut descriptor = -1i32;
+        let mut length = std::mem::size_of_val(&descriptor) as libc::socklen_t;
+        // SAFETY: output points to a descriptor-sized writable region; stream
+        // remains owned throughout this native peer observation.
+        let status = unsafe {
+            libc::getsockopt(
+                stream.as_raw_fd(),
+                libc::SOL_SOCKET,
+                libc::SO_PEERPIDFD,
+                (&mut descriptor as *mut i32).cast(),
+                &mut length,
+            )
+        };
+        if status != 0 {
+            return Err(io::Error::last_os_error());
+        }
+        if descriptor < 0 {
+            return Err(io::ErrorKind::InvalidData.into());
+        }
+        // SAFETY: a successful SO_PEERPIDFD call transfers a fresh descriptor.
+        let descriptor = unsafe { OwnedFd::from_raw_fd(descriptor) };
+        if length as usize != std::mem::size_of::<i32>() {
+            return Err(io::ErrorKind::InvalidData.into());
+        }
+        // SAFETY: this owned descriptor must not leak into launched children.
+        if unsafe { libc::fcntl(descriptor.as_raw_fd(), libc::F_SETFD, libc::FD_CLOEXEC) } < 0 {
+            return Err(io::Error::last_os_error());
+        }
+        let information = bounded(PathBuf::from(format!(
+            "/proc/self/fdinfo/{}",
+            descriptor.as_raw_fd()
+        )))?;
+        let mut pids = information
+            .lines()
+            .filter_map(|line| line.strip_prefix("Pid:"));
+        let pid = pids
+            .next()
+            .and_then(|value| value.trim().parse::<u32>().ok())
+            .filter(|pid| *pid > 0)
+            .ok_or(io::ErrorKind::InvalidData)?;
+        if pids.next().is_some() {
+            return Err(io::ErrorKind::InvalidData.into());
+        }
+        let process = Self { descriptor, pid };
+        process.require_alive()?;
+        let mut credentials = libc::ucred {
+            pid: 0,
+            uid: 0,
+            gid: 0,
+        };
+        let mut length = std::mem::size_of_val(&credentials) as libc::socklen_t;
+        // SAFETY: initialized native credential output and its exact writable bound.
+        let status = unsafe {
+            libc::getsockopt(
+                stream.as_raw_fd(),
+                libc::SOL_SOCKET,
+                libc::SO_PEERCRED,
+                (&mut credentials as *mut libc::ucred).cast(),
+                &mut length,
+            )
+        };
+        if status != 0 {
+            return Err(io::Error::last_os_error());
+        }
+        let identity = process.identity()?;
+        if length as usize != std::mem::size_of::<libc::ucred>()
+            || u32::try_from(credentials.pid).ok() != Some(pid)
+            || credentials.uid != identity.uid
+        {
+            return Err(io::ErrorKind::PermissionDenied.into());
+        }
+        process.require_alive()?;
+        Ok(process)
+    }
+
     pub fn open(pid: u32) -> io::Result<Self> {
         let pid = i32::try_from(pid)
             .ok()
@@ -167,6 +250,26 @@ fn credentials(status: &str) -> io::Result<(u32, bool)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn connected_peer_is_held_by_the_kernel_and_not_inherited() {
+        let (left, _right) = UnixStream::pair().unwrap();
+        let peer = Process::peer(&left).unwrap();
+        assert_eq!(peer.pid, std::process::id());
+        assert_eq!(
+            peer.identity().unwrap(),
+            Process::open(std::process::id())
+                .unwrap()
+                .identity()
+                .unwrap()
+        );
+        // SAFETY: read-only descriptor flags while the peer owns its pidfd.
+        assert_ne!(
+            unsafe { libc::fcntl(peer.descriptor.as_raw_fd(), libc::F_GETFD) } & libc::FD_CLOEXEC,
+            0
+        );
+        assert!(peer.alive().unwrap());
+    }
 
     #[test]
     fn kernel_start_ticks_allow_parentheses_in_command_and_reject_missing_identity() {

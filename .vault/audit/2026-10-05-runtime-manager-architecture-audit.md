@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:15e4aa22e15b05c993aeac0912564e893072fa398ccaaf58735b6c51e5eb29ed'
+body_hash: 'sha256:bcf4909864c89d07c90be661240f7be13929e58f28107ced7505d58df1d88752'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -201,6 +201,14 @@ This is source integration evidence, not attended native acceptance. Existing hi
 ### S17 lifetime exclusion corrective review | low | Windows launch boundaries and regressions pass; native removal acceptance remains pending
 
 2026-10-08 source review traced the shared exact-package API through the new static C ABI bridge, both native interpreter hosts, and desktop startup. Production callers retain the admitted lease through OS process cleanup; tests retain normal RAII disposal. The metadata-only --version/-V shortcut now also follows admission. Explicit portable policy is required for structurally versioned unmanaged packages, and canonical native policy binds identity, manifest digest, Ready publication and native owner prefix. Windows CMake release links passed. CMake's real python.exe/python_d.exe admission tests passed (4.55s), including missing-marker refusal and metadata gating; launch_guard.rust and application.rust passed again after shared rollback changes (12.75s and 11.29s). Application/guard all-target Clippy passed; desktop backend 210 tests passed and pinned snapshot Clippy passed (6.35s). Portable installation fixtures passed 25 tests with two POSIX cases excluded by host. Linux shared API/host checks are in progress. This resolves the source defect with Windows evidence, not disposable installed-process acceptance. Review status PENDING for the full S17 step; MSI admission stays closed.
+
+### 2026-10-08 Linux native IPC foundation | low | Held kernel peer identity and bounded transport pass scoped checks
+
+S18 source foundation adds SO_PEERPIDFD peer capture with SO_PEERCRED UID/PID cross-check, CLOEXEC and held identity revalidation. Owner-only no-follow descriptor-pinned socket directories, kernel endpoint locks, exact stale-socket reclamation and inode-qualified cleanup preserve endpoint custody. Bounded nonblocking request/response frames revalidate native login session and installed-image peers through response completion. The server also retains and revalidates its own pidfd identity/session. Missing kernel or logind evidence refuses admission; no numeric-PID or environment session fallback is introduced.
+
+Pinned manylinux_2_28 x86-64 manager.rust CTest passed (17.38s) and all-target Clippy with warnings denied passed (4.88s) on normalized source snapshot 16c4a2a6357eb0399692d0fc3332bed665105dba3ef889527842a63493f11c9b. Tests exercise actual kernel peer sockets, partial/oversize frames, stale/live endpoint ownership, symlink/replacement/public-directory refusal and missing ownership. Independent source review reports no material defect in this gated foundation. No duplicate test run was required.
+
+Main activation, cross-version successor endpoint admission and attended install/login/upgrade/uninstall acceptance remain unfinished. The existing Linux manager gate remains. The proposed direct-child placement ADR is still proposed pending the user's architecture choice; these transport primitives do not change the accepted placement contract. Overall native acceptance verdict remains PENDING.
 
 ## Recommendations
 

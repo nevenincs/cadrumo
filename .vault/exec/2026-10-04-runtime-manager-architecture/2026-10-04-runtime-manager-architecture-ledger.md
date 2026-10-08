@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:9ca77aa529c4dee10ca2141e45f3187ba7194f34cbeec8e114a68dc1a86fba1d'
+body_hash: 'sha256:83985a9979cadfd89d75c970503567afea722caa76f2d3d8c7267f64f3b95e69'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -539,6 +539,13 @@ related:
 - `S17` `verify:` `Linux real host admission with SDK loader variables removed from test child (1.60s)` -> `pass`
 - `S17` `verify:` `Ruff format lint and ty launch_guard_check` -> `pass`
 - `S17` `by:` `Codex`
+- `S18` `M` `native/manager/src/linux.rs`
+- `S18` `M` `native/manager/src/linux/process.rs`
+- `S18` `A` `native/manager/src/linux/ipc.rs`
+- `S18` `M` `.vault/audit/2026-10-05-runtime-manager-architecture-audit.md`
+- `S18` `verify:` `manylinux manager.rust CTest (17.38s)` -> `pass`
+- `S18` `verify:` `manylinux manager Clippy all-targets warnings denied (4.88s)` -> `pass`
+- `S18` `verify:` `independent scoped Linux IPC source review` -> `pass`
 
 ## Notes
 
@@ -577,3 +584,4 @@ related:
 - `S16` Partial S16 checkpoint: localized notices use existing typed E-frame stream and sole writer with complete-frame flush witnesses, pre-login and restricted TUI plus human CLI consumers. One retained read-only observation worker enforces bounded StopIfIdle and rejects expired results. Legacy client to new server compatible; opted-in client to older strict server deliberately refuses without downgrade. Real installed interactive two-release notice acceptance remains outstanding; native reference-login integration was adapted/typechecked but not rerun.
 - `S18` Partial S18 portability checkpoint: canonical generated platform replaces Windows-only package inspection; integrity tests cover missing/changed inventories and incompatible target. Native Linux entry remains gated; no graphical session, install, upgrade or uninstall acceptance claimed.
 - `S17` Partial S17 corrective checkpoint; independent interpreter and desktop lifetime leases, explicit native/portable launch policy, metadata commands included. Initial Linux host test correctly refused inherited SDK `LD_` settings before reaching subject; child test environment now excludes them, production refusal unchanged. Native installed removal and two-release interactive acceptance remain pending; all MSI gates retained.
+- `S18` Partial S18 transport foundation only; main activation, cross-version cutover, placement choice and native acceptance remain open.
