@@ -24,7 +24,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
@@ -249,7 +248,7 @@ def _resolve_regularizacion_parameters(
         return resolve_bienes_inversion_regularizacion_parameters(
             context.revision,
             modelo_id=context.modelo,
-            filing_period_date=date(context.filing_year, 12, 31),
+            filing_period_date=context.period.end_date,
         )
     except BienesInversionParameterResolutionError as exc:
         # Modelo 390 revisions declare the parameter family NOT APPLICABLE,

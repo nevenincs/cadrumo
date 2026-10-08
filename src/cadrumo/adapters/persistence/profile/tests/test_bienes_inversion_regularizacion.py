@@ -615,3 +615,59 @@ def test_no_transmision_advisory_when_no_disposal_in_year() -> None:
     )
     assert projection.rows == ()
     assert diagnostic is None
+
+
+@pytest.mark.parametrize("period_token", ["01", "1T"])
+@pytest.mark.parametrize("in_window_good", [False, True])
+def test_nonempty_early_m303_register_admits_period_figures_and_preserves_definitive_prorrata_refusal(
+    tmp_path: Path,
+    period_token: str,
+    in_window_good: bool,
+) -> None:
+    """Fresh encrypted goods do not turn an in-window missing annual percentage into zero."""
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+    ):
+        period = Period.from_year_and_code(2026, period_token)
+        snapshot = operation.snapshot("303", filing_year=2026, period=period_token)
+        assert snapshot.revision.id == "2026-hasta-01-y-1t"
+        context = CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2026,
+            period=period,
+            revision=snapshot.revision,
+        )
+        record = _register().records[0]
+        if not in_window_good:
+            # The persisted good is real and validated; its regularisation window has ended.
+            record = BienInversionIvaRecord.model_validate(
+                {**record.model_dump(mode="python"), "acquisition_year": 2020},
+            )
+        repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
+        repository.add(record)
+        assert repository.load().records == (record,)
+
+        resolution = BienesInversionRegularizacionSourceResolver(
+            current_year_values={},
+            missing_current_year_casilla_ids=(_CURRENT_YEAR_PRORRATA_ID,),
+            register_repository=repository,
+            observation_repository=CalculationObservationRepository(objects=profile.repository),
+            operation=operation,
+        ).resolve(context)
+
+    target = next(casilla.id for casilla in snapshot.revision.casillas if casilla.binding == _BINDING_ID)
+    assert BindingSourceKind.BIENES_INVERSION_REGULARIZACION in resolution.owned_sources
+    if in_window_good:
+        assert _BINDING_ID in resolution.unresolved_binding_ids
+        assert _BINDING_ID not in resolution.binding_values
+        assert target not in resolution.bound_inputs_by_casilla_id
+        assert resolution.diagnostics
+        assert all("requires current-year definitive prorrata" in item.message for item in resolution.diagnostics)
+        assert all("does not resolve for filing-period date" not in item.message for item in resolution.diagnostics)
+    else:
+        assert resolution.binding_values[_BINDING_ID] == Decimal("0")
+        assert resolution.bound_inputs_by_casilla_id[target] == Decimal("0")
+        assert _BINDING_ID not in resolution.unresolved_binding_ids
+        assert resolution.diagnostics == ()

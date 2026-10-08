@@ -784,7 +784,7 @@ def _resolve_m303_export_arrivals(
     bienes_parameters = resolve_bienes_inversion_regularizacion_parameters(
         snapshot.revision,
         modelo_id=Modelo("303").value,
-        filing_period_date=date(period.filing_year, 12, 31),
+        filing_period_date=period.end_date,
     )
     definitive_by_identifier: dict[str, Decimal] = {}
     for record in bienes_register.in_window_records(period.filing_year, parameters=bienes_parameters):
