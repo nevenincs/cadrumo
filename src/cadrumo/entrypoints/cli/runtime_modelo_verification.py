@@ -37,6 +37,10 @@ from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
 from .runtime_registered_operation import run_registered_operation
 
+#: Filing checks the reviewed revision and commits its local record.
+#: Keep its settlement horizon separate from each bounded transport exchange.
+_FILING_SETTLEMENT_SECONDS = 1800.0
+
 
 def read_modelo_work_revision(
     client: RuntimeFrontendClient, request: ModeloWorkRevisionRequest, *, timeout: float = 60
@@ -126,7 +130,12 @@ def run_modelo_work_verification(
 
 
 def run_modelo_work_filing(
-    client: RuntimeFrontendClient, *, work_unit_id: str, request: ModeloWorkFileRequest, timeout: float = 60
+    client: RuntimeFrontendClient,
+    *,
+    work_unit_id: str,
+    request: ModeloWorkFileRequest,
+    timeout: float = 60,
+    settlement_timeout: float = _FILING_SETTLEMENT_SECONDS,
 ) -> RegisteredOperationCompletion[ModeloWorkFilePublicResultV2]:
     """Submit one exact reviewed revision for local filing only."""
     completed = run_registered_operation(
@@ -138,6 +147,7 @@ def run_modelo_work_filing(
         request_version=2,
         result_version=2,
         timeout=timeout,
+        settlement_timeout=settlement_timeout,
     )
     projection = completed.projection
     if (

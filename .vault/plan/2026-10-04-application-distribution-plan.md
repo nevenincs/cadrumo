@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:1c22263b858b28e9f0225ec03f31b5dd901750ad554c82be093619d7aff098d6'
+body_hash: 'sha256:9398440b102147096522909ee063fc11db329af5d07ba7c59acec4e586d6894e'
 ---
 
 # Application distribution
@@ -34,6 +34,9 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 
 2026-10-08 CMake orchestration: the operator requested integrating the installation steps into the CMake-owned flow while preserving software and acceptance gates. S11 refines that authorized build integration: the manager msi target builds the four scoped products, msi-verify checks their source/payload/artifact bindings, and check-msi-installation fails with the unresolved lifecycle and disposable-runner requirements. A read-only native MSI database query verifies actual action sequencing because WiX 5.0.2 decompilation reconstructs the registration schedule inaccurately. Neither the source launch condition nor the readiness refusal is bypassable by a CMake switch. S09, S03 and S04 remain open; compilation receipts are build evidence and are not native transaction publication or install/upgrade acceptance. Linux/macOS native backends, runner evidence and release signing/notarization remain separate prerequisites.
 
+
+2026-10-08 frozen acceptance correction: the unchanged Windows Modelo390 annual seed fails at fourth-quarter Modelo303 local filing because the registered CLI operation is still running when its shared 60-second deadline expires. Filing lacks the distinct settlement allowance already used by calculation and verification. S14 applies the existing bounded 1800-second settlement policy while retaining 60-second per-exchange bounds and existing unknown-effect/no-replay behavior. This is an in-scope installer-build blocker correction under the operator's continued implementation authorization; it introduces no transport, storage or installation authority change. The original long-work bottleneck remains unmeasured, and the separate Renta intermittent result-read failure remains unresolved.
+
 ## Steps
 
 - [x] `S01` - Generate canonical product publisher channel and platform identities for all supported targets; `src/cadrumo/core/product_identity.py and dev/packaging/native/identity.py`.
@@ -49,6 +52,7 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 - [ ] `S04` - Verify native install upgrade launch and uninstall across the supported matrix and review; `dev/packaging/tests and native package verification`.
 - [x] `S13` - Enable and verify CMake native Linux component builds with the pinned manylinux toolchain and explicit payload configuration; `CMakeLists.txt, native/cmake/ManylinuxToolchain.cmake and native/CONTRACT.md with native Linux compile and platform test evidence`.
 - [ ] `S05` - Centralize build output paths and generation ownership in CMake and remove unowned build clutter; `native/cmake, native/desktop, dev/packaging/native, dev/packaging/tests, dev/docs sequence build helpers and owning tests, and build`.
+- [ ] `S14` - Separate registered local filing settlement from the bounded exchange timeout exposed by frozen installer documentation acceptance; `src/cadrumo/entrypoints/cli/runtime_modelo_verification.py filing function only and new owning filing settlement tests, preserving independent verification changes`.
 
 ## Parallelization
 
@@ -67,6 +71,9 @@ Frozen Windows diagnostic follow-up: notice_review owns ignored payload-free tim
 
 
 Timing follow-up scheduling correction: because the Modelo390 page contains eleven long scenarios, root authorizes one Renta diagnostic concurrently in its own diagnostic-storage and diagnostic-temp. Its evidence must record concurrent Windows Modelo390 and WSL docs activity; timings establish the observed code/budget path, not isolated performance causality. Sources, golden files and deadlines remain unchanged.
+
+
+S14: linux_manager may own only the filing constant/signature/settlement forwarding in runtime_modelo_verification.py and a new test_runtime_modelo_filing_settlement.py under its owning CLI tests. Preserve the existing independent verification edits in that same module and the dirty existing error-detail tests; no broad refactor. Reuse the real registered protocol/clock test patterns with bounded policy tests. Root owns review, frozen source overlay after the current docs batch completes, native failed-sequence rerun, vault and scoped partial-hunk commit.
 
 
 ## Verification

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:4e675567f2be853a51a019d4e1382a52e4bac35ce26112bc1ff341c9f97a94d1'
+body_hash: 'sha256:ac9caafb60052e1fe4fa7d9de4ca8c225b548f5290f6f8a2d65bc5533c832ab5'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -198,6 +198,15 @@ Host preservation: the operator explicitly identifies both this Windows runner a
 
 
 Renta timing follow-up: one instrumented reproduction passes unchanged frozen sources/goldens in 238.23 seconds, with 131 observed page calls. Two revision_snapshot results each contain 997,173 bytes over 31 pages; their retrievals take 12.710/11.675 seconds from initial result budgets 42.582/40.595 seconds. Settlement polling takes about three seconds, with admission/prior exchanges consuming approximately 14.27/16.42 seconds first. Concurrent Windows Modelo390 and WSL documentation work is explicitly recorded. This successful run does not explain or fix the original 349-second deadline failure. No production changes or deadline increases follow from it; retain the ignored timing harness and result logs for a future failing run.
+
+
+### Filing settlement during frozen installer docs | medium | bounded wait corrected, native confirmation pending
+
+The frozen four-page baseline finishes with unchanged source/authority identities: Modelo036 PASS 121.85s, verification reports PASS 339.16s, Renta result-read deadline failure 349.03s, and Modelo390 FAIL 1507.39s at annual seed iva-year-2025 line52. The latter is fourth-quarter Modelo303 local filing, operation c8b97302e52383f5ddfe710b9a15df38979db2a5fded5caaca677ea3dd2b2511, reported still running with unknown effect. No failing-operation journal survives, so its slow stage and eventual publication outcome are unproved.
+
+Source trace shows filing had no separate settlement allowance: its contract/admission/start/polling shared60seconds. S14 adds a bounded1800second filing settlement default/caller override, matching existing calculation and verification policy; admission/control/observation exchanges retain60seconds. Existing settled-result collection policy remains unchanged and may use the remaining settlement horizon, so this is not a60second cap on every result page. Preserve unknown effect, operation identity and no automatic replay on wait expiry. Independent verification edits in the same source module remain unowned and unchanged.
+
+Source review PASS after correcting the synthetic successful filing fixture to UPDATED. Ten focused tests pass in3.82seconds through the real filing contract, registered loop and result-page collector, covering completion after60seconds, single submit/start, bounded admission/polling, custom/default expiry without resultread/replay, and invalid waits before transport. Scoped Ruff, formatting and ty pass. Native frozen annual-scenario confirmation remains PENDING; the controlled one-module overlay and journalled rerun are delegated to msi_maintenance. The separate intermittent Renta issue remains unresolved. Evidence: build/windows-docs-frozen-20261008/evidence/final-result.json and development test run20261008T145314.573631Z-pytest-17500-d1de8ebe/run.log.
 
 
 ## Recommendations
