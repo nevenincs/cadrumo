@@ -89,7 +89,13 @@ pub fn current_session() -> Option<String> {
             .ok()
             .map(|session| session.id)
     }
-    #[cfg(not(any(windows, target_os = "linux")))]
+    #[cfg(target_os = "macos")]
+    {
+        crate::session::ManagerSession::current()
+            .ok()
+            .map(|session| session.session)
+    }
+    #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
     {
         None
     }

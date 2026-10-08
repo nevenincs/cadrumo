@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:e39c1c72acafa9d886bcf126323f666497fc82aca015ba531f135c953a2a23d8'
+body_hash: 'sha256:6aaedc57a4c803b761b18eb0581929a86b51737e27b8344da2bb590c32d106b1'
 ---
 
 # `runtime-manager-architecture` plan
@@ -161,6 +161,7 @@ B5 initial checkpoint (2026-10-05, shared working tree): `SupervisedController._
 
 Darwin IPC continuation: the existing linux_manager worker also owns the narrow platform-neutral bounded framing extraction into native/manager/src/ipc/framing.rs, minimal ipc.rs and Linux IPC caller/test changes, and macos/login.rs current-process identity capture using Mach TASK_AUDIT_TOKEN corroborated with held Process and Security SessionGetInfo. Preserve native incarnation, same-user and graphical-session authority; no environment or PID-only fallback. Retest shared framing on Linux and Darwin. Keep main activation gated and the ongoing frozen Mac package source untouched. Root owns review, plan/audit edits and commits.
 
+2026-10-08 S19 shared session continuation: after a read-only status check of the original blockers, linux_manager owns the narrow macOS ManagerSession::current and shared current-session observation integration using the existing held Process and kernel-backed Login::current. Preserve graphical-session refusal, unknown activity state, exact incarnation checks and main/registration gates. Ownership is session.rs, supervision/process.rs and a narrowly scoped macOS session helper/tests if needed. No adoption, signaling, instance activation or new session authority is included. Root owns integrated review, vault records and commits; native Mac validation remains pending connectivity, and active frozen build inputs must stay unchanged.
 
 ## Verification
 

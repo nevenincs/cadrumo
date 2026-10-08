@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:87b3d871020adbb2c9967f833706d1a8e1a45a5c5c7ed02e8b52ceda3ab2517e'
+body_hash: 'sha256:bcda59e746688bf9c9d35bc92a5a09a21271bbe4f2b5a21e2512d8c6b4b0aefc'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -251,6 +251,13 @@ The bounded length-prefix reader/writer and its partial/oversized-frame tests mo
 
 Shared framing verification completion: pinned Windows all-target manager Clippy passes in 1.48 seconds and rustfmt --check passes for all seven shared/Darwin paths without source changes. The shared framing slice review is PASS. Darwin primitive/test typecheck also passes with -D warnings through real source modules; the full manager cross-check stops in ring because this Windows cross-build lacks an Apple C toolchain/SDK. The available real Mac SDK is on the temporarily unreachable host. Full native Darwin compilation and execution remain PENDING, not failed native behavior. Evidence/commands are under build/macos-process-typecheck/.
 
+### macOS shared session and native IPC verification | low | Native component checks pass; platform activation remains gated
+
+ManagerSession::current now derives macOS user and login-session coordinates through the existing held Process, current Mach audit token and Security.framework graphical-session policy. Shared supervision delegates to that observation and returns None on refusal. No environment-based session authority, adoption, signaling, instance ownership, login registration or manager-main activation is added. Independent source review found no defect; Windows and Linux branches remain unchanged. The native test checks shared coordinates when admitted and consistent refusal otherwise.
+
+The Mac became reachable again. An isolated native-session-check tree under /Users/gergely.wootsch/cadrumo-builds/unsigned-installers-20261008 received 133 hash-verified current crate files and the configured generated contract, with provenance retained. The full native manager compiled and linked with Rust 1.96 and the Apple SDK in 57.46 seconds. All 76 library tests passed in 0.09 seconds, including the previously unexecuted Darwin IPC socket tests and current-token/shared-session tests; all-target Clippy with -D warnings passed in 18.09 seconds. The first run had nine custody fixture failures because the SSH default temporary path traversed the /var symlink. A private canonical task-owned TMPDIR corrected the harness without changing custody policy; both runs are retained. Windows configured manager tests and all-target Clippy also pass. Scoped formatting and diff checks pass; final whitespace normalization is recorded separately from the tested snapshot.
+
+Evidence and commands are retained locally in build/macos-process-typecheck/native-session-evidence, with session-windows-tests.log and session-windows-clippy.log alongside it. Review verdict PASS for this source slice and native IPC component verification. The SSH session exercises refusal, not positive graphical admission. S19 remains open for instance ownership, supervision/stop, tray/lifecycle, SMAppService, installed dispatch and native graphical acceptance. Frozen package-build inputs were not modified, and neither supplied host received product installation or login/session-ending tests.
 
 ## Recommendations
 

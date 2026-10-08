@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:daffca352d95398aac1edd04e3fb981d33f26b60c1bcd49ecf62a39e0e0903a9'
+body_hash: 'sha256:abf6ce2836fa111a475d5e1f38862cfcdd3832362eeb7127d7c2a31195c30c65'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -602,6 +602,13 @@ related:
 - `S19` `verify:` `Rustfmt Darwin manager source paths` -> `pass`
 - `S19` `verify:` `aarch64-apple-darwin primitive and test Clippy typecheck -Dwarnings` -> `pass`
 - `S19` `verify:` `full manager Darwin cross-check on Windows missing Apple compiler SDK for ring` -> `fail`
+- `S19` `M` `native/manager/src/session.rs`
+- `S19` `M` `native/manager/src/supervision/process.rs`
+- `S19` `verify:` `Native macOS manager cargo test --lib with canonical private TMPDIR 76 tests` -> `pass`
+- `S19` `verify:` `Native macOS manager cargo clippy --all-targets -- -D warnings` -> `pass`
+- `S19` `verify:` `Configured Windows manager tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `Scoped rustfmt and git diff --check` -> `pass`
+- `S19` `verify:` `Independent shared-session source review` -> `pass`
 
 ## Notes
 
@@ -648,3 +655,4 @@ related:
 - `S18` S18 remains open; proposed direct-child amendment is unaccepted and insufficient for the observed default GNOME autostart profile. Preserved existing Windows/Mac hosts receive no destructive acceptance.
 - `S18` Partial S18 checkpoint: share existing bounded framing for Darwin reuse; Linux placement and lifecycle remain unfinished. No activation or host registration.
 - `S19` Source checkpoint only. Current task audit token is corroborated against held process and Security session facts; transport retains owner-only namespace/socket, per-socket NOSIGPIPE and bounded authenticated exchanges. Independent source review finds no concrete defect. Full native compilation and execution remain pending because the real Mac is unreachable; primitive cross-typecheck is not native execution. Main activation, login registration and S19 remain gated/open.
+- `S19` S19 remains open. Native IPC component execution now verified, but SSH refusal is not graphical positive admission or installed lifecycle acceptance. Initial native fixture failures from symlinked SSH TMPDIR were retained; corrected private canonical path passed without weakening custody.
