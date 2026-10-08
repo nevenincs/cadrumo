@@ -9,9 +9,10 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-supervisor-contract-adr]]'
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-desktop-shell-adr]]'
+  - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:e131fe086e89d6f40c90e042af962dc8353eece31b6b44936dad7f2e1312f960'
+body_hash: 'sha256:c534bb1136c85cbc929caf862f1492484cabf5ac7fc743cfdb53edfbd1737966'
 ---
 
 # `runtime-manager-architecture` plan
@@ -104,7 +105,7 @@ Manager-owned side-by-side cutover once the distribution workstream's versioned 
 Platform ports deferred behind their prerequisites.
 
 - [ ] `P05.S18` - Port the manager to Linux with XDG autostart in both scopes, systemd-run scope placement with probed pipe fallback, logind handling and StatusNotifier tray; `native/manager/, native/platform/ POSIX support, Linux packaging`.
-- [ ] `P05.S19` - Port the manager to macOS with the SMAppService agent plist, process-group abandonment and menu-bar item once signing exists; `native/manager/, macOS bundle packaging`.
+- [ ] `P05.S19` - Implement and verify the macOS manager source and unsigned build, including canonical transient transport locations, session/process custody, IPC, lifecycle, bundle registration metadata and menu-bar integration; retain signing-dependent registration and disposable-host acceptance gates; `native/manager/, native/platform/, canonical core storage and native contract projection, macOS bundle packaging, focused owning tests`.
 
 ### Phase `P06` - Acceptance and review
 
@@ -164,6 +165,8 @@ Darwin IPC continuation: the existing linux_manager worker also owns the narrow 
 2026-10-08 S19 shared session continuation: after a read-only status check of the original blockers, linux_manager owns the narrow macOS ManagerSession::current and shared current-session observation integration using the existing held Process and kernel-backed Login::current. Preserve graphical-session refusal, unknown activity state, exact incarnation checks and main/registration gates. Ownership is session.rs, supervision/process.rs and a narrowly scoped macOS session helper/tests if needed. No adoption, signaling, instance activation or new session authority is included. Root owns integrated review, vault records and commits; native Mac validation remains pending connectivity, and active frozen build inputs must stay unchanged.
 
 2026-10-08 S19 socket-path investigation: linux_manager owns bounded read-only canonical location/projection analysis and a candidate amendment draft; notice_review owns primary Apple API comparison, one isolated /dev/fd alias probe, and evidence consistency review. Root owns research, audit, decision reconciliation and any later source assignment. No namespace change, private API, global working-directory mutation or product-directory creation is authorized by these research assignments. The installed-default path defect keeps platform activation gated.
+
+2026-10-08 S19 Darwin transport implementation assignment: under the operator's all-code/build authorization, linux_manager owns the canonical Python transport declaration, lazy location resolution, taxonomy materialisation/reclaim semantics, runtime endpoint and synthetic-fixture integration, native generator projection and conformance vectors, and focused owning tests. Root owns the Rust platform transport resolver, manager compact naming and IPC consumption, native checks, integration review, vault records and commits. notice_review owns the reviewed decision and four prior-ADR reconciliations before source work. Installed Darwin mode without an explicit namespace/member override uses the native transient anchor regardless of inherited storage-root pin; root-derived leaves preserve custom-root and channel identity separation. Development and explicit synthetic namespace isolation remain. No new environment pin or channel inference is introduced. Existing frozen package inputs remain unchanged. Native checks use synthetic directories; no product installation, login registration or session-ending acceptance occurs on these non-disposable hosts.
 
 ## Verification
 

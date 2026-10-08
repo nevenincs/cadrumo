@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-environment'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:138e00b2b60b40fd5325c94623e3778526906fd57a29a294e076eb8eff17fd07'
+body_hash: 'sha256:b46e316a511ca690a176992e648169bb27728924767564d3eae46c9cac0d8589'
 related:
   - "[[2026-10-04-canonical-environment-reference]]"
   - "[[2026-08-03-canonical-storage-management-adr]]"
@@ -17,6 +17,7 @@ related:
   - "[[2026-10-03-application-packaging-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
+  - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
 ---
 
 # `canonical-environment` adr: `Canonical location and environment contract` | (**status:** `accepted`)
@@ -40,7 +41,7 @@ Storage, log, cache, temporary and component locations are declared once in Pyth
 - **Keep the Python declaration, specify one resolution algorithm, and generate test vectors both resolvers must pass:** chosen. Extends the existing owners and generator; no second authority.
 - **Rust platform becomes the sole resolver and Python only consumes pinned variables:** rejected. The pip and uvx distributions and the development loop have no native host, so Python would need a resolver anyway.
 - **Python is the sole resolver and native hosts always ask it (the desktop fixed-query pattern):** rejected. The C host must set the root before CPython initializes; a query child would itself need a root; the runtime manager must not depend on launching Python to find its own records.
-- **Per-user default as the OS application-data directory, one root for every category:** chosen. Matches the accepted single-root ruling and the proposed `U` sketch.
+- **Per-user default as the OS application-data directory, one root for persistent application data:** chosen, subject to the dated Darwin transport exception below. Matches the accepted single-root ruling and the proposed `U` sketch.
 - **Home dot-directory `~/.cadrumo` on every OS:** rejected. Non-idiomatic on Windows and macOS, no gain over the OS directory.
 - **Package-relative or cwd-relative root for installed builds:** rejected. The installed package is read-only and the cwd is arbitrary.
 - **One shared root for stable and preview channels:** rejected. Two code versions over one encrypted store and one runtime endpoint; each manager treats the runtime of the other channel as foreign.
@@ -57,7 +58,7 @@ Binding commitments.
 - **Development tooling stays out of the product.** `TOOL_STORAGE_LOCATIONS` and `XDG_*` tool variables are development concerns. The installed host, the desktop and the manager neither set nor allowlist them. The product allowlist is the root variable plus the settings fields of operator-overridable taxonomy members.
 - **Per-channel roots.** Each release channel has its own default root. The channel comes from the identity projection (`dev/packaging/native/identity.py`, `CADRUMO_ID_*`, `data/build.json`) and nowhere else. Python never derives a channel; a native package pins the root before Python runs.
 - **No migration, no compatibility reader.** Existing `var/storage` trees created by installed builds under a launch directory are not discovered, read or moved. Relocation remains refuse-and-instruct (`2026-08-03-canonical-storage-management-adr` R7). The pre-release regime applies.
-- **Prior rulings reused unchanged.** `2026-09-20-lud-authority-adr`: the configured root is application-owned and created idempotently even when selected explicitly; explicit member overrides must pre-exist. `2026-08-03-canonical-storage-management-adr` R1, R3, R5, R10: members are typed, no member path moves, `FIXED` members carry no variable. `2026-07-13-data-output-standardization-adr` R1 and `2026-07-03-claude-ecosystem-packaging-adr`: installed runs use a platform user-data root, checkouts use `var/storage`.
+- **Prior rulings reused, subject to the 2026-10-08 Darwin transport exception below.** `2026-09-20-lud-authority-adr`: the configured root is application-owned and created idempotently even when selected explicitly; explicit member overrides must pre-exist. `2026-08-03-canonical-storage-management-adr` R1, R3, R5, R10: members are typed, member paths are preserved except the separately accepted relocations, and `FIXED` members carry no variable. `2026-07-13-data-output-standardization-adr` R1 and `2026-07-03-claude-ecosystem-packaging-adr`: installed runs use a platform user-data root, checkouts use `var/storage`.
 - **Scope exclusion.** No configuration file is introduced. The product reads the process environment only (`src/cadrumo/core/config.py:199-214`); the proposed `U/config/application.env` in `2026-10-03-application-packaging-adr` stays proposed and is a separate decision.
 
 ## Implementation
@@ -71,7 +72,7 @@ We will make the Python core storage owner the single declaration of every locat
 - `platform_user_data_root()` in `config_state_root.py` returns the real per-user base in installed mode and the checkout in development mode; `resolve_project_path` and relative member overrides keep anchoring to it, so the "never the process cwd" promise at `src/cadrumo/core/paths.py:194-200` becomes true in installed mode.
 - `_config_runtime.py:38-40` and the env-source alias at `config.py:115-117` read precedence from the declaration (closes `2026-08-03-canonical-storage-management-adr` R19).
 - `Settings.storage_env_var_names()` narrows to the product allowlist: the root variable `CADRUMO_LOCAL_STORAGE_ROOT` plus the settings field of every `OPERATOR_OVERRIDABLE` member. Development tool variables get their own accessor used only by `dev/` and the justfile. *Hypothesis:* `development_tool_env_var_names()` beside it.
-- New taxonomy members: `DESKTOP_WEBVIEW` (`webview`, directory, root scope, `OPERATOR_OVERRIDABLE` with `cadrumo_webview_dir`, grouping `CACHE`, fingerprint `EXCLUDED`; lifecycle *hypothesis* `UNBOUNDED_BY_DESIGN` because the renderer owns its own eviction) replaces `environment.rs:114`. `.runtime/` and its `installation.json`, `boot.json` and `manager-*` records become `FIXED` members registered by the runtime manager decision; this ADR only requires that `installation.py:36` stop joining the literal. `RUNTIME_SOCKETS` (`runtime`) and `.runtime/` are distinct directories and both stay.
+- New taxonomy members: `DESKTOP_WEBVIEW` (`webview`, directory, root scope, `OPERATOR_OVERRIDABLE` with `cadrumo_webview_dir`, grouping `CACHE`, fingerprint `EXCLUDED`; lifecycle *hypothesis* `UNBOUNDED_BY_DESIGN` because the renderer owns its own eviction) replaces `environment.rs:114`. `.runtime/` and its `installation.json`, `boot.json` and `manager-*` records become `FIXED` members registered by the runtime manager decision; this ADR only requires that `installation.py:36` stop joining the literal. `RUNTIME_SOCKETS` (`runtime`) and `.runtime/` are distinct categories. `.runtime/` stays under the data root; default sockets in installed Darwin mode use the declared external transient anchor under the 2026-10-08 exception.
 
 **Installed default root (per OS, per channel).** Let `name` be `PRODUCT_IDENTITY.python_package` (`cadrumo`) for the stable channel and `python_package` plus `-` plus channel for any other channel (`cadrumo-preview`), produced by the identity projection, never spelled by a consumer.
 
@@ -82,7 +83,7 @@ We will make the Python core storage owner the single declaration of every locat
 | macOS | `~/Library/Application Support/<name>` | `HOME` |
 
 - Local, not roaming: the tree holds an encrypted store with its keystore, caches and browser profiles. Operator backup goes through explicit export, not through OS profile sync.
-- Every taxonomy member keeps its current subpath under this root; the proposed `U/data/` regrouping in `2026-10-03-application-packaging-adr` is not adopted (`2026-08-03-canonical-storage-management-adr` R3).
+- Except for default transient transport in installed Darwin mode under the dated exception below, every taxonomy member keeps its current subpath under this root; the proposed `U/data/` regrouping in `2026-10-03-application-packaging-adr` is not adopted (`2026-08-03-canonical-storage-management-adr` R3).
 - Creation: the first product process that needs the root creates it idempotently (`ensure_storage_tree`, `2026-09-20-lud-authority-adr`); the native host also creates it before CPython starts as today (`lib.rs:132-137`), refusing reparse points. POSIX mode `0o700` on the root, matching the existing temporary-directory hardening; Windows inherits the per-user ACL of `LocalAppData`. *Hypothesis:* the mode-bits test required by `2026-08-03-canonical-storage-management-adr` Constraints covers the new default.
 - Channels: stable and preview resolve different default roots and therefore different runtime endpoints, `.runtime/` records and managers. An account may install both. Development builds carry no channel: a checkout resolves `var/storage` regardless of `CADRUMO_CHANNEL`. The pip and uvx distribution is stable only; a preview native package always pins the root through its host, so Python computes only the stable default.
 - Overrides: an absolute `CADRUMO_LOCAL_STORAGE_ROOT` wins in every mode and channel, is operator-owned, and is unmanaged by the runtime manager; an operator who points two channels at one root accepts one shared runtime. A relative override anchors at the checkout in development mode and is refused in installed mode. Blank values are ignored as today. `CADRUMO_STORAGE_ROOT` keeps its lower-precedence development role and is not projected into installed packages.
@@ -131,7 +132,7 @@ We will make the Python core storage owner the single declaration of every locat
 
 The knockout is ownership. Python already owns the typed taxonomy, the settings fields and the only generator; every other option either adds a second authority (a Rust resolver that Python does not define) or makes a binary that must run before Python depend on Python. Specifying the algorithm once and proving both implementations against generated vectors is the smallest change that makes drift a build failure instead of a review finding.
 
-The per-user OS directory restores what `2026-07-03-claude-ecosystem-packaging-adr` and `2026-07-13-data-output-standardization-adr` already accepted and the interpreter foundation deferred to the storage owner. It keeps one root, so the rejected multi-root split stays rejected. Per-channel roots follow from the storage-identity keying of the runtime: one root per channel is the only arrangement in which two installed families neither share a store nor fight over a runtime, and the identity projection already carries the channel.
+The per-user OS directory restores what `2026-07-03-claude-ecosystem-packaging-adr` and `2026-07-13-data-output-standardization-adr` already accepted and the interpreter foundation deferred to the storage owner. It keeps one root for persistent application data; the 2026-10-08 exception permits only Darwin transient transport outside it, not a general data/cache/log split. Per-channel roots follow from the storage-identity keying of the runtime: one root per channel is the only arrangement in which two installed families neither share a store nor fight over a runtime, and the identity projection already carries the channel.
 
 Pin-and-inherit is what S02 proved and what the manager needs: a single resolution site means the endpoint, the boot record and the cutover see one root.
 
@@ -148,3 +149,11 @@ Acceptance establishes the contract and the default; it does not claim any consu
 ## 2026-10-05 reconciliation of the allowlist wording
 
 An independent review found the Implementation contradicting itself: one passage put both root variables in the product allowlist while the Constraints excluded the development-only `CADRUMO_STORAGE_ROOT` from installed packages. The Constraints govern. The product allowlist and every installed projection carry only `CADRUMO_LOCAL_STORAGE_ROOT`; `CADRUMO_STORAGE_ROOT` belongs to the development projection only, and an installed native host does not honour it. This restates the accepted intent; it adds no new commitment.
+
+## 2026-10-08 accepted Darwin transient transport exception
+
+2026-10-08-canonical-environment-darwin-transport-adr narrows this record's one-root, unchanged-member and owner-query commitments only for the default `RUNTIME_SOCKETS` namespace in installed Darwin mode: runtime, worker and manager socket leaves plus their namespace-ownership lock inodes use the declared public per-user cache anchor. Persistent data, `.runtime/` start claims and boot/installation records, logs, preferences, encrypted custody and the existing storage-root pin do not move. The declaration explicitly models this external transient anchor and its materialisation/reclaim policy; Python and Rust implement it through the canonical owners and shared vectors, outside Settings construction.
+
+Each process queries the native transport base once and retains validated namespace identity; this is distinct from, and does not re-resolve or replace, the inherited storage-root pin. No new environment pin is added. Selection depends on installed mode and no explicit runtime-socket member/namespace override, regardless of an inherited storage-root pin; it never infers mode or channel from the root path or pin presence. The manager's default-storage-only admission is unchanged. Development roots remain root-relative, and explicit synthetic/operator socket namespaces retain isolation. Custom installed data roots remain separated by root-derived endpoint identities. Stable and preview may share the transient family directory while endpoint identities remain channel/root separated. Ordinary materialisation, reclaim and uninstall never delete that directory or its lock inodes; socket cleanup is incarnation-checked. The successor governs exact selection, naming, custody and refusal requirements. Historical amendment proposals above remain the record of the 2026-10-04 decision, subject to this dated exception.
+
+Accepted 2026-10-08 under the user's advance authorization to fix the identified defects and code/build all installer and manager work except signing. This scoped default-path correction is required for installed Darwin launch and does not claim implementation or native lifecycle acceptance.

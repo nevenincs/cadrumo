@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:fad53a0c5b61101a0e9d5772e8261c537bc4b4eb33066041a5af9f04a10a8d5e'
+body_hash: 'sha256:5f7416c1e38e49bbd9ffbe05c53383162d076fca6c7e20009c28011912e0dc59'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -614,6 +614,15 @@ related:
 - `S19` `verify:` `Native Darwin ordinary socket peer identity and fd-alias feasibility probe` -> `pass`
 - `S19` `verify:` `Read-only Darwin user-cache ownership mode and canonical path probe` -> `pass`
 - `S19` `verify:` `Independent research factual consistency review` -> `pass`
+- `S19` `A` `.vault/adr/2026-10-08-canonical-environment-darwin-transport-adr.md`
+- `S19` `M` `.vault/adr/2026-10-04-canonical-environment-adr.md`
+- `S19` `M` `.vault/adr/2026-08-03-canonical-storage-management-adr.md`
+- `S19` `M` `.vault/adr/2026-07-13-data-output-standardization-adr.md`
+- `S19` `M` `.vault/adr/2026-10-04-runtime-manager-architecture-adr.md`
+- `S19` `verify:` `independent Darwin transport decision review` -> `pass`
+- `S19` `verify:` `four affected vault feature checks (zero errors)` -> `pass`
+- `S19` `verify:` `scoped git diff --check` -> `pass`
+- `S19` `by:` `root`
 
 ## Notes
 
@@ -662,3 +671,4 @@ related:
 - `S19` Source checkpoint only. Current task audit token is corroborated against held process and Security session facts; transport retains owner-only namespace/socket, per-socket NOSIGPIPE and bounded authenticated exchanges. Independent source review finds no concrete defect. Full native compilation and execution remain pending because the real Mac is unreachable; primitive cross-typecheck is not native execution. Main activation, login registration and S19 remain gated/open.
 - `S19` S19 remains open. Native IPC component execution now verified, but SSH refusal is not graphical positive admission or installed lifecycle acceptance. Initial native fixture failures from symlinked SSH TMPDIR were retained; corrected private canonical path passed without weakening custody.
 - `S19` High installed-default socket path blocker remains unresolved. Feasibility probes establish that fd aliases fail ENOENT and the user cache is only a candidate; no namespace decision or product activation is claimed.
+- `S19` Accepted transport-only exception under explicit all-code/build advance authorization; source implementation and native verification pending, S19 remains open. Bounded crossref used as advisory, not complete corpus proof.

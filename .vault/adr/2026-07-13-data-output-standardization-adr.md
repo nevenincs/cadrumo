@@ -3,10 +3,11 @@ tags:
   - '#adr'
   - '#data-output-standardization'
 date: '2026-07-13'
-modified: '2026-10-05'
-body_hash: 'sha256:f152f3c4cd19ca045ebf5922ab85e91a335edca674604f29783213970551b674'
+modified: '2026-10-08'
+body_hash: 'sha256:646bd3d9e2c70c29dc572755d848c02c0cd651bf1ff91fcb72744e2670759452'
 related:
   - "[[2026-07-13-data-output-standardization-research]]"
+  - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
 ---
 
 # `data-output-standardization` adr: `Data output location and naming standardization` | (**status:** `accepted`)
@@ -91,8 +92,9 @@ blobs, audit, tokens, buckets), `cache/<name>`, `logs`, `exports`, and
 runtime `staging` (OS temp, always context-managed). Every settings dir field
 whose default is currently `PROJECT_ROOT/var/...` moves into the state-root
 derivation table (`_STATE_ROOT_DERIVED_DIRS` generalised): explicit env
-overrides keep working, but the DEFAULT for every output dir derives from the
-root. `PROJECT_ROOT`-anchored output defaults are eliminated. The dormant
+overrides keep working, but default output directories derive from the
+root except the default transient transport anchor for installed Darwin mode,
+accepted in the 2026-10-08 exception below. `PROJECT_ROOT`-anchored output defaults are eliminated. The dormant
 `cadrumo_submission_browser_trace_dir` / `cadrumo_status_browser_trace_dir`
 pair is deleted (no consumer; no-dormant discipline) and re-introduced only
 when a writer lands. The vestigial-vs-live status of each `var/financial/*`
@@ -189,9 +191,11 @@ campaigns (binding validation, period filter).
 
 ## Consequences
 
-- Operators get one answer to "where does Cadrumo write": under the storage
-  root, categorised; nothing durable in the OS temp dir; scratch only under
-  `scratch/`. Uninstall/backup/GDPR-export story becomes tractable.
+- Persistent application data stays under the categorised storage root;
+  default transport sockets and namespace locks in installed Darwin mode use
+  the narrowly declared external anchor below. Nothing durable enters the OS temp
+  dir; scratch stays under `scratch/`. Backup/GDPR-export data locations remain
+  unchanged by the transport exception.
 - The settings surface changes shape (defaults move; two dormant fields
   deleted; several fields renamed) — pre-release zero-legacy makes this
   cheap now and expensive later; doc/locale/harness sweeps are mandatory
@@ -207,3 +211,11 @@ campaigns (binding validation, period filter).
 - Renaming `AEAT_*` policy fields is operator-visible configuration churn;
   the per-field adjudication table keeps authority-referent names stable so
   the churn is bounded to app-owned controls.
+
+## 2026-10-08 accepted Darwin transient transport exception
+
+2026-10-08-canonical-environment-darwin-transport-adr qualifies O2/R1 and the single-root consequence only for the default runtime, worker and manager socket leaves in installed Darwin mode and their namespace-ownership lock inodes. They use the canonical declaration's public per-user cache anchor and compact product-family directory. This is transient transport infrastructure, not an additional persistent data/cache/log root. R2's prohibition on durable artifacts in OS temporary storage is unchanged; the selected native cache API is not the temporary-directory fallback.
+
+Persistent data, encrypted custody, logs, preferences, boot/installation records and start claims remain at existing locations. R8 isolation remains binding: development roots stay root-relative and explicit synthetic/operator socket namespaces do not resolve into the installed transport namespace. Custom installed data roots remain separated by root-derived endpoint identities. Namespace locks remain stable while contenders may exist and ordinary reclaim/uninstall never deletes their directory or inodes. There is no old-path reader, data movement or migration. The successor governs exact selection, naming, native validation and refusal.
+
+Accepted 2026-10-08 under the user's advance authorization to fix defects and code/build all installer/manager work except signing. This remedies the measured Darwin socket-path launch blocker without claiming implementation or native lifecycle acceptance.

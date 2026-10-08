@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a562ec9e30e6ec50dc82d294d0545402060de11a131b4d6cfac4bed0d08b21c'
+body_hash: 'sha256:608f8ef971be16efe40401e5437effa0643349baa29681a5527e33b279796f35'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"
@@ -21,6 +21,7 @@ related:
   - '[[2026-10-03-runtime-without-service-manager-scope-removal-audit]]'
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
+  - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
 ---
 
 # `runtime-manager-architecture` adr: `Per-user runtime manager` | (**status:** `accepted`)
@@ -139,7 +140,7 @@ This record decides the installed topology. The runtime-side contract is `2026-1
 - Uninstall never forces down running sessions. It removes the registrations and the version-independent entry point. Running managers detect the entry point's removal and quit gracefully. In-use version directories are removed by delete-at-reboot or by the next elevated maintenance run.
 
 **Prerequisites.** These must be met before the manager ships.
-- **Canonical locations.** Storage, log and other locations come from the single canonical, config-driven location definition that the operator directed on 2026-10-04. The Python product, the Rust host and manager, the runtime and the frontend all consume it programmatically, including its process-environment overrides. That definition is `2026-10-04-canonical-environment-adr`. The manager consumes its `strict` profile: it pins the resolved root and never re-resolves it. The manager resolves nothing on its own. The default root must not depend on the working directory, must be the same for every installed version, and must specify creation and permissions. Every surface must resolve the same root from any working directory and any version. The endpoint, the boot record and the cutover all depend on it.
+- **Canonical locations.** Storage, log and other locations come from the single canonical, config-driven location definition that the operator directed on 2026-10-04. The Python product, the Rust host and manager, the runtime and the frontend all consume it programmatically, including its process-environment overrides. That definition is `2026-10-04-canonical-environment-adr`. The manager consumes its `strict` profile: it pins the resolved root and never re-resolves it. The manager invents no location: it consumes canonical root resolution and, on Darwin, the owner-level native transport-base query specified in the 2026-10-08 exception below. The default root must not depend on the working directory, must be the same for every installed version, and must specify creation and permissions. Every surface must resolve the same root from any working directory and any version. The endpoint, the boot record and the cutover all depend on it.
 - **Versioned installs.** A versioned-install decision, owned by the distribution workstream, must provide for each format a layout that meets the Versions constraints and a version-independent entry point for login registration and launchers. Examples: an MSI product per version behind a version-independent bootstrap product; per-version DEB/RPM packages behind a metapackage; separately signed version bundles behind a thin macOS launcher. The same decision must provide dual-scope MSI authoring. It must also provide per-OS discovery of the entry point for versioned components such as the desktop, for example a registry value under the package key, a known path or a LaunchServices bundle id. The manager does not ship for a format until a versioned layout for that format is implemented and passes acceptance.
 
 **Naming and authoring.**
@@ -249,7 +250,7 @@ An adopted runtime has no heartbeat, so it cuts over only at the user's Restart 
 | Manager preference | `manager-preferences.json` in the canonical configuration location | canonical locations |
 | Boot record (runtime) | `.runtime/boot.json` | `.runtime/installation.json` |
 | Start claim / Quit / failed versions (manager) | `.runtime/manager-start.lock`, `.runtime/manager-quit.json`, `.runtime/manager-failed-versions.json` | `.runtime/installation.lock` |
-| Manager IPC endpoint | `\\.\pipe\cadrumo-manager-{owner and session identity}` (owner-only DACL, first-instance), or a `.sock` in the owner-only runtime socket directory on POSIX | runtime endpoint `cadrumo-runtime-{storage_identity}` |
+| Manager IPC endpoint | `\\.\pipe\cadrumo-manager-{owner and session identity}` (owner-only DACL, first-instance), or a `.sock` in the owner-only runtime socket directory on POSIX; installed Darwin's default socket namespace uses the declared external transport anchor and compact name below | runtime endpoint `cadrumo-runtime-{storage_identity}` |
 
 The user-facing name, and whether it is localized, is a *hypothesis* for the operator to confirm. Tray strings come from the locale catalogues.
 
@@ -323,3 +324,11 @@ Letting the old manager orchestrate the cutover keeps the only supervisor channe
 - unattended agent work needs a runtime before any sign-in
 
 Acceptance would establish decision authority only. None of this is implemented.
+
+## 2026-10-08 accepted Darwin transport location and naming exception
+
+2026-10-08-canonical-environment-darwin-transport-adr refines Canonical locations and the POSIX Manager IPC naming row. For default socket endpoints in installed Darwin mode, the runtime, worker and manager use the canonical owner's public per-user cache anchor and identity-projected product-family directory. The manager filename is `manager-` plus unpadded base64url of the first 16 SHA-256 digest bytes plus `.sock`. The canonical declaration defines the compact JSON domain/version, channel-qualified manager identifier, decimal UID and native-session input grammar and shared vectors. The name remains independent of image, version and install scope; full kernel peer owner/session/image admission remains mandatory.
+
+Stable and preview share only the transient family directory, with distinct endpoint identities. Each process resolves the native transport base once through the canonical owner and retains validated namespace identity; the inherited storage-root pin and strict child environment are unchanged, and no new environment pin is added. Persistent `.runtime/` start claims, Quit/failed-version markers, boot/installation records, logs and preferences stay at their declared locations. Development roots remain root-relative and explicit synthetic/operator socket namespaces retain isolation. Custom installed data roots keep root-derived endpoint identities. Ordinary reclaim/uninstall never removes the shared directory or namespace-lock inodes, and socket cleanup remains incarnation-checked. Per-session ownership must coordinate with the IPC namespace lock; this amendment does not claim that separate integration complete.
+
+Accepted 2026-10-08 under the user's advance authorization to fix defects and code/build all installer/manager work except signing. Identity, supervision, signing, login registration and disposable-host lifecycle acceptance gates are unchanged. This decision establishes the transport remedy, not a completed macOS manager port.
