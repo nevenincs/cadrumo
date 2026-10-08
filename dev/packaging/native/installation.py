@@ -16,8 +16,10 @@ from dev._paths import REPO_ROOT
 
 from .build_paths import build_paths
 from .hashing import digest
+from .identity import DistributionIdentity
 from .installation_filesystem import file_identity, remove_owned_file
 from .layout import application_images, desktop_image, load_layout
+from .macos_launchagent import author_agent, verify_agent
 from .package_inventory import package_inventory, user_docs_bundled
 
 
@@ -262,6 +264,18 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
             "NSHighResolutionCapable": True,
         }
         (destination.parent / "Info.plist").write_bytes(plistlib.dumps(plist))
+        if managers:
+            if len(managers) != 1 or managers[0].package_path not in manifest["files"]:
+                raise ValueError("A macOS LaunchAgent requires one inventory-owned manager image")
+            manager = managers[0]
+            if not member(destination, manager.package_path).is_file():
+                raise ValueError("The bundled manager image is missing")
+            identity = DistributionIdentity(**value)
+            agent = author_agent(identity, manager)
+            agent_file = member(destination.parent.parent, agent.destination.as_posix())
+            agent_file.parent.mkdir(parents=True, exist_ok=True)
+            agent_file.write_bytes(agent.contents)
+            verify_agent(agent_file.read_bytes(), identity, manager)
     if target.startswith("windows-") and (desktop or versioned):
         wix = Element("Wix", xmlns="http://wixtoolset.org/schemas/v4/wxs")
         fragment = SubElement(wix, "Fragment")

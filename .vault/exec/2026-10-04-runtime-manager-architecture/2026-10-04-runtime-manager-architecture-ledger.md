@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:477c757f7d760a7fce2cfbabac6b842dc1dc021d8b7af3c64e3a00975b9e5a52'
+body_hash: 'sha256:4003fbb54dd84237780ce3cd003fc6f3e18adee0ba908b424ce67915f0a64fa9'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -399,6 +399,12 @@ related:
 - `S13` `verify:` `Linux manager Release build and 65 unit tests` -> `pass`
 - `S13` `verify:` `Native desktop-file-validate generated XDG machine/user/escaped-path fixtures` -> `pass`
 - `S13` `by:` `Codex`
+- `S19` `A` `dev/packaging/native/macos_launchagent.py`
+- `S19` `A` `dev/packaging/native/tests/test_macos_launchagent.py`
+- `S19` `M` `dev/packaging/native/installation.py`
+- `S19` `verify:` `Configured builder macOS metadata and installation tests 28 passed 2 POSIX skipped` -> `pass`
+- `S19` `verify:` `Scoped Ruff format lint ty and diff` -> `pass`
+- `S19` `by:` `Codex`
 
 ## Notes
 
@@ -430,3 +436,4 @@ related:
 - `S27` The 2026-10-07 Google decision-coverage repair removes the prior external schema blocker. Prior source verification at commit 7798824f68 remains evidence for S27; later concurrent startup/cancellation improvements belong to their owners. Closing discovery does not close MSI lifecycle or product acceptance.
 - `S24` Existing canonical taxonomy already enrolls all six manager/runtime records; added cross-version grammar and enrollment/axis assertions without a second path authority.
 - `S13` Coherent shared Windows tray/IPC and Linux foundation checkpoint; S13 remains open until integration review/interactive evidence. S12 successor readiness and S18 production composition remain open. Linux test harness fixes are verified separately. No disposable-host installation acceptance.
+- `S19` Unsigned metadata/source checkpoint only. No login registration, ad-hoc substitute, Apple SDK/Mach-O build, DMG or native SMAppService acceptance. S19 stays open. Shared distribution cache input enrollment follows in S09 graph checkpoint.

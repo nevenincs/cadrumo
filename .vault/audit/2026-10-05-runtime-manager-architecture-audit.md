@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:a41f2d3bbd0fdb3e43f1bcb3f001543863c14e6ab8f0cde13c6c223c94e7df8b'
+body_hash: 'sha256:1e9172861477c250d27c47e8b241f34f9b901b16904bb2a597346a12efa906e1'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -162,6 +162,18 @@ Windows Release manager, application and installer CTests passed in 57.13 second
 Linux Release manager and Python host compile on the pinned glibc 2.28 builder. All 65 manager unit tests pass. Linux main and placement remain gated: moving a process into a user-systemd scope can remove the native logind identity required by runtime admission. No environment-variable substitute is accepted. Native XDG desktop-file validation passes for user, machine and escaped-path fixtures. Container evidence does not prove interactive login, tray, shutdown or installation acceptance.
 
 This is a bounded implementation checkpoint. S12 successor authentication/readiness, S16/S17 upgrade/rollback/uninstall integration and S18 production Linux composition remain open. Native Linux integration tests exposed fixture executable permissions and ambient uv selecting the Windows checkout environment; corrections are under verification. No full product or disposable-host acceptance is claimed.
+
+### 2026-10-08 unsigned Linux/macOS packaging boundary
+
+Linux manager metadata and artifact checks passed eleven configured-container tests, including real synthetic DEB/RPM generation, exact native ownership/refusal-script inspection, CMake native-package execution and defective-script rejection. Native desktop-file validation passed machine/user/escaped-path XDG entries. These artifacts deliberately remain installable:false; safe per-version/registration ownership, rootless package-database strategy and real desktop admission are not implemented by the packaging gate. The source-to-format graph fixed CPack root-prefix normalization and preserved the binary filename across include(CPack).
+
+The read-only Linux placement probe refuses the current WSL context: environment DISPLAY/WAYLAND_DISPLAY values do not substitute for a native local active graphical logind session. Its explicitly disposable-runner mode captures direct/scope/pipe pidfd identity, cgroup and wrapper/runtime distinctions with bounded cleanup; acceptance remains false. P05.S18 stays open.
+
+The operator excludes certificates from current work. macOS unsigned bundle authoring now includes the exact projected dormant SMAppService LaunchAgent plist, Aqua restriction, unsuccessful-exit KeepAlive, AbandonProcessGroup and bundle-relative manager executable. Twenty-eight metadata/installation tests pass, with two POSIX tests skipped on Windows; Ruff/ty pass. No registration is attempted, and no ad-hoc signing substitute is introduced. Apple documentation and DTS distinguish bundled metadata from supported signed helper registration: https://developer.apple.com/documentation/servicemanagement/updating-helper-executables-from-earlier-versions-of-macos and https://developer.apple.com/forums/thread/799910. No Apple SDK, native Mach-O build, DMG generation or ServiceManagement runner proof is available; P05.S19 remains open for native backend and verification.
+
+### 2026-10-08 cutover integration review — revision required
+
+Independent integrated review of the in-progress S12/S16/S17 wiring found two high issues: Windows session-end/other exit paths could drop a retained cutover claim without confirming successor/runtime cleanup, and the parent inferred Ready response delivery from an IPC reconnect state also reached after write/closing failures. A medium observation gap required the manager to sample each registration Ready generation before recognizing a later committed Absent generation, missing upgrade-plus-uninstall between polls. The worker is correcting these with bounded retained cleanup, explicit positive delivery/confirmation evidence and verified registration identity continuity; no installation gate is lifted on the current snapshot. Root additionally corrected unbounded child.wait after failed process observation and required exact immutable MSI role/identity binding instead of membership in a shared permitted-family list. Follow-up verification and review must close these findings before integrated source completion.
 
 ## Recommendations
 

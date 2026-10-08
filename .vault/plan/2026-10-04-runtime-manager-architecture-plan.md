@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:37a848c34652902584b4875d25e5c46b960d69a2993902c5537281d822754e61'
+body_hash: 'sha256:0e49fccce62905835b16530f47930ad1a5037da4bb5db4fd1cb7ca6061cdc6fc'
 ---
 
 # `runtime-manager-architecture` plan
@@ -137,6 +137,8 @@ B5 initial checkpoint (2026-10-05, shared working tree): `SupervisedController._
 2026-10-08 continuation: the manager worker may continue P02.S13 and its P02.S24 storage prerequisite alongside root-owned distribution/native MSI and Linux build work. Worker owns manager tray/preferences/logging/IPC reveal integration, the canonical storage taxonomy entries and locale catalogue additions, plus focused tests. Root owns installer publication, native MSI adapter, packaging/CMake and vault checkpoints. Existing other-agent changes must be preserved. Coordinate native Cargo checks before running; source ownership is disjoint except root reviews.
 
 2026-10-08 Linux continuation: P05.S18 may proceed on existing POSIX platform/custody code alongside the Windows tray and MSI lanes. A Linux worker owns new Linux manager backend modules and focused tests plus Linux-only service/desktop registration sources. Coordinate main.rs/lib.rs inclusion with the Windows manager owner instead of editing their ongoing startup changes. Root owns CMake Linux toolchain, configure/build and vault records; Linux native tests use the separate Linux binary directory. Do not enroll macOS signing-dependent acceptance or claim desktop/session acceptance from container checks.
+
+2026-10-08 unsigned platform continuation: the operator explicitly requested all code/build work except signing certificates. Signing therefore does not block unsigned macOS source authoring and static/bundle checks for P05.S19; native Apple SDK/build and SMAppService acceptance still require their own evidence. The platform worker may own macOS LaunchAgent metadata authoring and focused tests plus a grounded account of unsigned SMAppService constraints while Windows cutover and MSI ownership remain with their existing workers. Coordinate any shared installation.py/CMake integration with root. Do not claim native macOS compilation or login acceptance without an Apple runner.
 
 ## Verification
 
