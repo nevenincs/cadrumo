@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:e9a7bc467db6eba881b846ec80a6fa6673272217cc67854aaf3c1f2ed0184e30'
+body_hash: 'sha256:e39c1c72acafa9d886bcf126323f666497fc82aca015ba531f135c953a2a23d8'
 ---
 
 # `runtime-manager-architecture` plan
@@ -154,6 +154,13 @@ B5 initial checkpoint (2026-10-05, shared working tree): `SupervisedController._
 
 
 2026-10-08 native Mac verification correction: linux_manager also owns the two narrow Linux-only effective_uid cfg guards in custody.rs and custody/posix.rs after proving all callers are Linux-gated; native Mac all-target Clippy verifies the correction. msi_maintenance may provision an isolated docs build under the existing WSL user's build directory and execute the synthetic docs fixture using its already-running user-systemd containment. Do not change services, install the product, register login, reboot or weaken native containment. Root retains repository docs/CMake edits, snapshot provenance, vault and commits. Both named Windows and macOS hosts are non-disposable and restricted to isolated builds and non-destructive probes.
+
+
+2026-10-08 S19 IPC continuation: linux_manager may implement a bounded native Darwin manager transport module and minimal macos.rs export, reusing the existing held-process and kernel peer-session foundation plus existing POSIX custody patterns. Preserve owner-only anchored sockets, exact process incarnation, bounded framing and fail-closed peer/session observation; no numeric-PID fallback, global signal policy change or manager-main activation. Avoid broad shared transport refactors without root coordination. Verify with an isolated native Mac test crate/build so ongoing frozen package inputs stay unchanged. Root owns shared contracts, source integration decisions, reviews, vault and commits; host registration/install/session-ending tests remain excluded.
+
+
+Darwin IPC continuation: the existing linux_manager worker also owns the narrow platform-neutral bounded framing extraction into native/manager/src/ipc/framing.rs, minimal ipc.rs and Linux IPC caller/test changes, and macos/login.rs current-process identity capture using Mach TASK_AUDIT_TOKEN corroborated with held Process and Security SessionGetInfo. Preserve native incarnation, same-user and graphical-session authority; no environment or PID-only fallback. Retest shared framing on Linux and Darwin. Keep main activation gated and the ongoing frozen Mac package source untouched. Root owns review, plan/audit edits and commits.
+
 
 ## Verification
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:bb5689100b5906aa0e4a134cc38d49fcdcac205c2517ec1b2faf4a1e95e6cafa'
+body_hash: 'sha256:5cdc5d9f40b65874bca3f93fbd2ce89882a446d76c5f9525324ce48f5ec205dd'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -587,6 +587,15 @@ related:
 - `S18` `verify:` `probe unsupported Windows host refuses before launch` -> `pass`
 - `S18` `verify:` `probe scoped Ruff format ty` -> `pass`
 - `S18` `verify:` `independent Linux placement evidence and proposed-status review` -> `pass`
+- `S18` `M` `native/manager/src/ipc.rs`
+- `S18` `A` `native/manager/src/ipc/framing.rs`
+- `S18` `M` `native/manager/src/linux/ipc.rs`
+- `S18` `verify:` `native manylinux Rust1.96 manager.rust CTest 10.53s` -> `pass`
+- `S18` `verify:` `native manylinux all-target Release Clippy 2.24s` -> `pass`
+- `S18` `verify:` `configured Windows manager Rust tests 93units and integration suites` -> `pass`
+- `S18` `verify:` `configured Windows all-target Clippy 1.48s` -> `pass`
+- `S18` `verify:` `Rustfmt shared and Darwin seven source paths` -> `pass`
+- `S18` `verify:` `shared framing source review` -> `pass`
 
 ## Notes
 
@@ -631,3 +640,4 @@ related:
 - `S18` S18 remains open: manager loop, native placement and lifecycle acceptance remain unfinished; existing Windows and macOS hosts are non-disposable.
 - `S19` S19 remains open: component evidence does not establish graphical lifecycle, SMAppService activation or signed release acceptance.
 - `S18` S18 remains open; proposed direct-child amendment is unaccepted and insufficient for the observed default GNOME autostart profile. Preserved existing Windows/Mac hosts receive no destructive acceptance.
+- `S18` Partial S18 checkpoint: share existing bounded framing for Darwin reuse; Linux placement and lifecycle remain unfinished. No activation or host registration.

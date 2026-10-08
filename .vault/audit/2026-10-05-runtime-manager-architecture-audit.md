@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:c8a8281bba0dd8659be958571f76dc4267d9d2c7aa6ee5fd04478b4e56159ae5'
+body_hash: 'sha256:87b3d871020adbb2c9967f833706d1a8e1a45a5c5c7ed02e8b52ceda3ab2517e'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -242,6 +242,15 @@ Apple Security SessionGetInfo returns AuditInfo.flags, and the real SDK bsm/audi
 ### 2026-10-08 Linux placement evidence checkpoint | medium | Default GNOME autostart does not establish required native process-session mapping
 
 The linked Linux-placement research and proposed amendment are now retained as evidence, not execution authority. The isolated Ubuntu GNOME probe observed an active local X11 login but its ordinary XDG autostart process had no sd_pid_get_session mapping under the user-manager app slice. Thus direct-child launch does not repair that observed profile's admission; no supported installed lifecycle or broader session-binding design is established. Accepted decisions and Linux activation gates remain unchanged. Independent consistency review passes. The probe also explicitly refuses non-Linux use before child launch; Windows direct refusal, scoped Ruff/format and ty pass. The guest was shut down cleanly and its disk retained; no supplied non-disposable host was installed, reset or used for session-ending acceptance.
+
+
+### Shared Unix manager framing | low | portable extraction verified
+
+The bounded length-prefix reader/writer and its partial/oversized-frame tests move from Linux IPC into the canonical ipc/framing.rs module, reused by Linux and the pending Darwin transport. Review finds no protocol, size-bound or timeout behavior change. Native manylinux glibc2.28 manager.rust CTest passes in 10.53 seconds and all-target Release Clippy passes in 2.24 seconds on Rust1.96 after overlaying exactly ipc.rs, ipc/framing.rs and linux/ipc.rs (snapshot b9046ea0d3ded4355d9fde2a9b539e2ee6aa4d3cb20579b850bc9c66bb6ddda4). Windows manager tests pass (93 unit tests plus integration/doc suites). Verdict PASS for the shared extraction, subject to the final formatting/Windows lint check; S18 remains open for manager lifecycle/placement integration. Darwin transport review has no concrete source finding, but its full native compilation/execution remains PENDING while the Mac is unreachable; cross-target primitive typechecking is not native acceptance.
+
+
+Shared framing verification completion: pinned Windows all-target manager Clippy passes in 1.48 seconds and rustfmt --check passes for all seven shared/Darwin paths without source changes. The shared framing slice review is PASS. Darwin primitive/test typecheck also passes with -D warnings through real source modules; the full manager cross-check stops in ring because this Windows cross-build lacks an Apple C toolchain/SDK. The available real Mac SDK is on the temporarily unreachable host. Full native Darwin compilation and execution remain PENDING, not failed native behavior. Evidence/commands are under build/macos-process-typecheck/.
+
 
 ## Recommendations
 

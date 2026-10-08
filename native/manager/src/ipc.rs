@@ -6,6 +6,8 @@
 use serde::{Deserialize, Serialize};
 use std::io;
 
+#[cfg(unix)]
+pub(crate) mod framing;
 #[cfg(windows)]
 pub mod windows;
 
