@@ -27,6 +27,7 @@ directory prefix gate draws around ``mkdtemp``.
 
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 from typing import Final
@@ -47,10 +48,30 @@ _DISCOVERY_EXCLUSIONS: Final[frozenset[str]] = frozenset(
     {"build_scratch_reclaim.py", "test_var_scratch_mint_sites_are_registered.py"},
 )
 
+
 #: A hidden name joined onto a path: ``base / ".name"`` or ``base / f".{x}-work"``.
 #: Spans lines, because the join is routinely wrapped and a single-line pattern
 #: would under-report exactly the sites most likely to be missed.
-_HIDDEN_JOIN: Final[re.Pattern[str]] = re.compile(r"""/\s*f?["'](\.[^"'\n]*)["']""", re.DOTALL)
+def _hidden_joins(source: str) -> set[str]:
+    """Read path operands, excluding punctuation inside unrelated string values."""
+    joined: set[str] = set()
+    for node in ast.walk(ast.parse(source)):
+        if not isinstance(node, ast.BinOp) or not isinstance(node.op, ast.Div):
+            continue
+        value = node.right
+        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+            literal = value.value
+        elif isinstance(value, ast.JoinedStr):
+            literal = "".join(
+                part.value if isinstance(part, ast.Constant) and isinstance(part.value, str) else "{value}"
+                for part in value.values
+            )
+        else:
+            continue
+        if literal.startswith("."):
+            joined.add(literal)
+    return joined
+
 
 #: Interpolation inside an f-string literal, replaced by a stand-in body so the
 #: rendered name can be judged by the same function the sweep judges names with.
@@ -120,7 +141,7 @@ def _hand_spelled_mints(paths: list[Path]) -> tuple[list[str], int]:
             source = path.read_text(encoding=UTF_8)
         except (OSError, UnicodeDecodeError):
             continue
-        for literal in sorted(set(_HIDDEN_JOIN.findall(source))):
+        for literal in sorted(_hidden_joins(source)):
             examined += 1
             if literal in _NOT_VAR_SCRATCH:
                 continue
@@ -248,3 +269,8 @@ def test_an_unminted_registered_family_is_reported(tmp_path: Path) -> None:
     }
 
     assert _unminted_families(named, [source]) == ["ORPHAN_FAMILY"]
+
+
+def test_a_string_separator_is_not_a_hidden_path_join() -> None:
+    """A slash used as a string separator cannot mint a filesystem member."""
+    assert _hidden_joins('resource = "/".join(("src", "payload"))\n') == set()

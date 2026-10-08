@@ -23,13 +23,14 @@ classifiers = [
 ]
 
 dependencies = [
-  # The command-bearing distribution is complete by default. The two data
+  # The command-bearing distribution is complete by default. The three data
   # companions are separate files only to stay below the package-index
   # per-file cap; they are exact-version runtime dependencies because the CLI
-  # cannot perform grounded tax work without both corpus slices.
+  # cannot perform grounded tax work without every corpus slice.
   "anyio>=4.5,<5",
   "cadrumo-data-manuals==0.5.1", # x-release-please-version
   "cadrumo-data-official==0.5.1", # x-release-please-version
+  "cadrumo-data-normatives==0.5.1", # x-release-please-version
   "mcp>=2,<3",
   # Rust-backed TOML parser behind the canonical `cadrumo.core.toml` boundary,
   # the only place TOML is parsed; several times faster than the stdlib parser.
@@ -395,7 +396,7 @@ exclude = [
   # Corpus source binaries (the AEAT/BOE manuals and workbooks) are 94% of the
   # wheel's compressed weight and serve only the always-on registry integrity
   # hash chain at runtime.
-  # They ship in the two `cadrumo-data-manuals` / `cadrumo-data-official` companion
+  # They ship in the three manuals, official, and normatives data companion
   # distributions (installed as mandatory base dependencies)
   # under a mirrored `cadrumo_data/_data/corpus` tree; the corpus locator resolves
   # either root. Every derived surface the
@@ -444,17 +445,19 @@ path = "packaging/authority/hatch_build.py"
 
 # ── uv ───────────────────────────────────────────────────────────────────────
 # `cadrumo-data-manuals` (packaging/cadrumo_data_manuals/) and `cadrumo-data-official`
-# (packaging/cadrumo_data_official/) own NO source. Each is a project file plus a
+# (packaging/cadrumo_data_official/), plus `cadrumo-data-normatives`
+# (packaging/cadrumo_data_normatives/), own NO source. Each is a project file plus a
 # hatchling build hook that force-includes a disjoint slice of the ONE corpus tree at
 # `src/cadrumo/_data/corpus` under a mirrored `cadrumo_data` namespace. They author
 # nothing and only repackage the base product's mandatory corpus payload.
 [tool.uv.sources]
-# The two data companions are not yet on PyPI, so the development resolver builds
+# The three data companions are not yet on PyPI, so the development resolver builds
 # each from its in-repo project. These source overrides never reach published wheel
 # metadata, whose mandatory dependencies resolve the exact-version companion
 # distributions from the configured package index.
 cadrumo-data-manuals = { path = "packaging/cadrumo_data_manuals" }
 cadrumo-data-official = { path = "packaging/cadrumo_data_official" }
+cadrumo-data-normatives = { path = "packaging/cadrumo_data_normatives" }
 
 [dependency-groups]
 registry = [
@@ -933,7 +936,7 @@ convention = "google"
 # with a fixed, literal argv (no user/untrusted input), in an isolated
 # subprocess, exactly as the docs build gate above.
 "dev/docs/tests/test_built_site_resolvability_sweep.py" = ["S603"]
-# The cadrumo-data distribution gate builds the two companion wheels with the
+# The cadrumo-data distribution gate builds all three companion wheels with the
 # trusted `uv` build driver (resolved from PATH by design), mirroring the
 # src/cadrumo wheel-build gates. Corpus membership is enumerated in-process.
 "dev/packaging/tests/test_cadrumo_data_distribution.py" = ["S603", "S607"]
@@ -1180,28 +1183,10 @@ python_files = ["test_*.py"]
 # under Git Bash / MinTTY on this project's primary platform.
 # Plain assertions preserve failures without rendering expensive comparison diffs.
 addopts = "-n auto --dist=loadfile -ra --tb=short --durations=10 -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' --strict-markers --strict-config --capture=sys --max-worker-restart=0 --assert=plain"
-# Per-test wall ceiling: a deadlocked test fails in minutes with a stack dump
-# instead of wedging the whole run for hours (the CI unit lane sat 3-5.5h
-# wedged with idle workers on every recent run). pytest-timeout picks the
-# signal method where available (Linux) and falls back to thread elsewhere.
-# 300 s is a ceiling, not a target; no legitimate unit test approaches it.
-#
-# The ceiling above bounds a hung TEST. It cannot bound a dead WORKER, and that
-# is the failure this repository actually kept hitting: a test whose thread is
-# blocked in `subprocess.wait()` is not interruptible by the thread timeout
-# method, so the worker exits uncleanly rather than reporting. xdist then
-# replaces the node, and the run either re-runs the test on the replacement --
-# observed reporting ONE test id as three separate failures -- or wedges the
-# loadscope scheduler outright (`KeyError: <WorkerController gw6>` in
-# `_assign_work_unit`, because a replacement node has no registered
-# collection). Both were reproduced here; the wedge sat 30 minutes with no
-# output on an otherwise idle box before it was killed.
-#
-# `--max-worker-restart=0` makes a worker death terminal and LOUD: the session
-# stops and names the test the worker died on, instead of silently retrying it
-# or hanging. A crashed worker is a defect to fix, never a transient to absorb
-# -- absorbing it is what turns one broken test into a corrupted result set.
-timeout = 300
+# Correctness tests run to completion independently of host speed. Callers
+# can explicitly request a pytest-timeout deadline when investigating a hang.
+# `--max-worker-restart=0` keeps a crashed worker terminal and visible rather
+# than silently retrying its test.
 # Drop a test's `tmp_path` as soon as that test PASSES; keep it when it fails.
 # Measured on this box: `pytest-of-hello` reached 39.1 GB across 101 retained
 # session directories, 85% of it a dozen packaging-lane runs at up to 4.4 GB and
@@ -1319,20 +1304,16 @@ exclude = 'tests|test_'
 min_confidence = 80
 paths = ["src/cadrumo"]
 exclude = [
-  "*/src/cadrumo/*test_*.py",
-  "*\\src\\cadrumo\\*test_*.py",
-  "*/src/cadrumo/tests/*",
-  "*\\src\\cadrumo\\tests\\*",
-  "*/src/cadrumo/*/tests/*",
-  "*\\src\\cadrumo\\*\\tests\\*",
-  "*/src/cadrumo/_data/*",
-  "*\\src\\cadrumo\\_data\\*",
-  "*/src/cadrumo/*/_data/*",
-  "*\\src\\cadrumo\\*\\_data\\*",
-  "*/src/cadrumo/conftest.py",
-  "*\\src\\cadrumo\\conftest.py",
-  "*/src/cadrumo/*/conftest.py",
-  "*\\src\\cadrumo\\*\\conftest.py",
+  "*/tests/*",
+  "*\\tests\\*",
+  "*/_data/*",
+  "*\\_data\\*",
+  "*/test_*.py",
+  "*\\test_*.py",
+  "*/_test_*.py",
+  "*\\_test_*.py",
+  "*/conftest.py",
+  "*\\conftest.py",
 ]
 ignore_decorators = [
   "@app.command",
@@ -1405,7 +1386,8 @@ ignore_names = [
 [tool.deptry.per_rule_ignores]
 # `cadrumo`: the `all` convenience extra self-references the capability extras
 # (`cadrumo[google]` etc.); deptry reads the self-reference as an unused dependency.
-# `cadrumo-data-manuals` / `cadrumo-data-official`: two data-only companion
+# `cadrumo-data-manuals` / `cadrumo-data-official` / `cadrumo-data-normatives`:
+# three data-only companion
 # distributions with no importable code the scanner can see; the corpus locator
 # reaches their shared `cadrumo_data` namespace package dynamically through
 # `importlib.resources` (the corpus-binary resolution seam).
@@ -1423,6 +1405,7 @@ DEP002 = [
   "cadrumo",
   "cadrumo-data-manuals",
   "cadrumo-data-official",
+  "cadrumo-data-normatives",
   "pillow",
   "python-dotenv",
   # Typer imports Rich for runtime help/error rendering. The application

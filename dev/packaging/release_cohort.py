@@ -153,7 +153,9 @@ def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort
         "cadrumo-data-manuals": cohort.manuals_wheel,
         "cadrumo-data-manuals-sdist": cohort.manuals_sdist,
         "cadrumo-data-official": cohort.official_wheel,
+        "cadrumo-data-normatives": cohort.normatives_wheel,
         "cadrumo-data-official-sdist": cohort.official_sdist,
+        "cadrumo-data-normatives-sdist": cohort.normatives_sdist,
     }
     declared = {
         source_manifest.relative_to(source_root).as_posix(),
@@ -192,7 +194,9 @@ def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort
         manuals_wheel=copied_artifacts["cadrumo-data-manuals"],
         manuals_sdist=copied_artifacts["cadrumo-data-manuals-sdist"],
         official_wheel=copied_artifacts["cadrumo-data-official"],
+        normatives_wheel=copied_artifacts["cadrumo-data-normatives"],
         official_sdist=copied_artifacts["cadrumo-data-official-sdist"],
+        normatives_sdist=copied_artifacts["cadrumo-data-normatives-sdist"],
     )
 
 
@@ -391,6 +395,11 @@ def build_from_clean_source(
         if use_prepared_source
         else build_python_cohort(root, python_work)
     )
+    if python_cohort.source_digest != expected_source_digest:
+        raise SystemExit(
+            "captured Python cohort source differs from the requested release source: "
+            f"expected {expected_source_digest}, got {python_cohort.source_digest}",
+        )
     cohort = _copy_python_cohort(python_cohort, output / "python")
     scoop, homebrew = _generate_channel_artifacts(
         clean_root=root,
@@ -437,9 +446,19 @@ def build_from_clean_source(
                 cohort.official_wheel,
             ),
             (
+                "cadrumo-data-normatives-wheel",
+                ArtifactKind.PYTHON_WHEEL,
+                cohort.normatives_wheel,
+            ),
+            (
                 "cadrumo-data-official-sdist",
                 ArtifactKind.PYTHON_SDIST,
                 cohort.official_sdist,
+            ),
+            (
+                "cadrumo-data-normatives-sdist",
+                ArtifactKind.PYTHON_SDIST,
+                cohort.normatives_sdist,
             ),
             (
                 "python-cohort-manifest",

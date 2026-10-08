@@ -5,7 +5,7 @@ requires = ["hatchling>=1.32.3,<2"]
 build-backend = "hatchling.build"
 
 [project]
-name = "cadrumo-data-official"
+name = "cadrumo-data-normatives"
 # Version-locked to the root `cadrumo` distribution. This is a synced literal kept
 # equal to the `version` field of the repository-root pyproject.toml; the parity
 # gate `dev/packaging/tests/test_cadrumo_data_distribution.py` fails loudly if the
@@ -13,7 +13,7 @@ name = "cadrumo-data-official"
 # runtime wheel that resolves it. Bump the root and all three companions
 # together on every release.
 version = "0.5.1" # x-release-please-version
-description = "Official AEAT designs and workbooks and EU source binaries for the Cadrumo distribution"
+description = "Normative source binaries for the Cadrumo distribution"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"

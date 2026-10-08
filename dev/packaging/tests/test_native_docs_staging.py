@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -79,7 +80,10 @@ def _staged(build: Path) -> tuple[Path, dict[str, Any]]:
 
 def _composed(payload: Path, language: str, page: str) -> str:
     structure = (payload / "structure" / page).read_text(encoding="utf-8", newline="")
-    return compose_page(structure, json.loads((payload / "text" / f"{language}.json").read_text(encoding="utf-8")))
+    text = compose_page(structure, json.loads((payload / "text" / f"{language}.json").read_text(encoding="utf-8")))
+    # The stored page omits platform line terminators; composition restores
+    # them just as the documentation producer does when writing its output.
+    return text.replace("\n", os.linesep)
 
 
 def test_csp_hash_matches_the_specification_example_and_html_newline_normalization() -> None:

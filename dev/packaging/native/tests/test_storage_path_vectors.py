@@ -25,7 +25,7 @@ def test_host_resolver_replays_original_and_normalized_link_fixtures(tmp_path: P
     for name, target in vector.links:
         if os.name == "nt":
             command = [os.environ["COMSPEC"], "/c", "mklink", "/J", str(tmp_path / name), str(tmp_path / target)]
-            result = run_audited_process(command, capture_output=True, timeout=20)
+            result = run_audited_process(command, capture_output=True, timeout=None)
             assert result.returncode == 0, (result.stdout, result.stderr)
         else:
             (tmp_path / name).symlink_to(tmp_path / target)

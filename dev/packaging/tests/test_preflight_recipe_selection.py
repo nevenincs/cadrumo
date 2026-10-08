@@ -69,7 +69,6 @@ from __future__ import annotations
 
 import functools
 import re
-import subprocess
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -79,7 +78,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..campaign import campaign_pytest_argv
+from ..campaign import PytestPass, campaign_pytest_argv, pytest_pass_argv
 from ..command_execution import run_command
 from ._justfile_recipes import Recipe, packaging_pytest_recipes
 
@@ -87,16 +86,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _REPO_ROOT: Final = REPO_ROOT
 _TARGET_DIRECTORY: Final = "dev/packaging/tests"
-#: Wall-clock bound for one nested collection. The heaviest here costs
-#: about 8.2s unloaded, so 300s carried roughly a thirty-sevenfold margin.
-#: Its sibling in ``dev/quality/tests/test_shard.py`` ran the same kind of
-#: nested ``--collect-only`` on a HUNDREDfold margin and still expired inside
-#: a twenty-three-minute concurrent suite, so this one had a third of the
-#: headroom of a budget already shown to be too tight. The bound stays --
-#: an unbounded wait on a child cannot be interrupted by the per-test
-#: ceiling, and the worker dies taking every sibling's result with it -- but
-#: it is sized for real contention rather than an idle machine.
-_COLLECT_TIMEOUT_SECONDS: Final = 600
 
 #: Recipes known to invoke pytest over this directory. Asserted as a subset of
 #: what the parser finds, so a parser that stops matching fails loudly instead
@@ -298,33 +287,22 @@ def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
     collection_arguments = tuple(
         argument for argument in arguments if argument not in {"-q", "--quiet", "-v", "--verbose"}
     )
-    try:
-        completed = run_command(
-            [
-                sys.executable,
-                "-m",
-                "pytest",
-                "-p",
-                "no:cacheprovider",
-                "--collect-only",
-                *collection_arguments,
-                "-q",
-                "-n0",
-            ],
-            cwd=_REPO_ROOT,
-            errors="replace",
-            timeout_seconds=_COLLECT_TIMEOUT_SECONDS,
-        )
-    except subprocess.TimeoutExpired as expiry:
-        # Chained on purpose: the expiry carries the argv and the elapsed budget,
-        # and none of it is sensitive. Reading an expiry as a recipe-selection
-        # defect is the wrong first move, so the message says what it means.
-        message = (
-            f"{label} did not finish collecting within {_COLLECT_TIMEOUT_SECONDS}s. The heaviest "
-            "collection here costs about 8.2s unloaded, so an expiry means the machine was "
-            "contended, not that the recipe selection changed"
-        )
-        raise AssertionError(message) from expiry
+    completed = run_command(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-p",
+            "no:cacheprovider",
+            "--collect-only",
+            *collection_arguments,
+            "-q",
+            "-n0",
+        ],
+        cwd=_REPO_ROOT,
+        errors="replace",
+        timeout_seconds=None,
+    )
 
     assert completed.returncode == 0, (
         f"{label} failed to collect (exit {completed.returncode}):\n{completed.stdout}\n{completed.stderr}"
@@ -472,28 +450,26 @@ def test_the_campaign_pass_corpus_is_non_empty_and_carries_the_known_passes() ->
 def test_the_pass_argument_reader_keeps_selection_and_scheduler_tokens() -> None:
     """Positive control: a real driver argv reads back without its basetemp.
 
-    The input is a verbatim argv the driver builds. Every token that decides
-    WHICH tests run or HOW MANY processes run them must survive, because the
+    The driver builds this argv from an explicit caller timeout request.
+    Tokens that decide WHICH tests run or HOW MANY processes run them must
+    survive, because the
     coverage and ``-n0`` assertions are readings of this output; only the
     interpreter prefix and the destructive ``--basetemp`` may be dropped.
     """
-    argv = [
-        sys.executable,
-        "-m",
-        "pytest",
-        "-q",
-        "--timeout=900",
-        "--basetemp=var/packaging-smoke/pytest-basetemp/preflight-serial",
-        "-m",
-        "serial and not perf",
-        _TARGET_DIRECTORY,
-        f"--ignore={_TARGET_DIRECTORY}/test_installed_oracles.py",
-        _NO_WORKERS,
-    ]
+    requested = PytestPass(
+        label="caller-timeout",
+        markers="serial and not perf",
+        target=_TARGET_DIRECTORY,
+        parallel=False,
+        ignore=(f"{_TARGET_DIRECTORY}/test_installed_oracles.py",),
+        timeout_seconds=17,
+        pinned_basetemp=True,
+    )
+    argv = pytest_pass_argv(requested, _REPO_ROOT, None)
 
     assert parse_pass_arguments(argv) == (
         "-q",
-        "--timeout=900",
+        "--timeout=17",
         "-m",
         "serial and not perf",
         _TARGET_DIRECTORY,

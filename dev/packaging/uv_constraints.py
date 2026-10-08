@@ -13,7 +13,7 @@ lockfile on every generation.
 One product distribution carries both console scripts, so its closure is the
 whole runtime surface the installers must pin: the MCP SDK and its transport
 stack are ``cadrumo``'s own requirements, reached by the same export as the
-CLI's. Local, bundle-local-wheel rows (``cadrumo`` and the two data companions)
+CLI's. Local, bundle-local-wheel rows (``cadrumo`` and the three data companions)
 are excluded via ``--no-emit-package``; only genuine third-party leaves are
 pinned.
 """
@@ -39,7 +39,7 @@ _CONSTRAINTS_HEADER = (
 def local_product_packages(*, repo_root: Path) -> tuple[str, ...]:
     """Return the workspace-local package names, read from ``uv.lock``.
 
-    The runtime install closure is ``cadrumo`` and its two data companions.
+    The runtime install closure is ``cadrumo`` and its three data companions.
     All three install from bundle-local or index-resolved product wheels, so
     they are excluded from the pinned third-party constraint set; only their
     transitive dependency closure needs pinning.

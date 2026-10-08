@@ -1,4 +1,4 @@
-cadrumo-data-official (cadrumo / aeat corpus companion)
+cadrumo-data-normatives (Cadrumo normative corpus companion)
 Copyright 2026 Neve Nincs (https://neve.md) and the cadrumo contributors.
 
 This distribution is part of the Cadrumo project
@@ -7,7 +7,7 @@ packaging, file layout, and derived metadata are distributed under the
 Apache License, Version 2.0 (see LICENSE).
 
 The corpus binaries it ships reproduce official Spanish public-sector
-documents (official AEAT designs and workbooks, plus EU source documents). Legal and regulatory texts are excluded from copyright by Article 13
+documents (normative sources). Legal and regulatory texts are excluded from copyright by Article 13
 TRLPI (Real Decreto Legislativo 1/1996); AEAT/BOE publications are reused as
 public-sector information under Ley 37/2007 and the publishing bodies'
 general reuse terms: sources are identified per document, content is

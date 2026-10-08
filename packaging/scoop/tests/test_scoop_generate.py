@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 from dev.packaging.cohort_attestation import add_test_runtime_wheelhouse, add_test_source_archive
-from dev.packaging.command_spec_attestation import attest_command_specs
+from dev.packaging.command_spec_attestation import _projection_digest, attest_command_specs
 from dev.packaging.hashing import sha256_path
 from dev.packaging.lane_verification_core import (
     build_companion_wheels,
@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.s
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _GENERATOR = _REPO_ROOT / "packaging" / "scoop" / "generate.py"
 #: The data distributions the command distribution cannot do grounded work without.
-_COMPANIONS = ("cadrumo-data-manuals", "cadrumo-data-official")
+_COMPANIONS = ("cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-data-normatives")
 #: Every quoted requirement naming the command distribution in an install hook.
 _CADRUMO_REQUIREMENT = re.compile(r"'cadrumo[^']*'")
 
@@ -44,6 +44,7 @@ class BuiltCohort:
     root: Path
     manuals: Path
     official: Path
+    normatives: Path
     version: str
 
 
@@ -59,16 +60,16 @@ def _generator_command(cohort: BuiltCohort, *, cohort_dir: Path | None = None) -
 
 
 def _copy_cohort(
-    artifacts: tuple[Path, Path, Path],
+    artifacts: tuple[Path, ...],
     destination: Path,
-) -> tuple[Path, Path, Path]:
+) -> tuple[Path, ...]:
     destination.mkdir()
     copied: list[Path] = []
     for artifact in artifacts:
         target = destination / artifact.name
         shutil.copy2(artifact, target)
         copied.append(target)
-    return copied[0], copied[1], copied[2]
+    return tuple(copied)
 
 
 def _wheel_requirements(wheel: Path) -> tuple[str, ...]:
@@ -105,13 +106,14 @@ def _conditional_companion_pin_wheel(
     destination: Path,
     *,
     version: str,
+    companion: str,
 ) -> None:
     with zipfile.ZipFile(source) as source_archive:
         members = tuple(source_archive.infolist())
         metadata_members = tuple(member for member in members if member.filename.endswith(".dist-info/METADATA"))
         assert len(metadata_members) == 1
         metadata_name = metadata_members[0].filename
-        original = f"Requires-Dist: cadrumo-data-manuals=={version}"
+        original = f"Requires-Dist: {companion}=={version}"
         replacement = f'{original}; sys_platform != "win32"'
         metadata = source_archive.read(metadata_name).decode("utf-8")
         assert metadata.count(original) == 1
@@ -141,10 +143,10 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
     # tracked-data queries need Git and the extract has no ``.git``.
     build_root = build_root_snapshot(_REPO_ROOT, build_dir)
     root = build_wheel(_REPO_ROOT, build_dir, uv, build_root=build_root)
-    manuals, official = build_companion_wheels(build_dir, uv, build_root=build_root)
+    manuals, official, normatives = build_companion_wheels(build_dir, uv, build_root=build_root)
     cohort_dir = root_dir / "cohort"
-    copied_root, copied_manuals, copied_official = _copy_cohort(
-        (root, manuals, official),
+    copied_root, copied_manuals, copied_official, copied_normatives = _copy_cohort(
+        (root, manuals, official, normatives),
         cohort_dir,
     )
     root_sdist = build_sdist(build_dir, uv, build_root=build_root)
@@ -156,6 +158,10 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
     run_checked(
         [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
         cwd=build_root / "packaging/cadrumo_data_official",
+    )
+    run_checked(
+        [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
+        cwd=build_root / "packaging/cadrumo_data_normatives",
     )
     copied_sdists = []
     for artifact in (root_sdist, *sorted(companion_sdists.glob("*.tar.gz"))):
@@ -171,6 +177,8 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
         "cadrumo-data-manuals-sdist": next(path.name for path in copied_sdists if "manuals" in path.name),
         "cadrumo-data-official": copied_official.name,
         "cadrumo-data-official-sdist": next(path.name for path in copied_sdists if "official" in path.name),
+        "cadrumo-data-normatives": copied_normatives.name,
+        "cadrumo-data-normatives-sdist": next(path.name for path in copied_sdists if "normatives" in path.name),
     }
     digests = {name: sha256_path(cohort_dir / filename) for name, filename in artifacts.items()}
     source_archive = add_test_source_archive(cohort_dir, artifacts, digests)
@@ -200,6 +208,7 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
         root=copied_root,
         manuals=copied_manuals,
         official=copied_official,
+        normatives=copied_normatives,
         version=version,
     )
 
@@ -307,9 +316,8 @@ def test_generator_rejects_missing_and_duplicate_wheels(
 ) -> None:
     """Require exactly one artifact for every cohort distribution."""
     missing_dir = tmp_path / "missing"
-    missing_dir.mkdir()
-    shutil.copy2(built_cohort.root, missing_dir / built_cohort.root.name)
-    shutil.copy2(built_cohort.manuals, missing_dir / built_cohort.manuals.name)
+    shutil.copytree(built_cohort.directory, missing_dir)
+    (missing_dir / built_cohort.normatives.name).unlink()
     with pytest.raises(SystemExit):
         run_checked(
             [
@@ -321,10 +329,7 @@ def test_generator_rejects_missing_and_duplicate_wheels(
         )
 
     duplicate_dir = tmp_path / "duplicate"
-    _copy_cohort(
-        (built_cohort.root, built_cohort.manuals, built_cohort.official),
-        duplicate_dir,
-    )
+    shutil.copytree(built_cohort.directory, duplicate_dir)
     shutil.copy2(
         built_cohort.manuals,
         duplicate_dir / f"cadrumo_data_manuals-{built_cohort.version}-duplicate.whl",
@@ -346,13 +351,15 @@ def test_generator_rejects_distribution_and_version_mismatches(
 ) -> None:
     """Reject a renamed foreign companion and a requested version mismatch."""
     foreign_dir = tmp_path / "foreign"
-    foreign_dir.mkdir()
-    shutil.copy2(built_cohort.root, foreign_dir / built_cohort.root.name)
+    shutil.copytree(built_cohort.directory, foreign_dir)
     shutil.copy2(
         built_cohort.official,
         foreign_dir / built_cohort.manuals.name,
     )
-    shutil.copy2(built_cohort.official, foreign_dir / built_cohort.official.name)
+    manifest = foreign_dir / "python-cohort.json"
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload["sha256"]["cadrumo-data-manuals"] = sha256_path(built_cohort.official)
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(SystemExit):
         run_checked(
             [
@@ -369,26 +376,39 @@ def test_generator_rejects_distribution_and_version_mismatches(
         run_checked([*command, "--output", str(tmp_path / "version.json")], cwd=_REPO_ROOT)
 
 
+@pytest.mark.parametrize("companion", _COMPANIONS)
 def test_generator_rejects_conditional_companion_pin(
     tmp_path: Path,
     built_cohort: BuiltCohort,
+    companion: str,
 ) -> None:
     """Reject a root artifact that makes a mandatory companion conditional."""
     conditional_dir = tmp_path / "conditional"
-    conditional_dir.mkdir()
+    shutil.copytree(built_cohort.directory, conditional_dir)
     _conditional_companion_pin_wheel(
         built_cohort.root,
         conditional_dir / built_cohort.root.name,
         version=built_cohort.version,
+        companion=companion,
     )
-    shutil.copy2(built_cohort.manuals, conditional_dir / built_cohort.manuals.name)
-    shutil.copy2(built_cohort.official, conditional_dir / built_cohort.official.name)
-    with pytest.raises(SystemExit):
-        run_checked(
-            [
-                *_generator_command(built_cohort, cohort_dir=conditional_dir),
-                "--output",
-                str(tmp_path / "conditional.json"),
-            ],
-            cwd=_REPO_ROOT,
-        )
+    manifest = conditional_dir / "python-cohort.json"
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    root_digest = sha256_path(conditional_dir / built_cohort.root.name)
+    payload["sha256"]["cadrumo"] = root_digest
+    payload["command_spec_attestation"]["root_wheel_sha256"] = root_digest
+    attestation = payload["command_spec_attestation"]
+    attestation["envelope_sha256"] = _projection_digest(
+        {key: value for key, value in attestation.items() if key != "envelope_sha256"}
+    )
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+    result = run_checked(
+        [
+            *_generator_command(built_cohort, cohort_dir=conditional_dir),
+            "--output",
+            str(tmp_path / "conditional.json"),
+        ],
+        cwd=_REPO_ROOT,
+        expected={1},
+    )
+    assert companion in result.stderr
+    assert "unconditionally and without extras" in result.stderr

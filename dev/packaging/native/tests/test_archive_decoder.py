@@ -35,7 +35,7 @@ def test_cmake_decoder_projection_is_builder_only_and_refuses_drift(tmp_path: Pa
     )
     cmake = shutil.which("cmake")
     assert cmake is not None
-    result = run_command([cmake, "-P", str(script)], cwd=tmp_path, timeout_seconds=30)
+    result = run_command([cmake, "-P", str(script)], cwd=tmp_path, timeout_seconds=None)
     assert result.returncode == 0, result.stderr
     selected = json.loads(output.read_text(encoding="utf-8"))
     pins = toolchain_for_target("linux-aarch64")

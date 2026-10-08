@@ -37,6 +37,7 @@ _DISTRIBUTIONS = (
     ("cadrumo", "cadrumo-*.whl"),
     ("cadrumo-data-manuals", "cadrumo_data_manuals-*.whl"),
     ("cadrumo-data-official", "cadrumo_data_official-*.whl"),
+    ("cadrumo-data-normatives", "cadrumo_data_normatives-*.whl"),
 )
 
 
@@ -91,7 +92,7 @@ def _console_scripts(archive: zipfile.ZipFile, wheel: Path) -> tuple[str, ...]:
     shipped ``cadrumo-mcp`` while the manifest exposed only ``aeat``, so the
     server was installed into the venv and reachable from nowhere on PATH.
 
-    An empty result is legitimate and not decided here -- the two data
+    An empty result is legitimate and not decided here -- the three data
     companions declare no entry points at all -- so the emptiness check
     belongs to the caller that knows which artifact must supply the commands.
     """
@@ -107,11 +108,10 @@ def _console_scripts(archive: zipfile.ZipFile, wheel: Path) -> tuple[str, ...]:
 
 def _validate_companion_pins(
     root: WheelArtifact,
-    manuals: WheelArtifact,
-    official: WheelArtifact,
+    companions: tuple[WheelArtifact, ...],
 ) -> None:
     requirements = [Requirement(value) for value in root.requirements]
-    for companion in (manuals, official):
+    for companion in companions:
         matches = [
             requirement
             for requirement in requirements
@@ -161,8 +161,8 @@ def generate_manifest(
         raise SystemExit(
             f"cohort wheel versions must all equal {version!r}: {sorted(observed_versions)!r}",
         )
-    root, manuals, official = artifacts
-    _validate_companion_pins(root, manuals, official)
+    root, *companions = artifacts
+    _validate_companion_pins(root, tuple(companions))
     # The command distribution is the only cohort member that installs
     # commands; a build that stopped declaring them would otherwise produce a
     # manifest exposing nothing on PATH, silently.

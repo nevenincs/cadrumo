@@ -343,7 +343,7 @@ def verify(
                 "from cadrumo.domain.calculations.registry.authority_store import require_authority_store_available; "
                 "p=configured_authority_root(); require_authority_store_available(p/'authority.current.json'); "
                 "print(json.dumps({n:m.version(n) for n in "
-                "['cadrumo','cadrumo-data-manuals','cadrumo-data-official']}))",
+                "['cadrumo','cadrumo-data-manuals','cadrumo-data-official','cadrumo-data-normatives']}))",
             ]
         )
         versions = json.loads(installed.stdout)

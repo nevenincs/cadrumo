@@ -18,7 +18,8 @@
         "src/cadrumo/core/package_version.py",
         "pyproject.toml",
         "packaging/cadrumo_data_manuals/pyproject.toml",
-        "packaging/cadrumo_data_official/pyproject.toml"
+        "packaging/cadrumo_data_official/pyproject.toml",
+        "packaging/cadrumo_data_normatives/pyproject.toml"
       ],
       "component": ""
     }

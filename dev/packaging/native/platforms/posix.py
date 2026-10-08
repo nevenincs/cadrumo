@@ -214,7 +214,7 @@ def verify_package(
         "child==sys.executable or sys.exit('Child interpreter escaped the package'); "
         "print(json.dumps({'executable':sys.executable}))"
     )
-    with tempfile.TemporaryDirectory(prefix="cadrumo-native-state-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-native-state-", dir=destination) as temporary:
         environment = {key: value for key, value in os.environ.items() if not key.startswith(("LD_", "DYLD_"))}
         environment.update({STORAGE_ROOT.variable: temporary, "PYTHONPATH": temporary, "PYTHONHOME": temporary})
         for arguments in (["--check-package"], ["-c", script]):

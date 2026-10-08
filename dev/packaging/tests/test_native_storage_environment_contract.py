@@ -36,6 +36,7 @@ def test_desktop_defaults_project_canonical_declarations(tmp_path: Path) -> None
     generate(REPO_ROOT, tmp_path)
     contract = json.loads((tmp_path / "contract.json").read_text(encoding="utf-8"))
     assert contract["desktop_defaults"] == {
+        "console_workspace": STORAGE_TAXONOMY[StorageCategory.CONSOLE_WORKSPACE].subpath,
         "webview": STORAGE_TAXONOMY[StorageCategory.DESKTOP_WEBVIEW].subpath,
         "logs": STORAGE_TAXONOMY[StorageCategory.LOGS].subpath,
         "log_file": STORAGE_TAXONOMY[StorageCategory.LOG_FILE].subpath,

@@ -7,10 +7,12 @@ import zipfile
 from pathlib import Path, PurePosixPath
 
 from dev._paths import UTF_8
+from dev.first_party_source import is_test_source
 from dev.quality.source_import_analysis import wheel_exclude_globs
 from dev.source_tree import repository_files
 
 from .authority_staging import selected_published_authority
+from .google_oauth import GOOGLE_OAUTH_RESOURCE
 from .proof_ledger import (
     record_proof,
 )
@@ -25,7 +27,7 @@ _WHEEL_DATA_PREFIX = "cadrumo/_data"
 
 
 # Corpus source binaries excluded from the compact command-bearing ``cadrumo`` wheel
-# by the build config; they ship in the two mandatory ``cadrumo-data-*`` distributions. A
+# by the build config; they ship in the three mandatory ``cadrumo-data-*`` distributions. A
 # source path is one of these when it lives under ``_data/corpus`` and
 # carries a binary suffix, so the wheel-bundling parity check must not expect it
 # in the
@@ -36,6 +38,7 @@ _CORPUS_SOURCE_PREFIX = "src/cadrumo/_data/corpus/"
 _COMPANION_HOOKS = (
     "packaging/cadrumo_data_manuals/hatch_build.py",
     "packaging/cadrumo_data_official/hatch_build.py",
+    "packaging/cadrumo_data_normatives/hatch_build.py",
 )
 
 
@@ -183,7 +186,7 @@ def expected_wheel_data_paths(repo_root: Path) -> set[str]:
 
     Corpus source binaries declared by the root Hatch exclusion list are excluded:
     the wheel-split build config sheds them from this wheel and ships them in the
-    two mandatory ``cadrumo-data-*`` distributions, so they are absent from the
+    three mandatory ``cadrumo-data-*`` distributions, so they are absent from the
     archive.
     Test modules under a ``_data`` ``tests/`` folder are excluded by the
     data-budget wheel boundary (tests serve no installed consumer) and are
@@ -220,7 +223,9 @@ def _is_configured_exclusion(path: str, patterns: tuple[str, ...]) -> bool:
 def _expected_wheel_data_paths(repo_root: Path, source_paths: set[str]) -> set[str]:
     """Project source data and the selected published authority into wheel paths."""
     suffixes = _configured_corpus_binary_suffixes(repo_root)
-    split_owned = {path for path in source_paths if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
+    split_owned = {
+        path for path in source_paths if not is_test_source(path) and _is_corpus_source_binary(path, suffixes)
+    }
     _assert_split_files_have_companion_owners(repo_root, split_owned)
     # The build sheds authoring inputs by directory as well as by suffix, so an
     # expectation derived from the source tree alone demands payload the wheel
@@ -230,13 +235,16 @@ def _expected_wheel_data_paths(repo_root: Path, source_paths: set[str]) -> set[s
     for path in source_paths:
         if path in split_owned:
             continue
-        if "/tests/" in path:
+        if is_test_source(path):
             continue
         if _is_configured_exclusion(path, exclusions):
             continue
         expected.add(f"{_WHEEL_DATA_PREFIX}/{path.removeprefix(_SOURCE_DATA_PREFIX)}")
     descriptor, database = selected_published_authority(repo_root)
     expected.update(f"{_WHEEL_DATA_PREFIX}/registry/authority/{path.name}" for path in (descriptor, database))
+    # The build hook creates this validated runtime input even when the source
+    # checkout keeps its publisher configuration outside tracked package data.
+    expected.add(GOOGLE_OAUTH_RESOURCE.removeprefix("src/"))
     return expected
 
 

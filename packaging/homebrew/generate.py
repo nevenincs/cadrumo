@@ -34,6 +34,7 @@ normalise_distribution_name, sha256_path, load_python_cohort = _load_packaging_h
 _COMPANIONS = (
     ("cadrumo-data-manuals", "cadrumo_data_manuals"),
     ("cadrumo-data-official", "cadrumo_data_official"),
+    ("cadrumo-data-normatives", "cadrumo_data_normatives"),
 )
 
 # argon2-cffi-bindings and cryptography are installed with build isolation
@@ -50,8 +51,8 @@ _COMPANIONS = (
 # versioning into a separate `vcs_versioning` distribution that an
 # isolation-disabled build cannot resolve. maturin (cryptography's build
 # backend, cryptography>=48 requires maturin>=1.9.4,<2,!=1.12.0) builds from its
-# own Rust source under isolation ON safely — its build overlay never imports
-# cffi, so pac-ret there does not fault — and `rust` is already a formula build
+# own Rust source under isolation ON safely â€” its build overlay never imports
+# cffi, so pac-ret there does not fault â€” and `rust` is already a formula build
 # dependency. Declared as (name, url, sha256).
 _EXTRA_BUILD_BACKEND = (
     (
@@ -291,11 +292,11 @@ def _resolve_platform_resources(
     packages_by_name: dict[str, list[dict[str, Any]]],
     platform: str,
     target: dict[str, str],
-    resolved: dict[str, Resource],
+    resolved: dict[tuple[str, str, str], Resource],
 ) -> None:
     # Only the mandatory runtime closure becomes formula resources.
     queue = list(root.get("dependencies", []))
-    seen = {"cadrumo-data-manuals", "cadrumo-data-official"}
+    seen = {name for name, _archive_prefix in _COMPANIONS}
     while queue:
         dependency = queue.pop(0)
         name = str(dependency["name"])
@@ -304,7 +305,8 @@ def _resolve_platform_resources(
         package = _select_package(dependency, packages_by_name)
         seen.add(name)
         material = _locked_resource(name, package, platform)
-        resolved[name] = _merge_resource(material, resolved.get(name))
+        key = (material.name, material.url, material.sha256)
+        resolved[key] = _merge_resource(material, resolved.get(key))
         queue.extend(package.get("dependencies", []))
 
 
@@ -317,10 +319,10 @@ def _locked_resources(lock_path: Path) -> tuple[Resource, ...]:
     roots = packages_by_name.get("cadrumo", [])
     if len(roots) != 1:
         raise SystemExit("uv.lock must contain exactly one cadrumo package")
-    resolved: dict[str, Resource] = {}
+    resolved: dict[tuple[str, str, str], Resource] = {}
     for platform, target in _TARGETS.items():
         _resolve_platform_resources(roots[0], packages_by_name, platform, target, resolved)
-    return tuple(sorted(resolved.values(), key=lambda resource: resource.name))
+    return tuple(sorted(resolved.values(), key=lambda resource: (resource.name, resource.url, resource.sha256)))
 
 
 def _resource_declaration(resource: Resource, *, indent: int) -> str:
@@ -372,6 +374,15 @@ def _platform_resource_body(
 
 
 def _resource_blocks(resources: tuple[Resource, ...]) -> str:
+    placements: dict[tuple[str, str], tuple[str, str]] = {}
+    for resource in resources:
+        material = (resource.url, resource.sha256)
+        for target in resource.platforms:
+            placement = (resource.name, target)
+            previous = placements.get(placement)
+            if previous is not None and previous != material:
+                raise SystemExit(f"platform lock material overlaps for Homebrew resource: {resource.name} on {target}")
+            placements[placement] = material
     all_targets = frozenset(_TARGETS)
     common = tuple(resource for resource in resources if resource.platforms == all_targets)
     conditional = tuple(resource for resource in resources if resource.platforms != all_targets)

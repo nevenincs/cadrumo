@@ -16,5 +16,8 @@ src/cadrumo/test_*.py
 src/cadrumo/**/test_*.py
 src/cadrumo/**/_test_*.py
 src/cadrumo/tests/
+src/cadrumo/**/tests/
+src/cadrumo/conftest.py
+src/cadrumo/**/conftest.py
 
 # Test-only support modules whose names intentionally avoid pytest collection.

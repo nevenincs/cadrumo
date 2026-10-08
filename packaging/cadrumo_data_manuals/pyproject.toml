@@ -9,9 +9,9 @@ name = "cadrumo-data-manuals"
 # Version-locked to the root `cadrumo` distribution. This is a synced literal kept
 # equal to the `version` field of the repository-root pyproject.toml; the parity
 # gate `dev/packaging/tests/test_cadrumo_data_distribution.py` fails loudly if the
-# two ever drift, so the companion can only ship at the same version as the
-# runtime wheel that resolves it. Bump both (and the sibling
-# `cadrumo-data-official`) together on every release.
+# versions ever drift, so the companion can only ship at the same version as the
+# runtime wheel that resolves it. Bump the root and all three companions
+# together on every release.
 version = "0.5.1" # x-release-please-version
 description = "AEAT/BOE práctico manuals (corpus source binaries) for the Cadrumo distribution"
 readme = "README.md"
@@ -40,9 +40,9 @@ Issues = "https://github.com/nevenincs/cadrumo/issues"
 Repository = "https://github.com/nevenincs/cadrumo"
 
 # This companion ships a subtree of the SAME `cadrumo_data` PEP 420 implicit
-# namespace package as the sibling `cadrumo-data-official`: NEITHER wheel ships
+# namespace package as the other data companions: no companion ships
 # `cadrumo_data/__init__.py` (a joint install would collide on that path), so
-# `importlib.resources.files("cadrumo_data")` resolves a MultiplexedPath over both
+# `importlib.resources.files("cadrumo_data")` resolves a MultiplexedPath over all
 # installed portions. There is therefore no discoverable package to select —
 # every shipped file is force-included by the build hook — so selection is
 # bypassed and the wheel content is the hook's force-include map alone.

@@ -20,7 +20,7 @@ _REPO_ROOT = Path(__file__).parents[3]
 #: classifiers are simply never compared, and no assertion here can notice an
 #: absence it was never told about. The floor keeps an empty or truncated glob
 #: from satisfying a comparison between two nearly empty sides.
-_MINIMUM_COHORT_PYPROJECTS = 3
+_MINIMUM_COHORT_PYPROJECTS = 4
 
 
 def _cohort_pyprojects(root: Path) -> dict[str, Path]:
@@ -168,7 +168,7 @@ def test_python_classifier_gate_rejects_unproven_and_prerelease_rows() -> None:
 
 def test_the_roster_covers_every_packaging_manifest_on_disk(tmp_path: Path) -> None:
     """A companion added under ``packaging/`` joins the roster without an edit here."""
-    assert set(_PYPROJECTS) == {"root", "cadrumo_data_manuals", "cadrumo_data_official"}
+    assert set(_PYPROJECTS) == {"root", "cadrumo_data_manuals", "cadrumo_data_official", "cadrumo_data_normatives"}
 
     (tmp_path / "pyproject.toml").write_text("", encoding="utf-8")
     for companion in ("cadrumo_data_manuals", "cadrumo_data_official", "cadrumo_data_forms"):

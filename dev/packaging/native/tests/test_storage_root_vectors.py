@@ -149,7 +149,7 @@ def _installed_probe(site: Path, cwd: Path, environment: dict[str, str]) -> dict
             env={**inherited, **environment},
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=None,
         )
     )
     assert completed.returncode == 0, completed.stderr

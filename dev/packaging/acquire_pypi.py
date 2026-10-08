@@ -190,6 +190,7 @@ def run_pypi_acquisition(
             f"cadrumo=={cohort.version}",
             f"cadrumo-data-manuals=={cohort.version}",
             f"cadrumo-data-official=={cohort.version}",
+            f"cadrumo-data-normatives=={cohort.version}",
         ],
         cwd=run_root,
         log=logs / "uv-pip-install.log",

@@ -136,6 +136,7 @@ def main(argv: list[str] | None = None) -> int:
             "wheel": relative_manifest_path(work_dir, wheel),
             "data_wheel_manuals": relative_manifest_path(work_dir, cohort.manuals_wheel),
             "data_wheel_official": relative_manifest_path(work_dir, cohort.official_wheel),
+            "data_wheel_normatives": relative_manifest_path(work_dir, cohort.normatives_wheel),
             "venv": relative_manifest_path(work_dir, venv_path),
         },
         declared=tuple(declared),

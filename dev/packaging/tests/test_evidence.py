@@ -177,6 +177,7 @@ def _installation_outcome(
         "cadrumo": "a" * 64,
         "cadrumo-data-manuals": "b" * 64,
         "cadrumo-data-official": "c" * 64,
+        "cadrumo-data-normatives": "c" * 64,
     }
     canonical = json.dumps(
         artifact_digests,

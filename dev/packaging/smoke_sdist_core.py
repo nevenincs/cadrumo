@@ -8,6 +8,7 @@ import tarfile
 from pathlib import Path
 
 from dev._paths import REPO_ROOT
+from dev.first_party_source import is_test_source
 
 from .dependency_contract import validate_frozen_exports
 from .lane_verification_core import (
@@ -109,7 +110,7 @@ def main(argv: list[str] | None = None) -> int:
     expected_data_paths = {
         path
         for path in source_data_paths(repo_root)
-        if not _is_corpus_source_binary(path, corpus_binary_suffixes) and "/tests/" not in path
+        if not _is_corpus_source_binary(path, corpus_binary_suffixes) and not is_test_source(path)
     }
     sdist = cohort.root_sdist
     _assert_sdist_contains_expected_data(
@@ -155,6 +156,7 @@ def main(argv: list[str] | None = None) -> int:
             "sdist": relative_manifest_path(work_dir, sdist),
             "data_wheel_manuals": relative_manifest_path(work_dir, cohort.manuals_wheel),
             "data_wheel_official": relative_manifest_path(work_dir, cohort.official_wheel),
+            "data_wheel_normatives": relative_manifest_path(work_dir, cohort.normatives_wheel),
             "venv": relative_manifest_path(work_dir, venv_path),
         },
         declared=tuple(declared),

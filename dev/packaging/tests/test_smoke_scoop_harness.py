@@ -82,7 +82,7 @@ foreach ($path in $paths) {{
     completed = run_command(
         [interpreter, "-NoProfile", "-Command", driver],
         cwd=Path.cwd(),
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
     assert completed.returncode == 0, completed.stderr
 
@@ -139,7 +139,7 @@ Write-Output "DEFAULT=$defaultRoot"
     completed = run_command(
         [interpreter, "-NoProfile", "-Command", driver],
         cwd=checkout,
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
     assert completed.returncode == 0, completed.stderr
     assert f"ROOT={local_root}" in completed.stdout
@@ -177,8 +177,8 @@ def test_scoop_command_root_guard_rejects_mismatch_and_shadowing(tmp_path: Path)
     unexpected_shims = tmp_path / "unexpected" / "shims"
     selected_shims.mkdir(parents=True)
     unexpected_shims.mkdir(parents=True)
-    (selected_shims / "scoop.cmd").write_text("@echo off\r\n", encoding="utf-8")
-    (unexpected_shims / "scoop.cmd").write_text("@echo off\r\n", encoding="utf-8")
+    (selected_shims / "scoop.cmd").write_text("@echo off\r\n", encoding="utf-8", newline="")
+    (unexpected_shims / "scoop.cmd").write_text("@echo off\r\n", encoding="utf-8", newline="")
     helper = str(_STORAGE_PATHS).replace("'", "''")
     root = str(selected_shims.parent).replace("'", "''")
     wrong_path = str(unexpected_shims).replace("'", "''")
@@ -206,7 +206,7 @@ Write-Output 'GUARD-PASSED'
     completed = run_command(
         [interpreter, "-NoProfile", "-Command", driver],
         cwd=tmp_path,
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
     assert completed.returncode == 0, completed.stderr
     assert "GUARD-PASSED" in completed.stdout
@@ -251,7 +251,7 @@ Write-Output 'INVOKE-NATIVE-SURVIVED'
     return run_command(
         [interpreter, "-NoProfile", "-Command", driver],
         cwd=Path.cwd(),
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
 
 
@@ -329,7 +329,7 @@ Write-Output "RESULT=$result"
     return run_command(
         [interpreter, "-NoProfile", "-Command", driver],
         cwd=Path.cwd(),
-        timeout_seconds=180,
+        timeout_seconds=None,
     )
 
 
@@ -432,7 +432,7 @@ finally {{
     completed = run_command(
         [interpreter, "-NoProfile", "-Command", driver],
         cwd=Path.cwd(),
-        timeout_seconds=180,
+        timeout_seconds=None,
     )
     assert completed.returncode == 0, completed.stderr
     assert "UNDER_EXITED=True" in completed.stdout

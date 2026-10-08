@@ -309,7 +309,7 @@ def test_tap_name_rejects_a_malformed_pair(tap_name: str) -> None:
         _require_valid_tap_name(tap_name)
 
 
-def test_localization_changes_only_the_three_cohort_acquisition_urls(tmp_path: Path) -> None:
+def test_localization_changes_only_the_four_cohort_acquisition_urls(tmp_path: Path) -> None:
     """Loopback acquisition preserves the generated formula outside cohort URLs."""
     cohort = tmp_path / "cohort"
     cohort.mkdir()
@@ -317,6 +317,7 @@ def test_localization_changes_only_the_three_cohort_acquisition_urls(tmp_path: P
         "cadrumo-0.2.1.tar.gz",
         "cadrumo_data_manuals-0.2.1.tar.gz",
         "cadrumo_data_official-0.2.1.tar.gz",
+        "cadrumo_data_normatives-0.2.1.tar.gz",
     )
     digests: dict[str, str] = {}
     for filename in filenames:
@@ -337,6 +338,10 @@ def test_localization_changes_only_the_three_cohort_acquisition_urls(tmp_path: P
             f'    url "{base}/{filenames[2]}"',
             f'    sha256 "{digests[filenames[2]]}"',
             "  end",
+            '  resource "cadrumo-data-normatives" do',
+            f'    url "{base}/{filenames[3]}"',
+            f'    sha256 "{digests[filenames[3]]}"',
+            "  end",
             '  resource "unrelated-dependency" do',
             '    url "https://files.pythonhosted.org/packages/unrelated-dependency.tar.gz"',
             "  end",
@@ -351,7 +356,7 @@ def test_localization_changes_only_the_three_cohort_acquisition_urls(tmp_path: P
         server_base_url="http://127.0.0.1:43123",
     )
 
-    assert len(replacements) == 3
+    assert len(replacements) == 4
     assert "https://files.pythonhosted.org/packages/unrelated-dependency.tar.gz" in localized
     restored = localized
     for original, replacement in replacements.items():
@@ -374,7 +379,7 @@ def test_localization_rejects_an_incomplete_cohort_formula(tmp_path: Path) -> No
         "end\n"
     )
 
-    with pytest.raises(SystemExit, match="expected root and two companion"):
+    with pytest.raises(SystemExit, match="expected root and three companion"):
         localize_formula(
             formula,
             cohort_dir=cohort.resolve(),
@@ -392,6 +397,7 @@ def test_localization_rejects_a_cohort_archive_not_matching_the_formula_digest(
         "cadrumo-0.2.1.tar.gz",
         "cadrumo_data_manuals-0.2.1.tar.gz",
         "cadrumo_data_official-0.2.1.tar.gz",
+        "cadrumo_data_normatives-0.2.1.tar.gz",
     )
     expected_payload = b"accepted source archive"
     expected_sha256 = hashlib.sha256(expected_payload).hexdigest()
@@ -410,6 +416,10 @@ def test_localization_rejects_a_cohort_archive_not_matching_the_formula_digest(
             "  end",
             '  resource "cadrumo-data-official" do',
             f'    url "{base}/{filenames[2]}"',
+            f'    sha256 "{expected_sha256}"',
+            "  end",
+            '  resource "cadrumo-data-normatives" do',
+            f'    url "{base}/{filenames[3]}"',
             f'    sha256 "{expected_sha256}"',
             "  end",
             "end",

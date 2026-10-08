@@ -27,7 +27,7 @@ def _project(root: Path) -> CommandResult:
         [sys.executable, str(REPO_ROOT / "native/desktop/src-tauri/src/python/environment.py")],
         cwd=REPO_ROOT,
         environment=environment,
-        timeout_seconds=30,
+        timeout_seconds=None,
     )
 
 

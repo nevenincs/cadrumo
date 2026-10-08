@@ -22,7 +22,7 @@ from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import CommandResult, run_command
 from dev.packaging.google_oauth import build_client_json, stage_build_client
-from dev.source_tree import content_digest, repository_files, snapshot
+from dev.source_tree import member_content_digest, repository_files, snapshot
 
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
@@ -102,18 +102,20 @@ class PythonCohort:
     manuals_sdist: Path
     official_wheel: Path
     official_sdist: Path
+    normatives_wheel: Path
+    normatives_sdist: Path
     sha256: dict[str, str]
     command_spec_attestation: dict[str, object] | None = None
 
     @property
-    def companion_wheels(self) -> tuple[Path, Path]:
+    def companion_wheels(self) -> tuple[Path, Path, Path]:
         """Return the mandatory data wheels in stable install order."""
-        return (self.manuals_wheel, self.official_wheel)
+        return (self.manuals_wheel, self.official_wheel, self.normatives_wheel)
 
     @property
-    def product_wheels(self) -> tuple[Path, Path, Path]:
+    def product_wheels(self) -> tuple[Path, Path, Path, Path]:
         """Return every exact installable product wheel in stable order."""
-        return (self.root_wheel, self.manuals_wheel, self.official_wheel)
+        return (self.root_wheel, *self.companion_wheels)
 
 
 def _run(argv: list[str], *, cwd: Path) -> CommandResult:
@@ -205,14 +207,17 @@ def _validate_wheel_contract(
     root_wheel: Path,
     manuals_wheel: Path,
     official_wheel: Path,
+    normatives_wheel: Path,
 ) -> str:
     root_name, version, requirements = _wheel_identity(root_wheel)
     manuals_name, manuals_version, _ = _wheel_identity(manuals_wheel)
     official_name, official_version, _ = _wheel_identity(official_wheel)
+    normatives_name, normatives_version, _ = _wheel_identity(normatives_wheel)
     observed = {
         root_name: version,
         manuals_name: manuals_version,
         official_name: official_version,
+        normatives_name: normatives_version,
     }
     if observed != {name: version for name in _DISTRIBUTIONS}:
         raise SystemExit(
@@ -224,7 +229,7 @@ def _validate_wheel_contract(
         version=version,
         artifact_kind="wheel",
     )
-    for wheel in (root_wheel, manuals_wheel, official_wheel):
+    for wheel in (root_wheel, manuals_wheel, official_wheel, normatives_wheel):
         if wheel.stat().st_size >= PYPI_FILE_CAP_BYTES:
             raise SystemExit(
                 f"{wheel.name} exceeds PyPI's 100 MB per-file cap: {wheel.stat().st_size} bytes",
@@ -236,16 +241,19 @@ def _validate_sdist_contract(
     root_sdist: Path,
     manuals_sdist: Path,
     official_sdist: Path,
+    normatives_sdist: Path,
     *,
     expected_version: str,
 ) -> None:
     root_name, root_version, requirements = _sdist_identity(root_sdist)
     manuals_name, manuals_version, _ = _sdist_identity(manuals_sdist)
     official_name, official_version, _ = _sdist_identity(official_sdist)
+    normatives_name, normatives_version, _ = _sdist_identity(normatives_sdist)
     observed = {
         root_name: root_version,
         manuals_name: manuals_version,
         official_name: official_version,
+        normatives_name: normatives_version,
     }
     expected = {name: expected_version for name in _DISTRIBUTIONS}
     if observed != expected:
@@ -257,7 +265,7 @@ def _validate_sdist_contract(
         version=expected_version,
         artifact_kind="sdist",
     )
-    for sdist in (root_sdist, manuals_sdist, official_sdist):
+    for sdist in (root_sdist, manuals_sdist, official_sdist, normatives_sdist):
         if sdist.stat().st_size >= PYPI_FILE_CAP_BYTES:
             raise SystemExit(
                 f"{sdist.name} exceeds PyPI's 100 MB per-file cap: {sdist.stat().st_size} bytes",
@@ -275,7 +283,9 @@ def _safe_recreate(directory: Path, *, repo_root: Path) -> None:
     resolved.mkdir(parents=True)
 
 
-def _archive_source_snapshot(build_root: Path, files: Sequence[str], destination: Path) -> Path:
+def _archive_source_snapshot(
+    build_root: Path, files: Sequence[str], destination: Path, *, expected_source_digest: str
+) -> Path:
     """Archive an already-extracted source snapshot into one flat-member zip.
 
     ``build_root`` already carries ``files`` with the repository's own
@@ -287,6 +297,12 @@ def _archive_source_snapshot(build_root: Path, files: Sequence[str], destination
     with zipfile.ZipFile(destination, mode="x", compression=zipfile.ZIP_DEFLATED) as archive:
         for relative in sorted(files):
             archive.write(build_root / relative, arcname=relative)
+    with zipfile.ZipFile(destination) as archive:
+        observed_files = tuple(member.filename for member in archive.infolist() if not member.is_dir())
+        if sorted(observed_files) != sorted(files):
+            raise SystemExit("captured source archive member inventory drifted")
+        if member_content_digest(observed_files, archive.read) != expected_source_digest:
+            raise SystemExit("captured source archive does not match its source digest")
     return destination
 
 
@@ -331,6 +347,10 @@ def _assert_source_archive_binds_wheelhouse(
 def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     """Build one immutable cohort from a content snapshot and write its digest manifest.
 
+    Name the copied bytes, not a prior read of the live working tree: another
+    writer can change a member between enumeration and copying. Verify the
+    retained archive against that captured identity before staging or building.
+
     Returns the cohort assembled from what the build already derived -- the
     resolved artifact paths, the digests written into the manifest, the runtime
     wheelhouse this build validated, and the attestation it sealed -- rather
@@ -346,7 +366,6 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     """
     root = repo_root.resolve(strict=True)
     source_files = repository_files(root)
-    source_digest = content_digest(root, source_files)
     output = output_dir.resolve()
     _safe_recreate(output, repo_root=root)
     build_root = output.parent / var_scratch_name(COHORT_BUILD_TREE_FAMILY, output.name)
@@ -354,6 +373,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         shutil.rmtree(build_root)
     try:
         snapshot(root, source_files, build_root)
+        source_digest = member_content_digest(source_files, lambda relative: (build_root / relative).read_bytes())
         return _build_python_cohort_from_snapshot(
             build_root=build_root,
             output=output,
@@ -413,7 +433,7 @@ def _build_python_cohort_from_snapshot(
         # The ordinary builder made this snapshot just before entering here;
         # the release builder has already verified its clean snapshot. The
         # retained archive is written from those same normalized source bytes.
-        _archive_source_snapshot(build_root, source_files, archive)
+        _archive_source_snapshot(build_root, source_files, archive, expected_source_digest=source_digest)
         stage_build_client(build_root, build_client_json(authority_source_root or build_root))
         if authority_source_root is not None:
             # The published authority is absent from the source archive but is
@@ -454,6 +474,19 @@ def _build_python_cohort_from_snapshot(
             ],
             cwd=build_root,
         )
+        _run(
+            [
+                uv,
+                "build",
+                "--wheel",
+                "--sdist",
+                "--project",
+                str(build_root / "packaging" / "cadrumo_data_normatives"),
+                "--out-dir",
+                str(output),
+            ],
+            cwd=build_root,
+        )
         # uv seeds its --out-dir with a `.gitignore`; that is a build-tool
         # artifact, not a release artifact, and the release-cohort completeness
         # check refuses any file the manifest does not declare.
@@ -478,6 +511,11 @@ def _build_python_cohort_from_snapshot(
             "cadrumo_data_official-*.whl",
             label="official wheel",
         )
+        normatives_wheel = _single(
+            output,
+            "cadrumo_data_normatives-*.whl",
+            label="normatives wheel",
+        )
         manuals_sdist = _single(
             output,
             "cadrumo_data_manuals-*.tar.gz",
@@ -488,15 +526,22 @@ def _build_python_cohort_from_snapshot(
             "cadrumo_data_official-*.tar.gz",
             label="official sdist",
         )
+        normatives_sdist = _single(
+            output,
+            "cadrumo_data_normatives-*.tar.gz",
+            label="normatives sdist",
+        )
         version = _validate_wheel_contract(
             root_wheel,
             manuals_wheel,
             official_wheel,
+            normatives_wheel,
         )
         _validate_sdist_contract(
             root_sdist,
             manuals_sdist,
             official_sdist,
+            normatives_sdist,
             expected_version=version,
         )
         artifacts = {
@@ -507,7 +552,9 @@ def _build_python_cohort_from_snapshot(
             "cadrumo-data-manuals": manuals_wheel.name,
             "cadrumo-data-manuals-sdist": manuals_sdist.name,
             "cadrumo-data-official": official_wheel.name,
+            "cadrumo-data-normatives": normatives_wheel.name,
             "cadrumo-data-official-sdist": official_sdist.name,
+            "cadrumo-data-normatives-sdist": normatives_sdist.name,
         }
         sha256 = {name: sha256_path(output / filename) for name, filename in artifacts.items()}
         # Attested here, INSIDE the block that owns the build tree, because the
@@ -561,7 +608,9 @@ def _build_python_cohort_from_snapshot(
         manuals_wheel=manuals_wheel,
         manuals_sdist=manuals_sdist,
         official_wheel=official_wheel,
+        normatives_wheel=normatives_wheel,
         official_sdist=official_sdist,
+        normatives_sdist=normatives_sdist,
         sha256=sha256,
         command_spec_attestation=command_spec_attestation,
     )
@@ -591,7 +640,9 @@ def _cohort_manifest_fields(document: Any) -> tuple[dict[str, Any], dict[str, An
         "cadrumo-data-manuals",
         "cadrumo-data-manuals-sdist",
         "cadrumo-data-official",
+        "cadrumo-data-normatives",
         "cadrumo-data-official-sdist",
+        "cadrumo-data-normatives-sdist",
     }
     if set(artifacts) != expected_keys or set(sha256) != expected_keys:
         raise SystemExit(
@@ -663,6 +714,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         resolved["cadrumo"],
         resolved["cadrumo-data-manuals"],
         resolved["cadrumo-data-official"],
+        resolved["cadrumo-data-normatives"],
     )
     if observed_version != version:
         raise SystemExit(
@@ -672,6 +724,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         resolved["cadrumo-sdist"],
         resolved["cadrumo-data-manuals-sdist"],
         resolved["cadrumo-data-official-sdist"],
+        resolved["cadrumo-data-normatives-sdist"],
         expected_version=version,
     )
     return PythonCohort(
@@ -687,7 +740,9 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         manuals_wheel=resolved["cadrumo-data-manuals"],
         manuals_sdist=resolved["cadrumo-data-manuals-sdist"],
         official_wheel=resolved["cadrumo-data-official"],
+        normatives_wheel=resolved["cadrumo-data-normatives"],
         official_sdist=resolved["cadrumo-data-official-sdist"],
+        normatives_sdist=resolved["cadrumo-data-normatives-sdist"],
         sha256={str(name): str(digest) for name, digest in sha256.items()},
         command_spec_attestation=command_spec_attestation,
     )
@@ -768,6 +823,11 @@ def install_targets(
             cohort.official_wheel,
             digest=cohort.sha256.get("cadrumo-data-official"),
         ),
+        digest_install_target(
+            "cadrumo-data-normatives",
+            cohort.normatives_wheel,
+            digest=cohort.sha256.get("cadrumo-data-normatives"),
+        ),
     )
 
 
@@ -804,6 +864,7 @@ def _verify_direct_urls(
         "cadrumo": root_artifact.resolve(),
         "cadrumo-data-manuals": cohort.manuals_wheel,
         "cadrumo-data-official": cohort.official_wheel,
+        "cadrumo-data-normatives": cohort.normatives_wheel,
     }
     for name, artifact in expected_artifacts.items():
         direct_url = direct_urls.get(name)
@@ -851,6 +912,7 @@ def assert_installed_cohort(
     expected_requirements = {
         f"cadrumo-data-manuals=={cohort.version}",
         f"cadrumo-data-official=={cohort.version}",
+        f"cadrumo-data-normatives=={cohort.version}",
     }
     if not expected_requirements <= requirements:
         raise SystemExit(
@@ -858,8 +920,8 @@ def assert_installed_cohort(
         )
     _verify_direct_urls(document.get("direct_urls"), cohort, root_artifact)
     record_proof("all installed origins and digests match the supplied cohort")
-    record_proof("root metadata declares both exact mandatory companion requirements")
-    record_proof("all three installed distributions share one version")
+    record_proof("root metadata declares all exact mandatory companion requirements")
+    record_proof("all four installed distributions share one version")
     return document
 
 

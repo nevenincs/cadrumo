@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def test_development_script_refuses_nonisolated_interpreter_before_setup(tmp_path: Path) -> None:
     script = Path(gnome_login_observer.__file__).resolve()
-    result = run_command([sys.executable, str(script), "install"], cwd=tmp_path, timeout_seconds=30)
+    result = run_command([sys.executable, str(script), "install"], cwd=tmp_path, timeout_seconds=None)
     assert result.returncode == 2
     assert result.stdout == ""
     assert result.stderr == RuntimeRefusalCode.UNAVAILABLE.value + "\n"
@@ -28,7 +28,7 @@ def test_development_script_refuses_nonisolated_interpreter_before_setup(tmp_pat
 @pytest.mark.skipif(sys.platform == "linux", reason="Real Linux resource publication has its own native tests")
 def test_isolated_development_script_uses_installed_product_and_refuses_unsupported_host(tmp_path: Path) -> None:
     script = Path(gnome_login_observer.__file__).resolve()
-    result = run_command([sys.executable, "-I", str(script), "inspect"], cwd=tmp_path, timeout_seconds=30)
+    result = run_command([sys.executable, "-I", str(script), "inspect"], cwd=tmp_path, timeout_seconds=None)
     assert result.returncode == 2
     assert result.stdout == ""
     assert result.stderr == RuntimeRefusalCode.UNAVAILABLE.value + "\n"

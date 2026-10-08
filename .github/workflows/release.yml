@@ -385,7 +385,7 @@ jobs:
           set -euo pipefail
           mkdir -p var/release-dist
           cp var/release-cohort/python/*.whl var/release-cohort/python/*.tar.gz var/release-dist/
-          test "$(find var/release-dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 6
+          test "$(find var/release-dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 8
           uv run --no-sync python -m dev.packaging.distribution_cap --directory var/release-dist
 
       - name: Seal the release cohort
@@ -1122,7 +1122,7 @@ jobs:
           tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
           uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
           cp var/release-cohort/python/*.whl var/release-cohort/python/*.tar.gz dist/
-          test "$(find dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 6
+          test "$(find dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 8
           uv run --no-sync python -m dev.packaging.distribution_cap --directory dist
 
       - name: Compare the sealed bytes with the package index

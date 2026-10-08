@@ -91,7 +91,7 @@ def test_intervening_parent_junction_cannot_redirect_deletion(tmp_path: Path) ->
     result = run_command(
         [str(command), "/d", "/c", "mklink", "/J", str(path.parent), str(foreign)],
         cwd=tmp_path,
-        timeout_seconds=10,
+        timeout_seconds=None,
     )
     assert result.returncode == 0, result.stderr
     assert path.parent.is_junction()

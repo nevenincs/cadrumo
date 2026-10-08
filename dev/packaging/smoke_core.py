@@ -2,7 +2,7 @@
 
 This module is the ``core`` lane only. The artifact and installed-product
 checks it shares with every other lane live in :mod:`dev.packaging.lane_verification_core`;
-what remains here is the three-wheel cohort identity rule and this lane's own
+what remains here is the four-wheel cohort identity rule and this lane's own
 sequencing.
 """
 
@@ -12,8 +12,6 @@ import argparse
 import json
 from pathlib import Path
 from typing import Final
-
-from packaging.requirements import Requirement
 
 from dev._paths import UTF_8
 
@@ -36,6 +34,7 @@ from .lane_verification_core import (
 )
 from .proof_ledger import record_proof
 from .python_cohort import (
+    _validate_companion_pins,
     assert_installed_cohort,
     load_python_cohort,
 )
@@ -74,11 +73,13 @@ def _assert_complete_wheel_cohort(
     *,
     data_wheel_manuals: Path,
     data_wheel_official: Path,
+    data_wheel_normatives: Path,
 ) -> str:
-    """Require one command wheel and both exact-version mandatory companions."""
+    """Require one command wheel and all three exact-version mandatory companions."""
     named_companions = {
         "cadrumo-data-manuals": data_wheel_manuals,
         "cadrumo-data-official": data_wheel_official,
+        "cadrumo-data-normatives": data_wheel_normatives,
     }
     identities = _companion_identities(named_companions)
     root_name, root_version = _wheel_identity(wheel)
@@ -90,18 +91,8 @@ def _assert_complete_wheel_cohort(
             f"companion versions do not match cadrumo {root_version!r}: {mismatched!r}",
         )
     requirements, _extras = wheel_metadata(wheel)
-    exact_pins = {
-        normalise_distribution_name(requirement.name): str(requirement.specifier)
-        for row in requirements
-        if (requirement := Requirement(row)).marker is None
-        and normalise_distribution_name(requirement.name) in named_companions
-    }
-    expected_pins = {name: f"=={root_version}" for name in named_companions}
-    if exact_pins != expected_pins:
-        raise SystemExit(
-            f"command wheel companion pins must be exact: expected {expected_pins!r}, got {exact_pins!r}",
-        )
-    record_proof("complete exact-version three-wheel cohort")
+    _validate_companion_pins(tuple(requirements), version=root_version, artifact_kind="wheel")
+    record_proof("complete exact-version four-wheel cohort")
     return root_version
 
 
@@ -136,7 +127,8 @@ def main(argv: list[str] | None = None) -> int:
     wheel = cohort.root_wheel
     data_wheel_manuals = cohort.manuals_wheel
     data_wheel_official = cohort.official_wheel
-    companion_wheels = (data_wheel_manuals, data_wheel_official)
+    data_wheel_normatives = cohort.normatives_wheel
+    companion_wheels = cohort.companion_wheels
     print("using supplied complete wheel cohort", flush=True)
     assert_wheel_contains_source_data(
         repo_root,
@@ -148,6 +140,7 @@ def main(argv: list[str] | None = None) -> int:
         wheel,
         data_wheel_manuals=data_wheel_manuals,
         data_wheel_official=data_wheel_official,
+        data_wheel_normatives=data_wheel_normatives,
     )
 
     print("installing complete wheel cohort into fresh venv", flush=True)
@@ -192,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
     declared = [
         "wheel source shipped-data payload",
         "wheel metadata dependency surface",
-        "complete exact-version three-wheel cohort",
+        "complete exact-version four-wheel cohort",
         "fresh uv virtualenv install",
         "installed bundled data resources",
         "attachment storage round-trip",
@@ -209,6 +202,7 @@ def main(argv: list[str] | None = None) -> int:
             "wheel": relative_manifest_path(work_dir, wheel),
             "data_wheel_manuals": relative_manifest_path(work_dir, companion_wheels[0]),
             "data_wheel_official": relative_manifest_path(work_dir, companion_wheels[1]),
+            "data_wheel_normatives": relative_manifest_path(work_dir, companion_wheels[2]),
             "installed_tax_oracle": relative_manifest_path(work_dir, tax_evidence_path),
             "venv": relative_manifest_path(work_dir, venv),
         },

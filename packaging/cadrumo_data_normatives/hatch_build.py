@@ -1,8 +1,10 @@
-"""Hatchling build hook for the manuals corpus companion.
+"""Hatchling build hook for the normatives corpus companion.
 
-The manuals, official and normatives companions preserve the complete corpus
-source bytes under disjoint portions of the implicit ``cadrumo_data`` namespace.
-This hook packages only ``corpus/manuals`` for source-tree and embedded-sdist builds.
+This companion owns source binaries under ``_data/corpus/normatives``.
+Together the manuals, official and normatives companions form a disjoint,
+exhaustive partition under the same implicit ``cadrumo_data`` namespace.
+Derived surfaces remain in the command-bearing wheel. Resource paths and
+source bytes are preserved for source-tree and embedded-sdist builds.
 """
 
 from __future__ import annotations
@@ -14,11 +16,12 @@ from hatchling.builders.config import BuilderConfig
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 from hatchling.plugin.manager import PluginManager
 
-_CORPUS_BINARY_SUFFIXES = frozenset({".pdf", ".xls", ".xlsm", ".xlsx"})
+_CORPUS_BINARY_SUFFIXES = frozenset({".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip"})
 _TARGET_PREFIX = "cadrumo_data/_data/corpus"
 
-# The three companions own disjoint corpus subtrees.
-_OWNED_SUBDIRS = frozenset({"manuals"})
+# The companions own disjoint corpus subtrees; their
+# union is every corpus subtree carrying source binaries.
+_OWNED_SUBDIRS = frozenset({"normatives"})
 
 
 def _is_string_mapping(value: object) -> TypeGuard[dict[str, str]]:
@@ -31,7 +34,7 @@ def _is_string_mapping(value: object) -> TypeGuard[dict[str, str]]:
 def _corpus_root(hook_root: Path) -> Path | None:
     """Return the corpus tree root for a source-tree or embedded-sdist build.
 
-    A source-tree build (from ``packaging/cadrumo_data_manuals/``) reaches the ONE
+    A source-tree build (from ``packaging/cadrumo_data_normatives/``) reaches the ONE
     source corpus two levels up; a wheel built from an extracted sdist finds the
     binaries already embedded under ``cadrumo_data/_data/corpus``. Returns ``None``
     when neither is present (nothing to force-include).
@@ -79,7 +82,7 @@ else:
 class CustomBuildHook(_CustomBuildHookBase):
     """Force-include this companion's corpus source binaries under the mirrored tree."""
 
-    PLUGIN_NAME = "cadrumo-data-manuals-corpus"
+    PLUGIN_NAME = "cadrumo-data-normatives-corpus"
 
     @override
     def initialize(self, version: str, build_data: dict[str, Any]) -> None:

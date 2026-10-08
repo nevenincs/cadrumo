@@ -9,6 +9,7 @@ import sys
 import tomllib
 from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import Any
 
 import pytest
 from dev.packaging._distribution_names import normalise_distribution_name
@@ -22,6 +23,7 @@ from dev.packaging.lane_verification_core import (
     build_wheel,
     run_checked,
 )
+from packaging.markers import Marker, default_environment
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -50,6 +52,34 @@ _IMMUTABLE_INDEX_FILE = re.compile(
 )
 
 
+def _formula_resources_for_target(formula: str, target: str) -> dict[str, tuple[str, str]]:
+    """Observe the resources active within the formula's OS and architecture blocks."""
+    platform, architecture = target.split("-", 1)
+    predicates = {
+        "on_macos do": platform == "macos",
+        "on_linux do": platform == "linux",
+        "on_arm do": architecture == "arm64",
+        "on_intel do": architecture == "x86_64",
+    }
+    conditions: dict[int, bool] = {}
+    observed: dict[str, tuple[str, str]] = {}
+    lines = formula.splitlines()
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        indent = len(line) - len(line.lstrip())
+        if stripped in predicates:
+            conditions[indent] = predicates[stripped]
+        elif stripped == "end":
+            conditions.pop(indent, None)
+        elif stripped.startswith('resource "') and all(conditions.values()):
+            declaration = _RESOURCE.match("\n" + "\n".join(lines[index : index + 4]))
+            assert declaration is not None, line
+            name, url, digest = declaration.groups()
+            assert name not in observed, (target, name)
+            observed[name] = (url, digest)
+    return observed
+
+
 @dataclass(frozen=True)
 class BuiltCohort:
     """One real sdist-and-companion cohort shared by formula tests."""
@@ -58,6 +88,7 @@ class BuiltCohort:
     root: Path
     manuals: Path
     official: Path
+    normatives: Path
     version: str
 
 
@@ -77,14 +108,17 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
     companion_dir = build_dir / "companions"
     manuals_project = build_root / "packaging" / "cadrumo_data_manuals"
     official_project = build_root / "packaging" / "cadrumo_data_official"
+    normatives_project = build_root / "packaging" / "cadrumo_data_normatives"
     run_checked([uv, "build", "--sdist", "--out-dir", str(companion_dir)], cwd=manuals_project)
     run_checked([uv, "build", "--sdist", "--out-dir", str(companion_dir)], cwd=official_project)
+    run_checked([uv, "build", "--sdist", "--out-dir", str(companion_dir)], cwd=normatives_project)
     manuals = next(companion_dir.glob("cadrumo_data_manuals-*.tar.gz"))
     official = next(companion_dir.glob("cadrumo_data_official-*.tar.gz"))
+    normatives = next(companion_dir.glob("cadrumo_data_normatives-*.tar.gz"))
     cohort = root_dir / "cohort"
     cohort.mkdir()
     copied = []
-    for artifact in (root, manuals, official):
+    for artifact in (root, manuals, official, normatives):
         target = cohort / artifact.name
         shutil.copy2(artifact, target)
         copied.append(target)
@@ -104,6 +138,8 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
         "cadrumo-data-manuals-sdist": copied[1].name,
         "cadrumo-data-official": copied_wheels[2].name,
         "cadrumo-data-official-sdist": copied[2].name,
+        "cadrumo-data-normatives": copied_wheels[3].name,
+        "cadrumo-data-normatives-sdist": copied[3].name,
     }
     digests = {name: sha256_path(cohort / filename) for name, filename in artifacts.items()}
     source_archive = add_test_source_archive(cohort, artifacts, digests)
@@ -133,6 +169,7 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
         root=copied[0],
         manuals=copied[1],
         official=copied[2],
+        normatives=copied[3],
         version=version,
     )
 
@@ -217,7 +254,7 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     # block checks each one arrived rather than only the product CLI.
     assert 'assert_predicate bin/"cadrumo-mcp", :executable?' in formula
 
-    resources = {name: (url, digest) for name, url, digest in _RESOURCE.findall(formula)}
+    resources = _formula_resources_for_target(formula, "macos-arm64")
     assert resources["cadrumo-data-manuals"] == (
         f"{_INDEX_SOURCE}/cadrumo-data-manuals/{built_cohort.manuals.name}",
         sha256_path(built_cohort.manuals),
@@ -226,13 +263,18 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
         f"{_INDEX_SOURCE}/cadrumo-data-official/{built_cohort.official.name}",
         sha256_path(built_cohort.official),
     )
+    assert resources["cadrumo-data-normatives"] == (
+        f"{_INDEX_SOURCE}/cadrumo-data-normatives/{built_cohort.normatives.name}",
+        sha256_path(built_cohort.normatives),
+    )
     # The MCP SDK is a mandatory runtime requirement of the distribution this
     # formula installs, and Homebrew installs every resource with --no-deps, so
     # nothing pulls it in transitively: absent from the closure, the installed
     # virtualenv is missing an import the product makes.
     assert "mcp" in resources
-    # No workspace-only dependency may leak into the formula closure.
-    assert "tzdata" not in resources
+    # The root declares tzdata as a mandatory runtime dependency. Homebrew's
+    # no-deps resource install must carry that dependency explicitly as well.
+    assert "tzdata" in resources
     # The three isolation-disabled build backends: setuptools -- the venv from
     # `python -m venv` ships none and Homebrew installs resources --no-deps;
     # setuptools-scm for argon2; maturin for cryptography.
@@ -240,23 +282,23 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     assert "setuptools-scm" in resources
     assert "maturin" in resources
     # Gate on the property, not a pinned tally: the closure is exactly the
-    # mandatory `cadrumo` lock walk plus the two data companions plus those
+    # mandatory `cadrumo` lock walk plus the three data companions plus those
     # three backends, and every member resolves to immutable material. An
     # exact count encodes one moment and trains everyone to bump the constant.
-    assert len(resources) == len(_RESOURCE.findall(formula))
+    for target in ("macos-arm64", "linux-arm64", "linux-x86_64"):
+        assert _formula_resources_for_target(formula, target)
     assert all(digest and len(digest) == 64 for _url, digest in resources.values())
     assert all(url.startswith("https://") for url, _digest in resources.values())
-    # macOS is ARM-only (Intel dropped 2026-07-21), so no resource is macOS
-    # conditional any more and the on_macos block disappears entirely; Linux
-    # still spans two architectures and keeps its block.
-    assert formula.count("  on_macos do\n") == 0
+    # macOS is ARM-only. The lock deliberately selects a different pikepdf
+    # version for Darwin, so its material lives in the OS-specific block.
+    assert formula.count("  on_macos do\n") == 1
     assert formula.count("  on_linux do\n") == 1
     assert '    resource "secretstorage" do' in formula
     assert '    resource "jeepney" do' in formula
-    # greenlet's marker excludes macOS arm64, so it is now Linux-common:
-    # emitted once inside on_linux, with no architecture split on either side.
-    assert formula.count('resource "greenlet" do') == 1
-    assert '    resource "greenlet" do' in formula
+    # The locked SQLAlchemy core no longer requires the asyncio-only greenlet
+    # extra. Development or optional-extra material must not enter this recipe.
+    for target in ("macos-arm64", "linux-arm64", "linux-x86_64"):
+        assert "greenlet" not in _formula_resources_for_target(formula, target)
     assert "on_intel do" not in formula
     assert "on_arm do" not in formula
 
@@ -267,16 +309,29 @@ def test_formula_resources_match_the_locked_pypi_sdists(
 ) -> None:
     """Every runtime resource is one exact sdist from ``uv.lock``."""
     formula = _generate(built_cohort, tmp_path / "tap").read_text(encoding="utf-8")
-    resources = {name: (url, digest) for name, url, digest in _RESOURCE.findall(formula)}
     lock = tomllib.loads((_REPO_ROOT / "uv.lock").read_text(encoding="utf-8"))
-    locked_sdists = {
-        package["name"]: (
-            package["sdist"]["url"],
-            package["sdist"]["hash"].removeprefix("sha256:"),
+    for target in ("macos-arm64", "linux-arm64", "linux-x86_64"):
+        _assert_target_resources_match_lock(formula, target, lock)
+
+
+def _assert_target_resources_match_lock(formula: str, target: str, lock: dict[str, Any]) -> None:
+    environment = {key: str(value) for key, value in default_environment().items()}
+    environment.update({"python_full_version": "3.13.0", "python_version": "3.13"})
+    environment["sys_platform"] = "darwin" if target.startswith("macos-") else "linux"
+    environment["platform_system"] = "Darwin" if target.startswith("macos-") else "Linux"
+    environment["os_name"] = "posix"
+    environment["platform_machine"] = "arm64" if target.endswith("arm64") else "x86_64"
+    locked_sdists: dict[str, set[tuple[str, str]]] = {}
+    for package in lock["package"]:
+        if package.get("source", {}).get("registry") != "https://pypi.org/simple" or "sdist" not in package:
+            continue
+        markers = package.get("resolution-markers", ())
+        if markers and not any(Marker(marker).evaluate(environment) for marker in markers):
+            continue
+        locked_sdists.setdefault(package["name"], set()).add(
+            (package["sdist"]["url"], package["sdist"]["hash"].removeprefix("sha256:"))
         )
-        for package in lock["package"]
-        if package.get("source", {}).get("registry") == "https://pypi.org/simple" and "sdist" in package
-    }
+    resources = _formula_resources_for_target(formula, target)
     backends: set[str] = set()
     for name, material in resources.items():
         if name.startswith("cadrumo-data-"):
@@ -296,7 +351,7 @@ def test_formula_resources_match_the_locked_pypi_sdists(
             distribution = filename.removesuffix(".tar.gz").rsplit("-", 1)[0]
             assert normalise_distribution_name(distribution) == name
             continue
-        assert material == locked_sdists[name]
+        assert material in locked_sdists[name], (target, name, material)
     # Every declared backend reached the formula, and no other resource escaped
     # the lock: an unlisted name falls through to the lock comparison above.
     assert backends == set(_EXPLICIT_BUILD_BACKENDS)
@@ -308,10 +363,12 @@ def test_generator_rejects_renamed_foreign_companion(
 ) -> None:
     """A filename-compatible archive with foreign metadata cannot enter the tap."""
     foreign = tmp_path / "foreign"
-    foreign.mkdir()
-    shutil.copy2(built_cohort.root, foreign / built_cohort.root.name)
+    shutil.copytree(built_cohort.directory, foreign)
     shutil.copy2(built_cohort.official, foreign / built_cohort.manuals.name)
-    shutil.copy2(built_cohort.official, foreign / built_cohort.official.name)
+    manifest = foreign / "python-cohort.json"
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload["sha256"]["cadrumo-data-manuals-sdist"] = sha256_path(built_cohort.official)
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(SystemExit):
         _generate(
             replace(built_cohort, directory=foreign),

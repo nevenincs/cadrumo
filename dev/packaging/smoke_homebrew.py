@@ -36,6 +36,7 @@ _HASHING = importlib.import_module("dev.packaging.hashing")
 sha256_path = _HASHING.sha256_path
 sha256_text = _HASHING.sha256_text
 load_python_cohort = importlib.import_module("dev.packaging.python_cohort").load_python_cohort
+_COHORT_DISTRIBUTIONS = importlib.import_module("cadrumo.core.product_identity").PRODUCT_IDENTITY.cohort_distributions
 
 _UTF_8: Final[str] = "utf-8"
 _FORMULA_NAME: Final[str] = "cadrumo"
@@ -125,11 +126,18 @@ def localize_formula(
     cohort_dir: Path,
     server_base_url: str,
 ) -> tuple[str, dict[str, str]]:
-    """Point exactly three cohort sdists at a loopback server without other edits."""
+    """Point exactly four cohort sdists at a loopback server without other edits."""
     replacements: dict[str, str] = {}
+    observed_distributions: set[str] = set()
 
     def replace(match: re.Match[str]) -> str:
         filename = match.group("filename")
+        distribution = filename.split("-", 1)[0].replace("_", "-")
+        if distribution not in _COHORT_DISTRIBUTIONS:
+            return match.group(0)
+        if distribution in observed_distributions:
+            raise SystemExit(f"formula repeats cohort distribution: {distribution}")
+        observed_distributions.add(distribution)
         if Path(filename).name != filename:
             raise SystemExit(f"formula cohort URL contains an unsafe filename: {filename!r}")
         artifact = (cohort_dir / filename).resolve(strict=True)
@@ -150,9 +158,9 @@ def localize_formula(
         )
 
     localized = _RELEASE_ARTIFACT.sub(replace, formula)
-    if len(replacements) != 3:
+    if observed_distributions != set(_COHORT_DISTRIBUTIONS):
         raise SystemExit(
-            f"expected root and two companion release sdists in the generated formula; got {sorted(replacements)!r}",
+            f"expected root and three companion release sdists in the generated formula; got {sorted(replacements)!r}",
         )
     if localized == formula:
         raise SystemExit("formula localization made no changes")

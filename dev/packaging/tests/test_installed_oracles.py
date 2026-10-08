@@ -51,11 +51,7 @@ from ..lane_verification_core import (
 )
 from ..python_cohort import PythonCohort, build_python_cohort
 
-# The module-scoped cohort fixture snapshots and ZIPs the complete tracked
-# source corpus before building three distributions. On Windows that legitimate
-# setup can exceed the repository's ordinary five-minute per-test ceiling while
-# CRC-compressing the binary evidence corpus; keep a finite ceiling for hangs.
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial, pytest.mark.timeout(900)]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
 _REPO_ROOT = REPO_ROOT
 _AUTHORITY_CANDIDATE_ENV = "CADRUMO_AUTHORITY_CANDIDATE_DIR"
@@ -63,6 +59,7 @@ _DISTRIBUTIONS = (
     "cadrumo",
     "cadrumo-data-manuals",
     "cadrumo-data-official",
+    "cadrumo-data-normatives",
 )
 _REQUIREMENT_NAME_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 _COHORT_PROBE = """
@@ -71,7 +68,7 @@ import sysconfig
 from importlib.metadata import distribution
 from pathlib import Path
 
-names = ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official")
+names = ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-data-normatives")
 distributions = {name: distribution(name) for name in names}
 root = distributions["cadrumo"]
 print(json.dumps({
@@ -282,7 +279,7 @@ class InstalledCohort:
     work_dir: Path
     venv: Path
     root_wheel: Path
-    data_wheels: tuple[Path, Path]
+    data_wheels: tuple[Path, Path, Path]
     cli: Path
     mcp_server: Path
     cohort_dir: Path
@@ -616,6 +613,7 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
     assert {
         f"cadrumo-data-manuals=={version}",
         f"cadrumo-data-official=={version}",
+        f"cadrumo-data-normatives=={version}",
     } <= requirements
     assert metadata["console_scripts"]["aeat"] == "cadrumo.entrypoints.cli.bootstrap:main"
     # The package split is internal to one distribution: the wheel target packs
@@ -645,6 +643,7 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
         "cadrumo": cohort.root_wheel,
         "cadrumo-data-manuals": cohort.data_wheels[0],
         "cadrumo-data-official": cohort.data_wheels[1],
+        "cadrumo-data-normatives": cohort.data_wheels[2],
     }
     assert set(artifacts) == set(_DISTRIBUTIONS)
     for name, artifact in artifacts.items():

@@ -1,6 +1,6 @@
-# cadrumo-data-manuals
+# cadrumo-data-normatives
 
-This Cadrumo corpus companion ships source binaries under `corpus/manuals`.
+This Cadrumo corpus companion ships source binaries under `corpus/normatives`.
 It preserves their bytes and mirrored resource paths. Derived text and metadata
 remain in the command-bearing `cadrumo` distribution.
 

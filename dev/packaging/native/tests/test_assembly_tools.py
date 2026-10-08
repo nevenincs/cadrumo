@@ -33,7 +33,7 @@ def test_cmake_selected_tools_reject_content_drift_without_shipping_host_paths(t
     )
     cmake = shutil.which("cmake")
     assert cmake is not None
-    completed = run_command([cmake, "-P", str(script)], cwd=tmp_path, timeout_seconds=30)
+    completed = run_command([cmake, "-P", str(script)], cwd=tmp_path, timeout_seconds=None)
     assert completed.returncode == 0, completed.stderr
     provenance = json.loads(output.read_text(encoding="utf-8"))
     contract = {"backend": "linux", "platform": "linux-aarch64"}

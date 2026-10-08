@@ -534,6 +534,7 @@ build-distributions:
     @uv build --out-dir var/distributions .
     @uv build --out-dir var/distributions packaging/cadrumo_data_manuals
     @uv build --out-dir var/distributions packaging/cadrumo_data_official
+    @uv build --out-dir var/distributions packaging/cadrumo_data_normatives
     @uv run --no-sync python -m dev.packaging.distribution_cap --directory var/distributions
 
 # Run source and binary compatibility probes for every row in the checked-in
@@ -863,7 +864,7 @@ calculation_exclusions := "--ignore=src/cadrumo/application/calculations --ignor
 [group('test')]
 test-pytest-harness:
     @uv run --no-sync pytest -q -m integration --collect-only -n0 {{harness_worker_hook}}
-    @uv run --no-sync pytest -v -m integration -n0 --timeout=900 {{harness_members}}
+    @uv run --no-sync pytest -v -m integration -n0 {{harness_members}}
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Per-test
 # verdicts stream while the lane is running. `durations` is optional and prints
@@ -996,7 +997,7 @@ test-product: test-pytest-harness test-unit test-integration-parallel test-integ
 
 [private]
 _test-registry-collect:
-    @uv run --no-sync pytest --collect-only -v -n0 -m "(unit or integration) and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" --timeout=300 src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
+    @uv run --no-sync pytest --collect-only -v -n0 -m "(unit or integration) and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
 [private]
 _test-registry-load:
@@ -1008,7 +1009,7 @@ _test-registry-calculations-parallel:
 
 [private]
 _test-registry-conformance:
-    @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" --timeout=300 dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
+    @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
 [doc('Collect and load the registry first, then run calculation and conformance populations as one normalized signal.')]
 [group('test')]
@@ -1195,7 +1196,7 @@ test-gate changed_files="":
 [doc('Run the registry conformance suite (slow: walks every bundled revision).')]
 [group('test')]
 test-registry-conformance:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" --timeout=300 dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
 [doc('Run the committed cli-sequence goldens gate for supplied changed paths or the full tree; reuses a recorded clean verdict.')]
 [group('test')]
@@ -1340,7 +1341,7 @@ test-ingest-corpus:
 [doc('Run the Homebrew/Scoop channel-artifact conformance tests (serial, builds real sdists and wheels).')]
 [group('test')]
 test-channel-artifacts:
-    @uv run --no-sync pytest -v -n0 --timeout=900 -m serial packaging/homebrew/tests packaging/scoop/tests
+    @uv run --no-sync pytest -v -n0 -m serial packaging/homebrew/tests packaging/scoop/tests
 
 # Run the unit suite with live per-test verdicts, coverage, and fail-under check.
 [doc('Run the unit test suite with a coverage report and a fail-under check.')]

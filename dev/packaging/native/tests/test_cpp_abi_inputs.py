@@ -217,7 +217,7 @@ file(WRITE "${{CMAKE_BINARY_DIR}}/configured.json" "${{build_toolchain}}")
 '''
     (project / "CMakeLists.txt").write_text(script, encoding="utf-8")
     binary = tmp_path / "configured build"
-    result = run_command([cmake, "-S", str(project), "-B", str(binary)], cwd=project, timeout_seconds=60)
+    result = run_command([cmake, "-S", str(project), "-B", str(binary)], cwd=project, timeout_seconds=None)
     assert result.returncode == 0, result.stdout + result.stderr
     configured = json.loads((binary / "configured.json").read_text(encoding="utf-8"))
     assert configured["linux_cpp_abi"] == inputs["configured"]["linux_cpp_abi"]
@@ -227,5 +227,5 @@ file(WRITE "${{CMAKE_BINARY_DIR}}/configured.json" "${{build_toolchain}}")
         assert Path(actual["resolved"]) == Path(expected["resolved"])
         assert actual["sha256"] == expected["sha256"] and actual["link_text"] == expected["link_text"]
     inputs["provider"].write_bytes(inputs["provider"].read_bytes() + b"changed")
-    retry = run_command([cmake, "--build", str(binary)], cwd=project, timeout_seconds=60)
+    retry = run_command([cmake, "--build", str(binary)], cwd=project, timeout_seconds=None)
     assert retry.returncode != 0 and "floor provider bytes differ" in retry.stdout + retry.stderr

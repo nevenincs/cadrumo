@@ -14,9 +14,10 @@ copy of a threshold cannot fail when the real limit moves; it keeps passing and
 reports the value it was policing as still correct.
 
 Prose statements of the number elsewhere are deliberately left alone: the
-``pyproject`` wheel-split comment, both companion ``hatch_build`` hooks, and
-both companion READMEs explain to a human WHY the corpus split exists. They assert nothing and cannot drift a gate, so a
-consistency sweep should leave them where they are. Only executable copies
+``pyproject`` wheel-split comment, all three companion ``hatch_build`` hooks, and
+all three companion READMEs explain to a human WHY the corpus split exists.
+They assert nothing and cannot drift a gate, so a consistency sweep should leave
+them where they are. Only executable copies
 needed one owner, and there is now exactly one.
 """
 

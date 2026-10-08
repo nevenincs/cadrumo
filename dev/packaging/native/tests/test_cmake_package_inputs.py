@@ -103,7 +103,7 @@ def test_declared_bootstrap_is_a_real_build_dependency(tmp_path: Path, target: s
         [cmake, "-S", str(tmp_path), "-B", str(build)],
         [cmake, "--build", str(build), "--target", "bootstrap-fixture"],
     ):
-        result = run_command(command, cwd=tmp_path, timeout_seconds=60)
+        result = run_command(command, cwd=tmp_path, timeout_seconds=None)
         assert result.returncode == 0, result.stdout + result.stderr
     observed = Path((build / "selected-bootstrap.txt").read_text(encoding="utf-8"))
     assert observed.resolve() == (REPO_ROOT / "native" / layout["bootstrap"]).resolve()

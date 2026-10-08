@@ -173,8 +173,8 @@ def build_wheel(repo_root: Path, work_dir: Path, uv: str, *, build_root: Path) -
     return wheels[0]
 
 
-def build_companion_wheels(work_dir: Path, uv: str, *, build_root: Path) -> tuple[Path, Path]:
-    """Build the two mandatory data companions for a complete local cohort.
+def build_companion_wheels(work_dir: Path, uv: str, *, build_root: Path) -> tuple[Path, Path, Path]:
+    """Build the three mandatory data companions for a complete local cohort.
 
     Built from ``build_root`` for the same reason as :func:`build_wheel`; pass
     a :func:`build_root_snapshot` tree so the companions correspond to one
@@ -196,9 +196,9 @@ def build_companion_wheels(work_dir: Path, uv: str, *, build_root: Path) -> tupl
                 f"{wheel.name} exceeds PyPI's 100 MB per-file cap: {wheel.stat().st_size} bytes",
             )
         wheels.append(wheel)
-    if len(wheels) != 2:
-        raise SystemExit(f"expected two mandatory companion wheels, got {wheels!r}")
-    return wheels[0], wheels[1]
+    if len(wheels) != 3:
+        raise SystemExit(f"expected three mandatory companion wheels, got {wheels!r}")
+    return wheels[0], wheels[1], wheels[2]
 
 
 def build_sdist(work_dir: Path, uv: str, *, build_root: Path) -> Path:
