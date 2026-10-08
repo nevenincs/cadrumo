@@ -17,6 +17,8 @@ from dev.packaging.tests.test_native_installation import payload_fixture
 from ..distribution_prepare import refresh
 from ..hashing import digest
 from ..identity import cmake_projection, identity
+from ..windows_msi_build import compile_products, verify_products
+from ..windows_msi_database import verify_upgrade_order
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -129,14 +131,69 @@ def test_distribution_wix_guard_and_authoring_are_in_the_real_graph(tmp_path: Pa
         assert result.returncode != 0
         assert "separate version and registration" in result.stdout + result.stderr, result.stdout + result.stderr
         assert len(list((build / "installation/metadata/wix").glob("*.wxs"))) == 4
-        result = run_command([cmake, "--build", str(build), "--target", "msi"], cwd=source)
+        result = run_command([cmake, "--build", str(build), "--target", "check-msi-installation"], cwd=source)
         assert result.returncode != 0
-        assert "separate version and registration" in result.stdout + result.stderr, result.stdout + result.stderr
+        assert "same-version integrity" in result.stdout + result.stderr, result.stdout + result.stderr
+        assert "Session 0" in result.stdout + result.stderr
         assert not list((build / "packages").glob("*.msi"))
     else:
         assert result.returncode == 0, result.stdout + result.stderr
     _cmake(source, "--build", str(build), "--target", "zip")
     assert list((build / "packages").glob("*.zip"))
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="Requires the native Windows MSI validator")
+def test_cmake_scoped_msi_build_verify_tamper_and_clean(tmp_path: Path) -> None:
+    wix = shutil.which("wix")
+    assert wix is not None, "Put WiX 5+ on PATH for the native compiler lane"
+    _, source, build = _configure_distribution(tmp_path, "windows-x86-64", manager=True)
+    _cmake(source, "-S", str(source), "-B", str(build), f"-DCADRUMO_WIX_EXECUTABLE={wix}")
+    _cmake(source, "--build", str(build), "--target", "msi-verify")
+    directory = build / "packages/msi"
+    receipt = json.loads((directory / "compiled.json").read_text(encoding="utf-8"))
+    assert receipt["installable"] is False
+    assert set(receipt["artifacts"]) == {
+        f"{scope}-{role}.msi" for scope in ("user", "machine") for role in ("version", "registration")
+    }
+    identity_file = build / "generated/identity.json"
+    for name, checksum in receipt["artifacts"].items():
+        assert digest(directory / name) == checksum
+    # Compile a real regression: moving removal outside the transaction must fail
+    # the native action-table check even if the WiX decompiler loses scheduling.
+    bad_source = tmp_path / "bad-registration.wxs"
+    bad_source.write_text(
+        (build / "installation/metadata/wix/user-registration.wxs")
+        .read_text(encoding="utf-8")
+        .replace('Schedule="afterInstallExecute"', 'Schedule="afterInstallFinalize"'),
+        encoding="utf-8",
+    )
+    bad_msi = tmp_path / "bad-registration.msi"
+    result = run_command([wix, "build", "-arch", "x64", "-wx", "-o", str(bad_msi), str(bad_source)], cwd=tmp_path)
+    assert result.returncode == 0, result.stdout + result.stderr
+    with pytest.raises(ValueError, match="transactional upgrade order"):
+        verify_upgrade_order(bad_msi, version_product=False)
+    (directory / "user-version.msi").write_bytes(b"replaced artifact")
+    with pytest.raises(ValueError, match="artifact has changed"):
+        verify_products(build, identity_file)
+    with pytest.raises(ValueError, match="WiX 5 or newer"):
+        compile_products(build, identity_file, Path(sys.executable))
+    assert not (directory / "compiled.json").exists()
+    _cmake(source, "--build", str(build), "--target", "clean-msi")
+    assert not directory.exists()
+    assert (build / "installation/metadata/wix/user-version.wxs").is_file()
+    assert (build / "installation/stage").is_dir()
+
+
+def test_cmake_scoped_msi_missing_compiler_fails_without_receipt(tmp_path: Path) -> None:
+    _, source, build = _configure_distribution(tmp_path, "windows-x86-64", manager=True)
+    _cmake(source, "-S", str(source), "-B", str(build), f"-DCADRUMO_WIX_EXECUTABLE={tmp_path / 'missing-wix'}")
+    cmake = shutil.which("cmake")
+    assert cmake is not None
+    result = run_command([cmake, "--build", str(build), "--target", "msi"], cwd=source)
+    assert result.returncode != 0
+    assert "CADRUMO_WIX_EXECUTABLE" in result.stdout + result.stderr
+    assert not (build / "packages/msi/compiled.json").exists()
 
 
 @pytest.mark.parametrize(

@@ -9,9 +9,9 @@ related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
   - '[[2026-10-03-runtime-without-service-manager-adr]]'
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
-modified: '2026-10-07'
+modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:50739a7156ef00bad6790af2ae700dc605ec1fb8d2cf9608bda5394175313898'
+body_hash: 'sha256:9ff42846d4ab9241e7989451ed94717e2574e137d5d3d016e168781c7fcd1a7b'
 ---
 
 # Application distribution
@@ -32,6 +32,8 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 
 2026-10-07 S10 correction: the Windows registry adapter now returns named this-user and all-users origins, and manager/desktop convert them to the shared catalogue's borrowed RegistrationHints. A verified this-user prefix outranks newer machine/local fallback prefixes. Invalid user candidates permit fallback; a local archive receives no user-scope preference without matching native registration. Native application/manager CTests, all nineteen selected desktop manager backend tests and pinned Rust 1.96 Clippy for all three consumers pass. This corrects the audit's scope-selection finding without implementing S09's all-account MSI admission or publication/removal exclusion. S09 is the next source implementation Step; S03/S04 and manager lifecycle dependencies remain open.
 
+2026-10-08 CMake orchestration: the operator requested integrating the installation steps into the CMake-owned flow while preserving software and acceptance gates. S11 refines that authorized build integration: the manager msi target builds the four scoped products, msi-verify checks their source/payload/artifact bindings, and check-msi-installation fails with the unresolved lifecycle and disposable-runner requirements. A read-only native MSI database query verifies actual action sequencing because WiX 5.0.2 decompilation reconstructs the registration schedule inaccurately. Neither the source launch condition nor the readiness refusal is bypassable by a CMake switch. S09, S03 and S04 remain open; compilation receipts are build evidence and are not native transaction publication or install/upgrade acceptance. Linux/macOS native backends, runner evidence and release signing/notarization remain separate prerequisites.
+
 ## Steps
 
 - [x] `S01` - Generate canonical product publisher channel and platform identities for all supported targets; `src/cadrumo/core/product_identity.py and dev/packaging/native/identity.py`.
@@ -40,6 +42,7 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 - [x] `S07` - Separate Windows MSI product and component identities by ownership role, installation scope and release without changing legacy identities; `dev/packaging/native/identity.py, dev/packaging/native/windows_msi_identity.py and dev/packaging/tests/test_windows_msi_identity.py`.
 - [x] `S08` - Author separate immutable version and shared registration WiX products for both scopes, with combined manager MSI refused until native maintenance is integrated; `dev/packaging/native/windows_msi.py, dev/packaging/native/windows_msi_identity.py, native/cmake/distribution, dev/packaging/tests/test_windows_msi.py, dev/packaging/native/tests/test_distribution_prepare.py and native/CONTRACT.md`.
 - [x] `S10` - Preserve native registry scope in discovery and enforce verified this-user fallback before newer machine installations; `native/platform/src/installation.rs, native/application installation catalogue and tests, native/manager/src/installation.rs, native/desktop/src-tauri manager consumers and tests, and native/CONTRACT.md`.
+- [x] `S11` - Integrate scoped MSI compilation, database verification and fail-closed installation readiness into the CMake distribution graph; `native/cmake/distribution, dev/packaging/native Windows MSI build helpers and tests, native/CONTRACT.md`.
 - [ ] `S09` - Integrate native MSI transaction publication and scope admission with catalogue startup and removal exclusion; `native/application installation catalogue, native installer maintenance adapter and native/cmake/distribution`.
 - [ ] `S03` - Implement native installation registration and ownership-aware uninstall; `native/cmake, native/desktop build identity, and dev/packaging/native installation helpers`.
 - [ ] `S04` - Verify native install upgrade launch and uninstall across the supported matrix and review; `dev/packaging/tests and native package verification`.

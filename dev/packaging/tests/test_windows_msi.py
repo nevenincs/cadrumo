@@ -15,6 +15,7 @@ from dev.packaging.command_execution import run_command
 from dev.packaging.native.distribution_prepare import refresh
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.windows_msi import MAINTENANCE_GATE, author, reject_combined_manager_msi
+from dev.packaging.native.windows_msi_build import verify_database
 
 from .test_native_installation import payload_fixture
 
@@ -183,6 +184,35 @@ def test_stage_receipt_and_package_identity_must_agree(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="receipt and package identities differ"):
         reject_combined_manager_msi(build)
     assert not (build / "installation/metadata/wix").exists()
+
+
+@pytest.mark.parametrize("defect", ["identity", "gate", "version-removal", "registration-upgrade"])
+def test_database_verifier_rejects_ownership_regressions(tmp_path: Path, defect: str) -> None:
+    build, identity = _prepared(tmp_path)
+    sources = author(build, identity, "cadrumo")
+    role = "registration" if defect == "registration-upgrade" else "version"
+    source = sources[f"user-{role}.wxs"]
+    database = tmp_path / "database.wxs"
+    content = source.read_text(encoding="utf-8")
+    database.write_text(content, encoding="utf-8")
+    verify_database(source, database)
+    if defect == "identity":
+        package = ElementTree.parse(source).find("w:Package", NS)
+        assert package is not None
+        content = content.replace(package.attrib["ProductCode"], "00000000-0000-0000-0000-000000000000")
+    elif defect == "gate":
+        content = content.replace('Condition="0"', 'Condition="1"')
+    elif defect == "version-removal":
+        content = content.replace(
+            "</Package>",
+            "<InstallExecuteSequence><RemoveExistingProducts "
+            'After="InstallExecute" /></InstallExecuteSequence></Package>',
+        )
+    else:
+        content = content.replace("MajorUpgrade", "MissingUpgrade")
+    database.write_text(content, encoding="utf-8")
+    with pytest.raises(ValueError):
+        verify_database(source, database)
 
 
 @pytest.mark.windows_only

@@ -135,13 +135,32 @@ function(cadrumo_distribution_package target generator)
     DEPENDS installation_prepare USES_TERMINAL VERBATIM)
 endfunction()
 if(CADRUMO_TARGET STREQUAL "windows-x86-64")
-  cadrumo_distribution_package(msi WIX)
   add_custom_target(msi-author
     COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi author
       --build "${CMAKE_BINARY_DIR}" --identity "${CADRUMO_PATH_GENERATED}/identity.json" ${desktop_args}
     DEPENDS installation_prepare
     WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
   cadrumo_register_clean(TARGET msi-author PATHS "${CADRUMO_PATH_INSTALLATION_METADATA}/wix")
+  if(installed_manager)
+    find_program(CADRUMO_WIX_EXECUTABLE NAMES wix DOC "WiX 5+ compiler for scoped MSI products")
+    set(msi_build_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi_build)
+    set(msi_build_arguments --build "${CMAKE_BINARY_DIR}"
+      --identity "${CADRUMO_PATH_GENERATED}/identity.json" ${desktop_args})
+    add_custom_target(msi
+      COMMAND ${msi_build_helper} build ${msi_build_arguments} --wix "${CADRUMO_WIX_EXECUTABLE}"
+      DEPENDS msi-author WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
+    add_custom_target(msi-verify
+      COMMAND ${msi_build_helper} verify ${msi_build_arguments}
+      DEPENDS msi WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
+    # Readiness is an independent refusal, so missing compilers do not hide the
+    # lifecycle blockers. It never installs products or changes login registration.
+    add_custom_target(check-msi-installation
+      COMMAND ${msi_build_helper} check-installation ${msi_build_arguments}
+      WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
+    cadrumo_register_clean(TARGET msi PATHS "${CADRUMO_PATH_PACKAGES}/msi")
+  else()
+    cadrumo_distribution_package(msi WIX)
+  endif()
 elseif(CADRUMO_TARGET MATCHES "^linux-")
   cadrumo_distribution_package(deb DEB)
   cadrumo_distribution_package(rpm RPM)

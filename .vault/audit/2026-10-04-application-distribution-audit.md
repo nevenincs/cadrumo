@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-07'
+modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:352e3fcdcfa4b9638b0c68ebf413fbd43d0d6490f2661f435878bf818a5a9e42'
+body_hash: 'sha256:9d89237b86bbbc18ae7f0bc637989260d61d388b2e83b7c101a5c542389cd15f'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -88,6 +88,14 @@ Current native/platform/src/installation.rs manager_entry_points reads HKCU and 
 Fresh verification: ctest --test-dir build/windows-x64 -C Release -R '^(application\\.rust|manager\\.rust)$' --output-on-failure --parallel 1 passed both suites in 134.09 seconds. The fourteen installation cases include older-user/newer-machine precedence from both stable/versioned images, corrupt-user fallback, unregistered archive ordering, wrong entry-name refusal and existing cancellation/integrity boundaries. Evidence: build/windows-x64/verification/manager-discovery-native-tests.log. The CMake-generated Release desktop command's existing backend-only action, tauri.mjs test-unit manager::, compiled the real host and copied path crates and passed nineteen selected manager/logging cases (191 unrelated tests filtered), including package admission, relocation, cancellation, close, helper containment and reply/error attribution; no frontend or live package acceptance is implied. Evidence: build/windows-x64/desktop/test-results/manager-discovery-unit.log. All six touched Rust source/test files pass pinned rustfmt --check --edition 2024 --config skip_children=true. CMake-derived application/manager clippy --all-targets -- -D warnings and the existing desktop clippy-backend action pass with pinned Rust/Clippy 1.96.0; evidence: build/windows-x64/verification/manager-discovery-clippy.log and build/windows-x64/desktop/test-results/manager-discovery-clippy.log. The initial ad-hoc native Clippy command discovered ambient cargo-clippy 1.99 despite RUSTC being pinned, producing E0514; correcting its toolchain PATH/RUSTUP_TOOLCHAIN resolved that invocation failure without cleaning shared outputs or changing source/lint policy. Scoped git diff --check passes.
 
 S10 source/consumer verdict: PASS, with no new high or critical finding. This is read-only selection over isolated real file/binary fixtures and current source, not proof that native conflicting products coexist or that all-account installer admission is implemented. The preceding native-maintenance finding, false MSI install condition, open S09/S03/S04 and missing disposable native release acceptance remain unchanged.
+
+### cmake-msi-orchestration | low | Scoped build integration passes; native installation remains gated
+
+2026-10-08 review of S11 against ec44a9524b and the owned working-tree changes. PASS for the scoped CMake integration: installation_prepare precedes msi-author, manager msi compilation and msi-verify. Four products compile with WiX 5.0.2 warnings as errors; the build re-admits stage/source identity before publishing a hash-bound compilation receipt. Artifact tampering, missing/invalid compiler, literal-false gate removal, product identity changes and version removal regressions are refused. clean-msi removes only its CMake-owned artifact directory. Direct combined CPack remains refused; check-msi-installation fails without invoking an installer or requiring compilation. Windows Installer database access is read-only, uses the system MSI library and closes native handles. The compilation receipt is not the pending installer-owned publication protocol.
+
+WiX 5.0.2 decompilation reported afterInstallFinalize for the correctly authored afterInstallExecute product. Actual native InstallExecuteSequence rows confirm removal between InstallExecute and InstallFinalize. The verifier therefore reads those rows directly; an additional genuinely compiled fixture moving removal after InstallFinalize is rejected. This corrects a verifier assumption, not the accepted upgrade policy.
+
+Evidence: uv run --no-sync pytest -q -n 0 -m unit dev/packaging/native/tests/test_distribution_prepare.py dev/packaging/tests/test_windows_msi.py: 28 passed, including native compiler tests, with configured temporary WiX 5.0.2 and DOTNET_ROLL_FORWARD=Major. Log: var/storage/development/.logs/test-runs/2026-10-08/20261008T060959.336556Z-pytest-57884-95c6e212/run.log. Scoped Ruff lint/format and ty checks passed. Discovery reused the bounded distribution source owners; semantic search was unavailable in the recorded session. Overall release PENDING: S09 native admission/publication/maintenance and manager lifecycle integration remain unfinished; disposable interactive Windows/two-release acceptance, Linux/macOS native backend/runner evidence and signing/notarization are still required. No native product was installed.
 
 ## Recommendations
 

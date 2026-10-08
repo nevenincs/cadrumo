@@ -1388,7 +1388,34 @@ launches the manager or runtime during installation. Explicit `UpgradeStrategy`
 authoring requires WiX 5 or newer: version products disable automatic major
 upgrades; registration uses its own family and shared component identities.
 
-These are source definitions, with `installable: false` in their authoring
+For manager payloads, `msi` compiles these four products through WiX with warnings
+treated as errors, then decompiles each database to check product/upgrade identity,
+version, the install block and upgrade ownership. A read-only Windows Installer
+query checks actual action sequencing: version products cannot remove existing
+products; registration removal must follow InstallExecute and precede InstallFinalize.
+This query avoids relying on the WiX decompiler's reconstructed scheduling.
+Set `CADRUMO_WIX_EXECUTABLE` to
+the installed WiX 5+ executable when it is not on the configure process's PATH.
+The build uses that existing tool; provisioning and any tool-term acceptance remain
+with the operator. Outputs are `packages/msi/{user,machine}-{version,registration}.msi`.
+Only after all four pass does `packages/msi/compiled.json` publish their SHA256
+hashes and compiler/source identity. A failed compilation invalidates that receipt;
+remaining older artifacts are not evidence of the failed build succeeding.
+`clean-msi` owns this artifact directory and leaves the staged payload intact.
+
+```text
+cmake --build build/distribution-windows-x64 --config Release --target msi-verify
+cmake --build build/distribution-windows-x64 --config Release --target check-msi-installation
+```
+
+`msi-verify` depends on preparation, authoring and compilation, then verifies all
+four artifacts against the current payload and compilation receipt. It is a build
+integrity check, not native installation acceptance. `check-msi-installation`
+currently fails with the outstanding lifecycle and runner requirements, independently
+of compiler availability. No CMake switch bypasses that refusal. Direct CPack and
+its `package` target still refuse the combined manager MSI; use `msi` or `msi-verify`.
+
+The compiled products retain `installable: false` in their build
 descriptor and a literal-false launch condition. Native transaction publication,
 scope admission, same-version byte checks, retained anchors and safe in-use
 maintenance must be implemented and validated before replacing that condition.

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-07'
+modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:64a0a0eb34b1abce6d244c295cd33e7ec90bd06606c38771fd3255d9492fd37b'
+body_hash: 'sha256:02c8f8a72ddabca5256ad105b1e4f254e85bea9776a05603b81c82d7088e1e58'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -148,6 +148,16 @@ related:
 - `S10` `verify:` `git diff --check scoped S10 files` -> `pass`
 - `S10` `by:` `Codex`
 - `S10` `verify:` `vaultspec-core check --feature application-distribution (zero errors; existing stale-index warning)` -> `pass`
+- `S11` `A` `dev/packaging/native/windows_msi_build.py`
+- `S11` `A` `dev/packaging/native/windows_msi_database.py`
+- `S11` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S11` `M` `dev/packaging/native/tests/test_distribution_prepare.py`
+- `S11` `M` `dev/packaging/tests/test_windows_msi.py`
+- `S11` `M` `native/CONTRACT.md`
+- `S11` `verify:` `pytest -m unit distribution_prepare and windows_msi: 28 tests` -> `pass`
+- `S11` `verify:` `pytest dev/quality/tests/test_no_git_cli.py: 25 tests` -> `pass`
+- `S11` `verify:` `scoped Ruff lint and format, ty, git diff --check` -> `pass`
+- `S11` `by:` `Codex`
 
 ## Notes
 
