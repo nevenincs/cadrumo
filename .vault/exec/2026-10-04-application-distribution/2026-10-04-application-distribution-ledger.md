@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:e62b75cda7ccbd1c9228b08ae0d3a674f03bc26e98d0592a316b3d24fff4a691'
+body_hash: 'sha256:33539ad73914e95c7f6f4a6088ec2999b7779a6b43f10c1a216e66e99378eb1f'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -316,6 +316,12 @@ related:
 - `S14` `by:` `Codex`
 - `S14` `verify:` `retained native frozen Windows modelo-390-annual-2025 forensic check 440.89s` -> `pass`
 - `S05` `verify:` `WSL retained filing-spine-chain diagnostic exit 0 in 59.56 seconds` -> `pass`
+- `S05` `M` `dev/docs/language_switcher.py`
+- `S05` `A` `dev/docs/tests/test_docs_language_switcher_compile.py`
+- `S05` `verify:` `Owning language-switcher pytest suite 47 tests` -> `pass`
+- `S05` `verify:` `Native Mac frozen-builder multilingual 404 regressions 8 tests` -> `pass`
+- `S05` `verify:` `Scoped Ruff formatting ty and git diff checks` -> `pass`
+- `S05` `verify:` `Independent multilingual link source review` -> `pass`
 
 ## Notes
 
@@ -346,3 +352,4 @@ related:
 - `S14` Filing-only source checkpoint. Preserve independent dirty verification edits through partial staging. Native annual scenario rerun pending after frozen one-module overlay; S14 remains open until that confirmation. No changes to golden files or registered global/result-read deadlines.
 - `S14` Native failed filing boundary and completegoldencheck now pass with ordinary fixture cleanup. Observer sees28cleanfutures/drainreceipt1/zero missing-uncontained-unsettled and releasedtrue. Earlier intermittent runtime connection loss remains unresolved; full installer and lifecycle gates stay open.
 - `S05` Targeted diagnostic passed with normal cleanup and retained workspace; prior full strict documentation failure remains unexplained. Frozen Windows native-installer full docs gate and Mac full build remain running. Neither machine is disposable; installation and login/session-ending acceptance remain excluded.
+- `S05` Full Mac build failed nine translated 404 cross-root links after HTML compile success. Reviewed two-file overlay is verified and full CMake build relaunched; no complete DMG or native installation acceptance yet. Concurrent Windows frozen inputs unchanged.

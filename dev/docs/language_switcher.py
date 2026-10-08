@@ -71,6 +71,12 @@ _CARET: Final[str] = (
 )
 
 
+def _site_base(root_uri: str, prefix: str) -> str:
+    """Climb from one language root, preserving relative page-depth links."""
+    base = root_uri + "../" * prefix.count("/")
+    return f"{posixpath.normpath(base).rstrip('/')}/" if root_uri.startswith("/") else base
+
+
 def switcher_markup(
     languages: Sequence[Mapping[str, str]],
     *,
@@ -109,7 +115,7 @@ def switcher_markup(
     # The base every language root is a peer under: this page's own root, then
     # back out of each directory the root itself sits in. A root at the apex
     # sits in none, which is the one case where the base is the root.
-    base = root_uri + "../" * prefixes[build_language].count("/")
+    base = _site_base(root_uri, prefixes[build_language])
     items: list[str] = []
     for entry in languages:
         code, label = entry["code"], entry["label"]
@@ -275,11 +281,16 @@ def switcher_of_page(
     # string, which stands in a page stored without the terminators of the
     # platform that wrote it (:func:`~dev.docs.language_roots.compose_root`).
     def render(carried: OutputLanguage) -> str:
+        carried_root = root_uri
+        if root_uri.startswith("/"):
+            # The error page's absolute root belongs to the source build. Rebase
+            # it for each recorded language before climbing to the shared site.
+            carried_root = _site_base(root_uri, prefixes[language.value]) + prefixes[carried.value]
         return switcher_markup(
             languages,
             build_language=carried.value,
             prefixes=prefixes,
-            root_uri=root_uri,
+            root_uri=carried_root,
             pagename=pagename,
             aria_label=aria_label,
             newline="\n",

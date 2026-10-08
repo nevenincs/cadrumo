@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:ed2194893d281afe028a6439cfb2996049fa62977bb2bb542448ec4533960ca7'
+body_hash: 'sha256:fa1593a5c24813ca970f0e0d2839a09b76c9e04a374a32acf78c77897764ca12'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -223,6 +223,14 @@ Frozen Windows CMake configuration also passes in19.28seconds with pinned MSVC14
 The retained-workspace filing-spine-chain diagnostic on the existing WSL user manager completed with exit 0 in 59.56 seconds and unchanged goldens. Its normal drain reported one receipt, zero missing, uncontained or unsettled workers, and released fixture cleanup; all ten connection futures were clean. The 486 zero-timeout PIDFD wait observations were liveness checks, not worker exit statuses. Evidence is retained at /home/hello/.local/share/cadrumo-builds/docs-20261008/evidence/filing-spine-forensics, with the sandbox at /tmp/cf-4j5aq21f/spine. Local harness copies are under build/windows-installers-x64/verification/wsl-filing-spine-forensics. No source, authority, timeout, golden or containment policy changed. This targeted PASS does not reproduce or explain the prior full strict documentation runtime_unavailable failure; full-page and package acceptance remain PENDING.
 
 The frozen Windows native-installer build now uses the verified filing-only source overlay (source digest 38b44614e0fffa1934e6c46ae6639ff65a0f31bf12d2ce73fedaf0213a8769cd, authority digest 9db202fd630f35654c984a5b656ddd4be59dffd03927d6f520316af6e9222a92). Configure, native application compilation and the desktop Release build passed; the full strict documentation gate is running. No completed installer artifact or lifecycle acceptance is established by these intermediate results.
+
+### Mac full-build 404 language links | medium | Corrected source and native regression verified
+
+The full Mac native-installer run ended with exit 1 at the documentation gate. Its strict HTML compilation succeeded, but the postcompile cross-root link check rejected nine links on translated 404 pages, including /../404.html. The documentation subprocess reported 3209 seconds. No DMG completion or installed acceptance is established. Full failed logs and hashes are preserved under the Mac task's evidence/docs404-before; local recovery provenance is build/macos-process-typecheck/docs404-overlay-result.json.
+
+The recorded multilingual switcher reused the source build's absolute language-root URI while subtracting the carried language's prefix depth. dev/docs/language_switcher.py now derives the shared absolute site base using the source language, rebases it for each carried language, and normalizes absolute links. Relative page-depth behavior is unchanged. Eight regression cases cover source English/Spanish, desktop/website layout and host-apex/subpath deployment with actual compile-slot recording. They failed before the fix. All 47 owning switcher checks pass in 79.84 seconds; scoped Ruff, formatting, ty and diff checks pass; independent source review is PASS. The eight new cases also pass on the native Mac builder in 4.54 seconds.
+
+Only the reviewed switcher module and its new test were overlaid into the stopped frozen Mac tree, with before/after hashes. Existing snapshots and ready markers were left intact. The full CMake native-installer build has been relaunched with the existing secure build-input helper. Full build verification remains PENDING. The concurrently running frozen Windows build has not received this overlay.
 
 ## Recommendations
 
