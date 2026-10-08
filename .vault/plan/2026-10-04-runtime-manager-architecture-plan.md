@@ -12,7 +12,7 @@ related:
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:2b8529b3a7fae8e89a956d7d70226637f1801d75df033a461d1a43f80a4050bf'
+body_hash: 'sha256:e83f368f7aca7c2ffb68160e64c6111a221e8bfba4cdba58f4bdc86149e8935b'
 ---
 
 # `runtime-manager-architecture` plan
@@ -177,6 +177,8 @@ Darwin IPC continuation: the existing linux_manager worker also owns the narrow 
 2026-10-08 S19 lifecycle prerequisite: linux_manager owns a behavior-preserving extraction of the existing pure lifecycle and cutover-runtime traits from windows_lifecycle.rs/cutover_coordinator.rs into their canonical shared owner, with atomic consumer/test imports and lib.rs enrollment. Preserve Background's concrete Windows gating and all existing method semantics, cutover cancellation, claims and settlement behavior; do not add no-op platform adapters or activate another platform. Move existing trait implementations without public re-export compatibility aliases. This prerequisite gives later native hosts the same lifecycle contract while actual platform composition remains gated. Root owns reviews, shared Windows/Mac checks, vault and commits; unrelated peer source work is excluded.
 
 2026-10-08 S19 portable Background prerequisite: linux_manager owns the sealed shared successor permit/reporting owner with nested Windows-only native admission, required-method installation-removal observation contract with the existing Windows watcher implementation, and minimal Background/startup/supervised/lifecycle/lib/main consumer changes to compile the existing state machine on supported platforms. Preserve private permit construction after native admission, exact root/session/Quit checks, bounded reporting and final Ready acknowledgement, retained claims, cancellation and settlement semantics. No no-op macOS removal watcher, new authority constructor, native activation, installation-layout decision or host mutation. Root owns shared Windows/Mac verification, integrated review, vault and commits. Keep frozen builds and unrelated peer edits unchanged.
+
+2026-10-08 S19 nonblocking session-end prerequisite: linux_manager owns startup.rs, background.rs, lifecycle.rs and the minimal Windows lifecycle test consumer updates for required begin_session_end/session_end_settled methods. Suppress restarts before the stop request, keep repeated notifications idempotent without extending stop deadlines or writing user Quit preferences, and preserve the existing Windows 3500ms bounded wrapper. Nonblocking settlement must retain terminal evidence until the real worker finishes, join it and drain final events before successful completion; disconnection, panic and errors cannot masquerade as clean settlement or discard ownership. Add focused tests for result-before-thread-exit, clean join, disconnection/panic, repeated requests and cancellation/reassessment. No native host activation, signal registration, new installation policy or frozen-build modification. Root owns shared checks, integrated review, vault and commits.
 
 ## Verification
 

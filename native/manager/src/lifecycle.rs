@@ -75,6 +75,8 @@ pub trait ManagerLifecycle: CutoverRuntime {
         false
     }
     fn poll(&mut self) -> io::Result<()>;
+    fn begin_session_end(&mut self);
+    fn session_end_settled(&self) -> bool;
     fn session_end(&mut self);
     fn cancel_session_end(&mut self);
 }
@@ -96,6 +98,12 @@ impl ManagerLifecycle for Background {
     }
     fn poll(&mut self) -> io::Result<()> {
         Background::poll(self)
+    }
+    fn begin_session_end(&mut self) {
+        Background::begin_session_end(self);
+    }
+    fn session_end_settled(&self) -> bool {
+        Background::session_end_settled(self)
     }
     fn session_end(&mut self) {
         Background::session_end(self);

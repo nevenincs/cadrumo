@@ -494,6 +494,12 @@ mod tests {
             self.0.lock().unwrap().push("poll");
             Ok(())
         }
+        fn begin_session_end(&mut self) {
+            self.session_end();
+        }
+        fn session_end_settled(&self) -> bool {
+            self.0.lock().unwrap().contains(&"end")
+        }
         fn session_end(&mut self) {
             self.0.lock().unwrap().push("end");
         }

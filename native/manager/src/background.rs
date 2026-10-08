@@ -19,11 +19,7 @@ use cadrumo_application::{
     diagnostics::{Diagnostics, EventKind, HostStage, lifecycle::LifecycleFact},
     error::application::{ApplicationError, ErrorCode, Operation},
 };
-use std::{
-    io,
-    sync::{Arc, mpsc::TryRecvError},
-    time::Duration,
-};
+use std::{io, sync::Arc, time::Duration};
 
 // A continuously replenished diagnostics queue must yield to native events.
 const EVENTS_PER_POLL: usize = 64;
@@ -37,6 +33,8 @@ pub struct Background {
     blocked: bool,
     quitting: bool,
     suspended: bool,
+    session_end: SessionEnd,
+    settlement_error_reported: bool,
     diagnostics: Arc<Diagnostics>,
     waiting: Option<LifecycleFact>,
     installation_watch: Option<Box<dyn crate::lifecycle::RemovalObservation>>,
@@ -71,6 +69,8 @@ impl Background {
             blocked: false,
             quitting: false,
             suspended: false,
+            session_end: SessionEnd::default(),
+            settlement_error_reported: false,
             diagnostics,
             waiting: None,
             installation_watch: None,
@@ -204,9 +204,8 @@ impl Background {
                 Some(&mut self.observation),
             );
             self.observation.report(self.reporter.as_ref())?;
-            match running.ended.try_recv() {
-                Ok(result) => {
-                    let joined = running.join();
+            match running.settled() {
+                Ok(Some(outcome)) => {
                     drain_events(
                         running,
                         &self.diagnostics,
@@ -214,8 +213,6 @@ impl Background {
                         Some(&mut self.observation),
                     );
                     self.running = None;
-                    report_failure(&self.diagnostics, joined)?;
-                    let outcome = report_failure(&self.diagnostics, result)?;
                     diagnostics::supervision_outcome(&self.diagnostics, outcome);
                     match outcome {
                         Outcome::Failed { .. } | Outcome::Foreign(_) | Outcome::StoodDown(_) => {
@@ -225,14 +222,14 @@ impl Background {
                         _ => {}
                     }
                 }
-                Err(TryRecvError::Disconnected) => {
-                    self.diagnostics.host_failure(
-                        HostStage::Supervision,
-                        ApplicationError::new(ErrorCode::ManagerUnavailable, Operation::Manager),
-                    );
-                    return Err(io::Error::other("manager_supervisor_lost"));
+                Err(error) => {
+                    if !self.settlement_error_reported {
+                        self.settlement_error_reported = true;
+                        return report_failure(&self.diagnostics, Err(error));
+                    }
+                    return Err(error);
                 }
-                Err(TryRecvError::Empty) => return Ok(()),
+                Ok(None) => return Ok(()),
             }
         }
         if self.suspended || self.blocked || self.quitting || self.cutover_pending {
@@ -278,6 +275,7 @@ impl Background {
                     None,
                 );
                 self.waiting = None;
+                self.settlement_error_reported = false;
                 self.running = Some(running);
             }
             Start::Waiting(role) => {
@@ -382,31 +380,68 @@ impl Background {
         "waiting"
     }
 
+    fn suppress_session_end(&mut self) -> bool {
+        self.session_end.begin(&mut self.suspended, || {
+            if let Some(running) = &self.running {
+                running.handle.request(Request::SessionEnd);
+            }
+        })
+    }
+
+    pub fn begin_session_end(&mut self) {
+        if self.suppress_session_end() {
+            session_end_requested(&self.diagnostics);
+        }
+    }
+
+    /// Supervisor/thread custody only, not Effects::Settled. The native host must
+    /// also settle its cutover owner; SessionEnd effects remain Unknown.
+    pub fn session_end_settled(&self) -> bool {
+        self.session_end.requested && self.running.is_none()
+    }
+
     pub fn session_end(&mut self) {
-        self.suspended = true;
+        if !self.suppress_session_end() {
+            return;
+        }
         if let Some(running) = &mut self.running {
-            if settle_session(running, &self.diagnostics, Duration::from_millis(3500)) {
+            if wait_session(running, &self.diagnostics, Duration::from_millis(3500)) {
                 self.running = None;
             }
         } else {
-            self.diagnostics.lifecycle(
-                EventKind::StageStarted,
-                HostStage::Shutdown,
-                LifecycleFact::SessionEndRequested {},
-                None,
-            );
+            session_end_requested(&self.diagnostics);
         }
     }
 
     pub fn cancel_session_end(&mut self) {
         // A still-settling supervisor must exit before a fresh one may start.
-        self.suspended = self.quitting;
+        self.session_end.cancel(&mut self.suspended, self.quitting);
         self.diagnostics.lifecycle(
             EventKind::StageCompleted,
             HostStage::Shutdown,
             LifecycleFact::SessionEndCancelled {},
             None,
         );
+    }
+}
+
+#[derive(Default)]
+struct SessionEnd {
+    requested: bool,
+}
+impl SessionEnd {
+    fn begin(&mut self, suspended: &mut bool, request: impl FnOnce()) -> bool {
+        *suspended = true;
+        if self.requested {
+            return false;
+        }
+        self.requested = true;
+        request();
+        true
+    }
+    fn cancel(&mut self, suspended: &mut bool, quitting: bool) {
+        self.requested = false;
+        *suspended = quitting;
     }
 }
 
@@ -453,24 +488,35 @@ impl Observation {
 /// False retains the running supervisor so cleanup ownership survives the bound.
 pub fn settle_session(running: &mut Running, diagnostics: &Diagnostics, bound: Duration) -> bool {
     running.handle.request(Request::SessionEnd);
-    let ended = running.ended.recv_timeout(bound);
+    wait_session(running, diagnostics, bound)
+}
+
+fn session_end_requested(diagnostics: &Diagnostics) {
     diagnostics.lifecycle(
         EventKind::StageStarted,
         HostStage::Shutdown,
         LifecycleFact::SessionEndRequested {},
         None,
     );
-    if let Ok(result) = ended {
-        let joined = running.join();
-        drain_events(running, diagnostics, EVENT_QUEUE, None);
-        let _ = report_failure(diagnostics, joined);
-        if let Ok(outcome) = report_failure(diagnostics, result) {
+}
+
+fn wait_session(running: &mut Running, diagnostics: &Diagnostics, bound: Duration) -> bool {
+    let result = running.wait_settled(bound);
+    session_end_requested(diagnostics);
+    match result {
+        Ok(Some(outcome)) => {
+            drain_events(running, diagnostics, EVENT_QUEUE, None);
             diagnostics::supervision_outcome(diagnostics, outcome);
+            true
         }
-        true
-    } else {
-        drain_events(running, diagnostics, EVENTS_PER_POLL, None);
-        false
+        Err(error) => {
+            let _ = report_failure::<()>(diagnostics, Err(error));
+            false
+        }
+        Ok(None) => {
+            drain_events(running, diagnostics, EVENTS_PER_POLL, None);
+            false
+        }
     }
 }
 
@@ -525,6 +571,23 @@ mod tests {
     use super::*;
     use cadrumo_application::diagnostics::DiagnosticSource;
     use std::sync::mpsc;
+
+    #[test]
+    fn session_end_is_idempotent_and_cancellation_preserves_user_quit() {
+        let mut state = SessionEnd::default();
+        let mut suspended = false;
+        let (send, receive) = mpsc::channel();
+        assert!(state.begin(&mut suspended, || send.send(()).unwrap()));
+        assert!(suspended && state.requested);
+        assert!(!state.begin(&mut suspended, || send.send(()).unwrap()));
+        assert_eq!(receive.try_iter().count(), 1);
+        state.cancel(&mut suspended, false);
+        assert!(!suspended && !state.requested);
+        assert!(state.begin(&mut suspended, || send.send(()).unwrap()));
+        assert_eq!(receive.try_iter().count(), 1);
+        state.cancel(&mut suspended, true);
+        assert!(suspended && !state.requested);
+    }
 
     #[test]
     fn polling_leaves_backlog_for_later_messages_and_final_drain_finishes_it() {

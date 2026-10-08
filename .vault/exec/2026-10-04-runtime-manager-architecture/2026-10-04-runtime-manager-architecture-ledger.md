@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:8c5c22a53a41b9ed9d38ab6d38c29e035cd4b6d2952297ffa191887afa28cc62'
+body_hash: 'sha256:858a096cd4583060c8c0ac54e39ea3185d9d2a9aab47b862939d736e7660d962'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -702,6 +702,10 @@ related:
 - `S19` `verify:` `Mac check12 platform 32 manager 94 tests and all-target Clippy` -> `pass`
 - `S19` `verify:` `Windows manager 148 tests and all-target Clippy` -> `pass`
 - `S19` `verify:` `scoped rustfmt and diff check` -> `pass`
+- `S19` `verify:` `Mac check13 platform32 manager98 tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `Windows manager152 tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `scoped rustfmt and diff check` -> `pass`
+- `S19` `verify:` `independent nonblocking settlement review` -> `pass`
 
 ## Notes
 
@@ -759,3 +763,4 @@ related:
 - `S19` Moved Activity and its implementations into the canonical activity module instead of adding a public re-export; private FFI ownership and behavior unchanged. Windows verification from check9 remains applicable to unchanged Windows paths. Native snapshot SHA256 4ceb74ad9fa2c3669d1b530149decd17cca53b986c9b7eb4444d9143c68d8b5b. S19 remains open.
 - `S19` S19 prerequisite only: existing lifecycle/cutover traits now have canonical shared definitions consumed by actual Windows host/coordinator. Existing defaults, Background Windows gating and concrete cancellation/claims/settlement behavior remain unchanged; no new native host adapter or activation. Snapshot SHA256 e3c711a1bafd6388909a91d9e9a74b051b43101394f2dbc696f77dfd25a140b9.
 - `S19` Shared lifecycle prerequisite only; native activation and versioned macOS installation remain incomplete. Non-disposable hosts received only isolated tests.
+- `S19` Errors now retain Running ownership rather than discarding it; Effects::Unknown unchanged. Native host activation and graphical acceptance remain open.
