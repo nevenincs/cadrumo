@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-manager-architecture'
 date: '2026-10-05'
-modified: '2026-10-07'
+modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:f97e5e937b6bbd56eba1b985d94519be04974b40a122dc396060c452e907d2fd'
+body_hash: 'sha256:e97ae308ce66c64c75bae8ac50e65af5c245a7144bacdf53c24c78f7352af37a'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -150,6 +150,10 @@ PASS for the selected concrete source fixes. PENDING for broader gates: real dua
 ### discovery-external-gate-resolved | low | Google decision coverage no longer blocks P03.S27
 
 On 2026-10-07 the operator requested the Google validation repair and complete installer/upgrade acceptance. The bounded Google repair is in 2026-10-07-google-outbound-review-decision-coverage-repair-audit: the plan retains its proposed custody prerequisite without treating it as governing authority. Whole-vault validation now reports zero errors (thirteen unrelated/concurrent warnings). S27's previously verified source at commit 7798824f68 is unchanged by this repair, and its final required gate now passes; P03.S27 is closed. Concurrent later startup/cancellable catalogue source changes are owned and verified separately. This source-discovery closure makes no MSI, upgrade, signing, GUI or complete manager-plan acceptance claim.
+
+### P02.S24 cross-version storage contract review | low | Existing taxonomy enrollment now has conformance checks and documented grammar
+
+2026-10-08: Reviewed the six existing manager/runtime storage entries against shared session vectors and added scope, node, override, fingerprint and lifecycle-axis assertions. Documented stable session mutex, start-claim and bounded Quit-record grammar in native/CONTRACT.md. No second authored path inventory or runtime authority was introduced. Seven focused Python tests, scoped Ruff/format/ty and the configured native custody/session tests pass. IPC successor readiness, tray integration and interactive acceptance remain separate open work.
 
 ## Recommendations
 

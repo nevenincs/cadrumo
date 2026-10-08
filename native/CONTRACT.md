@@ -1270,6 +1270,41 @@ macOS runs no desktop GUI and takes no lock.
 
 ## Manager startup and supervision
 
+### Cross-version session records
+
+Every installed version of a channel shares the per-user storage root and these
+coordination names. They are not versioned with an immutable package:
+
+- The session mutex is `Local\\<manager-component-id>.<user-SID>.session.<session>.lock`.
+  It grants access only to that user, verifies the object's owner, and uses the
+  Windows kernel's abandoned-mutex behavior. A claimed mutex remains on its
+  claiming thread; an existing foreign or wrong-type object is refused.
+- The per-user start claim is `.runtime/manager-start.lock`, a noninheritable,
+  kernel-released custody lock. File existence does not prove ownership; only
+  the held native lock permits a start. Do not delete a live lock to reclaim it.
+- `.runtime/manager-quit.json` is one UTF-8 JSON object, at most 4096 bytes, with
+  exactly `schema_version`, `session`, `set_at_ms`, and `user`. Schema is integer
+  `1`; time is an integer from 1 through 9007199254740991. User and session are
+  nonempty ASCII alphanumeric/`-`/`_` identifiers bounded to 192 and 64 bytes.
+  Duplicate/unknown fields, booleans masquerading as integers, malformed JSON,
+  links and oversized files are refused. Writers use compact, sorted-key JSON
+  and owner-only atomic replacement; readers accept equivalent JSON whitespace
+  and member order. An unreadable marker blocks automatic startup. A manual
+  start clears local Quit; sign-in clears only a valid marker for the same user.
+  Automatic restart cannot clear it, and custody refuses another account's root.
+
+Python canonical JSON and Rust parse the shared vectors in
+`manager/tests/session_record_vectors.json`; real-process custody tests verify
+the lock and record interchange. Keep this grammar stable across side-by-side
+releases, or introduce an explicit migration before either reader changes.
+The canonical storage taxonomy enrolls the boot record, start claim, Quit,
+failed-version record, `manager-preferences.json`, and `logs/cadrumo-manager.log`.
+These mutable lifecycle records are excluded from profile fingerprints. Logs
+rotate through the generated native log policy; coordination and preferences
+remain outside generic age-based reclamation.
+
+### Startup lifetime
+
 The Windows manager admits an unelevated interactive session, escapes a parent
 job once when permitted, and retains its session lock while its hidden top-level
 window runs. Startup verifies the selected package and queries its installed

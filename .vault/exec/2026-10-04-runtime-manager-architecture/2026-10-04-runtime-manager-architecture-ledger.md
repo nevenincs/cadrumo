@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-07'
+modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:247b0a246f2f9848d3d7da61a9561d76756a575ffef380b4c5c04c064c8c281a'
+body_hash: 'sha256:05e072dd2a952962cf8e395d82094cb65f2b37711068adfc61e3c4b2e5bda6b7'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -348,6 +348,13 @@ related:
 - `S27` `verify:` `vault check all` -> `fail`
 - `S27` `by:` `Codex`
 - `S27` `verify:` `vaultspec-core vault check all after Google governing-link repair` -> `pass`
+- `S24` `M` `dev/packaging/tests/test_native_manager_session_records.py`
+- `S24` `M` `native/CONTRACT.md`
+- `S24` `verify:` `pytest native_manager_session_records (7 passed)` -> `pass`
+- `S24` `verify:` `Ruff lint and format owning test` -> `pass`
+- `S24` `verify:` `ty owning test` -> `pass`
+- `S24` `verify:` `configured manager.rust CTest including cross-version custody vectors` -> `pass`
+- `S24` `by:` `Codex`
 
 ## Notes
 
@@ -377,3 +384,4 @@ related:
 - `S09` Desktop Clippy fails in a concurrent sign-in test outside this step; the manager and changed consumer tests pass. Interactive installation and OS session-end acceptance remain disposable-host rollout obligations.
 - `S27` Concrete discovery source fix and scoped review pass. S27 remains open because the required repository-wide vault check fails on an unrelated approved Google plan's non-accepted backup-custody ADR. Full format-specific installation/upgrade and interactive-session acceptance remain excluded disposable-host rollout gates. Concurrent source edits and registry-authority documentation hunks are preserved and excluded from this commit.
 - `S27` The 2026-10-07 Google decision-coverage repair removes the prior external schema blocker. Prior source verification at commit 7798824f68 remains evidence for S27; later concurrent startup/cancellation improvements belong to their owners. Closing discovery does not close MSI lifecycle or product acceptance.
+- `S24` Existing canonical taxonomy already enrolls all six manager/runtime records; added cross-version grammar and enrollment/axis assertions without a second path authority.

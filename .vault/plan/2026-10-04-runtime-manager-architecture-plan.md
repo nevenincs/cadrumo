@@ -9,9 +9,9 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-supervisor-contract-adr]]'
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-desktop-shell-adr]]'
-modified: '2026-10-07'
+modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:79e371cbf83aace423a78105fa347f1ba10a45cef752d2472bbdd35e69eb9842'
+body_hash: 'sha256:6316e8edf0cfc813a265eefce16c13faf4f123e797393f460b978098bdd55a0e'
 ---
 
 # `runtime-manager-architecture` plan
@@ -52,6 +52,8 @@ Named follow-on decisions remain outside this plan:
 
 2026-10-07 corrective authorization: the operator requested fixing the identified high, medium and low issues while retaining current binary placement and authority, then selected "Fix defects and the discovery blocker". P02.S09 repairs the three reproduced supervision defects. P03.S27 implements the already accepted stable-entry/versioned-install commitment across packaging, shared discovery, manager startup and desktop dispatch. This authorization includes those owning source areas; remaining tray, autostart, cutover/rollback and platform rollout are excluded. The existing format-specific upgrade, removal and disposable-host acceptance gates remain open.
 
+2026-10-08 expanded authorization: the operator requested coding and building everything except signing certificates, which will not be available, and authorized dependency installation. This supersedes the earlier session limitation to defects and discovery: remaining installer, IPC/readiness, preferences, cutover/rollback, uninstall detection and platform source/build work are authorized. Produce unsigned artifacts and retain truthful platform/interactive acceptance limits; absence of signing must not be presented as completion of platform APIs requiring signed identity. No permission to publish, purchase certificates or treat a development host as a disposable acceptance machine is inferred.
+
 ## Steps
 
 ### Phase `P01` - Runtime supervisor contract
@@ -80,7 +82,7 @@ The cadrumo-manager native image: identity-derived names, canonical locations, s
 - [ ] `P02.S12` - Implement the manager IPC endpoint with owner and image verification and the closed reveal, retry and successor-readiness request set; `native/manager/`.
 - [ ] `P02.S13` - Implement the tray surface, manager log and per-user preference with strings from the canonical locale catalogues; `native/manager/, src/cadrumo/locales/ via the dev.locales workflow`.
 - [x] `P02.S23` - Gate supervisor restarts through the per-user start claim so an observing session cannot relaunch during the owner's backoff; `native/manager/src/supervision/supervisor.rs, native/manager/src/session/ownership.rs, owning tests`.
-- [ ] `P02.S24` - Register the manager .runtime records, preference and log locations in the Python storage taxonomy and record the session lock, start claim and Quit marker grammar as a cross-version contract; `src/cadrumo/core/storage_taxonomy.py, storage_taxonomy_locations.py, native/CONTRACT.md, owning tests`.
+- [x] `P02.S24` - Register the manager .runtime records, preference and log locations in the Python storage taxonomy and record the session lock, start claim and Quit marker grammar as a cross-version contract; `src/cadrumo/core/storage_taxonomy.py, storage_taxonomy_locations.py, native/CONTRACT.md, owning tests`.
 
 ### Phase `P03` - Installation and client remedies
 
@@ -129,6 +131,10 @@ Coordinate any `native/application` or `native/platform` edits with the desktop-
 2026-10-05 lane dispatch: the operator authorized B5, followed by D1 and D2, with no lanes beyond B1-B5/D1-D2. B1-B4 remain external concurrent owners. B5 owns `native/manager/**`, starting at S23 and consuming B1 package contracts, B2 platform/environment APIs and B4 state/protocol declarations. Its first checkpoint checks B4-owned S04 ordered settle, S22 exact counts and S24 manager record schemas. S08/S10/S12/S13 advance only where prerequisites are available. Requests touching native/application, native/platform, packaging or locales go to those owners. The coordinator serializes this session's vault, ledger and commit writes and owns shared verification; workers use separate Cargo outputs. External B1-B4 agents are not visible here: shared files and supplied handovers establish their state.
 
 B5 initial checkpoint (2026-10-05, shared working tree): `SupervisedController._end_session` still requests `SESSION_END_SETTLE` through the normal drain; the supervisor exposes Stop/StopIfIdle but no SessionEnd request. Python and Rust heartbeat still carry `hosted_profiles`, not exact operations. B4 must supply the final S04/S22 behavior and count contract before B5 changes that wire schema. Manager taxonomy entries are present in working changes; the current Rust Quit marker is `{schema_version: 1, session, user, set_at_ms}`, bounded to 4096 bytes, with ASCII identifier bounds and an integer timestamp up to 2^53-1. S24 remains open until B4 records and verifies the cross-version grammar. S23 restart-claim gating is independently ready; live manager integration is not claimed complete.
+
+2026-10-08 execution assignment under expanded authorization: P02.S12 manager IPC may proceed while the distribution owner implements shared publication state. IPC ownership is native/manager IPC modules and their tests plus lib.rs/main.rs/windows_lifecycle.rs integration; the distribution owner retains native/application installation state, native/manager installation.rs/installed.rs lease consumption, native/desktop manager dispatch and packaging. Keep these writes disjoint. The root agent serializes vault edits, native Cargo verification/builds and commits; IPC work reports its source ready before a shared native build.
+
+2026-10-08 continuation: the manager worker may continue P02.S13 and its P02.S24 storage prerequisite alongside root-owned distribution/native MSI and Linux build work. Worker owns manager tray/preferences/logging/IPC reveal integration, the canonical storage taxonomy entries and locale catalogue additions, plus focused tests. Root owns installer publication, native MSI adapter, packaging/CMake and vault checkpoints. Existing other-agent changes must be preserved. Coordinate native Cargo checks before running; source ownership is disjoint except root reviews.
 
 ## Verification
 
