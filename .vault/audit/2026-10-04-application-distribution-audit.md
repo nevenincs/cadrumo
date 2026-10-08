@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb901d4eb2dc62ad4830457d25fc30457b9df7e820d3977faa6b8a777c705c37'
+body_hash: 'sha256:ed2194893d281afe028a6439cfb2996049fa62977bb2bb542448ec4533960ca7'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -218,6 +218,11 @@ S14 native targeted confirmation: the retained-sandbox forensic annual390 check 
 
 Frozen Windows CMake configuration also passes in19.28seconds with pinned MSVC14.44.35207, Python3.13.11, WiX5.0.2 and docs/desktop/manager enrolled. Its exact inputs and command are under evidence/native-configure/. Root authorizes a full native-installer build only after reconfirming unchanged source/authority; no forged docs completion markers or host installation. The two source fixes and native package/lifecycle acceptance remain distinct evidence scopes.
 
+### Retained WSL filing diagnostic | low | Targeted pass does not resolve the full docs failure
+
+The retained-workspace filing-spine-chain diagnostic on the existing WSL user manager completed with exit 0 in 59.56 seconds and unchanged goldens. Its normal drain reported one receipt, zero missing, uncontained or unsettled workers, and released fixture cleanup; all ten connection futures were clean. The 486 zero-timeout PIDFD wait observations were liveness checks, not worker exit statuses. Evidence is retained at /home/hello/.local/share/cadrumo-builds/docs-20261008/evidence/filing-spine-forensics, with the sandbox at /tmp/cf-4j5aq21f/spine. Local harness copies are under build/windows-installers-x64/verification/wsl-filing-spine-forensics. No source, authority, timeout, golden or containment policy changed. This targeted PASS does not reproduce or explain the prior full strict documentation runtime_unavailable failure; full-page and package acceptance remain PENDING.
+
+The frozen Windows native-installer build now uses the verified filing-only source overlay (source digest 38b44614e0fffa1934e6c46ae6639ff65a0f31bf12d2ce73fedaf0213a8769cd, authority digest 9db202fd630f35654c984a5b656ddd4be59dffd03927d6f520316af6e9222a92). Configure, native application compilation and the desktop Release build passed; the full strict documentation gate is running. No completed installer artifact or lifecycle acceptance is established by these intermediate results.
 
 ## Recommendations
 

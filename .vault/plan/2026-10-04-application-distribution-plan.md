@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:9f336e24ceed8ee87e62b6ca9a2ab5937cbd85966d54475036f730df7d30cba2'
+body_hash: 'sha256:2f2f7d49f69098b1a23779cb054d6412ea1257efdaaa32c6142b55aa7e877d75'
 ---
 
 # Application distribution
@@ -78,6 +78,7 @@ S14: linux_manager may own only the filing constant/signature/settlement forward
 
 Post-S14 native diagnostic follow-up: notice_review owns an ignored one-scenario forensic harness under the frozen Windows evidence directory, using the existing execute_sequence sandbox_root parameter to retain synthetic files while preserving normal runtime/worker cleanup. Capture only failure type, traceback locations, bounded cleanup flags and process exit metadata through existing observation points; do not log messages/locals/payloads or alter native semantics. Root reviews before one targeted launch. msi_maintenance retains Windows/WSL build inputs and copies bounded failed-build diagnostics; no new full build or overlay without coordination.
 
+The same diagnostic owner may adapt the ignored retained-sandbox observer to one WSL filing-spine-chain check against its unchanged frozen inputs. Keep the private socket namespace short, preserve normal worker cleanup, and record concurrent Windows build activity. Root reviews before launch; this does not authorize another full WSL build or changes to product services.
 
 ## Verification
 
