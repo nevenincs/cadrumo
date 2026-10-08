@@ -80,12 +80,43 @@ mod native {
 
     type SessionInfo = unsafe extern "C" fn(u32, *mut u32, *mut u32) -> i32;
 
+    unsafe extern "C" {
+        // mach/task_info.h and mach/mach_init.h: borrowed current-task send right.
+        static mach_task_self_: u32;
+        fn task_info(task: u32, flavor: u32, output: *mut i32, count: *mut u32) -> i32;
+    }
+
+    fn current_token(process: &Process) -> io::Result<Token> {
+        let identity = process.identity()?;
+        if identity.incarnation.pid != std::process::id() {
+            return Err(io::ErrorKind::PermissionDenied.into());
+        }
+        let mut words = [0u32; 8];
+        let mut count = 8;
+        // SAFETY: TASK_AUDIT_TOKEN (15) copies eight natural_t words into the
+        // bounded buffer; the current-task right is borrowed, never deallocated.
+        let status =
+            unsafe { task_info(mach_task_self_, 15, words.as_mut_ptr().cast(), &mut count) };
+        if status != 0 || count != 8 {
+            return Err(io::ErrorKind::PermissionDenied.into());
+        }
+        let bytes: Vec<u8> = words.into_iter().flat_map(u32::to_ne_bytes).collect();
+        let token = Token::decode(&bytes, identity.observed.uid)?;
+        token.corroborate(
+            identity.incarnation.pid,
+            identity.incarnation.version,
+            identity.observed.uid,
+        )?;
+        process.identity()?;
+        Ok(token)
+    }
+
     pub struct Login {
         library: *mut c_void,
         query: SessionInfo,
     }
 
-    /// Only native peer capture constructs this binding. Session IDs never come from JSON.
+    /// Only native kernel-token capture constructs this binding. Session IDs never come from JSON.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct Session {
         uid: u32,
@@ -188,6 +219,33 @@ mod native {
             observation(session.id, status, id, attributes)
         }
 
+        /// Native current-task identity, with the same admission policy as a socket peer.
+        pub fn current(&self, process: &Process) -> io::Result<Session> {
+            let before = current_token(process)?;
+            let session = Session {
+                uid: before.0[1],
+                id: before.0[6],
+            };
+            if self.observe(&session)? != (Observation::Present { graphical: true }) {
+                return Err(io::ErrorKind::PermissionDenied.into());
+            }
+            if current_token(process)? != before {
+                return Err(io::ErrorKind::PermissionDenied.into());
+            }
+            Ok(session)
+        }
+
+        /// Open only the kernel's peer PID, then require its current audit incarnation.
+        pub fn peer(&self, socket: &UnixStream) -> io::Result<(Process, Session)> {
+            let pid = i32::from_ne_bytes(socket_record::<4>(socket, 2)?);
+            if pid <= 0 {
+                return Err(io::ErrorKind::PermissionDenied.into());
+            }
+            let process = Process::open(pid as u32)?;
+            let session = self.capture_peer(socket, &process)?;
+            Ok((process, session))
+        }
+
         pub fn capture_peer(&self, socket: &UnixStream, process: &Process) -> io::Result<Session> {
             let before = token(socket, process)?;
             let session = Session {
@@ -201,6 +259,31 @@ mod native {
                 return Err(io::ErrorKind::PermissionDenied.into());
             }
             Ok(session)
+        }
+    }
+    #[cfg(test)]
+    mod native_tests {
+        use super::*;
+
+        #[test]
+        fn current_kernel_token_matches_held_process_and_native_session_policy() {
+            let process = Process::open(std::process::id()).unwrap();
+            let token = current_token(&process).unwrap();
+            let login = Login::open().unwrap();
+            let session = Session {
+                uid: token.0[1],
+                id: token.0[6],
+            };
+            let observed = login.observe(&session).unwrap();
+            match observed {
+                Observation::Present { graphical: true } => {
+                    assert_eq!(login.current(&process).unwrap(), session)
+                }
+                _ => assert_eq!(
+                    login.current(&process).unwrap_err().kind(),
+                    io::ErrorKind::PermissionDenied
+                ),
+            }
         }
     }
 }

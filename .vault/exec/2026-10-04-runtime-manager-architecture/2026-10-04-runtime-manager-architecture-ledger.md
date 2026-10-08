@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:5cdc5d9f40b65874bca3f93fbd2ce89882a446d76c5f9525324ce48f5ec205dd'
+body_hash: 'sha256:daffca352d95398aac1edd04e3fb981d33f26b60c1bcd49ecf62a39e0e0903a9'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -596,6 +596,12 @@ related:
 - `S18` `verify:` `configured Windows all-target Clippy 1.48s` -> `pass`
 - `S18` `verify:` `Rustfmt shared and Darwin seven source paths` -> `pass`
 - `S18` `verify:` `shared framing source review` -> `pass`
+- `S19` `A` `native/manager/src/macos/ipc.rs`
+- `S19` `A` `native/manager/src/macos/ipc/socket.rs`
+- `S19` `verify:` `Windows configured manager Rust tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `Rustfmt Darwin manager source paths` -> `pass`
+- `S19` `verify:` `aarch64-apple-darwin primitive and test Clippy typecheck -Dwarnings` -> `pass`
+- `S19` `verify:` `full manager Darwin cross-check on Windows missing Apple compiler SDK for ring` -> `fail`
 
 ## Notes
 
@@ -641,3 +647,4 @@ related:
 - `S19` S19 remains open: component evidence does not establish graphical lifecycle, SMAppService activation or signed release acceptance.
 - `S18` S18 remains open; proposed direct-child amendment is unaccepted and insufficient for the observed default GNOME autostart profile. Preserved existing Windows/Mac hosts receive no destructive acceptance.
 - `S18` Partial S18 checkpoint: share existing bounded framing for Darwin reuse; Linux placement and lifecycle remain unfinished. No activation or host registration.
+- `S19` Source checkpoint only. Current task audit token is corroborated against held process and Security session facts; transport retains owner-only namespace/socket, per-socket NOSIGPIPE and bounded authenticated exchanges. Independent source review finds no concrete defect. Full native compilation and execution remain pending because the real Mac is unreachable; primitive cross-typecheck is not native execution. Main activation, login registration and S19 remain gated/open.

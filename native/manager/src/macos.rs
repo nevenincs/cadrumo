@@ -4,3 +4,6 @@ pub mod login;
 #[cfg(target_os = "macos")]
 pub mod process;
 pub mod records;
+
+#[cfg(target_os = "macos")]
+pub mod ipc;
