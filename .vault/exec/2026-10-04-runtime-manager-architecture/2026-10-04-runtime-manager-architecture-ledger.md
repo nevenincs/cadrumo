@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:e33cb3eeaa42f9b659a2aba6faf58ef94a7865f411d256269d1ae88fba02359b'
+body_hash: 'sha256:7ca45a2b094305cf5cf59db47a553e8acc19b35b19cf98b443129a0b6cfa9c08'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -683,6 +683,9 @@ related:
 - `S19` `verify:` `Mac check9: platform32 manager93 tests and both Clippy` -> `pass`
 - `S19` `verify:` `configured Windows manager148 tests and Clippy` -> `pass`
 - `S19` `verify:` `scoped Rustfmt edition2024 and integrated source review` -> `pass`
+- `S19` `M` `native/manager/src/macos/activity.rs`
+- `S19` `verify:` `Mac check10: platform32 manager93 tests and both Clippy` -> `pass`
+- `S19` `verify:` `canonical-module corrective review and scoped Rustfmt` -> `pass`
 
 ## Notes
 
@@ -737,3 +740,4 @@ related:
 - `S19` S19 remains open; isolated synthetic native evidence only, no main activation or host product/login/session transitions. Shared capability concurrent binding race corrected before native verification.
 - `S19` S19 remains open. Task-name rights corroborate held process UID/PID/pidversion; private admitted session is revalidated against target and current manager before exact-incarnation signaling. Adopted exit remains Unknown. ASID validation is bounded, not atomic with signal. check6 compilation failure and check7 transient lock failure retained; native probes corroborated CLOEXEC descriptor inheritance during concurrent spawn. Tests prove local capability release before bounded reacquisition; product locking unchanged. Main activation, lifecycle, registration and graphical acceptance remain gated. check8 source archive SHA256 22977a56b82453a28f714cb128379a1ac9a7a75dff095e90034374e9f1964fb5.
 - `S19` S19 remains open. Public caller-scoped Quartz activity is bracketed by retained kernel UID/ASID and full initial graphical admission; typed unavailable evidence never grants start/restart eligibility. It does not prove unlocked state or session end. GUI switch/logout acceptance and manager activation remain gated. Custody test post-drop wait now accounts for independently reproduced transient inherited descriptors; live-owner refusal unchanged. Native snapshot SHA256 c3b6e2a4bd66634f8ca3a9d44543b4bced0c5c1afa8d7c8a29510a6e081c6484.
+- `S19` Moved Activity and its implementations into the canonical activity module instead of adding a public re-export; private FFI ownership and behavior unchanged. Windows verification from check9 remains applicable to unchanged Windows paths. Native snapshot SHA256 4ceb74ad9fa2c3669d1b530149decd17cca53b986c9b7eb4444d9143c68d8b5b. S19 remains open.

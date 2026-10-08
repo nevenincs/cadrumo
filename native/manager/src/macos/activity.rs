@@ -30,16 +30,49 @@ fn classify(owner: u32, console: Option<Console>, identity_matches: bool) -> Obs
     }
 }
 
+/// Activity for this fully admitted graphical manager incarnation only.
+#[cfg(target_os = "macos")]
+#[derive(Debug)]
+pub struct Activity {
+    process: crate::macos::process::Process,
+    session: crate::macos::login::Session,
+}
+
+#[cfg(target_os = "macos")]
+impl Activity {
+    pub fn current() -> std::io::Result<Self> {
+        let process = crate::macos::process::Process::open(std::process::id())?;
+        let session = crate::macos::login::Login::open()?.current(&process)?;
+        Ok(Self { process, session })
+    }
+
+    pub fn observe(&self) -> Observation {
+        use crate::macos::login::Login;
+
+        if Login::process_identity(&self.process).ok() != Some(self.session) {
+            return Observation::Unavailable;
+        }
+        let observed = native::console();
+        // UID is not an ASID. The caller-scoped Quartz observation is bracketed
+        // by the retained native audit identity, never by a dictionary session ID.
+        let unchanged = Login::process_identity(&self.process).ok() == Some(self.session);
+        classify(self.session.uid(), observed, unchanged)
+    }
+}
+
+#[cfg(target_os = "macos")]
+impl crate::supervision::supervisor::SessionActivity for Activity {
+    fn is_active(&self) -> bool {
+        self.observe() == Observation::Active
+    }
+}
+
 #[cfg(target_os = "macos")]
 mod native {
     #![allow(unsafe_code)]
 
-    use super::{Console, Observation, classify};
-    use crate::macos::{
-        login::{Login, Session},
-        process::Process,
-    };
-    use std::{ffi::c_void, io, ptr};
+    use super::Console;
+    use std::{ffi::c_void, ptr};
 
     type Ref = *const c_void;
 
@@ -121,7 +154,7 @@ mod native {
         Some(unsafe { CFBooleanGetValue(value) } != 0)
     }
 
-    fn console() -> Option<Console> {
+    pub(super) fn console() -> Option<Console> {
         // SAFETY: public no-argument query; null is a documented unavailable result.
         let value = unsafe { CGSessionCopyCurrentDictionary() };
         if value.is_null() {
@@ -151,41 +184,10 @@ mod native {
         })
     }
 
-    /// Activity for this fully admitted graphical manager incarnation only.
-    #[derive(Debug)]
-    pub struct Activity {
-        process: Process,
-        session: Session,
-    }
-
-    impl Activity {
-        pub fn current() -> io::Result<Self> {
-            let process = Process::open(std::process::id())?;
-            let session = Login::open()?.current(&process)?;
-            Ok(Self { process, session })
-        }
-
-        pub fn observe(&self) -> Observation {
-            if Login::process_identity(&self.process).ok() != Some(self.session) {
-                return Observation::Unavailable;
-            }
-            let observed = console();
-            // UID is not an ASID. The caller-scoped Quartz observation is bracketed
-            // by the retained native audit identity, never by a dictionary session ID.
-            let unchanged = Login::process_identity(&self.process).ok() == Some(self.session);
-            classify(self.session.uid(), observed, unchanged)
-        }
-    }
-
-    impl crate::supervision::supervisor::SessionActivity for Activity {
-        fn is_active(&self) -> bool {
-            self.observe() == Observation::Active
-        }
-    }
-
     #[cfg(test)]
     mod tests {
         use super::*;
+        use crate::macos::{activity::Activity, login::Login, process::Process};
         unsafe extern "C" {
             fn CFNumberCreate(allocator: Ref, kind: isize, value: *const c_void) -> Ref;
             static kCFBooleanTrue: Ref;
@@ -241,9 +243,6 @@ mod native {
         }
     }
 }
-
-#[cfg(target_os = "macos")]
-pub use native::Activity;
 
 #[cfg(test)]
 mod tests {
