@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#runtime-lifecycle-diagnostics'
 date: '2026-10-07'
-modified: '2026-10-07'
+modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:1cc4008a4b22c11538564028cd094ffadb1166591f4235a75a4f5975c5b6917d'
+body_hash: 'sha256:f8389d5101f0335d29a7d81a5109d7e9bd95551f070d68b24ae940c9a173aed1'
 related:
   - "[[2026-10-07-runtime-lifecycle-diagnostics-plan]]"
 ---
@@ -403,6 +403,15 @@ related:
 - `S28` `verify:` `Performance acceptance` -> `fail`
 - `S28` `verify:` `Candidate archived and exact before source restored with empty source diff` -> `pass`
 - `S28` `by:` `root`
+- `S29` `M` `src/cadrumo/adapters/persistence/storage/custody/kdf_calibration_search.py`
+- `S29` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_calibration_search.py`
+- `S29` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_calibration_scheduling.py`
+- `S29` `verify:` `56 distinct focused search and supervision cases` -> `pass`
+- `S29` `verify:` `Scoped Ruff and format; ty Linux Windows Darwin` -> `pass`
+- `S29` `by:` `root`
+- `S29` `M` `.vault/audit/2026-10-07-runtime-lifecycle-diagnostics-audit.md`
+- `S29` `verify:` `Root single before-after fixed-package calibration guards and settlement` -> `pass`
+- `S29` `verify:` `Root integrated algorithm review with 56-case evidence` -> `pass`
 
 ## Notes
 
@@ -442,3 +451,5 @@ related:
 - `S25` Live-tree full gate failed solely on source mutation and is retained. Frozen complete gate passed with unchanged budgets. Instrumented source medians are not packaged SLO evidence. Only generated canonical-module enrollment is owned; foreign dev target rows remain unstaged.
 - `S27` Measured source variants only; shared-host stall retained; packaged startup and enrollment targets remain unresolved.
 - `S28` Evaluated and rejected: 65.16 percent fewer `get_args` calls did not produce a CPU improvement. No production optimization retained and no timeout changed.
+- `S29` Root reviewed full search/caller and independent oracle; guarded fixed-package source-algorithm comparison pending. No timeout, resource, grid, strength-floor or supervision changes.
+- `S29` Calibration12.475006s before vs13.155735s after; same256MiB/t8/p4 winner, five confirmations each, extra after near-miss retry. No measured host speedup. Deterministic superseded-candidate20-to10 probe reduction supports scheduling change; application performance remains open. Evidence s29-kdf-search/verification.json SHA256 d322a0d89eea9a70fa41a04151fe56a09c1441b49f6802524285c7c51947f775.

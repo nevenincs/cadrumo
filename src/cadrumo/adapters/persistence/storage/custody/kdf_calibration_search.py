@@ -60,36 +60,29 @@ class _Search:
     def over(self, point: ProfileCustodyKdfParameters) -> bool:
         return self.observed(point) > self.target_max_seconds
 
-    def column(self, points: Sequence[ProfileCustodyKdfParameters]) -> ProfileKdfSearchChoice | None:
-        """Return the confirmed in-band point with the most iterations in one column, if any.
+    def column(self, points: Sequence[ProfileCustodyKdfParameters]) -> ProfileCustodyKdfParameters | None:
+        """Return the provisional in-band point with the most iterations in one column, if any.
 
         ``points`` share memory and parallelism and ascend in iterations, so
         "over the band" is false up to some index and true after it.
         """
-        while True:
-            last_within = -1
-            low, high = 0, len(points) - 1
-            while low <= high:
-                middle = (low + high) // 2
-                if self.over(points[middle]):
-                    high = middle - 1
-                else:
-                    last_within = middle
-                    low = middle + 1
-            if last_within < 0:
-                return None
-            point = points[last_within]
-            if self.observed(point) < self.target_min_seconds:
-                # Every point with more iterations is over the band and every
-                # point with fewer is faster still, so this column has none.
-                return None
-            # The in-band probe was the discarded warm-up; these samples decide.
-            confirmed = median(self.probe(point) for _ in range(self.confirmation_samples))
-            self.seconds[point] = confirmed
-            if self.target_min_seconds <= confirmed <= self.target_max_seconds:
-                return ProfileKdfSearchChoice(parameters=point, median_seconds=confirmed)
-            if confirmed < self.target_min_seconds:
-                return None
+        last_within = -1
+        low, high = 0, len(points) - 1
+        while low <= high:
+            middle = (low + high) // 2
+            if self.over(points[middle]):
+                high = middle - 1
+            else:
+                last_within = middle
+                low = middle + 1
+        if last_within < 0:
+            return None
+        point = points[last_within]
+        if self.observed(point) < self.target_min_seconds:
+            # Every point with more iterations is over the band and every
+            # point with fewer is faster still, so this column has none.
+            return None
+        return point
 
 
 def search_profile_kdf_grid(
@@ -134,20 +127,31 @@ __all__ = [
 def _search_memory_level(
     level: Iterable[ProfileCustodyKdfParameters], search: _Search
 ) -> ProfileKdfSearchChoice | None:
-    """Choose the strongest confirmed column without inferring across parallelism."""
+    """Discover the strongest provisional point, then confirm it without inferring across lanes."""
     columns: dict[int, list[ProfileCustodyKdfParameters]] = {}
     for point in level:
         columns.setdefault(point.parallelism, []).append(point)
-    best: ProfileKdfSearchChoice | None = None
-    for parallelism in sorted(columns, reverse=True):
-        column = sorted(columns[parallelism], key=lambda point: point.iterations)
-        if best is not None:
-            # A tie in iterations already loses to the higher parallelism found first.
-            floor_iterations = best.parameters.iterations
-            column = [point for point in column if point.iterations > floor_iterations]
-            if not column or search.over(column[0]):
-                continue
-        choice = search.column(column)
-        if choice is not None:
-            best = choice
-    return best
+    ordered_columns = [
+        sorted(columns[parallelism], key=lambda point: point.iterations)
+        for parallelism in sorted(columns, reverse=True)
+    ]
+    while True:
+        best: ProfileCustodyKdfParameters | None = None
+        for column in ordered_columns:
+            if best is not None:
+                # A tie in iterations already loses to the higher parallelism found first.
+                column = [point for point in column if point.iterations > best.iterations]
+                if not column or search.over(column[0]):
+                    continue
+            choice = search.column(column)
+            if choice is not None:
+                best = choice
+        if best is None:
+            return None
+        # Discovery was the discarded warm-up; only the provisional winner is confirmed.
+        confirmed = median(search.probe(best) for _ in range(search.confirmation_samples))
+        search.seconds[best] = confirmed
+        if search.target_min_seconds <= confirmed <= search.target_max_seconds:
+            return ProfileKdfSearchChoice(parameters=best, median_seconds=confirmed)
+        # Reconsider this same materialized level: the rejected point may have
+        # pruned a lower lane or fewer iterations that can now be the strongest.

@@ -9,9 +9,10 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-supervisor-contract-adr]]'
   - '[[2026-10-04-desktop-shell-adr]]'
   - '[[2026-10-04-canonical-environment-adr]]'
-modified: '2026-10-07'
+  - '[[2026-08-13-profile-password-custody-rollup-adr]]'
+modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:f5f68387b76aca43d3c8bab61d9db9d3847f7f28ba50ea885027c5e05a83d418'
+body_hash: 'sha256:e107381841b5592a082798d469cf0dba403cc954c73e439002bcd2be9144e8e2'
 ---
 
 <!-- RETIRED: S08 -->
@@ -57,8 +58,11 @@ The separate manager session retains its active implementation files. This work 
 - [x] `S26` - Settle a failed KDF worker before closing pipe descriptors that may be held by blocked reader threads; `KDF supervisor cleanup ordering and retained ownership on termination failure, existing process termination seam, bounded real blocked-reader regression and lifecycle checks`.
 - [x] `S27` - Defer concrete ledger LLM and AEAT identity acquisition imports until their existing operation callbacks execute, preserving public contracts and measuring the removed startup work; `operation_composition.py concrete execution import sites, owning fresh registry exclusion and callback tests, existing offline LLM and verification integration cases, guarded source performance evidence`.
 - [x] `S28` - Evaluate traversal-local annotation memoization against mutation safety and measured registry construction cost, retaining only an evidenced improvement; `registry_schema_validation.py candidate and owning tests, guarded before-after comparison, rejected-candidate preservation and exact source restoration`.
+- [x] `S29` - Avoid confirming superseded KDF candidates by discovering the strongest provisional point before its unchanged five-sample confirmation; `kdf_calibration_search.py finite-grid search ordering, owning oracle and reclassification tests, preserved supervision contracts, measured probe counts and guarded calibration performance`.
 
 ## Parallelization
+
+S29 is root-designed finite-grid search scheduling within the accepted custody calibration contract: preserve the grid, eligibility floor, memory/iteration/parallelism ordering, near-miss retry, five confirming samples, derivation-only timing, supervisor ownership and deadlines. Current _search_memory_level confirms each column's candidate before considering a stronger candidate in another parallelism column, paying for confirmation batches that may be discarded. Separate provisional discovery from confirmation. Within one memory level, find the strongest provisional in-band point across all parallelism columns using only the existing fixed-memory/fixed-parallelism iteration ordering. Confirm only that strongest provisional point. If its median leaves the band, reclassify that point in the existing observation map and search the same level again, reconsidering every branch previously pruned by that provisional point. Return immediately after successful confirmation. Do not memoize across calibrations, infer performance across parallelism, reuse child processes, lower cryptographic parameters or change timeouts. The native Sol 6.1 worker owns kdf_calibration_search.py and a narrow new owning test, preserving the shared dirty test files. Root owns algorithm review, independent oracle/probe-count interpretation and guarded actual performance acceptance. The package worker may prepare isolated comparison tooling only after the source design and fixture contract are fixed.
 
 S28 follows root's attribution review: the retained registry profile records 93,177 annotation-state visits and repeated shared annotation expansion; the measured registry and schema-validation source hashes still match. Reuse accepted eager public schema and mutation-detection requirements unchanged. Optimize only one invocation of _model_schema_graph_state: ordinary classes and exact immutable atomic values need no typing argument traversal, and repeated complex annotation identities may reuse their structural snapshot within that invocation. Annotation and ordinary metadata states must have separate memo keys, and each memo entry must retain its source object to prevent identity recycling. Every subsequent graph capture starts fresh, including both sides of schema generation and each fingerprint revalidation. No schema-check suppression, cross-capture cache, stored fingerprint trust or public contract change is authorized. The existing Sol 6.1 native worker owns registry_schema_validation.py and its narrow owning tests; root owns architectural review and measured acceptance. Hold CPU-heavy tests until root releases the S27 comparison. If the guarded measurement does not establish reduced work without mutation-detection regressions, do not promote the optimization on timing intuition alone.
 
