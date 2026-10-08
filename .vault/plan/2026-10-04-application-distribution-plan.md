@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:8ea5ee8ea47e997e0097fb3e551259999c89b0c966e3655830c84d36edd58f8e'
+body_hash: 'sha256:213f3f807708916d043a1c1b5fe1c7d9258277cd435d040d8dcc530cf3fd9b32'
 ---
 
 # Application distribution
@@ -54,6 +54,7 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 - [ ] `S05` - Centralize build output paths and generation ownership in CMake and remove unowned build clutter; `native/cmake, native/desktop, dev/packaging/native, dev/packaging/tests, dev/docs sequence build helpers and owning tests, and build`.
 - [x] `S14` - Separate registered local filing settlement from the bounded exchange timeout exposed by frozen installer documentation acceptance; `src/cadrumo/entrypoints/cli/runtime_modelo_verification.py filing function only and new owning filing settlement tests, preserving independent verification changes`.
 - [ ] `S15` - Declare and verify Linux desktop system runtime prerequisites through canonical per-image metadata, strict ELF relocation and CMake DEB/RPM dependency projections while preserving private Python and installation gates; `native platform desktop metadata, dev/packaging/native dependency and relocation helpers/tests, native/cmake/distribution`.
+- [ ] `S16` - Verify exact installed Windows registration resources and admit an already-installed same-version no-op without native repair or publication mutation, retaining anchored damaged-repair refusal and MSI gates; `dev/packaging/native/windows_msi authoring and tests, native/installer registration verification and runner tests, and narrowly required shared maintenance observation`.
 
 ## Parallelization
 
@@ -90,6 +91,8 @@ The same diagnostic owner may adapt the ignored retained-sandbox observer to one
 S15: msi_maintenance owns the canonical Linux desktop-runtime contract, native platform enrollment, dev/packaging/native dependency/projection/relocation/package inspection helpers and their tests, and native/cmake/distribution only. Implement the accepted 2026-10-08 distribution refinement with per-image scope, metadata inspection and retained native refusal gates. Root owns governance, review and commits. linux_manager may continue the isolated Mac build observer concurrently. Peer-owned top-level CMake packaging/docs/release files and native/CONTRACT.md remain excluded; report any required enrollment handoff before touching them.
 
 S15 verified-source follow-up: after commit 840f846001, msi_maintenance owns the controlled committed-slice overlay into stopped WSL and manylinux snapshots, their before/after provenance, actual CMake documentation producer/cache handoff and full Linux native-installer retry. Include only required Cargo evidence inputs, preserve all earlier output/evidence and native provider checks, and use the established secure build-input helper. Root authorizes these launches after source review, both real native package fixture tests and all 51 actual ELF relocation checks passed. linux_manager continues the independent frozen Mac full observer; root retains frozen Windows full-build ownership. No product installation or host session changes.
+
+S16: notice_review owns implementation of the bounded Windows MSI registration-resource contract, corresponding authoring/tests, installer read-only verification and runner no-op integration/tests; native/installer Cargo dependencies only as required for native read-only APIs. Preserve existing MSI gates, exact cached-product authority and damaged anchored repair refusal. No product/MSI/login registration or session-ending tests on this host; isolated fixture files and native observations only. Coordinate before any shared native/application edits. Root owns independent review, source admission, governance and commits. The two other agents continue frozen Linux/Mac build lanes; Windows frozen full build remains unchanged.
 
 ## Verification
 

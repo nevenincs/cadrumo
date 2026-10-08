@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:010c139b00c5d2b3ef7a3083ce50412d6975f07f9e3583d7f77c3400dc289232'
+body_hash: 'sha256:6c5193675cb1987846e0ca2dfbdf423de6de547209cb36cd7e320181e451abeb'
 related:
   - "[[2026-10-04-application-distribution-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -67,6 +67,11 @@ A transaction nonce or opaque native handle is correlation, never independent pr
 
 This refines the same transaction-owner decision; it does not establish acceptance. Required negative evidence includes wrong SID/scope/prefix/product/operation, mutable ancestor or owner ACL, stale PID/creation/image/endpoint, altered record, owner death and unauthenticated standalone installation. A genuine changed-runner two-release upgrade must exercise old cached custom actions. Microsoft documents [single transaction ownership and owner-loss rollback](https://learn.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msibegintransactionw), the [owner-only settlement boundary](https://learn.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msiendtransaction), and the need to preserve the effective context and protected data in [custom action security](https://learn.microsoft.com/en-us/windows/win32/msi/custom-action-security). The record's correlation design is our implementation choice, not a native API guarantee.
 
+### Exact same-version no-op admission, 2026-10-08
+
+The user's continuing authorization to complete unsigned installation code includes an exact already-installed no-op. This does not relax anchored repair exclusion or native installation gates. A no-op may succeed only under maintenance exclusion after verifying the exact native owners and cached product identity, Ready publication and anchors, complete immutable version bytes, and the actual shared registration resources. Cached MSI properties or component key-path status alone do not prove installed registration integrity.
+
+The existing MSI authoring owner projects a bounded, typed registration-resource description into its immutable registration MSI: shared file hashes including the native marker bytes, scoped registry values and component identity, and desktop shortcut semantics. Installer verification consumes that same bound description and reads actual native resources without invoking repair, launching a shortcut, changing publication, or opening a native installation transaction. Missing, legacy, damaged or ambiguous evidence refuses no-op admission; normal ordered maintenance retains its own existing admission rules. A distinct successful result must identify that an already-published installation was verified, not claim that native installation or repair ran. No-op verification may coexist with readers of unchanged version files while retaining maintenance exclusion and file/version custody through its observation.
 
 ## Rationale
 
