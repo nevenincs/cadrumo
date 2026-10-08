@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:bcf4909864c89d07c90be661240f7be13929e58f28107ced7505d58df1d88752'
+body_hash: 'sha256:31dc496d81daa02868bc2f594060e6060258a72e989e0c8d2e9af454d24b332c'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -209,6 +209,14 @@ S18 source foundation adds SO_PEERPIDFD peer capture with SO_PEERCRED UID/PID cr
 Pinned manylinux_2_28 x86-64 manager.rust CTest passed (17.38s) and all-target Clippy with warnings denied passed (4.88s) on normalized source snapshot 16c4a2a6357eb0399692d0fc3332bed665105dba3ef889527842a63493f11c9b. Tests exercise actual kernel peer sockets, partial/oversize frames, stale/live endpoint ownership, symlink/replacement/public-directory refusal and missing ownership. Independent source review reports no material defect in this gated foundation. No duplicate test run was required.
 
 Main activation, cross-version successor endpoint admission and attended install/login/upgrade/uninstall acceptance remain unfinished. The existing Linux manager gate remains. The proposed direct-child placement ADR is still proposed pending the user's architecture choice; these transport primitives do not change the accepted placement contract. Overall native acceptance verdict remains PENDING.
+
+### 2026-10-08 unsigned macOS process foundation | low | Exact incarnation and exit observation pass source review and type checks
+
+S19 adds a gated Darwin process capability with fixed system libproc symbol loading, exact record-length/identity validation, bracketed native incarnation/image reads, a retained CLOEXEC kqueue NOTE_EXIT watch, and kernel pidversion-bound audit-token signalling. Missing exports, short records, privilege/owner changes and indeterminate native failures refuse; no numeric-PID signal fallback is introduced. Portable record tests cover ABI offsets, short records, owner/zombie/timestamp refusal, PID reuse/exec identity, token construction and native result classification. Existing Python native layouts and Apple's libproc implementation/record definitions provide independent ABI grounding.
+
+Configured Windows manager.rust passed (32.25s), pinned Rust 1.96 all-target manager Clippy passed (17.93s), and an isolated libc-only aarch64-apple-darwin all-target Clippy harness passed (0.89s), including the Darwin-only native module. The latter is a target type check, not an Apple SDK link or native execution. Python ctypes layout comparison confirms 136-byte BSD and 56-byte unique-identity records and consumed offsets. Independent source review PASS with no material findings; source formatting passes.
+
+No manager-main activation, login authority, macOS IPC, AppKit lifecycle/menu or signed service registration is enabled by this slice. Full native macOS linking and lifecycle behavior remain unverified without an Apple SDK/runner. Signing is explicitly excluded by the user. S19 remains open; overall platform acceptance PENDING.
 
 ## Recommendations
 

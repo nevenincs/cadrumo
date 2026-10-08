@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:9fc99108ab8836f74e10600b3a18f91e7f3b32a050e2d41b436b6819c97d46c1'
+body_hash: 'sha256:3553f44be8632026f0d7d50d2d010ca0a53918465ec26d380b7537c9c7744767'
 ---
 
 # `runtime-manager-architecture` plan
@@ -146,6 +146,7 @@ B5 initial checkpoint (2026-10-05, shared working tree): `SupervisedController._
 
 2026-10-08 S17 launch-fence correction: manager_remedies owns the shared exact-current-package Ready/lease admission API in native/application, a narrow native/launch_guard static C ABI crate/header, and desktop Launch lifetime custody with focused tests. Root owns C interpreter host calls and CMake static-library orchestration. msi_maintenance continues native transaction-owner records and safe removal; it must not treat RM snapshots as launch exclusion before these entry boundaries participate. Coordinate any maintenance.rs changes with its installer owner. Keep the existing platform/application dependency direction: the new ABI bridge may depend on application but platform must not depend cyclically on it. Missing native marker/publication for a structurally versioned package is refusal, never a portable fallback. Every Python child independently holds its own package lease through process lifetime; no Python/environment bypass grants admission. Root owns combined verification, source snapshots, vault and commits.
 
+2026-10-08 unsigned S19 source assignment: the linux_manager worker, after releasing its completed Linux IPC/SDK lane, owns a bounded macOS process-identity foundation in new native/manager/src/macos.rs, macos/records.rs and macos/process.rs, plus the minimal lib.rs export. Reuse the existing runtime's guarded native audit-token/libproc identity contract and retained kqueue exit observation; no numeric-PID signaling fallback, signing substitute or manager-main activation. Pure record/identity tests and source formatting may run on available hosts; native macOS compilation and behavior remain unverified without the Apple SDK/runner. This disjoint source slice may run alongside S09 installer recovery. Root owns shared CMake/build lanes, integrated review, vault and commits.
 
 ## Verification
 

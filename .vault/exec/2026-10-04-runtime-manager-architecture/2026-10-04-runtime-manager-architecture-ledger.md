@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:83985a9979cadfd89d75c970503567afea722caa76f2d3d8c7267f64f3b95e69'
+body_hash: 'sha256:2b66280289eeafdb3c67eb29a7fc784863ecc3e5985db6100cbe7de3bcc83f72'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -546,6 +546,17 @@ related:
 - `S18` `verify:` `manylinux manager.rust CTest (17.38s)` -> `pass`
 - `S18` `verify:` `manylinux manager Clippy all-targets warnings denied (4.88s)` -> `pass`
 - `S18` `verify:` `independent scoped Linux IPC source review` -> `pass`
+- `S19` `M` `native/manager/src/lib.rs`
+- `S19` `A` `native/manager/src/macos.rs`
+- `S19` `A` `native/manager/src/macos/records.rs`
+- `S19` `A` `native/manager/src/macos/process.rs`
+- `S19` `M` `.vault/plan/2026-10-04-runtime-manager-architecture-plan.md`
+- `S19` `M` `.vault/audit/2026-10-05-runtime-manager-architecture-audit.md`
+- `S19` `verify:` `Windows manager.rust (32.25s)` -> `pass`
+- `S19` `verify:` `pinned manager Clippy all-targets (17.93s)` -> `pass`
+- `S19` `verify:` `isolated Darwin-target libc-only Clippy (0.89s)` -> `pass`
+- `S19` `verify:` `Apple record Python ctypes ABI crosscheck` -> `pass`
+- `S19` `verify:` `independent macOS process source review` -> `pass`
 
 ## Notes
 
@@ -585,3 +596,4 @@ related:
 - `S18` Partial S18 portability checkpoint: canonical generated platform replaces Windows-only package inspection; integrity tests cover missing/changed inventories and incompatible target. Native Linux entry remains gated; no graphical session, install, upgrade or uninstall acceptance claimed.
 - `S17` Partial S17 corrective checkpoint; independent interpreter and desktop lifetime leases, explicit native/portable launch policy, metadata commands included. Initial Linux host test correctly refused inherited SDK `LD_` settings before reaching subject; child test environment now excludes them, production refusal unchanged. Native installed removal and two-release interactive acceptance remain pending; all MSI gates retained.
 - `S18` Partial S18 transport foundation only; main activation, cross-version cutover, placement choice and native acceptance remain open.
+- `S19` Partial unsigned S19 source foundation; no native macOS linking, execution, session or service activation evidence.
