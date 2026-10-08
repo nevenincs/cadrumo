@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:6af663ae9cc7e5bb1e79b70e29dacc7c1f18b7abbdbc5c4263ab510d7912b14e'
+body_hash: 'sha256:5fcfe095e65c6aeb49f0a178e800d754c043b52d545c6f4e47b57581a33f6752'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -201,6 +201,27 @@ related:
 - `S05` `verify:` `Scoped Ruff format lint and ty` -> `pass`
 - `S05` `verify:` `Pinned isolated Windows source configure` -> `pass`
 - `S05` `verify:` `Pinned Linux full source configure and frontend production build` -> `pass`
+- `S09` `M` `native/installer`
+- `S09` `M` `native/cmake/Installer.cmake`
+- `S09` `M` `native/CMakeLists.txt`
+- `S09` `M` `native/cmake/platforms/Posix.cmake`
+- `S09` `M` `native/application/src/installation/maintenance.rs`
+- `S09` `M` `native/application/tests/installation.rs`
+- `S09` `M` `dev/packaging/native/windows_msi.py`
+- `S09` `M` `dev/packaging/native/windows_msi_build.py`
+- `S09` `M` `dev/packaging/native/windows_msi_database.py`
+- `S09` `M` `dev/packaging/tests/test_windows_msi.py`
+- `S09` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S09` `M` `native/cmake/distribution/LinuxPackageGate.cmake.in`
+- `S09` `M` `dev/packaging/native/linux_packages.py`
+- `S09` `M` `dev/packaging/native/tests/test_linux_packages.py`
+- `S09` `verify:` `Pinned isolated Windows installer DLL and runner Release build` -> `pass`
+- `S09` `verify:` `Application and installer CTests` -> `pass`
+- `S09` `verify:` `Pinned installer and application all-target Clippy` -> `pass`
+- `S09` `verify:` `22 real Windows MSI/compiler/runner tests` -> `pass`
+- `S09` `verify:` `11 Linux package/XDG native-tool tests` -> `pass`
+- `S09` `verify:` `Native PE loader flags and runner asInvoker manifest` -> `pass`
+- `S09` `by:` `Codex`
 
 ## Notes
 
@@ -215,3 +236,4 @@ related:
 - `S13` Native component lane only. Full payload remains default ON. New desktop WebKitGTK4.1 dependency and full installer/session acceptance remain unresolved; no complete Linux artifact claimed.
 - `S05` Cross-platform validation repairs. Full Linux Clippy encountered concurrently introduced manager cutover source and awaits owner stabilization. S05 stays open; no full payload acceptance.
 - `S05` Shared nested distribution configure/build serialized under process lock after independent review. Full payload and native installation acceptance remain open; standalone distribution commands must not overlap source native-installer.
+- `S09` Partial S09 transaction/custody/owner foundation; immutable exact-role binding corrected before freeze. Owner callbacks not enrolled; literal MSI gate retained. Publication ACLs, full owner recovery/uninstall/all-session protection and native acceptance remain open. Includes verified Linux graph gates and root SDK/bridge graph repairs in shared CMake files.

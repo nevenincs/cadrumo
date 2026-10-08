@@ -24,7 +24,7 @@ include(../CachedCommand.cmake)
 set(installation_inputs "${CADRUMO_PAYLOAD}" "${CADRUMO_PATH_GENERATED}/identity.json"
   "${CMAKE_BINARY_DIR}/build-paths.json" "${CADRUMO_SOURCE_ROOT}/LICENSE" "${CADRUMO_SOURCE_ROOT}/NOTICE"
   "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-favicon.svg")
-foreach(helper installation installation_filesystem distribution_prepare build_paths hashing layout package_inventory docs_stage)
+foreach(helper installation installation_filesystem distribution_prepare build_paths hashing layout package_inventory docs_stage macos_launchagent)
   list(APPEND installation_inputs "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/${helper}.py")
 endforeach()
 cadrumo_cached_command(installation_command installation_prepare INPUTS ${installation_inputs}
@@ -95,6 +95,30 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
   endif()
 elseif(CADRUMO_TARGET MATCHES "^linux-")
   set(CPACK_GENERATOR "DEB;RPM")
+  # CMake normalizes DESTINATION . to the prefix and strips its final slash.
+  # Keep the native filesystem root nonempty through that generated install step.
+  set(CPACK_PACKAGING_INSTALL_PREFIX "/.")
+  file(READ "${CADRUMO_PAYLOAD}/data/package-manifest.json" linux_payload_manifest)
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CADRUMO_PAYLOAD}/data/package-manifest.json")
+  string(JSON linux_image_count LENGTH "${linux_payload_manifest}" layout application_images)
+  set(linux_manager FALSE)
+  if(linux_image_count GREATER 0)
+    math(EXPR linux_last_image "${linux_image_count} - 1")
+    foreach(index RANGE 0 ${linux_last_image})
+      string(JSON linux_image_target GET "${linux_payload_manifest}" layout application_images ${index} target)
+      if(linux_image_target STREQUAL "rust_manager")
+        set(linux_manager TRUE)
+      endif()
+    endforeach()
+  endif()
+  if(linux_manager)
+    configure_file("${CADRUMO_SOURCE_ROOT}/native/cmake/distribution/LinuxPackageGate.cmake.in"
+      "${CMAKE_BINARY_DIR}/LinuxPackageGate.cmake" @ONLY)
+    set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_BINARY_DIR}/LinuxPackageGate.cmake")
+  endif()
+  set(linux_package_basename "${CPACK_PACKAGE_FILE_NAME}")
+  set(CPACK_DEBIAN_FILE_NAME "${linux_package_basename}.deb")
+  set(CPACK_RPM_FILE_NAME "${linux_package_basename}.rpm")
   set(CPACK_DEBIAN_PACKAGE_NAME "${CADRUMO_ID_PACKAGE_NAME}")
   set(CPACK_RPM_PACKAGE_NAME "${CADRUMO_ID_PACKAGE_NAME}")
   set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CADRUMO_ID_PUBLISHER} <${CADRUMO_ID_CONTACT}>")
@@ -135,9 +159,17 @@ function(cadrumo_distribution_package target generator)
     DEPENDS installation_prepare USES_TERMINAL VERBATIM)
 endfunction()
 if(CADRUMO_TARGET STREQUAL "windows-x86-64")
+  set(CADRUMO_MSI_ADAPTER "" CACHE FILEPATH "Installer-only DLL built by the native rust_installer target")
+  set(msi_adapter_arguments)
+  if(CADRUMO_MSI_ADAPTER)
+    if(NOT IS_ABSOLUTE "${CADRUMO_MSI_ADAPTER}" OR NOT EXISTS "${CADRUMO_MSI_ADAPTER}")
+      message(FATAL_ERROR "CADRUMO_MSI_ADAPTER must identify a built native installer DLL")
+    endif()
+    set(msi_adapter_arguments --adapter "${CADRUMO_MSI_ADAPTER}")
+  endif()
   add_custom_target(msi-author
     COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi author
-      --build "${CMAKE_BINARY_DIR}" --identity "${CADRUMO_PATH_GENERATED}/identity.json" ${desktop_args}
+      --build "${CMAKE_BINARY_DIR}" --identity "${CADRUMO_PATH_GENERATED}/identity.json" ${desktop_args} ${msi_adapter_arguments}
     DEPENDS installation_prepare
     WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
   cadrumo_register_clean(TARGET msi-author PATHS "${CADRUMO_PATH_INSTALLATION_METADATA}/wix")
@@ -145,13 +177,22 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
     find_program(CADRUMO_WIX_EXECUTABLE NAMES wix DOC "WiX 5+ compiler for scoped MSI products")
     set(msi_build_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi_build)
     set(msi_build_arguments --build "${CMAKE_BINARY_DIR}"
-      --identity "${CADRUMO_PATH_GENERATED}/identity.json" ${desktop_args})
+      --identity "${CADRUMO_PATH_GENERATED}/identity.json" ${desktop_args} ${msi_adapter_arguments})
     add_custom_target(msi
       COMMAND ${msi_build_helper} build ${msi_build_arguments} --wix "${CADRUMO_WIX_EXECUTABLE}"
       DEPENDS msi-author WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
     add_custom_target(msi-verify
       COMMAND ${msi_build_helper} verify ${msi_build_arguments}
       DEPENDS msi WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
+    add_custom_target(native-package DEPENDS msi-verify)
+    set(CADRUMO_MSI_RUNNER "" CACHE FILEPATH "CMake-built explicit native MSI maintenance runner")
+    set(CADRUMO_MSI_SCOPE "" CACHE STRING "Explicit maintenance scope: user or machine")
+    set_property(CACHE CADRUMO_MSI_SCOPE PROPERTY STRINGS user machine)
+    set(CADRUMO_MSI_PREFIX "" CACHE PATH "Explicit native MSI installation prefix")
+    add_custom_target(install-msi
+      COMMAND ${msi_build_helper} install ${msi_build_arguments}
+        --runner "${CADRUMO_MSI_RUNNER}" --scope "${CADRUMO_MSI_SCOPE}" --prefix "${CADRUMO_MSI_PREFIX}"
+      DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
     # Readiness is an independent refusal, so missing compilers do not hide the
     # lifecycle blockers. It never installs products or changes login registration.
     add_custom_target(check-msi-installation
@@ -160,12 +201,38 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
     cadrumo_register_clean(TARGET msi PATHS "${CADRUMO_PATH_PACKAGES}/msi")
   else()
     cadrumo_distribution_package(msi WIX)
+    add_custom_target(native-package DEPENDS msi)
   endif()
 elseif(CADRUMO_TARGET MATCHES "^linux-")
   cadrumo_distribution_package(deb DEB)
   cadrumo_distribution_package(rpm RPM)
+  if(linux_manager)
+    find_program(CADRUMO_DPKG_DEB_EXECUTABLE NAMES dpkg-deb)
+    find_program(CADRUMO_RPM_EXECUTABLE NAMES rpm)
+    set(linux_package_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.linux_packages)
+    set(linux_package_arguments --build "${CMAKE_BINARY_DIR}"
+      --identity "${CADRUMO_PATH_GENERATED}/identity.json")
+    foreach(format deb rpm)
+      if(format STREQUAL "deb")
+        set(linux_inspector "${CADRUMO_DPKG_DEB_EXECUTABLE}")
+      else()
+        set(linux_inspector "${CADRUMO_RPM_EXECUTABLE}")
+      endif()
+      add_custom_target(${format}-verify
+        COMMAND ${linux_package_helper} inspect ${linux_package_arguments} --format "${format}"
+          --artifact "${CADRUMO_PATH_PACKAGES}/${linux_package_basename}.${format}" --tool "${linux_inspector}"
+        DEPENDS ${format} WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
+    endforeach()
+    add_custom_target(check-linux-installation
+      COMMAND ${linux_package_helper} check-installation ${linux_package_arguments}
+      WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" VERBATIM)
+    add_custom_target(native-package DEPENDS deb-verify rpm-verify)
+  else()
+    add_custom_target(native-package DEPENDS deb rpm)
+  endif()
 elseif(CADRUMO_TARGET STREQUAL "macos-arm64")
   cadrumo_distribution_package(dmg DragNDrop)
+  add_custom_target(native-package DEPENDS dmg)
 endif()
 # The generated `package` target builds ALL first; `zip` selects the portable
 # install-based archive independently of host installer tool availability.

@@ -67,6 +67,7 @@ def _files(
     value: DistributionIdentity,
     stage: Path,
     members: dict[str, str],
+    native_marker: tuple[str, Path],
 ) -> Element:
     standard = SubElement(package, "StandardDirectory", Id=product.root_directory)
     root = SubElement(standard, "Directory", Id="INSTALL_ROOT", Name=_literal(value.name))
@@ -96,7 +97,7 @@ def _files(
             "File",
             Id=file_id,
             Name=_literal(path.name),
-            Source=_literal(member(stage, relative).as_posix()),
+            Source=_literal((native_marker[1] if relative == native_marker[0] else member(stage, relative)).as_posix()),
             KeyPath="no" if product.scope == "user" else "yes",
         )
         if product.scope == "user":
@@ -149,7 +150,7 @@ def _registration(
         Key="Software\\Microsoft\\Windows\\CurrentVersion\\Run",
         Name=value.application_id,
         Type="string",
-        Value='"[INSTALL_ROOT]' + manager + '"',
+        Value='"[INSTALL_ROOT]' + manager + '" --sign-in',
         KeyPath="yes",
     )
     if desktop:
@@ -186,6 +187,9 @@ def _source(
     role: ProductRole,
     manager: str,
     desktop: str | None,
+    native_marker: tuple[str, Path],
+    manifest_sha256: str,
+    adapter: Path | None = None,
 ) -> bytes:
     product = msi_identity(value, scope, role)
     wix = Element("Wix", xmlns=WIX_NAMESPACE, RequiredVersion="5.0")
@@ -206,9 +210,31 @@ def _source(
     SubElement(package, "MediaTemplate", EmbedCab="yes")
     SubElement(package, "Property", Id="MSIRESTARTMANAGERCONTROL", Value="Disable")
     SubElement(package, "Property", Id="REBOOT", Value="ReallySuppress")
+    ownership = {
+        "schema": 1,
+        "application_id": value.application_id,
+        "channel": value.channel,
+        "platform": "windows-x64",
+        "version": value.version,
+        "role": role,
+        "manifest_sha256": manifest_sha256,
+    }
+    SubElement(package, "Property", Id="CadrumoPackage", Value=json.dumps(ownership, separators=(",", ":")))
+    # Native product evidence must identify the resolved relocated prefix, not an
+    # unevaluated directory token or a registry value belonging to another role.
+    SubElement(
+        package,
+        "SetProperty",
+        Id="ARPINSTALLLOCATION",
+        Value="[INSTALL_ROOT]",
+        After="CostFinalize",
+        Sequence="execute",
+    )
     # Literal false cannot be bypassed with an MSI command-line property. Replace
     # it only when native transactional admission/maintenance is implemented.
     SubElement(package, "Launch", Condition="0", Message=MAINTENANCE_GATE)
+    if adapter is not None:
+        _admission(package, value, scope, adapter)
     if role == "registration":
         SubElement(
             package,
@@ -218,7 +244,7 @@ def _source(
             DowngradeErrorMessage="A later shared registration product is already installed.",
         )
     feature = SubElement(package, "Feature", Id="ProductFeature", Title=_literal(value.name), Level="1")
-    root = _files(package, feature, product, value, stage, files)
+    root = _files(package, feature, product, value, stage, files, native_marker)
     if role == "registration":
         _registration(package, feature, root, product, value, manager, desktop)
     content = tostring(wix, encoding="utf-8", xml_declaration=True)
@@ -227,9 +253,57 @@ def _source(
     return content
 
 
-def author(build: Path, identity_file: Path, desktop: str | None = None) -> dict[str, Path]:
+def _admission(package: Element, value: DistributionIdentity, scope: InstallationScope, adapter: Path) -> None:
+    """Enroll checked native admission without claiming transactional maintenance is complete."""
+    opposite: InstallationScope = "machine" if scope == "user" else "user"
+    request = {
+        "schema": 1,
+        "scope": scope,
+        "permitted_families": [msi_identity(value, scope, role).upgrade_code for role in ("version", "registration")],
+        "conflicting_families": [
+            msi_identity(value, opposite, role).upgrade_code for role in ("version", "registration")
+        ]
+        + [value.upgrade_code],
+    }
+    SubElement(package, "Property", Id="CadrumoAdmission", Value=json.dumps(request, separators=(",", ":")))
+    SubElement(package, "Binary", Id="CadrumoInstaller", SourceFile=_literal(adapter.as_posix()))
+    SubElement(
+        package,
+        "CustomAction",
+        Id="CadrumoPrepareAdmission",
+        BinaryRef="CadrumoInstaller",
+        DllEntry="CadrumoPrepareAdmission",
+        Execute="immediate",
+        Return="check",
+    )
+    SubElement(
+        package,
+        "CustomAction",
+        Id="CadrumoScopeAdmission",
+        BinaryRef="CadrumoInstaller",
+        DllEntry="CadrumoScopeAdmission",
+        Execute="deferred",
+        Impersonate="no" if scope == "machine" else "yes",
+        HideTarget="yes",
+        Return="check",
+    )
+    sequence = SubElement(package, "InstallExecuteSequence")
+    # Removing a conflicting product must remain possible. Never run maintenance
+    # from the UI sequence, whose token/scope differs from the execute transaction.
+    condition = 'NOT (REMOVE ~= "ALL")'
+    SubElement(sequence, "Custom", Action="CadrumoPrepareAdmission", Before="InstallInitialize", Condition=condition)
+    SubElement(sequence, "Custom", Action="CadrumoScopeAdmission", After="InstallInitialize", Condition=condition)
+
+
+def author(
+    build: Path, identity_file: Path, desktop: str | None = None, adapter: Path | None = None
+) -> dict[str, Path]:
     """Emit four ownership sources from the verified stage without producing installable MSIs."""
     stage, owned, manifest_file, manifest = _staged_manifest(build)
+    if adapter is not None:
+        adapter = adapter.resolve(strict=True)
+        if not adapter.is_file() or adapter.suffix.lower() != ".dll":
+            raise ValueError("MSI adapter must be an existing native installer DLL")
     value = DistributionIdentity(**json.loads(identity_file.read_text(encoding="utf-8")))
     if value.target != "windows-x86-64":
         raise ValueError("MSI authoring requires a Windows payload")
@@ -248,15 +322,34 @@ def author(build: Path, identity_file: Path, desktop: str | None = None) -> dict
     expected_shared = {manager, definition["marker"], "docs/licenses/CADRUMO.txt", "docs/licenses/NOTICE.txt"}
     if set(shared_files) != expected_shared or digest(member(stage, manager)) != digest(member(package, manager)):
         raise ValueError("MSI shared resources differ from the canonical registration owner")
+    metadata = build_paths(build)["installation_metadata"]
+    directory = member(metadata, "wix")
+    # Native eligibility is an installer-owned overlay. Archive staging and its
+    # immutable inventory remain unchanged and do not acquire this native fence.
+    marker = json.loads(member(stage, definition["marker"]).read_text(encoding="utf-8"))
+    marker["publication"] = definition["publication"]
+    native_marker = member(directory, "native-installation.json")
+    marker_content = (json.dumps(marker, indent=2) + "\n").encode("utf-8")
     sources = {}
     for scope in ("user", "machine"):
         for role, files in (("version", version_files), ("registration", shared_files)):
             name = f"{scope}-{role}.wxs"
-            sources[name] = _source(stage, files, value, scope, role, manager, desktop)
-    metadata = build_paths(build)["installation_metadata"]
+            sources[name] = _source(
+                stage,
+                files,
+                value,
+                scope,
+                role,
+                manager,
+                desktop,
+                (definition["marker"], native_marker),
+                digest(manifest_file),
+                adapter,
+            )
     verify_inventory(stage, member(metadata, "installation.json"))
-    directory = member(metadata, "wix")
     directory.mkdir(exist_ok=True)
+    if not native_marker.exists() or native_marker.read_bytes() != marker_content:
+        native_marker.write_bytes(marker_content)
     outputs = {}
     for name, content in sources.items():
         output = member(directory, name)
@@ -268,6 +361,22 @@ def author(build: Path, identity_file: Path, desktop: str | None = None) -> dict
         "blocked_by": MAINTENANCE_GATE,
         "manifest_sha256": digest(manifest_file),
         "sources": {name: digest(path) for name, path in outputs.items()},
+        "adapter_sha256": digest(adapter) if adapter is not None else None,
+        "native_marker_sha256": digest(native_marker),
+        "maintenance": {
+            "version": value.version,
+            "manifest_sha256": digest(manifest_file),
+            "desktop_present": desktop is not None,
+            "contract": {
+                "layout": manifest["layout"],
+                "installation_identity": {"application_id": value.application_id, "channel": value.channel},
+            },
+            "products": {
+                f"{scope}-{role}": msi_identity(value, scope, role).product_code
+                for scope in ("user", "machine")
+                for role in ("version", "registration")
+            },
+        },
     }
     locator = member(directory, "authoring.json")
     content = (json.dumps(descriptor, indent=2) + "\n").encode("utf-8")
@@ -284,11 +393,12 @@ def main() -> None:
     source.add_argument("--build", type=Path, required=True)
     source.add_argument("--identity", type=Path, required=True)
     source.add_argument("--desktop")
+    source.add_argument("--adapter", type=Path)
     guard = commands.add_parser("reject-combined")
     guard.add_argument("--build", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "author":
-        author(args.build, args.identity, args.desktop)
+        author(args.build, args.identity, args.desktop, args.adapter)
     else:
         reject_combined_manager_msi(args.build)
 

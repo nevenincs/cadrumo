@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -14,8 +15,10 @@ from defusedxml import ElementTree
 from dev.packaging.command_execution import run_command
 from dev.packaging.native.distribution_prepare import refresh
 from dev.packaging.native.hashing import digest
+from dev.packaging.native.identity import DistributionIdentity
 from dev.packaging.native.windows_msi import MAINTENANCE_GATE, author, reject_combined_manager_msi
-from dev.packaging.native.windows_msi_build import verify_database
+from dev.packaging.native.windows_msi_build import compile_products, maintenance_plan, verify_database, verify_products
+from dev.packaging.native.windows_msi_identity import msi_identity
 
 from .test_native_installation import payload_fixture
 
@@ -77,9 +80,17 @@ def test_authoring_separates_file_ownership_and_scoped_registration(tmp_path: Pa
             sets[role] = set()
             for file in root.findall(".//w:File", NS):
                 source = Path(file.attrib["Source"])
-                relative = source.relative_to(stage).as_posix()
+                if source.name == "native-installation.json":
+                    relative = "data/installation.json"
+                    native_marker = json.loads(source.read_text(encoding="utf-8"))
+                    portable_marker = json.loads((stage / relative).read_text(encoding="utf-8"))
+                    assert "publication" not in portable_marker
+                    assert native_marker.pop("publication") == "data/installation-state"
+                    assert native_marker == portable_marker
+                else:
+                    relative = source.relative_to(stage).as_posix()
+                    assert digest(source) == owned[relative]
                 sets[role].add(relative)
-                assert digest(source) == owned[relative]
                 assert file.attrib["KeyPath"] == ("no" if scope == "user" else "yes")
             if role == "version":
                 assert package.attrib["UpgradeStrategy"] == "none"
@@ -96,7 +107,7 @@ def test_authoring_separates_file_ownership_and_scoped_registration(tmp_path: Pa
                 assert entry.attrib["Value"] == "[INSTALL_ROOT]cadrumo-manager"
                 login = next(item for item in registry if item.attrib["Name"] == value["application_id"])
                 assert login.attrib["Key"].endswith("\\CurrentVersion\\Run")
-                assert login.attrib["Value"] == '"[INSTALL_ROOT]cadrumo-manager"'
+                assert login.attrib["Value"] == '"[INSTALL_ROOT]cadrumo-manager" --sign-in'
                 anchor = next(item for item in registry if item.attrib["Name"] == "ManagerAnchorVersion")
                 assert anchor.attrib["Value"] == value["version"]
                 shortcut = root.find(".//w:Shortcut", NS)
@@ -135,6 +146,116 @@ def test_authoring_is_incremental_and_preserves_stage(tmp_path: Path) -> None:
     assert author(build, identity, "cadrumo") == outputs
     assert {name: path.stat().st_mtime_ns for name, path in outputs.items()} == times
     assert receipt.read_bytes() == before
+
+
+def test_optional_native_admission_is_scoped_and_hash_bound_without_opening_installation(tmp_path: Path) -> None:
+    build, identity = _prepared(tmp_path)
+    adapter = tmp_path / "installer.dll"
+    adapter.write_bytes(b"authoring fixture; not a native acceptance payload")
+    outputs = author(build, identity, "cadrumo", adapter)
+    value = DistributionIdentity(**json.loads(identity.read_text(encoding="utf-8")))
+    for scope in ("user", "machine"):
+        opposite = "machine" if scope == "user" else "user"
+        for role in ("version", "registration"):
+            package = ElementTree.parse(outputs[f"{scope}-{role}.wxs"]).find("w:Package", NS)
+            assert package is not None
+            metadata = package.find("w:Property[@Id='CadrumoAdmission']", NS)
+            assert metadata is not None
+            request = json.loads(metadata.attrib["Value"])
+            assert request["scope"] == scope
+            assert request["permitted_families"] == [
+                msi_identity(value, scope, item).upgrade_code for item in ("version", "registration")
+            ]
+            assert request["conflicting_families"] == [
+                msi_identity(value, opposite, item).upgrade_code for item in ("version", "registration")
+            ] + [value.upgrade_code]
+            action = package.find("w:CustomAction[@Id='CadrumoScopeAdmission']", NS)
+            assert action is not None
+            assert action.attrib["Impersonate"] == ("yes" if scope == "user" else "no")
+            assert action.attrib["Execute"] == "deferred"
+            assert action.attrib["Return"] == "check"
+            launch = package.find("w:Launch", NS)
+            assert launch is not None and launch.attrib["Condition"] == "0"
+    descriptor = build / "installation/metadata/wix/authoring.json"
+    before = descriptor.read_bytes()
+    assert json.loads(before)["adapter_sha256"] == digest(adapter)
+    adapter.write_bytes(b"changed adapter")
+    author(build, identity, "cadrumo", adapter)
+    assert descriptor.read_bytes() != before
+
+
+@pytest.mark.parametrize("defect", ["data", "action", "impersonation", "ignore-failure"])
+def test_database_verifier_detects_native_admission_changes(tmp_path: Path, defect: str) -> None:
+    build, identity = _prepared(tmp_path)
+    adapter = tmp_path / "installer.dll"
+    adapter.write_bytes(b"authoring fixture")
+    source = author(build, identity, "cadrumo", adapter)["machine-version.wxs"]
+    database = tmp_path / "database.wxs"
+    content = source.read_text(encoding="utf-8")
+    if defect == "data":
+        content = content.replace('Id="CadrumoAdmission"', 'Id="MissingAdmission"')
+    elif defect == "action":
+        content = content.replace('DllEntry="CadrumoScopeAdmission"', 'DllEntry="MissingAdmission"')
+    elif defect == "impersonation":
+        content = content.replace('Impersonate="no"', 'Impersonate="yes"')
+    else:
+        content = content.replace('Return="check"', 'Return="ignore"')
+    database.write_text(content, encoding="utf-8")
+    with pytest.raises(ValueError, match="admission"):
+        verify_database(source, database)
+
+
+@pytest.mark.external_tool
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="Requires the native Windows MSI adapter and compiler")
+def test_native_admission_dll_is_embedded_in_all_four_verified_products(tmp_path: Path) -> None:
+    wix = shutil.which("wix")
+    assert wix is not None, "Put the configured WiX compiler on PATH"
+    configured = os.environ.get("CADRUMO_TEST_MSI_ADAPTER")
+    assert configured, "Set CADRUMO_TEST_MSI_ADAPTER to the CMake rust_installer output"
+    adapter = tmp_path / "adapter.dll"
+    shutil.copyfile(Path(configured), adapter)
+    build, identity = _prepared(tmp_path)
+    paths = build / "build-paths.json"
+    document = json.loads(paths.read_text(encoding="utf-8"))
+    document["paths"]["packages"] = "packages"
+    paths.write_text(json.dumps(document), encoding="utf-8")
+    compile_products(build, identity, Path(wix), "cadrumo", adapter)
+    verify_products(build, identity, "cadrumo", adapter)
+    receipt = json.loads((build / "packages/msi/compiled.json").read_text(encoding="utf-8"))
+    assert receipt["installable"] is False
+    assert len(receipt["artifacts"]) == 4
+    runner = Path(configured).with_name("cadrumo-msi-maintenance.exe")
+    assert runner.is_file(), "Build the native maintenance runner alongside its DLL"
+    prefix = tmp_path / "never installed"
+    plan = maintenance_plan(build, identity, "user", prefix, "cadrumo", adapter)
+
+    def run_plan() -> str:
+        result = run_command([str(runner), "install", "--plan", str(plan)], cwd=build, timeout_seconds=30)
+        assert result.returncode != 0
+        assert not prefix.exists()
+        code = json.loads(result.stdout)["code"]
+        assert isinstance(code, str)
+        return code
+
+    assert run_plan() == "native_owner_protocol_not_admitted"
+    request = json.loads(plan.read_text(encoding="utf-8"))
+    request["version_product"], request["registration_product"] = (
+        request["registration_product"],
+        request["version_product"],
+    )
+    plan.write_text(json.dumps(request), encoding="utf-8")
+    assert run_plan() == "artifact_or_owner_refused"
+    request["version_product"], request["registration_product"] = (
+        request["registration_product"],
+        request["version_product"],
+    )
+    request["contract"]["installation_identity"]["channel"] = "another-channel"
+    plan.write_text(json.dumps(request), encoding="utf-8")
+    assert run_plan() == "artifact_or_owner_refused"
+    adapter.write_bytes(adapter.read_bytes() + b"changed")
+    with pytest.raises(ValueError, match="stale payload identity"):
+        verify_products(build, identity, "cadrumo", adapter)
 
 
 @pytest.mark.parametrize("operation", ["author", "guard"])

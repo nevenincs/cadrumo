@@ -141,7 +141,13 @@ fn native_publication_refuses_missing_pending_changed_and_removing_versions() {
         Sha256::digest(fs::read(package.join("data/package-manifest.json")).unwrap())
     ))
     .unwrap();
-    let product = "12345678-1234-1234-1234-123456789abc".to_owned();
+    use cadrumo_application::installation::maintenance::{NativeContext, NativeOwner};
+    let product = NativeOwner::new(
+        "12345678-1234-1234-1234-123456789abc".to_owned(),
+        NativeContext::Machine,
+        prefix.clone(),
+    )
+    .unwrap();
     let install = store
         .prepare("1.0.0", product.clone(), manifest.clone())
         .unwrap();
@@ -173,6 +179,10 @@ fn native_publication_refuses_missing_pending_changed_and_removing_versions() {
     assert!(matches!(store.begin_removal("1.0.0"), Err(Error::Busy)));
     drop(clone);
     store.anchors(Some("1.0.0"), None).unwrap();
+    let snapshot = store.snapshot().unwrap();
+    assert_eq!(snapshot.manager_anchor(), Some("1.0.0"));
+    assert_eq!(snapshot.desktop_anchor(), None);
+    assert_eq!(snapshot.versions().count(), 1);
     assert!(matches!(store.begin_removal("1.0.0"), Err(Error::Busy)));
     store.anchors(None, Some("1.0.0")).unwrap();
     assert!(matches!(store.begin_removal("1.0.0"), Err(Error::Busy)));
@@ -218,6 +228,299 @@ fn native_publication_identity_and_path_must_match_the_catalogue() {
             .inspect_cancellable(&prefix, &Cancellation::default())
             .is_err()
     );
+}
+
+#[test]
+fn committed_registration_absence_is_positive_evidence_and_releases_anchors_atomically() {
+    use cadrumo_application::{
+        installation::maintenance::{
+            NativeContext, NativeOwner, NativeProductInventory, RegistrationPhase,
+        },
+        value::Sha256Digest,
+    };
+    struct Inventory(bool);
+    impl NativeProductInventory for Inventory {
+        fn locate(&self, owner: &NativeOwner) -> Result<Option<NativeOwner>, Error> {
+            Ok(self.0.then(|| owner.clone()))
+        }
+    }
+    let mut fixture = Fixture::new();
+    let prefix = fixture.prefix("registration");
+    let package = fixture.version(&prefix, "1.0.0");
+    let store = fixture.native(&prefix);
+    store.initialize().unwrap();
+    assert!(store.snapshot().unwrap().registration().is_none());
+    let manifest = Sha256Digest::new(format!(
+        "{:x}",
+        Sha256::digest(fs::read(package.join("data/package-manifest.json")).unwrap())
+    ))
+    .unwrap();
+    let owner = NativeOwner::new(
+        "12345678-1234-1234-1234-123456789abc".into(),
+        NativeContext::Machine,
+        prefix.clone(),
+    )
+    .unwrap();
+    let registration = NativeOwner::new(
+        "22345678-1234-1234-1234-123456789abc".into(),
+        NativeContext::Machine,
+        prefix,
+    )
+    .unwrap();
+    let writer = store
+        .prepare("1.0.0", owner.clone(), manifest.clone())
+        .unwrap();
+    assert!(
+        store
+            .publish_registered("1.0.0", &package, &fixture.contract, true, owner)
+            .is_err()
+    );
+    assert!(store.snapshot().unwrap().manager_anchor().is_none());
+    store
+        .publish_registered(
+            "1.0.0",
+            &package,
+            &fixture.contract,
+            true,
+            registration.clone(),
+        )
+        .unwrap();
+    drop(writer);
+    let snapshot = store.snapshot().unwrap();
+    assert_eq!(
+        snapshot.registration().unwrap().phase,
+        RegistrationPhase::Ready
+    );
+    assert_eq!(snapshot.manager_anchor(), Some("1.0.0"));
+    assert_eq!(snapshot.desktop_anchor(), Some("1.0.0"));
+    assert!(store.anchors(None, None).is_err());
+    assert!(store.begin_removal("1.0.0").is_err());
+    let removal = store.begin_registration_removal(&registration).unwrap();
+    assert!(store.exclusive_maintenance().is_err());
+    drop(removal); // Interrupted uninstall is not positive absence evidence.
+    assert_eq!(
+        store.snapshot().unwrap().registration().unwrap().phase,
+        RegistrationPhase::Removing
+    );
+    assert_eq!(store.snapshot().unwrap().manager_anchor(), Some("1.0.0"));
+    assert!(
+        store
+            .begin_registration_removal(&registration)
+            .unwrap()
+            .complete(&Inventory(true))
+            .is_err()
+    );
+    store
+        .begin_registration_removal(&registration)
+        .unwrap()
+        .complete(&Inventory(false))
+        .unwrap();
+    let snapshot = store.snapshot().unwrap();
+    assert_eq!(
+        snapshot.registration().unwrap().phase,
+        RegistrationPhase::Absent
+    );
+    assert!(snapshot.manager_anchor().is_none());
+    assert!(snapshot.desktop_anchor().is_none());
+    assert!(store.acquire("1.0.0", &manifest).is_ok());
+    assert!(store.begin_registration_removal(&registration).is_err());
+}
+
+#[test]
+fn native_repair_fences_discovery_and_removal_recovery_rechecks_native_and_file_ownership() {
+    use cadrumo_application::{
+        installation::maintenance::{NativeContext, NativeOwner, NativeProductInventory},
+        value::Sha256Digest,
+    };
+    struct Inventory(Result<Option<NativeOwner>, &'static str>);
+    impl NativeProductInventory for Inventory {
+        fn locate(&self, _owner: &NativeOwner) -> Result<Option<NativeOwner>, Error> {
+            self.0
+                .clone()
+                .map_err(|message| Error::Integrity(message.into()))
+        }
+    }
+    let mut fixture = Fixture::new();
+    let prefix = fixture.prefix("recovery");
+    let package = fixture.version(&prefix, "1.0.0");
+    let store = fixture.native(&prefix);
+    store.initialize().unwrap();
+    let manifest = Sha256Digest::new(format!(
+        "{:x}",
+        Sha256::digest(fs::read(package.join("data/package-manifest.json")).unwrap())
+    ))
+    .unwrap();
+    let owner = NativeOwner::new(
+        "12345678-1234-1234-1234-123456789abc".into(),
+        NativeContext::Machine,
+        prefix.clone(),
+    )
+    .unwrap();
+    let install = store
+        .prepare("1.0.0", owner.clone(), manifest.clone())
+        .unwrap();
+    assert!(store.begin_removal("1.0.0").is_err());
+    store.publish("1.0.0", &package, &fixture.contract).unwrap();
+    drop(install);
+    let reader = store.acquire("1.0.0", &manifest).unwrap();
+    assert!(matches!(
+        store.prepare("1.0.0", owner.clone(), manifest.clone()),
+        Err(Error::Busy)
+    ));
+    drop(reader);
+    store.anchors(Some("1.0.0"), None).unwrap();
+    assert!(matches!(
+        store.prepare("1.0.0", owner.clone(), manifest.clone()),
+        Err(Error::Busy)
+    ));
+    assert!(store.acquire("1.0.0", &manifest).is_ok());
+    store.anchors(None, None).unwrap();
+    let repair = store
+        .prepare("1.0.0", owner.clone(), manifest.clone())
+        .unwrap();
+    drop(repair); // A dead installer leaves the durable Pending fence.
+    assert!(store.acquire("1.0.0", &manifest).is_err());
+    store.publish("1.0.0", &package, &fixture.contract).unwrap();
+
+    let present = Inventory(Ok(Some(owner.clone())));
+    let absent = Inventory(Ok(None));
+    let unavailable = Inventory(Err("native inventory unavailable"));
+    assert!(
+        store
+            .begin_removal("1.0.0")
+            .unwrap()
+            .complete(&present)
+            .is_err()
+    );
+    assert!(store.acquire("1.0.0", &manifest).is_err());
+    assert!(
+        store
+            .begin_removal("1.0.0")
+            .unwrap()
+            .complete(&unavailable)
+            .is_err()
+    );
+    assert!(
+        store
+            .begin_removal("1.0.0")
+            .unwrap()
+            .rollback(&fixture.contract, &absent)
+            .is_err()
+    );
+    fs::write(package.join("python.zip"), b"damaged rollback").unwrap();
+    assert!(
+        store
+            .begin_removal("1.0.0")
+            .unwrap()
+            .rollback(&fixture.contract, &present)
+            .is_err()
+    );
+    fs::write(
+        package.join("python.zip"),
+        b"inventoried fixture dependency",
+    )
+    .unwrap();
+    let different = NativeOwner::new(
+        owner.product_code().into(),
+        NativeContext::User {
+            sid: "S-1-5-21-1000".into(),
+        },
+        prefix.clone(),
+    )
+    .unwrap();
+    assert!(
+        store
+            .begin_removal("1.0.0")
+            .unwrap()
+            .rollback(&fixture.contract, &Inventory(Ok(Some(different))))
+            .is_err()
+    );
+    store
+        .begin_removal("1.0.0")
+        .unwrap()
+        .rollback(&fixture.contract, &present)
+        .unwrap();
+    assert!(store.acquire("1.0.0", &manifest).is_ok());
+    store
+        .begin_removal("1.0.0")
+        .unwrap()
+        .complete(&absent)
+        .unwrap();
+    assert!(store.acquire("1.0.0", &manifest).is_err());
+    // Even after native absence, the shared owner never substitutes direct deletion.
+    assert!(package.join("python.zip").is_file());
+}
+
+#[test]
+fn native_publication_rejects_foreign_paths_contexts_and_legacy_unscoped_state() {
+    use cadrumo_application::{
+        installation::maintenance::{NativeContext, NativeOwner},
+        value::Sha256Digest,
+    };
+    let mut fixture = Fixture::new();
+    let prefix = fixture.prefix("owner");
+    let package = fixture.version(&prefix, "1.0.0");
+    let other = fixture.prefix("foreign");
+    let foreign_package = fixture.version(&other, "1.0.0");
+    let store = fixture.native(&prefix);
+    store.initialize().unwrap();
+    let manifest = Sha256Digest::new(format!(
+        "{:x}",
+        Sha256::digest(fs::read(package.join("data/package-manifest.json")).unwrap())
+    ))
+    .unwrap();
+    let owner = NativeOwner::new(
+        "12345678-1234-1234-1234-123456789abc".into(),
+        NativeContext::Machine,
+        prefix.clone(),
+    )
+    .unwrap();
+    let foreign_owner =
+        NativeOwner::new(owner.product_code().into(), NativeContext::Machine, other).unwrap();
+    assert!(
+        store
+            .prepare("1.0.0", foreign_owner, manifest.clone())
+            .is_err()
+    );
+    let install = store
+        .prepare("1.0.0", owner.clone(), manifest.clone())
+        .unwrap();
+    assert!(
+        store
+            .publish("1.0.0", &foreign_package, &fixture.contract)
+            .is_err()
+    );
+    drop(install);
+    let user_owner = NativeOwner::new(
+        owner.product_code().into(),
+        NativeContext::User {
+            sid: "S-1-5-21-1000".into(),
+        },
+        prefix.clone(),
+    )
+    .unwrap();
+    assert!(
+        store
+            .prepare("1.0.0", user_owner.clone(), manifest.clone())
+            .is_err()
+    );
+    assert!(store.prepare("2.0.0", user_owner, manifest).is_err());
+    for sid in ["", "S-1-1-0", "S-1-5--1", "S-1-05-21", "S-1-5-4294967296"] {
+        assert!(
+            NativeOwner::new(
+                owner.product_code().into(),
+                NativeContext::User { sid: sid.into() },
+                prefix.clone()
+            )
+            .is_err()
+        );
+    }
+    let state_path = prefix.join("data/installation-state/state.json");
+    let mut state: serde_json::Value =
+        serde_json::from_slice(&fs::read(&state_path).unwrap()).unwrap();
+    state["schema"] = json!(1);
+    fs::write(&state_path, serde_json::to_vec(&state).unwrap()).unwrap();
+    assert!(store.initialize().is_err());
 }
 
 #[test]

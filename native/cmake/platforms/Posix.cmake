@@ -112,7 +112,9 @@ foreach(target ${host_targets} cadrumo_python_bridge)
 endforeach()
 foreach(target ${host_targets})
   target_link_libraries(${target} PRIVATE "${platform_static}" ${CMAKE_DL_LIBS} pthread m)
-  add_dependencies(${target} rust_platform_static)
+  # Each interpreter entry needs the bridge at runtime. Ninja also emits an alias
+  # for OUTPUT_NAME (python), which can take precedence over the aggregate target.
+  add_dependencies(${target} rust_platform_static cadrumo_python_bridge)
   if(APPLE)
     target_link_options(${target} PRIVATE "LINKER:-headerpad_max_install_names")
   endif()

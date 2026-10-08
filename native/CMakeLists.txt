@@ -1,6 +1,11 @@
 set(CONTRACT_DIR "${CADRUMO_PATH_GENERATED}")
 string(JSON sdk_root_relative GET "${package_layout}" sdk root)
 set(CPYTHON_ROOT "${CADRUMO_PATH_PYTHON_SDK}/${sdk_root_relative}")
+set(sdk_link_outputs)
+if(NOT WIN32)
+  string(JSON sdk_link_library GET "${package_layout}" sdk link_library)
+  list(APPEND sdk_link_outputs "${CPYTHON_ROOT}/${sdk_link_library}")
+endif()
 set(CADRUMO_BUILD_HELPER "${PROJECT_SOURCE_DIR}/dev/packaging/native/cmake_build.py")
 set(CADRUMO_HELPER "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_build)
 file(GLOB_RECURSE native_helper_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/dev/packaging/native/*.py")
@@ -41,7 +46,7 @@ set(CADRUMO_PACKAGE_MANIFEST "${package_manifest}" PARENT_SCOPE)
 add_custom_target(python_sdk
   COMMAND ${CADRUMO_HELPER} sdk --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-sdk.txt"
   DEPENDS ${sdk_inputs} "${PROJECT_BINARY_DIR}/inputs-sdk.txt"
-  BYPRODUCTS "${CADRUMO_PATH_PYTHON_SDK}/ready"
+  BYPRODUCTS "${CADRUMO_PATH_PYTHON_SDK}/ready" ${sdk_link_outputs}
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 add_custom_target(python_dependencies
   COMMAND ${CADRUMO_HELPER} provision --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-provision.txt"
@@ -87,6 +92,7 @@ endif()
 add_subdirectory(application)
 # Defines rust_manager and CADRUMO_MANAGER_EXECUTABLE in this directory scope for Packaging.cmake.
 include("${PROJECT_SOURCE_DIR}/native/cmake/Manager.cmake")
+include("${PROJECT_SOURCE_DIR}/native/cmake/Installer.cmake")
 set(CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE "${CADRUMO_APPLICATION_ARTIFACT_PROBE_FILE}" PARENT_SCOPE)
 set(CADRUMO_ENTRYPOINTS "${CADRUMO_ENTRYPOINTS}" PARENT_SCOPE)
 set(CADRUMO_ENTRYPOINT_TARGETS "${CADRUMO_ENTRYPOINT_TARGETS}" PARENT_SCOPE)

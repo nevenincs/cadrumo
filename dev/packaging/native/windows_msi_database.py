@@ -76,3 +76,18 @@ def verify_upgrade_order(artifact: Path, *, version_product: bool) -> None:
         < sequence.get("InstallFinalize", 0)
     ):
         raise ValueError(f"Registration MSI lost its transactional upgrade order: {sequence}")
+
+
+def verify_admission_order(artifact: Path) -> None:
+    """Prove scoped admission runs in the execute transaction before file ownership changes."""
+    sequence = action_sequence(artifact)
+    if not (
+        0
+        < sequence.get("CostFinalize", 0)
+        < sequence.get("CadrumoPrepareAdmission", 0)
+        < sequence.get("InstallInitialize", 0)
+        < sequence.get("CadrumoScopeAdmission", 0)
+        < sequence.get("ProcessComponents", 0)
+        < sequence.get("InstallFiles", 0)
+    ):
+        raise ValueError(f"MSI native scope admission has unsafe action ordering: {sequence}")

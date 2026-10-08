@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:2f74777c57e6921721425daa7519606fcae9ddf81e133123b84b7802a2f3acf0'
+body_hash: 'sha256:4f95a0e7f2a9ec42c6bbde68c4cee77249752fd955d31654c87ab5aa12514c5c'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -114,6 +114,14 @@ Component configuration deliberately supplies no bundle or package acceptance ta
 The source native-installer target now depends on its configured bundle and Windows installer binaries, forwards exact configuration/channel/desktop placement and builder interpreter, and delegates format construction to the owning distribution preset. The windows-installers-x64 preset isolates source output from the concurrent documentation build. Review found that nested distribution output remains shared; a generated CMake script now holds a process lock through nested configure and packaging. An actual concurrent two-source-build test confirms the first package's payload cannot be changed by the second configure. The lock does not govern independently invoked standalone distribution commands; those must not overlap. No generated build-system script is incorrectly enrolled as disposable artifact cleanup.
 
 Sixteen CMake configuration/input/flow tests passed before the lock addition, and the affected flow test passed after it with real concurrent package execution. Scoped Ruff/format/ty and diff checks pass. The independent Linux-worker review reports its concurrency finding resolved. Windows isolated configure succeeds with pinned tools, and full Linux configure plus frontend TypeScript/Vite production build pass on the pinned floor builder. Native Linux platform/application/manager CTests pass (15.74s); later manager cutover changes require fresh integration verification. The full Linux desktop host remains blocked by WebKitGTK 4.1 availability in the floor SDK. No full product/native installation or interactive acceptance is inferred.
+
+### 2026-10-08 S09 native transaction runner checkpoint — partial
+
+The installer-only DLL and explicit maintenance runner compile in the isolated pinned Windows Release graph. The runner binds exact native MSI role/application/channel/platform/release/manifest metadata and artifact hashes, retains source and ancestor handles against replacement, owns MsiBeginTransaction/MsiEndTransaction, and distinguishes rollback from committed-but-unpublished failure. Shared state now carries typed native owner/context/prefix, atomic Ready-plus-registration-anchor publication and positive committed registration absence. Repair/removal guards retain version exclusion and revalidate native ownership; missing or ambiguous inventory stays fenced. Same-user non-msiexec clients fail native owner-pipe admission. Owner callback exports are compiled but are not enrolled in generated MSIs, which retain the literal-false gate.
+
+Verification: isolated Release DLL/runner build passed; application/installer CTests passed in 79.53s before the final metadata-only role binding change, and both pinned all-target Clippy checks passed afterward. Twenty-two Python MSI tests passed in 58.57s, compiling twelve real products and checking embedded adapter sequencing, receipt tampering, swapped-role/changed-channel rejection and refusal before prefix creation for the still-gated pair. Log: var/storage/development/.logs/test-runs/2026-10-08/20261008T100601.710324Z-pytest-4564-7471af5b/run.log. Root review's role-confusion issue is corrected. Linux native-package graph/gates are independently verified with real synthetic DEB/RPM builds.
+
+S09 remains open: protected publication-directory ACL custody, authenticated callback enrollment and happy native transaction evidence, ordered prior-registration removal, safe native uninstall, rollback/owner-death recovery and all-session in-use protection are not completed by this checkpoint. Software and disposable interactive host/two-release acceptance stay gated; certificates are excluded from current source/build work.
 
 ## Recommendations
 
