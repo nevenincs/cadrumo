@@ -8,6 +8,7 @@ from threading import TIMEOUT_MAX, Event
 
 import pytest
 
+from ....core.errors.hierarchy import InternalInvariantError
 from ..lifecycle_guard import RuntimeLifecycleGuard
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -19,7 +20,7 @@ def test_reentrant_owner_retains_exclusion_and_foreign_release_cannot_drop_it() 
     assert guard.acquire(blocking=False)
     assert guard.acquire_delete()
     with ThreadPoolExecutor(max_workers=1) as pool:
-        with pytest.raises(RuntimeError, match="cannot release un-acquired lock"):
+        with pytest.raises(InternalInvariantError, match="cannot release un-acquired lock"):
             pool.submit(guard.release).result()
         assert not pool.submit(guard.acquire, False).result()
         guard.release()
@@ -28,7 +29,7 @@ def test_reentrant_owner_retains_exclusion_and_foreign_release_cannot_drop_it() 
         guard.release()
         assert pool.submit(guard.acquire_delete).result()
         pool.submit(guard.release).result()
-    with pytest.raises(RuntimeError, match="cannot release un-acquired lock"):
+    with pytest.raises(InternalInvariantError, match="cannot release un-acquired lock"):
         guard.release()
 
 

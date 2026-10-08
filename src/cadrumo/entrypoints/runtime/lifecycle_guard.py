@@ -7,6 +7,8 @@ from collections import deque
 from threading import Condition, RLock, get_ident
 from typing import Literal
 
+from ...core.errors.hierarchy import InternalInvariantError
+
 _LifecycleRole = Literal["exclusive", "poll", "delete"]
 
 
@@ -118,7 +120,7 @@ class RuntimeLifecycleGuard:
         """Release only this thread's ownership, transferring the final depth atomically."""
         with self._condition:
             if self._owner != get_ident():
-                raise RuntimeError("cannot release un-acquired lock")
+                raise InternalInvariantError("cannot release un-acquired lock")
             self._depth -= 1
             if self._depth == 0:
                 self._release_owner()
