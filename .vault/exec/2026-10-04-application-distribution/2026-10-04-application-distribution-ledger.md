@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:7dc02aa37455f9d4ead0e355d9514240076709288fd1fb096592e763d013878c'
+body_hash: 'sha256:05c0b2ca3064f312dd7cbe48e0d6a3dfedcb2147a034d095523a42a9a0642271'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -381,6 +381,10 @@ related:
 - `S16` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
 - `S16` `verify:` `S09 recovery and exact-registration no-op coverage review` -> `pass`
 - `S16` `by:` `root`
+- `S05` `verify:` `Frozen Windows strict full docs compile4578s` -> `pass`
+- `S05` `verify:` `Frozen Windows native-installer docs reconstruction` -> `fail`
+- `S05` `verify:` `All1316 mismatches exclusively CRLF-LF` -> `pass`
+- `S05` `verify:` `Actual pagefind indexing line ending regression2tests` -> `pass`
 
 ## Notes
 
@@ -424,3 +428,4 @@ related:
 - `S15` S15 remains open for full product packaging evidence; native graphical minimum-host and installation acceptance remain separate gates. Windows-native-tool skips covered by isolated DEB/RPM fixture run.
 - `S15` Reference now states archive/this-user prerequisites and artifact versus host glibc boundary. Full frozen Linux build lane delegated after source/native fixture and ELF checks.
 - `S16` Existing recovery/rollback/owner-loss implementations retain native acceptance gaps. S16 adds actual resource verification before a no-op success; missing legacy/resource evidence and damaged anchored repair stay refused.
+- `S05` Original outcome preserved. Existing committed pagefind fix narrowly overlaid into isolated source with hashes. CMake retry18081 pending, gates unchanged.

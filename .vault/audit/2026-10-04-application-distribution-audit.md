@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:995557a6260754e929c44e7d4857e6b286ae1ec32fcbba3da78842abfeac76e8'
+body_hash: 'sha256:90127b950b145593681b595d91b695dcb0adebf254b78417e54079652163f48d'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -267,6 +267,10 @@ Linux native desktop Release compilation now passes in the existing manylinux co
 Verification: 106 owning tests passed with five platform/tool skips; 22 focused tests passed with two native-tool skips on Windows. Both skipped DEB/RPM fixture cases then passed natively in a separate manylinux source snapshot (2 tests, 3.65s), building actual archives and proving acceptance of declared metadata plus rejection of weakened minimums without installing them. Both target CMake dependency projections pass; scoped Ruff, formatting and ty pass. Evidence: build/windows-installers-x64/verification/linux-desktop-policy-native-tests and build/linux-desktop-contract-proof/out. Actual staged ELF relocation and full-product packaging follow separately; source review and synthetic native artifacts do not establish live installation or minimum graphical-host acceptance. S15 remains open pending integrated product evidence.
 
 S15 actual ELF confirmation: PASS. Using the isolated source snapshot and current canonical policy, relocation processed all 51 actual staged Linux ELF images on separate copies in 2.402s, including interpreter, manager, desktop and extensions. Architecture, GLIBC <= 2.28, direct dependency closure and loader-relative RUNPATH checks passed; hashes of all 51 original staged images were unchanged and the private SDK was untouched. Evidence: build/windows-installers-x64/verification/linux-desktop-policy-native-tests/relocation-command.json, relocation-inputs.json, relocation-result.json and relocation.log. This verifies the concrete closure blocker correction without desktop execution, full package completion or minimum-host acceptance.
+
+2026-10-08 Windows frozen retry 99182: strict documentation compile PASS in 4578 seconds; search index 1316 pages/four languages/15360 shared records. Overall build FAIL after 4975.83 seconds at user_docs_stage reconstruction. All 1316 HTML mismatches are exclusively CRLF versus LF, confirmed by complete byte comparison. Source cac1d8a03fae22056b54b5e3ecf589cfd996369396c2978abc5a2825a56e0985 and authority 9db202fd630f35654c984a5b656ddd4be59dffd03927d6f520316af6e9222a92 unchanged. Evidence: build/windows-docs-frozen-20261008/evidence/full-docs-forensics. All thirteen bank sequences observed cleanly; passing full compile confirms validation succeeded, without explaining the previous intermittent failure.
+
+Existing independent commit 454f97bf3f fixes pagefind stamping to preserve line endings. Both actual LF/CRLF regression cases PASS. Only dev/docs/pagefind_index.py and its owning test were overlaid into the isolated snapshot, preserving original bytes/hashes in evidence/pagefind-line-endings/overlay.json. New source digest 3c1a610dd82b641aae56ae31076c7a7cdc04acfb23a79cc206884590f94877ac. Original CMake native-installer retry 18081 runs in evidence/full-docs-pagefind-retry, with unchanged byte-equality gate, strict live sequence checks, deadlines, goldens, authority and parallelism. No ready/cache marker manufactured. MSI product build and installation acceptance remain unproven.
 
 ## Recommendations
 
