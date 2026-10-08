@@ -24,6 +24,7 @@ const DIRECTORY_MODE: libc::mode_t = 0o700;
 pub(super) struct Anchor(OwnedFd);
 
 /// The effective user of this process.
+#[cfg(target_os = "linux")]
 pub(crate) fn effective_uid() -> u32 {
     // SAFETY: geteuid takes no arguments and cannot fail.
     unsafe { libc::geteuid() }

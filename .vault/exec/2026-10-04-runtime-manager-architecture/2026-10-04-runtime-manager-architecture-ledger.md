@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:a05b7d510b7c4901edc931791ae4692336fbf6e8900b727f72a1d5a7e6c2d84e'
+body_hash: 'sha256:9ac800631650f27a57e07012a257c03f5501e202f715fe32bc231a4f15f6204e'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -570,6 +570,16 @@ related:
 - `S18` `verify:` `scoped Ruff lint and format` -> `pass`
 - `S18` `verify:` `ty check posix_endpoint.py tests/test_posix.py` -> `pass`
 - `S18` `verify:` `independent endpoint identity review` -> `pass`
+- `S19` `M` `native/manager/src/macos/login.rs`
+- `S19` `M` `native/manager/src/custody.rs`
+- `S19` `M` `native/manager/src/custody/posix.rs`
+- `S19` `M` `src/cadrumo/adapters/local_runtime/macos_login.py`
+- `S19` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_login.py`
+- `S19` `verify:` `Python macOS login tests (22) and scoped Ruff format ty` -> `pass`
+- `S19` `verify:` `native Apple SDK foundation tests (5) and process/session smoke` -> `pass`
+- `S19` `verify:` `actual Mac CMake manager.rust (50.14s)` -> `pass`
+- `S19` `verify:` `actual Mac Rust1.96 all-target Clippy (32.88s)` -> `pass`
+- `S19` `verify:` `independent session flags and Linux cfg review` -> `pass`
 
 ## Notes
 
@@ -612,3 +622,4 @@ related:
 - `S19` Partial unsigned S19 source foundation; no native macOS linking, execution, session or service activation evidence.
 - `S19` S19 remains open; actual Apple SDK build newly available on user-supplied non-disposable Mac. Preserve both existing machines and all lifecycle gates.
 - `S18` S18 remains open: manager loop, native placement and lifecycle acceptance remain unfinished; existing Windows and macOS hosts are non-disposable.
+- `S19` S19 remains open: component evidence does not establish graphical lifecycle, SMAppService activation or signed release acceptance.

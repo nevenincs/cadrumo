@@ -73,3 +73,27 @@ def test_missing_session_and_native_failure_remain_distinct_and_cannot_restore_a
     failed = binding.observe(credential_facilities=Availability.AVAILABLE)
     assert not failed.active and failed.lock_state is OsLockState.UNKNOWN
     assert failed.unattended is LoginEligibility.UNKNOWN
+
+
+@pytest.mark.parametrize("flags", [0x2010, 0x4010, 0x6010, 0x5020, 0x7010, 0x4011])
+def test_known_audit_flags_do_not_grant_lock_or_unattended_authority(
+    flags: int,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    value = macos_login._session_observation(100022, 0, 100022, flags)
+    assert value == MacosSessionObservation(100022, flags)
+    monkeypatch.setattr(macos_login, "observe_macos_session", lambda _session_id: value)
+    context = MacosLoginBinding("501", 100022).observe(credential_facilities=Availability.AVAILABLE)
+    assert context.active is (bool(flags & 0x10) and not bool(flags & 0x1001))
+    assert context.lock_state is OsLockState.UNKNOWN and not context.unlocked
+    assert context.unattended is LoginEligibility.UNKNOWN
+
+
+@pytest.mark.parametrize("status,observed,flags", [(1, 42, 0x6010), (0, 43, 0x6010), (0, 42, 0x8010)])
+def test_audit_record_unknown_flags_error_and_changed_session_still_refuse(
+    status: int, observed: int, flags: int
+) -> None:
+    with pytest.raises(RuntimeRefusalError) as caught:
+        macos_login._session_observation(42, status, observed, flags)
+    assert caught.value.reason is RuntimeRefusalCode.UNAVAILABLE
+    assert macos_login._session_observation(42, -60500, 0, 0) is None

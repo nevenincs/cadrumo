@@ -57,7 +57,9 @@ fn observation(
     if status == -60500 {
         return Ok(Observation::Absent);
     }
-    if status != 0 || observed != requested || attributes & !0x1031 != 0 {
+    // SessionGetInfo forwards audit flags, including console/authenticated bits.
+    // These known bits do not grant unlocked or unattended eligibility.
+    if status != 0 || observed != requested || attributes & !0x7031 != 0 {
         return Err(io::ErrorKind::InvalidData.into());
     }
     Ok(Observation::Present {
@@ -253,7 +255,13 @@ mod tests {
             observation(42, 0, 42, 0x30).unwrap(),
             Observation::Present { graphical: true }
         );
-        for flags in [0, 0x20, 0x11, 0x1010, 0x1031] {
+        for flags in [0x2010, 0x4010, 0x6010] {
+            assert_eq!(
+                observation(42, 0, 42, flags).unwrap(),
+                Observation::Present { graphical: true }
+            );
+        }
+        for flags in [0, 0x20, 0x11, 0x1010, 0x1031, 0x5020, 0x7010, 0x4011] {
             assert_eq!(
                 observation(42, 0, 42, flags).unwrap(),
                 Observation::Present { graphical: false }

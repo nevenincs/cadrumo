@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd82dcab274ceaa117fdc12058a7c57394d4837bff45c00225896caf9a9f69fe'
+body_hash: 'sha256:a12a25bb1729b116c7fbadac8fcbcc357ca66cfc79aa37011803577a20eb2434'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -232,6 +232,11 @@ The user subsequently supplied an existing ARM64 Mac at gergely.wootsch@gw-lapto
 The real glibc 2.28/Python 3.13.11 documentation runtime exposed unsupported chmod(follow_symlinks=False). Linux now pins the bound filesystem socket with O_PATH|O_NOFOLLOW under the held namespace, checks owner/type/incarnation, applies 0600 through its held procfs descriptor alias and rechecks identity and mode. Missing procfs and replacement before/after pinning refuse; the listener's unrelated sockfs inode is never used. Independent source review passed. All 33 POSIX integration tests passed on the native Linux container in 2.62s with a short task-owned socket directory; scoped Ruff/format and ty passed. Earlier long socket paths correctly refused admission. The subsequent real docs profile-setup page advances past permission setup but refuses runtime_containment_unavailable during synthetic login; that separate builder/fixture limitation is under investigation. This is transport evidence, not installed manager/login acceptance.
 
 The operator explicitly states that this Windows CI runner and gergely.wootsch@gw-laptop are non-disposable. Both are restricted to isolated builds and non-destructive probes; no product installation, removal, login registration or session-ending acceptance is authorized here. The exploratory Linux VM was shut down cleanly and its disk retained. macOS now has actual native SDK compilation evidence; signing certificates remain excluded by request. Installation/upgrade gates remain closed.
+
+
+### 2026-10-08 native macOS session flags and component checks | low | Documented audit flags no longer cause false unavailability
+
+Apple Security SessionGetInfo returns AuditInfo.flags, and the real SDK bsm/audit.h defines console-access 0x2000 and authenticated 0x4000. Python and Rust now recognize those bits (known mask 0x7031) without treating them as unlocked, attended or eligible for unattended operation. The actual SSH session's 0x5020 observation is recognized but remains inactive, locked-state unknown, unattended unknown and ineligible; remote/root/non-graphical refusal is preserved. Evidence: https://raw.githubusercontent.com/apple-oss-distributions/Security/main/OSX/libsecurity_authorization/lib/Authorization.cpp and the native macOS 26.5 SDK audit.h. Twenty-two Python tests and scoped Ruff/format/ty pass; five actual native Mac foundation tests and self-process probe pass. Full CMake manager.rust passes on the actual Mac in 50.14s, and all-target pinned Rust 1.96 Clippy passes in 32.88s. The effective_uid export and function are now precisely Linux-gated to match every caller; shared POSIX custody remains available on Darwin. Independent review passed both changes. Native logs are retained under /Users/gergely.wootsch/cadrumo-builds/unsigned-installers-20261008; local foundation evidence is build/macos-process-typecheck. Manager-main/SMAppService integration, graphical lifecycle and full DMG acceptance remain open.
 
 ## Recommendations
 

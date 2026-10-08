@@ -34,7 +34,7 @@ mod windows;
 #[cfg(windows)]
 use windows as platform;
 
-#[cfg(unix)]
+#[cfg(target_os = "linux")]
 pub(crate) use posix::effective_uid;
 
 /// The pause between attempts on a held lock, as the Python owner polls.

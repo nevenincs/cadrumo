@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:ed4f7102317a9cbf0bca26ec3ed6f42d873f65cf02f930e8f5b47021f0d65ce7'
+body_hash: 'sha256:e9a7bc467db6eba881b846ec80a6fa6673272217cc67854aaf3c1f2ed0184e30'
 ---
 
 # `runtime-manager-architecture` plan
@@ -151,6 +151,9 @@ B5 initial checkpoint (2026-10-05, shared working tree): `SupervisedController._
 2026-10-08 S19 continuation: linux_manager may add macos/login.rs and its macos.rs export, reusing the runtime's existing kernel LOCAL_PEERTOKEN/LOCAL_PEERPID and Security.framework SessionGetInfo policy for peer/session observation. Preserve held-process incarnation checks, unavailable/absent distinctions and unknown lock/console state. No manager self-session API, shared-session/main activation or signing-dependent registration is included in this slice. Root retains shared builds, vault and commits; coordinate native Cargo checks with the installer owner.
 
 2026-10-08 native build corrections: msi_maintenance, after completing its committed installer recovery checkpoint, may own the reproduced Linux socket-permission compatibility defect in src/cadrumo/adapters/local_runtime/posix_endpoint.py and focused owning tests. The glibc-2.28 builder's real CPython raises NotImplementedError for chmod(follow_symlinks=False); preserve no-follow identity/custody and do not introduce a pathname-following fallback or process-wide umask mutation. Root owns docs scratch propagation and frozen-source/full-build orchestration. linux_manager may correct the shared Python macOS login observer and Rust macos/login.rs known-flag validation after primary Apple evidence: SessionGetInfo returns native audit flags including SDK-documented 0x2000 and 0x4000. Recognize those documented bits without granting active/unlocked/unattended eligibility, keeping root/remote/non-graphical refusal. Coordinate tests and preserve all other native source edits; root owns vault and commits.
+
+
+2026-10-08 native Mac verification correction: linux_manager also owns the two narrow Linux-only effective_uid cfg guards in custody.rs and custody/posix.rs after proving all callers are Linux-gated; native Mac all-target Clippy verifies the correction. msi_maintenance may provision an isolated docs build under the existing WSL user's build directory and execute the synthetic docs fixture using its already-running user-systemd containment. Do not change services, install the product, register login, reboot or weaken native containment. Root retains repository docs/CMake edits, snapshot provenance, vault and commits. Both named Windows and macOS hosts are non-disposable and restricted to isolated builds and non-destructive probes.
 
 ## Verification
 
