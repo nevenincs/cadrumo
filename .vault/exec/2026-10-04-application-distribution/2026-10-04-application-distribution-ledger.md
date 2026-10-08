@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:c1648e30d2c69316bcfab1705959ae27ac16db8c6c17cee8028cdd59c5c54305'
+body_hash: 'sha256:2a6beaa60c90389739917f412c36dacf9e806af4b6c0a2c1fd17c73444628bbc'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -410,6 +410,11 @@ related:
 - `S05` `verify:` `Mac native-installer and hdiutil integrity` -> `pass`
 - `S05` `verify:` `Windows full MSI cabinet compilation` -> `fail`
 - `S05` `verify:` `Windows post-build complete input verification` -> `pass`
+- `S05` `M` `dev/packaging/native/windows_msi.py`
+- `S05` `M` `dev/packaging/tests/test_windows_msi.py`
+- `S05` `verify:` `WiX ordinary versus extended long-path reproduction` -> `pass`
+- `S05` `verify:` `Owning 39 tests plus corrected native long-source regression` -> `pass`
+- `S05` `verify:` `Ruff format check and ty` -> `pass`
 
 ## Notes
 
@@ -457,3 +462,4 @@ related:
 - `S16` Root integrated source review PASS; installed native product registry and interactive acceptance unproven, gates unchanged. Evidence in audit and worker verification handoff.
 - `S15` Hash-verified local artifacts and full provenance in linux-s15-final-handoff. Native installation gates unchanged; graphical lifecycle and ARM64 acceptance unproven.
 - `S05` DMG built and copied; separate Mac live qualification failed. Windows long-source cabinet defect reproduced; no native installations.
+- `S05` Full-payload retry pending; installation gates retained.

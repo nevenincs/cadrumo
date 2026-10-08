@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
 from typing import Any
 from xml.etree.ElementTree import Element, SubElement, tostring
 
@@ -53,6 +53,27 @@ def _literal(value: str) -> str:
     return value
 
 
+def _source_path(path: PurePath) -> str:
+    """Use native extended paths at the cabinet reader, without changing MSI destinations."""
+    value = str(path).replace("/", "\\")
+    if value.startswith("\\\\?\\UNC\\"):
+        value = "\\\\" + value[8:]
+    elif value.startswith("\\\\?\\"):
+        value = value[4:]
+    if value.startswith(("\\\\.\\", "\\??\\")):
+        raise ValueError("MSI source must identify a filesystem path, not a device namespace")
+    native = PureWindowsPath(value)
+    if native.is_absolute():
+        if ".." in native.parts:
+            raise ValueError("MSI source must use an absolute normalized path")
+        value = str(native)
+        return _literal("\\\\?\\UNC\\" + value[2:] if value.startswith("\\\\") else "\\\\?\\" + value)
+    # Portable authoring tests can inspect WiX metadata from POSIX fixture roots.
+    if path.is_absolute() and not isinstance(path, PureWindowsPath):
+        return _literal(path.as_posix())
+    raise ValueError("MSI source must use an absolute filesystem path")
+
+
 def _component(parent: Element, feature: Element, product: MsiIdentity, resource: str) -> Element:
     code = product.component_code(resource)
     component_id = "C_" + code.replace("-", "")
@@ -98,7 +119,7 @@ def _files(
             "File",
             Id=file_id,
             Name=_literal(path.name),
-            Source=_literal((native_marker[1] if relative == native_marker[0] else member(stage, relative)).as_posix()),
+            Source=_source_path(native_marker[1] if relative == native_marker[0] else member(stage, relative)),
             KeyPath="no" if product.scope == "user" else "yes",
         )
         if product.scope == "user":
@@ -329,7 +350,7 @@ def _admission(package: Element, value: DistributionIdentity, scope: Installatio
         + [value.upgrade_code],
     }
     SubElement(package, "Property", Id="CadrumoAdmission", Value=json.dumps(request, separators=(",", ":")))
-    SubElement(package, "Binary", Id="CadrumoInstaller", SourceFile=_literal(adapter.as_posix()))
+    SubElement(package, "Binary", Id="CadrumoInstaller", SourceFile=_source_path(adapter))
     SubElement(
         package,
         "CustomAction",

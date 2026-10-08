@@ -6,7 +6,7 @@ import json
 import os
 import shutil
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from uuid import UUID
 
 import pytest
@@ -16,7 +16,7 @@ from dev.packaging.command_execution import run_command
 from dev.packaging.native.distribution_prepare import refresh
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.identity import DistributionIdentity
-from dev.packaging.native.windows_msi import MAINTENANCE_GATE, author, reject_combined_manager_msi
+from dev.packaging.native.windows_msi import MAINTENANCE_GATE, _source_path, author, reject_combined_manager_msi
 from dev.packaging.native.windows_msi_build import compile_products, maintenance_plan, verify_database, verify_products
 from dev.packaging.native.windows_msi_identity import msi_identity
 
@@ -24,6 +24,38 @@ from .test_native_installation import payload_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 NS = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        (PureWindowsPath("C:/build/payload/file.bin"), "\\\\?\\C:\\build\\payload\\file.bin"),
+        (PureWindowsPath("//server/share/payload/file.bin"), "\\\\?\\UNC\\server\\share\\payload\\file.bin"),
+        (PureWindowsPath("\\\\?\\C:\\build\\file.bin"), "\\\\?\\C:\\build\\file.bin"),
+        (PureWindowsPath("\\\\?\\UNC\\server\\share\\file.bin"), "\\\\?\\UNC\\server\\share\\file.bin"),
+        (PurePosixPath("/portable/fixture/file.bin"), "/portable/fixture/file.bin"),
+    ],
+)
+def test_wix_source_paths_preserve_native_local_unc_and_existing_extended_paths(
+    source: PureWindowsPath | PurePosixPath, expected: str
+) -> None:
+    assert _source_path(source) == expected
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "relative/file",
+        "C:relative",
+        "C:/root/../file",
+        "//./PhysicalDrive0",
+        "//?/GLOBALROOT/device",
+        "C:/$(env.SECRET)/file",
+    ],
+)
+def test_wix_source_paths_refuse_ambiguous_or_interpreted_paths(source: str) -> None:
+    with pytest.raises(ValueError):
+        _source_path(PureWindowsPath(source))
 
 
 @pytest.mark.parametrize("desktop", [True, False])
@@ -126,7 +158,7 @@ def test_authoring_separates_file_ownership_and_scoped_registration(tmp_path: Pa
                     assert portable_marker.pop("launch_policy") == "portable"
                     assert native_marker == portable_marker
                 else:
-                    relative = source.relative_to(stage).as_posix()
+                    relative = source.relative_to(Path(_source_path(stage))).as_posix()
                     assert digest(source) == owned[relative]
                 sets[role].add(relative)
                 assert file.attrib["KeyPath"] == ("no" if scope == "user" else "yes")
@@ -425,6 +457,50 @@ def test_database_verifier_rejects_ownership_regressions(tmp_path: Path, defect:
     database.write_text(content, encoding="utf-8")
     with pytest.raises(ValueError):
         verify_database(source, database)
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="Requires the native Windows MSI validator")
+def test_native_wix_cabinets_preserve_long_source_bytes_and_install_destinations(tmp_path: Path) -> None:
+    wix = shutil.which("wix")
+    assert wix is not None, "Put a configured WiX 5 or newer tool on PATH for the native compiler lane"
+    build, identity = _prepared(tmp_path)
+    payload = identity.parent / "payload"
+    relative = "/".join(["long-source"] * 15 + ["complete-inventory-member.bin"])
+    original = payload / relative
+    original.parent.mkdir(parents=True)
+    original.write_bytes(b"long source cabinet integrity fixture")
+    manifest_path = payload / "data/package-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["files"][relative] = digest(original)
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    refresh(payload, identity, build, "cadrumo")
+    sources = author(build, identity, "cadrumo")
+    source = sources["machine-version.wxs"]
+    authored = ElementTree.parse(source)
+    long_file = next(item for item in authored.findall(".//w:File", NS) if item.attrib["Name"] == original.name)
+    actual_source = Path(long_file.attrib["Source"])
+    assert len(str(actual_source)) > 260
+    assert str(actual_source).startswith("\\\\?\\")
+    expected_digest = digest(actual_source)
+    artifact = tmp_path / "long-source.msi"
+    compiled = run_command([wix, "build", "-arch", "x64", "-wx", "-o", str(artifact), str(source)], cwd=tmp_path)
+    assert compiled.returncode == 0, compiled.stdout + compiled.stderr
+    exported = tmp_path / "exported"
+    database = tmp_path / "long-source.wxs"
+    decompiled = run_command(
+        [wix, "msi", "decompile", "-x", str(exported), "-o", str(database), str(artifact)], cwd=tmp_path
+    )
+    assert decompiled.returncode == 0, decompiled.stdout + decompiled.stderr
+    verify_database(source, database)
+    observed = ElementTree.parse(database)
+    installed_file = observed.find(f".//w:File[@Id='{long_file.attrib['Id']}']", NS)
+    assert installed_file is not None and installed_file.attrib["Name"] == original.name
+    original_directories = {item.attrib["Id"]: item.attrib["Name"] for item in authored.findall(".//w:Directory", NS)}
+    observed_directories = {item.attrib["Id"]: item.attrib["Name"] for item in observed.findall(".//w:Directory", NS)}
+    assert original_directories.items() <= observed_directories.items()
+    assert any(digest(path) == expected_digest for path in exported.rglob("*") if path.is_file())
+    assert digest(actual_source) == expected_digest == digest(original)
 
 
 @pytest.mark.windows_only

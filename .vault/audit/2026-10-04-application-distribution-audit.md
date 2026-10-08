@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:db2b0921984b288e0bb07535ba61ec8b6c2aac97b31e60b307d4543a07603175'
+body_hash: 'sha256:8e4b91cc3b9af6d6272629bd6ac0f9d5d6b0b8a134566a16e23de97ff14728ce'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -292,6 +292,12 @@ For Windows, the already completed peer app-distro payload is consumed read-only
 The reviewed six-file Mac build-flow overlay applies the existing committed packaging/release-check separation, with original bytes and per-file before/after hashes preserved. Seven owning tests and generated CMake dependency assertions passed. Frozen source after overlay: 6d1b7693440147f7f955beb60190d9f4ab046e1d046febe26d5cb1cd24bac4aa; selected authority unchanged. Full native-installer 71925 passed in 708.592 seconds. The DMG is build/macos-process-typecheck/build-flow-run/artifacts/cadrumo-0.5.1-macos-arm64.dmg, 425482015 bytes, SHA256 032b4ece8fc3ea7f43e3b6837340f85c05c07ce6b3c27e17256f140ad120dd36, equal remotely and locally. hdiutil verify passed in 5.056 seconds and imageinfo in 0.129 seconds: UDZO compressed/checksummed. No mount or installation occurred. The 33-file copied evidence set and verified 32-entry manifest are under build/macos-process-typecheck/build-flow-run/evidence; installation receipt SHA256 4773539fe9ef33e0411868b479be2e81ee462b9aa0bd57f2dbade9533ab43ed2. Ad-hoc Mach-O sealing is not publisher signing or notarization. The separate live release qualification failure remains unresolved.
 
 Full Windows standalone native-package 96263 failed in pinned WiX 5.0.2 cabinet compression with WIX0001/0x80070003 for several long absolute File/Source paths. Installation preparation and all four source definitions completed. No compiled receipt was published. Its finally verifier passed: original 35604-file payload, relevant source, native installer artifacts and identity remained unchanged. Evidence: build/s16-full-msi-evidence/build.log, before.json, after.json and result.json (primary_exit=1, input_verification_exit=0). A bounded native reproduction is investigating the cabinet path boundary; no product installation or bypass of inventory/installation gates is authorized by this failure.
+
+### S05 WiX cabinet long-source correction | low | PASS for focused source and native regression; full retry pending
+
+Pinned WiX 5.0.2 reproduced the full-payload failure using the exact unchanged 263-character staged file: ordinary absolute Source failed; native extended-length spelling succeeded and produced an MSI. Original source SHA256 463cac7529de6333f55c174e3a887e92c79e7af328de5865bb1a0399d711b9a0 remained unchanged. Probe evidence is build/s16-full-msi-evidence/long-path-probe. The failed full attempt and before/after verification are preserved under attempt-96263 (build.log SHA256 cb14beef457365fc67a596cf8d811f8cbd1838f87cb4ad3e05b0c514d27b9cf9).
+
+The two-file correction centralizes WiX File Source and Binary SourceFile spelling in windows_msi.py: extended local and UNC paths, idempotent existing prefix handling, refusal of relative/device/traversal/preprocessor paths, and portable POSIX authoring fixtures. It does not change installed names, directory structure, ownership, payload inventory or gates. Root reviewed the complete diff and callers with no findings. Owning native tests established 39 passes plus one new-test fixture-path failure, then the corrected affected test passed in 2.47 seconds. The actual cabinet regression compiles and decompiles a long-source MSI, extracts matching bytes, and checks unchanged destination tree and installation gate. Existing four-product native compilation used the current CMake-built DLL. Logs: var/storage/development/.logs/test-runs/2026-10-08/20261008T211321.373904Z-pytest-60156-9f20422a and 20261008T211404.190098Z-pytest-74448-f25d853a. Final two-file Ruff format/check, ty and diff checks passed. Full real-payload MSI retry is still required; installed-product and interactive acceptance remain pending.
 
 ## Recommendations
 
