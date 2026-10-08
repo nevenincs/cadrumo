@@ -4,15 +4,19 @@
 
 use super::State;
 use crate::{
-    background::Background, ipc, lifecycle::ManagerLifecycle, macos::ipc::Server,
+    background::Background,
+    ipc,
+    lifecycle::ManagerLifecycle,
+    macos::ipc::Server,
+    macos::menu::{Action, Controller, appkit::StatusMenu},
     session::instance::SessionLock,
 };
 use objc2::rc::Retained;
 use objc2::runtime::ProtocolObject;
 use objc2::{DefinedClass, MainThreadOnly, define_class, msg_send, sel};
 use objc2_app_kit::{
-    NSApplication, NSApplicationDelegate, NSApplicationTerminateReply, NSModalPanelRunLoopMode,
-    NSWorkspace, NSWorkspaceSessionDidBecomeActiveNotification,
+    NSApplication, NSApplicationDelegate, NSApplicationTerminateReply, NSEventTrackingRunLoopMode,
+    NSModalPanelRunLoopMode, NSWorkspace, NSWorkspaceSessionDidBecomeActiveNotification,
     NSWorkspaceSessionDidResignActiveNotification, NSWorkspaceWillPowerOffNotification,
 };
 use objc2_foundation::{
@@ -40,6 +44,7 @@ pub struct Host {
     _session: SessionLock,
     ipc: Server,
     state: State,
+    menu: Controller,
 }
 
 #[must_use = "recover and retain the host; an event-loop error is not settlement"]
@@ -49,12 +54,18 @@ pub struct RetainedFailure {
 }
 
 impl Host {
-    pub fn new(background: Background, session: SessionLock, ipc: Server) -> Self {
+    pub fn new(
+        background: Background,
+        session: SessionLock,
+        ipc: Server,
+        menu: Controller,
+    ) -> Self {
         Self {
             background,
             _session: session,
             ipc,
             state: State::default(),
+            menu,
         }
     }
 
@@ -107,12 +118,34 @@ impl Host {
         )
     }
 
+    fn menu_action(&mut self, action: Action) {
+        let result = self.menu.select(
+            action,
+            self.background.status(),
+            self.state.ending.is_some(),
+        );
+        let result = result.and_then(|action| match action {
+            Some(Action::Restart) => self.background.restart(),
+            Some(Action::Retry) => self.background.retry(),
+            Some(Action::Quit) => self.user_quit(),
+            None => Ok(()),
+            _ => Err(io::ErrorKind::InvalidData.into()),
+        });
+        if result.is_err() {
+            self.menu.rejected();
+        }
+    }
+
     /// Register signals only here, in executable composition, never on import or
     /// in tests. The caller must own the application's main-thread event loop.
     /// AppKit normally terminates the process; an unexpected return carries all
     /// native custody back to the caller rather than dropping a live supervisor.
     /// Tokio's installed signal disposition remains process-wide after a return.
     pub fn run(self, mtm: MainThreadMarker) -> RetainedFailure {
+        let menu = match StatusMenu::new(mtm) {
+            Ok(menu) => menu,
+            Err(error) => return RetainedFailure { host: self, error },
+        };
         let runtime = match tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -137,6 +170,7 @@ impl Host {
                 runtime,
                 signal,
                 flags,
+                menu,
             },
         );
         let application = NSApplication::sharedApplication(mtm);
@@ -177,11 +211,12 @@ impl Host {
             )
         };
         let run_loop = NSRunLoop::currentRunLoop();
-        // SAFETY: Both modes are Apple's exported run-loop constants. Deferred
-        // application termination runs in the modal mode, not only default mode.
+        // SAFETY: These are Apple's exported run-loop modes. Deferred termination
+        // and an open status menu must not suspend supervision/IPC polling.
         unsafe {
             run_loop.addTimer_forMode(&timer, NSDefaultRunLoopMode);
             run_loop.addTimer_forMode(&timer, NSModalPanelRunLoopMode);
+            run_loop.addTimer_forMode(&timer, NSEventTrackingRunLoopMode);
         }
         application.run();
         // SAFETY: Both objects are still strongly retained on this thread.
@@ -208,6 +243,7 @@ struct Driver {
     runtime: tokio::runtime::Runtime,
     signal: tokio::signal::unix::Signal,
     flags: Arc<AtomicU8>,
+    menu: StatusMenu,
 }
 impl Driver {
     fn poll(&mut self) {
@@ -225,6 +261,15 @@ impl Driver {
         // Activity notifications are observation hints only. The supervisor's
         // native Activity collaborator rechecks authority; switching never ends it.
         self.host.poll();
+        if let Some(action) = self.menu.take_action() {
+            self.host.menu_action(action);
+        }
+        if self.menu.take_rejection() {
+            self.host.menu.rejected();
+        }
+        let ending = self.host.state.ending.is_some();
+        let rows = self.host.menu.rows(self.host.background.status(), ending);
+        self.menu.update(rows, !ending);
     }
 }
 

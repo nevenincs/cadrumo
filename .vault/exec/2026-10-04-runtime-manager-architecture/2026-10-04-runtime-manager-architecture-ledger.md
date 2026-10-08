@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd1108c1d36d01a0ec7fbfa35e0e0a1ec531ce2e01f5d59ee61942ec3af792d0'
+body_hash: 'sha256:92e12767e1629559f93656c1b850ef6c073cb382735a4bd343d50177a60ade71'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -716,6 +716,13 @@ related:
 - `S19` `verify:` `scoped rustfmt and diff check` -> `pass`
 - `S19` `verify:` `isolated Linux platform25 and manager90 library tests` -> `pass`
 - `S19` `verify:` `isolated Linux platform and manager all-target release Clippy` -> `pass`
+- `S19` `M` `native/manager/src/macos/lifecycle/appkit.rs`
+- `S19` `A` `native/manager/src/macos/menu.rs`
+- `S19` `A` `native/manager/src/macos/menu/appkit.rs`
+- `S19` `A` `native/manager/src/macos/menu/tests.rs`
+- `S19` `verify:` `Native Mac 108 manager library tests` -> `pass`
+- `S19` `verify:` `Native Mac all-target Clippy warnings denied` -> `pass`
+- `S19` `verify:` `Edition 2024 format and diff checks` -> `pass`
 
 ## Notes
 
@@ -776,3 +783,4 @@ related:
 - `S19` Errors now retain Running ownership rather than discarding it; Effects::Unknown unchanged. Native host activation and graphical acceptance remain open.
 - `S19` Check14 warning corrected by using typed safe API; no suppression. Main activation remains gated; no GUI loop, host signal policy, login or session-ending tests performed.
 - `S19` Direct native verification using configured toolchain with current canonical generated Linux contract; no CMake package acceptance or production host activation.
+- `S19` Inactive menu source; native installation/login/cutover and interactive acceptance remain gates.
