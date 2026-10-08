@@ -21,9 +21,10 @@ import re
 
 import pytest
 
+from cadrumo.core.storage_environment import TOOL_STORAGE_LOCATIONS
 from dev._paths import REPO_ROOT
 from dev.cache_root import DEV_CACHE_ROOT_ENV
-from dev.deploy.docs_static_site import DELIVERY_CREDENTIAL_ENV
+from dev.deploy.docs_delivery_contracts import DELIVERY_CREDENTIAL_ENV
 
 from ..env_reference import render_environment_reference, target_path
 
@@ -35,7 +36,30 @@ _KEY_RE = re.compile(r"^#?\s*([A-Z][A-Z0-9_]+)=", re.MULTILINE)
 
 #: Template keys for development tooling, which reads them itself rather than
 #: through the product settings model.
-_DEVELOPMENT_TOOLING_KEYS = frozenset({DEV_CACHE_ROOT_ENV, *DELIVERY_CREDENTIAL_ENV})
+_DEVELOPMENT_TOOLING_KEYS = frozenset(
+    {
+        DEV_CACHE_ROOT_ENV,
+        *DELIVERY_CREDENTIAL_ENV,
+        *(variable for variable, _default in TOOL_STORAGE_LOCATIONS.values()),
+        "CADRUMO_NATIVE_BUILD_ROOT",
+        "CADRUMO_DOCS_BUILD_ROOT",
+        "CADRUMO_HOMEBREW_ROOT",
+        "CADRUMO_SCOOP_ROOT",
+        "CADRUMO_HOMEBREW_PREFIX",
+        "CADRUMO_SCOOP_INSTALL_ROOT",
+        "CADRUMO_HOMEBREW_CACHE_DIR",
+        "CADRUMO_HOMEBREW_LOGS_DIR",
+        "CADRUMO_HOMEBREW_TEMP_DIR",
+        "CADRUMO_SCOOP_CACHE_DIR",
+        "CADRUMO_DEV_ARTIFACTS_DIR",
+        "CADRUMO_ACTIONLINT_DIR",
+        "CADRUMO_REGISTRY_DISK_CACHE_DIR",
+        "CADRUMO_RECORD_DESIGN_CACHE_DIR",
+        "CADRUMO_CORPUS_TEXT_CACHE_DIR",
+        "CADRUMO_REGISTRY_VERDICT_CACHE_DIR",
+        "CADRUMO_RUNTIME_WHEEL_CACHE_DIR",
+    }
+)
 
 #: Runner and SDK inputs read outside product Settings. Inherited run IDs and
 #: artifact paths are intentionally absent: the harness creates those itself.
@@ -43,12 +67,11 @@ _TEST_RUNNER_KEYS = frozenset(
     {
         "CADRUMO_PYTEST_WORKERS",
         "CADRUMO_SCRATCH_BASE",
+        "CADRUMO_TEST_LOG_ROOT",
+        "CADRUMO_CI_REPORTS_DIR",
         "VAULTSPEC_CI_REPORTS",
         "VAULTSPEC_CI_REPORT_NAME",
         "AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH",
-        "AEAT_GOOGLE_LIVE_PROFILE",
-        "AEAT_IMPERSONATION_TARGET_PRINCIPAL",
-        "GOOGLE_APPLICATION_CREDENTIALS",
     },
 )
 

@@ -102,9 +102,7 @@ source_refs = [
 ]
 
 [revisions."2021-hasta-2026-01".family_dispositions.extraction_profiles]
-reason = """
-An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. No such document is bundled for 353. Its three bundled artefacts are the two diseños de registro, which describe the WIRE record and print no form labels; the procedure page, which carries no box numbers at all; and Orden EHA/3434/2007, whose \
-consolidated text bundles no anexo with the printed form. A grep of both for a label-plus-box-number pattern returns nothing. Authoring patterns anyway would mean inventing the labels a real 353 declaración prints, which is exactly the fabrication the grounding rule forbids. Bundling a filed or AEAT-published 353 specimen is the change that makes this family authorable."""
+reason = "The applicable official paper form is now enrolled and its workbook layout is authored. Extraction patterns for filed artifacts have not been authored for this revision; workbook presentation does not claim PDF extraction coverage."
 legal_refs = [
     "orden-eha-3434-2007:art-2",
     "orden-eha-3434-2007:art-8",

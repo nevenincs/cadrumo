@@ -41,6 +41,7 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 
@@ -77,7 +78,7 @@ def _session_scratch_root(prefix: str) -> Path:
     fixtures write venvs and wheels measured in hundreds of megabytes, so the
     finalizer is registered at creation rather than left to the caller.
     """
-    root = Path(tempfile.mkdtemp(prefix=prefix))
+    root = Path(tempfile.mkdtemp(prefix=prefix, dir=prepare_temporary_directory()))
     atexit.register(shutil.rmtree, root, ignore_errors=True)
     return root
 

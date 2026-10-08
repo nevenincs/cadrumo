@@ -33,7 +33,7 @@ from .....tests.loopback_llm import (
     write_json_response,
 )
 from ....persistence.llm.cache import LLMCache
-from ....persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+from ....persistence.llm.run_records import LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
 from .. import client as client_module
 from ..client import (
@@ -90,13 +90,13 @@ def _client(tmp_path: Path, *, attempts: int = 1) -> LLMClient:
         cadrumo_llm_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_telemetry_dir=tmp_path / "run-telemetry",
+        cadrumo_llm_run_record_dir=tmp_path / "run-record",
     )
     return LLMClient(
         settings=settings,
         cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
         usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-        run_telemetry_recorder=LLMRunTelemetryRecorder(root_dir=settings.cadrumo_llm_run_telemetry_dir),
+        run_record_recorder=LLMRunRecorder(root_dir=settings.cadrumo_llm_run_record_dir),
         retry_policy=LLMRetryPolicy(max_attempts=attempts, initial_backoff_s=0.01, max_backoff_s=0.02, budget_s=30.0),
     )
 
@@ -188,13 +188,13 @@ def test_the_shared_wait_is_bounded_by_the_retry_budget(tmp_path: Path) -> None:
         cadrumo_llm_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_telemetry_dir=tmp_path / "run-telemetry",
+        cadrumo_llm_run_record_dir=tmp_path / "run-record",
     )
     client = LLMClient(
         settings=settings,
         cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
         usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-        run_telemetry_recorder=LLMRunTelemetryRecorder(root_dir=settings.cadrumo_llm_run_telemetry_dir),
+        run_record_recorder=LLMRunRecorder(root_dir=settings.cadrumo_llm_run_record_dir),
         retry_policy=LLMRetryPolicy(max_attempts=1, initial_backoff_s=0.01, max_backoff_s=0.02, budget_s=0.2),
     )
 

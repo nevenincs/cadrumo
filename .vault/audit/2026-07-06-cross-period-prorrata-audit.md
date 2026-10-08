@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cross-period-prorrata'
 date: '2026-07-06'
-modified: '2026-08-26'
-body_hash: 'sha256:b77619adf617b380555ee35c5abf5c53ae701950e47d0521a1ee685594d38d2e'
-related:
-  - "[[2026-07-06-cross-period-prorrata-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:d4e7b6dc2fc00c046f988338a7ecb7f880f673465b2a969b3e1a2dffb01e2779'
+related: []
 ---
 
 # `cross-period-prorrata` audit: `S10-S18 seed/override review`
@@ -297,7 +296,7 @@ against the cross-period prorrata ADR, the W04/P07 plan row, the existing
 is landed, so the semantic gate for promotion is satisfied.
 
 The implementation target is not safely editable at this point:
-`src/aeat/application/aggregation/_source_mesh.py` carries non-authored
+The retired module carried non-authored
 uncommitted WIP adding structured out-of-window source-diagnostic fields and
 helpers. The shared-worktree safety rule requires aborting edits to a file with
 non-authored WIP, so S30 is formally deferred rather than partially promoted.

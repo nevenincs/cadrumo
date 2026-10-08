@@ -27,7 +27,7 @@ def _recorded_pair() -> tuple[str, date]:
 def test_a_recorded_window_converts_through_the_real_provider() -> None:
     currency, rate_date = _recorded_pair()
 
-    rate = EcbReferenceRateProvider(fetch=recorded_ecb_fetch).get_eur_rate(currency, rate_date)
+    rate = EcbReferenceRateProvider(fetch=recorded_ecb_fetch).lookup_eur_rate(currency, rate_date).rate
 
     assert isinstance(rate, Decimal)
     assert rate > 0
@@ -41,14 +41,14 @@ def test_an_unrecorded_date_refuses_instead_of_borrowing_a_neighbour() -> None:
     ), "the probe date must fall outside the recording for this refusal to mean anything"
 
     with pytest.raises(ExchangeRateProviderError, match="no recorded ECB answer"):
-        EcbReferenceRateProvider(fetch=recorded_ecb_fetch).get_eur_rate(currency, unrecorded)
+        EcbReferenceRateProvider(fetch=recorded_ecb_fetch).lookup_eur_rate(currency, unrecorded)
 
 
 def test_an_unrecorded_currency_refuses() -> None:
     _, rate_date = _recorded_pair()
 
     with pytest.raises(ExchangeRateProviderError, match="no recorded ECB answer"):
-        EcbReferenceRateProvider(fetch=recorded_ecb_fetch).get_eur_rate("ZAR", rate_date)
+        EcbReferenceRateProvider(fetch=recorded_ecb_fetch).lookup_eur_rate("ZAR", rate_date)
 
 
 def test_the_host_provider_is_the_recorded_one() -> None:

@@ -84,8 +84,8 @@ def test_llm_usage_records_survive_encrypted_storage_roundtrip(
     )
     assert only_yesterday == (record_yesterday,)
 
-    summary = recorder.summarize(since=date(2000, 1, 1))
-    assert summary.entries == 2
-    assert summary.total_input_tokens == 274
-    assert summary.total_output_tokens == 128
-    assert summary.total_cost_estimate_usd == Decimal("0.0290")
+    selected = recorder.load_records(since=date(2000, 1, 1))
+    assert len(selected) == 2
+    assert sum(record.input_tokens for record in selected) == 274
+    assert sum(record.output_tokens for record in selected) == 128
+    assert tuple(record.cost_estimate_usd for record in selected) == (Decimal("0.0145"), Decimal("0.0145"))

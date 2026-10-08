@@ -82,8 +82,14 @@ def _verified_revision(repos: Repos):
 
 def test_refile_of_presentado_revision_is_idempotent_noop(repos: Repos) -> None:
     """A second file of an already-filed revision returns the existing record unchanged."""
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit, revision = _verified_revision(repos)
+    granting = tuple(
+        report
+        for report in vr_repo.load().reports.values()
+        if report.calculation_revision_id == revision.calculation_revision_id and report.granted_verificado_completo
+    )
+    assert len(granting) == 1
 
     first = file_revision(
         revision.calculation_revision_id,
@@ -110,20 +116,22 @@ def test_refile_of_presentado_revision_is_idempotent_noop(repos: Repos) -> None:
     with bundled_indexed_authority().operation() as operation:
         second = file_modelo_revision(
             revision.calculation_revision_id,
+            approved_verification_report_id=granting[0].verification_report_id,
             actor="operator-A",
             workflow_profile=workflow_profile(),
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             clock=T4,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         )
 
     # Same record returned, unchanged - no re-stamp of filed_at to T4.
-    assert second.filing_record_id == first.filing_record_id
-    assert second.status is ModeloRecordStatus.VIGENTE
-    assert second.filed_at == T3
-    assert second.filed_at != T4
+    assert second.published is False
+    assert second.record.filing_record_id == first.filing_record_id
+    assert second.record.status is ModeloRecordStatus.VIGENTE
+    assert second.record.filed_at == T3
+    assert second.record.filed_at != T4
 
     # No duplicate filing record and no second MODELO_FILED event.
     assert dict(fr_repo.load().records) == records_after_first
@@ -167,10 +175,11 @@ def test_file_of_unverified_revision_still_hard_refuses(repos: Repos) -> None:
     ):
         file_modelo_revision(
             revision.calculation_revision_id,
+            approved_verification_report_id="0" * 64,  # absent: the state refusal precedes approval
             actor="operator-A",
             workflow_profile=workflow_profile(),
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,

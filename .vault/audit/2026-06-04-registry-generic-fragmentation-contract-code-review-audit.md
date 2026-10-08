@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-hardening-next-work'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:7a28784f9d4cc58c3201f00e13f5e9b3a93a3a290b9dbc90f43d1e5121a620d3'
-related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
+related: []
 ---
 
 # `registry-hardening-next-work` Code Review

@@ -13,6 +13,7 @@ from typing import Protocol
 
 from ....core.casilla_id import CasillaId
 from .casilla_membership import casillas_by_id, declared_casilla_ids
+from .export import row_binding_casilla_ids_by_field
 from .ids import BindingId
 from .schema import (
     BindingDefinition,
@@ -77,13 +78,23 @@ def collect_export_field_ids(revision: ModeloRevision) -> set[str]:
 
 
 def _exported_casilla_ids(revision: ModeloRevision) -> set[CasillaId]:
-    return {
+    direct = {
         field.endpoint_casilla_id
         for layout in revision.export_layouts
         for record in layout.records
         for field in record.fields
         if field.endpoint_casilla_id is not None
     }
+    # A repeated row binding writes its target casilla through an export field
+    # whose kind is BINDING, so endpoint_casilla_id is intentionally absent.
+    # Reuse the exact selector/record inverse that the filing reader uses;
+    # unrelated bindings must not imply an exported casilla.
+    row_bound = {
+        casilla_id
+        for layout in revision.export_layouts
+        for casilla_id in row_binding_casilla_ids_by_field(revision, layout).values()
+    }
+    return direct | row_bound
 
 
 @dataclass(frozen=True)

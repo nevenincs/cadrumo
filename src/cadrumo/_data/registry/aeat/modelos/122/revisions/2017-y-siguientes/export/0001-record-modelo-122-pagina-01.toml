@@ -1,0 +1,694 @@
+[[revisions.2017-y-siguientes.export_layouts]]
+id = 'generated-modelo-122-2017-y-siguientes-fichero'
+
+[[revisions.2017-y-siguientes.export_layouts.records]]
+id = 'modelo-122-pagina-01'
+record_type = 'pagina_01'
+order = 0
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-open'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-modelo'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '122'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-pagina'
+offset = 6
+length = 2
+kind = 'literal'
+literal = '01'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-fin-identificador'
+offset = 8
+length = 4
+kind = 'literal'
+literal = '000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-pagina-complementaria'
+offset = 12
+length = 1
+kind = 'casilla'
+casilla_id = 'decl.pagina-complementaria'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-tipo-declaracion'
+offset = 13
+length = 1
+kind = 'literal'
+literal = 'I'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-contribuyente-nif'
+offset = 14
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-contribuyente-apellidos'
+offset = 23
+length = 60
+kind = 'header'
+producer_key = 'taxpayer.surnames'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-contribuyente-nombre'
+offset = 83
+length = 20
+kind = 'header'
+producer_key = 'taxpayer.given_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-ejercicio'
+offset = 103
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-periodo'
+offset = 107
+length = 2
+kind = 'literal'
+literal = '0A'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-reservado-aeat'
+offset = 109
+length = 129
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-conyuge-deduccion'
+offset = 238
+length = 17
+kind = 'casilla'
+casilla_id = 'conyuge.deduccion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-conyuge-abono-anticipado'
+offset = 255
+length = 17
+kind = 'casilla'
+casilla_id = 'conyuge.abono-anticipado'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-descendientes-nif'
+offset = 272
+length = 9
+kind = 'casilla'
+casilla_id = 'descendientes.nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-descendientes-nombre'
+offset = 281
+length = 60
+kind = 'casilla'
+casilla_id = 'descendientes.nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-reservado-tras-descendientes'
+offset = 341
+length = 20
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-descendientes-deduccion'
+offset = 361
+length = 17
+kind = 'casilla'
+casilla_id = 'descendientes.deduccion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-descendientes-abono-anticipado'
+offset = 378
+length = 17
+kind = 'casilla'
+casilla_id = 'descendientes.abono-anticipado'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-ascendientes-nif'
+offset = 395
+length = 9
+kind = 'casilla'
+casilla_id = 'ascendientes.nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-ascendientes-nombre'
+offset = 404
+length = 60
+kind = 'casilla'
+casilla_id = 'ascendientes.nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-reservado-tras-ascendientes'
+offset = 464
+length = 20
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-ascendientes-deduccion'
+offset = 484
+length = 17
+kind = 'casilla'
+casilla_id = 'ascendientes.deduccion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-ascendientes-abono-anticipado'
+offset = 501
+length = 17
+kind = 'casilla'
+casilla_id = 'ascendientes.abono-anticipado'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-familia-numerosa-titulo'
+offset = 518
+length = 30
+kind = 'casilla'
+casilla_id = 'familia-numerosa.titulo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-familia-numerosa-deduccion'
+offset = 548
+length = 17
+kind = 'casilla'
+casilla_id = 'familia-numerosa.deduccion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-familia-numerosa-abono-anticipado'
+offset = 565
+length = 17
+kind = 'casilla'
+casilla_id = 'familia-numerosa.abono-anticipado'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-ascendiente-dos-hijos-deduccion'
+offset = 582
+length = 17
+kind = 'casilla'
+casilla_id = 'ascendiente-dos-hijos.deduccion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-ascendiente-dos-hijos-abono-anticipado'
+offset = 599
+length = 17
+kind = 'casilla'
+casilla_id = 'ascendiente-dos-hijos.abono-anticipado'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-resultado-a-ingresar'
+offset = 616
+length = 17
+kind = 'casilla'
+casilla_id = 'resultado.a-ingresar'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-ingreso-iban'
+offset = 633
+length = 34
+kind = 'header'
+producer_key = 'selected_account.iban'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-complementaria-marca'
+offset = 667
+length = 1
+kind = 'header'
+producer_key = 'amendment_evidence.is_complementaria'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-complementaria-justificante'
+offset = 668
+length = 13
+kind = 'header'
+producer_key = 'amendment_evidence.original_aeat_receipt'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-representante-nif'
+offset = 681
+length = 9
+kind = 'casilla'
+casilla_id = 'repr.nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-representante-apellidos'
+offset = 690
+length = 60
+kind = 'casilla'
+casilla_id = 'repr.apellidos-razon-social'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-representante-nombre'
+offset = 750
+length = 20
+kind = 'casilla'
+casilla_id = 'repr.nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-reservado-final'
+offset = 770
+length = 206
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-sello-electronico'
+offset = 976
+length = 13
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-122-p1-fin-registro'
+offset = 989
+length = 12
+kind = 'literal'
+literal = '</T12201000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hfp-105-2017:art-5',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-122-2016']
+
+[revisions.2017-y-siguientes.export_layouts.records.row_field_casilla_ids]

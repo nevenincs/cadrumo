@@ -8,14 +8,14 @@ from itertools import pairwise
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cadrumo.core.corpus_text import normalise_corpus_text
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPayload
 from cadrumo.domain.calculations.registry.facts.schema import (
     GovernedFact,
     GovernedFactCatalogue,
-    GovernedFactVariant,
-    MappingFactPayload,
 )
+from cadrumo.domain.calculations.registry.facts.variants import GovernedFactVariant
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
@@ -90,61 +90,82 @@ def governed_fact_catalogue_failures(
     )
     for fact_id, fact in sorted(catalogue.facts.items()):
         for variant in fact.variants:
-            if not variant.legal_refs and not variant.source_refs:
-                failures.append(
-                    f"governed fact {fact_id!r} variant {variant.variant_id!r} "
-                    "must declare a complete legal or source evidence lane",
-                )
-            failures.extend(
-                f"governed fact {fact_id!r} variant {variant.variant_id!r} references unknown legal id {ref!r}"
-                for ref in variant.legal_refs
-                if ref not in legal_ref_ids
-            )
-            failures.extend(
-                f"governed fact {fact_id!r} variant {variant.variant_id!r} references unknown source id {ref!r}"
-                for ref in variant.source_refs
-                if ref not in source_ref_ids
-            )
-            cited = {citation.source_ref for citation in variant.source_citations}
-            if cited != set(variant.source_refs):
-                failures.append(
-                    f"governed fact {fact_id!r} variant {variant.variant_id!r} citations must cover every source_ref",
-                )
+            failures.extend(_variant_structure_failures(fact_id, variant, legal_ref_ids, source_ref_ids))
             if legal_refs is not None and source_root is not None:
-                for ref_id in variant.legal_refs:
-                    if ref_id in verified_legal:
-                        continue
-                    reference = legal_refs.get(ref_id)
-                    if reference is None:
-                        continue
-                    try:
-                        verify_legal_reference_grounding(reference, source_root=source_root)
-                    except RegistryValidationError as exc:
-                        failures.append(
-                            f"governed fact {fact_id!r} variant {variant.variant_id!r} "
-                            f"has invalid legal evidence {ref_id!r}: {exc}"
-                        )
-                    else:
-                        verified_legal.add(ref_id)
+                failures.extend(_legal_grounding_failures(fact_id, variant, legal_refs, source_root, verified_legal))
             if source_refs is not None and source_root is not None:
-                for citation in variant.source_citations:
-                    reference = source_refs.get(citation.source_ref)
-                    if reference is None:
-                        continue
-                    source_text = evidence.source_text(reference)
-                    if source_text is None:
-                        failures.append(
-                            f"governed fact {fact_id!r} variant {variant.variant_id!r} "
-                            f"cannot read source evidence {citation.source_ref!r}"
-                        )
-                        continue
-                    for required_text in citation.required_text:
-                        if normalise_corpus_text(required_text) not in source_text:
-                            failures.append(
-                                f"governed fact {fact_id!r} variant {variant.variant_id!r} source citation "
-                                f"{citation.source_ref!r} missing text {required_text!r}"
-                            )
+                failures.extend(_source_citation_failures(fact_id, variant, source_refs, evidence))
     return tuple(failures)
+
+
+def _variant_structure_failures(
+    fact_id: str,
+    variant: GovernedFactVariant,
+    legal_ref_ids: Collection[str],
+    source_ref_ids: Collection[str],
+) -> list[str]:
+    failures: list[str] = []
+    context = f"governed fact {fact_id!r} variant {variant.variant_id!r}"
+    if not variant.legal_refs and not variant.source_refs:
+        failures.append(f"{context} must declare a complete legal or source evidence lane")
+    failures.extend(
+        f"{context} references unknown legal id {ref!r}" for ref in variant.legal_refs if ref not in legal_ref_ids
+    )
+    failures.extend(
+        f"{context} references unknown source id {ref!r}" for ref in variant.source_refs if ref not in source_ref_ids
+    )
+    cited = {citation.source_ref for citation in variant.source_citations}
+    if cited != set(variant.source_refs):
+        failures.append(f"{context} citations must cover every source_ref")
+    return failures
+
+
+def _legal_grounding_failures(
+    fact_id: str,
+    variant: GovernedFactVariant,
+    legal_refs: Mapping[str, LegalReference],
+    source_root: Path,
+    verified_legal: set[str],
+) -> list[str]:
+    failures: list[str] = []
+    for ref_id in variant.legal_refs:
+        if ref_id in verified_legal:
+            continue
+        reference = legal_refs.get(ref_id)
+        if reference is None:
+            continue
+        try:
+            verify_legal_reference_grounding(reference, source_root=source_root)
+        except RegistryValidationError as error:
+            failures.append(
+                f"governed fact {fact_id!r} variant {variant.variant_id!r} "
+                f"has invalid legal evidence {ref_id!r}: {error}"
+            )
+        else:
+            verified_legal.add(ref_id)
+    return failures
+
+
+def _source_citation_failures(
+    fact_id: str,
+    variant: GovernedFactVariant,
+    source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
+) -> list[str]:
+    failures: list[str] = []
+    context = f"governed fact {fact_id!r} variant {variant.variant_id!r}"
+    for citation in variant.source_citations:
+        reference = source_refs.get(citation.source_ref)
+        if reference is None:
+            continue
+        source_text = evidence.source_text(reference)
+        if source_text is None:
+            failures.append(f"{context} cannot read source evidence {citation.source_ref!r}")
+            continue
+        for required_text in citation.required_text:
+            if normalise_corpus_text(required_text) not in source_text:
+                failures.append(f"{context} source citation {citation.source_ref!r} missing text {required_text!r}")
+    return failures
 
 
 def iva_binding_cash_accounting_vocabulary_failures(
@@ -160,13 +181,7 @@ def iva_binding_cash_accounting_vocabulary_failures(
     Python enum a second authority.  This check runs while the authored
     catalogue is compiled, before published authority is involved.
     """
-    relevant_bindings = tuple(
-        (revision, binding)
-        for revision in modelo.revisions.values()
-        for binding in revision.bindings
-        if getattr(getattr(binding, "source", None), "value", getattr(binding, "source", None))
-        == "ledger_iva_aggregation"
-    )
+    relevant_bindings = _ledger_iva_bindings(modelo)
     if not relevant_bindings:
         return ()
 
@@ -178,25 +193,44 @@ def iva_binding_cash_accounting_vocabulary_failures(
             f"{fact_id!r} is missing",
         )
 
+    vocabulary = _cash_accounting_vocabulary(fact)
+    if not vocabulary:
+        return (f"authored IVA vocabulary fact {fact_id!r} has no cash_accounting.*.value declarations",)
+    return _binding_vocabulary_failures(modelo, relevant_bindings, vocabulary, fact_id)
+
+
+def _ledger_iva_bindings(modelo: ModeloDefinition):
+    return tuple(
+        (revision, binding)
+        for revision in modelo.revisions.values()
+        for binding in revision.bindings
+        if getattr(getattr(binding, "source", None), "value", getattr(binding, "source", None))
+        == "ledger_iva_aggregation"
+    )
+
+
+def _cash_accounting_vocabulary(fact: GovernedFact) -> set[str]:
     vocabulary: set[str] = set()
     for variant in fact.variants:
         payload = variant.payload
-        if not isinstance(payload, MappingFactPayload):
-            continue
-        for entry in payload.entries:
-            key = entry.key
-            value = entry.value
-            if (
-                isinstance(key, str)
-                and key.startswith("cash_accounting.")
-                and key.endswith(".value")
-                and isinstance(value, str)
-                and value
-            ):
-                vocabulary.add(value)
-    if not vocabulary:
-        return (f"authored IVA vocabulary fact {fact_id!r} has no cash_accounting.*.value declarations",)
+        if isinstance(payload, MappingFactPayload):
+            vocabulary.update(_payload_cash_accounting_values(payload))
+    return vocabulary
 
+
+def _payload_cash_accounting_values(payload: MappingFactPayload) -> set[str]:
+    return {
+        entry.value
+        for entry in payload.entries
+        if isinstance(entry.key, str)
+        and entry.key.startswith("cash_accounting.")
+        and entry.key.endswith(".value")
+        and isinstance(entry.value, str)
+        and entry.value
+    }
+
+
+def _binding_vocabulary_failures(modelo, relevant_bindings, vocabulary, fact_id) -> tuple[str, ...]:
     failures: list[str] = []
     for revision, binding in relevant_bindings:
         values = getattr(binding.provider, "cash_accounting_treatments", None)

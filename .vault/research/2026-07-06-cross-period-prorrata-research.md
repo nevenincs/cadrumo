@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#cross-period-prorrata'
 date: '2026-07-06'
-modified: '2026-07-17'
-body_hash: 'sha256:3f964e9a4fb7fdc84fcf2b27fe56138b4b144062677a9ec4eaf9b67d281beb2b'
+modified: '2026-10-03'
+body_hash: 'sha256:1fa37b1371e8070b65cc3c0f0b15804d753b6608be5fa9521263a5362832a1eb'
 related: []
 ---
 
@@ -50,8 +50,8 @@ silent-zero-base deferred rows honestly.
 At the time this bridge was written, `vaultspec-core vault plan status
 2026-07-06-cross-period-prorrata-plan --json` reported 0 of 40 steps complete
 and `W01.P01.S01` as the next open step. That first step already has active
-non-authored work in `src/aeat/core/__init__.py` and
-`src/aeat/core/_prorrata_register.py`, so this research bridge does not claim
+non-authored work  and
+the former source file, so this research bridge does not claim
 or close it.
 
 ### Implementation guardrails
@@ -81,7 +81,7 @@ Future execution should preserve the ADR's boundaries:
   naming the cross-period prorrata follow-up.
 - `2026-07-01-iva-complexity-hardening-scope-research`: prorrata gap inventory
   and legal-shape research.
-- `src/aeat/domain/iva/_prorrata.py`: existing computation substrate consumed by
+- the former source file: existing computation substrate consumed by
   the ADR.
-- `src/aeat/application/aggregation/_iva_ledger.py`: current shared IVA ledger
+- the former source file: current shared IVA ledger
   aggregation path where in-year cuota apportionment must eventually land.

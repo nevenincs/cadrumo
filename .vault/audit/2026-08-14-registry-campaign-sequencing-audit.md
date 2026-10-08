@@ -3,15 +3,10 @@ tags:
   - '#audit'
   - '#registry-campaign-sequencing'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:740a9500861f2f8457d07193319ea937e1e32219775c978d80a0ab84f96f1732'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
-  - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
-  - "[[2026-08-13-registry-suite-red-at-head-plan]]"
-  - "[[2026-08-10-legal-corpus-vintage-plan]]"
+related: []
 ---
 
 # `registry-campaign-sequencing` audit: `registry campaign sequencing`

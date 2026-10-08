@@ -31,6 +31,12 @@ class ClaveMovilRoute(StrEnum):
     APP_REQUEST = "app_request"
 
 
+#: The route used whenever the operator has not chosen one. A QR code needs a
+#: person watching a visible browser, while the app request completes from the
+#: phone alone, so it is the only route that works in a terminal or headless run.
+DEFAULT_CLAVE_MOVIL_ROUTE = ClaveMovilRoute.APP_REQUEST
+
+
 class AuthProviderDescription(BaseModel):
     """Safe operator-facing readiness description for one auth provider."""
 
@@ -48,4 +54,4 @@ class AuthProviderDescription(BaseModel):
     health_summary: str | None = None
 
 
-__all__ = ["AuthProviderDescription", "AuthProviderKind", "ClaveMovilRoute"]
+__all__ = ["DEFAULT_CLAVE_MOVIL_ROUTE", "AuthProviderDescription", "AuthProviderKind", "ClaveMovilRoute"]

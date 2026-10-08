@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#facts-registry'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:06905556b9e3b59b5828f871d97db06ff8103c200a5f661b2ca1fc4bacbd878c'
+body_hash: 'sha256:5f83af5c15459226d12f8ad5a2c951baad583ec229be6dafb12d63b128351bfb'
 related:
-  - "[[2026-09-09-facts-registry-plan]]"
   - "[[2026-09-09-facts-registry-governed-fact-catalogue-adr]]"
 ---
 # `facts-registry` research: raw IVA authority retirement evidence
@@ -30,7 +29,7 @@ Place-of-supply uses ordered references, a distinguished establishing reference,
 
 ### S81ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“S85 need an amended deletion matrix
 
-S81 omits live paths including `src/cadrumo/core/resources/_repos/iva_catalogues.py:36`, the catalogue cache/parser, `IvaCitation` and `IvaRegulation` types, the local catalogue verifier, and their consumers. The S58 audit independently records that raw readers and IVA-local grounding keep sole authority unproven: `.vault/audit/2026-09-11-facts-registry-s58-handoff-audit.md:20`. The amendment must name every deletion target and replace the ledger's obsolete suggestion to project the old `IvaCatalogue` API with direct canonical fact-result consumers or a newly defined canonical result model.
+S81 omits live paths including the former source file, the catalogue cache/parser, `IvaCitation` and `IvaRegulation` types, the local catalogue verifier, and their consumers. The S58 audit independently records that raw readers and IVA-local grounding keep sole authority unproven: `.vault/audit/2026-09-11-facts-registry-s58-handoff-audit.md:20`. The amendment must name every deletion target and replace the ledger's obsolete suggestion to project the old `IvaCatalogue` API with direct canonical fact-result consumers or a newly defined canonical result model.
 
 ### Evidence prerequisites prevent unsupported replacement
 
@@ -46,10 +45,10 @@ The primary BOE text limits Article 91.Cuatro's 0% treatment to qualifying donat
 - `.vault/audit/2026-09-11-facts-registry-s58-handoff-audit.md:20`
 - `dev/registry/analysis/facts_iva_retirement.toml:11`
 - `src/cadrumo/domain/calculations/registry/facts/schema.py:130`
-- `src/cadrumo/domain/iva/catalogue.py:33`
+
 - `src/cadrumo/domain/iva/place_of_supply.py:73`
 - `src/cadrumo/domain/iva/establishment.py:226`
-- `src/cadrumo/domain/iva/_grounding.py:52`
+
 - `src/cadrumo/_data/registry/aeat/iva/catalogues.toml:80`
 - `src/cadrumo/_data/registry/aeat/iva/territories.toml:14`
 - `src/cadrumo/_data/registry/aeat/iva/territory_carve_outs.toml:79`

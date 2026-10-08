@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-generator'
 date: '2026-09-09'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b857e026c47fd048b340fce71f29b1552cb09538636d308a3541daa118389dd'
+body_hash: 'sha256:458ac9342a207cdd83992ff671f799743530ddc91a9c8f862b2a4a335275e971'
 related:
   - "[[2026-09-09-registry-generator-corpus-provenance-research]]"
   - "[[2026-09-09-registry-generator-divergence-evidence-research]]"
@@ -202,8 +202,7 @@ not a new principle but unmet compliance with `aeat-calculation-grounding`, whic
 cross-checking against an independent official example or oracle and rules that expected values
 copied from the implementation under test are not evidence.
 
-**Ordering.** D1a, D2 and D3 land first and fail closed. Because the two reproduction gates in
-`dev/registry/tests/test_generated_export_trees.py` are parametrised over all 32 generated trees
+**Ordering.** D1a, D2 and D3 land first and fail closed. Because the two reproduction gates  are parametrised over all 32 generated trees
 and re-render each, a refusal landing on 22 of them would turn both gates red on the day it lands —
 which the Constraints forbid. Refusals therefore land against
 `dev/registry/pipeline/generated_tree_dispositions.toml`, one row per affected revision, each

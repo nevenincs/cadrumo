@@ -12,9 +12,11 @@
   implementation that shipped broken; retired per no-legacy-compatibility).
 
   The controller lazy-loads the chunked Pagefind index written by the post-build
-  pass (dev/docs/pagefind_index.py) into _build/html/pagefind/ after Sphinx runs.
-  No PagefindUI bundle CSS/JS is loaded here -- the controller imports the raw
-  pagefind.js module itself.
+  pass (dev/docs/pagefind_index.py). The site has ONE index for every language,
+  at the apex above the language roots, which the controller resolves from this
+  page's own position in the site; it is `pagefind/` beside the pages only when
+  the root being built IS the whole site. No PagefindUI bundle CSS/JS is loaded
+  here -- the controller imports the raw pagefind.js module itself.
 
   The ?q= contract: callers hand off here with the reader's query in the `q`
   parameter (the palette's full-text row emits %20-encoded spaces, the casilla

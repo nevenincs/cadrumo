@@ -38,6 +38,7 @@ __all__ = ["isolated_profile_storage"]
 from ._profile_cli_support import (
     edit_quiet_profile as _edit_profile,
 )
+from ._profile_cli_support import native_profile_runtime as native_profile_runtime
 from ._profile_cli_support import (
     profile_rows as _profile_rows,
 )
@@ -45,7 +46,12 @@ from ._profile_cli_support import (
     seed_profile as _seed_profile,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.usefixtures("operation", "native_profile_runtime"),
+]
 
 _LEGAL_ENTITY_FACTS = {
     "taxpayer_type.entity_type": "legal_entity",

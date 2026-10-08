@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#m200-internal-casilla-discipline'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:2e53c6afff26c1afcf52fe074b86cf5cd42aca8cd3aae66f058559431acede46'
+modified: '2026-10-03'
+body_hash: 'sha256:aa92d0fb5fe55cebd74d4e0ffd75fae83b8d0448a9a3896c738f83e76e4e3109'
 related:
   - "[[2026-06-03-m200-internal-casilla-discipline-research]]"
   - "[[2026-06-02-modelo-200-base-determination-adr]]"
@@ -17,8 +17,7 @@ related:
 Three reds fire in the M200 calculation-registry test suite
 (`test_registered_record_design_sources_are_discovered_and_parseable`,
 `test_calculation_completeness_manifests_match_their_calculation_surface`,
-`test_calculation_closure_bounds_the_full_diseno_coverage` under
-`src/cadrumo/domain/calculations/registry/test_record_design.py`) because the
+`test_calculation_closure_bounds_the_full_diseno_coverage` ) because the
 M200 base-determination ADR (accepted 2026-06-02) introduced a synthetic
 casilla `DP200014:bin-aplicada-maxima` whose `(segmento, number)`
 identity does not appear in the AEAT-published Diseno de Registros for
@@ -139,7 +138,7 @@ surfaces.
 
 **(1) Schema field on `CasillaDefinition`.** Add
 `internal_only: bool = Field(default=False, description=...)` to
-`CasillaDefinition` in `src/cadrumo/domain/calculations/registry/_schema.py`.
+`CasillaDefinition`.
 The docstring names the contract: "App-internal computed casilla that
 participates in the calculation graph but is intentionally absent from
 the AEAT-published Diseno de Registros. Typically a regulatory ceiling
@@ -154,7 +153,7 @@ those three conditions is violated.
 
 **(2) Gate exemption in
 `derive_calculation_completeness_casillas`.** In
-`src/cadrumo/domain/calculations/registry/_record_design.py`, build a set
+the former source file, build a set
 of internal-only `(segmento, number)` pairs from the revision at the
 start of the function:
 
@@ -184,7 +183,7 @@ non-internal_only casilla.
 
 **(3) M200 migration plus anti-tautology test.** Flip
 `internal_only = true` on
-`src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/casillas/liquidacion-bin-aplicada-maxima.toml`.
+
 Author one anti-tautology test in
 `src/cadrumo/domain/calculations/registry/` that constructs a
 `CasillaDefinition(internal_only=True, export_refs=(some_export_id,))`

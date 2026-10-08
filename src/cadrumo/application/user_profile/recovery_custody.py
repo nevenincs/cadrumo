@@ -37,8 +37,10 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import effective_storage_root
 from ...core.time.clock import now as _now
 from .authentication import ProfilePasswordProofOperation
+from .automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from .custody_ports import (
     create_profile_recovery_enrollment_material,
+    default_profile_record_crypto_port,
     install_profile_recovery_envelope,
     load_profile_custody_password_material,
     load_profile_custody_recovery_material,
@@ -66,8 +68,6 @@ if TYPE_CHECKING:
         ProfileCustodyUnlockPort,
         ProfileRecoveryKeyPort,
     )
-
-_RECOVERY_KDF_SALT_BYTES = 16
 
 
 class ProfileRecoveryError(CadrumoError):
@@ -196,7 +196,7 @@ def enroll_profile_recovery(
             profile_id=profile_id,
             dek=unlock.dek,
             dek_epoch=material.envelope.dek_epoch,
-            salt=token_bytes(_RECOVERY_KDF_SALT_BYTES),
+            salt=token_bytes(default_profile_record_crypto_port().passphrase_kdf_policy().salt_bytes),
         )
         enrollment = ProfileRecoveryEnrollment(envelope=minted.envelope, recovery_key=minted.recovery_key)
         with enrollment.recovery_key:
@@ -248,6 +248,8 @@ def reset_profile_passphrase_with_recovery(
     new_passphrase_confirmation: str,
     root: Path | None = None,
     profile_decode_context: ProfileDecodeContext,
+    expected_envelope_digest: str | None = None,
+    before_replace: Callable[[], None] | None = None,
 ) -> ProfilePassphraseResetOutcome:
     """Replace a forgotten passphrase by proving the enrolled recovery code.
 
@@ -299,6 +301,10 @@ def reset_profile_passphrase_with_recovery(
         if evaluation.throttled:
             raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
         password = load_profile_custody_password_material(profile_id, root=storage_root)
+        if expected_envelope_digest is not None and password.envelope.self_digest != expected_envelope_digest:
+            # A prepared bootstrap invocation can replace this exact predecessor
+            # once. A replay must not apply the still-valid recovery code again.
+            raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
         if not profile_custody_recovery_envelope_path(password.capsule_path).exists():
             raise ProfileRecoveryError(
                 translated_message="application.user_profile.errors.recovery_not_enrolled",
@@ -322,6 +328,10 @@ def reset_profile_passphrase_with_recovery(
         # and this one succeeded whatever happens to the write that follows.
         sessions.reset_throttle(storage_root=storage_root, bucket_id=bucket_id)
         current = recovery.password_envelope
+        if before_replace is not None:
+            # Runtime composition retires live human authority only after proof
+            # succeeds, while the exact predecessor remains transaction-locked.
+            before_replace()
         rotated = rewrap_profile_passphrase_under_lock(
             profile_id=profile_id,
             dek=unlock.dek,

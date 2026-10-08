@@ -73,7 +73,7 @@ if TYPE_CHECKING:
     from .client import LLMClient
 
 #: Identifier under which this capability's calls are recorded in LLM usage and
-#: run telemetry, so a mapping call is attributable separately from a read.
+#: run record, so a mapping call is attributable separately from a read.
 COLUMN_ROLE_MAPPING_PROMPT_ID = "tabular-column-role-map"
 
 #: Ceiling on the reply length. One assignment is a short object and the reply

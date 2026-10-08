@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#ci-discipline'
 date: '2026-07-21'
-modified: '2026-08-23'
-body_hash: 'sha256:beb0a0253c91d4be088352f948e4e2ca5c189d4733c339db27c2b71b64343416'
+modified: '2026-10-03'
+body_hash: 'sha256:209a17f088a90f82dcb31e3e51152effae151e5630f013ca340c62d99c745d56'
 related:
   - '[[2026-07-21-ci-discipline-reference]]'
   - '[[2026-07-20-ci-speed-redesign-adr]]'
@@ -22,7 +22,7 @@ Operator directive, 2026-07-21 (verbatim intent): improve branch push/pull disci
 ## Considerations
 
 - Development is direct-push-to-main by coordinated agents; branch protection is structurally unavailable on the current plan (the protection API returns 403) and PRs are rare (5 in the repo's `gh pr list` history, last real one 2026-07-15). Any PR semantics shipped now are future-proofing, not the primary surface.
-- Self-hosted fleet only (operator cost mandate, enforced by `dev/packaging/tests/test_self_hosted_fleet.py`); fork-PR head code must never execute on the fleet (GitHub self-hosted hardening guidance).
+- Self-hosted fleet only (operator cost mandate, enforced by the former source file); fork-PR head code must never execute on the fleet (GitHub self-hosted hardening guidance).
 - Evidence honesty (`2026-07-20-release-asset-transport-adr`): only `packaging-smoke.yml` mints promotable evidence; Gate 2 of `publish-release.yml` pins that workflow path and accepts `workflow_dispatch` runs with main-ancestry verification â€” so an auto-dispatched campaign is promotable through the existing trust rule, no new trust path.
 - The speed-redesign ADR accepted the blind spot that flavor-lane regressions surface only at the next dispatched campaign; release-artifact-surface pushes are rare enough that closing the blind spot per-matching-push is nearly free.
 - The `.vault` audit (`vault check all`) is red at HEAD (285 standing errors), so the full lane's vault-drift step must be informational until the backlog clears, or every full-lane run is red and masks real regressions.
@@ -53,7 +53,7 @@ Operator directive, 2026-07-21 (verbatim intent): improve branch push/pull disci
 
 **D4 â€” Trigger/permission coherence, zero schedules.** Cloud cache round-trips (`enable-cache: true`) removed from the repaired workflows per the speed-redesign's D5. The zero-Actions-artifact posture is promoted from per-family gates to repo-wide. Per the 2026-07-21 no-standing-compute ruling every `schedule` trigger is retired: `ci-nightly.yml` becomes the dispatch-only `ci-full.yml` (renamed for honesty â€” nothing is nightly anymore), the AEAT drift detector and the code-health report become dispatch-only, and the operator or coordinator dispatches the full lane before a release, before promoting evidence, or after a long idle stretch. A repo-wide conformance gate pins that no workflow carries a `schedule` trigger, so standing compute cannot creep back.
 
-**D5 â€” Conformance pins.** New `dev/packaging/tests/test_change_class_tiers.py` pins: the T2 paths set, the trigger workflow's single-job dispatch-only shape and confined `actions: write`, the shared T0 carve-out, the fork guard on every `pull_request` job, the repo-wide artifact ban, the repo-wide no-schedule invariant, the naming convention, the full-lane relocation of both retired gates, and the on-disk existence of every drift-detector pytest target (the l1-anchor-drift failure class, now structurally impossible to reintroduce silently). `test_packaging_quick_workflow.py`'s trigger pin extended for `pull_request`; `test_ci_workflow.py`'s full-lane pins updated for the rename and dispatch-only triggers.
+**D5 â€” Conformance pins.** New the former source file pins: the T2 paths set, the trigger workflow's single-job dispatch-only shape and confined `actions: write`, the shared T0 carve-out, the fork guard on every `pull_request` job, the repo-wide artifact ban, the repo-wide no-schedule invariant, the naming convention, the full-lane relocation of both retired gates, and the on-disk existence of every drift-detector pytest target (the l1-anchor-drift failure class, now structurally impossible to reintroduce silently). `test_packaging_quick_workflow.py`'s trigger pin extended for `pull_request`; `test_ci_workflow.py`'s full-lane pins updated for the rename and dispatch-only triggers.
 
 **Branch-protection proposal (operator applies; not automatable today).** When the plan allows: required checks `Cadrumo / static checks / Python 3.13` and `Cadrumo / unit suite / Python 3.13` on `main` (strict up-to-date off â€” the direct-push fleet would deadlock); quick probes informational; force-push and deletion blocked; no required human reviews (the agent fleet's coordinator/review discipline substitutes).
 

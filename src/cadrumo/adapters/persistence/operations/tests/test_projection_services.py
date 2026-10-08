@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+import threading
+from collections.abc import AsyncGenerator, Callable
+from contextlib import asynccontextmanager, suppress
+from contextvars import ContextVar
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Self
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from cadrumo.adapters.persistence.storage.secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
@@ -31,6 +36,8 @@ from cadrumo.application.operations.frontend_requests import (
     OperationCancellationSuccessV1,
     OperationDetachRequestV1,
     OperationDetachSuccessV1,
+    OperationObservationRequestV1,
+    OperationObservationSuccessV1,
     OperationResponseApplyRequestV1,
     OperationResponseControlRefusalCode,
     OperationResponseControlRequestV1,
@@ -58,10 +65,13 @@ from cadrumo.application.operations.interactions import (
     OperationResponseIntent,
 )
 from cadrumo.application.operations.models import (
+    OperationFailureErrorCode,
     OperationIdentity,
     OperationRequest,
     OperationTerminalReceipt,
 )
+from cadrumo.application.operations.observation import OperationObservationService
+from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.events import (
     OperationInteractionEvent,
@@ -85,8 +95,6 @@ from cadrumo.application.operations.projection_services import (
     UnavailableOperationSecureResponseAuthority,
 )
 from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -116,6 +124,8 @@ _INTERACTION_ID = "2" * 64
 _TOKEN = "3" * 64
 _PROPOSAL = "4" * 64
 _DEFINITION_ID = "operations.projection.test"
+_REFUSAL_CODE = "REFUSED_OPERATION_SUBJECT_BUSY"
+_REFUSAL_SENTINEL = "PRIVATE-REFUSAL-DETAIL-SENTINEL"
 
 
 class ProjectionRequest(BaseModel):
@@ -131,6 +141,17 @@ class ProjectionResult(BaseModel):
 class PublicProjectionResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
     result_code: str
+
+
+class PrivateRefusalDetail(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+    detail_code: str
+    private_sentinel: str
+
+
+class PublicRefusalDetail(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+    detail_code: str
 
 
 class ReviewedOperand(BaseModel):
@@ -177,6 +198,17 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> Bas
     return PublicProjectionResult(result_code=ProjectionResult.model_validate(result).result_code)
 
 
+def _project_refusal_detail(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
+    """Release only the declared detail code for its exact refused terminal."""
+    if (
+        type(result) is not PrivateRefusalDetail
+        or receipt.condition is not OperationTerminalCondition.REFUSED
+        or receipt.refusal_ref != _REFUSAL_CODE
+    ):
+        raise TypeError("refusal detail does not match its registered refused terminal")
+    return PublicRefusalDetail(detail_code=result.detail_code)
+
+
 def _unsafe_result_projection(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
     del result, receipt
     return SafeReviewProjection(summary_code="wrong-model")
@@ -203,6 +235,8 @@ def _registry(
     review_projector: Callable[[BaseModel, OperationInteractionRequest], BaseModel] = _project_review,
     result_projector: Callable[[BaseModel, OperationTerminalReceipt], BaseModel] | None = None,
     result_schema_type: type[BaseModel] = ProjectionResult,
+    result_type: type[BaseModel] = ProjectionResult,
+    refusal_detail_codes: frozenset[OperationFailureErrorCode] = frozenset(),
     refresh_adapter: Callable[[OperationTerminalReceipt], BaseModel] = _refresh_target,
     include_refresh: bool = True,
 ) -> OperationRegistry:
@@ -222,7 +256,7 @@ def _registry(
     definition = OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=ProjectionRequest,
-        result_type=ProjectionResult,
+        result_type=result_type,
         executor_factory=OperationExecutorFactory(
             request_type=ProjectionRequest,
             executor_type=ProjectionExecutor,
@@ -233,6 +267,7 @@ def _registry(
         capabilities=capabilities,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.TUI}),
+        refusal_detail_codes=refusal_detail_codes,
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,
@@ -378,15 +413,19 @@ def _terminal_snapshot(
     registry: OperationRegistry,
     *,
     result_ref: str = "result:projection-complete",
+    condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
+    effect: OperationEffect = OperationEffect.UPDATED,
+    failure_error_code: str | None = None,
 ) -> OperationPersistedSnapshot:
     running = _running_snapshot(registry)
     receipt = OperationTerminalReceipt(
         identity=running.identity,
         revision=1,
-        condition=OperationTerminalCondition.SUCCEEDED,
-        effect=OperationEffect.UPDATED,
+        condition=condition,
+        effect=effect,
         settled_at=_NOW + timedelta(minutes=1),
         result_ref=result_ref,
+        failure_error_code=failure_error_code,
     )
     event = OperationTerminalEvent(
         identity=running.identity,
@@ -401,8 +440,8 @@ def _terminal_snapshot(
             update={
                 "revision": 1,
                 "lifecycle": OperationLifecycle.TERMINAL,
-                "terminal_condition": OperationTerminalCondition.SUCCEEDED,
-                "effect": OperationEffect.UPDATED,
+                "terminal_condition": condition,
+                "effect": effect,
                 "updated_at": receipt.settled_at,
                 "event_cursor": 2,
                 "events": (event,),
@@ -410,6 +449,68 @@ def _terminal_snapshot(
             }
         ).model_dump()
     )
+
+
+def _refused_snapshot(
+    registry: OperationRegistry,
+    *,
+    detail_ref: str,
+    effect: OperationEffect = OperationEffect.UNKNOWN,
+) -> OperationPersistedSnapshot:
+    """Build one durable refused receipt with a separate encrypted-detail reference."""
+    running = _running_snapshot(registry)
+    receipt = OperationTerminalReceipt(
+        identity=running.identity,
+        revision=1,
+        condition=OperationTerminalCondition.REFUSED,
+        effect=effect,
+        settled_at=_NOW + timedelta(minutes=1),
+        refusal_ref=_REFUSAL_CODE,
+        refusal_detail_ref=detail_ref,
+    )
+    event = OperationTerminalEvent(
+        identity=running.identity,
+        revision=1,
+        sequence=2,
+        timestamp=receipt.settled_at,
+        code="operation.terminal",
+        receipt=receipt,
+    )
+    return OperationPersistedSnapshot.model_validate(
+        running.model_copy(
+            update={
+                "revision": 1,
+                "lifecycle": OperationLifecycle.TERMINAL,
+                "terminal_condition": OperationTerminalCondition.REFUSED,
+                "effect": effect,
+                "updated_at": receipt.settled_at,
+                "event_cursor": 2,
+                "events": (event,),
+                "terminal_receipt": receipt,
+            }
+        ).model_dump()
+    )
+
+
+def _observe_refused_operation(
+    repository: OperationJournalRepository,
+    registry: OperationRegistry,
+    *,
+    expected_effect: OperationEffect,
+) -> OperationObservationSuccessV1:
+    """Re-read the durable public lifecycle independently of result projection."""
+    observed = asyncio.run(
+        OperationObservationService(reader=repository, registry=registry).observe(
+            OperationObservationRequestV1(operation_id=_OPERATION_ID, after_cursor=0, page_limit=32)
+        )
+    )
+    assert isinstance(observed, OperationObservationSuccessV1)
+    assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
+    assert observed.projection.terminal_condition is OperationTerminalCondition.REFUSED
+    assert observed.projection.refusal_ref == _REFUSAL_CODE
+    assert observed.projection.effect is expected_effect
+    assert observed.projection.result_ref is None
+    return observed
 
 
 def _write(root: Path, repository: OperationJournalRepository, snapshot: OperationPersistedSnapshot) -> None:
@@ -572,6 +673,203 @@ def test_result_resolution_uses_encrypted_operand_and_public_contract(tmp_path: 
         assert schema_mismatch.code is OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH
         assert unsafe_output.code is OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE
         assert "result_ref" not in type(request).model_fields
+
+
+def test_refused_detail_uses_encrypted_operand_and_preserves_the_refused_receipt(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        root = tmp_path / "refused-detail-durable"
+        registry = _registry(
+            result_projector=_project_refusal_detail,
+            result_schema_type=PublicRefusalDetail,
+            result_type=PrivateRefusalDetail,
+            refusal_detail_codes=frozenset({_REFUSAL_CODE}),
+        )
+        repository = OperationJournalRepository(storage_root=root)
+        operands = operation_secure_reference_repository(objects=profile.repository)
+        private_detail = PrivateRefusalDetail(
+            detail_code="modelo.not_applicable",
+            private_sentinel=_REFUSAL_SENTINEL,
+        )
+        detail_ref = asyncio.run(operands.put(private_detail, written_at=_NOW))
+        assert asyncio.run(operands.resolve(detail_ref, PrivateRefusalDetail)) == private_detail
+
+        terminal = _refused_snapshot(registry, detail_ref=detail_ref)
+        _write(root, repository, _running_snapshot(registry))
+        asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
+        contract = registry.lookup_public_contract(_DEFINITION_ID)
+        assert contract.result_schema is not None
+        request = OperationResultProjectionRequestV1(
+            operation_id=_OPERATION_ID,
+            terminal_revision=terminal.revision,
+            definition_contract_digest=contract.definition_contract_digest,
+            result_schema=contract.result_schema,
+        )
+        service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
+        before = _observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
+
+        projected = asyncio.run(service.resolve(request, PublicRefusalDetail))
+        after = _observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
+        persisted = b"".join(path.read_bytes() for path in tmp_path.rglob("*") if path.is_file())
+        snapshot = asyncio.run(repository.load(_OPERATION_ID))
+
+    assert isinstance(projected, OperationResultProjectionSuccessV1)
+    assert projected.projection == PublicRefusalDetail(detail_code="modelo.not_applicable")
+    assert _REFUSAL_SENTINEL not in projected.model_dump_json()
+    assert _REFUSAL_SENTINEL.encode() not in persisted
+    assert detail_ref not in before.model_dump_json()
+    assert before.projection.model_dump() == after.projection.model_dump()
+    assert snapshot.terminal_receipt is not None
+    assert snapshot.terminal_receipt.condition is OperationTerminalCondition.REFUSED
+    assert snapshot.terminal_receipt.refusal_ref == _REFUSAL_CODE
+    assert snapshot.terminal_receipt.refusal_detail_ref == detail_ref
+    assert snapshot.terminal_receipt.result_ref is None
+    assert snapshot.terminal_receipt.effect is OperationEffect.UNKNOWN
+
+
+@pytest.mark.parametrize("stored_detail", ("missing", "wrong-model"))
+def test_unavailable_refused_detail_keeps_refusal_code_and_unknown_effect_observable(
+    tmp_path: Path,
+    stored_detail: str,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        root = tmp_path / f"refused-detail-{stored_detail}"
+        registry = _registry(
+            result_projector=_project_refusal_detail,
+            result_schema_type=PublicRefusalDetail,
+            result_type=PrivateRefusalDetail,
+            refusal_detail_codes=frozenset({_REFUSAL_CODE}),
+        )
+        repository = OperationJournalRepository(storage_root=root)
+        operands = operation_secure_reference_repository(objects=profile.repository)
+        if stored_detail == "missing":
+            detail_ref = "f" * 64
+            missing = profile.repository.load(
+                OPERATION_SECURE_REFERENCE_NAMESPACE.namespace,
+                detail_ref,
+                expected_class=OPERATION_SECURE_REFERENCE_NAMESPACE.sensitivity,
+                max_supported_version=OPERATION_SECURE_REFERENCE_NAMESPACE.schema_version,
+            )
+            assert missing is None
+        else:
+            detail_ref = asyncio.run(operands.put(ProjectionResult(result_code=_REFUSAL_SENTINEL), written_at=_NOW))
+        terminal = _refused_snapshot(registry, detail_ref=detail_ref, effect=OperationEffect.UNKNOWN)
+        _write(root, repository, _running_snapshot(registry))
+        asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
+        contract = registry.lookup_public_contract(_DEFINITION_ID)
+        assert contract.result_schema is not None
+        request = OperationResultProjectionRequestV1(
+            operation_id=_OPERATION_ID,
+            terminal_revision=terminal.revision,
+            definition_contract_digest=contract.definition_contract_digest,
+            result_schema=contract.result_schema,
+        )
+        service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
+        before = _observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
+
+        unavailable = asyncio.run(service.resolve(request, PublicRefusalDetail))
+        after = _observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
+        snapshot = asyncio.run(repository.load(_OPERATION_ID))
+
+    assert isinstance(unavailable, OperationResultProjectionRefusalV1)
+    assert unavailable.code is OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE
+    assert _REFUSAL_SENTINEL not in unavailable.model_dump_json()
+    assert before.projection.model_dump() == after.projection.model_dump()
+    assert snapshot.terminal_receipt is not None
+    assert snapshot.terminal_receipt.condition is OperationTerminalCondition.REFUSED
+    assert snapshot.terminal_receipt.refusal_ref == _REFUSAL_CODE
+    assert snapshot.terminal_receipt.refusal_detail_ref == detail_ref
+    assert snapshot.terminal_receipt.result_ref is None
+    assert snapshot.terminal_receipt.effect is OperationEffect.UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "condition",
+    (
+        OperationTerminalCondition.FAILED,
+        OperationTerminalCondition.CANCELLED,
+        OperationTerminalCondition.TIMED_OUT,
+        OperationTerminalCondition.INTERRUPTED,
+    ),
+)
+def test_result_projection_service_never_releases_result_ref_from_non_success_terminal(
+    tmp_path: Path,
+    condition: OperationTerminalCondition,
+) -> None:
+    """An incidental reference on any non-success receipt cannot become a result projection."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        root = tmp_path / f"non-success-result-{condition.value}"
+        registry = _registry(result_projector=_project_result, result_schema_type=PublicProjectionResult)
+        repository = OperationJournalRepository(storage_root=root)
+        operands = operation_secure_reference_repository(objects=profile.repository)
+        result_ref = asyncio.run(operands.put(ProjectionResult(result_code="must.not.escape"), written_at=_NOW))
+        terminal = _terminal_snapshot(
+            registry,
+            result_ref=result_ref,
+            condition=condition,
+            effect=OperationEffect.NONE,
+        )
+        _write(root, repository, _running_snapshot(registry))
+        asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
+        contract = registry.lookup_public_contract(_DEFINITION_ID)
+        assert contract.result_schema is not None
+        request = OperationResultProjectionRequestV1(
+            operation_id=_OPERATION_ID,
+            terminal_revision=terminal.revision,
+            definition_contract_digest=contract.definition_contract_digest,
+            result_schema=contract.result_schema,
+        )
+
+        result = asyncio.run(
+            OperationResultProjectionService(reader=repository, registry=registry, operands=operands).resolve(
+                request,
+                PublicProjectionResult,
+            )
+        )
+
+    assert isinstance(result, OperationResultProjectionRefusalV1)
+    assert result.code is OperationResultProjectionRefusalCode.OPERATION_NOT_SUCCESSFUL
+
+
+@pytest.mark.parametrize(
+    ("stored", "expected_success"),
+    [
+        (ProjectionResult(result_code="identity.result"), True),
+        (SafeReviewProjection(summary_code="wrong.stored.model"), False),
+    ],
+)
+def test_identity_result_projection_validates_the_encrypted_stored_model(
+    tmp_path: Path, stored: BaseModel, expected_success: bool
+) -> None:
+    """An identical public model needs no projector but still needs typed custody."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        root = tmp_path / "identity-result-durable"
+        registry = _registry()
+        repository = OperationJournalRepository(storage_root=root)
+        operands = operation_secure_reference_repository(objects=profile.repository)
+        result_ref = asyncio.run(operands.put(stored, written_at=_NOW))
+        terminal = _terminal_snapshot(registry, result_ref=result_ref)
+        _write(root, repository, _running_snapshot(registry))
+        asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
+        contract = registry.lookup_public_contract(_DEFINITION_ID)
+        assert contract.result_schema is not None
+        request = OperationResultProjectionRequestV1(
+            operation_id=_OPERATION_ID,
+            terminal_revision=terminal.revision,
+            definition_contract_digest=contract.definition_contract_digest,
+            result_schema=contract.result_schema,
+        )
+        result = asyncio.run(
+            OperationResultProjectionService(reader=repository, registry=registry, operands=operands).resolve(
+                request, ProjectionResult
+            )
+        )
+
+    if expected_success:
+        assert isinstance(result, OperationResultProjectionSuccessV1)
+        assert result.projection == stored
+    else:
+        assert isinstance(result, OperationResultProjectionRefusalV1)
+        assert result.code is OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE
 
 
 def test_refresh_target_resolves_only_authoritative_successful_terminal_receipt(tmp_path: Path) -> None:
@@ -938,3 +1236,144 @@ def test_cancellation_and_detach_delegate_to_real_supervisor_ports(tmp_path: Pat
         assert isinstance(stale, OperationCancellationRefusalV1)
         assert stale.code is OperationCancellationRefusalCode.STALE_OPERATION_REVISION
         assert journal_path.read_bytes() == settled_bytes
+
+
+_RESULT_PROJECTION_IDENTITY: ContextVar[str] = ContextVar("result_projection_identity", default="")
+_RESULT_MODEL_HOOK: ContextVar[Callable[[], None] | None] = ContextVar("result_model_validation", default=None)
+
+
+class HeldPublicProjectionResult(PublicProjectionResult):
+    """Exercise both projector construction and registered public-model revalidation."""
+
+    @model_validator(mode="after")
+    def _hold_public_validation(self) -> Self:
+        hook = _RESULT_MODEL_HOOK.get()
+        if hook is not None:
+            hook()
+        return self
+
+
+async def _await_result_stage[T](pending: asyncio.Task[T], entered: asyncio.Event) -> None:
+    """Surface an on-loop regression without a blocking test fallback or wall-clock cutoff."""
+    waiting = asyncio.create_task(entered.wait())
+    try:
+        await asyncio.wait((pending, waiting), return_when=asyncio.FIRST_COMPLETED)
+        if not entered.is_set():
+            pending.result()
+            pytest.fail("the registered result stage did not enter its held body")
+    finally:
+        waiting.cancel()
+        with suppress(asyncio.CancelledError):
+            await waiting
+
+
+@pytest.mark.parametrize("stage", ["projector", "validation"])
+@pytest.mark.parametrize("cancel", [False, True])
+def test_result_projection_yields_and_settles_inside_the_callers_guard(
+    tmp_path: Path, stage: str, cancel: bool
+) -> None:
+    """Pure public transformation preserves context and cannot outlive the caller's authority guard."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+
+        async def resolve() -> None:
+            loop = asyncio.get_running_loop()
+            loop_thread = threading.get_ident()
+            entered, progressed = asyncio.Event(), asyncio.Event()
+            resume = threading.Event()
+            events: list[str] = []
+            validations = 0
+
+            def hold() -> None:
+                assert threading.get_ident() != loop_thread
+                assert _RESULT_PROJECTION_IDENTITY.get() == "original-result-context"
+                loop.call_soon_threadsafe(entered.set)
+                resume.wait()
+                events.append("result-body-settled")
+
+            def validate() -> None:
+                nonlocal validations
+                validations += 1
+                assert threading.get_ident() != loop_thread
+                assert _RESULT_PROJECTION_IDENTITY.get() == "original-result-context"
+                if stage == "validation" and validations == 2:
+                    hold()
+
+            def project(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
+                assert receipt.condition is OperationTerminalCondition.SUCCEEDED
+                if stage == "projector":
+                    hold()
+                return HeldPublicProjectionResult(result_code=ProjectionResult.model_validate(result).result_code)
+
+            root = tmp_path / "held-result-durable"
+            registry = _registry(result_projector=project, result_schema_type=HeldPublicProjectionResult)
+            repository = OperationJournalRepository(storage_root=root)
+            operands = operation_secure_reference_repository(objects=profile.repository)
+            result_ref = await operands.put(ProjectionResult(result_code="held.safe.result"), written_at=_NOW)
+            terminal = _terminal_snapshot(registry, result_ref=result_ref)
+            lease = _lease()
+            observed = await OperationLeaseFilesystemRepository(storage_root=root).acquire(lease, observed_at=_NOW)
+            assert observed.current == lease
+            await repository.create(_running_snapshot(registry), lease=lease)
+            await repository.commit_settlement(terminal, expected_revision=0, lease=lease)
+            contract = registry.lookup_public_contract(_DEFINITION_ID)
+            assert contract.result_schema is not None
+            request = OperationResultProjectionRequestV1(
+                operation_id=_OPERATION_ID,
+                terminal_revision=terminal.revision,
+                definition_contract_digest=contract.definition_contract_digest,
+                result_schema=contract.result_schema,
+            )
+            service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
+
+            @asynccontextmanager
+            async def caller_guard() -> AsyncGenerator[None]:
+                events.append("authority-held")
+                try:
+                    yield
+                finally:
+                    events.append("authority-released")
+
+            async def guarded_result() -> OperationResultProjectionSuccessV1[HeldPublicProjectionResult]:
+                async with caller_guard():
+                    result = await service.resolve(request, HeldPublicProjectionResult)
+                    assert not isinstance(result, OperationResultProjectionRefusalV1)
+                    assert isinstance(result, OperationResultProjectionSuccessV1)
+                    return result
+
+            async def control() -> None:
+                assert entered.is_set() and not resume.is_set()
+                progressed.set()
+
+            identity = _RESULT_PROJECTION_IDENTITY.set("original-result-context")
+            hook = _RESULT_MODEL_HOOK.set(validate)
+            pending = asyncio.create_task(guarded_result())
+            try:
+                await _await_result_stage(pending, entered)
+                await asyncio.create_task(control())
+                assert progressed.is_set() and not pending.done()
+                if cancel:
+                    pending.cancel()
+                    await asyncio.sleep(0)
+                    pending.cancel()
+                    await asyncio.sleep(0)
+                    assert not pending.done() and events == ["authority-held"]
+                resume.set()
+                if cancel:
+                    with pytest.raises(asyncio.CancelledError):
+                        await pending
+                else:
+                    result = await pending
+                    assert result.projection.result_code == "held.safe.result"
+                    assert result.result_schema == contract.result_schema
+                    assert result.definition_contract_digest == contract.definition_contract_digest
+                assert validations >= 2
+                assert events == ["authority-held", "result-body-settled", "authority-released"]
+            finally:
+                resume.set()
+                _RESULT_MODEL_HOOK.reset(hook)
+                _RESULT_PROJECTION_IDENTITY.reset(identity)
+                if not pending.done():
+                    with suppress(asyncio.CancelledError):
+                        await pending
+
+        asyncio.run(resolve())

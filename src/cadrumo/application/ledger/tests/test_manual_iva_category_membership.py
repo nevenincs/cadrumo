@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from hashlib import sha256
@@ -21,14 +22,16 @@ from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.iva.schema import IvaCategory
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.work_unit import WorkUnitCatalogue
+from ....domain.transactions.dates import transaction_filing_date
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
-from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ..action_ports import LedgerActionPorts
 from ..actions_classification import bulk_classify_from_csv
 from ..actions_manual import create_manual_transaction, update_manual_transaction_fields
 from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
+from ..persistence_ports import LedgerPersistenceConflictError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -45,7 +48,7 @@ class _PreparedEventWrite(SecureObjectWrite):
 class _EventRepository:
     def __init__(self) -> None:
         self.catalogue = BucketEventHistoryCatalogue()
-        self.revision_id = "0" * 64
+        self.revision_id: str = "0" * 64
         self.save_count = 0
 
     def load(self) -> BucketEventHistoryCatalogue:
@@ -89,9 +92,54 @@ class _TransactionRepository:
         self.events = events
         self.save_count = 0
         self.guarded_replacement: tuple[Transaction, Transaction] | None = None
+        self.revision_id = sha256(catalogue.model_dump_json().encode("utf-8")).hexdigest()
+        self.after_load_revisioned: Callable[[], None] | None = None
+
+    def exists(self) -> bool:
+        return bool(self.catalogue.transactions)
 
     def load(self) -> TransactionCatalogue:
         return self.catalogue
+
+    def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
+        return TransactionCatalogue.from_transactions(
+            transaction
+            for transaction in self.catalogue.values()
+            if start <= transaction_filing_date(transaction) <= end
+        )
+
+    def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        selected_ids = set(transaction_ids)
+        return TransactionCatalogue.from_transactions(
+            transaction for transaction in self.catalogue.values() if transaction.transaction_id in selected_ids
+        )
+
+    def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
+        _ = start, end
+        raise NotImplementedError("this fixture does not exercise range partitioning")
+
+    def save(self, catalogue: TransactionCatalogue) -> None:
+        self.catalogue = catalogue
+        self.save_count += 1
+        self._advance_revision()
+
+    def load_revisioned(self) -> tuple[TransactionCatalogue, str]:
+        snapshot = self.catalogue, self.revision_id
+        if self.after_load_revisioned is not None:
+            after_load = self.after_load_revisioned
+            self.after_load_revisioned = None
+            after_load()
+        return snapshot
+
+    def replace_catalogue_from_concurrent_writer(self, catalogue: TransactionCatalogue) -> None:
+        """Model a catalogue write landing after a caller captured its snapshot."""
+        self.catalogue = catalogue
+        self.save_count += 1
+        self._advance_revision()
+
+    def _advance_revision(self) -> None:
+        payload = self.catalogue.model_dump_json().encode("utf-8")
+        self.revision_id = sha256(self.revision_id.encode("ascii") + b"\0" + payload).hexdigest()
 
     def save_with_secure_object_writes(
         self,
@@ -104,6 +152,24 @@ class _TransactionRepository:
         self.events.commit(event_write)
         self.catalogue = catalogue
         self.save_count += 1
+        self._advance_revision()
+
+    def save_if_revision_with_secure_object_writes(
+        self,
+        catalogue: TransactionCatalogue,
+        *,
+        expected_revision_id: str,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        if expected_revision_id != self.revision_id:
+            raise LedgerPersistenceConflictError("transaction catalogue changed since the snapshot was loaded")
+        (event_write,) = extra_writes
+        if not isinstance(event_write, _PreparedEventWrite):
+            raise TypeError("test action port expected a prepared bucket-event write")
+        self.events.commit(event_write)
+        self.catalogue = catalogue
+        self.save_count += 1
+        self._advance_revision()
 
     def replace_if_current_with_secure_object_writes(
         self,
@@ -123,6 +189,7 @@ class _TransactionRepository:
         self.catalogue = TransactionCatalogue.from_transactions(updated.values())
         self.guarded_replacement = current, replacement
         self.save_count += 1
+        self._advance_revision()
 
 
 class _EmptyRepository:
@@ -279,6 +346,46 @@ def test_bulk_classification_persists_valid_rows_and_collects_undeclared_categor
     assert (invalid_transaction := transactions.catalogue.get(invalid_id)) is not None
     assert invalid_transaction.iva_category is None
     assert transactions.save_count == events.save_count == 1
+
+
+def test_bulk_classification_refuses_a_catalogue_changed_after_its_snapshot(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    catalogue = _stored_catalogue("concurrent batch row")
+    transaction_id = next(iter(catalogue.transactions))
+    transactions, events = _repositories(catalogue)
+    concurrent_transaction = catalogue.get(transaction_id)
+    assert concurrent_transaction is not None
+    concurrent_transaction = concurrent_transaction.model_copy(update={"notes": "edited elsewhere"})
+    concurrent_catalogue = TransactionCatalogue.from_transactions((concurrent_transaction,))
+    concurrent_revision: list[str] = []
+
+    def write_concurrently_after_snapshot() -> None:
+        transactions.replace_catalogue_from_concurrent_writer(concurrent_catalogue)
+        concurrent_revision.append(transactions.revision_id)
+
+    transactions.after_load_revisioned = write_concurrently_after_snapshot
+    original_event_catalogue = events.catalogue
+    original_event_revision = events.revision_id
+
+    with pytest.raises(
+        LedgerPersistenceConflictError,
+        match="transaction catalogue changed since the snapshot was loaded",
+    ):
+        bulk_classify_from_csv(
+            bucket_id=_BUCKET,
+            csv_text=(f"transaction_id,classification,iva_category\n{transaction_id},BUSINESS,domestic_general\n"),
+            actor="operator",
+            ports=_ports(operation=operation, transactions=transactions, events=events),
+        )
+
+    assert transactions.catalogue == concurrent_catalogue
+    assert transactions.catalogue.get(transaction_id) == concurrent_transaction
+    assert concurrent_revision == [transactions.revision_id]
+    assert transactions.save_count == 1
+    assert events.catalogue == original_event_catalogue
+    assert events.revision_id == original_event_revision
+    assert events.save_count == 0
 
 
 def test_none_and_declared_non_declarable_categories_are_not_remapped(

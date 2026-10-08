@@ -118,7 +118,7 @@ def test_total_findings_falls_back_to_the_headlines_leading_count() -> None:
         "duplication",
         Status.AMBER,
         "17 clone cluster(s), 0.08% duplicated lines across 1482 analysed file(s) (advisory debt)",
-        details=["see `just audit-duplication` for the full clone report"],
+        details=["see `just audit-dead-weight` for the full clone list"],
     )
 
     assert _total_findings(dimension) == 17

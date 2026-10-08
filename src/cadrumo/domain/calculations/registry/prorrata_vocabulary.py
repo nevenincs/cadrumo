@@ -12,14 +12,19 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from types import MappingProxyType
 from typing import Final, overload
 
-from ....core.time.clock import today_madrid
 from ...iva.prorrata import InputClassification, ProrrataKind
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    BooleanTokenCase,
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+    required_mapping_boolean,
+)
+from .governed_fact_scope import GovernedFactSource
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "prorrata vocabulary"
@@ -147,15 +152,7 @@ def _coerce_token(
     return token
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("prorrata vocabulary entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate prorrata vocabulary key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
 def _optional(entries: Mapping[str, str], key: str) -> str | None:
@@ -166,44 +163,7 @@ def _optional(entries: Mapping[str, str], key: str) -> str | None:
     return trimmed or None
 
 
-def _boolean(entries: Mapping[str, str], key: str) -> bool:
-    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
-    if value == "true":
-        return True
-    if value == "false":
-        return False
-    raise RegistryValidationError(f"prorrata vocabulary {key!r} must be true or false")
-
-
-def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("Renta IVA ratio policy must resolve as a mapping fact")
-    return _mapping_entries(resolved)
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_entries(effective_date: date) -> Mapping[str, str]:
-    del effective_date
-    raise RegistryValidationError("prorrata vocabulary requires an explicit authority operation or scope")
-
-
-def _selected_entries(
-    *,
-    effective_date: date | None,
-    authority: GovernedFactSource | None,
-) -> Mapping[str, str]:
-    coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        return _bundled_entries(coordinate)
-    return _resolve_entries(effective_date=coordinate, authority=selected)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def resolve_prorrata_kind_catalogue(
@@ -212,7 +172,7 @@ def resolve_prorrata_kind_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> ProrrataKindCatalogue:
     """Resolve the dated prorrata lifecycle vocabulary from fact 0116."""
-    entries = _selected_entries(effective_date=effective_date, authority=authority)
+    entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
     definitions: list[ProrrataKindDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _KIND_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_KIND_PREFIX}{raw_token}"
@@ -224,8 +184,12 @@ def resolve_prorrata_kind_catalogue(
                 token=ProrrataKind.from_registry(declared_value),
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
-                period_required=_boolean(entries, f"{prefix}.period_required"),
-                annual_only=_boolean(entries, f"{prefix}.annual_only"),
+                period_required=required_mapping_boolean(
+                    entries, f"{prefix}.period_required", subject=_ENTRY_SUBJECT, case=BooleanTokenCase.CASE_INSENSITIVE
+                ),
+                annual_only=required_mapping_boolean(
+                    entries, f"{prefix}.annual_only", subject=_ENTRY_SUBJECT, case=BooleanTokenCase.CASE_INSENSITIVE
+                ),
             ),
         )
     catalogue = ProrrataKindCatalogue(definitions=tuple(definitions))
@@ -282,14 +246,16 @@ def resolve_input_classification_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> InputClassificationCatalogue:
     """Resolve the dated art. 106 input vocabulary from fact 0116."""
-    entries = _selected_entries(effective_date=effective_date, authority=authority)
+    entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
     definitions: list[InputClassificationDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _INPUT_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_INPUT_PREFIX}{raw_token}"
         declared_value = required_mapping_entry(entries, f"{prefix}.value", subject=_ENTRY_SUBJECT)
         if declared_value != raw_token:
             raise RegistryValidationError(f"input classification {raw_token!r} declares a mismatched value")
-        uses_general_percentage = _boolean(entries, f"{prefix}.uses_general_percentage")
+        uses_general_percentage = required_mapping_boolean(
+            entries, f"{prefix}.uses_general_percentage", subject=_ENTRY_SUBJECT, case=BooleanTokenCase.CASE_INSENSITIVE
+        )
         fixed_percentage_text = _optional(entries, f"{prefix}.deductible_percentage")
         if (fixed_percentage_text is None) != uses_general_percentage:
             raise RegistryValidationError(

@@ -36,6 +36,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
 from .published_authority_support import published_authority_operation
+from .wallet_history import load_decision_history
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -90,7 +91,7 @@ def test_a_wallet_retrieved_twice_credits_the_prior_compensation_once(tmp_path: 
                     operation=operation,
                 )
 
-        history = decisions.load_decision_history(_TAXPAYER, _PERIOD)
+        history = load_decision_history(decisions, _TAXPAYER, _PERIOD)
         current = decisions.load_decision(_TAXPAYER, _PERIOD)
         assert len(history) == 2, "each retrieval keeps its own audit event"
         assert len(decisions.list_decisions()) == 1, "one period holds one current decision"

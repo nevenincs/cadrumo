@@ -3,17 +3,17 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6dec9ef458a5f9d64a00233c0d9ffcf03e1337276f097a239ab7080c8460d8b8'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:8de0ada032176c252dd2f321582b23134111a92f32ee584fe92febc122f95ad8'
+related: []
 ---
+
 # `registry-completeness-closure` audit: `S61 distinct offset probes`
 
 ## Scope
 
-Independent review of commit `8e001a9dee` for `W01.P02.S61`: distinct `(record_id, field_id)` identities, emitted-byte position overlap refusal, checked-offset count integrity, and the regression's mutation bite. The review covers `dev/registry/filing_export_proof.py` and `dev/registry/tests/test_filing_export_live_proof.py` without modifying production code.
+Independent review of commit `8e001a9dee` for `W01.P02.S61`: distinct `(record_id, field_id)` identities, emitted-byte position overlap refusal, checked-offset count integrity, and the regression's mutation bite.
 
 ## Findings
 

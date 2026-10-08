@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-design-relayout-boundary'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:f3f0e4ccca133752db4f4eb351331964d806c6b5db5d7fcb76c9842a4570dd4f'
-related:
-  - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
+related: []
 ---
 # `modelo-200-semantic-crosswalk` audit: `W02 P04 identity review`
 

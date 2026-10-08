@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#adjacent-domain-deduplication'
 date: '2026-08-02'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c7a145a2815b5f9a72463dc23752ab0343cc83ac897dca85500336ffb00ff45d'
+body_hash: 'sha256:41f1f547f3ce2bfe9bd3d97ec4456d0beee754dd007a8c3425bbfbb473d2c827'
 related:
   - '[[2026-08-01-adjacent-domain-deduplication-wave-two-audit]]'
 ---
@@ -105,6 +105,10 @@ So on the wallet the collision stays documented and unadmitted. Any surface that
 does take an entry lands it in the same change as the guard call it unblocks, and
 brings coverage with it, because the existing state-creating canary tuple is dead
 and proves nothing.
+
+The typed form of a surface-scoped allow-list entry on the remote-state guard is the
+declared read request ruled in `2026-10-03-aeat-live-write-guard-adr`. It does not
+alter any landing-refusal tuple.
 
 ## Rationale
 

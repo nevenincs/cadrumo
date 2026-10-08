@@ -11,13 +11,6 @@ source_refs = [
     "boe-modelo-360-2010-form",
 ]
 casilla_ids = ["decl.ejercicio", "decl.estado-miembro"]
-bindings = [
-    "modelo-360-refund-row-member-state",
-    "modelo-360-refund-row-operation-kind",
-    "modelo-360-refund-row-operation-date",
-    "modelo-360-refund-row-supplier-nif",
-    "modelo-360-refund-row-amount",
-]
 workbook_parity_refs = ["modelo-360-dr"]
 live_cross_references = [
     "modelo-360-static-documentation",

@@ -12,6 +12,7 @@ secret material handled by :mod:`adapters.outbound.google.oauth_flow`.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from enum import StrEnum
 
 from ....application.operator_actions.models import PreconditionVerdict
@@ -28,7 +29,13 @@ class GoogleAuthPreconditionCondition(StrEnum):
     PROFILE_IDENTITY_RESOLVED = "google.auth.profile_identity.resolved"
     PROFILE_RECORD_SESSION_AVAILABLE = "google.auth.profile_record_session.available"
     REQUIRED_SCOPES_GRANTED = "google.auth.required_scopes.granted"
+    CONSENT_GRANTED = "google.auth.consent.granted"
+    REFRESH_CREDENTIAL_ISSUED = "google.auth.refresh_credential.issued"
+    SIGN_IN_CLIENT_BOUND = "google.auth.sign_in_client.bound"
+    GRANT_ACTIVE = "google.auth.grant.active"
+    SIGN_IN_RECORD_READABLE = "google.auth.sign_in_record.readable"
     OAUTHLIB_AVAILABLE = "google.auth.oauthlib.available"
+    CLIENT_METADATA_AVAILABLE = "google.auth.client_metadata.available"
     OAUTH_CLIENT_CONFIG_VALID = "google.auth.oauth_client_config.valid"
     LOOPBACK_RECEIVER_BOUND = "google.auth.loopback_receiver.bound"
     BROWSER_LAUNCHER_AVAILABLE = "google.auth.browser_launcher.available"
@@ -37,11 +44,6 @@ class GoogleAuthPreconditionCondition(StrEnum):
     IDENTITY_ASSERTION_PRESENT = "google.auth.identity_assertion.present"
     IDENTITY_ASSERTION_VERIFIER_AVAILABLE = "google.auth.identity_verifier.available"
     IDENTITY_ASSERTION_VERIFIED = "google.auth.identity_assertion.verified"
-    IDENTITY_EMAIL_PRESENT = "google.auth.identity_email.present"
-    ADC_CLIENT_AVAILABLE = "google.auth.adc_client.available"
-    ADC_AVAILABLE = "google.auth.adc.available"
-    IAM_CREDENTIAL_MINTED = "google.auth.iam_credential.minted"
-    ADC_SOURCE_FRESH = "google.auth.adc_source.fresh"
 
 
 def google_auth_no_action_verdict(
@@ -72,28 +74,54 @@ class GoogleAuthValidationError(GoogleAuthError):
     """Raised when input parameters fail validation."""
 
 
-class GoogleAuthClientNotRegisteredError(GoogleAuthError):
-    """Raised when no Cloud Console Desktop OAuth client is registered for the active profile."""
+class GoogleAuthClientMetadataUnavailableError(GoogleAuthError):
+    """Raised when this installation carries no usable Google OAuth Desktop client metadata."""
 
 
 class GoogleAuthClientRevokedError(GoogleAuthError):
-    """Raised when the operator (or Google) revoked the registered Desktop OAuth client."""
+    """Raised when Google no longer accepts this installation's Desktop OAuth client."""
 
 
-class GoogleAuthRevokedError(GoogleAuthError):
-    """Raised when the refresh token was revoked (e.g. via myaccount.google.com).
+class GoogleAuthSignInRequiredError(GoogleAuthError):
+    """Raised when a profile has no Google sign-in it can use.
 
-    Maps to Google's ``invalid_grant`` response with
-    ``error_description="Token has been expired or revoked."``.
+    Covers a grant Google reports as revoked or expired, a stored token that
+    does not belong to the client this installation signs in with, and a
+    consent that was declined. The remedy is the same in every case: sign
+    in again.
     """
 
 
-class GoogleAuthExpiredError(GoogleAuthError):
-    """Raised when a Testing-project refresh token has aged past Google's 7-day cap."""
+@dataclass(frozen=True, slots=True)
+class GoogleScopeFailure:
+    """Canonical scope-check values, independent of generic diagnostic context."""
+
+    missing_scopes: tuple[str, ...]
+    account_email: str
 
 
 class GoogleAuthScopeInsufficientError(GoogleAuthError):
-    """Raised when the granted scope set does not include every scope required by the call site."""
+    """Raised when the granted scope set does not include every required scope."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
+        scope_failure: GoogleScopeFailure | None = None,
+    ) -> None:
+        """Preserve ordinary defaults and optionally retain the canonical scope check."""
+        super().__init__(
+            message, context=context, translated_message=translated_message, precondition_verdict=precondition_verdict
+        )
+        self._scope_failure = scope_failure
+
+    @property
+    def scope_failure(self) -> GoogleScopeFailure | None:
+        """Return immutable owning scope facts, never an unchecked context map."""
+        return self._scope_failure
 
 
 class GoogleAuthNetworkError(GoogleAuthError):
@@ -134,18 +162,18 @@ class GoogleAuthProfileUnboundError(GoogleAuthError):
 
 __all__ = [
     "GoogleAuthBrowserOpenError",
-    "GoogleAuthClientNotRegisteredError",
+    "GoogleAuthClientMetadataUnavailableError",
     "GoogleAuthClientRevokedError",
     "GoogleAuthError",
-    "GoogleAuthExpiredError",
     "GoogleAuthKeychainLockedError",
     "GoogleAuthLoopbackBindError",
     "GoogleAuthNetworkError",
     "GoogleAuthNonInteractiveError",
     "GoogleAuthPreconditionCondition",
     "GoogleAuthProfileUnboundError",
-    "GoogleAuthRevokedError",
     "GoogleAuthScopeInsufficientError",
+    "GoogleAuthSignInRequiredError",
     "GoogleAuthValidationError",
+    "GoogleScopeFailure",
     "google_auth_no_action_verdict",
 ]

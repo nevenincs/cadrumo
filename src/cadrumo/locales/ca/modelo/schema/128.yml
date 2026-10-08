@@ -11,6 +11,38 @@ modelo:
           d'assegurança de vida o invalidesa.
         title: Retencions i ingressos a compte - rendes de capital mobiliari d'operacions
           de capitalització i contractes d'assegurança
+      form:
+        column:
+          adicional: Caselles 04–05
+          ordinario: Caselles 01–03
+        context:
+          apellidos: Cognoms o raó social
+          declaracion-complementaria: Autoliquidació complementària
+          ejercicio: Exercici
+          iban: Codi IBAN
+          justificante-anterior: Núm. de justificant de l’autoliquidació anterior
+          nif: NIF
+          nombre: Nom
+          periodo: Període
+        page:
+          modelo-128-page-01:
+            heading: Retencions sobre operacions de capitalització i assegurances
+              de vida o invalidesa
+        row:
+          base: Base de retencions i ingressos a compte
+          perceptores: Nombre de perceptors
+          retenciones: Retencions i ingressos a compte
+        section:
+          complementaria:
+            heading: Complementària (6)
+          devengo:
+            heading: Meritació (2)
+          identificacion:
+            heading: Identificació (1)
+          ingreso:
+            heading: Ingrés (4)
+          liquidacion:
+            heading: Liquidació (3)
       revision:
         2019-y-siguientes:
           casilla:

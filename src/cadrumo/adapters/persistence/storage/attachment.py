@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import hmac
 import json
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -37,7 +37,6 @@ from ....core.time.clock import now
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.attachments.errors import AttachmentNotFoundError, AttachmentPersistenceError, AttachmentValidationError
 from ....domain.attachments.models import Attachment, is_link_only_mime_type
-from ....domain.attachments.protocols import AttachmentStoreProtocol
 from .crypto.encrypted_columns import HashedLookup
 from .envelope.contract import Envelope
 from .namespace_registry import secure_object_namespace_logical_path
@@ -212,6 +211,14 @@ class AttachmentStore(BaseModel):
 
     objects: SecureObjectRepository | None = Field(default=None, exclude=True, repr=False)
     bucket_id: BucketId | None = Field(default=None)
+    mutation_writer: Callable[[Callable[[], None]], None] | None = Field(default=None, exclude=True, repr=False)
+
+    def _write(self, write: Callable[[], None]) -> None:
+        """Admit only the prepared concrete mutation, preserving ordinary callers."""
+        if self.mutation_writer is None:
+            write()
+        else:
+            self.mutation_writer(write)
 
     def _bound_bucket_id(self) -> str | None:
         """Return the profile bucket this store serves, when one is resolvable.
@@ -279,14 +286,18 @@ class AttachmentStore(BaseModel):
         if objects.exists(_ATTACHMENT_BLOB_NAMESPACE, digest):
             _LOGGER.debug("reusing existing attachment object for %s", digest)
             return digest
-        objects.save(
-            namespace=_ATTACHMENT_BLOB_NAMESPACE,
-            object_key=digest,
-            # rationale: blob sensitivity is FINANCIAL regardless of modelo; see module docstring.
-            classification=_ATTACHMENT_BLOB_SENSITIVITY,
-            schema_version=_ATTACHMENT_BLOB_VERSION,
-            written_at=now(),
-            payload=_wrap_blob_payload(data),
+        written_at = now()
+        payload = _wrap_blob_payload(data)
+        self._write(
+            lambda: objects.save(
+                namespace=_ATTACHMENT_BLOB_NAMESPACE,
+                object_key=digest,
+                # rationale: blob sensitivity is FINANCIAL regardless of modelo; see module docstring.
+                classification=_ATTACHMENT_BLOB_SENSITIVITY,
+                schema_version=_ATTACHMENT_BLOB_VERSION,
+                written_at=written_at,
+                payload=payload,
+            )
         )
         _LOGGER.debug("stored attachment object %s (%d bytes)", digest, len(data))
         return digest
@@ -424,14 +435,18 @@ class AttachmentStore(BaseModel):
         envelope_dict = json.loads(envelope.model_dump_json())
         del envelope_dict["payload"]["attachment_id"]
         payload_json = json.dumps(envelope_dict)
-        self._objects_repo().save(
-            namespace=_ATTACHMENT_MANIFEST_NAMESPACE,
-            object_key=attachment.attachment_id,
-            # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
-            classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
-            schema_version=_ATTACHMENT_MANIFEST_VERSION,
-            written_at=envelope.written_at,
-            payload=payload_json.encode(UTF_8_ENCODING),
+        payload = payload_json.encode(UTF_8_ENCODING)
+        objects = self._objects_repo()
+        self._write(
+            lambda: objects.save(
+                namespace=_ATTACHMENT_MANIFEST_NAMESPACE,
+                object_key=attachment.attachment_id,
+                # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
+                classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
+                schema_version=_ATTACHMENT_MANIFEST_VERSION,
+                written_at=envelope.written_at,
+                payload=payload,
+            )
         )
         _LOGGER.debug("wrote attachment manifest %s", attachment.attachment_id)
 
@@ -495,29 +510,4 @@ class AttachmentStore(BaseModel):
         yield from sorted(manifests, key=lambda attachment: attachment.attachment_id)
 
 
-def resolve_attachment_store(store: AttachmentStoreProtocol | None) -> AttachmentStoreProtocol:
-    """Return the injected byte-custody port, or construct the default concrete store.
-
-    Every service that accepts an optional
-    :class:`~domain.attachments.protocols.AttachmentStoreProtocol` so a test can inject a
-    real store into an isolated profile needs the same fallback, and that
-    fallback names a concrete adapter. Resolving it here -- in the module that
-    owns :class:`AttachmentStore` -- keeps the construction to one site. A copy
-    per consuming package looks harmless while the constructor takes no
-    arguments and drifts the moment it takes one; two such copies had already
-    appeared, in the ledger action services and in the live notification
-    custody service, and neither package owns the class.
-
-    Args:
-        store: The caller's injected port, or ``None`` to take the default.
-
-    Returns:
-        ``store`` unchanged when one was injected, otherwise a new
-        :class:`AttachmentStore` bound to the active bucket's runtime.
-    """
-    if store is not None:
-        return store
-    return AttachmentStore()
-
-
-__all__ = ["AttachmentStore", "resolve_attachment_store"]
+__all__ = ["AttachmentStore"]

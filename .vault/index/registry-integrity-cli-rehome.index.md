@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#registry-integrity-cli-rehome'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:40be62be92527273c887037fbe2fff0191cec16e29e6bd668373434004348326'
-related:
-  - '[[2026-09-10-registry-integrity-cli-rehome-completion-audit]]'
+body_hash: 'sha256:13d617b2d2d9ec26b31112bbcd5fda410fbcfc1d3a35d288ce2da77e2adc5086'
+related: []
 ---
 
 # `registry-integrity-cli-rehome` feature index
@@ -16,7 +15,3 @@ related:
 Auto-generated index of all documents tagged with `#registry-integrity-cli-rehome`.
 
 ## Documents
-
-### audit
-
-- `2026-09-10-registry-integrity-cli-rehome-completion-audit` - `registry-integrity-cli-rehome` audit: `Registry integrity CLI rehome`

@@ -42,10 +42,10 @@ from .workspace_fixtures import ledger_context, ledger_focused_context, ledger_p
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _FLOW_COPY = {
-    OutputLanguage.ES: ("Clasificar apunte contable", "Importar apuntes contables"),
-    OutputLanguage.EN: ("Classify ledger entry", "Import ledger entries"),
-    OutputLanguage.CA: ("Classificar assentament comptable", "Importar assentaments comptables"),
-    OutputLanguage.HU: ("Főkönyvi tétel besorolása", "Főkönyvi tételek importálása"),
+    OutputLanguage.ES: ("Clasificar apunte", "Importar apuntes"),
+    OutputLanguage.EN: ("Classify entry", "Import entries"),
+    OutputLanguage.CA: ("Classificar apunt", "Importar apunts"),
+    OutputLanguage.HU: ("Tétel besorolása", "Tételek importálása"),
 }
 
 
@@ -245,7 +245,8 @@ async def test_import_previews_first_then_applies_exactly_the_previewed_request(
             await app.workers.wait_for_complete()
             await pilot.pause()
             assert screen.flow_state is LedgerFlowState.SUCCEEDED
-            assert door.applied == door.previews
+            # Applying binds to exactly the files the preview read; this door reported none.
+            assert door.applied == [door.previews[0].model_copy(update={"previewed_sources": ()})]
             assert "Imported: 2" in str(screen.query_one("#ledger-import-preview", Static).render())
             screen.query_one("#ledger-import-confirm", Button).press()
             await pilot.pause()

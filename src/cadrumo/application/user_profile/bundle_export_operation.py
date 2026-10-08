@@ -26,6 +26,7 @@ confidentiality and restoration semantics and is not folded in here.
 from __future__ import annotations
 
 import hashlib
+import os
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
@@ -218,7 +219,8 @@ class ProfileBundleExportJournalRepository(JournalRepositoryBase[ProfileBundleEx
     authenticity guarantee; it is the durable state store the publication
     service and its reconciliation read and write. The atomic read/write
     substrate is inherited from :class:`JournalRepositoryBase`; this class adds
-    journal deletion, an isolating scan, and prepared-state selection.
+    exclusive creation, journal deletion, an isolating scan, and prepared-state
+    selection.
     """
 
     def __init__(
@@ -239,6 +241,22 @@ class ProfileBundleExportJournalRepository(JournalRepositoryBase[ProfileBundleEx
             subject="profile export journal",
             id_subject="profile export operation",
         )
+
+    def create(self, operation: ProfileBundleExportOperation) -> None:
+        """Insert PREPARED only when no journal already owns this identifier.
+
+        The repository lock makes absence and insertion one decision. Even an
+        unreadable file or dangling link is retained rather than overwritten.
+        Later PREPARED-to-COMPLETED transitions use :meth:`JournalRepositoryBase.save`.
+        """
+        self._ensure_root()
+        path = self.path_for(operation.operation_id)
+        with exclusive_file_lock(self._lock_target):
+            if os.path.lexists(path):
+                raise ProfileBundleExportJournalError(
+                    translated_message="errors.fail.profile_export", context={"journal_present": True}
+                )
+            self._write(path, operation)
 
     def delete(self, operation_id: str) -> None:
         """Remove one journal file once its operation is reconciled or complete."""

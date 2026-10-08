@@ -4,9 +4,10 @@ casilla_source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 # application_link_source_refs: carried from predecessor edition "2019"; not re-grounded on this edition's own design
 application_link_source_refs = ["aeat-modelo-194-procedure"]
 reviewed_against = "2019"
-# Applicability-grade Modelo 194 record-design era. This revision models only
-# the five manual hoja-resumen fields grounded in the approving Orden; it does
-# not declare an export layout or infer any unbundled design year.
+# Applicability-grade Modelo 194 record-design era. Summary, contact and
+# declaration-identification fields are enrolled. Recipient detail and the
+# generated filing export remain unfinished. Historical review below predates
+# the additional fields; current lineage evidence is stored with declarations.
 authority_grade = "applicability"
 valid_from = 2023-01-01
 valid_to = 2023-12-31
@@ -29,7 +30,8 @@ reviewed_by = """\
 agent: inspected the official AEAT hash-pinned Modelo 194 design for ejercicio 2023 and the cited full BOE amendment. The revision is bounded exactly to the design's stated ejercicio; no record-design evidence is reused for a different year. The five hoja-resumen casillas remain manual input, no export layout is declared, and no authority grade is promoted. The 2020-2022 gap remains unselectable, and this 2023 evidence does not establish a predecessor or successor."""
 reviewed_at = 2026-08-25
 family_storage_baseline = "2019"
-scoped_families = ["workbook_parity_refs", "verification_expectations"]
+# Each edition owns its export claim; the older record design is not adopted.
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [[revisions."2023".lineage_attestations]]
 family = "casillas"
@@ -75,3 +77,680 @@ to_revision = "2023"
 origin = "seeded"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
 source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declarante-contacto-telefono"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 designs 2019 and 2023, type 1 positions 59-67: the contact or declaration-identification field retains its description, width and purpose."
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declarante-contacto-nombre"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 designs 2019 and 2023, type 1 positions 68-107: the contact or declaration-identification field retains its description, width and purpose."
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-numero-identificativo"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 designs 2019 and 2023, type 1 positions 108-120: the contact or declaration-identification field retains its description, width and purpose."
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-complementaria"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 designs 2019 and 2023, type 1 positions 121: the contact or declaration-identification field retains its description, width and purpose."
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-sustitutiva"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 designs 2019 and 2023, type 1 positions 122: the contact or declaration-identification field retains its description, width and purpose."
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-anterior-numero"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 designs 2019 and 2023, type 1 positions 123-135: the contact or declaration-identification field retains its description, width and purpose."
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "perceptor-identificacion-fiscal"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 18-26 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "perceptor-representante-identificacion-fiscal"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 27-35 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "perceptor-nombre"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 36-75 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "perceptor-provincia"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 76-77 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "activo-financiero-origen-operacion"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 78 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "emisor-clave-identificacion"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 79 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "emisor-identificacion"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 80-91 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "cuenta-valores-tipo-identificacion"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 92 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "cuenta-valores-identificacion"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 93-112 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "rendimiento-pendiente-abono"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 113 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "rendimiento-ejercicio-devengo"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 114-117 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "activo-financiero-valor-adquisicion"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 118-130 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "activo-financiero-valor-transmision"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 131-143 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capital-ajeno-perceptor-base-retenciones"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 157-169 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capital-ajeno-perceptor-porcentaje-retencion"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 170-173 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capital-ajeno-perceptor-retenciones"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 174-186 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".lineage_attestations]]
+family = "casillas"
+continuidad_id = "activo-financiero-entidad-vinculada"
+from_revision = "2019"
+to_revision = "2023"
+origin = "grounded"
+evidence = "AEAT Modelo 194 type 2 positions 187 in designs 2019 and 2023: same recipient/transaction concept and value representation. Province vocabulary changes do not change the domicile-province concept."
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-dr-194-2023"]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-nif"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-nif-representante"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-nombre"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-provincia"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-origen"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-clave-codigo"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-codigo-emisor"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-tipo-codigo"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-codigo-cuenta"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-pendiente"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-ejercicio-devengo"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-valor-adquisicion"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-valor-transmision"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-base"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-porcentaje"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-retenciones"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-perceptor-row-vinculacion"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[revisions.2023.family_overrides.sequence_order]
+source_refs = [1, 0]
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+
+[revisions.2023.family_overrides.selector]
+revision = "2019"
+id = "modelo-194-export"
+
+[revisions.2023.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-194-2023"]
+
+[revisions.2023.family_overrides.sequence_removals]
+source_refs = [0]
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = { revision = "2019", id = "modelo-194-resumen-perceptores-positivos" }
+sequence_additions = { source_refs = ["aeat-dr-194-2023"] }
+sequence_removals = { source_refs = [0] }
+sequence_order = { source_refs = [1, 0] }
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = { revision = "2019", id = "modelo-194-resumen-base-positiva" }
+sequence_additions = { source_refs = ["aeat-dr-194-2023"] }
+sequence_removals = { source_refs = [0] }
+sequence_order = { source_refs = [1, 0] }
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = { revision = "2019", id = "modelo-194-resumen-retenciones-total" }
+sequence_additions = { source_refs = ["aeat-dr-194-2023"] }
+sequence_removals = { source_refs = [0] }
+sequence_order = { source_refs = [1, 0] }
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = { revision = "2019", id = "modelo-194-resumen-perceptores-no-positivos" }
+sequence_additions = { source_refs = ["aeat-dr-194-2023"] }
+sequence_removals = { source_refs = [0] }
+sequence_order = { source_refs = [1, 0] }
+
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = { revision = "2019", id = "modelo-194-resumen-base-negativa" }
+sequence_additions = { source_refs = ["aeat-dr-194-2023"] }
+sequence_removals = { source_refs = [0] }
+sequence_order = { source_refs = [1, 0] }
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = { revision = "2019", id = "modelo-194-base-positiva" }
+sequence_additions = { source_refs = ["aeat-dr-194-2023"] }
+sequence_removals = { source_refs = [0] }
+sequence_order = { source_refs = [1, 0] }
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = { revision = "2019", id = "modelo-194-retenciones-total" }
+sequence_additions = { source_refs = ["aeat-dr-194-2023"] }
+sequence_removals = { source_refs = [0] }
+sequence_order = { source_refs = [1, 0] }
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = { revision = "2019", id = "modelo-194-base-negativa" }
+sequence_additions = { source_refs = ["aeat-dr-194-2023"] }
+sequence_removals = { source_refs = [0] }
+sequence_order = { source_refs = [1, 0] }
+
+[[revisions."2023".family_overrides]]
+family = "constructs"
+selector = { revision = "2019", id = "modelo-194-calculation-construct" }
+sequence_additions = { source_refs = ["aeat-dr-194-2023"] }
+sequence_removals = { source_refs = [3] }
+
+[[revisions."2023".family_overrides]]
+family = "completeness_manifest"
+selector = { revision = "2019", id = "aeat-dr-194-2019" }
+replacement_id = "aeat-dr-194-2023"
+sequence_additions = { source_refs = ["aeat-dr-194-2023"] }
+sequence_removals = { source_refs = [0] }
+sequence_order = { source_refs = [1, 0] }
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "decl.persona-contacto-telefono" }
+fields = { source_refs = ["aeat-dr-194-2023", "boe-modelo-194-form-layout"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "decl.persona-contacto-nombre" }
+fields = { source_refs = ["aeat-dr-194-2023", "boe-modelo-194-form-layout"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "decl.num-identificativo" }
+fields = { source_refs = ["aeat-dr-194-2023", "boe-modelo-194-form-layout"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "decl.complementaria" }
+fields = { source_refs = ["aeat-dr-194-2023", "boe-modelo-194-form-layout"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "decl.sustitutiva" }
+fields = { source_refs = ["aeat-dr-194-2023", "boe-modelo-194-form-layout"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "decl.num-identificativo-anterior" }
+fields = { source_refs = ["aeat-dr-194-2023", "boe-modelo-194-form-layout"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.nif" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.nif-representante" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.nombre" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.provincia" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.origen" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.clave-codigo" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.codigo-emisor" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.tipo-codigo" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.codigo-cuenta" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.pendiente" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.ejercicio-devengo" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.valor-adquisicion" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.valor-transmision" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.base" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.porcentaje" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.retenciones" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+
+[[revisions."2023".casilla_overrides]]
+selector = { revision = "2019", id = "perc.vinculacion" }
+fields = { source_refs = ["aeat-dr-194-2023"] }
+

@@ -1,0 +1,686 @@
+# Exact AEAT PDF anchors; review binds explicit subdivided money parts and absent Naturaleza cells.
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+signed_composite_rules = []
+literal_numeric_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 32
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-32-1-enumeration"
+decision_statement = "The source field at 1+1 uses enumeration representation."
+justification = "The source states this exact numeric constant and its printed slot width."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 32
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["349"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 34
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-34-2-enumeration"
+decision_statement = "The source field at 2+3 uses enumeration representation."
+justification = "The source states this exact numeric constant and its printed slot width."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 34
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 36
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-36-5-year-yyyy"
+decision_statement = "The source field at 5+4 uses year yyyy representation."
+justification = "The source describes four digits of the fiscal year or copies that exact year from the Tipo 1 record."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 36
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 58
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-58-59-digit-string"
+decision_statement = "The source field at 59+9 uses digit string representation."
+justification = "The source explicitly describes Teléfono as a numeric nine-position contact identifier."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 58
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 59
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-59-68-mistyped-alphanumeric-text"
+decision_statement = "The source field at 68+40 uses mistyped alphanumeric text representation."
+justification = "The source subdivision names APELLIDOS Y NOMBRE, a text field, while leaving Naturaleza absent for this component."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 59
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 63
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-63-108-identifier-digits"
+decision_statement = "The source field at 108+13 uses identifier digits representation."
+justification = "Número identificativo is a 13-digit identifier, not a decimal quantity."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 63
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 88
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-88-123-identifier-digits"
+decision_statement = "The source field at 123+13 uses identifier digits representation."
+justification = "Número identificativo is a 13-digit identifier, not a decimal quantity."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 88
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 117
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "12"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-117-138-integer"
+decision_statement = "The source field at 138+9 uses integer representation."
+justification = "The source names a count of operadores/registros and declares nine numeric positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 117
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "12"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 150
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-150-147-amount-integer-part"
+decision_statement = "The source field at 147+13 uses amount integer part representation."
+justification = "The enclosing official amount field explicitly divides this span into 13 integer positions and a following two-position decimal part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 150
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 152
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-152-160-amount-fractional-digits"
+decision_statement = "The source field at 160+2 uses amount fractional digits representation."
+justification = "The enclosing official amount field explicitly labels this two-position suffix Parte decimal."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 152
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 155
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "14"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-155-162-integer"
+decision_statement = "The source field at 162+9 uses integer representation."
+justification = "The source names a count of operadores/registros and declares nine numeric positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 155
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "14"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 189
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-189-171-amount-integer-part"
+decision_statement = "The source field at 171+13 uses amount integer part representation."
+justification = "The enclosing official amount field explicitly divides this span into 13 integer positions and a following two-position decimal part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 189
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 191
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-191-184-amount-fractional-digits"
+decision_statement = "The source field at 184+2 uses amount fractional digits representation."
+justification = "The enclosing official amount field explicitly labels this two-position suffix Parte decimal."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 191
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 229
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-229-1-enumeration"
+decision_statement = "The source field at 1+1 uses enumeration representation."
+justification = "The source states this exact numeric constant and its printed slot width."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 229
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["349"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 232
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-232-2-enumeration"
+decision_statement = "The source field at 2+3 uses enumeration representation."
+justification = "The source states this exact numeric constant and its printed slot width."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 232
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 235
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-235-5-year-yyyy"
+decision_statement = "The source field at 5+4 uses year yyyy representation."
+justification = "The source describes four digits of the fiscal year or copies that exact year from the Tipo 1 record."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 235
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 377
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-377-134-amount-integer-part"
+decision_statement = "The source field at 134+11 uses amount integer part representation."
+justification = "The official operator Base Imponible parent expressly divides 134-144 as Parte entera and 145-146 as Parte decimal."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 377
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 379
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-379-145-amount-fractional-digits"
+decision_statement = "The source field at 145+2 uses amount fractional digits representation."
+justification = "The official operator Base Imponible parent expressly divides 145-146 as Parte decimal."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Operador Intracomunitario"
+source_row = 379
+record_identity = "Tipo 2 - Registro De Operador Intracomunitario"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 452
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-452-1-enumeration"
+decision_statement = "The source field at 1+1 uses enumeration representation."
+justification = "The source states this exact numeric constant and its printed slot width."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 452
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["349"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 455
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-455-2-enumeration"
+decision_statement = "The source field at 2+3 uses enumeration representation."
+justification = "The source states this exact numeric constant and its printed slot width."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 455
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 458
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-458-5-year-yyyy"
+decision_statement = "The source field at 5+4 uses year yyyy representation."
+justification = "The source describes four digits of the fiscal year or copies that exact year from the Tipo 1 record."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 458
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 558
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "10"
+semantic_part_offset = 147
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-558-147-year-yyyy"
+decision_statement = "The source field at 147+4 uses year yyyy representation."
+justification = "The source describes four digits of the fiscal year or copies that exact year from the Tipo 1 record."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 558
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "10"
+semantic_part_offset = 147
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 599
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "11"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-599-153-decimal"
+decision_statement = "The source field at 153+13 uses decimal representation."
+justification = "The same source field explicitly divides its 13 positions into 11 integer and two decimal positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 599
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "11"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 637
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "12"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m349-2020-row-637-166-decimal"
+decision_statement = "The source field at 166+13 uses decimal representation."
+justification = "The same source field explicitly divides its 13 positions into 11 integer and two decimal positions."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Retificaciones"
+source_row = 637
+record_identity = "Tipo 2 - Registro De Retificaciones"
+ordinal = "12"
+
+[design_identity]
+modelo = "349"
+design_epoch = "2020"
+source_ref = "aeat-dr-349-2020-current"
+source_sha256 = "874db49c9aff4d9c024bdee52f869123a9815c09272a0066cf81421ace1a8335"

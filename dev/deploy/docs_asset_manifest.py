@@ -18,10 +18,61 @@ MANIFEST_SCHEMA = "cadrumo.docs-release.v1"
 MANIFEST_NAME = "delivery-manifest.json"
 
 
+def _require_release_path(key: str) -> None:
+    """Require release path."""
+    if (
+        not isinstance(key, str)
+        or not key
+        or key.startswith("/")
+        or "\\" in key
+        or ":" in key
+        or _release_path_contains_control_characters(key)
+        or any(part in {"", ".", ".."} for part in key.split("/"))
+    ):
+        raise ValueError("Unsafe release path")
+
+
+def _release_path_contains_control_characters(key: str) -> bool:
+    """Recognize whitespace and control bytes after the string-shape checks."""
+    return any(character.isspace() or ord(character) < 32 for character in key)
+
+
+def _require_release_population(objects: dict[str, Any]) -> None:
+    """Require release population.
+
+    A page is required per language, because the pages differ by language. The
+    search runtime is required once, at the apex: the site has ONE index and
+    every language's pages load it from there.
+    """
+    required = {"index.html", "404.html", "pagefind/pagefind.js", "pagefind/pagefind-entry.json"}
+    required.update(f"{language}/index.html" for language in LANGUAGES)
+    for kind in ("fragment", "index"):
+        if not any(key.startswith(f"pagefind/{kind}/") for key in objects):
+            raise ValueError(f"Missing site search {kind}")
+    if not required.issubset(objects):
+        raise ValueError("Release lacks required pages or search runtime")
+
+
+def _require_mirror_error_pages(document: dict[str, Any], objects: dict[str, Any]) -> None:
+    """Require mirror error pages."""
+    mirrors = document.get("mirror_errors")
+    error_pages = {key for key in objects if key == "404.html" or key.endswith("/404.html")}
+    if (
+        not isinstance(mirrors, dict)
+        or set(mirrors) != error_pages
+        or not all(isinstance(text, str) for text in mirrors.values())
+    ):
+        raise ValueError("Missing or invalid mirror error pages")
+
+
 def search_payload(key: str) -> bool:
-    """Identify large generated search trees without moving the search runtime."""
+    """Identify the large generated search trees without moving the search runtime.
+
+    One pair of trees for the whole site, at the apex: the site has ONE index,
+    so these keys no longer begin with a language.
+    """
     parts = PurePosixPath(key).parts
-    return len(parts) == 4 and parts[0] in LANGUAGES and parts[1] == "pagefind" and parts[2] in {"fragment", "index"}
+    return len(parts) == 3 and parts[0] == "pagefind" and parts[1] in {"fragment", "index"}
 
 
 def validate_manifest(document: Any) -> dict[str, Any]:
@@ -37,42 +88,10 @@ def validate_manifest(document: Any) -> dict[str, Any]:
     objects = document.get("objects")
     if not isinstance(objects, dict) or not objects:
         raise ValueError("Empty release manifest")
-    required = {"index.html", "404.html"}
-    for language in LANGUAGES:
-        required.update(
-            {f"{language}/index.html", f"{language}/pagefind/pagefind.js", f"{language}/pagefind/pagefind-entry.json"}
-        )
-        for kind in ("fragment", "index"):
-            if not any(key.startswith(f"{language}/pagefind/{kind}/") for key in objects):
-                raise ValueError(f"Missing {language} search {kind}")
-    if not required.issubset(objects):
-        raise ValueError("Release lacks required pages or search runtime")
+    _require_release_population(objects)
     for key, row in objects.items():
-        if (
-            not isinstance(key, str)
-            or not key
-            or key.startswith("/")
-            or "\\" in key
-            or ":" in key
-            or any(character.isspace() or ord(character) < 32 for character in key)
-            or any(part in {"", ".", ".."} for part in key.split("/"))
-        ):
-            raise ValueError("Unsafe release path")
-        if not isinstance(row, dict) or type(row.get("size")) is not int or row["size"] < 0:
-            raise ValueError(f"Invalid size: {key}")
-        for name, length in (("sha256", 64), ("etag", 32)):
-            if not isinstance(row.get(name), str) or re.fullmatch(f"[0-9a-f]{{{length}}}", row[name]) is None:
-                raise ValueError(f"Invalid {name}: {key}")
-        if not isinstance(row.get("content_type"), str) or not row["content_type"]:
-            raise ValueError(f"Missing content type: {key}")
-    mirrors = document.get("mirror_errors")
-    error_pages = {key for key in objects if key == "404.html" or key.endswith("/404.html")}
-    if (
-        not isinstance(mirrors, dict)
-        or set(mirrors) != error_pages
-        or not all(isinstance(text, str) for text in mirrors.values())
-    ):
-        raise ValueError("Missing or invalid mirror error pages")
+        _require_release_object(key, row)
+    _require_mirror_error_pages(document, objects)
     return document
 
 
@@ -134,34 +153,7 @@ def delivery_config(document: dict[str, Any]) -> dict[str, Any]:
     objects = document["objects"]
     redirects: list[str] = []
     for mount in MOUNTS:
-        redirects.append(f"{mount} {mount}/ 301")
-        for key in objects:
-            if key == "index.html" or key.endswith("/index.html"):
-                directory = key.removesuffix("index.html")
-                redirects.append(f"{mount}/{directory} {mount}/{key} 200")
-                if directory:
-                    redirects.append(f"{mount}/{directory.rstrip('/')} {mount}/{directory} 301")
-        for language in LANGUAGES:
-            for kind in ("fragment", "index"):
-                path = f"{language}/pagefind/{kind}"
-                redirects.append(
-                    f"{mount}/{path}/* https://{PUBLIC_HOST}/releases/{document['release']}/{path}/:splat 302"
-                )
-                sample = min(key for key in objects if key.startswith(path + "/"))
-                redirects.append(
-                    f"{mount}/_health/{language}/{kind} "
-                    f"https://{PUBLIC_HOST}/releases/{document['release']}/{sample} 302"
-                )
-        roots = sorted({key.split("/")[1] for key in objects if key.startswith("en/")})
-        for root in roots:
-            if root in {"index.html", "404.html"} or root.startswith("."):
-                continue
-            if f"en/{root}" in objects:
-                if root not in objects:
-                    redirects.append(f"{mount}/{root} {mount}/en/{root} 301")
-            else:
-                redirects.append(f"{mount}/{root}/* {mount}/en/{root}/:splat 301")
-                redirects.append(f"{mount}/{root} {mount}/en/{root}/ 301")
+        _append_mount_redirects(mount, document, objects, redirects)
 
     # Cloudflare treats every rule after the first dynamic rule as dynamic,
     # including exact paths for the second mount. Partition globally first.
@@ -188,3 +180,65 @@ def delivery_config(document: dict[str, Any]) -> dict[str, Any]:
         "_redirects": "\n".join(redirects) + "\n",
         "_headers": headers,
     }
+
+
+def _require_release_object(key: str, row: Any) -> None:
+    """Require release object."""
+    _require_release_path(key)
+    if not isinstance(row, dict) or type(row.get("size")) is not int or row["size"] < 0:
+        raise ValueError(f"Invalid size: {key}")
+    for name, length in (("sha256", 64), ("etag", 32)):
+        if not isinstance(row.get(name), str) or re.fullmatch(f"[0-9a-f]{{{length}}}", row[name]) is None:
+            raise ValueError(f"Invalid {name}: {key}")
+    if not isinstance(row.get("content_type"), str) or not row["content_type"]:
+        raise ValueError(f"Missing content type: {key}")
+
+
+def _append_mount_redirects(
+    mount: str, document: dict[str, Any], objects: dict[str, Any], redirects: list[str]
+) -> None:
+    """Append mount redirects."""
+    redirects.append(f"{mount} {mount}/ 301")
+    for key in objects:
+        _append_directory_redirects(mount, key, redirects)
+    _append_site_search_redirects(mount, document, objects, redirects)
+    roots = sorted({key.split("/")[1] for key in objects if key.startswith("en/")})
+    for root in roots:
+        _append_english_root_redirects(mount, root, objects, redirects)
+
+
+def _append_directory_redirects(mount: str, key: str, redirects: list[str]) -> None:
+    """Append directory redirects."""
+    if key == "index.html" or key.endswith("/index.html"):
+        directory = key.removesuffix("index.html")
+        redirects.append(f"{mount}/{directory} {mount}/{key} 200")
+        if directory:
+            redirects.append(f"{mount}/{directory.rstrip('/')} {mount}/{directory} 301")
+
+
+def _append_site_search_redirects(
+    mount: str, document: dict[str, Any], objects: dict[str, Any], redirects: list[str]
+) -> None:
+    """Send the site's one pair of search trees to the public bucket.
+
+    One rule per tree for the whole site, where there was one per tree per
+    language: the index these address is the site's, loaded from the apex by
+    every language's pages, so a language no longer names one of its own.
+    """
+    for kind in ("fragment", "index"):
+        path = f"pagefind/{kind}"
+        redirects.append(f"{mount}/{path}/* https://{PUBLIC_HOST}/releases/{document['release']}/{path}/:splat 302")
+        sample = min(key for key in objects if key.startswith(path + "/"))
+        redirects.append(f"{mount}/_health/{kind} https://{PUBLIC_HOST}/releases/{document['release']}/{sample} 302")
+
+
+def _append_english_root_redirects(mount: str, root: str, objects: dict[str, Any], redirects: list[str]) -> None:
+    """Append english root redirects."""
+    if root in {"index.html", "404.html"} or root.startswith("."):
+        return
+    if f"en/{root}" in objects:
+        if root not in objects:
+            redirects.append(f"{mount}/{root} {mount}/en/{root} 301")
+    else:
+        redirects.append(f"{mount}/{root}/* {mount}/en/{root}/:splat 301")
+        redirects.append(f"{mount}/{root} {mount}/en/{root}/ 301")

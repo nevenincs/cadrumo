@@ -168,7 +168,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\nshort_work_unit_id\taf6b2264dd9d\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2026-y-siguientes\nname\t303-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew work unit created.\n"
+      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\nshort_work_unit_id\tb7a7592ccc53\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2026-hasta-01-y-1t\nname\t303-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\nplazo_nominal_closes_on\t2026-04-20\nplazo_holiday_coverage\tnational_only\ndays_remaining\t19\nNew declaration created.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -191,7 +191,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.calculate\ncalculation_revision_id\t188eab579e6d21e60fbc7bf28ce7afa0b9ec7e40cc5a65782a76467cbb01ef93\nwork_unit_id\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary Modelo 303 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\tiva.cuota-devengada-total\t210.00\tTotal accrued VAT amount\nkey_figure\tiva.cuota-deducible-total\t105.00\tTotal deductible VAT amount\nkey_figure\tiva.resultado-regimen-general\t105.00\tGeneral regime result\nkey_figure\t64\t105.00\tResult - Sum of results ([46]+[58]+[76])\nkey_figure\t66\t105.00\tResult - Amount attributable to the State Tax Administration ([64]×[65]/100)\nkey_figure\tiva.compensacion-aplicada-periodo\t0.00\tVAT credit from previous periods applied in this period\nkey_figure\tiva.compensacion-pendiente-periodos-posteriores\t0.00\tVAT credit from previous periods carried forward to later periods\nkey_figure\tiva.resultado\t105.00\tResult of the self-assessment ([66]+[77]+[68]-[78])\nkey_figure\t71\t105.00\tResult final ([69]-[70]+[109])\nkey_figure\tiva.compensacion-generada-periodo\t0.00\tOffset balance generated in this period\nkey_figure\tiva.compensacion-disponible-fin-periodo\t0.00\tOffset balance available for later periods\nkey_figure\t27\t210.00\tTotal accrued VAT amount\nkey_figure\t45\t105.00\tTotal deductible amount\ncasilla\t01\t0.00\tsum(iva.repercutido.super-reducido.base, iva.autoconsumo.promotor.super-reducido.base) = sum(0, 0) = 0.00\ncasilla\t02\t0\ncasilla\t03\t0.00\tcalculation(iva.cuota-devengada.super-reducido) = calculation(0.00) = 0.00\ncasilla\t04\t0.00\tsum(iva.repercutido.reducido.base, iva.autoconsumo.promotor.reducido.base) = sum(0, 0) = 0.00\ncasilla\t05\t0\ncasilla\t06\t0.00\tcalculation(iva.cuota-devengada.reducido) = calculation(0.00) = 0.00\ncasilla\t07\t1000.00\tsum(iva.repercutido.general.base, iva.autoconsumo.promotor.general.base) = sum(1000, 0) = 1000.00\ncasilla\t08\t0\ncasilla\t09\t210.00\tcalculation(iva.cuota-devengada.general) = calculation(210.00) = 210.00\ncasilla\t10\t0.00\tcalculation(iva.autorepercutido.intracomunitaria.devengado.base) = calculation(0) = 0.00\ncasilla\t107\t0\ncasilla\t108\t0\ncasilla\t109\t0\ncasilla\t11\t0.00\tcalculation(iva.autorepercutido.intracomunitaria.devengado) = calculation(0) = 0.00\ncasilla\t111\t0\ncasilla\t112\t0\ncasilla\t12\t0\ncasilla\t120\t0\ncasilla\t122\t0\ncasilla\t123\t0\ncasilla\t124\t0\ncasilla\t125\t0\ncasilla\t126\t0\ncasilla\t127\t0\ncasilla\t128\t0\ncasilla\t13\t0.00\tcalculation(iva.autorepercutido.interior.devengado) = calculation(0) = 0.00\ncasilla\t14\t0\ncasilla\t15\t0\ncasilla\t150\t0\ncasilla\t151\t0\ncasilla\t152\t0\ncasilla\t153\t0\ncasilla\t154\t0.00\tcalculation(m303-dr303-154-transitional-rate-percent) = calculation(0.00) = 0.00\ncasilla\t155\t0.00\tcalculation(iva.repercutido.reducido.transitorio) = calculation(0) = 0.00\ncasilla\t156\t0\ncasilla\t157\t0\ncasilla\t158\t0\ncasilla\t16\t0\ncasilla\t165\t0\ncasilla\t166\t0.00\tcalculation(m303-dr303-166-transitional-rate-percent) = calculation(0.00) = 0.00\ncasilla\t167\t0.00\tcalculation(iva.repercutido.super-reducido.transitorio) = calculation(0) = 0.00\ncasilla\t168\t0\ncasilla\t169\t0\ncasilla\t17\t0\ncasilla\t170\t0\ncasilla\t18\t0\ncasilla\t19\t0\ncasilla\t20\t0\ncasilla\t21\t0\ncasilla\t22\t0\ncasilla\t23\t0\ncasilla\t24\t0\ncasilla\t25\t0\ncasilla\t26\t0\ncasilla\t27\t210.00\tcalculation(iva.cuota-devengada-total) = calculation(210.00) = 210.00\ncasilla\t28\t500.00\tsum(iva.soportado.interiores.base, iva.autorepercutido.interior.deducible.base) = sum(500, 0) = 500.00\ncasilla\t29\t105.00\tsum(iva.soportado.interiores, iva.autorepercutido.interior.deducible) = sum(105, 0) = 105.00\ncasilla\t30\t0.00\tsum(iva.soportado.interiores.bienes-inversion.base, iva.autorepercutido.interior.deducible.bienes-inversion.base) = sum(0, 0) = 0.00\ncasilla\t31\t0.00\tsum(iva.soportado.interiores.bienes-inversion, iva.autorepercutido.interior.deducible.bienes-inversion) = sum(0, 0) = 0.00\ncasilla\t32\t0\ncasilla\t33\t0.00\tcalculation(iva.soportado.importaciones) = calculation(0) = 0.00\ncasilla\t34\t0\ncasilla\t35\t0\ncasilla\t36\t0\ncasilla\t37\t0.00\tcalculation(iva.autorepercutido.intracomunitaria.deducible) = calculation(0) = 0.00\ncasilla\t38\t0\ncasilla\t39\t0\ncasilla\t40\t0.00\tsum(iva.rectificacion-deducciones.interiores.base, iva.rectificacion-deducciones.importaciones.base, iva.rectificacion-deducciones.inversion-sujeto-pasivo.base) = sum(0, 0, 0) = 0.00\ncasilla\t41\t0.00\tsum(iva.rectificacion-deducciones.interiores, iva.rectificacion-deducciones.importaciones, iva.rectificacion-deducciones.inversion-sujeto-pasivo) = sum(0, 0, 0) = 0.00\ncasilla\t42\t0\ncasilla\t43\t0.00\ncasilla\t44\t0.00\ncasilla\t45\t105.00\tcalculation(iva.cuota-deducible-total) = calculation(105.00) = 105.00\ncasilla\t47\t0\ncasilla\t48\t0\ncasilla\t49\t0\ncasilla\t50\t0\ncasilla\t51\t0\ncasilla\t52\t0\ncasilla\t53\t0\ncasilla\t54\t0\ncasilla\t55\t0\ncasilla\t56\t0\ncasilla\t57\t0\ncasilla\t58\t0\ncasilla\t59\t0\ncasilla\t60\t0\ncasilla\t62\t0\ncasilla\t63\t0\ncasilla\t64\t105.00\tsum(iva.resultado-regimen-general, 58, 76) = sum(105.00, 0, 0) = 105.00\ncasilla\t65\t100\ncasilla\t66\t105.00\tdivide(64, 65) = divide(105.00, 100) = 105.00\ncasilla\t68\t0\ncasilla\t70\t0\ncasilla\t71\t105.00\tsubtract(iva.resultado, 70, 109, 112) = subtract(105.00, 0, 0, 0) = 105.00\ncasilla\t74\t0\ncasilla\t75\t0\ncasilla\t76\t0\ncasilla\t77\t0\ncasilla\t79\t0\ncasilla\t80\t0\ncasilla\t81\t0\ncasilla\t83\t0\ncasilla\t84\t0\ncasilla\t86\t0\ncasilla\t88\t0\ncasilla\t89\t0\ncasilla\t90\t0\ncasilla\t91\t0\ncasilla\t92\t0\ncasilla\t93\t0\ncasilla\t94\t0\ncasilla\t95\t0\ncasilla\t96\t0\ncasilla\t97\t0\ncasilla\t98\t0\ncasilla\t99\t0\ncasilla\tdecl.ejercicio\t2026\ncasilla\tiva.autoconsumo.promotor.base\t0\ncasilla\tiva.autoconsumo.promotor.base.por-tipo\t0.00\tsum(iva.autoconsumo.promotor.super-reducido.base, iva.autoconsumo.promotor.reducido.base, iva.autoconsumo.promotor.general.base) = sum(0, 0, 0) = 0.00\ncasilla\tiva.autoconsumo.promotor.general.base\t0\ncasilla\tiva.autoconsumo.promotor.reducido.base\t0\ncasilla\tiva.autoconsumo.promotor.super-reducido.base\t0\ncasilla\tiva.autorepercutido.interior.deducible\t0\ncasilla\tiva.autorepercutido.interior.deducible.base\t0\ncasilla\tiva.autorepercutido.interior.deducible.bienes-inversion\t0\ncasilla\tiva.autorepercutido.interior.deducible.bienes-inversion.base\t0\ncasilla\tiva.autorepercutido.interior.devengado\t0\ncasilla\tiva.autorepercutido.intracomunitaria\t0\ncasilla\tiva.autorepercutido.intracomunitaria.deducible\t0\ncasilla\tiva.autorepercutido.intracomunitaria.devengado\t0\ncasilla\tiva.autorepercutido.intracomunitaria.devengado.base\t0\ncasilla\tiva.compensacion-aplicada-periodo\t0.00\tminimum(iva.compensacion-pendiente-periodos-anteriores, iva.resultado-regimen-general) = minimum(0, 105.00) = 0.00\ncasilla\tiva.compensacion-disponible-fin-periodo\t0.00\tsum(iva.compensacion-pendiente-periodos-posteriores, iva.compensacion-generada-periodo) = sum(0.00, 0.00) = 0.00\ncasilla\tiva.compensacion-generada-periodo\t0.00\tmaximum(iva.resultado) = maximum(105.00) = 0.00\ncasilla\tiva.compensacion-pendiente-periodos-anteriores\t0\ncasilla\tiva.compensacion-pendiente-periodos-posteriores\t0.00\tsubtract(iva.compensacion-pendiente-periodos-anteriores, iva.compensacion-aplicada-periodo) = subtract(0, 0.00) = 0.00\ncasilla\tiva.cuota-deducible-total\t105.00\tsum(29, 31, 33, 35, 37, 39, 41, 42, 43, 44) = sum(105.00, 0.00, 0.00, 0, 0.00, 0, 0.00, 0, 0.00, 0.00) = 105.00\ncasilla\tiva.cuota-devengada-total\t210.00\tsum(iva.cuota-devengada.general, iva.cuota-devengada.reducido, iva.cuota-devengada.super-reducido, iva.repercutido.reducido.transitorio, iva.repercutido.super-reducido.transitorio, iva.autorepercutido.intracomunitaria, iva.autorepercutido.interior.devengado, 18, 21, 24, 158, 170, 26, 15, 152) = sum(210.00, 0.00, 0.00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) = 210.00\ncasilla\tiva.cuota-devengada.general\t210.00\tsum(iva.repercutido.general, iva.autoconsumo.promotor.general.base, m303-dr303-08-tipo-porcentaje) = sum(210, 0, 21) = 210.00\ncasilla\tiva.cuota-devengada.reducido\t0.00\tsum(iva.repercutido.reducido, iva.autoconsumo.promotor.reducido.base, m303-dr303-05-tipo-porcentaje) = sum(0, 0, 10) = 0.00\ncasilla\tiva.cuota-devengada.super-reducido\t0.00\tsum(iva.repercutido.super-reducido, iva.autoconsumo.promotor.super-reducido.base, m303-dr303-02-tipo-porcentaje) = sum(0, 0, 4) = 0.00\ncasilla\tiva.prorrata-porcentaje\t100\tconditional(iva.prorrata-volumen-total) = conditional(0) = 100\ncasilla\tiva.prorrata-volumen-con-derecho\t0\ncasilla\tiva.prorrata-volumen-total\t0\ncasilla\tiva.rectificacion-deducciones.importaciones\t0\ncasilla\tiva.rectificacion-deducciones.importaciones.base\t0\ncasilla\tiva.rectificacion-deducciones.interiores\t0\ncasilla\tiva.rectificacion-deducciones.interiores.base\t0\ncasilla\tiva.rectificacion-deducciones.inversion-sujeto-pasivo\t0\ncasilla\tiva.rectificacion-deducciones.inversion-sujeto-pasivo.base\t0\ncasilla\tiva.regularizacion-inversiones\t0\ncasilla\tiva.repercutido.general\t210\ncasilla\tiva.repercutido.general.base\t1000\ncasilla\tiva.repercutido.reducido\t0\ncasilla\tiva.repercutido.reducido.base\t0\ncasilla\tiva.repercutido.reducido.transitorio\t0\ncasilla\tiva.repercutido.super-reducido\t0\ncasilla\tiva.repercutido.super-reducido.base\t0\ncasilla\tiva.repercutido.super-reducido.transitorio\t0\ncasilla\tiva.resultado\t105.00\tsubtract(66, 77, 68, 108, iva.compensacion-aplicada-periodo) = subtract(105.00, 0, 0, 0, 0.00) = 105.00\ncasilla\tiva.resultado-regimen-general\t105.00\tsubtract(iva.cuota-devengada-total, iva.cuota-deducible-total) = subtract(210.00, 105.00) = 105.00\ncasilla\tiva.soportado.importaciones\t0\ncasilla\tiva.soportado.interiores\t105\ncasilla\tiva.soportado.interiores.base\t500\ncasilla\tiva.soportado.interiores.bienes-inversion\t0\ncasilla\tiva.soportado.interiores.bienes-inversion.base\t0\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nSaved as draft calculation revision 188eab579e6d21e60fbc7bf28ce7afa0b9ec7e40cc5a65782a76467cbb01ef93 (state: draft). It is persisted and can be resumed later.\n"
+      "text": "operation\tmodelo.work.calculate\ncalculation_revision_id\t5926c154302784c506f3ad54e865a936e5a8c5dcebacfec7307fd80bb078a377\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary Modelo 303 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\tiva.cuota-devengada-total\t210.00\tTotal accrued VAT amount\nkey_figure\tiva.cuota-deducible-total\t105.00\tTotal deductible VAT amount\nkey_figure\tiva.resultado-regimen-general\t105.00\tGeneral regime result\nkey_figure\t64\t105.00\tResult. Sum of results\nkey_figure\t66\t105.00\tResult. Attributable to the State Administration\nkey_figure\tiva.compensacion-aplicada-periodo\t0.00\tVAT credit from previous periods applied in this period\nkey_figure\tiva.compensacion-pendiente-periodos-posteriores\t0.00\tVAT credit from previous periods carried forward to later periods\nkey_figure\tiva.resultado\t105.00\tSelf-assessment result\nkey_figure\t71\t105.00\tResult of the settlement\nkey_figure\tiva.compensacion-generada-periodo\t0.00\tOffset balance generated in this period\nkey_figure\tiva.compensacion-disponible-fin-periodo\t0.00\tOffset balance available for later periods\nkey_figure\t27\t210.00\tTotal accrued VAT amount\nkey_figure\t45\t105.00\tTotal deductible amount\ncasilla\t01\t0.00\tsum(iva.repercutido.super-reducido.base, iva.autoconsumo.promotor.super-reducido.base) = sum(0, 0) = 0.00\ncasilla\t02\t0\ncasilla\t03\t0.00\tcalculation(iva.cuota-devengada.super-reducido) = calculation(0.00) = 0.00\ncasilla\t04\t0.00\tsum(iva.repercutido.reducido.base, iva.autoconsumo.promotor.reducido.base) = sum(0, 0) = 0.00\ncasilla\t05\t0\ncasilla\t06\t0.00\tcalculation(iva.cuota-devengada.reducido) = calculation(0.00) = 0.00\ncasilla\t07\t1000.00\tsum(iva.repercutido.general.base, iva.autoconsumo.promotor.general.base) = sum(1000, 0) = 1000.00\ncasilla\t08\t0\ncasilla\t09\t210.00\tcalculation(iva.cuota-devengada.general) = calculation(210.00) = 210.00\ncasilla\t10\t0.00\tcalculation(iva.autorepercutido.intracomunitaria.devengado.base) = calculation(0) = 0.00\ncasilla\t107\t0\ncasilla\t108\t0\ncasilla\t109\t0\ncasilla\t11\t0.00\tcalculation(iva.autorepercutido.intracomunitaria.devengado) = calculation(0) = 0.00\ncasilla\t111\t0\ncasilla\t112\t0\ncasilla\t12\t0\ncasilla\t120\t0\ncasilla\t122\t0\ncasilla\t123\t0\ncasilla\t124\t0\ncasilla\t125\t0\ncasilla\t126\t0\ncasilla\t127\t0\ncasilla\t128\t0\ncasilla\t13\t0.00\tcalculation(iva.autorepercutido.interior.devengado) = calculation(0) = 0.00\ncasilla\t14\t0\ncasilla\t15\t0\ncasilla\t150\t0\ncasilla\t151\t0\ncasilla\t152\t0\ncasilla\t153\t0\ncasilla\t154\t0.00\tcalculation(m303-dr303-154-transitional-rate-percent) = calculation(0.00) = 0.00\ncasilla\t155\t0.00\tcalculation(iva.repercutido.reducido.transitorio) = calculation(0) = 0.00\ncasilla\t156\t0\ncasilla\t157\t0\ncasilla\t158\t0\ncasilla\t16\t0\ncasilla\t165\t0\ncasilla\t166\t0.00\tcalculation(m303-dr303-166-transitional-rate-percent) = calculation(0.00) = 0.00\ncasilla\t167\t0.00\tcalculation(iva.repercutido.super-reducido.transitorio) = calculation(0) = 0.00\ncasilla\t168\t0\ncasilla\t169\t0\ncasilla\t17\t0\ncasilla\t170\t0\ncasilla\t18\t0\ncasilla\t19\t0\ncasilla\t20\t0\ncasilla\t21\t0\ncasilla\t22\t0\ncasilla\t23\t0\ncasilla\t24\t0\ncasilla\t25\t0\ncasilla\t26\t0\ncasilla\t27\t210.00\tcalculation(iva.cuota-devengada-total) = calculation(210.00) = 210.00\ncasilla\t28\t500.00\tsum(iva.soportado.interiores.base, iva.autorepercutido.interior.deducible.base) = sum(500, 0) = 500.00\ncasilla\t29\t105.00\tsum(iva.soportado.interiores, iva.autorepercutido.interior.deducible) = sum(105, 0) = 105.00\ncasilla\t30\t0.00\tsum(iva.soportado.interiores.bienes-inversion.base, iva.autorepercutido.interior.deducible.bienes-inversion.base) = sum(0, 0) = 0.00\ncasilla\t31\t0.00\tsum(iva.soportado.interiores.bienes-inversion, iva.autorepercutido.interior.deducible.bienes-inversion) = sum(0, 0) = 0.00\ncasilla\t32\t0\ncasilla\t33\t0.00\tcalculation(iva.soportado.importaciones) = calculation(0) = 0.00\ncasilla\t34\t0\ncasilla\t35\t0\ncasilla\t36\t0\ncasilla\t37\t0.00\tcalculation(iva.autorepercutido.intracomunitaria.deducible) = calculation(0) = 0.00\ncasilla\t38\t0\ncasilla\t39\t0\ncasilla\t40\t0.00\tsum(iva.rectificacion-deducciones.interiores.base, iva.rectificacion-deducciones.importaciones.base, iva.rectificacion-deducciones.inversion-sujeto-pasivo.base) = sum(0, 0, 0) = 0.00\ncasilla\t41\t0.00\tsum(iva.rectificacion-deducciones.interiores, iva.rectificacion-deducciones.importaciones, iva.rectificacion-deducciones.inversion-sujeto-pasivo) = sum(0, 0, 0) = 0.00\ncasilla\t42\t0\ncasilla\t43\t0.00\ncasilla\t44\t0.00\ncasilla\t45\t105.00\tcalculation(iva.cuota-deducible-total) = calculation(105.00) = 105.00\ncasilla\t47\t0\ncasilla\t48\t0\ncasilla\t49\t0\ncasilla\t50\t0\ncasilla\t51\t0\ncasilla\t52\t0\ncasilla\t53\t0\ncasilla\t54\t0\ncasilla\t55\t0\ncasilla\t56\t0\ncasilla\t57\t0\ncasilla\t58\t0\ncasilla\t59\t0\ncasilla\t60\t0\ncasilla\t62\t0\ncasilla\t63\t0\ncasilla\t64\t105.00\tsum(iva.resultado-regimen-general, 58, 76) = sum(105.00, 0, 0) = 105.00\ncasilla\t65\t100\ncasilla\t66\t105.00\tdivide(64, 65) = divide(105.00, 100) = 105.00\ncasilla\t68\t0\ncasilla\t70\t0\ncasilla\t71\t105.00\tsubtract(iva.resultado, 70, 109, 112) = subtract(105.00, 0, 0, 0) = 105.00\ncasilla\t74\t0\ncasilla\t75\t0\ncasilla\t76\t0\ncasilla\t77\t0\ncasilla\t79\t0\ncasilla\t80\t0\ncasilla\t81\t0\ncasilla\t83\t0\ncasilla\t84\t0\ncasilla\t86\t0\ncasilla\t88\t0.00\tsubtract(80, 81, 93, 94, 83, 84, 125, 126, 127, 128, 86, 95, 96, 97, 98, 79, 99) = subtract(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) = 0.00\ncasilla\t89\t0\ncasilla\t90\t0\ncasilla\t91\t0\ncasilla\t92\t0\ncasilla\t93\t0\ncasilla\t94\t0\ncasilla\t95\t0\ncasilla\t96\t0\ncasilla\t97\t0\ncasilla\t98\t0\ncasilla\t99\t0\ncasilla\tdecl.ejercicio\t2026\ncasilla\tiva.autoconsumo.promotor.base\t0\ncasilla\tiva.autoconsumo.promotor.base.por-tipo\t0.00\tsum(iva.autoconsumo.promotor.super-reducido.base, iva.autoconsumo.promotor.reducido.base, iva.autoconsumo.promotor.general.base) = sum(0, 0, 0) = 0.00\ncasilla\tiva.autoconsumo.promotor.general.base\t0\ncasilla\tiva.autoconsumo.promotor.reducido.base\t0\ncasilla\tiva.autoconsumo.promotor.super-reducido.base\t0\ncasilla\tiva.autorepercutido.interior.deducible\t0\ncasilla\tiva.autorepercutido.interior.deducible.base\t0\ncasilla\tiva.autorepercutido.interior.deducible.bienes-inversion\t0\ncasilla\tiva.autorepercutido.interior.deducible.bienes-inversion.base\t0\ncasilla\tiva.autorepercutido.interior.devengado\t0\ncasilla\tiva.autorepercutido.intracomunitaria\t0\ncasilla\tiva.autorepercutido.intracomunitaria.deducible\t0\ncasilla\tiva.autorepercutido.intracomunitaria.devengado\t0\ncasilla\tiva.autorepercutido.intracomunitaria.devengado.base\t0\ncasilla\tiva.compensacion-aplicada-periodo\t0.00\tminimum(iva.compensacion-pendiente-periodos-anteriores, iva.resultado-regimen-general) = minimum(0, 105.00) = 0.00\ncasilla\tiva.compensacion-disponible-fin-periodo\t0.00\tsum(iva.compensacion-pendiente-periodos-posteriores, iva.compensacion-generada-periodo) = sum(0.00, 0.00) = 0.00\ncasilla\tiva.compensacion-generada-periodo\t0.00\tmaximum(iva.resultado) = maximum(105.00) = 0.00\ncasilla\tiva.compensacion-pendiente-periodos-anteriores\t0\ncasilla\tiva.compensacion-pendiente-periodos-posteriores\t0.00\tsubtract(iva.compensacion-pendiente-periodos-anteriores, iva.compensacion-aplicada-periodo) = subtract(0, 0.00) = 0.00\ncasilla\tiva.cuota-deducible-total\t105.00\tsum(29, 31, 33, 35, 37, 39, 41, 42, 43, 44) = sum(105.00, 0.00, 0.00, 0, 0.00, 0, 0.00, 0, 0.00, 0.00) = 105.00\ncasilla\tiva.cuota-devengada-total\t210.00\tsum(iva.cuota-devengada.general, iva.cuota-devengada.reducido, iva.cuota-devengada.super-reducido, iva.repercutido.reducido.transitorio, iva.repercutido.super-reducido.transitorio, iva.autorepercutido.intracomunitaria, iva.autorepercutido.interior.devengado, 18, 21, 24, 158, 170, 26, 15, 152) = sum(210.00, 0.00, 0.00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) = 210.00\ncasilla\tiva.cuota-devengada.general\t210.00\tsum(iva.repercutido.general, iva.autoconsumo.promotor.general.base, m303-dr303-08-tipo-porcentaje) = sum(210, 0, 21) = 210.00\ncasilla\tiva.cuota-devengada.reducido\t0.00\tsum(iva.repercutido.reducido, iva.autoconsumo.promotor.reducido.base, m303-dr303-05-tipo-porcentaje) = sum(0, 0, 10) = 0.00\ncasilla\tiva.cuota-devengada.super-reducido\t0.00\tsum(iva.repercutido.super-reducido, iva.autoconsumo.promotor.super-reducido.base, m303-dr303-02-tipo-porcentaje) = sum(0, 0, 4) = 0.00\ncasilla\tiva.prorrata-porcentaje\t100\tconditional(iva.prorrata-volumen-total) = conditional(0) = 100\ncasilla\tiva.prorrata-volumen-con-derecho\t0\ncasilla\tiva.prorrata-volumen-total\t0\ncasilla\tiva.rectificacion-deducciones.importaciones\t0\ncasilla\tiva.rectificacion-deducciones.importaciones.base\t0\ncasilla\tiva.rectificacion-deducciones.interiores\t0\ncasilla\tiva.rectificacion-deducciones.interiores.base\t0\ncasilla\tiva.rectificacion-deducciones.inversion-sujeto-pasivo\t0\ncasilla\tiva.rectificacion-deducciones.inversion-sujeto-pasivo.base\t0\ncasilla\tiva.regularizacion-inversiones\t0\ncasilla\tiva.repercutido.general\t210\ncasilla\tiva.repercutido.general.base\t1000\ncasilla\tiva.repercutido.reducido\t0\ncasilla\tiva.repercutido.reducido.base\t0\ncasilla\tiva.repercutido.reducido.transitorio\t0\ncasilla\tiva.repercutido.super-reducido\t0\ncasilla\tiva.repercutido.super-reducido.base\t0\ncasilla\tiva.repercutido.super-reducido.transitorio\t0\ncasilla\tiva.resultado\t105.00\tsubtract(66, 77, 68, 108, iva.compensacion-aplicada-periodo) = subtract(105.00, 0, 0, 0, 0.00) = 105.00\ncasilla\tiva.resultado-regimen-general\t105.00\tsubtract(iva.cuota-devengada-total, iva.cuota-deducible-total) = subtract(210.00, 105.00) = 105.00\ncasilla\tiva.soportado.importaciones\t0\ncasilla\tiva.soportado.interiores\t105\ncasilla\tiva.soportado.interiores.base\t500\ncasilla\tiva.soportado.interiores.bienes-inversion\t0\ncasilla\tiva.soportado.interiores.bienes-inversion.base\t0\nplazo_closes_on\t2026-04-20\nplazo_nominal_closes_on\t2026-04-20\nplazo_holiday_coverage\tnational_only\ndays_remaining\t19\nSaved as draft calculation revision 5926c154302784c506f3ad54e865a936e5a8c5dcebacfec7307fd80bb078a377 (state: draft). It is persisted and can be resumed later.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -228,7 +228,7 @@
               "source_period": "4T",
               "source_refs": "aeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form"
             },
-            "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+            "message": "Modelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.",
             "severity": "warning"
           },
           {
@@ -241,14 +241,21 @@
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
               "severity": "warning",
               "source_kind_code": "output_iva_evidence",
-              "source_refs": "aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late"
+              "source_refs": "aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late, boe-modelo-303-2024-form-pdf"
             },
-            "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
+            "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
         "result": {
-          "calculation_revision_id": "188eab579e6d21e60fbc7bf28ce7afa0b9ec7e40cc5a65782a76467cbb01ef93",
+          "calculation_revision_id": "5926c154302784c506f3ad54e865a936e5a8c5dcebacfec7307fd80bb078a377",
           "completeness_status": "complete",
           "findings": [
             {
@@ -259,7 +266,7 @@
               "legal_refs": [
                 "rd-1065-2007:art-9"
               ],
-              "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+              "message": "Modelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -276,14 +283,15 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
               "source_refs": [
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form",
                 "aeat-dr-303-2026",
                 "aeat-dr-303-2024-early",
-                "aeat-dr-303-2024-late"
+                "aeat-dr-303-2024-late",
+                "boe-modelo-303-2024-form-pdf"
               ]
             }
           ],
@@ -294,11 +302,11 @@
             "modelo": "303",
             "modelo_year": 2026,
             "period": "1T",
-            "revision_id": "2026-y-siguientes"
+            "revision_id": "2026-hasta-01-y-1t"
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "953ee6c43fe7001b6a7f8f5576c628aed530fe10e39cee9511f34f6d0ce60f6c",
+          "verification_report_id": "ff8984b35e1a79088d17b98c1569019c313b25af67ae919d959edbf055149f45",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -341,7 +349,7 @@
               "modelo": "303",
               "period": "1T"
             },
-            "message": "The local export is not official filing evidence.",
+            "message": "The exported file is not an AEAT filing receipt.",
             "severity": "warning"
           },
           {
@@ -353,21 +361,44 @@
               "period": "1T",
               "software_identity_grade": "development_mock"
             },
-            "message": "The file header carries Cadrumo's all-zero development software identity; AEAT will not accept this file for presentation.",
+            "message": "AEAT will not accept this file for filing: it contains Cadrumo's all-zero development software identity. Enter the calculated box values in the AEAT form instead.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
         "result": {
-          "bucket_event_id": "26c79beb977a8ae8d91177c0d216e472ef22113285cf59624a3d8ca16406e240",
+          "bucket_event_id": "268ae66b8614edb56cfe51dec88795a3fdc7b3dcef688e102abec955b3641345",
           "bucket_id": "<bucket-id>",
           "byte_size": 2948,
-          "calculation_revision_id": "188eab579e6d21e60fbc7bf28ce7afa0b9ec7e40cc5a65782a76467cbb01ef93",
-          "file_sha256": "77eba478ce87019b64cda1c7f3fe7d267a4c3ca80121481bdab96b886ec4c37e",
+          "calculation_revision_id": "5926c154302784c506f3ad54e865a936e5a8c5dcebacfec7307fd80bb078a377",
+          "file_sha256": "310281eedac7a2d810c82addcf66519d9a522aad42908c40d9739311bf5fb16a",
           "filing_year": 2026,
           "format": "fichero-boe",
+          "iva_wallet_decision_provenance": {
+            "authority_source_kinds": [
+              "local_recurrence"
+            ],
+            "authority_source_refs": [
+              "sha256:64bc1cee701fc87c375234c8799bc82399c69968a5cc5e312b265e764a3ed334"
+            ],
+            "decision_ref": "sha256:4c310e680d2cfcf762e02632eb11d35a3e3c1bcd873094cf589fa50bb526a362",
+            "divergence": "first_period_zero",
+            "selected_authority": "local_recurrence",
+            "target_period": {
+              "code": "1T",
+              "filing_year": 2026
+            },
+            "target_year": 2026
+          },
           "modelo": "303",
           "operation": "modelo.export",
-          "output_path": "modelo-303.boe",
+          "output_path": "<sandbox-workdir>/modelo-303.boe",
           "payment_election": "ingreso",
           "period": {
             "code": "1T",
@@ -383,7 +414,7 @@
           "refund_election": null,
           "resolved_result_disposition": "I",
           "software_identity_grade": "development_mock",
-          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+          "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
         },
         "schema_version": "2",
         "status": "warning"

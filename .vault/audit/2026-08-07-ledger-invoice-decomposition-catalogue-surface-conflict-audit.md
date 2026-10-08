@@ -3,15 +3,16 @@ tags:
   - '#audit'
   - '#ledger-invoice-decomposition'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:a00c45796cad369b37c4be78c865699f0516fc7a982c65583fc532a652eec0be'
-related:
-  - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
+body_hash: 'sha256:781edea1d80b2452ce2d082929a0664a4f8e0e105a78482547e67dda1311db75'
+related: []
 ---
 # `ledger-invoice-decomposition` audit: P06.S55 targets a surface another campaign is retiring
 
-## Summary
+## Scope
+
+### Summary
 
 Step `P06.S55` of the ledger-invoice-decomposition plan directs an agent to wire
 the simplificada issuer validator to an operator Notice, and to extend the
@@ -24,7 +25,9 @@ The step is nonetheless not safe to execute, because a second in-flight campaign
 is deleting the surface it names. The conflict is invisible from either plan
 alone, which is why it is recorded here rather than resolved by editing code.
 
-## The conflict
+## Findings
+
+### The conflict
 
 The invoice-canonical-structure plan carries five open steps whose whole purpose
 is to collapse two invoice stores onto one aggregate. Two of them name this exact
@@ -43,7 +46,7 @@ The ledger plan contains no mention of the retirement, so an agent picking up
 `P06.S55` from that plan alone sees a well-formed step with a verified premise
 and no reason to hesitate.
 
-## Why the premise check is not sufficient here
+### Why the premise check is not sufficient here
 
 The usual guard against a decayed step is to re-verify its premise at HEAD. That
 guard passes here and still gives the wrong answer: the premise describes what is
@@ -55,7 +58,9 @@ names a shared surface, the question is not only whether its premise holds, but
 whether another open plan claims that surface - and a plan whose steps say
 `retire`, `delete`, `collapse` or `repoint` is claiming it.
 
-## Recommendation
+## Recommendations
+
+### Recommendation
 
 Leave `P06.S55` open and blocked rather than executed or silently dropped. Its
 underlying intent is sound: a validator that is exported, tested and reachable by

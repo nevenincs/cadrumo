@@ -1,0 +1,95 @@
+[[revisions.esquema-exterior.export_layouts]]
+id = 'modelo-369-exterior-fichero'
+
+[[revisions.esquema-exterior.export_layouts.records]]
+id = 'modelo-369-exterior-info-adicional'
+record_type = 't36900-info-adicional'
+order = 0
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'modelo-369-exterior-info-adicional-1-inicio-del-identificador-de-modelo-y-pag'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'modelo-369-exterior-info-adicional-3-modelo'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '369'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'modelo-369-exterior-info-adicional-6-pagina'
+offset = 6
+length = 2
+kind = 'literal'
+literal = '00'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'modelo-369-exterior-info-adicional-8-fin-de-identificador-de-modelo'
+offset = 8
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'modelo-369-exterior-info-adicional-9-reservado'
+offset = 9
+length = 93
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = 'modelo-369-exterior-info-adicional-102-constante-t36900'
+offset = 102
+length = 9
+kind = 'literal'
+literal = '</T36900>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[revisions.esquema-exterior.export_layouts.records.row_field_casilla_ids]

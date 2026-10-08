@@ -1,25 +1,36 @@
-"""Concrete Sede binding for the application filed-data acquisition port."""
+"""Concrete Sede binding for the application filed-data acquisition port.
+
+Source acquisition is scoped by the requested :class:`ModeloRevision`.
+"""
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Awaitable, Callable
-from contextlib import asynccontextmanager
-from typing import override
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from contextlib import asynccontextmanager, nullcontext
+from dataclasses import dataclass, field
+from typing import cast, override
 
 from .....application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .....application.auth.operator_scope_ports import OperatorScopePorts
 from .....application.auth.protocols import BrowserSessionFactoryPort
 from .....application.live.errors import LiveApplicationError
 from .....application.live.filed_data_ports import (
+    DeferredFiledObservation,
+    DeferredFiledObservations,
     FiledArtefactSink,
     FiledDataCapturePort,
     FiledDataRegisterPort,
+    FiledEffectGuard,
     FiledRegisterDeclarationProtocol,
 )
 from .....application.live.filed_observation_ports import FiledObservationProtocol
-from .....application.live.session import active_verified_session
+from .....application.live.session import SessionWriteReporter, active_verified_session
+from .....application.runtime.contracts import RuntimeRefusalError
+from .....application.user_profile.access_errors import ProfileAccessRefusedError
+from .....application.user_profile.automation_custody_port import AutomationCustodyError
+from .....core.errors.hierarchy import AuthError
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.schema import ModeloRevision
 from .declarations import (
     DeclaracionesRegisterSession,
@@ -32,7 +43,7 @@ from .declarations_capture import (
     capture_relation_source_observations,
 )
 from .declarations_schema import Declaracion
-from .schema import FiledDeclaracionArtefact
+from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 
 _DEFAULT_FAILURE_KEY = "application.live.filed_observations.errors.registry_enrollment_failed"
 
@@ -50,6 +61,10 @@ async def _call_adapter[T](operation: str, callback: Callable[[], Awaitable[T]])
     """Invoke one Sede capability and translate its exception at this boundary."""
     try:
         return await callback()
+    # An authentication failure is the operator's login, not this read; it keeps
+    # its own registered code so the operator sees, for example, an approval timeout.
+    except (ProfileAccessRefusedError, AutomationCustodyError, RuntimeRefusalError, AuthError):
+        raise
     except LiveApplicationError:
         raise
     except Exception as exc:
@@ -74,6 +89,73 @@ def _concrete_artefact_sink(
         return stored
 
     return persist
+
+
+@dataclass(slots=True)
+class _DeferredSedeObservation:
+    observation: FiledDeclaracionObservation
+    staged: list[tuple[tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes]] = field(default_factory=list)
+    consumed: bool = False
+
+    def persist_artefacts(self, sink: FiledArtefactSink) -> FiledObservationProtocol:
+        """Publish captured bytes only after the caller enters its local effect fence."""
+        if self.consumed or len(self.staged) != len(self.observation.artefacts):
+            raise ValueError("deferred filed artefacts cannot be persisted twice or incompletely")
+        if any(
+            original != observed
+            for (_, original, _), observed in zip(self.staged, self.observation.artefacts, strict=True)
+        ):
+            raise ValueError("deferred filed artefacts differ from the captured observation")
+        concrete_sink = _concrete_artefact_sink(sink)
+        if concrete_sink is None:
+            raise ValueError("deferred filed artefacts require a persistence sink")
+        self.consumed = True
+        staged, self.staged = self.staged, []
+        stored = tuple(concrete_sink(key, artefact, body) for key, artefact, body in staged)
+        return self.observation.model_copy(update={"artefacts": stored})
+
+
+@dataclass(slots=True)
+class _DeferredSedeObservations:
+    observations: tuple[FiledDeclaracionObservation, ...]
+    staged: list[tuple[tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes]] = field(default_factory=list)
+    consumed: bool = False
+
+    def persist_artefacts(self, sink: FiledArtefactSink) -> tuple[FiledObservationProtocol, ...]:
+        """Publish source artefacts together after the caller enters its fence."""
+        if self.consumed:
+            raise ValueError("deferred source artefacts cannot be persisted twice")
+        expected = _deferred_source_artefacts(self.observations)
+        if expected != tuple(artefact for _, artefact, _ in self.staged):
+            raise ValueError("deferred source artefacts differ from captured observations")
+        concrete_sink = _concrete_artefact_sink(sink)
+        if concrete_sink is None:
+            raise ValueError("deferred source artefacts require a persistence sink")
+        self.consumed = True
+        staged, self.staged = self.staged, []
+        stored = iter(concrete_sink(key, artefact, body) for key, artefact, body in staged)
+        return tuple(
+            observation.model_copy(update={"artefacts": tuple(next(stored) for _ in observation.artefacts)})
+            for observation in self.observations
+        )
+
+
+async def capture_deferred_sede_observation(
+    register: DeclaracionesRegisterSession, declaration: Declaracion
+) -> DeferredFiledObservation:
+    """Stage one remote declaration without invoking a local persistence callback."""
+    staged: list[tuple[tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes]] = []
+
+    def stage(
+        key: tuple[str, int, Period, str], artefact: FiledDeclaracionArtefact, body: bytes
+    ) -> FiledDeclaracionArtefact:
+        staged.append((key, artefact, body))
+        return artefact
+
+    observation = await register.capture_observation(declaration, artefact_sink=stage)
+    if not isinstance(observation, FiledDeclaracionObservation):
+        raise TypeError("filed register returned a non-Sede observation")
+    return _DeferredSedeObservation(observation=observation, staged=staged)
 
 
 class _SedeFiledDataRegisterPort(FiledDataRegisterPort):
@@ -114,6 +196,17 @@ class _SedeFiledDataRegisterPort(FiledDataRegisterPort):
             lambda: self._register.capture_observation(declaration, artefact_sink=concrete_sink),
         )
 
+    @override
+    async def capture_observation_deferred(
+        self, declaration: FiledRegisterDeclarationProtocol
+    ) -> DeferredFiledObservation:
+        """Return captured bytes for a later guarded local persistence section."""
+        if not isinstance(declaration, Declaracion):
+            raise TypeError("filed register port returned a non-Sede declaration")
+        return await _call_adapter(
+            "filed_declaration_capture", lambda: capture_deferred_sede_observation(self._register, declaration)
+        )
+
 
 class SedeFiledDataCapturePort(FiledDataCapturePort):
     """Compose authenticated Sede register and source-capture capabilities."""
@@ -132,10 +225,22 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
 
     @asynccontextmanager
     @override
-    async def open_register(self, *, operation: str) -> AsyncIterator[FiledDataRegisterPort]:
+    async def open_register(
+        self,
+        *,
+        operation: str,
+        authority_operation: PinnedAuthorityOperation | None = None,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
+    ) -> AsyncGenerator[FiledDataRegisterPort]:
         """Open one browser-backed register for the complete operation scope."""
         try:
-            with bundled_indexed_authority().operation() as indexed_operation:
+            authority_scope = (
+                nullcontext(authority_operation)
+                if authority_operation is not None
+                else bundled_indexed_authority().operation()
+            )
+            with authority_scope as indexed_operation:
                 session, settings = await _call_adapter(
                     "filed_register_session",
                     lambda: active_verified_session(
@@ -143,6 +248,9 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
                         browser_session_factory=self._browser_session_factory,
                         operation=operation,
                         operator_scope_ports=self._operator_scope_ports,
+                        authority_operation=indexed_operation,
+                        effect_guard=effect_guard,
+                        on_session_write=on_session_write,
                     ),
                 )
                 async with (
@@ -158,7 +266,13 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
                         register,
                         walk_timeout_ms=settings.cadrumo_live_filed_register_walk_timeout_ms,
                     )
-        except LiveApplicationError:
+        except (
+            LiveApplicationError,
+            ProfileAccessRefusedError,
+            AutomationCustodyError,
+            RuntimeRefusalError,
+            AuthError,
+        ):
             raise
         except Exception as exc:
             raise _translate_adapter_error("filed_register_open", exc) from exc
@@ -168,6 +282,8 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         self,
         *,
         operation: str,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
     ):
         """Read the register option lists through the application port."""
         session, settings = await _call_adapter(
@@ -177,6 +293,8 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
                 browser_session_factory=self._browser_session_factory,
                 operation=operation,
                 operator_scope_ports=self._operator_scope_ports,
+                effect_guard=effect_guard,
+                on_session_write=on_session_write,
             ),
         )
         try:
@@ -189,7 +307,13 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
                         playwright=playwright,
                     ),
                 )
-        except LiveApplicationError:
+        except (
+            LiveApplicationError,
+            ProfileAccessRefusedError,
+            AutomationCustodyError,
+            RuntimeRefusalError,
+            AuthError,
+        ):
             raise
         except Exception as exc:
             raise _translate_adapter_error("filed_register_discovery", exc) from exc
@@ -203,6 +327,8 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         period: Period,
         artefact_sink: FiledArtefactSink | None = None,
         operation: str,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
     ) -> tuple[FiledObservationProtocol, ...]:
         """Capture registry-selected source rows in one authenticated browser.
 
@@ -217,6 +343,8 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
                     browser_session_factory=self._browser_session_factory,
                     operation=operation,
                     operator_scope_ports=self._operator_scope_ports,
+                    effect_guard=effect_guard,
+                    on_session_write=on_session_write,
                 ),
             )
             concrete_sink = _concrete_artefact_sink(artefact_sink)
@@ -247,5 +375,47 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
 
             return await _call_adapter("filed_source_capture", _capture)
 
+    @override
+    async def capture_source_observations_deferred(
+        self,
+        revision: ModeloRevision,
+        *,
+        filing_year: int,
+        period: Period,
+        operation: str,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
+    ) -> DeferredFiledObservations:
+        """Stage :class:`ModeloRevision` source artefacts for a later commit fence."""
+        staged: list[tuple[tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes]] = []
 
-__all__ = ["SedeFiledDataCapturePort"]
+        def stage(
+            key: tuple[str, int, Period, str], artefact: FiledDeclaracionArtefact, body: bytes
+        ) -> FiledDeclaracionArtefact:
+            staged.append((key, artefact, body))
+            return artefact
+
+        observations = await self.capture_source_observations(
+            revision,
+            filing_year=filing_year,
+            period=period,
+            artefact_sink=stage,
+            operation=operation,
+            effect_guard=effect_guard,
+            on_session_write=on_session_write,
+        )
+        if not all(isinstance(observation, FiledDeclaracionObservation) for observation in observations):
+            raise TypeError("filed source capture returned a non-Sede observation")
+        return _DeferredSedeObservations(
+            observations=cast("tuple[FiledDeclaracionObservation, ...]", observations), staged=staged
+        )
+
+
+__all__ = ["SedeFiledDataCapturePort", "capture_deferred_sede_observation"]
+
+
+def _deferred_source_artefacts(
+    observations: tuple[FiledDeclaracionObservation, ...],
+) -> tuple[FiledDeclaracionArtefact, ...]:
+    """Flatten source artefacts in captured observation order before the equality fence."""
+    return tuple(artefact for observation in observations for artefact in observation.artefacts)

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#registry-load-direct-call'
 date: '2026-06-01'
-modified: '2026-08-15'
-body_hash: 'sha256:0f121abdb26745647e4f94134aae9ab6d06f4615e453e7e0ed95068ae38f3205'
+modified: '2026-10-03'
+body_hash: 'sha256:eb67348c69882f2119be9560166441c0e8d94cfb6211113654423c66471af457'
 related:
   - "[[2026-06-01-test-suite-performance-audit]]"
 ---
@@ -29,15 +29,15 @@ This audit is a precursor to cluster-5 of the test-suite-performance audit: **~2
 
 | File | Line | Classification | Test Context |
 |------|------|---|---|
-| `src/aeat/adapters/outbound/google/test_calc_sheets_pull_typing.py` | 97 | CONVENIENCE | loads bundled registry, calls `.snapshot()` to access modelos |
-| `src/aeat/application/overview/test_applicability.py` | 868 | CONVENIENCE | loads bundled registry, accesses `catalogues.legal` for filing regime metadata |
-| `src/aeat/domain/calculations/registry/test_authority.py` | 67 | CONVENIENCE | loads bundled registry, `.snapshot()` call for model access |
-| `src/aeat/domain/calculations/registry/test_authority.py` | 185 | NEGATIVE-PATH | mutates `tmp_path` manifest/revision files before load, tests cache invalidation on file changes |
-| `src/aeat/domain/calculations/registry/test_authority.py` | 187 | NEGATIVE-PATH | verifies cache miss after revision is modified between two consecutive `.load()` calls |
-| `src/aeat/application/filing/test_init.py` | 27 | CONVENIENCE | in `_authority()` helper function, bundled registry, used by multiple test methods |
-| `src/aeat/domain/calculations/registry/test_modelo_applicability.py` | 59 | CONVENIENCE | loads bundled registry, accesses `catalogues.legal` |
-| `src/aeat/domain/calculations/registry/test_queries.py` | 20 | CONVENIENCE | in `_service()` helper function, bundled registry, inlined fixture used across multiple test methods |
-| `src/aeat/domain/calculations/registry/test_queries.py` | 53 | CONVENIENCE | intra-test `.load()` call, bundled registry |
+| the retired test | 97 | CONVENIENCE | loads bundled registry, calls `.snapshot()` to access modelos |
+| the retired test | 868 | CONVENIENCE | loads bundled registry, accesses `catalogues.legal` for filing regime metadata |
+| the retired test | 67 | CONVENIENCE | loads bundled registry, `.snapshot()` call for model access |
+| the retired test | 185 | NEGATIVE-PATH | mutates `tmp_path` manifest/revision files before load, tests cache invalidation on file changes |
+| the retired test | 187 | NEGATIVE-PATH | verifies cache miss after revision is modified between two consecutive `.load()` calls |
+| the retired test | 27 | CONVENIENCE | in `_authority()` helper function, bundled registry, used by multiple test methods |
+| the retired test | 59 | CONVENIENCE | loads bundled registry, accesses `catalogues.legal` |
+| the retired test | 20 | CONVENIENCE | in `_service()` helper function, bundled registry, inlined fixture used across multiple test methods |
+| the retired test | 53 | CONVENIENCE | intra-test `.load()` call, bundled registry |
 
 **Breakdown:**
 - **CONVENIENCE**: 7 sites (78%) — candidates for fixture consolidation
@@ -50,7 +50,7 @@ This audit is a precursor to cluster-5 of the test-suite-performance audit: **~2
 
 All 7 CONVENIENCE sites call `.load()` on the immutable bundled registry without mutation. Migrate these to either:
 
-1. **`bundled_authority()` convenience function** (if available in the fixture suite), or
+1. **`bundled_authority()` convenience function** (if available in the fixture suite),
 2. **Session-scoped `registry_authority` fixture** (if session scope is permitted by test structure)
 
 This eliminates 7 redundant snapshot compilations per test session.

@@ -1,13 +1,14 @@
-# Apply IVA prorrata deductions
+(apply-iva-prorrata-deductions)=
+# Apply VAT prorrata deductions
 
-Use this guide when the taxpayer cannot deduct all input IVA. This happens when
+Use this guide when the taxpayer cannot deduct all input VAT. This happens when
 the activity mixes operations that grant the right to deduct with operations
-that do not (exempt operations without the right to deduct). Spanish IVA calls
+that do not (exempt operations without the right to deduct). Spanish VAT calls
 this *prorrata*. Record the taxpayer's prorrata choice once and the tool applies
 it to Modelo 303 and Modelo 390 automatically.
 
-Cadrumo does not submit anything to AEAT. The prorrata register is local,
-profile-scoped taxpayer state, not an AEAT filing surface.
+Cadrumo does not submit anything to AEAT. The prorrata register is stored
+locally with the taxpayer's profile; it is not something you file at AEAT.
 
 The tool needs your passphrase and prompts for it.
 
@@ -63,10 +64,10 @@ inputs (LIVA art. 106.Uno regla 3.ª / art. 104.Dos). The same `--provenance` an
 option you exercise this year. Omit it to record that the regime already in
 force continues.
 
-Then tag each input row with its use when you add it:
+Then tag each input entry with its use when you add it:
 
 ```{cli-sequence} prorrata-classify-input
-:verify: Confirm the tagged common input is recorded in the ledger.
+:verify: Confirm the tagged common input is recorded in the records.
 ```
 
 `--input-classification` takes one value:
@@ -84,8 +85,8 @@ the tag take effect.
 
 The tag only sets how much of a deductible input deducts. An input deducts
 only when its row also carries `--deduction-kind` on `ledger add` or
-`classify`. The kind `domestic_current` requires linked purchase invoice
-evidence. See [Attach invoices and receipts](ledger-evidence.md).
+`classify`. The kind `domestic_current` requires a linked purchase invoice as
+its supporting document. See [Attach invoices and receipts to transactions](ledger-evidence.md).
 
 ## Declare a differentiated sector
 
@@ -96,20 +97,20 @@ regime (LIVA arts. 9.1.c / 101):
 :verify: Confirm the differentiated sector is registered.
 ```
 
-- `--sector-id` is a stable id the register entries and ledger rows reference.
+- `--sector-id` is a stable id that the register entries and the entries in your records reference.
 - `--letra` is the LIVA art. 9.1.c letra that makes the sector differentiated:
   `a`, `b`, `c`, or `d`.
 - `--activity-code` is a CNAE or IAE code grouped into the sector. Repeat it for
   each code; give at least one.
 
-Scope an election to a sector with `--sector`, and tag a row's sector with
+Scope an election to a sector with `--sector`, and tag an entry's sector with
 `--sector` on `ledger add`:
 
 ```{cli-sequence} prorrata-sector-scoped
 :verify: Confirm the sector-scoped input is recorded against the declared sector.
 ```
 
-Tag a row with a sector you have not declared and the tool warns the tag is
+Tag an entry with a sector you have not declared and the tool warns the tag is
 unmatched: the input deducts at the common-use percentage until you declare the
 sector. The recorded example starts without a declared sector, so it prints
 that warning. Declare the sector first, or fix the id.
@@ -124,8 +125,8 @@ its options.
 
 ## Read the settlement advisories
 
-When you calculate the year-end Modelo 303 for the 4T settlement, the tool may
-surface a non-blocking advisory:
+When you calculate the year-end Modelo 303 for the 4th quarter settlement, the tool may
+surface an advisory that does not block filing:
 
 - **Especial may be mandatory** - when the taxpayer computes under general
   prorrata and the deduction under general exceeds the deduction under
@@ -140,9 +141,9 @@ Two more warnings appear when you add a row, not at settlement:
   election for that year.
 - **Unmatched sector** - a `--sector` tag naming a sector not yet declared.
 
-These are advisories, not refusals. Read them alongside the
-[calculation inputs](review-calculation-values.md) before you
-[verify the filing](verification-reports.md).
+These are notes, not refusals. Read them alongside the [calculation
+inputs](review-calculation-values.md) before you [check the
+filing](verification-reports.md).
 
 ## Review the register
 
@@ -158,5 +159,5 @@ List every election and declared sector on the active profile:
   data prorrata needs.
 - [Review calculation inputs](review-calculation-values.md) to see the deducted
   amounts.
-- [Prepare a Modelo 303 IVA filing](modelo-303.md) and
+- [Prepare a Modelo 303 VAT filing](modelo-303.md) and
   [the annual Modelo 390 summary](modelo-390.md).

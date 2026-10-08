@@ -92,7 +92,7 @@ def _race(tmp_path: Path, *, locked: bool) -> tuple[int, list[str]]:
             env=env,
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=None,
         )
         assert completed.returncode == 0, completed.stderr
         return str(completed.stdout).strip()

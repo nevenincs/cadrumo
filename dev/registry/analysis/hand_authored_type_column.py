@@ -197,21 +197,40 @@ def _shipped_records(
     """
     authored = revision_root / _HAND_AUTHORED_TREE
     if authored.is_dir():
-        for layout_file in sorted(authored.glob("*.toml")):
-            document = _object_mapping(parse_toml(layout_file.read_text(encoding="utf-8")))
-            if document is None:
-                continue
-            revisions = _object_mapping(document.get("revisions"))
-            if revisions is None:
-                continue
-            for body_value in revisions.values():
-                body = _object_mapping(body_value)
-                if body is None:
-                    continue
-                for layout in _object_mappings(body.get("export_layouts")):
-                    for record in _object_mappings(layout.get("records")):
-                        yield layout_file.name, record
+        yield from _authored_record_files(authored)
         return
+    yield from _compiled_record_rows(authority, modelo, revision)
+
+
+def _authored_record_files(authored: Path) -> Iterator[tuple[str, dict[str, object]]]:
+    """Yield records from each authored layout fragment in stable path order."""
+    for layout_file in sorted(authored.glob("*.toml")):
+        yield from _authored_layout_records(layout_file)
+
+
+def _authored_layout_records(layout_file: Path) -> Iterator[tuple[str, dict[str, object]]]:
+    """Read every record in one authored layout fragment, skipping non-mappings."""
+    document = _object_mapping(parse_toml(layout_file.read_text(encoding="utf-8")))
+    if document is None:
+        return
+    revisions = _object_mapping(document.get("revisions"))
+    if revisions is None:
+        return
+    for body_value in revisions.values():
+        body = _object_mapping(body_value)
+        if body is None:
+            continue
+        for layout in _object_mappings(body.get("export_layouts")):
+            for record in _object_mappings(layout.get("records")):
+                yield layout_file.name, record
+
+
+def _compiled_record_rows(
+    authority: ValidatedRegistryAuthority,
+    modelo: str,
+    revision: str,
+) -> Iterator[tuple[str, dict[str, object]]]:
+    """Yield records from the loader-resolved layout when no authored tree exists."""
     for layout in authority.modelo(modelo).revisions[revision].export_layouts:
         for record in layout.records:
             dumped = _object_mapping(record.model_dump(mode="json"))
@@ -229,47 +248,100 @@ def revision_findings(
     for layout_file, record in _shipped_records(
         authority, modelo=modelo, revision=revision, revision_root=revision_root
     ):
-        fields = [item for item in _object_mappings(record.get("fields")) if item.get("offset") and item.get("length")]
-        if not fields:
-            continue
-        record_id = str(record.get("id", ""))
-        if design is None:
-            alignments.append(RecordAlignment(modelo, revision, layout_file, record_id, Alignment.NO_DESIGN, None))
-            continue
-        slots = {
-            (
-                _wire_integer(item["offset"], field_name="offset"),
-                _wire_integer(item["length"], field_name="length"),
-            )
-            for item in fields
-        }
-        covering = sorted(name for name, sheet_slots in design.items() if slots <= sheet_slots.keys())
-        if len(covering) != 1:
-            outcome = Alignment.AMBIGUOUS if covering else Alignment.UNMATCHED
-            alignments.append(RecordAlignment(modelo, revision, layout_file, record_id, outcome, None))
-            continue
-        sheet = covering[0]
-        alignments.append(RecordAlignment(modelo, revision, layout_file, record_id, Alignment.ALIGNED, sheet))
-        for item in fields:
-            slot = (
-                _wire_integer(item["offset"], field_name="offset"),
-                _wire_integer(item["length"], field_name="length"),
-            )
-            if design[sheet][slot] == _SIGNED_TYPE and not item.get("signed", False):
-                contradictions.append(
-                    TypeColumnContradiction(
-                        modelo=modelo,
-                        revision=revision,
-                        layout_file=layout_file,
-                        record_id=record_id,
-                        field_id=str(item["id"]),
-                        offset=slot[0],
-                        length=slot[1],
-                        sheet=sheet,
-                        blocked_reason=_blocked_reason(item),
-                    )
-                )
+        record_alignments, record_contradictions = _record_findings(
+            modelo,
+            revision,
+            layout_file,
+            record,
+            design,
+        )
+        alignments.extend(record_alignments)
+        contradictions.extend(record_contradictions)
     return tuple(alignments), tuple(contradictions)
+
+
+def _record_findings(
+    modelo: str,
+    revision: str,
+    layout_file: str,
+    record: dict[str, object],
+    design: dict[str, dict[tuple[int, int], str]] | None,
+) -> tuple[tuple[RecordAlignment, ...], tuple[TypeColumnContradiction, ...]]:
+    """Align one record and report all unsigned fields typed negative by its sheet."""
+    fields = [item for item in _object_mappings(record.get("fields")) if item.get("offset") and item.get("length")]
+    if not fields:
+        return (), ()
+    record_id = str(record.get("id", ""))
+    if design is None:
+        alignment = RecordAlignment(modelo, revision, layout_file, record_id, Alignment.NO_DESIGN, None)
+        return (alignment,), ()
+    slots = _record_slots(fields)
+    covering = sorted(name for name, sheet_slots in design.items() if slots <= sheet_slots.keys())
+    if len(covering) != 1:
+        return (_unmatched_alignment(modelo, revision, layout_file, record_id, covering),), ()
+    sheet = covering[0]
+    alignment = RecordAlignment(modelo, revision, layout_file, record_id, Alignment.ALIGNED, sheet)
+    contradictions = _signed_field_contradictions(
+        modelo, revision, layout_file, record_id, sheet, fields, design[sheet]
+    )
+    return (alignment,), tuple(contradictions)
+
+
+def _record_slots(fields: list[dict[str, object]]) -> set[tuple[int, int]]:
+    """Read a shipped record's complete offset/length geometry."""
+    return {
+        (
+            _wire_integer(item["offset"], field_name="offset"),
+            _wire_integer(item["length"], field_name="length"),
+        )
+        for item in fields
+    }
+
+
+def _unmatched_alignment(
+    modelo: str,
+    revision: str,
+    layout_file: str,
+    record_id: str,
+    covering: list[str],
+) -> RecordAlignment:
+    """Describe a record whose complete wire geometry identifies zero or several sheets."""
+    outcome = Alignment.AMBIGUOUS if covering else Alignment.UNMATCHED
+    return RecordAlignment(modelo, revision, layout_file, record_id, outcome, None)
+
+
+def _signed_field_contradictions(
+    modelo: str,
+    revision: str,
+    layout_file: str,
+    record_id: str,
+    sheet: str,
+    fields: list[dict[str, object]],
+    design: dict[tuple[int, int], str],
+) -> list[TypeColumnContradiction]:
+    """Find unsigned shipped fields whose aligned design slots require a sign."""
+    contradictions: list[TypeColumnContradiction] = []
+    for item in fields:
+        slot = (
+            _wire_integer(item["offset"], field_name="offset"),
+            _wire_integer(item["length"], field_name="length"),
+        )
+        if design[slot] != _SIGNED_TYPE or item.get("signed", False):
+            continue
+        contradictions.append(
+            TypeColumnContradiction(
+                modelo=modelo,
+                revision=revision,
+                layout_file=layout_file,
+                record_id=record_id,
+                field_id=str(item["id"]),
+                offset=slot[0],
+                length=slot[1],
+                sheet=sheet,
+                blocked_reason=_blocked_reason(item),
+            )
+        )
+    return contradictions
 
 
 def screen_authority(

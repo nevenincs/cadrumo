@@ -14,6 +14,7 @@ from .filesystem_primitives import (
     is_reparse_metadata,
     posix_directory_fd,
     posix_open_child_directory,
+    rename_noreplace_at,
     windows_create_file_api,
     windows_file_information_type,
 )
@@ -80,37 +81,15 @@ def rename_directory_noreplace(
             raise ProfileCustodyRecordError("profile capsule staging is not identity-anchored")
         rename_windows_directory_by_handle(staging_handle, destination, root_handle=root_handle)
         return
-    if sys.platform == "linux":
-        if staging.parent != destination.parent:
-            raise ProfileCustodyRecordError("profile capsule staging and destination roots must match")
-        with posix_directory_fd(staging.parent) as parent_fd:
-            renameat2_noreplace(
-                source_fd=parent_fd,
-                source_name=staging.name,
-                destination_fd=parent_fd,
-                destination_name=destination.name,
-            )
-        return
-    raise ProfileCustodyRecordError("atomic no-replace profile capsule publication is unavailable on this platform")
-
-
-def renameat2_noreplace(*, source_fd: int, source_name: str, destination_fd: int, destination_name: str) -> None:
-    import ctypes
-    import errno
-
-    renameat2 = getattr(ctypes.CDLL(None, use_errno=True), "renameat2", None)
-    if renameat2 is None:
-        raise ProfileCustodyRecordError("atomic no-replace profile capsule publication is unavailable")
-    renameat2.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
-    renameat2.restype = ctypes.c_int
-    if renameat2(source_fd, os.fsencode(source_name), destination_fd, os.fsencode(destination_name), 1) == 0:
-        return
-    error = ctypes.get_errno()
-    if error in {errno.EEXIST, errno.ENOTEMPTY}:
-        raise ProfileCustodyRecordError("profile capsule destination already exists") from None
-    raise ProfileCustodyRecordError("atomic no-replace profile capsule publication failed") from OSError(
-        error, os.strerror(error)
-    )
+    if staging.parent != destination.parent:
+        raise ProfileCustodyRecordError("profile capsule staging and destination roots must match")
+    with posix_directory_fd(staging.parent) as parent_fd:
+        rename_noreplace_at(
+            source_fd=parent_fd,
+            source_name=staging.name,
+            destination_fd=parent_fd,
+            destination_name=destination.name,
+        )
 
 
 def rename_windows_directory_by_handle(staging_handle: int, destination: Path, *, root_handle: int) -> None:

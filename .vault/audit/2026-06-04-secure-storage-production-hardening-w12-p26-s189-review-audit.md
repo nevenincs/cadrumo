@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:a2aa650bf633380452b0bb0a7169026e9ebe33642a0bb876fee107134c2b31dc'
+modified: '2026-10-03'
+body_hash: 'sha256:c7baa1b62d1638544cebea5d97b834284a5ef86ea594060bf64cdeae16ce1103'
 related: []
 ---
 
@@ -24,10 +24,10 @@ The S189 test surface no longer declares a local `BoomError` class. It uses a re
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/sql/test_session.py` passed with 2 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/sql/session.py src/aeat/adapters/persistence/storage/sql/test_session.py` passed.
+- the historical check passed with 2 tests.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
-- `if (rg "_Fake|_Stub|monkeypatch|skip|xfail|class .*Error|pass$" src/aeat/adapters/persistence/storage/sql/test_session.py) { exit 1 }` passed.
+- the historical check passed.
 
 Reviewer note: supervisor review found no critical or high issues in the S189 slice. The helper remains a narrow SQL unit-of-work boundary and does not read settings or environment directly except through `get_engine()` when no explicit engine is provided.
 

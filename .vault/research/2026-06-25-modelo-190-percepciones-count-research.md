@@ -3,9 +3,11 @@ tags:
   - '#research'
   - '#modelo-190-percepciones-count'
 date: '2026-06-25'
-modified: '2026-07-17'
-body_hash: 'sha256:9ee306dc699356f044488d6c13ce1c4d8cbe7668f77daa460695e57d2de92f70'
-related: []
+modified: '2026-10-03'
+body_hash: 'sha256:cc3f8ba5943cacaba88fe8dd26f80930d9f13a71e5f596d32281e487092db4b7'
+related:
+  - '[[2026-06-25-modelo-190-percepciones-count-adr]]'
+  - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
 ---
 
 # `modelo-190-percepciones-count` research: `Modelo 190 número de percepciones distinct-(perceptor,clave) count`
@@ -64,14 +66,27 @@ is the count of DISTINCT (perceptor_tax_id, clave, subclave) `WithholdingObserva
 rows — derivable from the EXISTING clave-bearing model with no new clave axis on
 `RetencionObservation` and no `RetencionesAggregation.total_percepciones` field.
 
-### The withholding source is DEFERRED, not enrolled
+### The withholding source at decision entry (2026-06-25): deferred, not enrolled
 
-`"withholding"` is in `DEFERRED_SOURCE_KINDS` (`_source_mesh.py`: "M190/M193
-per-perceptor detalle — no live source; defer-with-advisory (S27)"). So today the
-withholding detail is advisory-only on the calc path and the box falls back to the
-wrong op=sum relation. The fix must enrol a distinct-(perceptor,clave) count over
-the withholding source in `merge_source_resolutions` — the same enrol-or-advise
-pattern RET-1 P02 applied to `retenciones_aggregation` (`no-dormant-source-resolvers`).
+At decision entry, `"withholding"` was in `DEFERRED_SOURCE_KINDS` (`_source_mesh.py`:
+"M190/M193 per-perceptor detalle — no live source; defer-with-advisory (S27)"). At
+that time the withholding detail was advisory-only on the calculation path and the
+box fell back to the wrong op=sum relation. Delivery therefore required enrolling a
+distinct-(perceptor,clave) count over the withholding source in
+`merge_source_resolutions`, following the RET-1 P02 pattern for
+`retenciones_aggregation`.
+
+### Current implementation status (2026-10-03)
+
+The planned enrollment is complete. `src/cadrumo/application/modelo/calculation_route.py:123` registers
+`WithholdingSourceResolver`; `src/cadrumo/application/aggregation/withholding_source.py:355-363` materializes the distinct
+`(perceptor_tax_id, clave, subclave)` count; and the Modelo 190 2022 binding at
+`src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/bindings/0001-declarations.toml:670-676` uses the `withholding` `percepcion_count` fact with
+`count_distinct`. The accepted 2026-09-07 amendment to
+`[[2026-06-10-calculation-aggregation-taxonomy-adr]]` withdrew the earlier deferred
+source allowance. This updates the implementation status while preserving the
+research finding that the original quarterly sum was wrong and the distinct key is
+perceptor plus clave/subclave; it adds no AEAT authority.
 
 ### Sibling / scope
 

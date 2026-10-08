@@ -46,6 +46,7 @@ from ..core.auth_provider import AuthProviderKind
 from ..core.config import Settings, reset_settings_cache, settings_override
 from ..core.external_constants import OUTPUT_LANGUAGE_ENV_VAR, OutputLanguage
 from ..core.i18n.render import clear_output_language_cache
+from ..core.storage_environment import prepare_temporary_directory
 from .collection_storage_root import SETTINGS_STEM
 
 _SETTINGS_STORAGE_DIRECTORIES: list[TemporaryDirectory[str]] = []
@@ -85,6 +86,7 @@ def release_settings_storage_directories() -> None:
 
 __all__ = [
     "activate_output_language",
+    "derived_storage_settings",
     "isolated_aeat_env",
     "output_language_scope",
     "ready_clave_settings",
@@ -128,7 +130,7 @@ def settings_without_env_file(**overrides: Any) -> Settings:
         and "CADRUMO_LOCAL_STORAGE_ROOT" not in os.environ
         and "cadrumo_local_storage_root" not in os.environ
     ):
-        temporary_directory = TemporaryDirectory(prefix=SETTINGS_STEM)
+        temporary_directory = TemporaryDirectory(prefix=SETTINGS_STEM, dir=prepare_temporary_directory())
         _SETTINGS_STORAGE_DIRECTORIES.append(temporary_directory)
         overrides = {**overrides, "cadrumo_local_storage_root": temporary_directory.name}
     return _EnvFileFreeSettings(**overrides)
@@ -186,6 +188,34 @@ def isolated_aeat_env(**overrides: str) -> Generator[None]:
         for name, value in saved.items():
             if value is not None:
                 os.environ[name] = value
+
+
+@contextmanager
+def derived_storage_settings(root: Path) -> Generator[None]:
+    """Resolve every storage category from ``root``, ignoring the runner's explicit paths.
+
+    A pytest run pins category paths in the environment (the product log
+    directory and the temporary root among them), and an explicit category path
+    outranks the storage root. A test that only repoints the root therefore
+    still reads, measures, and writes the runner's own directories for those
+    categories. This clears every settings variable, names ``root`` as the
+    storage root, and installs a settings baseline whose categories are all
+    derived, so a later ``override_settings(cadrumo_local_storage_root=...)``
+    re-derives them under its new root.
+
+    Use it for tests whose subject is the layout derived from a root, or that
+    write to or delete from a category. A test that needs one category
+    somewhere specific uses :mod:`cadrumo.tests.storage_scope` instead.
+
+    Arguments:
+        root: Storage root of the baseline. Nothing is created beneath it.
+    """
+    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(root)):
+        token = settings_override.set(Settings(cadrumo_profile_kdf_measure_calibration=False))
+        try:
+            yield
+        finally:
+            settings_override.reset(token)
 
 
 @contextmanager

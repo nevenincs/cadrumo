@@ -36,7 +36,7 @@ import yaml
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
-from dev.ci.lane_reachability import resolve_just_executable
+from dev.ci.lane_recipe_commands import resolve_just_executable
 from dev.ci.workflow_run_text import executed_text
 from dev.packaging.command_execution import run_command
 

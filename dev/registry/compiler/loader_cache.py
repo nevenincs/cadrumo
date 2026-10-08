@@ -39,6 +39,7 @@ from cadrumo.core.directory_scan import (
 )
 from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.core.toml import read_toml
 from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureClassification,
@@ -46,6 +47,7 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
 )
 from cadrumo.domain.calculations.registry.ids import RevisionId
+from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 
 from ._toml_helpers import as_toml_table as _as_toml_table
@@ -512,8 +514,8 @@ def registry_disk_cache_dir() -> Path:
        other development caches.
     """
     override = os.environ.get(REGISTRY_DISK_CACHE_DIR_ENV)
-    if override:
-        return Path(override)
+    if override and override.strip():
+        return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
     return dev_cache_dir("registry-disk-cache")
 
 

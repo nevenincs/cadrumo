@@ -129,12 +129,13 @@ def _history_repository():
     return _seed_ports().iva_compensation_history_repository
 
 
-def _seed(amount: Decimal) -> None:
+def _seed(amount: Decimal, *, operation: PinnedAuthorityOperation) -> None:
     seed_iva_compensation_period_for_bucket(
         bucket_id=_BUCKET_ID,
         period=_SEED_FILING_PERIOD,
         amount=amount,
         ports=_seed_ports(),
+        operation=operation,
     )
 
 
@@ -225,9 +226,9 @@ def _persist_sealed_303(
     rev_repo.save(upsert_calculation_revision(rev_repo.load(), revision))
 
 
-def test_correction_overwrites_balance_and_emits_audit_event() -> None:
+def test_correction_overwrites_balance_and_emits_audit_event(*, operation: PinnedAuthorityOperation) -> None:
     """Correcting a seeded period changes the stored balance and emits the audit event."""
-    _seed(Decimal("500.00"))
+    _seed(Decimal("500.00"), operation=operation)
 
     state = correct_iva_compensation_period_for_bucket(
         bucket_id=_BUCKET_ID,
@@ -235,6 +236,7 @@ def test_correction_overwrites_balance_and_emits_audit_event() -> None:
         amount=Decimal("1200.50"),
         reason="typo in opening balance",
         ports=_seed_ports(),
+        operation=operation,
     )
 
     assert state.available_end_amount == Decimal("1200.50")
@@ -256,7 +258,7 @@ def test_correction_overwrites_balance_and_emits_audit_event() -> None:
     assert payload["period"] == _SEED_PERIOD
 
 
-def test_correction_refuses_when_no_record_exists() -> None:
+def test_correction_refuses_when_no_record_exists(*, operation: PinnedAuthorityOperation) -> None:
     """Correcting a period with no seeded record refuses (seed first)."""
     with pytest.raises(ModeloIvaWalletCorrectionNoRecordError):
         correct_iva_compensation_period_for_bucket(
@@ -265,6 +267,7 @@ def test_correction_refuses_when_no_record_exists() -> None:
             amount=Decimal("100.00"),
             reason="no record yet",
             ports=_seed_ports(),
+            operation=operation,
         )
 
 
@@ -286,7 +289,7 @@ def test_correction_refused_when_sealed_303_consumed_the_seed(
     so correcting the 2024 4T seed would silently change an already-filed
     return — refused, with the offending revision named.
     """
-    _seed(Decimal("500.00"))
+    _seed(Decimal("500.00"), operation=operation)
     _persist_sealed_303(filing_year=2025, period="1T", state=sealed_state, operation=operation)
 
     with pytest.raises(ModeloIvaWalletCorrectionSealedError) as excinfo:
@@ -296,6 +299,7 @@ def test_correction_refused_when_sealed_303_consumed_the_seed(
             amount=Decimal("1200.50"),
             reason="should be blocked",
             ports=_seed_ports(),
+            operation=operation,
         )
 
     context = excinfo.value.context or {}
@@ -317,7 +321,7 @@ def test_correction_refused_when_same_period_sealed_303_consumed_the_seed(
     *, operation: PinnedAuthorityOperation
 ) -> None:
     """A sealed filing for the seeded 4T itself freezes the opening balance."""
-    _seed(Decimal("500.00"))
+    _seed(Decimal("500.00"), operation=operation)
     _persist_sealed_303(
         filing_year=_SEED_YEAR,
         period=_SEED_PERIOD,
@@ -332,6 +336,7 @@ def test_correction_refused_when_same_period_sealed_303_consumed_the_seed(
             amount=Decimal("1200.50"),
             reason="same filing already consumed the basis",
             ports=_seed_ports(),
+            operation=operation,
         )
 
     assert (excinfo.value.context or {})["blocking_period"] == _SEED_PERIOD
@@ -348,7 +353,7 @@ def test_correction_allowed_when_only_a_draft_303_exists(*, operation: PinnedAut
     proceeds. If the guard fired on a draft it would over-block legitimate
     corrections.
     """
-    _seed(Decimal("500.00"))
+    _seed(Decimal("500.00"), operation=operation)
     _persist_sealed_303(filing_year=2025, period="1T", state=CalculationRevisionState.BORRADOR, operation=operation)
 
     state = correct_iva_compensation_period_for_bucket(
@@ -357,6 +362,49 @@ def test_correction_allowed_when_only_a_draft_303_exists(*, operation: PinnedAut
         amount=Decimal("1200.50"),
         reason="draft does not block",
         ports=_seed_ports(),
+        operation=operation,
     )
 
     assert state.available_end_amount == Decimal("1200.50")
+
+
+def test_corrected_seed_refreshes_previously_accepted_zero(*, operation: PinnedAuthorityOperation) -> None:
+    from cadrumo.application.modelo.iva_wallet_gate import resolve_iva_compensation_decision_for_calculation
+
+    _seed(Decimal("0"), operation=operation)
+    _persist_sealed_303(filing_year=2025, period="1T", state=CalculationRevisionState.BORRADOR, operation=operation)
+    ports = _seed_ports()
+    unit = next(iter(ports.work_unit_repository.load().work_units.values()))
+    snapshot = operation.snapshot("303", filing_year=2025, period="1T")
+    taxpayer = taxpayer_nif_for_bucket(_BUCKET_ID)
+    assert taxpayer is not None
+
+    def resolve():
+        return resolve_iva_compensation_decision_for_calculation(
+            unit,
+            snapshot=snapshot,
+            operation=operation,
+            supplied_decision=None,
+            repository=ports.calculation_observation_ports.iva_wallet_decision_repository,
+            observation_repository=ports.calculation_observation_ports.observation_repository,
+            history_repository=ports.iva_compensation_history_repository,
+            binding_values=None,
+            backend_binding_values=None,
+            casilla_inputs=None,
+            backend_casilla_inputs=None,
+            profile_values={"identity.tax_id": taxpayer},
+        )
+
+    original = resolve()
+    assert original is not None and original.selected_amount == Decimal("0") and not original.blocked
+    correct_iva_compensation_period_for_bucket(
+        bucket_id=_BUCKET_ID,
+        period=_SEED_FILING_PERIOD,
+        amount=Decimal("125"),
+        reason="correct opening balance",
+        ports=ports,
+        operation=operation,
+    )
+    updated = resolve()
+    assert updated is not None and updated.blocked
+    assert updated.local_recurrence_amount == Decimal("125")

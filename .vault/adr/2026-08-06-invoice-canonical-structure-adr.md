@@ -14,9 +14,9 @@ related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-adr]]'
 supersedes:
   - '2026-06-10-ledger-invoice-unification-adr'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:aafc7fca0a42022f9579bd55287e7cdebb166413c69b8ce283ac2bb0e924dd7d'
+body_hash: 'sha256:f5b0a17db4babde52a8fbe5341f7b4b314283ff0c31a43cf79dc86aa8cfc9f67'
 ---
 # `invoice-canonical-structure` adr: `One canonical invoice aggregate; delete the slim store` | (**status:** `accepted`)
 
@@ -46,7 +46,7 @@ reasoning was correct on the facts as they stood.**
 `432fc96d29` (2026-06-28, "fix(modelo): feed m349 from business invoices"), landed
 18 days later, put the slim store into the calculation mesh:
 `_load_business_operation_invoices`
-(`src/cadrumo/application/invoices/_source_resolver.py:552-570`) and the slim
+ and the slim
 observation adapter (`:579-610`) now feed M347 and M349 alongside the rich
 catalogue, unioned at `:200-202`. The resolver's own docstring records the
 convergence (`:6-18`). The slim record is a calculation input. The premise is
@@ -70,7 +70,7 @@ one aggregation.
    dedup by identity is structurally impossible. The same real invoice recorded
    in both stores is counted twice. On M349 it does not even surface as two rows:
    `_build_operator_clave_rows`
-   (`src/cadrumo/domain/calculations/registry/_invoice_bindings.py:822-859`)
+
    groups by `(country_code, party_tax_id, clave)` with no invoice id in the key
    and accumulates at `:844`, producing one row with a doubled importe. On M347
    it inflates the per-party annual total (`:557-563`) and can push a

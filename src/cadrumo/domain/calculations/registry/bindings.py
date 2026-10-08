@@ -394,17 +394,6 @@ class IvaCompensationAnnualPartitionRequirement(BaseModel):
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
-def _iva_compensation_annual_partition_selector(
-    binding: BindingDefinition,
-) -> IvaCompensationAnnualPartitionProvider:
-    try:
-        return provider_member(binding, IvaCompensationAnnualPartitionProvider)
-    except ValueError as exc:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed iva_compensation_annual_partition selector: {exc}",
-        ) from exc
-
-
 def iva_compensation_annual_partition_requirement(
     revision: ModeloRevision,
 ) -> IvaCompensationAnnualPartitionRequirement | None:
@@ -424,7 +413,7 @@ def iva_compensation_annual_partition_requirement(
     if not bindings:
         return None
 
-    first_selector = _iva_compensation_annual_partition_selector(bindings[0])
+    first_selector = provider_member(bindings[0], IvaCompensationAnnualPartitionProvider)
     targets, legal_refs, source_refs = _collect_iva_compensation_partition_bindings(bindings, first_selector)
     return IvaCompensationAnnualPartitionRequirement(
         source_modelo=first_selector.source_modelo,
@@ -466,7 +455,7 @@ def _collect_iva_compensation_partition_bindings(
     legal_refs: set[LegalRefId] = set()
     source_refs: set[SourceRefId] = set()
     for binding in bindings:
-        selector = _iva_compensation_annual_partition_selector(binding)
+        selector = provider_member(binding, IvaCompensationAnnualPartitionProvider)
         _require_shared_iva_compensation_selector(selector, first_selector)
         output = IvaCompensationAnnualPartition(selector.partition_output)
         targets[output] = _unique_partition_binding_id(targets.get(output), binding.id, output)

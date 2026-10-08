@@ -20,8 +20,7 @@ See Also:
         Exact citation ids short-circuit through this lookup before ranking.
 
 Notes:
-    External adapters may resolve citation ids and retrieval ``corpus_ref``
-    values through this product-owned service.
+    Callers select citation ids before resolving their pinned legal evidence.
 """
 
 from __future__ import annotations
@@ -92,26 +91,6 @@ class CitationLookup(ABC):
             anchor=anchor,
             verbatim_text=verbatim,
         )
-
-    def resolve_corpus_text(self, ref: str) -> str:
-        """Resolve a citation id OR a corpus_ref (``path#anchor``) to verbatim text.
-
-        The ``cadrumo://corpus/{ref}`` resource accepts either form: a retrieval
-        hit's ``corpus_ref`` or a bare citation id. A known citation id routes
-        through :meth:`resolve`; otherwise ``ref`` is read as a corpus path and
-        anchor.
-
-        Raises:
-            CorpusSearchInputError: If ``ref`` resolves to no readable text or
-                escapes the corpus root.
-        """
-        key = ref.strip()
-        if key in self._legal:
-            return self.resolve(key).verbatim_text
-        references = tuple(reference for reference in self._legal.values() if reference.corpus_ref == key)
-        if len(references) != 1:
-            raise CorpusSearchInputError(reason="corpus_text_unreadable", context={"ref": ref})
-        return self._verbatim_text(references[0])
 
     @abstractmethod
     def _verbatim_text(self, reference: LegalReference) -> str:

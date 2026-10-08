@@ -3,16 +3,19 @@ tags:
   - '#audit'
   - '#semantic-consolidation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8da6020d1645b375f895ccbdbd09109595ad63a0df3192db88ab7ffdae93666d'
+body_hash: 'sha256:956593f5c0ada6e88c6aa8d150aa84a961f22c9b9ec52e0562b8428b0ceae934'
 related: []
 ---
 
 # `semantic-consolidation` audit: `private module cross package debt`
 
-## The finding
+## Scope
 
+Map private cross-package imports that block facade removal and determine which resolution depends on a new architectural ruling.
+
+## Findings
 `aeat-architecture-boundaries` states that leading-underscore modules "are
 private to their package and are not cross-package APIs", and that a contract
 required outside its package "must hard-move from an underscore-private module
@@ -40,6 +43,20 @@ tree, on the twelve heaviest targets only:
 | `core.decimal._grammar` | 2 | 35 |
 | **sampled total** | **122** | **1,507** |
 
+## Recommendations
+The rule states it directly: hard-move the contract to a **public** defining
+module. `core/time/_clock.py` becomes `core/time/clock.py`, and the 220
+consumers keep working with a one-token change.
+
+A rename is a create plus a delete. The operator's standing instruction forbids
+destructive commands, deletion explicitly included, so the campaign can create
+the public module but cannot remove the private one -- and leaving both is
+duplication, which is the exact defect this campaign exists to remove.
+
+So the campaign can currently only make this worse: every further facade
+retirement adds consumers to a private module that should have been renamed
+first.
+
 ## Why the campaign produces it
 
 Retiring a re-export facade means repointing every consumer at the module that
@@ -57,21 +74,6 @@ carries `relocation:core.errors split the errors namespace into its canonical
 defining modules` and `relocation:deadlines,google,sede retire three large
 facades` from other sessions, and the uncommitted tree carries several lanes'
 work at once.
-
-## What the correct remedy is, and why it is blocked
-
-The rule states it directly: hard-move the contract to a **public** defining
-module. `core/time/_clock.py` becomes `core/time/clock.py`, and the 220
-consumers keep working with a one-token change.
-
-A rename is a create plus a delete. The operator's standing instruction forbids
-destructive commands, deletion explicitly included, so the campaign can create
-the public module but cannot remove the private one -- and leaving both is
-duplication, which is the exact defect this campaign exists to remove.
-
-So the campaign can currently only make this worse: every further facade
-retirement adds consumers to a private module that should have been renamed
-first.
 
 ## What this means for the open steps
 

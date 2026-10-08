@@ -4,17 +4,19 @@ from __future__ import annotations
 
 import asyncio
 import os
+from collections.abc import Iterable
 from pathlib import Path
 from typing import override
 
 from pydantic import BaseModel
 
-from ....application.journal_repository import JournalRepositoryBase
+from ....application.journal_repository import JournalBusyError, JournalRepositoryBase
 from ....application.operations.event_replay import OperationEventCursor
-from ....application.operations.models import OperationRevision
+from ....application.operations.models import OperationId, OperationRevision
 from ....application.operations.persistence.idempotency import OperationIdempotencyClaim
 from ....application.operations.persistence.journal import (
     OperationEventStream,
+    OperationInventoryLimit,
     OperationJournal,
     OperationObservationCursorAheadError,
     OperationObservationMaterialization,
@@ -22,6 +24,9 @@ from ....application.operations.persistence.journal import (
     OperationObservationUnknownOperationError,
     OperationPersistedSnapshot,
     OperationProgressFoldInput,
+    OperationRecoveryInventoryDisposition,
+    OperationRecoveryInventoryEntry,
+    OperationRecoveryInventoryPage,
 )
 from ....application.operations.persistence.leases import (
     OperationOwnerLease,
@@ -41,7 +46,9 @@ from ....core.operations import OperationLifecycle
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
 from ..storage.errors import RepositoryError
+from ..storage.master_key.login_handover_journal import handover_journal_path
 from ._journal_validation import OperationJournalRecord, validate_advance
+from .financial_journal_purge import FinancialEditJournalPurgeRefusedError, purge_legacy_financial_edit_journal
 from .lease import OperationLeaseStorage
 
 
@@ -52,6 +59,15 @@ class _OperationReplayRequest(BaseModel):
 
     cursor: OperationEventCursor
     limit: OperationReplayLimit
+
+
+class _OperationInventoryRequest(BaseModel):
+    """Validate bounded inventory coordinates before touching the filesystem."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    after: OperationId | None
+    limit: OperationInventoryLimit
 
 
 def _replay_page_from_record(
@@ -109,6 +125,26 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
             id_subject="operation",
         )
         self._lease_storage = OperationLeaseStorage(storage_root=storage_root)
+        self._profile_handover_path = handover_journal_path(storage_root)
+
+    @override
+    def load(self, operation_id: str) -> OperationJournalRecord:
+        """Purge legacy values under the same exclusion as every journal writer."""
+        if not self._validate_existing_root():
+            return super().load(operation_id)
+        with exclusive_file_lock(self.lock_target):
+            return self._load_unlocked(operation_id)
+
+    def _load_unlocked(self, operation_id: str) -> OperationJournalRecord:
+        raw = self._read_payload(operation_id)
+        replacement = purge_legacy_financial_edit_journal(raw, operation_id=operation_id)
+        if replacement is not None:
+            try:
+                self._write_payload(self.path_for(operation_id), replacement)
+            except (OSError, RepositoryError, JournalBusyError):
+                raise FinancialEditJournalPurgeRefusedError from None
+            raw = replacement
+        return self._decode_payload(operation_id, raw)
 
     def resolve_idempotency(self, claim: OperationIdempotencyClaim) -> str | None:
         """Resolve a durable retry key from a complete operation journal only."""
@@ -126,7 +162,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
             return None
         with exclusive_file_lock(self.lock_target):
             try:
-                record = super().load(operation_id)
+                record = self._load_unlocked(operation_id)
             except RepositoryError:
                 if self.is_absent(operation_id):
                     return None
@@ -138,6 +174,72 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         path = self.path_for(operation_id)
         return not os.path.lexists(self.root) or not os.path.lexists(path)
 
+    def inventory_page(self, request: _OperationInventoryRequest) -> OperationRecoveryInventoryPage:
+        """Classify one ID-ordered page under the same exclusion as journal writes."""
+        if not self._validate_existing_root():
+            return OperationRecoveryInventoryPage(entries=(), next_cursor=request.after, has_more=False)
+        with exclusive_file_lock(self.lock_target):
+            try:
+                paths = scan_directory(self.root, pattern="*.json", require_root=True)
+            except OSError as exc:
+                raise RepositoryError("cannot scan operation journal inventory") from exc
+            operation_ids = self._inventory_operation_ids(paths)
+            selected = tuple(
+                operation_id for operation_id in operation_ids if request.after is None or operation_id > request.after
+            )
+            page_ids = selected[: request.limit]
+            entries: list[OperationRecoveryInventoryEntry] = []
+            for operation_id in page_ids:
+                entries.append(self._recovery_inventory_entry(operation_id))
+            return OperationRecoveryInventoryPage(
+                entries=tuple(entries),
+                next_cursor=page_ids[-1] if page_ids else request.after,
+                has_more=len(selected) > request.limit,
+            )
+
+    def _inventory_operation_ids(self, paths: Iterable[Path]) -> list[OperationId]:
+        """Validate inventory names while excluding canonical lease and handover rows."""
+        operation_ids: list[OperationId] = []
+        for path in paths:
+            # This shared storage category also contains the login owner's
+            # exact handover witness. Its defining owner validates it; it
+            # is not a canonical operation invocation or recovery target.
+            if path == self._profile_handover_path:
+                continue
+            if path.name.endswith(".lease.json"):
+                scope_ref = path.name.removesuffix(".lease.json")
+                try:
+                    expected_lease_name = self._lease_storage.path_for(scope_ref).name
+                except RepositoryError as exc:
+                    raise RepositoryError("invalid operation journal inventory filename") from exc
+                if path.name != expected_lease_name:
+                    raise RepositoryError("invalid operation journal inventory filename")
+                continue
+            try:
+                expected_name = self.path_for(path.stem).name
+            except RepositoryError as exc:
+                raise RepositoryError("invalid operation journal inventory filename") from exc
+            if path.name != expected_name:
+                raise RepositoryError("invalid operation journal inventory filename")
+            operation_ids.append(path.stem)
+        return operation_ids
+
+    def _recovery_inventory_entry(self, operation_id: OperationId) -> OperationRecoveryInventoryEntry:
+        """Classify one present journal row while refusing an inventory race."""
+        try:
+            record = self._load_unlocked(operation_id)
+        except RepositoryError:
+            if not self._validate_existing_root() or self.is_absent(operation_id):
+                raise RepositoryError("operation journal inventory changed during read") from None
+            disposition = OperationRecoveryInventoryDisposition.REFUSED
+        else:
+            disposition = (
+                OperationRecoveryInventoryDisposition.TERMINAL
+                if record.snapshot.lifecycle is OperationLifecycle.TERMINAL
+                else OperationRecoveryInventoryDisposition.NONTERMINAL
+            )
+        return OperationRecoveryInventoryEntry(operation_id=operation_id, disposition=disposition)
+
     def _resolve_idempotency_unlocked(self, claim: OperationIdempotencyClaim) -> str | None:
         """Find one exact claim while the canonical journal lock is already held."""
         matched_operation_id: str | None = None
@@ -145,7 +247,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
             operation_id = path.stem
             if len(operation_id) != 64 or any(character not in "0123456789abcdef" for character in operation_id):
                 continue
-            persisted_claim = super().load(operation_id).snapshot.idempotency_claim
+            persisted_claim = self._load_unlocked(operation_id).snapshot.idempotency_claim
             if persisted_claim is None or persisted_claim.key_digest != claim.key_digest:
                 continue
             if (
@@ -246,7 +348,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         path = self.path_for(snapshot.operation_id)
         if not os.path.lexists(path):
             raise RepositoryError("operation journal commit requires an existing snapshot created via create")
-        current = super().load(snapshot.operation_id)
+        current = self._load_unlocked(snapshot.operation_id)
         self._validate_advance(current.snapshot, snapshot, expected_revision)
         record = OperationJournalRecord(snapshot=snapshot, history=(*current.history, *snapshot.events))
         self._write(path, record)
@@ -301,6 +403,14 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
         """Load the latest credential-free snapshot for one operation."""
         record = await asyncio.to_thread(self._repository.load, operation_id)
         return record.snapshot
+
+    @override
+    async def inventory_page(
+        self, *, after: OperationId | None, limit: OperationInventoryLimit
+    ) -> OperationRecoveryInventoryPage:
+        """Read one bounded startup page without blocking the event loop."""
+        request = _OperationInventoryRequest(after=after, limit=limit)
+        return await asyncio.to_thread(self._repository.inventory_page, request)
 
     @override
     async def resolve_idempotency(self, claim: OperationIdempotencyClaim) -> str | None:

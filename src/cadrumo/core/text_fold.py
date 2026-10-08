@@ -16,6 +16,7 @@ matcher had each written out.
 
 from __future__ import annotations
 
+import html
 import re
 import unicodedata
 
@@ -25,6 +26,7 @@ __all__ = [
     "fold_diacritics",
     "fold_for_matching",
     "fold_printed_phrase",
+    "normalise_corpus_text",
     "unicode_compose",
 ]
 
@@ -33,6 +35,7 @@ __all__ = [
 #: DELETE whitespace, which is a different operation and is why the deleting
 #: caller in the PDF label reader names its pattern for what it does.
 _WHITESPACE_RUN_RE = re.compile(r"\s+")
+_CORPUS_HTML_TAG_RE = re.compile(r"<[a-zA-Z!/?][^<>\s]{0,200}>")
 
 #: Inclusive codepoint ranges of Unicode category ``Mn`` (Mark, nonspacing) as
 #: of Unicode 15.1.0 (CPython 3.13), and the exact set the fold strips
@@ -501,6 +504,16 @@ def fold_for_matching(text: str) -> str:
         The folded, whitespace-collapsed, casefolded form.
     """
     return _WHITESPACE_RUN_RE.sub(" ", fold_diacritics(text)).strip().casefold()
+
+
+def normalise_corpus_text(text: str) -> str:
+    """Fold citation prose without opening source files or loading configuration.
+
+    Only compact HTML tags are removed: comparison operators such as
+    ``< 500 euros`` and unbalanced brackets retain the surrounding prose.
+    """
+    decoded = html.unescape(text).replace("\xa0", " ")
+    return fold_for_matching(_CORPUS_HTML_TAG_RE.sub(" ", decoded))
 
 
 #: A run of characters that cannot appear in an ASCII slug, collapsed to a

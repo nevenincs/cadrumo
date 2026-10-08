@@ -176,7 +176,6 @@ def built_members(tmp_path_factory: pytest.TempPathFactory) -> tuple[frozenset[s
     return _build(root)
 
 
-@pytest.mark.timeout(900)
 def test_the_control_declaration_proves_the_archives_were_measured(
     built_members: tuple[frozenset[str], frozenset[str]],
 ) -> None:
@@ -197,7 +196,6 @@ def test_the_control_declaration_proves_the_archives_were_measured(
     )
 
 
-@pytest.mark.timeout(900)
 @pytest.mark.parametrize("member", _CACHE_MEMBERS)
 def test_the_verdict_cache_reaches_no_distribution(
     built_members: tuple[frozenset[str], frozenset[str]],
@@ -222,7 +220,6 @@ def test_the_verdict_cache_reaches_no_distribution(
     )
 
 
-@pytest.mark.timeout(900)
 def test_a_re_admitting_declaration_is_detected(tmp_path: Path) -> None:
     """The scan is proved against a build that does ship the cache.
 

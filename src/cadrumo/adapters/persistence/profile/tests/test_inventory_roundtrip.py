@@ -23,6 +23,7 @@ from typing import Any
 import pytest
 from sqlalchemy import select
 
+from .....domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from .....domain.contribuyente.inventory.records import (
     INVENTORY_SCHEMA_VERSION,
     InventoryAcquisitionCompleteness,
@@ -33,7 +34,6 @@ from .....domain.contribuyente.inventory.records import (
     InventoryAttributableCostKind,
     InventoryLedger,
     InventoryLedgerDocument,
-    InventoryLedgerError,
     MovementKind,
     MovementRecord,
     StockLayer,

@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.time.clock import today_madrid
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.ids import BindingId
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.validate_cross_domain_snapshot import register_cross_domain_snapshot_check
@@ -39,9 +39,7 @@ def _registry_m130_retenciones_route(
     authority: GovernedFactSource | None = None,
 ) -> M130RetencionesRoute:
     """Resolve the selected route declaration without a Python fallback."""
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise ValueError("Renta route requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="Renta route")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m130-retenciones-output-routing",

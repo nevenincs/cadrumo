@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#aeat-liabilities-sanciones'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:c3318f8e30e2b3d2ed61342f900dadfdf0cc8db5156f97197f0f83f96dd004b8'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-adr]]"
   - "[[2026-08-12-aeat-liabilities-sanciones-p05-p06-closeout-honesty-audit]]"
-  - "[[2026-08-07-dehu-notification-legal-effect-adr]]"
   - "[[2026-08-07-aeat-liabilities-sanciones-research]]"
 ---
 

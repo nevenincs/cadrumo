@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#docs-terminology-search'
 date: '2026-07-13'
-modified: '2026-07-13'
-body_hash: 'sha256:7f6ecaf8fcaaa05e0e050887f714dd1fb41aa202937885dd8155db36f97e6a71'
+modified: '2026-10-03'
+body_hash: 'sha256:6ffec150cc89cec2f2bff11690777dbeb8eea71c8d3648662eb19badb4fa28b5'
 related:
   - '[[2026-06-10-docs-terminology-search-adr]]'
   - '[[2026-06-15-docs-terminology-search-adr]]'
@@ -35,7 +35,7 @@ weights) relevance data. The shipped surfaces at HEAD:
   `_resolution`, `_synonym_mining`, `_miss_rate`, unified `SearchRecord`
   projection) with developer CLIs (`sweep.py`, `synonyms.py`).
 - Committed relevance data:
-  `src/cadrumo/_data/terminology/relevance/relevance.json` — 72 queries,
+  the former source file — 72 queries,
   29 approved concepts, 0 failed queries, score floor 0.5.
 - Shipped search: Pagefind index regenerated per build;
   `dev/docs/pagefind_inject.py` injects unified records — concept cards

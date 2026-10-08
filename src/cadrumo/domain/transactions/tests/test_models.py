@@ -18,6 +18,7 @@ from ...calculations.registry.authority import PinnedAuthorityOperation, bundled
 from ...iva.prorrata import InputClassification
 from ...iva.schema import IvaCategory, IvaExemptionArticle
 from ..enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ..errors import TransactionValidationError
 from ..lineage_models import ClassificationHistoryEntry, DecisionProvenance
 from ..models import (
     OutOfWindowTransactionIndexEntry,
@@ -26,6 +27,7 @@ from ..models import (
     derive_import_fingerprint,
     derive_movement_day_key,
     derive_transaction_id,
+    existing_transaction_import_fingerprints,
     normalise_movement_reference,
 )
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -807,6 +809,23 @@ def test_decision_provenance_rejects_bare_dict_payload() -> None:
         ClassificationHistoryEntry.model_validate(payload)
 
 
+def test_decision_provenance_preserves_non_string_key_refusal_cause() -> None:
+    payload: dict[object, object] = {
+        "decided_by": "manual",
+        "decided_at": datetime(2026, 4, 18, 8, 30, tzinfo=UTC),
+        1: "non-string key",
+    }
+
+    with pytest.raises(ValidationError) as exc_info:
+        DecisionProvenance.model_validate(payload)
+
+    boundary_error = exc_info.value.errors()[0].get("ctx", {}).get("error")
+    assert isinstance(boundary_error, ValueError)
+    assert isinstance(boundary_error.__cause__, TransactionValidationError)
+    assert str(boundary_error.__cause__) == "transaction payload keys must be strings"
+    assert isinstance(boundary_error.__cause__.__cause__, ValidationError)
+
+
 # ---------------------------------------------------------------------------
 # Cross-format / post-edit import-dedup fingerprint
 # ---------------------------------------------------------------------------
@@ -1081,3 +1100,72 @@ def test_out_of_window_transaction_summary_carries_no_decrypted_field() -> None:
 def test_out_of_window_transaction_summary_is_none_for_empty_index_entries() -> None:
     """An empty out-of-window set collapses to ``None``, not a zero-count summary."""
     assert OutOfWindowTransactionSummary.from_index_entries(()) is None
+
+
+#: Digests of :func:`_sample_raw` as stored before transactions carried an own
+#: account. An account-unassigned row must keep exactly these, or every stored
+#: row would change id.
+_UNBOUND_SAMPLE_TRANSACTION_ID = "e87c90c8f342c96af23b0fa5ff61fe49a904ff036f3e298fd2fb486d2f9cbdd5"
+_UNBOUND_SAMPLE_OUTGOING_FINGERPRINT = "19332863f39747be3c2de06f64c8f5a5667da77c90568f6da6288371fe7b6cc3"
+
+
+def _outgoing(raw: RawTransaction, *, own_account_id: str | None = None) -> Transaction:
+    return Transaction.model_validate(
+        {
+            "raw": raw,
+            "own_account_id": own_account_id,
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+        },
+    )
+
+
+def test_an_unbound_row_keeps_its_stored_transaction_id_and_fingerprint() -> None:
+    """Without an own account the id and the dedup fingerprint are unchanged."""
+    raw = _sample_raw()
+    transaction = _outgoing(raw)
+
+    assert transaction.own_account_id is None
+    assert transaction.transaction_id == _UNBOUND_SAMPLE_TRANSACTION_ID
+    assert derive_transaction_id(raw) == _UNBOUND_SAMPLE_TRANSACTION_ID
+    assert derive_import_fingerprint(raw, direction=TransactionDirection.OUTGOING) == (
+        _UNBOUND_SAMPLE_OUTGOING_FINGERPRINT
+    )
+    assert existing_transaction_import_fingerprints(transaction) == {_UNBOUND_SAMPLE_OUTGOING_FINGERPRINT}
+
+
+def test_the_same_movement_on_two_own_accounts_is_two_transactions() -> None:
+    """A bound own account enters both the id and the fingerprint."""
+    raw = _sample_raw()
+    first = _outgoing(raw, own_account_id="acc-01")
+    second = _outgoing(raw, own_account_id="acc-02")
+
+    assert len({first.transaction_id, second.transaction_id, _UNBOUND_SAMPLE_TRANSACTION_ID}) == 3
+    assert first.transaction_id == derive_transaction_id(raw, own_account_id="acc-01")
+    fingerprints = {
+        derive_import_fingerprint(raw, direction=TransactionDirection.OUTGOING, own_account_id=account)
+        for account in ("acc-01", "acc-02", None)
+    }
+    assert len(fingerprints) == 3
+    assert existing_transaction_import_fingerprints(first).isdisjoint(existing_transaction_import_fingerprints(second))
+
+
+def test_a_bound_row_round_trips_and_refuses_an_id_derived_without_its_account() -> None:
+    """Storage keeps the account, and an id that ignores it is tampering."""
+    bound = _outgoing(_sample_raw(), own_account_id="acc-03")
+
+    restored = Transaction.model_validate_json(bound.model_dump_json())
+    assert restored == bound
+    assert restored.own_account_id == "acc-03"
+
+    payload = json.loads(bound.model_dump_json())
+    payload["transaction_id"] = _UNBOUND_SAMPLE_TRANSACTION_ID
+    with pytest.raises(ValidationError):
+        Transaction.model_validate_json(json.dumps(payload))
+
+
+def test_an_own_account_id_outside_the_register_shape_is_refused() -> None:
+    """Only a register ordinal can bind a row; account material never can."""
+    with pytest.raises(ValidationError):
+        _outgoing(_sample_raw(), own_account_id="ES9121000418450200051332")

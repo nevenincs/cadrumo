@@ -1,0 +1,238 @@
+---
+tags:
+  - '#exec'
+  - '#runtime-file-access-performance'
+date: '2026-10-07'
+modified: '2026-10-08'
+body_schema: 'body-v2'
+body_hash: 'sha256:c537a0032f2e9f62de23ace4a08ba7b8518c05b9c566376f32c10c737f2c721a'
+related:
+  - "[[2026-10-07-runtime-file-access-performance-plan]]"
+---
+
+# `runtime-file-access-performance` ledger
+
+## Changes
+
+- `S01` `A` `dev/ci/runtime_file_access.py`
+- `S01` `A` `dev/ci/tests/test_runtime_file_access.py`
+- `S01` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S01` `M` `dev/quality/metadata/import_load_targets.json`
+- `S01` `verify:` `pytest dev/ci/tests/test_runtime_file_access.py` -> `pass`
+- `S01` `verify:` `just check-format` -> `pass`
+- `S01` `verify:` `just check-style` -> `pass`
+- `S01` `verify:` `just check-types` -> `pass`
+- `S01` `verify:` `just check-import-boundaries` -> `pass`
+- `S01` `verify:` `vaultspec-core vault plan check runtime-file-access-performance` -> `pass`
+- `S01` `verify:` `vaultspec-core vault check all` -> `pass`
+- `S02` `M` `src/cadrumo/application/modelo/local_observation_spreadsheet.py`
+- `S02` `M` `src/cadrumo/adapters/inbound/financial/providers/xlsx.py`
+- `S02` `M` `src/cadrumo/adapters/inbound/pdf/page_text_extraction.py`
+- `S02` `M` `src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_container.py`
+- `S02` `M` `src/cadrumo/entrypoints/calculation_review_xlsx_operation_composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/reconciliation_export_operation_composition.py`
+- `S02` `A` `src/cadrumo/entrypoints/tests/test_operation_registry_imports.py`
+- `S02` `verify:` `pytest PDF extraction and local observation spreadsheet` -> `pass`
+- `S02` `verify:` `pytest financial XLSX, PDF summary writer/verification, schema parity and spreadsheet composition` -> `pass`
+- `S02` `verify:` `pytest fresh-process operation registry import guard` -> `pass`
+- `S02` `verify:` `pytest runtime startup arguments` -> `pass`
+- `S02` `verify:` `pytest headless runtime and operation composition -m ''` -> `pass`
+- `S02` `verify:` `just check-format` -> `pass`
+- `S02` `verify:` `just check-style` -> `pass`
+- `S02` `verify:` `just check-types` -> `pass`
+- `S02` `verify:` `just check-import-boundaries` -> `pass`
+- `S01` `M` `dev/ci/runtime_file_access.py`
+- `S01` `verify:` `just check-format` -> `pass`
+- `S01` `by:` `Codex`
+- `S02` `verify:` `pytest test_stock_openssl_verifies_the_signature_and_refuses_a_flipped_byte with explicit Git OpenSSL 3.5.7 PATH -m ''` -> `pass`
+- `S02` `by:` `Codex`
+- `S05` `M` `src/cadrumo/application/operator_surface/contract.py`
+- `S05` `M` `src/cadrumo/application/modelo/source_policy.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/modelo_inception.py`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/tests/test_declared_inception_runtime_gate.py`
+- `S05` `M` `dev/registry/pipeline/generated_tree_inventory.py`
+- `S05` `M` `dev/registry/pipeline/render_check.py`
+- `S05` `M` `dev/registry/pipeline/tests/test_generated_export_trees.py`
+- `S05` `M` `dev/registry/tests/test_m390_annual_manual_worked_example.py`
+- `S05` `M` `src/cadrumo/locales/es/docs.yml`
+- `S05` `M` `src/cadrumo/locales/es/flows.yml`
+- `S05` `M` `src/cadrumo/locales/en/docs.yml`
+- `S05` `M` `src/cadrumo/locales/en/flows.yml`
+- `S05` `M` `src/cadrumo/locales/ca/docs.yml`
+- `S05` `M` `src/cadrumo/locales/ca/flows.yml`
+- `S05` `M` `src/cadrumo/locales/hu/docs.yml`
+- `S05` `M` `src/cadrumo/locales/hu/flows.yml`
+- `S05` `A` `.vault/audit/2026-10-07-runtime-file-access-performance-broad-test-failure-brief-audit.md`
+- `S05` `verify:` `pytest strict inception JSON and runtime gate plus two profile regressions` -> `pass`
+- `S05` `verify:` `pytest all 13 reported calculation revision persistence failures` -> `pass`
+- `S05` `verify:` `pytest action coverage and production assertions with CLI refusal targets` -> `pass`
+- `S05` `verify:` `pytest historical export enrollment and unsupported source frame` -> `pass`
+- `S05` `verify:` `pytest full source policy with all four languages` -> `pass`
+- `S05` `verify:` `pytest all six M390 annual manual worked example checks` -> `pass`
+- `S05` `verify:` `Ruff and format scoped S05 owners` -> `pass`
+- `S05` `verify:` `just check-types` -> `pass`
+- `S05` `verify:` `just check-data-format` -> `pass`
+- `S05` `by:` `Codex`
+- `S05` `verify:` `just check-format` -> `pass`
+- `S05` `verify:` `just check-style` -> `pass`
+- `S05` `verify:` `just check-import-boundaries on current shared source` -> `fail`
+- `S04` `verify:` `just build-native Release bundle first incremental attempt` -> `fail`
+- `S04` `verify:` `runtime-only owning native bundle, all 13 CTest checks, ZIP and extracted-package verification` -> `pass`
+- `S04` `verify:` `actual rebuilt CLI help and three syntax refusal cases, five fresh processes each` -> `pass`
+- `S04` `verify:` `three authenticated readiness samples with retained-handle logical I/O counters` -> `pass`
+- `S06` `M` `dev/packaging/native/stdlib.py`
+- `S06` `M` `dev/packaging/native/assemble.py`
+- `S06` `A` `dev/packaging/native/tests/test_package_bytecode.py`
+- `S06` `verify:` `20 package bytecode, platform enrollment, assembly tool and refusal checks (20261007T162025.435087Z-pytest-47284-54127690)` -> `pass`
+- `S06` `verify:` `just check-format` -> `pass`
+- `S06` `verify:` `just check-style` -> `pass`
+- `S06` `verify:` `just check-types` -> `pass`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py`
+- `S05` `M` `.vault/audit/2026-10-07-runtime-file-access-performance-broad-test-failure-brief-audit.md`
+- `S05` `verify:` `23 TUI finding-word, language-rendering, literal-branch and dynamic-key refusal checks (20261007T163049.180959Z-pytest-10044-9f47f02d)` -> `pass`
+- `S05` `verify:` `just fix-code src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py` -> `pass`
+- `S05` `verify:` `492-log safe case-status census with 46 later passes of 270 original cases` -> `pass`
+- `S05` `verify:` `current import aggregate (20261007T162730.928749Z-check-import-boundaries-7648-0215626a)` -> `fail`
+- `S05` `verify:` `just check-format after final TUI repair` -> `pass`
+- `S05` `verify:` `just check-style after final TUI repair` -> `pass`
+- `S05` `verify:` `just check-types after final TUI repair` -> `pass`
+- `S06` `verify:` `first bytecode-enabled bundle assembly` -> `pass`
+- `S06` `verify:` `first bytecode-enabled owning native verification` -> `fail`
+- `S05` `M` `native/manager/src/supervision/supervisor.rs`
+- `S05` `verify:` `three repeated complete manager.rust CTest suite runs with signalled bounded reader fixture` -> `pass`
+- `S05` `verify:` `fresh inherited bootstrap and predecessor registry groups (20261007T163659.842775Z-pytest-81280-c5fcfa28)` -> `fail`
+- `S05` `verify:` `current import aggregate after finalized Python edits (20261007T163356.538456Z-check-import-boundaries-50688-7e4502a7)` -> `fail`
+- `S07` `M` `native/interpreter/bootstrap.py`
+- `S07` `M` `dev/packaging/tests/test_native_startup_presence.py`
+- `S07` `M` `dev/packaging/native/platforms/windows_verify.py`
+- `S07` `verify:` `71 native startup presence, directory identity, hostile path and delegated inventory checks (20261007T165650.794044Z-pytest-86460-16d49597)` -> `pass`
+- `S07` `verify:` `scoped just fix-code Ruff, ty and formatter for all three owning files` -> `pass`
+- `S05` `M` `native/manager/tests/supervision.rs`
+- `S05` `M` `native/cmake/Manager.cmake`
+- `S05` `verify:` `two serial real-process manager.supervision CTest runs with unchanged deadlines` -> `pass`
+- `S05` `verify:` `pinned Rust 1.96 format check of reader and supervision integration files` -> `pass`
+- `S05` `verify:` `second bytecode native gate with parallel supervision fixture cases` -> `fail`
+- `S07` `verify:` `configured check-format after path repair and peer wrapping correction` -> `pass`
+- `S07` `verify:` `configured check-style after path repair` -> `pass`
+- `S07` `verify:` `configured check-types current retry` -> `pass`
+- `S07` `verify:` `final native manager.rust and serial manager.supervision targets` -> `pass`
+- `S05` `verify:` `final owning native verification, all 13 CTest checks` -> `pass`
+- `S05` `verify:` `configured current format/style/type checks` -> `pass`
+- `S05` `verify:` `current import check after owning target regeneration (20261007T171255.224352Z-check-import-boundaries-14976-f48cf065)` -> `fail`
+- `S07` `verify:` `owning native Release verification, all 13 current CTest checks` -> `pass`
+- `S05` `verify:` `safe original-case report refresh across 530 pytest logs: 110 recorded passes and 160 last failures` -> `pass`
+- `S06` `M` `dev/packaging/native/tests/test_package_bytecode.py`
+- `S06` `verify:` `scoped Ruff ty and format after explicit package cache placement` -> `pass`
+- `S06` `M` `native/tests/package_smoke.py`
+- `S06` `verify:` `41 prefix-aware bytecode assembly-tools startup-presence cases (20261007T175107.483884Z-pytest-84940-b146c00b)` -> `pass`
+- `S06` `verify:` `scoped Ruff ty and formatting for stdlib package-bytecode tests and native package smoke` -> `pass`
+- `S03` `M` `.vault/audit/2026-10-07-runtime-file-access-performance-audit.md`
+- `S03` `verify:` `latest whole-tree check-format` -> `fail`
+- `S03` `verify:` `latest whole-tree check-style` -> `fail`
+- `S03` `verify:` `latest whole-tree check-types` -> `fail`
+- `S07` `M` `.vault/audit/2026-10-07-runtime-file-access-performance-audit.md`
+- `S07` `verify:` `current corrected assembled bundle all 13 CTest checks (528.60s)` -> `pass`
+- `S07` `verify:` `packaged staged main-import metadata text opens 160 to 80 with unchanged source/PYC attempts 2673 each` -> `pass`
+- `S07` `verify:` `packaged staged source-module compilation caller count 2673 to zero` -> `pass`
+- `S06` `verify:` `42 optimized-builder bytecode and assembly/startup checks (20261007T190818.766825Z-pytest-62120-12615dfb)` -> `pass`
+- `S06` `verify:` `scoped Ruff ty format after explicit optimization zero` -> `pass`
+- `S03` `M` `.vault/audit/2026-10-07-runtime-file-access-performance-broad-test-failure-brief-audit.md`
+- `S03` `M` `.vault/plan/2026-10-07-runtime-file-access-performance-plan.md`
+- `S03` `verify:` `final runtime-only verify ZIP and extracted-package recipes` -> `pass`
+- `S03` `verify:` `final 13 CTest checks` -> `pass`
+- `S03` `verify:` `final CLI and readiness benchmarks with immutable identity` -> `pass`
+- `S03` `verify:` `final full package inventory verification` -> `pass`
+- `S03` `verify:` `all 6582 checked-hash cache executable-code comparisons` -> `pass`
+- `S03` `verify:` `42 focused bytecode assembly startup tests` -> `pass`
+- `S03` `verify:` `71 bootstrap delegated inventory tests` -> `pass`
+- `S03` `verify:` `just check-style` -> `pass`
+- `S03` `verify:` `just check-format` -> `fail`
+- `S03` `verify:` `just check-types` -> `fail`
+- `S08` `A` `dev/packaging/native/build_timing.py`
+- `S08` `verify:` `scoped Ruff format lint and ty` -> `pass`
+- `S08` `M` `justfile`
+- `S08` `M` `native/cmake/Packaging.cmake`
+- `S08` `M` `native/cmake/PackageInputs.cmake`
+- `S08` `A` `native/cmake/ReleaseVerification.cmake`
+- `S08` `M` `dev/packaging/native/action_cache.py`
+- `S08` `M` `dev/packaging/native/cached_command.py`
+- `S08` `M` `dev/packaging/native/cmake_build.py`
+- `S08` `M` `dev/packaging/native/product.py`
+- `S08` `M` `dev/packaging/native/assemble.py`
+- `S08` `M` `dev/packaging/native/tests/test_cached_command.py`
+- `S08` `M` `dev/packaging/native/tests/test_cmake_package_inputs.py`
+- `S08` `M` `dev/packaging/native/tests/test_incremental_generation.py`
+- `S08` `A` `dev/packaging/native/tests/test_build_timing.py`
+- `S08` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S08` `M` `dev/quality/metadata/import_load_targets.json`
+- `S08` `verify:` `38-case regression cohort 20261008T043423.799522Z` -> `pass`
+- `S08` `verify:` `38-case compatibility cohort 20261008T044128.291844Z` -> `pass`
+- `S08` `verify:` `4-case final generation-stability cohort 20261008T044333.822922Z` -> `pass`
+- `S08` `verify:` `scoped Ruff format lint and ty` -> `pass`
+- `S08` `verify:` `owning import_load_probe --compile-targets` -> `pass`
+- `S08` `verify:` `just --show test-native-release` -> `pass`
+- `S09` `M` `dev/packaging/native/artifact_verify.py`
+- `S09` `M` `dev/packaging/native/verify.py`
+- `S09` `M` `dev/packaging/native/verification_paths.py`
+- `S09` `M` `dev/packaging/native/platforms/windows.py`
+- `S09` `M` `dev/packaging/native/platforms/windows_verify.py`
+- `S09` `M` `dev/packaging/native/platforms/linux.py`
+- `S09` `M` `dev/packaging/native/platforms/macos.py`
+- `S09` `M` `dev/packaging/native/platforms/posix.py`
+- `S09` `A` `dev/packaging/native/tests/test_relocated_verification.py`
+- `S09` `M` `dev/packaging/tests/test_native_artifact_identity.py`
+- `S09` `M` `.vault/audit/2026-10-07-runtime-file-access-performance-audit.md`
+- `S09` `verify:` `38-case regression cohort 20261008T043423.799522Z including relocation and real ZIP/application refusal fixtures` -> `pass`
+- `S09` `verify:` `scoped Ruff format lint and ty` -> `pass`
+- `S09` `verify:` `integrated S08/S09 review` -> `pass`
+
+## Notes
+
+- `S01` Semantic RAG remains unavailable; profile caller identities and bounded defining-module reads provided discovery.
+- `S01` Raw Process Monitor exports include process environments. Only target file operations were retained; raw exports and PML captures were deleted. One earlier tool output inadvertently included environment records.
+- `S01` Native counters cover observed imports and admission; the capture lacks a process-exit record. ReadFile bytes are file API transfers, not physical media reads.
+- `S01` Review correction: replace the unsafe unfiltered-export guidance with target file-operation filtering before export or inspection; no diagnostic behavior changed.
+- `S02` The previously excluded `external_tool` signature test initially failed because OpenSSL was absent from PATH; an existing Git-bundled OpenSSL 3.5.7 was selected for the child test environment and the real verification/tamper refusal passed.
+- `S05` The 157-case and 113-case reports cover different populations, totaling 270 distinct failed cases. Full inventory retained in the requested brief.
+- `S05` The additional TUI probe remains 7 failed and 11 passed; together with the 9 passing policy tests, its combined run has 20 passed and 7 failed. These unrelated findings remain recorded for owning repair.
+- `S05` The first S05 import check was invalidated by source changes with zero hard findings; a stable-source retry is running.
+- `S05` Three current import runs loaded all 4522 modules with 15 kept contracts and zero hard findings, but concurrent governed source changes invalidate their overall verdict. Latest run 20261007T151810.433463Z-check-import-boundaries-58192-5c0a00ee remains unavailable. No gate weakened. S05 review pending this verification gap.
+- `S04` First build started 2026-10-07T13:53:47.854695Z and ended 15:22:54.007971Z: 5342.08 wall seconds, 7803.31 descendant CPU seconds, shared source changed. Documentation compile failed after 5095 seconds on golden divergences and fixture resource cleanup; no bundle, ZIP or installed-artifact success claimed. Timings and logs retained at build/runtime-file-access/rebuild/build-timing.json and bundle.log.
+- `S05` Final current-source import retry 20261007T152817.616073Z-check-import-boundaries-63064-612b3db4 also loaded all 4522 modules, kept all 15 contracts and found zero hard violations, but concurrent source changes invalidate the aggregate. Stop blind retries. S05 remains open pending a stable source check; its five repairs and complete failure brief are checkpointed with this explicit limitation.
+- `S04` Incremental supported runtime-only package finished in 2079.562 wall seconds (34m39.56s), 2122.859 descendant CPU seconds; configure 3.545s, bundle 471.768s, bundle verification 511.397s, ZIP 428.941s, extracted-package verification 663.908s. Existing managed caches were reused, shared source changed during the build, and the default docs-enabled configuration was restored. The full docs-enabled pipeline remains failed as previously recorded.
+- `S04` Final verified baseline ZIP: build/windows-x64/packages/Release/cadrumo-0.5.1-b2157-windows-x64-Release.zip, 341880888 bytes, SHA256 240ac5522d5e17ef91bdef3475a22e67671240b5874ea056435885d3ba18c69d. Preserved copy build/runtime-file-access/rebuild-runtime-only/verified-baseline.zip before the next rebuild.
+- `S04` Actual native CLI median wall seconds: help 0.5044, unknown flag 0.4222, missing value 0.3725, missing required args 0.3712. Runtime readiness median 20.8797 wall seconds and 14.9688 CPU seconds (three samples), with 6215/6222/6220 process read operations and 57291522 read-transfer bytes each. These are logical process counters, not physical disk measurements. Development runtime-session override was absent.
+- `S04` Evidence: build/runtime-file-access/rebuild-runtime-only/build-timing.json and rebuilt-runtime-benchmark.json; immutable manifest and runtime identities unchanged across the benchmark. Readiness remains slow and S04 stays open for the complete docs/desktop package.
+- `S06` Earlier focused run was invalidated by an edit while the runner was active; only the final 20-pass run is passing evidence.
+- `S06` Packaged main-import cProfile measured 2673 source-module compilations consuming 6.402803 self CPU seconds of the profiled import. Publication now compiles sorted bundled sources after native backend adaptations using exact pinned Python 3.13.11, deterministic relative code filenames, and checked source-hash PYC headers. Runtime bytecode writes remain disabled; all generated files enter the distribution inventory. A fresh owning runtime-only rebuild is running, so native admission and performance comparison are pending.
+- `S05` Seven fresh TUI failures are now resolved. Six shared a scanner that only accepted one literal AST constant; it now enumerates every finite conditional literal branch and still refuses dynamic or non-string keys. The remaining M349 expected heading referred to another locale leaf: the published selected revision binds op.nif-comunitario to modelo.schema.349.form.authored.nif-comunitario.heading, whose enrolled English value is EU VAT number. Only that expected heading changed; no product layout, locale leaf or finding presentation changed.
+- `S05` 41 originally failed cases passed after this workstream's seven roots; five other later passes produce 46 passed / 224 last-recorded failed. Remaining historical statuses are not fresh reproductions.
+- `S05` The additional import aggregate again loaded 4522 modules and kept all 15 contracts with zero hard violations, but source changed during the run, including our now-finished test repair. Its overall result is unavailable. One justified retry is running after finalizing our governed source edits.
+- `S05` Final configured format/style/type wrapper stops immediately on any earlier failure and completed with exit 0. Evidence logs: build/runtime-file-access/rebuild-bytecode/{format-final,style-final,types-final}.log.
+- `S06` First bytecode-enabled runtime-only attempt finished in 920.581 wall seconds, 1066.797 descendant CPU seconds; bundle assembly passed in 242.095s, verification failed in 653.460s after 12 of 13 CTest checks passed. The single failure was the manager backpressure test's child-exit assertion; its full-suite --list output can fill the stdout pipe while the reader is intentionally blocked. Default docs-enabled configuration was restored. This report remains retained in build/runtime-file-access/rebuild-bytecode/build-timing.json; it is not passing package evidence.
+- `S06` S05 repairs the bounded fixture by selecting one exact Rust test for child output without changing supervision behavior. Three repeated manager-suite runs are active, followed by resumption of the owning verification, ZIP and extracted-package gates.
+- `S05` Native backpressure test first failed waiting for a child that lists the whole Rust suite while its stdout reader is intentionally blocked. Limiting output passed twice then failed a third child-start deadline, so that attempt was not accepted. The final reader accepts a statically dispatched Read + Send stream; production still passes ChildStdout. The unit fixture signals its first bounded read before asserting backpressure, drops the full input queue, and verifies reader termination within the existing 5-second bound. No supervisor state, timing limit, input capacity or OS process handling changed. Three complete manager suites pass in 27.23s, 2.25s, 2.14s. Actual-process supervision integration remains required in the resumed native gate.
+- `S05` The two largest remaining registry groups reproduce 16 failures plus two setup errors and three passes. Ten cases assume now-superseded manual generated-export ancestors, while eight bind predecessor layout checks to changed current M390 forms/placements. Detailed boundaries and owning evidence repair work are recorded in the failure brief; those fixtures/corpus were not changed.
+- `S05` The final Python import aggregate again loaded all 4522 modules and kept all 15 contracts, with zero hard findings; concurrent source changes invalidated the snapshot. Its verdict remains unavailable. Repeating against the changing shared tree cannot establish the required stable result.
+- `S07` Actual packaged sys.path repeated cadrumo/site-packages using native and forward-slash spellings. The Python bootstrap compared strings even though both directories have the same Windows identity, doubling Pydantic plugin discovery over 80 installed distribution directories: 160 `entry_points.txt` open attempts. Bootstrap now compares Path identities and appends only new directories, with no persistent cache or bypass of path containment, .pth executable-directive or manifest order checks. The packaged Windows probe now refuses duplicate resolved import directories. Final native admission and 80-versus-160 discovery counters are pending.
+- `S05` Second pipeline attempt failed one of 13 CTest targets: manager.supervision reported two failures (heartbeat event ordering and quit-during-backoff case completion) among 37 real-process cases. It completed in 598.380 wall / 762.031 descendant CPU seconds; report and logs are retained under rebuild-bytecode-final. All other CTest targets, including the repaired reader, passed.
+- `S05` Serial diagnostic repetitions passed in 69.98s and 29.83s with the existing thresholds; the heartbeat test edit occurred while these repetitions ran, so these are resource-coordination evidence, not two identical-current-source proof runs. The owning CMake fixture target now passes --test-threads=1; ordinary release manager tests remain parallel. The heartbeat assertion separately distinguishes its original five-event confirmed path from the six-event path with pre-confirmation EffectsUnknown, requiring TerminationUnconfirmed for the latter and preserving subsequent termination and Hang restart checks. Final current-source native verification is running.
+- `S05` Full format found a one-line wrapping issue in peer-owned `windows_msi.py.` Only its Ruff formatter was applied, preserving the peer's code and staging; this workstream does not commit that unrelated module. Full format/style/type verification then resumed after the final path repair.
+- `S07` An earlier full type run reported two diagnostics in concurrently authored `windows_msi.py;` the current complete retry exits 0. The shared module was not committed by this workstream. Import-target metadata was refreshed with its owning `dev.quality.import_load_probe` --compile-targets generator after a new module made the declared target census stale; this adds only peer module enrollment, not a manually authored metadata change. The subsequent full import aggregate is running.
+- `S07` Final native pipeline now passes manager.rust in 168.35s and real-process manager.supervision in 161.96s with the current termination-order assertion, signalled reader fixture and enrolled --test-threads=1. Whole native/application and ZIP/package checks remain pending; these target passes do not close S06/S07.
+- `S05` All 13 current native targets pass; CTest total 650.56 seconds, outer owning verification recipe 1130.925 wall / 856.938 descendant CPU seconds. Both native test reliability changes and the current package path/bytecode changes are exercised by this gate. ZIP and extracted-artifact verification remain active.
+- `S05` Current import aggregate loaded all 4524 configured modules, kept all 15 contracts, and found no load failures or hard violations, but its source identity changed in the shared tree. Duration 489.997s. The required complete stable verdict remains unavailable; S05 stays open for that verification while the completed repairs receive a durable checkpoint.
+- `S07` All native checks now pass with current path deduplication, bytecode publication and native fixture repairs. The actual fresh extracted-ZIP plugin-discovery count and runtime performance comparison remain pending, so S07 remains open at this checkpoint.
+- `S05` Additional passes come from the independent broad-test-failure-repair campaign, not from this performance workstream's seven repaired roots (41 original cases). Historical report statuses do not establish a stable whole-tree verdict.
+- `S06` Extracted optimized-candidate manifest contains zero dependency PYC files. `dev._paths` sets `sys.pycache_prefix` and `cache_from_source` redirected the producer outside the package. Corrected explicit package-local destination; strengthened matching-bytecode test to set a separate builder prefix and prove no output escapes. Actual artifact comparison and rebuilt admission remain pending.
+- `S06` Previous extracted candidate admitted successfully after 3005.168 wall seconds but contains zero dependency PYC files, so it is not S06 optimization evidence. Corrected package-local producer and source-to-cache inventory smoke guard are checkpointed with S06 open; owning rebuilt admission and measurements run in rebuild-published.
+- `S03` Current shared-tree gates report 18 format files, 40 style diagnostics and one ty invalid-argument-type in `dev/quality/tests/test_governed_fact_runtime_reads.py.` Reported paths are outside this workstream's modified packaging files; scoped producer/test/smoke Ruff ty format pass. Preserve concurrent owners and do not claim a current whole-repository PASS. Logs: build/runtime-file-access/rebuild-published/{format,style,types}.log.
+- `S07` Staged evidence identifies its manifest and runtime hashes in rebuild-published/staged-evidence-identity.json. Fresh extracted-ZIP admission and actual delivered-host readiness remain pending. Profiler totals 19.195825 to 9.629786 seconds include profiler overhead and are not native startup medians.
+- `S06` Compiler now explicitly uses optimize=0 so builder flags cannot alter published runtime checks. The optimized-builder fixture uses the owning `run_command` wrapper without lint suppressions. SDK bytecode reproduction against the final extracted artifact will establish whether current ordinary-builder bytes are identical; final admission and delivered benchmarks remain pending.
+- `S03` S04 remains open: runtime-only pipeline 5131.02s wall / 2072.11s descendant CPU; default documentation enabled restored. Full documentation/desktop pipeline remains blocked, not superseded by runtime package admission.
+- `S03` S06/S07 closed after actual inventoried 6582 caches, zero imported source compilation, metadata text opens 160 to 80, full admission and compiler comparison. Nine caches differ in serialization bytes despite matching headers and executable code; no complete bitwise reproducibility claim.
+- `S03` Native readiness medians wall 20.880s to 14.960s / CPU 14.969s to 11.313s, but 46 changed sources and wall range 9.757–32.471s prevent isolated causal claims; logical process read counts and bytes increased.
+- `S03` 615-log census: 270 original cases, 258 later PASSED and 12 last recorded FAILED. This workstream repaired 41 original cases through seven roots; other passes belong to separately authorized broad repairs. Full current suite verdict unavailable.
+- `S03` S03/S05 stay open: aggregate import invalidated by concurrent source changes, final whole format one peer fixture and types two peer `runtime_probe_artifacts` diagnostics; owned scoped checks pass.
+- `S08` Full product/native builds remain prohibited. Real small isolated CMake, CPack and Cargo fixtures passed; no new release timing claim.
+- `S09` Full installed native/platform execution and release timing were not repeated, as instructed. Existing refusal/immutability paths retained and covered by focused controlled fixtures.

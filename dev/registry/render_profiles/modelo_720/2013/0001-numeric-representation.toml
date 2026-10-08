@@ -1,0 +1,671 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 77
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-1-row-77"
+decision_statement = "Exact 1+0 representation for TIPO DE REGISTRO."
+justification = "Reviewed exact source anchor. Printed meaning: TIPO DE REGISTRO. Printed source prose: Constante número '1'."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 77
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["720"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 79
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-1-row-79"
+decision_statement = "Exact 3+0 representation for MODELO DECLARACIÓN."
+justification = "Reviewed exact source anchor. Printed meaning: MODELO DECLARACIÓN. Printed source prose: Constante ‘720’."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 79
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 81
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-1-row-81"
+decision_statement = "Exact 4+0 representation for EJERCICIO."
+justification = "Reviewed exact source anchor. Printed meaning: EJERCICIO. Printed source prose: Las cuatro cifras del ejercicio fiscal al que corresponde la declaración."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 81
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 113
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-1-row-113"
+decision_statement = "Exact 9+0 representation for TELÉFONO : Campo numérico de 9 posiciones."
+justification = "Reviewed exact source anchor. Printed meaning: TELÉFONO : Campo numérico de 9 posiciones. Printed source prose: The PDF leaves no separate naturaleza/content at this component row."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 113
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 114
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-1-row-114"
+decision_statement = "Exact 0+0 representation for APELLIDOS Y NOMBRE: Se consignará el"
+justification = "Reviewed exact source anchor. Printed meaning: APELLIDOS Y NOMBRE: Se consignará el Printed source prose: The PDF leaves no separate naturaleza/content at this component row."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 114
+ordinal_absent = true
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 118
+ordinal = "8"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-1-row-118"
+decision_statement = "Exact 13+0 representation for NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN."
+justification = "Reviewed exact source anchor. Printed meaning: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN. Printed source prose: Se consignará el número identificativo correspondiente a la declaración. Campo de contenido numérico de 13 posiciones. El número identificativo que habrá de figurar, será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 720."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 118
+ordinal = "8"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 148
+ordinal = "10"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-1-row-148"
+decision_statement = "Exact 13+0 representation for NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR."
+justification = "Reviewed exact source anchor. Printed meaning: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR. Printed source prose: En el caso de que se haya consignado una “C” en el campo “Declaración complementaria” o en caso de que se haya consignado “S” en el campo “Declaración sustitutiva”, se consignará el número identificativo correspondiente a la declaración a la que sustituye o complementa. Campo de contenido numérico de 13 posiciones. En cualquier otro caso deberá rellenarse a CEROS."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 148
+ordinal = "10"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 158
+ordinal = "11"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-1-row-158"
+decision_statement = "Exact 9+0 representation for NÚMERO TOTAL DE REGISTROS DECLARADOS."
+justification = "Reviewed exact source anchor. Printed meaning: NÚMERO TOTAL DE REGISTROS DECLARADOS. Printed source prose: Se consignará el número total de registros de tipo 2 declarados por el declarante."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 158
+ordinal = "11"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 313
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-2-row-313"
+decision_statement = "Exact 1+0 representation for TIPO DE REGISTRO."
+justification = "Reviewed exact source anchor. Printed meaning: TIPO DE REGISTRO. Printed source prose: Constante '2'."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 313
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["720"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 315
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-2-row-315"
+decision_statement = "Exact 3+0 representation for MODELO DECLARACIÓN."
+justification = "Reviewed exact source anchor. Printed meaning: MODELO DECLARACIÓN. Printed source prose: Constante '720'."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 315
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 317
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-2-row-317"
+decision_statement = "Exact 4+0 representation for EJERCICIO."
+justification = "Reviewed exact source anchor. Printed meaning: EJERCICIO. Printed source prose: Consignar lo contenido en estas mismas posiciones del registro de tipo 1."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 317
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2", "3", "4", "5", "6", "7", "8"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 355
+ordinal = "8"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-2-row-355"
+decision_statement = "Exact 1+0 representation for CLAVE DE CONDICIÓN DEL DECLARANTE"
+justification = "Reviewed exact source anchor. Printed meaning: CLAVE DE CONDICIÓN DEL DECLARANTE Printed source prose: Se consignará una de las siguientes claves en función de la condición con la que figura el declarante en el bien o derecho declarado: 1 Titular. 2 Representante. 3 Autorizado. 4 Beneficiario. 5 Usufructuario. 6 Tomador. 7 Con poder de disposición. 8 Otras formas de titularidad real conforme a lo previsto en el artículo 4.2. de la Ley 10/2010, de 28 de abril."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 355
+ordinal = "8"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1", "2", "3", "4", "5"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 403
+ordinal = "11"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-2-row-403"
+decision_statement = "Exact 1+0 representation for SUBCLAVE DE BIEN O DERECHO"
+justification = "Reviewed exact source anchor. Printed meaning: SUBCLAVE DE BIEN O DERECHO Printed source prose: Se consignara la subclave numérica que corresponda al tipo de bien o derecho que se esté declarando, según la relación de subclaves siguientes: Subclaves a utilizar en los registros correspondientes a la clave C (cuentas bancarias o de crédito situadas en el extranjero): 1 Cuenta corriente. 2 Cuenta de ahorro. 3 Imposiciones a plazo. 4 Cuentas de crédito. 5 Otras cuentas. Subclaves a utilizar en los registros correspondientes a la clave V (valores y derechos situados en el extranjero): 1 Valores o derechos representativos de la participación en cualquier tipo de entidad jurídica. 2 Valores representativos de la cesión de capitales propios a terceros. 3 Valores aportados para su gestión o administración a cualquier instrumento jurídico, incluyendo fideicomisos y “trusts” o masas patrimoniales que, no obstante carecer de personalidad jurídica, puedan actuar en el tráfico económico Subclaves a utilizar en los registros correspondientes a la clave S (seguros y rentas temporales o vitalicias): 1 Seguros de vida o invalidez, cuya entidad aseguradora se encuentra en el extranjero. 2 Rentas temporales o vitalicias generadas como consecuencia de la entrega de un capital en dinero, de derechos de contenido económico o de bienes muebles o inmuebles, cuya entidad receptora o gestora se encuentre en el extranjero. Subclaves a utilizar en los registros correspondientes a la clave B (titularidad y derechos reales sobre inmuebles ubicados en el extranjero): 1 Titularidad del bien inmueble. 2 Derechos reales de uso o disfrute sobre bienes inmuebles. 3 Nuda propiedad sobre bienes inmuebles. 4 Multipropiedad, aprovechamiento por turnos, propiedad a tiempo parcial o fórmulas similares sobre bienes inmuebles. 5 Otros derechos reales sobre bienes inmuebles. Cuando el campo “CLAVE TIPO DE BIEN O DERECHO” (posición 102) corresponda a la clave I (acciones o participaciones en el capital social o fondo patrimonial Instituciones de Inversión Colectiva situadas en el extranjero) la subclave numérica de la posición 103 deberá informarse sin contenido (a cero)."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 403
+ordinal = "11"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1", "2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 488
+ordinal = "14"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-2-row-488"
+decision_statement = "Exact 1+0 representation for CLAVE DE IDENTIFICACIÓN."
+justification = "Reviewed exact source anchor. Printed meaning: CLAVE DE IDENTIFICACIÓN. Printed source prose: Cuando el campo “CLAVE TIPO DE BIEN O DERECHO” (posición102) tome el valor “V” ó “I” se informará este campo de acuerdo a: Clave Descripción 1 Identificación por código ISIN (código de 12 posiciones). 2 Valores extranjeros sin código ISIN. Cuando el campo “CLAVE TIPO DE BIEN O DERECHO” (posición102) tome otro valor distinto de “V” ó “I” deberá informarse sin contenido (a cero)."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 488
+ordinal = "14"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 620
+ordinal = "22"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-2-row-620"
+decision_statement = "Exact 8+0 representation for FECHA DE INCORPORACIÓN."
+justification = "Reviewed exact source anchor. Printed meaning: FECHA DE INCORPORACIÓN. Printed source prose: Se hará constar las siguientes fechas según el valor del campo “CLAVE TIPO DE DE BIEN O DERECHO” (posición 102) declarada: ‐ Cuando la “CLAVE TIPO DE BIEN O DERECHO” (posición 102) tome el valor “C” se consignará la fecha de apertura de la cuenta, de la concesión de la autorización o del poder de disposición, o de cualquier otra forma de titularidad real. ‐ Cuando la “CLAVE TIPO DE BIEN O DERECHO” (posición 102) tome el valor “V” se consignará la fecha de adquisición de la titularidad o titularidad real de los valores. ‐ Cuando la “CLAVE TIPO DE BIEN O DERECHO” (posición 102) tome el valor “I” se consignará la fecha de adquisición de la titularidad o titularidad real sobre las acciones o participaciones en la IIC. ‐ Cuando la “CLAVE TIPO DE BIEN O DERECHO” (posición 102) tome el valor “S” se consignará la fecha de contratación con la entidad aseguradora o con la entidad receptora de los bienes y derechos constitutivos de las rentas vitalicias o temporales. ‐ Cuando la “CLAVE TIPO DE BIEN O DERECHO” (posición 102) tome el valor “B” se consignará la fecha de adquisición de la titularidad o titularidad real sobre el bien inmueble o del derecho real sobre el mismo. ‐ Cuando existan diferentes fechas de incorporación respecto del tipo de bien o derecho declarado deberán consignarse las mismas en diferentes registros. De este modo cuando la “CLAVE TIPO DE BIEN O DERECHO” tome el valor “V” o “I” se deberán declarar tanto registros como fechas de adquisición diferentes existan. Se indicarán los cuatro dígitos del año, los dos del mes (de 01 a 12) y los dos del día (de 01 a 31) con el formato AAAAMMDD."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 620
+ordinal = "22"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 694
+ordinal = "24"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-2-row-694"
+decision_statement = "Exact 8+0 representation for FECHA DE EXTINCIÓN."
+justification = "Reviewed exact source anchor. Printed meaning: FECHA DE EXTINCIÓN. Printed source prose: Este campo solo deberá cumplimentarse cuando el campo “ORIGEN DE BIEN O DERECHO” (posición 423) sea “C”. En este caso deberá indicarse una de las fechas siguientes según sea la “CLAVE TIPO DE BIEN O DERECHO” (posición 102) declarada: ‐ Si la “CLAVE TIPO DE BIEN O DERECHO” (posición 102) declarada es “C”: fecha de la revocación de la autorización, de la representación, del poder de disposición, de la posición de beneficiario, del cese como titular o titular real de la cuenta bancaria o de crédito. ‐ Si la “CLAVE TIPO DE BIEN O DERECHO” (posición 102) es “V”, “I” o “S”: fecha de la transmisión o extinción de la titularidad o cualquier otra forma de titularidad real declarada sobre los valores, acciones o participaciones en IIC, seguros o rentas temporales y vitalicias. ‐ Si la “CLAVE TIPO DE BIEN O DERECHO” (posición 102) toma el valor “B”: fecha de transmisión o extinción de, la titularidad, titularidad real o de los derechos reales sobre los bienes inmuebles. Se indicarán los cuatro dígitos del año, los dos del mes (de 01 a 12) y los dos del día (de 01 a 31) con el formato AAAAMMDD"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 694
+ordinal = "24"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 837
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-2-row-837"
+decision_statement = "Exact 10+0 representation for Parte entera de los valores."
+justification = "Reviewed exact source anchor. Printed meaning: Parte entera de los valores. Printed source prose: The PDF leaves no separate naturaleza/content at this component row."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 837
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 838
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-2-row-838"
+decision_statement = "Exact 0+2 representation for Parte decimal de los valores. (si no tiene contenido se"
+justification = "Reviewed exact source anchor. Printed meaning: Parte decimal de los valores. (si no tiene contenido se Printed source prose: The PDF leaves no separate naturaleza/content at this component row."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 838
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 848
+ordinal = "30"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m720-type-2-row-848"
+decision_statement = "Exact 3+2 representation for PORCENTAJE DE PARTICIPACIÓN."
+justification = "Reviewed exact source anchor. Printed meaning: PORCENTAJE DE PARTICIPACIÓN. Printed source prose: En el caso de múltiples sujetos con la misma “CLAVE DE CONDICIÓN DE DECLARANTE” (posición 76) sobre el bien o derecho declarado, se consignará por cada declarante el porcentaje de su participación. Este campo se subdivide en: 476-478 Parte entera del porcentaje; si no tiene contenido, se consignará a ceros. 479-480 Parte decimal del porcentaje; Figurará la parte decimal del porcentaje; si no tiene contenido se consignará a ceros. Si la cuenta, valor, seguro, renta, inmueble o derecho real sobre este último tiene un solo declarante con la misma “CLAVE DE CONDICIÓN DE DECLARANTE” (posición 76), el valor a declarar en este campo será 100 en la parte entera, y 00 en la parte decimal"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 848
+ordinal = "30"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 15
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 161
+ordinal = "12"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "One leading blank or N sign followed by the source-stated whole and two decimal digits."
+justification = "The exact parser-read source states its sign, magnitude and integer/fractional ranges. No proration, tax calculation or taxpayer value is inferred."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 161
+ordinal = "12"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 15
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 196
+ordinal = "13"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "One leading blank or N sign followed by the source-stated whole and two decimal digits."
+justification = "The exact parser-read source states its sign, magnitude and integer/fractional ranges. No proration, tax calculation or taxpayer value is inferred."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 196
+ordinal = "13"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 12
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 720
+ordinal = "25"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "One leading blank or N sign followed by the source-stated whole and two decimal digits."
+justification = "The exact parser-read source states its sign, magnitude and integer/fractional ranges. No proration, tax calculation or taxpayer value is inferred."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 720
+ordinal = "25"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 12
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 785
+ordinal = "26"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "One leading blank or N sign followed by the source-stated whole and two decimal digits."
+justification = "The exact parser-read source states its sign, magnitude and integer/fractional ranges. No proration, tax calculation or taxpayer value is inferred."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Detalle"
+source_row = 785
+ordinal = "26"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Detalle"
+
+[design_identity]
+modelo = "720"
+design_epoch = "2013"
+source_ref = "aeat-dr-720"
+source_sha256 = "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7"

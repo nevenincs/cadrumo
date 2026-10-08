@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#unreachable-capability'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7882972fd0910df50590a10cc15db15b1cdf51ad0de3f3a15011a17e3f068ec0'
+body_hash: 'sha256:889e814c0e648582616c33df70f5543a6efecec0975ed2a45f86c0b1dc4fbccc'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
 ---
@@ -28,10 +28,9 @@ which is precisely what `no-silent-under-declaration` forbids.
 ### Three blockers wear one label
 
 The census row `fincas.annual-aggregates` carries
-`disposition = "grounding_blocked"`, whose closed meaning in
-`src/cadrumo/core/source_connectivity.py:106` is "official evidence has not yet
+`disposition = "grounding_blocked"`, whose closed meaning  is "official evidence has not yet
 settled legal substitutability". That is true, but the code disagrees about
-what stops it. `src/cadrumo/domain/fincas/source_readiness.py:34` returns
+what stops it. the former source file returns
 `ready=False` with a persistence reason: the aggregates "are not persisted
 through the canonical secure-storage revision boundary". That is the closed
 meaning of a different disposition, `ingress_blocked` at line 109, "the typed
@@ -91,8 +90,7 @@ the correct posture while grounding is open.
 The row's `capability_locators` and `capability_ids` pointed at
 `_aggregates.py`, `_amortization_ledger.py` and `_source_readiness.py`. The
 private-to-public promotion renamed all three, and none of those paths existed
-any more. The census schema validator at
-`src/cadrumo/application/registry/source_connectivity.py:190` checks only that
+any more. The census schema validator  checks only that
 locators are unique, never that they resolve, so six dead references sat in
 shipped data without any gate objecting.
 
@@ -103,8 +101,7 @@ rather than an improvement to it.
 
 ### What would have to be true to promote the row
 
-Working backwards from the connected proofs the mechanism defines in
-`src/cadrumo/core/source_connectivity.py:226`, a promoted row needs three
+Working backwards from the connected proofs the mechanism defines , a promoted row needs three
 independent executable proofs: resolver enrolment, encrypted revision, and
 operator reachability. Mapping those onto the open plan steps gives a concrete
 sequence rather than an aspiration.
@@ -210,7 +207,7 @@ question it must answer is now narrow and evidenced.
 ### The census locator gate exists, is thorough, and never sees the live census
 
 The six dead fincas pointers were not a fincas problem. `check_capability_locators`
-in `dev/source_connectivity/check.py` already requires every locator to
+ already requires every locator to
 re-fetch, requires the line number to be within the file, and cross-checks each
 `capability_id` against a discovery pass so an id and its locator cannot drift
 apart. It is a well-built gate.
@@ -277,12 +274,12 @@ campaign.
 
 ## Sources
 
-- `src/cadrumo/_data/source_connectivity/census.toml` — the `fincas.annual-aggregates` row
-- `src/cadrumo/core/source_connectivity.py:97` — the closed disposition set
-- `src/cadrumo/core/source_connectivity.py:226` — the three executable proof roles
-- `src/cadrumo/domain/fincas/source_readiness.py:34` — the persistence reason
-- `src/cadrumo/application/registry/source_connectivity.py:190` — the uniqueness-only validator
+- the former source file — the `fincas.annual-aggregates` row
+- the former source file — the closed disposition set
+- the former source file — the three executable proof roles
+- the former source file — the persistence reason
+- the former source file — the uniqueness-only validator
 - `.vault/plan/2026-08-22-source-casilla-integration-plan.md` — W02 through W04, and the hard sequencing statement
 - `.vault/adr/2026-08-22-source-casilla-integration-adr.md` — the accepted ratcheted-connectivity decision
 - `src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md` — chapter 4, casillas `[0062]`-`[0082]` and the two-tenancy worked example
-- `dev/source_connectivity/check.py` — `check_capability_locators` and `discovered_source_capability_evidence`
+- the former source file — `check_capability_locators` and `discovered_source_capability_evidence`

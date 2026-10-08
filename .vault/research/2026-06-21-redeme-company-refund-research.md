@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#redeme-company-refund'
 date: '2026-06-21'
-modified: '2026-07-17'
-body_hash: 'sha256:cf804ef245e6c4b95a0f6e57e7eccc747eadbe42bda0e486c677c73446bad968'
+modified: '2026-10-03'
+body_hash: 'sha256:833fbfe9a7d841f594d0c4b30d6ec00a8762b16256c8a85a1a1b4d04c09c888d'
 related:
   - '[[2026-06-19-iva-compensation-override-cli-adr]]'
 ---
@@ -23,7 +23,7 @@ surface, and defines a multi-persona verification plan.
 
 ### F1 — The gap, confirmed in code
 
-`_DISPOSITION_SPEC[Modelo.M303]` (in `src/aeat/core/_result_disposition.py`) sets
+`_DISPOSITION_SPEC[Modelo.M303]` () sets
 `negative = ResultDisposition.COMPENSACION` unconditionally. The
 `ResultDisposition` enum ALREADY defines `DEVOLUCION = "D"`, but no M303 path elects
 it. The 303 registry has no refund result casilla (only "a compensar" casillas;

@@ -287,11 +287,7 @@ def _parse_expect(rest: str, source: str, line_number: int, problems: list[str])
         ok = ok and literal_ok
     # exit_code is an integer exit status; a bool is not an exit code even
     # though ``bool`` is an ``int`` subclass in Python.
-    if ok and json_path == _EXIT_CODE_PATH and not (isinstance(value, int) and not isinstance(value, bool)):
-        problems.append(
-            f"{_at(source, line_number)}: @expect {_EXIT_CODE_PATH} value {literal!r} must be an integer literal",
-        )
-        ok = False
+    ok = _expect_exit_literal_valid(ok, json_path, value, literal, source, line_number, problems)
     if not ok:
         return None
     return ExpectAssertion(json_path=json_path, expected=value)
@@ -380,135 +376,17 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
         A ``(builders, problems)`` pair. ``builders`` are in document order;
         ``problems`` is empty when every line parsed cleanly.
     """
-    builders: list[_FrameBuilder] = []
-    problems: list[str] = []
-    current: _FrameBuilder | None = None
-    #: A parsed ``@step`` sentence (with its line, for diagnostics) waiting for
-    #: the NEXT frame line to attach to.
-    pending_step: tuple[str, int] | None = None
-
+    state = _FrameLineState()
     for offset, raw_line in enumerate(text.splitlines(), start=1):
-        line = raw_line.strip()
-        if not line:
-            continue
-        if line.startswith("```") or line.startswith("~~~"):
-            problems.append(f"{_at(source, offset)}: nested code fences are not allowed inside a cli-sequence")
-            continue
+        _parse_frame_line(raw_line, offset, source, state)
 
-        head, _, remainder = line.partition(" ")
-        remainder = remainder.strip()
-
-        if head == _EXECUTABLE or head in _FRAME_SIGILS:
-            kind = _FRAME_SIGILS.get(head, FrameKind.COMMAND)
-            command_line = line if head == _EXECUTABLE else remainder
-            if not command_line:
-                problems.append(f"{_at(source, offset)}: {head} requires an '{_EXECUTABLE} ...' command")
-                current = None
-                continue
-            argv = _decompose_argv(command_line, source, offset, problems)
-            if argv is None:
-                current = None
-                continue
-            placeholders = _placeholder_names(command_line, source, offset, problems)
-            current = _FrameBuilder(
-                kind=kind,
-                command_line=command_line,
-                argv=argv,
-                placeholder_names=placeholders,
-                source=source,
-                line_number=offset,
-            )
-            if pending_step is not None:
-                current.step_description = pending_step[0]
-                pending_step = None
-            builders.append(current)
-            continue
-
-        if head == "@step":
-            # Narration prose for the NEXT frame — never a command, so no
-            # argv decomposition and no placeholder/brace scan applies.
-            sentence, sentence_ok = _parse_step_sentence(remainder, source, offset, problems)
-            if pending_step is not None:
-                problems.append(
-                    f"{_at(source, offset)}: a frame takes one @step description; this line "
-                    f"follows an unattached @step at {_at(source, pending_step[1])}",
-                )
-                continue
-            if sentence_ok:
-                pending_step = (sentence, offset)
-            continue
-
-        if head == "@capture":
-            if current is None:
-                problems.append(f"{_at(source, offset)}: @capture must follow a command frame")
-                continue
-            if current.kind is FrameKind.STATIC:
-                problems.append(
-                    f"{_at(source, offset)}: @capture cannot annotate a @static frame; a @static "
-                    "frame is not executed, so it produces no output to capture",
-                )
-                continue
-            binding = _parse_capture(remainder, source, offset, problems)
-            if binding is not None:
-                current.captures.append(binding)
-                current.capture_lines.append(offset)
-            continue
-
-        if head == "@expect":
-            if current is None:
-                problems.append(f"{_at(source, offset)}: @expect must follow a command frame")
-                continue
-            if current.kind is FrameKind.STATIC:
-                problems.append(
-                    f"{_at(source, offset)}: @expect cannot annotate a @static frame; a @static "
-                    "frame is not executed, so there is nothing to assert",
-                )
-                continue
-            assertion = _parse_expect(remainder, source, offset, problems)
-            if assertion is not None:
-                current.expects.append(assertion)
-            continue
-
-        if head == "@blocked":
-            if current is None:
-                problems.append(f"{_at(source, offset)}: @blocked must follow a @static frame")
-                continue
-            if current.kind is not FrameKind.STATIC:
-                problems.append(
-                    f"{_at(source, offset)}: @blocked cannot annotate a {current.kind.value} frame; "
-                    "an executed frame runs, so it has no blocker to record",
-                )
-                continue
-            if current.blocked is not None:
-                problems.append(
-                    f"{_at(source, offset)}: a @static frame takes one @blocked reason; "
-                    f"the frame at {_at(current.source, current.line_number)} already carries one",
-                )
-                continue
-            current.blocked = _parse_blocked(remainder, source, offset, problems)
-            continue
-
-        if head.startswith("@"):
-            problems.append(
-                f"{_at(source, offset)}: unknown sigil {head!r}; expected "
-                "@setup, @result, @static, @capture, @expect, @blocked, or @step",
-            )
-            current = None
-            continue
-
-        problems.append(
-            f"{_at(source, offset)}: unrecognised line {line!r}; expected an "
-            f"'{_EXECUTABLE} ...' command, @setup, @result, @static, @capture, @expect, @blocked, or @step",
-        )
-        current = None
-
-    if pending_step is not None:
-        problems.append(
-            f"{_at(source, pending_step[1])}: @step must be followed by the frame it "
+    if state.pending_step is not None:
+        state.problems.append(
+            f"{_at(source, state.pending_step[1])}: @step must be followed by the frame it "
             "describes; this trailing @step attaches to nothing",
         )
 
-    return builders, problems
+    return state.builders, state.problems
 
 
 def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str]) -> None:
@@ -544,12 +422,7 @@ def _enforce_result_contract(builders: list[_FrameBuilder], problems: list[str])
             "frame in the sequence; only @static frames may follow it",
         )
         return
-    result = builders[only]
-    if not result.expects:
-        problems.append(
-            f"the @result frame ({_at(result.source, result.line_number)}) must carry at least one "
-            "@expect assertion (e.g. '@expect result.status == \"verified_complete\"')",
-        )
+    _require_result_expectations(builders[only], problems)
 
 
 #: A json-path addressing the result PAYLOAD (the ``result`` object of the
@@ -720,7 +593,6 @@ def parse_sequence(
         SequenceParseError: When the id, options, or body violate the grammar or
             the structural contract. The error enumerates every fault.
     """
-    from ._seeds import load_seed_frames  # deferred: _seeds imports this module's line parser
 
     problems: list[str] = []
 
@@ -729,13 +601,7 @@ def parse_sequence(
     builders: list[_FrameBuilder] = []
     seed_raw = options.get("seed")
     seed = (seed_raw or "").strip() or None
-    if seed is not None:
-        before = len(problems)
-        _validate_kebab_id(seed, ":seed: recipe name", problems)
-        if len(problems) == before:
-            seed_builders, seed_problems = load_seed_frames(seed, seeds_root=seeds_root)
-            problems.extend(seed_problems)
-            builders.extend(seed_builders)
+    _append_seed_frames(seed, seeds_root, problems, builders)
 
     body_builders, body_problems = parse_frame_lines(body, source="body")
     problems.extend(body_problems)
@@ -746,6 +612,204 @@ def parse_sequence(
 
     _enforce_result_contract(builders, problems)
     _enforce_static_frames_state_a_reason(builders, problems)
+    verify = _verify_sentence(options, builders, problems)
+
+    if problems:
+        raise SequenceParseError(sequence_id, problems)
+
+    return ParsedSequence(
+        sequence_id=sequence_id.strip(),
+        verify=verify,
+        seed=seed,
+        frames=tuple(builder.build() for builder in builders),
+    )
+
+
+@dataclass
+class _FrameLineState:
+    """Ordered line-pass accumulators, including pending narration."""
+
+    builders: list[_FrameBuilder] = field(default_factory=list)
+    problems: list[str] = field(default_factory=list)
+    current: _FrameBuilder | None = None
+    pending_step: tuple[str, int] | None = None
+
+
+def _parse_frame_line(raw_line: str, offset: int, source: str, state: _FrameLineState) -> None:
+    """Classify one line and update the same accumulating parser state."""
+    line = raw_line.strip()
+    if not line:
+        return
+    if _reject_nested_fence(line, source, offset, state.problems):
+        return
+
+    head, _, remainder = line.partition(" ")
+    remainder = remainder.strip()
+
+    if head == _EXECUTABLE or head in _FRAME_SIGILS:
+        _append_command_frame(head, line, remainder, source, offset, state)
+        return
+
+    if head == "@step":
+        # Narration prose for the NEXT frame — never a command, so no
+        # argv decomposition and no placeholder/brace scan applies.
+        _record_step_line(remainder, source, offset, state)
+        return
+
+    if head == "@capture":
+        _record_capture_line(remainder, source, offset, state)
+        return
+
+    if head == "@expect":
+        _record_expect_line(remainder, source, offset, state)
+        return
+
+    if head == "@blocked":
+        _record_blocked_line(remainder, source, offset, state)
+        return
+
+    if head.startswith("@"):
+        state.problems.append(
+            f"{_at(source, offset)}: unknown sigil {head!r}; expected "
+            "@setup, @result, @static, @capture, @expect, @blocked, or @step",
+        )
+        state.current = None
+        return
+
+    state.problems.append(
+        f"{_at(source, offset)}: unrecognised line {line!r}; expected an "
+        f"'{_EXECUTABLE} ...' command, @setup, @result, @static, @capture, @expect, @blocked, or @step",
+    )
+    state.current = None
+
+
+def _reject_nested_fence(line: str, source: str, offset: int, problems: list[str]) -> bool:
+    """Record nested fences without changing the current frame binding."""
+    if line.startswith("```") or line.startswith("~~~"):
+        problems.append(f"{_at(source, offset)}: nested code fences are not allowed inside a cli-sequence")
+        return True
+    return False
+
+
+def _append_command_frame(
+    head: str, line: str, remainder: str, source: str, offset: int, state: _FrameLineState
+) -> None:
+    """Append command frame."""
+    kind = _FRAME_SIGILS.get(head, FrameKind.COMMAND)
+    command_line = line if head == _EXECUTABLE else remainder
+    if not command_line:
+        state.problems.append(f"{_at(source, offset)}: {head} requires an '{_EXECUTABLE} ...' command")
+        state.current = None
+        return
+    argv = _decompose_argv(command_line, source, offset, state.problems)
+    if argv is None:
+        state.current = None
+        return
+    placeholders = _placeholder_names(command_line, source, offset, state.problems)
+    state.current = _FrameBuilder(
+        kind=kind,
+        command_line=command_line,
+        argv=argv,
+        placeholder_names=placeholders,
+        source=source,
+        line_number=offset,
+    )
+    if state.pending_step is not None:
+        state.current.step_description = state.pending_step[0]
+        state.pending_step = None
+    state.builders.append(state.current)
+    return
+
+
+def _record_step_line(remainder: str, source: str, offset: int, state: _FrameLineState) -> None:
+    """Record step line."""
+    sentence, sentence_ok = _parse_step_sentence(remainder, source, offset, state.problems)
+    if state.pending_step is not None:
+        state.problems.append(
+            f"{_at(source, offset)}: a frame takes one @step description; this line "
+            f"follows an unattached @step at {_at(source, state.pending_step[1])}",
+        )
+        return
+    if sentence_ok:
+        state.pending_step = (sentence, offset)
+    return
+
+
+def _record_capture_line(remainder: str, source: str, offset: int, state: _FrameLineState) -> None:
+    """Record capture line."""
+    if state.current is None:
+        state.problems.append(f"{_at(source, offset)}: @capture must follow a command frame")
+        return
+    if state.current.kind is FrameKind.STATIC:
+        state.problems.append(
+            f"{_at(source, offset)}: @capture cannot annotate a @static frame; a @static "
+            "frame is not executed, so it produces no output to capture",
+        )
+        return
+    binding = _parse_capture(remainder, source, offset, state.problems)
+    if binding is not None:
+        state.current.captures.append(binding)
+        state.current.capture_lines.append(offset)
+    return
+
+
+def _record_expect_line(remainder: str, source: str, offset: int, state: _FrameLineState) -> None:
+    """Record expect line."""
+    if state.current is None:
+        state.problems.append(f"{_at(source, offset)}: @expect must follow a command frame")
+        return
+    if state.current.kind is FrameKind.STATIC:
+        state.problems.append(
+            f"{_at(source, offset)}: @expect cannot annotate a @static frame; a @static "
+            "frame is not executed, so there is nothing to assert",
+        )
+        return
+    assertion = _parse_expect(remainder, source, offset, state.problems)
+    if assertion is not None:
+        state.current.expects.append(assertion)
+    return
+
+
+def _record_blocked_line(remainder: str, source: str, offset: int, state: _FrameLineState) -> None:
+    """Record blocked line."""
+    if state.current is None:
+        state.problems.append(f"{_at(source, offset)}: @blocked must follow a @static frame")
+        return
+    if state.current.kind is not FrameKind.STATIC:
+        state.problems.append(
+            f"{_at(source, offset)}: @blocked cannot annotate a {state.current.kind.value} frame; "
+            "an executed frame runs, so it has no blocker to record",
+        )
+        return
+    if state.current.blocked is not None:
+        state.problems.append(
+            f"{_at(source, offset)}: a @static frame takes one @blocked reason; "
+            f"the frame at {_at(state.current.source, state.current.line_number)} already carries one",
+        )
+        return
+    state.current.blocked = _parse_blocked(remainder, source, offset, state.problems)
+    return
+
+
+def _append_seed_frames(
+    seed: str | None, seeds_root: Path | None, problems: list[str], builders: list[_FrameBuilder]
+) -> None:
+    """Append seed frames."""
+    from ._seeds import load_seed_frames
+
+    if seed is not None:
+        before = len(problems)
+        _validate_kebab_id(seed, ":seed: recipe name", problems)
+        if len(problems) == before:
+            seed_builders, seed_problems = load_seed_frames(seed, seeds_root=seeds_root)
+            problems.extend(seed_problems)
+            builders.extend(seed_builders)
+
+
+def _verify_sentence(
+    options: Mapping[str, str | None], builders: list[_FrameBuilder], problems: list[str]
+) -> str | None:
+    """Verify sentence."""
     _enforce_captures_and_placeholders(builders, problems)
 
     # The :verify: contract depends on whether the sequence runs anything: it is
@@ -770,13 +834,25 @@ def parse_sequence(
         elif verify_max is not None and len(verify_text) > verify_max:
             problems.append(f"the :verify: sentence must be at most {verify_max} characters")
         verify = verify_text or None
+    return verify
 
-    if problems:
-        raise SequenceParseError(sequence_id, problems)
 
-    return ParsedSequence(
-        sequence_id=sequence_id.strip(),
-        verify=verify,
-        seed=seed,
-        frames=tuple(builder.build() for builder in builders),
-    )
+def _require_result_expectations(result: _FrameBuilder, problems: list[str]) -> None:
+    """Require result expectations."""
+    if not result.expects:
+        problems.append(
+            f"the @result frame ({_at(result.source, result.line_number)}) must carry at least one "
+            "@expect assertion (e.g. '@expect result.status == \"verified_complete\"')",
+        )
+
+
+def _expect_exit_literal_valid(
+    ok: bool, json_path: str, value: ExpectLiteral, literal: str, source: str, line_number: int, problems: list[str]
+) -> bool:
+    """Expect exit literal valid."""
+    if ok and json_path == _EXIT_CODE_PATH and not (isinstance(value, int) and not isinstance(value, bool)):
+        problems.append(
+            f"{_at(source, line_number)}: @expect {_EXIT_CODE_PATH} value {literal!r} must be an integer literal",
+        )
+        ok = False
+    return ok

@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#first-filer-attestation'
 date: '2026-06-12'
-modified: '2026-07-15'
-body_hash: 'sha256:cdea021ac8aaf6c6d53ac2a3aa9e19d368656b3b9a6d83020d9eb957ad666ccf'
+modified: '2026-10-03'
+body_hash: 'sha256:7081b2eddcec916437070aa9167302d79cce0f7c5551b5b398482943a1623234'
 related:
   - "[[2026-06-05-cross-period-filing-clean-state-adr]]"
   - "[[2026-06-05-cross-period-calculation-guards-adr]]"
@@ -34,7 +34,7 @@ Notably, `filing-record import` accepts exactly the evidence-kind set `_OFFICIAL
 
 ### 1. Current mechanics at HEAD: why a truthful zero still blocks
 
-The clean-state gate lives in `src/aeat/application/calculations/_cross_period_clean_state.py` (HEAD `bb3cfa9c9`, with minor uncommitted peer WIP adding the `_aeat_register_provenance_blockers` ALTA/identity check; read-only confirmed, the WIP does not touch the first-period surface). Its decision pipeline:
+The clean-state gate lives  (HEAD `bb3cfa9c9`, with minor uncommitted peer WIP adding the `_aeat_register_provenance_blockers` ALTA/identity check; read-only confirmed, the WIP does not touch the first-period surface). Its decision pipeline:
 
 - `cross_period_dependency_requirements(snapshot)` derives the requirement graph purely from the registry snapshot, folding `previous_filing_observation_requirements` (direct `previous_filing` bindings) and `relation_source_requirements` (registry relations). Nothing consults the taxpayer history, activity-start date, or whether a prior obligation ever existed; it asks only whether this revision binding selector resolves to a prior period.
 - For each derived `CrossPeriodDependencyRequirement`, `_evaluate_requirement` then `_evaluate_filing_history` calls `filing_catalogue.history_for(...)`. For a first-period filer there is no `ModeloRecord` for the prior period, so `current_filings` is empty, `filing is None`, and the function appends `MISSING_CURRENT_FILING_RECORD` (line ~921). That is the first and load-bearing blocker: the verdict is unclean before evidence is even considered.
@@ -48,7 +48,7 @@ The clean-state gate lives in `src/aeat/application/calculations/_cross_period_c
 
 Spanish tax law does not require a first-period filer to have filed anything for periods before their activity began. The obligation to file Modelo 130 (pago fraccionado IRPF, estimacion directa) arises from carrying on economic activity; RD 439/2007 art. 110 governs the cumulative-from-start-of-activity payment framework. The registry income binding (`modelo-130-actividad-economica-ingresos-cumulative`) describes casilla 01 as cumulative year-to-date, and the resultados-negativos-anteriores carry is implemented as a same-ejercicio prior-quarter carry only (`max_year_delta = 0`; legal refs `rd-439-2007:art-110`, `orden-eha-672-2007:art-1`, `ley-35-2006:art-99`, `rd-439-2007:art-95`). Current verification on 2026-06-29 rejected the old `RD 439/2007 art. 110.5` premise: the current BOE consolidated art. 110 has no vigente apartado 5, and the casilla 15 mechanics are grounded in `aeat-modelo-130-instructions`. A quarter before the activity began has no prior saldo to carry: the carry is null, not unevidenced. The M100 prior-year-negative carry cites Ley 35/2006 art. 48 (base imponible general negativa, four-year carry-forward); a first-year filer has no prior ejercicio that could have generated the saldo.
 
-The real-world evidence that activity started in period X is the alta de nueva actividad in the censo (Modelo 036/037 census declaration). AEAT publishes it on the G313 Mis Datos Censales page, and the codebase already captures it. CensoSnapshot.censo_facts (`src/aeat/application/live/_censo.py`) carries the dotted key censo.activity_start_date (line ~78), populated from the live G313 sede read; the schema field activity_start_date exists on SetupAnswers (`src/aeat/core/setup_answers.py:214`) with ISO-8601 validation, and the wizard catalogue binds profile_key = censo.activity_start_date (`application/wizard/_catalogue.py:411`). The censo snapshot is persisted at IDENTITY sensitivity, content-addressed, and lifecycle-managed (ACTIVE / SUPERSEDED / DISCARDED); the docstring states AEAT is the binding legal source of truth for censo data and the local profile is a cache that must be kept honest.
+The real-world evidence that activity started in period X is the alta de nueva actividad in the censo (Modelo 036/037 census declaration). AEAT publishes it on the G313 Mis Datos Censales page, and the codebase already captures it. CensoSnapshot.censo_facts  carries the dotted key censo.activity_start_date (line ~78), populated from the live G313 sede read; the schema field activity_start_date exists on SetupAnswers  with ISO-8601 validation, and the wizard catalogue binds profile_key = censo.activity_start_date (`application/wizard/_catalogue.py:411`). The censo snapshot is persisted at IDENTITY sensitivity, content-addressed, and lifecycle-managed (ACTIVE / SUPERSEDED / DISCARDED); the docstring states AEAT is the binding legal source of truth for censo data and the local profile is a cache that must be kept honest.
 
 So the codebase already holds a legally-grounded, AEAT-sourced start-of-activity fact. It is captured but never consumed by the cross-period clean-state gate, the calculation actions, or the overview calendar (grep confirms no activity_start reference in `application/calculations/` outside the unrelated iva-wallet module, and none in `application/overview/_calendar.py`). The grounding source exists; it is simply not wired into the dependency-scoping decision.
 

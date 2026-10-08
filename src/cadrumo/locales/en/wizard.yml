@@ -87,7 +87,7 @@ wizard:
             description: Recognised disability of 65% or more - higher increase to
               the personal minimum.
             label: Disability grade 65% or higher
-          assistance-or-mobility:
+          assistance-or-reduced-mobility:
             description: Certified need of third-party assistance or reduced mobility
               - adds the assistance increase.
             label: Third-party assistance or reduced mobility
@@ -260,10 +260,6 @@ wizard:
         prompt: Minor children in family unit
       title: Family unit
     filing-export:
-      charge-iban:
-        help: IBAN AEAT may debit when a Modelo 303 filing elects direct debit. This
-          is separate from the refund account.
-        prompt: IBAN for AEAT direct debit
       title: Modelo 303 direct-debit account
     flags:
       activity:
@@ -279,8 +275,6 @@ wizard:
           on account
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
-      charge-iban:
-        help: IBAN AEAT may debit for an elected Modelo 303 direct debit.
       cloud-evidence-upload:
         help: Allow uploading sensitive evidence to cloud LLM providers (off by default).
       country-of-fiscal-residence:
@@ -491,7 +485,9 @@ wizard:
       taxpayer-sex:
         help: 'First taxpayer sex: H = male, M = female.'
       third-party-transactions-above-347-threshold:
-        help: Third-party transactions exceed Modelo 347 threshold
+        help: Declare that, in the calendar year the Modelo 347 covers, your operations
+          with one person or entity exceeded EUR 3,005.06 (EUR 300.51 for amounts
+          collected on behalf of third parties).
     format:
       amount-eur: Amount in euros with a decimal point, e.g. 50000.00.
       date-iso: Date as YYYY-MM-DD, e.g. 2024-03-01.
@@ -576,8 +572,11 @@ wizard:
       irpf-special-regime:
         choices:
           general:
+            description: You are taxed under the general IRPF regime (Modelo 100).
             label: General regime
           impatriado:
+            description: You have opted for the Article 93 LIRPF special regime (Modelo
+              151).
             label: Inbound expatriate - Beckham Law (Art. 93 LIRPF)
         help: The inpatriate (Beckham Law) regime applies for the first 6 tax years
           after relocation. Most taxpayers are on the general regime.
@@ -633,7 +632,9 @@ wizard:
       professional-income-withholding-ge-70pct:
         prompt: At least 70% of professional income with prior retención
       third-party-transactions-above-347-threshold:
-        prompt: Third-party transactions exceed Modelo 347 threshold
+        prompt: In the calendar year the Modelo 347 covers, did your operations with
+          any one person or entity exceed EUR 3,005.06 (EUR 300.51 for amounts you
+          collect on behalf of third parties), counting sales and purchases separately?
       title: Modelo obligations
     preferencias:
       title: Preferences and capabilities

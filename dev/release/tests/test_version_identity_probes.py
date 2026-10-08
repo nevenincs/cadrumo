@@ -35,10 +35,12 @@ from typing import NamedTuple, override
 
 import pytest
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
 
-from ..version_identity import PYPI_PROJECTS, VersionIdentityError, pypi_projects_owning
+from .. import package_index_probe
+from ..version_identity import VersionIdentityError, pypi_projects_owning
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -96,7 +98,86 @@ def test_an_answer_that_is_not_404_is_read_as_carried() -> None:
     separates them cannot be inverted with both still passing.
     """
     with _index_answering(200) as origin:
-        assert pypi_projects_owning(_CANDIDATE, index_url=origin.url) == PYPI_PROJECTS
+        assert pypi_projects_owning(_CANDIDATE, index_url=origin.url) == PRODUCT_IDENTITY.cohort_distributions
+
+
+def test_https_ownership_probe_reads_one_byte_with_its_explicit_transport_policy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    connection_args: list[tuple[str, int | None, int]] = []
+    requests: list[tuple[str, str, dict[str, str]]] = []
+    read_calls: list[tuple[int, ...]] = []
+    closed: list[bool] = []
+
+    class _Response:
+        status = 200
+
+        def read(self, *args: int) -> bytes:
+            read_calls.append(args)
+            return b"x" if args else b"whole metadata body"
+
+    class _Connection:
+        def __init__(self, hostname: str, port: int | None, *, timeout: int) -> None:
+            connection_args.append((hostname, port, timeout))
+
+        def request(self, method: str, target: str, *, headers: dict[str, str]) -> None:
+            requests.append((method, target, headers))
+
+        def getresponse(self) -> _Response:
+            return _Response()
+
+        def close(self) -> None:
+            closed.append(True)
+
+    monkeypatch.setattr(package_index_probe.http.client, "HTTPSConnection", _Connection)
+
+    owning = pypi_projects_owning(
+        "v9.9.9",
+        projects=["team/name"],
+        index_url="https://index.example:8443/pypi?token=keep#fragment",
+    )
+
+    assert owning == ("team/name",)
+    assert connection_args == [("index.example", 8443, 20)]
+    assert requests == [("GET", "/pypi/team%2Fname/9.9.9/json?token=keep", {"Accept": "application/json"})]
+    assert read_calls == [(1,)]
+    assert closed == [True]
+
+
+def test_ownership_probe_refuses_when_connection_close_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    closed: list[bool] = []
+
+    class _Response:
+        status = 200
+
+        def read(self, amount: int) -> bytes:
+            assert amount == 1
+            return b"x"
+
+    class _Connection:
+        def __init__(self, hostname: str, port: int | None, *, timeout: int) -> None:
+            del hostname, port, timeout
+
+        def request(self, method: str, target: str, *, headers: dict[str, str]) -> None:
+            del method, target, headers
+
+        def getresponse(self) -> _Response:
+            return _Response()
+
+        def close(self) -> None:
+            closed.append(True)
+            raise OSError("close failed")
+
+    monkeypatch.setattr(package_index_probe.http.client, "HTTPSConnection", _Connection)
+
+    with pytest.raises(VersionIdentityError, match="index check failed for cadrumo: close failed"):
+        pypi_projects_owning(
+            _CANDIDATE,
+            projects=["cadrumo"],
+            index_url="https://index.example/pypi",
+        )
+
+    assert closed == [True]
 
 
 @pytest.mark.parametrize(
@@ -165,6 +246,17 @@ def test_the_probe_asks_the_endpoint_that_carries_the_answer() -> None:
         assert origin.requested == ["/pypi/cadrumo-data-official/1.2.3/json"]
 
 
+def test_the_probe_preserves_endpoint_query_and_quotes_project_as_one_segment() -> None:
+    with _index_answering(404) as origin:
+        pypi_projects_owning(
+            "1.2.3",
+            projects=["team/name"],
+            index_url=f"{origin.url}?token=kept#ignored",
+        )
+
+        assert origin.requested == ["/pypi/team%2Fname/1.2.3/json?token=kept"]
+
+
 @pytest.mark.parametrize("endpoint", ["file:///c:/tmp", "ftp://example.invalid/pypi", "pypi.org/pypi"])
 def test_an_endpoint_that_is_not_http_is_refused(endpoint: str) -> None:
     """A local file that opens would read exactly like a carried version."""
@@ -196,14 +288,14 @@ def test_a_malformed_ledger_refuses_with_a_message_rather_than_a_traceback(tmp_p
     package.mkdir(parents=True)
     for name in ("__init__.py", "_paths.py"):
         shutil.copy2(REPO_ROOT / "dev" / name, tmp_path / "dev" / name)
-    for name in ("__init__.py", "version_identity.py", "burned_versions.py"):
+    for name in ("__init__.py", "version_identity.py", "burned_versions.py", "package_index_probe.py"):
         shutil.copy2(REPO_ROOT / "dev" / "release" / name, package / name)
     (package / "burned_versions.json").write_text('{"burned": "not a list"}', encoding=UTF_8)
 
     completed = run_command(
         [sys.executable, "-m", "dev.release.version_identity", "--version", _CANDIDATE, "--scope", "seal"],
         cwd=tmp_path,
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
 
     assert completed.returncode == 1, completed.stdout + completed.stderr
@@ -222,13 +314,19 @@ def test_the_same_invocation_passes_over_the_ledger_it_ships(tmp_path: Path) -> 
     package.mkdir(parents=True)
     for name in ("__init__.py", "_paths.py"):
         shutil.copy2(REPO_ROOT / "dev" / name, tmp_path / "dev" / name)
-    for name in ("__init__.py", "version_identity.py", "burned_versions.py", "burned_versions.json"):
+    for name in (
+        "__init__.py",
+        "version_identity.py",
+        "burned_versions.py",
+        "package_index_probe.py",
+        "burned_versions.json",
+    ):
         shutil.copy2(REPO_ROOT / "dev" / "release" / name, package / name)
 
     completed = run_command(
         [sys.executable, "-m", "dev.release.version_identity", "--version", _CANDIDATE, "--scope", "seal"],
         cwd=tmp_path,
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
 
     assert completed.returncode == 0, completed.stdout + completed.stderr

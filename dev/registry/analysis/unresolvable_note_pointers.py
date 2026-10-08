@@ -33,7 +33,7 @@ import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
@@ -70,6 +70,35 @@ def _label_defining_sheets() -> dict[tuple[str, str], set[str]]:
     return defining
 
 
+def _unresolvable_pointer_for_entry(
+    modelo: str,
+    revision: str,
+    entry: Any,
+    labels: dict[tuple[str, str], set[str]],
+) -> UnresolvableNotePointer | None:
+    content = (entry.get("parser_field") or {}).get("content") or ""
+    pointer = _NOTE_POINTER.search(content)
+    if pointer is None:
+        return None
+    label = f"nota{pointer.group(1)}"
+    defining = labels.get((modelo, label))
+    if not defining or len(defining) <= 1:
+        return None
+    if (entry.get("parser_field") or {}).get("sheet") in defining:
+        # Resolved on its own sheet, which is how these designs scope a
+        # note. Reporting it would bury the genuine case under ninety
+        # times its own number.
+        return None
+    field_id = (entry.get("field") or {}).get("id")
+    return UnresolvableNotePointer(
+        modelo=modelo,
+        revision=revision,
+        export_field_id=str(field_id),
+        note_label=label,
+        distinct_texts=len(defining),
+    )
+
+
 def unresolvable_note_pointers(modelos_root: Path | None = None) -> Iterator[UnresolvableNotePointer]:
     """Yield every shipped field whose cited note label resolves to several texts."""
     root = modelos_root if modelos_root is not None else bundled_path("registry", "aeat", "modelos")
@@ -79,27 +108,9 @@ def unresolvable_note_pointers(modelos_root: Path | None = None) -> Iterator[Unr
         modelo, revision = parts[-5], parts[-3]
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         for entry in manifest.get("field_derivations") or ():
-            content = (entry.get("parser_field") or {}).get("content") or ""
-            pointer = _NOTE_POINTER.search(content)
-            if pointer is None:
-                continue
-            label = f"nota{pointer.group(1)}"
-            defining = labels.get((modelo, label))
-            if not defining or len(defining) <= 1:
-                continue
-            if (entry.get("parser_field") or {}).get("sheet") in defining:
-                # Resolved on its own sheet, which is how these designs scope a
-                # note. Reporting it would bury the genuine case under ninety
-                # times its own number.
-                continue
-            field_id = (entry.get("field") or {}).get("id")
-            yield UnresolvableNotePointer(
-                modelo=modelo,
-                revision=revision,
-                export_field_id=str(field_id),
-                note_label=label,
-                distinct_texts=len(defining),
-            )
+            finding = _unresolvable_pointer_for_entry(modelo, revision, entry, labels)
+            if finding is not None:
+                yield finding
 
 
 def screen_authority(_authority: object = None, _modelo_ids: Sequence[str] = ()) -> Sequence[UnresolvableNotePointer]:

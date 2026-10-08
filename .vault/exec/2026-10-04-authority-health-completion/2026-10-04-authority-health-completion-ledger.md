@@ -1,0 +1,202 @@
+---
+tags:
+  - '#exec'
+  - '#authority-health-completion'
+date: '2026-10-04'
+modified: '2026-10-05'
+body_schema: 'body-v2'
+body_hash: 'sha256:a8c343b728fb4bd082f0f2e5352666fe74464d14e4b4bdc2d029d4dc4dc1087d'
+related:
+  - "[[2026-10-04-authority-health-completion-plan]]"
+---
+
+# `authority-health-completion` ledger
+
+## Changes
+
+- `S02` `M` `dev/registry/conformance/profile.py`
+- `S02` `M` `dev/registry/conformance/manager.py`
+- `S02` `A` `dev/registry/conformance/tests/test_profile_candidate_scope.py`
+- `S02` `verify:` `explicit candidate scope and changed-candidate report tests` -> `pass`
+- `S02` `verify:` `conformance report and coverage CLI` -> `pass`
+- `S02` `by:` `root`
+- `S03` `M` `dev/registry/analysis/registry_status.py`
+- `S03` `A` `dev/registry/analysis/tests/test_registry_status_candidate_artifact.py`
+- `S03` `M` `dev/registry/conformance/tests/test_lifecycle_cli.py`
+- `S03` `verify:` `candidate descriptor status and lifecycle axes tests` -> `pass`
+- `S03` `verify:` `candidate/drift/binding/placement focused tests 26 passed` -> `pass`
+- `S03` `by:` `root`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/bindings/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/constructs/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml`
+- `S04` `A` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/bindings/0009-super-reducido-recargo.toml`
+- `S04` `M` `dev/registry/tests/test_modelo_303_binding_source_repair.py`
+- `S04` `verify:` `Modelo 303 source repair tests 5 passed` -> `pass`
+- `S04` `verify:` `Modelo 303 complete canonical migration equivalence and minimality no-op` -> `pass`
+- `S04` `verify:` `check-bindings zero blocking findings` -> `pass`
+- `S04` `by:` `root`
+- `S05` `M` `dev/registry/mappings/modelo_347/2011/0003-declarado.toml`
+- `S05` `M` `dev/registry/mappings/modelo_347/2025/0003-declarado.toml`
+- `S05` `M` `dev/registry/tests/test_modelo_347_declarado_export.py`
+- `S05` `M` `dev/registry/pipeline/generated_form_bridge.py`
+- `S05` `M` `dev/registry/pipeline/cli.py`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0002-record-m347-declarado.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/form_layouts/0001-form-layout.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S05` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S05` `verify:` `Modelo 347 producer/export tests 14 passed` -> `pass`
+- `S05` `verify:` `both Modelo 347 canonical target checks matched` -> `pass`
+- `S05` `verify:` `Modelo 347 complete canonical migration equivalence and minimality no-op` -> `pass`
+- `S05` `verify:` `check-bindings zero blocking findings` -> `pass`
+- `S05` `by:` `root`
+- `S06` `M` `dev/registry/pipeline/cli.py`
+- `S06` `A` `dev/registry/pipeline/legacy_publication_recovery.py`
+- `S06` `A` `dev/registry/pipeline/tests/test_legacy_publication_recovery.py`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/111/revisions/2019-y-siguientes/export_layouts/generation/manifest.json`
+- `S06` `verify:` `uv run --no-sync python -m pytest dev/registry/pipeline/tests/test_legacy_publication_recovery.py -k 'not active_old_writer'` -> `pass`
+- `S06` `verify:` `uv run --no-sync python -m pytest dev/registry/pipeline/tests/test_legacy_publication_recovery.py -k active_old_writer` -> `pass`
+- `S06` `verify:` `uv run --no-sync python -m dev.registry.pipeline check 111 2019-y-siguientes aeat-dr-111-2011 2024 1T` -> `pass`
+- `S06` `by:` `root`
+- `S06` `verify:` `uv run --no-sync python -m pytest -o addopts="" -n 0 dev/registry/pipeline/tests/test_historical_bootstrap_publication.py dev/registry/pipeline/tests/test_legacy_publication_recovery.py -q` -> `pass`
+- `S06` `verify:` `uv run --no-sync python -m dev.registry.pipeline check 111 2019-y-siguientes aeat-dr-111-2019-v18 2024 1T` -> `pass`
+- `S07` `M` `dev/registry/pipeline/_tree_publication.py`
+- `S07` `M` `dev/registry/pipeline/generated_export_bootstrap_targets.toml`
+- `S07` `A` `dev/registry/pipeline/tests/test_historical_bootstrap_publication.py`
+- `S07` `D` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2021/export_layouts/0001-declarations.toml`
+- `S07` `A` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2021/export`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/490/revisions/2021/form_layouts/0001-form-layout.toml`
+- `S07` `verify:` `Historical bootstrap publication and five legacy recovery cases, six passed` -> `pass`
+- `S07` `verify:` `Canonical publish-target and subsequent check for Modelo 490 2021 matched` -> `pass`
+- `S07` `by:` `root`
+- `S08` `M` `dev/registry/pipeline/render_check.py`
+- `S08` `M` `dev/registry/analysis/generated_tree_state.py`
+- `S08` `M` `dev/registry/analysis/registry_status.py`
+- `S08` `A` `dev/registry/render_profiles/modelo_309/2023/0001-numeric-representation.toml`
+- `S08` `M` `dev/registry/pipeline/export_field_numeric_derivation.py`
+- `S08` `M` `dev/registry/pipeline/export_field_derivation.py`
+- `S08` `A` `dev/registry/pipeline/tests/test_m309_numeric_profile.py`
+- `S08` `A` `dev/registry/pipeline/tests/test_m714_numeric_profiles.py`
+- `S08` `verify:` `uv run --no-sync python -m pytest -o addopts='' -n 0 dev/registry/pipeline/tests/test_m309_numeric_profile.py -q` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.registry.pipeline target-current 309 2023-y-siguientes aeat-dr-309-2023 2023 AD-HOC` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m pytest -o addopts='' -n 0 dev/registry/pipeline/tests/test_m714_numeric_profiles.py -q` -> `fail`
+- `S08` `by:` `root`
+- `S08` `A` `dev/registry/pipeline/source_stated_composites.py`
+- `S08` `A` `dev/registry/pipeline/export_field_numeric_source_pins.py`
+- `S08` `A` `dev/registry/mappings/modelo_720`
+- `S08` `A` `dev/registry/render_profiles/modelo_714`
+- `S08` `A` `dev/registry/render_profiles/modelo_720`
+- `S08` `M` `dev/registry/pipeline/render_profile_authority.py`
+- `S08` `M` `dev/registry/pipeline/render_profile_eligibility.py`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/720`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/714`
+- `S08` `verify:` `uv run --no-sync python -m dev.registry.pipeline target-current 720 2013-y-siguientes aeat-dr-720 2024 0A` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m pytest -o addopts='' -n 0 dev/registry/pipeline/tests/test_m720_numeric_profile.py dev/registry/pipeline/tests/test_signed_composite_render_profile.py dev/registry/compiler/tests/test_exact_inline_binding_placement.py src/cadrumo/domain/calculations/registry/tests/test_manual_input_record_field_selector.py src/cadrumo/application/filing/tests/test_binding_input_channels.py -q` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m pytest -o addopts='' -n 0 dev/registry/pipeline/tests/test_m714_numeric_profiles.py dev/registry/pipeline/tests/test_m309_numeric_profile.py dev/registry/pipeline/tests/test_export_tree.py -q` -> `pass`
+- `S08` `M` `dev/registry/pipeline/historical_static_repair.py`
+- `S08` `M` `dev/registry/pipeline/generated_form_bridge.py`
+- `S08` `M` `dev/registry/pipeline/cli.py`
+- `S08` `M` `dev/registry/pipeline/generated_tree_dispositions.toml`
+- `S08` `M` `dev/registry/mappings/modelo_720/2013/0001-records.toml`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/bindings/0001-declarations.toml`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/constructs/0001-declarations.toml`
+- `S08` `A` `dev/registry/pipeline/tests/test_historical_repair_findings.py`
+- `S08` `M` `dev/registry/pipeline/tests/test_m720_numeric_profile.py`
+- `S08` `verify:` `uv run --no-sync python -m pytest -o addopts='' -n 0 dev/registry/pipeline/tests/test_historical_repair_findings.py -q` -> `pass`
+- `S11` `M` `dev/registry/compiler/loader_materialisation.py`
+- `S11` `M` `dev/registry/compiler/runtime_catalogues.py`
+- `S11` `M` `dev/audit/legal_catalogue.py`
+- `S11` `M` `dev/packaging/tests/test_native_docs_staging.py`
+- `S11` `A` `dev/packaging/native/tests/test_docs_build_environment.py`
+- `S11` `R` `src/cadrumo/domain/calculations/registry/tests/_modelo_100_registry_support.py` -> `src/cadrumo/domain/calculations/registry/tests/modelo_100_registry_support.py`
+- `S11` `M` `src/cadrumo/core/tests/test_storage_root_vectors.py`
+- `S11` `M` `dev/locales/desktop_chrome.py`
+- `S11` `verify:` `uv run --no-sync python -m pytest -o addopts='' -n 0 src/cadrumo/core/tests/test_storage_root_vectors.py src/cadrumo/adapters/persistence/storage/tests/test_profile_custody_adapter.py -q` -> `pass`
+- `S11` `verify:` `uv run --no-sync python -m pytest -o addopts='' -n 0 dev/locales/tests/test_desktop_chrome.py -q` -> `pass`
+- `S11` `by:` `root`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/export/_generation.provenance.json`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S08` `verify:` `uv run --no-sync python -m dev.registry.pipeline republish-target 720 2013-y-siguientes aeat-dr-720 2024 0A 83c26f2c7c2848ec9544889d070b071d69d24608f48bd52782a6d608039d23b9` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.registry.pipeline target-current 720 2013-y-siguientes aeat-dr-720 2024 0A` -> `pass`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/export/0000-export-layout.toml`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/export/0001-record-modelo-720-type-1.toml`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/export/0002-record-modelo-720-type-2.toml`
+- `S08` `verify:` `uv run --no-sync python -m dev.registry.pipeline republish-target 720 2013-y-siguientes aeat-dr-720 2024 0A 1217b488e839465f1499fba090eeab3faa1e39e83068d7447de68467427f398d` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.registry.pipeline target-current 720 2013-y-siguientes aeat-dr-720 2024 0A` -> `pass`
+- `S08` `verify:` `canonical generated_state_inventory complete census: 98 reproducible / 160 revisions, 62 explicitly excluded` -> `pass`
+- `S08` `verify:` `just check-bindings: 8746 bindings, zero blocking findings, 58 modelos / 139 revisions` -> `pass`
+- `S11` `M` `dev/corpus/tests/test_extraction_sidecar_freshness.py`
+- `S11` `M` `dev/corpus/tests/test_corpus_text.py`
+- `S11` `M` `dev/corpus/extract_manual_corpus_text.py`
+- `S11` `M` `dev/audit/legal_excerpt_vintage_screen.py`
+- `S11` `M` `dev/registry/compiler/legal_grounding.py`
+- `S11` `M` `dev/registry/compiler/fact_validation.py`
+- `S11` `M` `dev/registry/compiler/validate_evidence.py`
+- `S11` `M` `dev/registry/compiler/_m303_orden_source.py`
+- `S11` `M` `dev/registry/compiler/validate_official_source_guidance_content.py`
+- `S11` `M` `dev/registry/tests/test_catalogue_verification_normatives.py`
+- `S11` `M` `dev/registry/tests/test_catalogue_verification_fragments.py`
+- `S11` `M` `dev/registry/tests/test_dana_relief_authority.py`
+- `S11` `M` `dev/registry/tests/test_legal_required_text_reaches_the_provision.py`
+- `S11` `M` `dev/registry/tests/test_legal_fused_redaction_refusal.py`
+- `S11` `M` `dev/registry/tests/test_modelo_100_eo_agraria_engine_ordenes_2022_2024.py`
+- `S11` `M` `dev/registry/tests/test_modelo_131_regulatory_floor_predicate.py`
+- `S11` `M` `dev/registry/tests/test_modelo_131_registry.py`
+- `S11` `M` `dev/registry/tests/test_modelo_130_runtime_and_source_grounding.py`
+- `S11` `M` `dev/registry/tests/test_modelo_349_registry.py`
+- `S11` `M` `src/cadrumo/core/text_fold.py`
+- `S11` `M` `dev/corpus/text.py`
+- `S11` `M` `src/cadrumo/domain/calculations/registry/tests/authored_editions.py`
+- `S11` `M` `src/cadrumo/domain/calculations/registry/tests/legal_quotation.py`
+- `S11` `M` `src/cadrumo/domain/iva/tests/test_rate_grounding.py`
+- `S11` `D` `src/cadrumo/domain/iva/tests/test_spanish_territory_grounding.py`
+- `S11` `A` `dev/corpus/tests/test_iva_spanish_territory_grounding.py`
+- `S11` `D` `src/cadrumo/domain/iva/tests/test_supply_nature.py`
+- `S11` `A` `dev/corpus/tests/test_iva_supply_nature.py`
+- `S11` `D` `src/cadrumo/core/tests/test_storage_root_vectors.py`
+- `S11` `A` `dev/packaging/native/tests/test_storage_root_vectors.py`
+- `S11` `M` `src/cadrumo/core/file_permissions.py`
+- `S11` `M` `src/cadrumo/core/tests/test_file_permissions.py`
+- `S11` `M` `dev/registry/pipeline/tests/test_generated_form_bridge.py`
+- `S11` `A` `dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/0000-export-layout.toml`
+- `S11` `A` `dev/registry/pipeline/tests/fixtures/m190-pre-repeat/export/0001-record-modelo-190-declarante.toml`
+- `S11` `M` `src/cadrumo/application/workflow/engine.py`
+- `S11` `M` `src/cadrumo/domain/contribuyente/descendant_guarderia.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_353_grupo_aggregation_continuity.py`
+- `S11` `verify:` `canonical serial pytest corpus normalizer and IVA grounding: 94 passed / 20261004T223924.250334Z-pytest-49416-935a5a74` -> `pass`
+- `S11` `verify:` `canonical serial pytest Windows ACL and storage materialization: 14 passed / 20261004T224149.331914Z-pytest-89732-39a03e92` -> `pass`
+- `S11` `verify:` `canonical serial pytest native storage vectors: 42 passed, 1 platform skip / 20261004T215136.835841Z-pytest-54768-2db93780` -> `pass`
+- `S11` `verify:` `canonical serial pytest shared censal fixture: 12 passed / 20261004T221919.378051Z-pytest-54700-187ba3e8` -> `pass`
+- `S11` `verify:` `just check-types after corpus-owner and ACL repairs / authority-health-types-20261004-corpus-acl-owner.txt` -> `pass`
+- `S11` `verify:` `just check-import-boundaries: 4404 modules loaded, 15 contracts kept, zero hard findings; source drift refusal / 20261004T224330.231135Z-check-import-boundaries-64340-9ccbf6e6` -> `fail`
+- `S11` `M` `.vault/audit/2026-10-04-authority-health-completion-audit.md`
+- `S11` `verify:` `uv run --no-sync python -m dev.registry.registry_collapse_verification --registry-root src/cadrumo/_data/registry/aeat --source-root src/cadrumo/_data --work-dir var/storage/development/authority-health-all-modelos-compaction-20261005-settled-targets` -> `fail`
+- `S11` `verify:` `uv run --no-sync python -m dev.quality.unreachable_module_coverage` -> `pass`
+- `S11` `verify:` `uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-import-boundaries --signal import-boundaries -- uv run --no-sync python -m dev.quality.import_gate` -> `fail`
+- `S11` `M` `src/cadrumo/application/invoices/tests/test_catalogue_add_operation.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_submission_stream_client.py`
+- `S11` `verify:` `uv run --no-sync python -m pytest -o addopts='' -n 0 --timeout=300 src/cadrumo/application/invoices/tests/test_catalogue_add_operation.py src/cadrumo/adapters/local_runtime/tests/test_submission_stream_client.py` -> `pass`
+- `S11` `verify:` `uv run --no-sync ruff check src/cadrumo/application/invoices/tests/test_catalogue_add_operation.py src/cadrumo/adapters/local_runtime/tests/test_submission_stream_client.py` -> `pass`
+- `S11` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/invoices/tests/test_catalogue_add_operation.py src/cadrumo/adapters/local_runtime/tests/test_submission_stream_client.py` -> `pass`
+- `S11` `verify:` `just check-code` -> `fail`
+- `S11` `verify:` `uv run --no-sync python -m dev.quality.types` -> `fail`
+- `S09` `M` `.vault/audit/2026-10-04-authority-health-completion-audit.md`
+- `S09` `verify:` `uv run --no-sync python -m dev.registry.conformance closure --check --json` -> `fail`
+- `S09` `by:` `root`
+
+## Notes
+
+- `S06` A concurrent canonical publisher completed Modelo 111 before this session's compare-and-swap recovery attempt. The mismatched recovery receipt was refused and the resulting target was independently verified current.
+- `S06` Correction: the S06 generated receipt is `export/_generation.provenance.json,` already committed by a concurrent publisher. The initial logged manifest path and reconstructed command spellings are erroneous and are not acceptance evidence. Exact command verification will be logged after rerunning the five recovery cases and the current target check.
+- `S08` Partial checkpoint: S08 remains open. Canonical M309 target is current; M714 profiles need complete render and publication; M720 mapping/profile and full per-entry reconciliation remain unresolved. No final authority publication.
+- `S08` Partial exception checkpoint: 714 all five and 720 canonical targets published/current; temporary bootstrap rows retired. Captured census accounts for 160 revisions, 98 reproducible and 62 explicit residues. A concurrent 347 provider rename invalidated later candidate currency/currentness; refreshed acceptance is pending. Scoped 714/720 normalization passed minimal/equivalent no-op. Public/secure proof, full compaction stability, changing shared code gates and final active publication remain open; no Step closure claimed.
+- `S08` Partial exception checkpoint: prior complete target census compared 98/160 with all 98 reproducible and 62 explicit exclusions. Public proof then exposed four source-declared M720 constants without a literal probe. Exact source/old-manifest/form-bound canonical replacement is in flight; its six-defect allowlist has eight passing refusal tests. The stale live target caused a premature integrated test failure. No Step closure or active authority publication is claimed.
+- `S11` Partial exception checkpoint: storage suite passed 45 with one skip, locale suite passed 13, prior audit/native suite passed 63 and M100 owner/consumer suite passed five. Compiler-helper imports unintentionally changed by basename replacement were restored. Complete compaction assessed all 58 modelos minimal with zero duplicates but refused live drift/import failure. Later type/import gates remain failed or drift-invalidated; runtime protected request control and both proof channels remain incomplete. No Step closure or final publication.
+- `S08` Partial checkpoint, no Step closure. The literal-role target and canonical form replacement passed, followed by fresh currentness and a complete synthetic canonical build/review/export producing 1004 bytes, two 500-position CRLF records, no draft findings. Public mechanism evidence is not secure replay or taxpayer acceptance. The completed target exposed a genuine missing filing producer-key role; a subsequent reviewed map now assigns repeated filing-year and taxpayer identity slots to the existing canonical draft/producer owners and requires a new target publication. The former empty-ledger omission was detected and corrected. Fresh census, normalization, stable code health and both proof channels remain pending; no active authority publication.
+- `S08` Partial S08 checkpoint only. Source-pin ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7 unchanged. Canonical producer/year replacement and form synchronization now current; exact nine historical findings admitted, no weakened compiler. Last disposition retired with `dispositions=[]` only after currentness. Fresh complete census includes native XML, no-export and applicability exclusions truthfully. S08 not closed while remaining integration/minimality checks run. Fresh registry health has six passing lanes, partial target coverage and active currency stale; final active publication remains gated.
+- `S11` Partial S11 checkpoint; complete normalization/unchanged cohort and full required health are still open. Shared sidecar-reader relocation preserved; pure normalization has one import-light core owner, mutable corpus tests moved whole outward. Windows permission idempotency retains exact ordered ACE protection; no native permission bypass. Independently retained exact M190 historical header/layout fixture corrected, genuine whole-corpus integration test still running at its 900-second bound. Focused maintenance fixed four dangling references; fresh complete check-code aggregate running, not yet accepted. Healthy existing main environment cannot inspect this storage without its older ACL rewrite timing out; a separately owned detached development checkout is being prepared through canonical setup to avoid mutating busy shared .venv. No secure proof, active publication or Step completion claimed.
+- `S11` Partial checkpoint only. All 58 minimal; indexed/facts/cache/equivalence pass; no live mutation. Canonical input diff identifies only `core/external_constants.py` changed during full compaction. Import gate loaded 4411, zero hard findings, 15 contracts kept but source changed. No stability waiver, no live source application, no final active publication. S11 remains open.
+- `S11` Partial verification only; all 30 existing tests pass. Focused ty using the runner's actual interpreter passes for both repaired files. Nine earlier test diagnostic occurrences are repaired without suppressions. Full aggregate is 8/12 at its boundary; receipt verifier symbol/export consumption and two private test imports remain blocked in overlapping rollout paths. Later type gate fails closed on missing pyrefly output during environment work. All five post-constant model minimality receipts are complete/equivalent/minimal/no-op and source-accepted. S11 stays open; no publication or Step completion.
+- `S09` Actual blocking command exits 1: validated registry, 62 satisfied revisions, 77 missing-evidence refusals, no join disagreements, `release_eligible=false.` Existing local data selection is authorized but authenticated secure inventory is unavailable. The proposed native/communication proof extension is not yet accepted; no public proof pin or active authority publication changed.

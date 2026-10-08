@@ -1,97 +1,52 @@
-"""Behavior handlers for ledger inventory commands.
-
-The commands delegate inventory persistence and valuation to
-:class:`InventoryService` and emit typed payloads
-from :mod:`._ledger_payloads`.
-"""
+"""Presentation handlers for worker-owned ledger inventory operations."""
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
+from uuid import UUID
 
 import typer
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 
-from ...application.inventory.service import InventoryMovementCommand, InventoryService
+from ...application.inventory.registered_requests import (
+    InventoryAcquisitionCostRequest,
+    InventoryClosingAuthorityRecordInput,
+    InventoryClosingAuthorityRecordRequest,
+    InventoryCreateRequest,
+    InventoryMovementAddRequest,
+    InventoryValuationPreviewRequest,
+)
+from ...application.operations.public_scalar import PublicDecimal
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
-from ...core.type_guards import is_object_list, is_str_keyed_dict
+from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
-    InventoryLedger,
-    InventoryLedgerError,
     MovementKind,
 )
 from ._date_parsing import _parse_iso_date
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
-from .common import (
-    active_bucket_id_or_refuse as _inventory_bucket_id,
-)
+from .common import active_bucket_id_or_refuse as _inventory_bucket_id
 from .common import emit_envelope
-from .ledger_business_payloads import (
-    InventoryClosingAuthorityRecordResult,
-    InventoryCreateResult,
-    InventoryListResult,
-    InventoryMovementAddResult,
-    InventoryValuationPreviewPayload,
+from .ledger_business_payloads import InventoryClosingAuthorityRecordResult
+from .runtime_ledger_inventory import (
+    add_inventory_movement,
+    create_inventory_ledger,
+    preview_inventory_valuation,
+    read_inventory_catalogue,
+    record_inventory_closing_authority,
 )
-from .state_projection_support import inventory_service_ports_factory
 
 
-def _inventory_service(ctx: typer.Context, *, bucket_id: str) -> InventoryService:
-    return InventoryService(ports=inventory_service_ports_factory(ctx)(bucket_id=bucket_id))
-
-
-_JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
-#: The dumped ``period_movements`` array. Validated rather than asserted so the
-#: redaction loop below walks a typed row: a movement whose acquisition cost is
-#: left unprojected would carry evidence references into CLI output.
-_JSON_OBJECT_LIST_ADAPTER: TypeAdapter[list[dict[str, object]]] = TypeAdapter(list[dict[str, object]])
-
-
-def _safe_inventory_ledger_payload(ledger: InventoryLedger) -> dict[str, object]:
-    """Project a ledger without evidence references or content digests."""
-    payload = _JSON_OBJECT_ADAPTER.validate_python(json.loads(ledger.model_dump_json()))
-    authority = payload.pop("closing_authority_record", None)
-    if isinstance(authority, dict) and ledger.closing_authority_record is not None:
-        record = ledger.closing_authority_record
-        payload["closing_authority_fingerprints"] = {
-            "record": record.fingerprint,
-            "decision": record.decision.fingerprint,
-            "physical_observation": (
-                record.physical_observation.fingerprint if record.physical_observation is not None else None
-            ),
-            "prior_closing_link": record.prior_closing_link.fingerprint,
-        }
-    movements = _JSON_OBJECT_LIST_ADAPTER.validate_python(payload["period_movements"])
-    payload["period_movements"] = movements
-    for movement in movements:
-        acquisition = movement.get("acquisition_cost")
-        if not is_str_keyed_dict(acquisition):
-            continue
-        evidence = acquisition.get("evidence")
-        components = acquisition.get("attributable_cost_components")
-        movement["acquisition_cost"] = {
-            "consideration_excluding_iva": acquisition["consideration_excluding_iva"],
-            "directly_attributable_cost_total": acquisition["directly_attributable_cost_total"],
-            "nonrecoverable_iva_included": acquisition["nonrecoverable_iva_included"],
-            "recoverable_iva_excluded": acquisition["recoverable_iva_excluded"],
-            "total_acquisition_cost": acquisition["total_acquisition_cost"],
-            "component_count": len(components) if is_object_list(components) else 0,
-            "evidence_count": len(evidence) if is_object_list(evidence) else 0,
-            "complete": True,
-        }
-    return payload
-
-
-def _parse_acquisition_cost(*, from_stdin: bool) -> InventoryAcquisitionCost | None:
-    """Read one acquisition-cost object from the non-argv stdin channel."""
+def _parse_acquisition_cost(*, from_stdin: bool) -> InventoryAcquisitionCostRequest | None:
+    """Read one typed purchase-cost request from the non-argv stdin channel."""
     if not from_stdin:
         return None
     value = typer.get_text_stream("stdin").read()
     try:
-        return InventoryAcquisitionCost.model_validate_json(value)
+        acquisition = InventoryAcquisitionCost.model_validate_json(value)
+        return InventoryAcquisitionCostRequest.from_domain(acquisition)
     except ValidationError as exc:
         details = "; ".join(f"{'.'.join(str(item) for item in error['loc'])}: {error['msg']}" for error in exc.errors())
         raise typer.BadParameter(
@@ -101,26 +56,16 @@ def _parse_acquisition_cost(*, from_stdin: bool) -> InventoryAcquisitionCost | N
 
 
 def inventory_list(ctx: typer.Context) -> None:
-    """List per-actividad ledgers via :meth:`InventoryService.list_all`."""
-    bucket_id = _inventory_bucket_id()
-    rows = _inventory_service(ctx, bucket_id=bucket_id).list_all(bucket_id=bucket_id)
-    payload = {
-        "bucket_id": bucket_id,
-        "rows": [row.model_dump(mode="json") for row in rows],
-        "count": len(rows),
-    }
-    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
-    for row in rows:
+    """List the selected profile's activity ledgers from its worker."""
+    completion, payload = read_inventory_catalogue(ctx)
+    bucket_id = payload.bucket_id
+    lines = [f"bucket\t{bucket_id}", f"count\t{payload.count}"]
+    for row in completion.projection.rows:
         lines.append(
             f"{row.actividad_id}\t{row.year}\t{row.valuation_method.value}\t"
-            f"opening={row.opening_stock}\tmovements={row.movement_count}",
+            f"opening={row.opening_stock.decimal}\tmovements={row.movement_count}",
         )
-    emit_envelope(
-        ctx,
-        command="ledger.inventory.list",
-        result=InventoryListResult.model_validate(payload),
-        lines=lines,
-    )
+    emit_envelope(ctx, command="ledger.inventory.list", result=payload, lines=lines)
 
 
 def inventory_create(
@@ -130,29 +75,30 @@ def inventory_create(
     valuation_method: str,
     opening_stock: str = "0",
 ) -> None:
-    """Create a ledger via :meth:`InventoryService.create`."""
+    """Create one ledger through the selected profile's authenticated worker."""
     bucket_id = _inventory_bucket_id()
-    result = _inventory_service(ctx, bucket_id=bucket_id).create(
-        bucket_id=bucket_id,
+    request = InventoryCreateRequest(
+        profile_id=UUID(bucket_id),
         actividad_id=actividad_id,
         year=year,
         valuation_method=valuation_method,
-        opening_stock=parse_decimal_amount(opening_stock, label="opening-stock"),
+        opening_stock=PublicDecimal(decimal=str(parse_decimal_amount(opening_stock, label="opening-stock"))),
     )
-    ledger = result.ledger
-    payload = _safe_inventory_ledger_payload(ledger)
-    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    completion, payload = create_inventory_ledger(ctx, request=request)
+    ledger = completion.projection.ledger
+    if ledger is None:
+        raise InternalInvariantError("inventory create bridge returned no canonical ledger")
     emit_envelope(
         ctx,
         command="ledger.inventory.create",
-        result=InventoryCreateResult.model_validate_json(json.dumps(payload)),
+        result=payload,
         lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{ledger.actividad_id}",
             f"year\t{ledger.year}",
             f"valuation_method\t{ledger.valuation_method.value}",
-            f"opening_stock\t{ledger.opening_stock}",
-            f"bucket_event_ids\t{','.join(result.bucket_event_ids)}",
+            f"opening_stock\t{ledger.opening_stock.decimal}",
+            f"bucket_event_ids\t{','.join(payload.bucket_event_ids)}",
         ),
     )
 
@@ -169,36 +115,33 @@ def inventory_movement_add(
     taxable_base: str | None = None,
     acquisition_cost_stdin: bool = False,
 ) -> None:
-    """Append an :class:`InventoryMovementCommand` to an actividad ledger."""
+    """Append one typed movement through the selected profile's worker."""
     bucket_id = _inventory_bucket_id()
-    command = InventoryMovementCommand(
+    unit_cost_amount = parse_optional_decimal_amount(unit_cost, label="unit-cost")
+    taxable_base_amount = parse_optional_decimal_amount(taxable_base, label="taxable-base")
+    request = InventoryMovementAddRequest(
+        profile_id=UUID(bucket_id),
+        actividad_id=actividad_id,
+        year=year,
         movement_id=movement_id,
         movement_date=_parse_iso_date(movement_date, label="--date"),
         kind=kind,
-        quantity=parse_decimal_amount(quantity, label="quantity"),
-        unit_cost=parse_optional_decimal_amount(unit_cost, label="unit-cost"),
-        taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
+        quantity=PublicDecimal(decimal=str(parse_decimal_amount(quantity, label="quantity"))),
+        unit_cost=PublicDecimal(decimal=str(unit_cost_amount)) if unit_cost_amount is not None else None,
+        taxable_base=PublicDecimal(decimal=str(taxable_base_amount)) if taxable_base_amount is not None else None,
         acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
     )
-    result = _inventory_service(ctx, bucket_id=bucket_id).movement_add(
-        bucket_id=bucket_id,
-        actividad_id=actividad_id,
-        year=year,
-        movement=command,
-    )
-    ledger = result.ledger
-    payload = _safe_inventory_ledger_payload(ledger)
-    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    _completion, payload = add_inventory_movement(ctx, request=request)
     emit_envelope(
         ctx,
         command="ledger.inventory.movement.add",
-        result=InventoryMovementAddResult.model_validate_json(json.dumps(payload)),
+        result=payload,
         lines=(
             f"bucket\t{bucket_id}",
-            f"actividad_id\t{ledger.actividad_id}",
-            f"year\t{ledger.year}",
-            f"movements\t{len(ledger.period_movements)}",
-            f"bucket_event_ids\t{','.join(result.bucket_event_ids)}",
+            f"actividad_id\t{payload.actividad_id}",
+            f"year\t{payload.year}",
+            f"movements\t{len(payload.period_movements)}",
+            f"bucket_event_ids\t{','.join(payload.bucket_event_ids)}",
         ),
     )
 
@@ -208,26 +151,26 @@ def inventory_valuation_preview(
     actividad_id: str,
     year: int,
 ) -> None:
-    """Preview valuation via :meth:`InventoryService.valuation_preview`."""
+    """Preview the canonical valuation through the selected profile worker."""
     bucket_id = _inventory_bucket_id()
-    result = _inventory_service(ctx, bucket_id=bucket_id).valuation_preview(
-        bucket_id=bucket_id,
+    request = InventoryValuationPreviewRequest(
+        profile_id=UUID(bucket_id),
         actividad_id=actividad_id,
         year=year,
     )
-    preview = result.preview
+    _completion, payload = preview_inventory_valuation(ctx, request=request)
     emit_envelope(
         ctx,
         command="ledger.inventory.valuation.preview",
-        result=InventoryValuationPreviewPayload.from_result(result),
+        result=payload,
         lines=(
             f"bucket\t{bucket_id}",
-            f"actividad_id\t{preview.actividad_id}",
-            f"year\t{preview.year}",
-            f"valuation_method\t{preview.valuation_method.value}",
-            f"derived_closing_value\t{preview.derived_closing_value}",
-            f"cogs\t{preview.cogs}",
-            f"bucket_event_ids\t{','.join(result.bucket_event_ids)}",
+            f"actividad_id\t{payload.actividad_id}",
+            f"year\t{payload.year}",
+            f"valuation_method\t{payload.valuation_method}",
+            f"derived_closing_value\t{payload.derived_closing_value}",
+            f"cogs\t{payload.cogs}",
+            f"bucket_event_ids\t{','.join(payload.bucket_event_ids)}",
         ),
     )
 
@@ -238,46 +181,40 @@ def inventory_closing_authority_record(
     year: int,
     file: Path,
 ) -> None:
-    """Record one complete typed authority document from its canonical file input."""
-    from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
-
+    """Read one typed authority DTO, then persist it in the profile worker."""
     bucket_id = _inventory_bucket_id()
     try:
-        record = InventoryClosingAuthorityRecord.model_validate_json(file.read_text(encoding=UTF_8_ENCODING))
-        result = _inventory_service(ctx, bucket_id=bucket_id).closing_authority_record(
-            bucket_id=bucket_id,
-            actividad_id=actividad_id,
-            year=year,
-            authority_record=record,
-        )
+        authority = InventoryClosingAuthorityRecord.model_validate_json(file.read_text(encoding=UTF_8_ENCODING))
+        authority_record = InventoryClosingAuthorityRecordInput.from_domain(authority)
     except (OSError, ValidationError) as exc:
         raise typer.BadParameter(
             tr("cli.app.ledger.inventory.authority_invalid"),
             param_hint="--file",
         ) from exc
-    persisted = result.ledger.closing_authority_record
-    if persisted is None:
-        raise InventoryLedgerError(
-            f"inventory ledger for actividad {actividad_id} year {year} retains no closing authority "
-            "record after recording one",
-        )
-    payload = InventoryClosingAuthorityRecordResult(
+    request = InventoryClosingAuthorityRecordRequest(
+        profile_id=UUID(bucket_id),
         actividad_id=actividad_id,
         year=year,
-        authority_record_fingerprint=persisted.fingerprint,
-        decision_fingerprint=persisted.decision.fingerprint,
-        physical_observation_fingerprint=(
-            persisted.physical_observation.fingerprint if persisted.physical_observation is not None else None
-        ),
-        prior_closing_link_fingerprint=persisted.prior_closing_link.fingerprint,
+        authority_record=authority_record,
     )
+    _completion, payload = record_inventory_closing_authority(ctx, request=request)
+    result: InventoryClosingAuthorityRecordResult = payload
     emit_envelope(
         ctx,
         command="ledger.inventory.closing-authority.record",
-        result=payload,
+        result=result,
         lines=(
-            f"actividad_id\t{actividad_id}",
-            f"year\t{year}",
-            f"authority_record_fingerprint\t{persisted.fingerprint}",
+            f"actividad_id\t{result.actividad_id}",
+            f"year\t{result.year}",
+            f"authority_record_fingerprint\t{result.authority_record_fingerprint}",
         ),
     )
+
+
+__all__ = [
+    "inventory_closing_authority_record",
+    "inventory_create",
+    "inventory_list",
+    "inventory_movement_add",
+    "inventory_valuation_preview",
+]

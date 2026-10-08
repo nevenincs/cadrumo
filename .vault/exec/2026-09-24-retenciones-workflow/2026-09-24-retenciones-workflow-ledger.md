@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#retenciones-workflow'
 date: '2026-09-24'
-modified: '2026-10-01'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:96ba0d8de6e0428427f79453380e703116c3a65f1f8af9ab69f69575f910e69b'
+body_hash: 'sha256:86e89fd829bab14230e826a7068959f443cf3b8ed172bf807c4f4d886f913b33'
 related:
   - "[[2026-09-24-retenciones-workflow-plan]]"
 ---
@@ -22,19 +22,16 @@ related:
 - `S02` `M` `src/cadrumo/application/aggregation/retencion_observations_repository.py`
 - `S02` `M` `src/cadrumo/adapters/persistence/profile/retencion_observations.py`
 - `S02` `M` `src/cadrumo/application/modelo/calculation_actions.py`
-- `S02` `A` `src/cadrumo/application/aggregation/tests/test_withholding_source_m193_phases.py`
 - `S02` `M` `src/cadrumo/locales/en/common.yml`
 - `S02` `verify:` `pytest m193 phases, withholding source, retenciones resolver, empty-store guard, locale parity` -> `pass`
 - `S06` `M` `src/cadrumo/application/aggregation/m193_phase_materialization.py`
 - `S06` `M` `src/cadrumo/application/aggregation/withholding_source.py`
 - `S06` `M` `src/cadrumo/application/aggregation/source_mesh.py`
-- `S06` `M` `src/cadrumo/application/aggregation/tests/test_withholding_source_m193_phases.py`
 - `S06` `verify:` `pytest m193 phases, withholding resolver, producer, ledger capital, source mesh` -> `pass`
 - `S09` `M` `src/cadrumo/application/modelo/export.py`
 - `S09` `M` `src/cadrumo/application/modelo/preconditions.py`
 - `S09` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
 - `S09` `M` `src/cadrumo/application/aggregation/m193_phase_materialization.py`
-- `S09` `A` `src/cadrumo/application/modelo/tests/test_m193_settled_row_export_gate.py`
 - `S09` `A` `dev/quality/tests/test_capability_flags_have_production_readers.py`
 - `S09` `verify:` `pytest export gate 7, application/modelo 1472, core/errors 43, capability flag guard` -> `pass`
 - `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/bindings/0001-declarations.toml`

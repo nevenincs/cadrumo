@@ -68,6 +68,23 @@ _LOG = get_logger(__name__)
 SANITIZER_VERSION = "0.1.0"
 
 
+def _scrub_static_pdf_metadata(
+    pdf: pikepdf.Pdf,
+    scrub_docinfo_dict: bool,
+    scrub_xmp_packet: bool,
+    scrub_xmp_strategy: Literal["delete", "rewrite"],
+    surfaces: list[ScrubbedSurface],
+    warnings: list[SanitizationWarning],
+) -> None:
+    """Scrub static pdf metadata."""
+    if scrub_docinfo_dict:
+        surfaces.append(scrub_docinfo(pdf))
+    if scrub_xmp_packet:
+        scrubbed, xmp_warnings = scrub_xmp(pdf, strategy=scrub_xmp_strategy)
+        surfaces.append(scrubbed)
+        warnings.extend(xmp_warnings)
+
+
 def sanitize_pdf(
     source: bytes | Path,
     mapping: TokenMap,
@@ -164,12 +181,7 @@ def sanitize_pdf(
 
     replacements: tuple[Replacement, ...] = apply_token_map_to_pdf(pdf, mapping)
 
-    if scrub_docinfo_dict:
-        surfaces.append(scrub_docinfo(pdf))
-    if scrub_xmp_packet:
-        scrubbed, xmp_warnings = scrub_xmp(pdf, strategy=scrub_xmp_strategy)
-        surfaces.append(scrubbed)
-        warnings.extend(xmp_warnings)
+    _scrub_static_pdf_metadata(pdf, scrub_docinfo_dict, scrub_xmp_packet, scrub_xmp_strategy, surfaces, warnings)
 
     output_bytes, flags = save_with_deterministic_flags(pdf)
     output_sha = sha256_hex(output_bytes)

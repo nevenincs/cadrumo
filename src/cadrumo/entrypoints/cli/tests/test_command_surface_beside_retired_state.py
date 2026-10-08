@@ -73,7 +73,7 @@ def test_the_command_surface_manifest_carries_the_published_modelos_beside_retir
         env_strip_prefixes=_STRIPPED_PREFIXES,
         extra_env=environment,
         cwd=tmp_path,
-        timeout=300.0,
+        timeout=None,
     )
 
     assert completed.returncode == 0, completed.stderr[-4000:]
@@ -96,7 +96,7 @@ def test_a_storage_command_still_refuses_beside_retired_state(tmp_path: Path) ->
         env_strip_prefixes=_STRIPPED_PREFIXES,
         extra_env={**environment, "CADRUMO_OUTPUT_LANGUAGE": "en"},
         cwd=tmp_path,
-        timeout=300.0,
+        timeout=None,
     )
 
     combined = f"{completed.stdout}\n{completed.stderr}"

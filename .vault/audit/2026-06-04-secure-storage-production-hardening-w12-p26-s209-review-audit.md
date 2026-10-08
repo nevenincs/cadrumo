@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:49d12b417d215e74f8dd107feae526eebf4a244362b3715e8eae289ec26a5adb'
+modified: '2026-10-03'
+body_hash: 'sha256:3dc9b20936778e4080f3b16b610f20abfc78b373df620c8730d032395478fd9a'
 related: []
 ---
 
@@ -38,9 +38,9 @@ audited with the mandated `python -m aeat.locales` CLI.
 
 ## S209-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/filing/_review.py src/aeat/application/filing/test_review_runtime_storage.py src/aeat/application/filing/test_review_describe_stale_reason.py` passed.
-- `uv run --no-sync pytest src/aeat/application/filing/test_filing.py src/aeat/application/filing/test_review_runtime_storage.py src/aeat/application/filing/test_review_describe_stale_reason.py -q` passed with 44 tests.
-- `uv run --no-sync pytest src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "transactions or s85_runtime" -q` passed with 3 selected tests.
+- the historical check passed.
+- the historical check passed with 44 tests.
+- the historical check passed with 3 selected tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for the S209

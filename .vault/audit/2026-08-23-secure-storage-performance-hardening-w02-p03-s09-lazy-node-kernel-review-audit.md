@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#secure-storage-performance-hardening'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:39e14feb0998a83081cc7b9664f357f42ab345203bbf12387243251cde83cd1f'
-related:
-  - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
+body_hash: 'sha256:5c98dfafede0e5edc84a316f02b5e2ca79207ed61bd13a9db5c92efcf74185f5'
+related: []
 ---
 
 # `secure-storage-performance-hardening` audit: `W02.P03.S09 lazy node kernel review`
@@ -26,18 +25,7 @@ same-namespace missing-internal-module error.
 
 ### optional-dependency-classification | high | A missing internal module in an optional package is silently degraded
 
-`_dependency_is_explicitly_optional` in
-`src/cadrumo/entrypoints/cli/_command_suggestions.py` accepts both an exact
-declared dependency and every dotted descendant of it. Consequently a loaded
-optional package that raises `ModuleNotFoundError(name="declared.internal")`
-is treated exactly like the declared top-level package being absent. An
-external probe using `LazyFactoryTarget(...,
-optional_dependencies=frozenset({"declared"}))` observed the loader returning
-the unavailable surface (`DEGRADED x`) instead of surfacing the internal
-defect. The committed negative fixture names an unrelated transitive package,
-so it does not bite on this same-namespace failure mode. This violates the
-Step's fail-loud rule and can hide a corrupt or incomplete optional
-installation behind a plausible unavailable-command response.
+Consequently a loaded optional package that raises `ModuleNotFoundError(name="declared.internal")` is treated exactly like the declared top-level package being absent. An external probe using `LazyFactoryTarget(..., optional_dependencies=frozenset({"declared"}))` observed the loader returning the unavailable surface (`DEGRADED x`) instead of surfacing the internal defect. The committed negative fixture names an unrelated transitive package, so it does not bite on this same-namespace failure mode. This violates the Step's fail-loud rule and can hide a corrupt or incomplete optional installation behind a plausible unavailable-command response.
 
 Resolution evidence (2026-08-23): fixed in the reviewed working tree.
 Classification now requires exact membership of `ModuleNotFoundError.name` in
@@ -49,18 +37,7 @@ degrading. Finding closed.
 
 ### exhaustive-nested-materialisation | high | Full-tree consumers cannot drain nested lazy nodes
 
-`materialise_lazy_subcommands` in
-`src/cadrumo/entrypoints/cli/_command_suggestions.py` traverses only Typer's
-`registered_groups` and indexes each Typer node by `node.info.name`. A nested
-`LazySubcommand` is returned directly as a materialized Click command by
-`CadrumoTyperGroup.get_command`; it is not added to its parent's Typer
-`registered_groups`. The new token-by-token resolver and live walker can reach
-that node, but `full_command_tree`, operator-surface drift, and JSON-schema
-conformance still call the old materializer under an explicit promise of
-exhaustiveness. Once S13/S14 register nested lazy descendants, those consumers
-can report success while omitting entire descendant families. The focused S09
-test proves `resolve_command_path`, but does not prove the supported full-tree
-materialization boundary.
+A nested `LazySubcommand` is returned directly as a materialized Click command by `CadrumoTyperGroup.get_command`; it is not added to its parent's Typer `registered_groups`. The new token-by-token resolver and live walker can reach that node, but `full_command_tree`, operator-surface drift, and JSON-schema conformance still call the old materializer under an explicit promise of exhaustiveness. Once S13/S14 register nested lazy descendants, those consumers can report success while omitting entire descendant families. The focused S09 test proves `resolve_command_path`, but does not prove the supported full-tree materialization boundary.
 
 Resolution evidence (2026-08-23): fixed in the reviewed working tree.
 `materialise_lazy_subcommands` now traverses the actual vendored Click

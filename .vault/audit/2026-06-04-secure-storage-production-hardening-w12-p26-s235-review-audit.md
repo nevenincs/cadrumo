@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:9b556bbfa7ee3bc51bd245195f3aec7e411a90d26bf877bded650e256902d7cd'
+modified: '2026-10-03'
+body_hash: 'sha256:f6c4f11a4208dc57af708bd405ed1ac900acc68b3aeb07c802b28cb3b7c75f6b'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S235-001 | PASS | Borrador binding is a remote-mirror secure-object consumer
 
-`src/aeat/application/modelo/_borrador_binding.py` owns the application decision
+The retired module owned the application decision
 to consume a selected Modelo 100 borrador snapshot for calculation binding
 inputs. It validates registry capability, calculation axis, snapshot lifecycle,
 and caller-precedence rules, then returns typed binding values and source-mesh
@@ -40,9 +40,9 @@ logs the exception at debug level with exception info and returns a structured
 
 ## S235-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/modelo/_borrador_binding.py src/aeat/application/modelo/test_borrador_binding.py` passed.
-- `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/application/modelo/test_borrador_binding.py` passed.
-- `$env:PYTHONPATH='src'; uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "borrador or s85_runtime"` passed.
+- the historical check passed.
+- the historical check passed.
+- the historical check passed.
 - `uv run --no-sync vaultspec-core vault plan step check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md S235` passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed after the adjacent S236 export keys landed.
 

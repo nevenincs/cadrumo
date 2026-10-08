@@ -203,8 +203,7 @@ class WorkflowEngine:
                 the draft stage.
             settings: Application :class:`Settings` instance.
             expedientes_source: Test seam over
-                :func:`adapters.outbound.aeat.sede.walker.walk_expedientes_tree`. Defaults to the
-                live walker.
+                the bucket-scoped application capture.
             notifications_source: Test seam over
                 a bucket-scoped application capture. ``None`` leaves the
                 inbox stage not wired; it must never default to a direct
@@ -225,7 +224,7 @@ class WorkflowEngine:
         # obligation has been resolved carries a ``run_id`` that
         # matches the final :class:`WorkflowResult.run_id`. When no
         # obligation is known yet (e.g. ``SiteHealthError`` from the
-        # deadline stage of an open-ended ``run_next`` call)
+        # deadline stage before the obligation has been resolved)
         # the ``-`` placeholders are expected and match the
         # placeholders in the final result.
         self._run_tax_id: str | None = None
@@ -235,32 +234,6 @@ class WorkflowEngine:
         self._run_obligation: WorkflowDeadlineTarget | None = None
 
     # ------------------------------------------------------------------ public
-
-    async def run_next(
-        self,
-        profile: TaxpayerProfile,
-        *,
-        fail_on_warning: bool = False,
-        today: date | None = None,
-    ) -> WorkflowResult:
-        """Drive the workflow for the caller's next obligation.
-
-        Args:
-            profile: The :class:`TaxpayerProfile` to run for.
-            fail_on_warning: Forwarded to the filing draft builder.
-            today: Reference date for deadline / preflight checks.
-                Defaults to :meth:`date.today`.
-
-        Returns:
-            A fully populated :class:`WorkflowResult`.
-        """
-        return await self._drive(
-            profile=profile,
-            target_modelo=None,
-            target_period=None,
-            fail_on_warning=fail_on_warning,
-            today=today,
-        )
 
     async def run_for_period(
         self,
@@ -279,8 +252,9 @@ class WorkflowEngine:
             profile: The :class:`TaxpayerProfile` to run for.
             modelo: Target modelo identifier.
             period: Target period identifier.
-            fail_on_warning: See :meth:`run_next`.
-            today: See :meth:`run_next`.
+            fail_on_warning: Treat draft validation warnings as blocking findings.
+            today: Reference date for deadlines and certificate validity;
+                defaults to the current date in Madrid.
             resumed_from: Optional prior workflow ``run_id`` that this
                 invocation continues. When set, the produced
                 :class:`WorkflowResult` carries the linkage so callers

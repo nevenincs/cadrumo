@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#obligation-coverage-completeness'
 date: '2026-06-30'
-modified: '2026-08-15'
-body_hash: 'sha256:54ff7f981b3549a79843f6997e238b0d4ee9f126b5a8abef22339ba190aded49'
+modified: '2026-10-03'
+body_hash: 'sha256:42045003ea21c2bbec144834c6428aae11c535d68ebef9b9600f235fe25185c6'
 related:
   - "[[2026-06-30-obligation-coverage-completeness-research]]"
 ---
@@ -86,7 +86,7 @@ up — at obligation *determination*, not calculation.
 
 Concretely, an obligation reaches a default-visible row only if it passes both
 gates of the single producer `compute_obligation_schedule`
-(`src/cadrumo/domain/deadlines/_engine.py:443`): Gate 1 requires a registered
+: Gate 1 requires a registered
 deadline window (or the engine never emits it); Gate 2 requires the seed
 applicability verdict to be `APPLICABLE` (`_calendar.py:1349-1360`), else the row
 is dropped and captured only when the default-off `--show-suppressed` flag is

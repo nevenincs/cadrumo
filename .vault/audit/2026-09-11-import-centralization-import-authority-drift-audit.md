@@ -3,17 +3,15 @@ tags:
   - '#audit'
   - '#import-centralization'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:474bfdc75d13fea78ccc1ed2e1b88f7898db1cd3f1e7181561809484a48222ac'
+body_hash: 'sha256:03e5b38f22bf87b5cc85ec39934675b8a9d16761488dbbb338955e71f206d53f'
 related:
   - "[[2026-07-01-import-centralization-research]]"
   - "[[2026-07-01-import-centralization-adr]]"
   - "[[2026-07-02-arch-remediation-ports-inversion-adr]]"
   - "[[2026-07-08-importlinter-test-carveout-adr]]"
   - "[[2026-09-08-quality-gate-zero-closure-product-boundary-adr]]"
-  - "[[2026-07-01-import-centralization-plan]]"
-  - "[[2026-08-24-quality-gate-zero-closure-plan]]"
 ---
 # `import-centralization` audit: `Import authority drift and single-gate ownership`
 
@@ -47,7 +45,7 @@ Import Linter is the correct dependency-graph authority, but it cannot alone rej
 
 ### duplicate-policy-authorities | high | Pytest gates and scanners independently restate import rules
 
-The overlapping set includes the core-boundary, relative-import resolution, cross-module resolution, test-support import, inert-namespace, lazy-facade, namespace-attribute, dunder/private, test-alias, TUI AST-import, harness-direction, and registry-public-API tests, plus `dev/import_hygiene_scan.py` and related quality scanners. Their import-policy portions overlap `.importlinter` and one another. Tests that also protect runtime behavior must be split so only the distinct behavior assertion survives.
+Their import-policy portions overlap `.importlinter` and one another. Tests that also protect runtime behavior must be split so only the distinct behavior assertion survives.
 
 ### nonblocking-consumer-interpretation | high | The development health report can disagree with the blocking gate
 
@@ -125,7 +123,6 @@ Nothing outside `cadrumo.entrypoints` imports an entrypoint. Application and dom
 | --- | --- | --- |
 | `.importlinter` | Dependency direction, roots, test ignores, and layered graph | Sole declarative owner of package classification and allowed dependency directions; make roots and layers exhaustive and remove broad ignores. |
 | `just check-imports` | Currently invokes one quiet lint wrapper | Sole contributor-facing verdict and orchestrator for every import check. |
-| `dev/import_hygiene_scan.py` and related AST scanners | Private imports, facades, forwarding modules, syntax, partial dynamic targets | Replace or narrow into one subordinate syntax/canonical/dynamic checker with no lane matrix or independent verdict. |
 | architecture pytest tests | Re-state source, layer, relative, private, facade, harness, entrypoint, or registry import predicates | Remove only after equivalent planted-defect proof passes through `just check-imports`; split and retain distinct runtime behavior. |
 | `dev/audit/report.py` layering dimension | Re-runs and parses Import Linter output | Consume the authoritative command result only; non-zero is RED, zero is GREEN, and unavailable execution cannot become an advisory substitute for the blocking gate. |
 | packaging tests | Distribution inclusion and exclusion | Retain as distinct artifact-behavior tests; do not treat excluded tests as architecture-exempt. |

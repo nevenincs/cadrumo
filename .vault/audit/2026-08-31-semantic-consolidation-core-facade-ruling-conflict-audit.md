@@ -3,16 +3,19 @@ tags:
   - '#audit'
   - '#semantic-consolidation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0bd443696bc11df0040fd7f3b76fc65999d7820e66e7d3ce30943014f7f91120'
+body_hash: 'sha256:5e01014178df963801ad2917f927e282427df27794c37021d6a45c87d500ea64'
 related: []
 ---
 
 # `semantic-consolidation` audit: `core facade ruling conflict`
 
-## The conflict
+## Scope
 
+Compare the accepted core-facade ruling with the current remediation path and identify the authority conflict.
+
+## Findings
 `P01.S08` directs retiring the `cadrumo.core` lazy export map "on the measured
 finding that the facade saves a real consumer nothing", and
 `aeat-architecture-boundaries` states plainly that package namespaces "are inert
@@ -36,6 +39,16 @@ These do not merely READ the facade. They require it: that a symbol is public
 *only* from core, that an axis is *reachable through* the facade, that the
 facade resolves a late-bound name while settings are being constructed.
 
+## Recommendations
+An operator ruling on whether `cadrumo.core` is exempt from the inert-namespace
+rule as a declared public API, or whether these thirteen gates are the old
+regime and should be reauthored against defining modules.
+
+If the ruling is to proceed, the work is ready: the map validates completely,
+the tooling is proven on the larger storage case, and the thirteen gates are
+enumerated above. The one requiring real thought is
+`test_early_init_facade_imports`, because it tests import-time behaviour rather
+than surface.
 ## What was done, and undone
 
 The retirement was executed and verified first, so the conflict is measured
@@ -67,15 +80,3 @@ Rewriting all thirteen would make the tree green while deciding, unilaterally
 and at the end of a long session, that a documented architectural position is
 obsolete. The measurement is the deliverable here; the ruling is not the
 executor's to make.
-
-## What is needed
-
-An operator ruling on whether `cadrumo.core` is exempt from the inert-namespace
-rule as a declared public API, or whether these thirteen gates are the old
-regime and should be reauthored against defining modules.
-
-If the ruling is to proceed, the work is ready: the map validates completely,
-the tooling is proven on the larger storage case, and the thirteen gates are
-enumerated above. The one requiring real thought is
-`test_early_init_facade_imports`, because it tests import-time behaviour rather
-than surface.

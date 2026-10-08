@@ -18,8 +18,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
-from ._detect import detect_artefact_kind
+from ..pdf.page_text_extraction import extract_pages_text_from_bytes
+from ._detect import detect_artefact_kind, detect_artefact_kind_from_pages
 from ._extractors.selection import get_extractor
 from .errors import BorradorParseError
 from .schema import (
@@ -33,7 +35,7 @@ _logger = get_logger(__name__)
 
 
 def parse_borrador(
-    pdf_path: Path,
+    pdf_path: Path | bytes,
     *,
     artefact_kind_override: ArtefactKind | None = None,
     año_override: int | None = None,
@@ -43,7 +45,7 @@ def parse_borrador(
     """Parse an observed AEAT Modelo 100 artefact PDF.
 
     Args:
-        pdf_path: Path to the borrador / predeclaración / declaración PDF.
+        pdf_path: Path to the borrador / predeclaración / declaración PDF, or its observed bytes.
         artefact_kind_override: Skip auto-detection and force the
             :class:`~adapters.inbound.borrador.schema.ArtefactKind`.
         año_override: Select the year-keyed extractor explicitly. When omitted,
@@ -65,6 +67,14 @@ def parse_borrador(
             missing registry profile in ``REGISTRY_PROFILE`` mode, or coverage
             below the supplied profile minimum).
     """
+    if isinstance(pdf_path, bytes):
+        return _parse_borrador_bytes(
+            pdf_path,
+            artefact_kind_override=artefact_kind_override,
+            año_override=año_override,
+            extraction_profile=extraction_profile,
+            parse_mode=parse_mode,
+        )
     path = Path(pdf_path)
     if parse_mode is BorradorParseMode.REGISTRY_PROFILE and extraction_profile is None:
         raise BorradorParseError("registry-profile parsing requires a registry extraction profile")
@@ -81,6 +91,31 @@ def parse_borrador(
         año,
     )
     return result
+
+
+def _parse_borrador_bytes(
+    pdf_bytes: bytes,
+    *,
+    artefact_kind_override: ArtefactKind | None = None,
+    año_override: int | None = None,
+    extraction_profile: BorradorExtractionProfile | None = None,
+    parse_mode: BorradorParseMode = BorradorParseMode.OBSERVED,
+) -> InboundBorradorObservation:
+    """Parse one in-memory PDF capture, sharing detection and extraction text."""
+    if parse_mode is BorradorParseMode.REGISTRY_PROFILE and extraction_profile is None:
+        raise BorradorParseError("registry-profile parsing requires a registry extraction profile")
+    año = año_override if año_override is not None else 2025
+    extractor = get_extractor(año)
+    pages = extract_pages_text_from_bytes(
+        pdf_bytes, error_class=BorradorParseError, pdf_label="PDF", source_label="<input-pdf>"
+    )
+    artefact_kind = artefact_kind_override or detect_artefact_kind_from_pages(pages)
+    return extractor.extract_pages(
+        pages,
+        artefact_kind,
+        source_pdf_sha256=sha256_hex(pdf_bytes),
+        extraction_profile=extraction_profile,
+    )
 
 
 __all__ = ["parse_borrador"]

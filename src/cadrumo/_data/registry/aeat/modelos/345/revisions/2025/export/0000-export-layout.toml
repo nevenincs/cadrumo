@@ -1,0 +1,23 @@
+[[revisions.2025.export_layouts]]
+id = 'modelo-345-fichero'
+format = 'fixed_width'
+source_refs = [
+    'aeat-dr-345-2025',
+    'boe-modelo-345-2023-amendment-hfp-1397',
+    'boe-modelo-345-2023-amendment-hfp-528',
+    'boe-modelo-345-2024-amendment-hac-1504',
+    'boe-modelo-345-2025-amendment-hac-1430',
+    'boe-modelo-345-base-order',
+]
+legal_refs = [
+    'orden-hac-1430-2025:art-septimo',
+    'orden-hac-1504-2024:art-octavo',
+    'orden-hfp-1397-2023:art-sexto',
+    'orden-hfp-528-2023:art-unico',
+    'orden-hfp-823-2022:art-1',
+    'orden-hfp-823-2022:art-2',
+    'orden-hfp-823-2022:art-3',
+    'orden-hfp-823-2022:art-4',
+    'orden-hfp-823-2022:art-5',
+]
+dictionary_path_overrides = []

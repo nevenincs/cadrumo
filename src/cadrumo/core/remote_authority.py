@@ -7,6 +7,7 @@ directly so runtime settings cannot become a competing authority.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Final
 from urllib.parse import urlsplit
 
@@ -67,6 +68,21 @@ def canonical_remote_hostname(url: str) -> str | None:
     return host.lower()
 
 
+def host_is_under_suffixes(host: str, suffixes: Iterable[str]) -> bool:
+    """Return whether ``host`` equals, or is a subdomain of, one of ``suffixes``.
+
+    The one label-boundary comparison every host allow-list in the product
+    uses. Each caller still chooses its own suffix scope; this predicate only
+    guarantees that ``evilagenciatributaria.gob.es`` never passes as a
+    subdomain of ``agenciatributaria.gob.es``.
+    """
+    normalized = host.lower()
+    return any(
+        normalized == candidate or normalized.endswith(f".{candidate}")
+        for candidate in (suffix.lower() for suffix in suffixes)
+    )
+
+
 def aeat_host_suffixes() -> tuple[str, ...]:
     """Return host suffixes treated as AEAT-owned infrastructure."""
     domains = load_external_constants().aeat.domains
@@ -75,8 +91,17 @@ def aeat_host_suffixes() -> tuple[str, ...]:
 
 def is_aeat_host(host: str) -> bool:
     """Return whether ``host`` is under an AEAT-owned suffix."""
-    normalized = host.lower()
-    return any(normalized == suffix or normalized.endswith(f".{suffix}") for suffix in aeat_host_suffixes())
+    return host_is_under_suffixes(host, aeat_host_suffixes())
+
+
+def is_current_aeat_host(host: str) -> bool:
+    """Return whether ``host`` is under the current AEAT apex only.
+
+    Narrower than :func:`is_aeat_host` by design: an authenticated landing or
+    an auth-gate redirect is served from the current apex, so the legacy
+    suffix that a read guard may still admit is not accepted here.
+    """
+    return host_is_under_suffixes(host, (load_external_constants().aeat.domains.host_suffix,))
 
 
 def first_aeat_host(hosts: tuple[str, ...]) -> str | None:
@@ -104,7 +129,4 @@ def is_sanctioned_gov_idp_host(host: str) -> bool:
     host in a guard policy is gated separately on an explicit opt-in
     (see :class:`RemoteStateGuardPolicy.allows_gov_idp_hosts`).
     """
-    normalized = host.lower()
-    return any(
-        normalized == suffix or normalized.endswith(f".{suffix}") for suffix in sanctioned_gov_idp_host_suffixes()
-    )
+    return host_is_under_suffixes(host, sanctioned_gov_idp_host_suffixes())

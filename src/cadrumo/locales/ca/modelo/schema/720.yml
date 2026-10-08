@@ -1,6 +1,32 @@
 modelo:
   schema:
     '720':
+      binding:
+        x-dlnm8pbcdsmjechg5pq7is35bsoisp35cdm62sj1cdkmurhdcdnmqs3cclmmarjkc5p6io9ddsmn6tbjehkn8tbkd5r62:
+          help: S'indica C si la declaració inclou registres omesos en una d'anterior
+            del mateix exercici, o S si anul·la i substitueix una d'anterior del mateix
+            exercici.
+          label: Declaració complementària o substitutiva
+        x-dlnm8pbcdsmjechg5pq7is35bsoisrjfdlh74p9dcdnmst31cdq6u:
+          label: Nom de la persona de contacte
+        x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdd5i6arjkd5j6ior1ehkncrpdchiiqr315li6aorcc5p62or9dtn0:
+          label: Número identificatiu de la declaració
+        x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdd5i6arjkd5j6ior1ehkncrpdchiiqr315li6aorcc5p62or9dtn2qobeehin4qbfe8:
+          label: Número identificatiu de la declaració anterior
+        x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdehnn8obc5li6abbicljmisrke9nn6bb4clhmoobic5i6uso:
+          label: Nombre total de registres declarats
+        ? x-dlnm8pbcdsmjechg5pq7is35bsoissrldlgiqt3fehgmobb4ckmncobcdtp62or9dtn2qc9dedgmop3f5lniqtj1dhnn4bb15kpj2bb4ckmm8qb3d5imqojickmn6
+        : help: Saldo o valor a 31 de desembre, saldo o valor en la data d'extinció,
+            o valor d'adquisició.
+          label: Suma total de valoració 1
+        ? x-dlnm8pbcdsmjechg5pq7is35bsoissrldlgiqt3fehgmobb4ckmncobcdtp62or9dtn2qchdd5mn0rriehiiqrpdepgmorri5li6abbcc4mn8sj1dppmqqbjd5nms
+        : help: Import o valor de la transmissió, o saldo mitjà de l'últim trimestre.
+          label: Suma total de valoració 2
+        x-dlnm8pbcdsmjechg5pq7is35bsoist35dhimcrredsmm6rreehgm6t3f:
+          label: Telèfon de la persona de contacte
+        x-dlnm8pbcdsmjechg5pq7is35bsoist39e1niqp355lpmus3fe9q6a:
+          help: 'S''indica la clau T: transmissió telemàtica.'
+          label: Tipus de suport
       construct:
         modelo-720-informative:
           field:

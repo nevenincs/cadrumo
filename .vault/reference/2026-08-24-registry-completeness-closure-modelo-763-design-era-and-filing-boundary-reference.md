@@ -3,12 +3,12 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:dd394c9b11047fa0a3bbad457c3efec7ba77dd102d659aec5983165ba6917ac2'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:3f9bb94adebc3b189254a13098eb600f25beddf88d3b8d9b8428174801b7c20d'
+related: []
 ---
+
 # `registry-completeness-closure` reference: `Modelo 763 design-era and filing boundary`
 
 ## Summary
@@ -131,8 +131,6 @@ or generic renderer result can count as that proof.
 - `src/cadrumo/_data/registry/aeat/legal/modelo-763.toml`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_763/manifest.json`
 - `src/cadrumo/application/filing/_envelope_modelo_policy.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_490_604_763_registry.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_unsupported_design_span_policy.py`
 - `2026-08-14-registry-temporal-coverage-plan`
 - `2026-08-22-source-casilla-integration-plan`
 - `2026-08-10-aeat-export-fragment-generator-authority-plan`

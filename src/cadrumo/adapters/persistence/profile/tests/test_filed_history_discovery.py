@@ -35,7 +35,7 @@ from cadrumo.adapters.outbound.aeat.sede.schema import (
 from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     registry_snapshot as _registry_snapshot,
 )
-from cadrumo.application.live.filed_data_capture import (
+from cadrumo.application.live.filed_history_discovery import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryPair,
     FiledHistoryDiscoveryReport,
@@ -461,7 +461,7 @@ def test_discovery_classifies_the_live_offered_options_at_its_owning_boundary() 
 
     class _DiscoveryPort(UnavailableFiledDataCapturePort):
         @override
-        async def discover_availability(self, *, operation: str) -> _AvailabilityReport:
+        async def discover_availability(self, *, operation: str, **_kwargs: object) -> _AvailabilityReport:
             assert operation == "live-expedientes-read"
             return availability
 

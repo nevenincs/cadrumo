@@ -18,8 +18,9 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import revisio
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.filing.producer_snapshot import M202_UNSUPPORTED_PRODUCER_IDS
-from ....application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID, ModeloExportRequest
+from ....application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from ....application.modelo.tests.registry_revision import active_registry_revision_id
+from ....application.modelo.work_export_contracts import ModeloExportRequest
 from ....application.operations.frontend_requests import OperationObservationRequestV1, OperationObservationSuccessV1
 from ....application.operations.models import OperationRequest
 from ....application.workflow.persistence import workflow_state_repository
@@ -29,7 +30,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ....domain.filing.software_identity import DEVELOPMENT_MOCK_DEVELOPER_TAX_ID
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -649,12 +649,16 @@ def test_export_modelo_202_emilio_passes_the_identity_gate_and_stops_at_incomple
     assert not out.exists()
 
 
-def test_export_without_an_envelope_prefix_reports_no_software_identity(
+def test_a_fixed_record_envelope_reports_the_development_identity_it_stamps(
     tmp_path: Path,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """A layout without an envelope prefix carries no developer header, so no identity grade is reported."""
+    """Modelo 111 authors its envelope as a fixed record whose EEDD slots take the development mock identity.
+
+    The file carries the all-zero identity, so the operator must be told it is
+    not presentable at AEAT exactly as for an envelope-prefix layout.
+    """
     _set_emilio_legal_entity_export_profile()
     _seed_modelo_111_revisions(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
@@ -687,9 +691,11 @@ def test_export_without_an_envelope_prefix_reports_no_software_identity(
 
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
-    assert envelope["result"]["software_identity_grade"] is None
-    assert "modelo.export.development_software_identity" not in {notice["code"] for notice in envelope["notices"]}
-    assert DEVELOPMENT_MOCK_DEVELOPER_TAX_ID.encode("ascii") not in out.read_bytes()
+    assert envelope["result"]["software_identity_grade"] == "development_mock"
+    assert "modelo.export.development_software_identity" in {notice["code"] for notice in envelope["notices"]}
+    written = out.read_bytes()
+    assert written[92:96] == b"0000"
+    assert written[100:109] == b"X0000000T"
 
 
 def _export_through_the_operation(
@@ -814,8 +820,19 @@ def test_export_invalid_period_names_the_selected_modelo_tokens(tmp_path: Path) 
     assert "0A" in result.output
 
 
+@pytest.mark.parametrize(
+    ("output_language", "expected_notice"),
+    [
+        ("en", "The exported file is not an AEAT filing receipt."),
+        ("es", "El fichero exportado no es un justificante de presentación de la AEAT."),
+        ("ca", "El fitxer exportat no és un justificant de presentació de l'AEAT."),
+        ("hu", "Az exportált fájl nem az AEAT által kiállított benyújtási igazolás."),
+    ],
+)
 def test_export_resolves_visible_target_to_current_verified_revision(
     tmp_path: Path,
+    output_language: str,
+    expected_notice: str,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
@@ -831,6 +848,8 @@ def test_export_resolves_visible_target_to_current_verified_revision(
 
     result = _invoke(
         [
+            "--language",
+            output_language,
             "--format",
             "json",
             "app",
@@ -857,7 +876,7 @@ def test_export_resolves_visible_target_to_current_verified_revision(
     assert notice["context"]["modelo"] == "111"
     assert notice["context"]["filing_year"] == "2026"
     assert notice["context"]["period"] == "1T"
-    assert notice["message"] == "The local export is not official filing evidence."
+    assert notice["message"] == expected_notice
     assert notice["action"] is None
     assert out.exists()
 

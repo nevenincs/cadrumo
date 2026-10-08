@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#arch-remediation-program'
 date: '2026-07-05'
-modified: '2026-07-17'
-body_hash: 'sha256:380c2b334ea9093a1578207dfa0652fa2248453d0fca546422f652a440a9ffae'
+modified: '2026-10-03'
+body_hash: 'sha256:13ee00fd7d1734c12c6794ecdb85b036e206a6d663468d6944f7112370a88d0d'
 related:
   - "[[2026-07-02-arch-remediation-program-adr]]"
   - "[[2026-07-02-aeat-architecture-review-audit]]"
@@ -32,13 +32,8 @@ tree can honestly declare the program closed.
 ### ratchet-gates-red | high | Program closure is blocked by current-tree ratchet failures
 
 The Wave 4 ratchet gate bundle is red on the current tree. The first run,
-`uv run --no-sync pytest -q src/aeat/tests/test_import_hygiene_gate.py
-src/aeat/tests/test_importlinter_ledger.py
-src/aeat/tests/test_lazy_import_policy.py
-src/aeat/tests/test_data_size_budget.py
-src/aeat/tests/test_codebase_size_budgets.py
-src/aeat/tests/test_wheel_content_boundary.py
-src/aeat/tests/test_wheel_bundles_corpus_and_registry.py`, failed with 7 failed
+Historical command omitted; its target was retired.
+The retired test`, failed with 7 failed
 and 31 passed in 55.09s. The required sequential rerun of the failing tests with
 `-n 0` reproduced all 7 failures in 11.06s, so this is not a parallel-loader
 artefact. The failures are: application-to-adapters pinned edges 850 > baseline
@@ -60,21 +55,8 @@ lands an accepted ADR deliberately freezing the new ceilings.
 
 The registry-format audit's deferred Wave 4 item is cleared. The focused
 M303/M369 filing-grade bundle ran through pytest:
-`uv run --no-sync pytest -q src/aeat/domain/calculations/registry/tests/test_modelo_369_registry.py
-src/aeat/domain/calculations/registry/tests/test_modelo_303_registry.py
-src/aeat/application/filing/tests/test_modelo_303_390.py
-src/aeat/application/filing/tests/test_fichero_boe_completeness_parity.py
-src/aeat/adapters/outbound/aeat/export/_formats/tests/test_fichero_boe_modelo_303.py
-src/aeat/adapters/outbound/aeat/export/_formats/tests/test_record_specs.py
-src/aeat/adapters/inbound/declaracion/tests/test_parser_boundary_m369.py
-src/aeat/adapters/inbound/declaracion/tests/test_verification_chain_m369.py
-src/aeat/adapters/inbound/declaracion/tests/test_parser_boundary_m303.py
-src/aeat/adapters/inbound/declaracion/tests/test_parser_boundary_m303_historical.py
-src/aeat/adapters/inbound/declaracion/tests/test_parser_boundary_m303_2023_2024.py
-src/aeat/adapters/inbound/declaracion/tests/test_verification_chain_m303_parser.py
-src/aeat/adapters/inbound/declaracion/tests/test_verification_chain_m303_historical.py
-src/aeat/adapters/inbound/declaracion/tests/test_verification_chain_m303_2023_2024.py
-src/aeat/adapters/inbound/declaracion/tests/test_m303_primitive_anti_tautology.py`.
+Historical command omitted; its target was retired.
+The retired test`.
 Result: 171 passed in 59.26s. The full output is in
 `var/log/arch-remediation-registry-format-filing-suites-20260705.log`.
 

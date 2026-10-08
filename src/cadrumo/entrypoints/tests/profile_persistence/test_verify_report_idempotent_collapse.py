@@ -6,7 +6,7 @@ wall-clock ``run_at``. This makes a non-granting ``modelo verify`` retry-safe
 for the autonomous-agent operator: re-running an identical verify collapses
 onto one persisted report instead of accumulating a fresh time-stamped report
 per attempt, while a genuinely distinct outcome (here a different actor) still
-produces a distinct report. Exercises the real ``verify_modelo_revision`` path
+produces a distinct report. Exercises the real ``verify_modelo_revision_with_preconditions`` path
 against the real registry and the encrypted report catalogue - no mocks.
 """
 
@@ -20,12 +20,12 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.filing_actions import list_verification_reports
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.tests.filing_record_read_support import persisted_verification_reports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     T1,
     T2,
@@ -58,12 +58,12 @@ def _verification_repositories_for_test(repos: Repos):
     )
 
 
-def _filing_ports_for_test(repos: Repos):
+def _filing_ports_for_test(repos: Repos, *, operation: PinnedAuthorityOperation):
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     bucket_id = wu_repo.bucket_id
     assert bucket_id is not None
     return replace(
-        build_filing_action_ports(bucket_id=bucket_id),
+        build_filing_action_ports(bucket_id=bucket_id, operation=operation),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
@@ -121,7 +121,7 @@ def test_identical_nongranting_verify_retry_collapses_to_one_report(
         _wu_repo, _cr_repo, _, _vr_repo, _bv_repo = repos
         revision = _seed_nongranting_revision(repos, operation=operation)
 
-        first = verify_modelo_revision(
+        first = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             actor="operator-A",
             workflow_profile=workflow_profile(),
@@ -130,8 +130,8 @@ def test_identical_nongranting_verify_retry_collapses_to_one_report(
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
-        )
-        second = verify_modelo_revision(
+        ).report
+        second = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             actor="operator-A",
             workflow_profile=workflow_profile(),
@@ -140,7 +140,7 @@ def test_identical_nongranting_verify_retry_collapses_to_one_report(
             clock=T3,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
-        )
+        ).report
 
         # Both refused, identical outcome.
         assert first.granted_verificado_completo is False
@@ -154,9 +154,9 @@ def test_identical_nongranting_verify_retry_collapses_to_one_report(
 
         # The catalogue collapsed: exactly ONE report for this revision, carrying
         # the last-seen run_at (T3 from the upsert), not two accumulated rows.
-        stored = list_verification_reports(
+        stored = persisted_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
-            ports=_filing_ports_for_test(repos),
+            ports=_filing_ports_for_test(repos, operation=_authority_operation_for_test),
             operation=_authority_operation_for_test,
         )
         assert len(stored) == 1
@@ -173,7 +173,7 @@ def test_distinct_outcome_verify_produces_a_distinct_report(
         _wu_repo, _cr_repo, _, _vr_repo, _bv_repo = repos
         revision = _seed_nongranting_revision(repos, operation=operation)
 
-        by_a = verify_modelo_revision(
+        by_a = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             actor="operator-A",
             workflow_profile=workflow_profile(),
@@ -182,8 +182,8 @@ def test_distinct_outcome_verify_produces_a_distinct_report(
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
-        )
-        by_b = verify_modelo_revision(
+        ).report
+        by_b = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             actor="operator-B",
             workflow_profile=workflow_profile(),
@@ -192,14 +192,14 @@ def test_distinct_outcome_verify_produces_a_distinct_report(
             clock=T3,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
-        )
+        ).report
 
         # verified_by is part of the outcome identity, so the two reports do NOT
         # collapse: distinct ids, both retained.
         assert by_b.verification_report_id != by_a.verification_report_id
-        stored = list_verification_reports(
+        stored = persisted_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
-            ports=_filing_ports_for_test(repos),
+            ports=_filing_ports_for_test(repos, operation=_authority_operation_for_test),
             operation=_authority_operation_for_test,
         )
         assert len(stored) == 2

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#cadrumo-frontend-launch'
 date: '2026-07-12'
-modified: '2026-07-17'
-body_hash: 'sha256:49feea015984fea62c28b8881132e959bd9a49a5915074b83810f8c6d1e5004f'
+modified: '2026-10-03'
+body_hash: 'sha256:83ba472c6546cea25490fdad6b9a6953a9e3eacb519b196947c76ced53e1040f'
 related: []
 ---
 
@@ -15,7 +15,7 @@ related: []
 Campaign-close honesty review, mandated by the campaign-close-honesty-review
 rule, over the Cadrumo marketing-frontend campaign: the `frontend/` landing
 page (Figma-derived, responsive, en/es/ca localization, legal page, animated
-404), the static-site deploy surface (`dev/deploy/frontend_static_site.py`,
+404), the static-site deploy surface (the retired module,
 `infra/docs-static-site.yaml`, justfile targets), the docs rebrand and the new
 agent-connection how-to, and the live delivery at `cadrumo.neve.md`. The
 review ran in fresh context via an independent read-only reviewer over the
@@ -49,7 +49,7 @@ soften the completeness assertion and correct the entity wording.
 
 ### honesty-review | high | The frontend deploy script has zero tests
 
-`dev/deploy/frontend_static_site.py` writes to the shared docs bucket with
+The retired module writes to the shared docs bucket with
 `--delete`; the `docs/*` protection guard, artifact validation, and
 invalidation parsing are untested, while the sibling docs publisher is
 tested. A guard regression would silently destroy the deployed docs.

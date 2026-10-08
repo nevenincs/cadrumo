@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#legal-corpus-structure'
 date: '2026-06-08'
-modified: '2026-08-15'
-body_hash: 'sha256:b7472b6ebf7dd83bcb7d00b5bc0c22af5a1702792ba497334021a345bfb7b834'
+modified: '2026-10-03'
+body_hash: 'sha256:6319293ebe98789ee076e93e518fa11cee366a3caef3811c056c6aac43f50283'
 related:
   - '[[2026-06-05-test-topology-refactor-adr]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
@@ -23,12 +23,12 @@ This audit performs a thorough review of the codebase to analyze and verify:
 ## Findings
 
 ### Finding A1: Production Corpus and Registry Bundling
-All production read-only legal references, consolidated legislation catalogues, and registry TOML definitions are fully bundled inside the installed package source under `src/aeat/_data/`. Specifically, `src/aeat/_data/corpus/` holds manuals and consolidated HTML normatives, while `src/aeat/_data/registry/` holds the modelo TOML definitions. These are successfully force-included inside the built wheel via the hatchling package targets, which has been verified by the built-wheel tripwire tests in `src/aeat/tests/test_wheel_bundles_corpus_and_registry.py`.
+All production read-only legal references, consolidated legislation catalogues, and registry TOML definitions are fully bundled inside the installed package source under `src/aeat/_data/`. Specifically, `src/aeat/_data/corpus/` holds manuals and consolidated HTML normatives, while `src/aeat/_data/registry/` holds the modelo TOML definitions. These are successfully force-included inside the built wheel via the hatchling package targets, which has been verified by the built-wheel tripwire tests in the retired test.
 
 ### Finding A2: Runtime Resource and Settings Path Resolution
-At runtime, all read-only resource lookups are strictly routed through the resource boundary functions `packaged_data()` and `bundled_path()` defined in `src/aeat/core/resources/_boundary.py`.
-1. The `Settings` class in `src/aeat/core/config.py` uses `default_factory` wrappers pointing to `bundled_path()` (e.g. `aeat_normatives_root` defaults to `bundled_path("corpus", "normatives")`), guaranteeing that default paths resolve into the installed package directory.
-2. Relative paths provided via environment overrides are normalized against `PROJECT_ROOT` in `src/aeat/core/paths.py`. This resolution is restricted to operator-writable outputs (such as `var/logs` or `var/secrets`) and is never used to fetch production legal metadata. No runtime-critical code references files outside `src/aeat/` by default.
+At runtime, all read-only resource lookups are strictly routed through the resource boundary functions `packaged_data()` and `bundled_path()` defined in the retired module.
+1. The `Settings` class in the retired module uses `default_factory` wrappers pointing to `bundled_path()` (e.g. `aeat_normatives_root` defaults to `bundled_path("corpus", "normatives")`), guaranteeing that default paths resolve into the installed package directory.
+2. Relative paths provided via environment overrides are normalized against `PROJECT_ROOT` in the retired module. This resolution is restricted to operator-writable outputs (such as `var/logs` or `var/secrets`) and is never used to fetch production legal metadata. No runtime-critical code references files outside `src/aeat/` by default.
 
 ### Finding A3: Sizing Consistency Between HTML and PDF Corpus
 The apparent difference in size between the HTML normative corpus (209 committed files) and the PDF corpus (directories containing only manifests or consent logs) is intentional and stems from a design strategy to prevent repository binary bloat:
@@ -58,7 +58,7 @@ The CLI exposes legal references and handbook definitions through several non-de
 5. **Manual practical review**: `aeat app registry manuals view` and `rules` expose metadata and rules from the annual handbooks (Renta and IVA), linking rules directly back to the casillas they govern via the `references_casillas` attribute.
 
 ### Finding A7: Packaged Data vs Database Reads
-1. **Schema and Legal References**: All registry TOMLs, legal catalogues, normatives, and manuals are read exclusively from package-bundled static data (located under `src/aeat/_data/`) using file-backed loader modules (e.g. `src/aeat/domain/manuals/_loader.py`). The CLI never queries the database for definitions, formulas, or handbook lookups.
+1. **Schema and Legal References**: All registry TOMLs, legal catalogues, normatives, and manuals are read exclusively from package-bundled static data (located under `src/aeat/_data/`) using file-backed loader modules (e.g. The retired module). The CLI never queries the database for definitions, formulas, or handbook lookups.
 2. **Operator Database (aeat.db)**: The SQLite database `aeat.db` is strictly bucket-scoped and reserved for persisting taxpayer profile facts, transaction ledgers, soft-tombstone records, and computed filing observations. It contains no static schema definitions.
 3. **Manual Graceful Degradation**: Production manuals on disk (like `src/aeat/_data/corpus/manuals/renta/2025/`) omit extracted chapter structures (which are optional). When the structured `chapters.json` or `sections/` files are missing, the repository loader and CLI commands degrade gracefully by reading only the `manifest.json` metadata and reporting `structure_available=False`.
 

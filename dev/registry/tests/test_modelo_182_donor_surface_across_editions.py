@@ -1,12 +1,8 @@
-"""Modelo 182 donor-row surface across every filing year the modelo authors.
+"""Modelo 182's official donor fields and explicit unresolved source boundary.
 
-The five donor-row bindings and the informative construct that gathers them are
-authored once, on the earliest edition, and inherited forward. Their grounding
-does not change between editions: the bindings cite the approving orden, and
-every record field they carry is printed at the same position by the
-ejercicio 2021-2023, 2024 and 2025 designs, which this module reads directly.
-What the later edition alone claims -- its verification expectation, workbook
-pin, design and deadline window -- stays keyed on it.
+The October binding-consumer closure retired donor scaffolding that no route
+resolved and no export wrote. Each edition retains its source-backed bindings
+disposition; official donor record positions remain independently measured.
 """
 
 from __future__ import annotations
@@ -105,7 +101,12 @@ def test_every_edition_design_prints_the_donor_fields_at_the_same_positions(mode
 
 def test_donor_surface_is_stated_once_on_the_earliest_edition(modelo_182: ModeloDefinition) -> None:
     earliest = min(modelo_182.revisions.values(), key=lambda revision: revision.valid_from)
-    assert {str(binding.id) for binding in earliest.bindings} == _DONOR_BINDINGS
+    assert not earliest.bindings
+    disposition = earliest.family_dispositions["bindings"]
+    assert "no calculation route resolved" in disposition.reason
+    assert "no export layout" in disposition.reason
+    assert set(disposition.source_refs) == {"aeat-dr-182-2021-2023"}
+    assert "orden-eha-3021-2007:art-1" in disposition.legal_refs
     assert {str(construct.id) for construct in earliest.constructs} == {_CONSTRUCT}
 
 
@@ -121,10 +122,10 @@ def test_donor_bindings_and_construct_hydrate_in_every_authored_year(
         bindings = {str(binding.id): binding for binding in revision.bindings}
         construct = next(item for item in revision.constructs if item.id == _CONSTRUCT)
 
-        assert set(bindings) == _DONOR_BINDINGS, filing_year
-        for binding in bindings.values():
-            assert tuple(map(str, binding.source_refs)) == ("enrolled-modelo-182-procedure",), filing_year
-        assert set(map(str, construct.bindings)) == _DONOR_BINDINGS, filing_year
+        assert not bindings, filing_year
+        assert not set(map(str, construct.bindings)) & _DONOR_BINDINGS, filing_year
+        assert "bindings" in revision.family_dispositions, filing_year
+        assert revision.family_dispositions["bindings"].source_refs, filing_year
         assert set(map(str, construct.casilla_ids)) == {"decl.ejercicio", "decl.tipo-declaracion"}, filing_year
         assert {str(window) for window in construct.deadline_windows} <= {
             str(window.id) for window in revision.deadline_windows

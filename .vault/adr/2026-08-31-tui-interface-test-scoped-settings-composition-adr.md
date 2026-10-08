@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#tui-interface'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:98c5ba648ed9c789e26706886e51fd151c3acaf4095c63356182191250b93096'
 related:
-  - "[[2026-08-11-tui-interface-plan]]"
   - '[[2026-08-31-tui-interface-settings-override-composition-probes-reference]]'
 ---
 

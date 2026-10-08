@@ -3,12 +3,11 @@ tags:
   - '#reference'
   - '#registry-generator'
 date: '2026-09-09'
-modified: '2026-09-09'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:9b759c62e836cb2052fc70fe48d0d074e18c54b8b8ed6cb8f799b6cb2fded24c'
 related:
   - "[[2026-09-09-registry-generator-adr]]"
-  - "[[2026-09-09-registry-generator-plan]]"
 ---
 
 # `registry-generator` reference: `how the consuming application behaves on an incoherent registry`

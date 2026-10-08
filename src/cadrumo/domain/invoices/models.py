@@ -35,6 +35,7 @@ from ...core.money.rounding import CENT, round_to_cents
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.iva_category_catalogue import require_iva_category
@@ -44,10 +45,11 @@ from ..identifiers import canonical_decimal_string
 from ..iva.classification import InvoiceKind, TransactionKind, resolve_transaction_kind_catalogue
 from ..iva.errors import IvaRateNotFoundError, IvaValidationError
 from ..iva.oss import OssIossRegime, resolve_oss_ioss_regime_catalogue
-from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind, require_eu_member_state, spanish_eu_member_state
+from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind, spanish_eu_member_state
 from ..transactions.raw_transaction import RawProvenance, SourceFormat
 from . import normalization as _normalization
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
+from .business_premises import BusinessPremisesLease, normalise_legacy_business_premises_lease
 from .enums import (
     InvoiceClass,
     InvoiceLegalMention,
@@ -329,6 +331,7 @@ class Invoice(BaseModel):
     payment_status: PaymentStatus
     linked_transaction_ids: tuple[str, ...] = ()
     notes: str = ""
+    business_premises_lease: BusinessPremisesLease | None = None
     iva_category: IvaCategory | None = None
     operation_type: IntracomOperationType | None = None
     # RD 1619/2012 disposición adicional cuarta: set when this invoice
@@ -383,6 +386,11 @@ class Invoice(BaseModel):
     # the same reason the rate and its date are: half a provenance is a claim
     # nothing can check.
     fx_rate_source: str | None = Field(default=None, min_length=1)
+    # The publication the rate was read from. It differs from `fx_rate_date` on
+    # every weekend and holiday, when the rate in force is the last one published
+    # before the operation date. Absent on a stamp recorded before this was kept,
+    # which is a known earlier shape rather than a defaulted value.
+    fx_rate_observation_date: date | None = None
     # When this RECORD was entered and last amended, which is a different fact
     # from `issued_at` (when the document was issued) and from `operation_date`
     # (when the operation occurred). Both are outside the identity derived by
@@ -401,6 +409,17 @@ class Invoice(BaseModel):
     # raw ledger rows. Manual and other non-file-created invoices legitimately
     # carry no source row, so this remains optional rather than inventing one.
     provenance: RawProvenance | None = None
+
+    @field_validator("business_premises_lease", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _normalize_business_premises_lease_wire_value(cls, value: object) -> object:
+        """Rehydrate the nested family from its secure-object JSON mapping."""
+        if value is None or isinstance(value, BusinessPremisesLease):
+            return value
+        if isinstance(value, Mapping):
+            return BusinessPremisesLease.model_validate(STR_KEYED_MAPPING_ADAPTER.validate_python(value))
+        return value
 
     @field_validator("provenance", mode="before")
     @classmethod
@@ -554,6 +573,7 @@ class Invoice(BaseModel):
             _normalization.normalise_invoice_dates,
             normalise_invoice_enum_fields,
             normalise_invoice_string_fields,
+            normalise_legacy_business_premises_lease,
             _normalization.normalise_invoice_counterparty,
             _normalization.normalise_invoice_currency,
             _normalization.normalise_invoice_monetary_fields,
@@ -618,6 +638,16 @@ class Invoice(BaseModel):
                 (
                     (stamp_flags[0], fx_rate <= Decimal("0")) == (True, True),
                     "fx_rate must be strictly positive",
+                ),
+                (
+                    self.fx_rate_observation_date is not None and not stamp_present,
+                    "fx_rate_observation_date belongs to an fx conversion stamp",
+                ),
+                (
+                    self.fx_rate_observation_date is not None
+                    and self.fx_rate_date is not None
+                    and self.fx_rate_observation_date > self.fx_rate_date,
+                    "fx_rate_observation_date cannot postdate fx_rate_date",
                 ),
             ),
         )
@@ -746,35 +776,10 @@ class Invoice(BaseModel):
         proportion of nothing, and inferring the amount from it would
         manufacture a figure the document never stated.
         """
-        if self.retention_amount is not None and self.retention_amount < Decimal("0"):
-            raise InvoiceValidationError(
-                "retention_amount must be non-negative",
-                context={"fields": ("retention_amount",)},
-            )
-        if self.retention_rate is not None:
-            if self.retention_rate < Decimal("0") or self.retention_rate > Decimal("1"):
-                raise InvoiceValidationError(
-                    "retention_rate must be a fraction between 0 and 1 (0.15 for a 15 % retención), not a percentage",
-                    context={"fields": ("retention_rate",)},
-                )
-            if self.retention_amount is None:
-                raise InvoiceValidationError(
-                    "retention_rate requires retention_amount; a rate alone declares no withheld figure",
-                    context={"fields": ("retention_rate", "retention_amount")},
-                )
-        if self.retention_amount is not None and self.retention_amount > self.base_total:
-            raise InvoiceValidationError(
-                "retention_amount must not exceed base_total; the retención base is the "
-                "base imponible (ingresos íntegros), not the IVA-inclusive total",
-                context={"fields": ("retention_amount", "base_total")},
-            )
-        if self.retention_rate is not None and self.retention_amount is not None:
-            expected_retencion = (self.base_total * self.retention_rate).quantize(Decimal("0.0001"))
-            if abs(self.retention_amount - expected_retencion) > CENT:
-                raise InvoiceValidationError(
-                    "retention_amount must equal base_total * retention_rate within 1 cent",
-                    context={"fields": ("retention_rate", "retention_amount", "base_total")},
-                )
+        _require_non_negative_retention_amount(self.retention_amount)
+        _validate_retention_rate_shape(self.retention_rate, self.retention_amount)
+        _require_retention_amount_within_base(self.retention_amount, self.base_total)
+        _validate_retention_rate_amount(self.retention_rate, self.retention_amount, self.base_total)
         return self
 
     @model_validator(mode="after")
@@ -805,10 +810,11 @@ class Invoice(BaseModel):
         far below its companion IVA rate (5.2 % against 21 %, 1.4 % against
         10 %, 0.5 % against 4 %), so a recargo exceeding the cuota it rides on
         is arithmetically impossible under any tier and is far more likely to
-        be the cuota written into the wrong field. The bound is deliberately
-        loose rather than a per-tier rate check: no recargo rate table ships in
-        the registry, and inventing rate literals here would put regulatory
-        values in a feature module.
+        be the cuota written into the wrong field. The bound remains generic
+        because the invoice-wide ``recargo_amount`` does not allocate the
+        surcharge across rate tiers. The authority-aware advisory checks the
+        published pairing when one cuota-bearing tier is identifiable; a
+        multi-tier invoice remains unattributed rather than guessed.
         """
         if self.recargo_amount is None:
             return self
@@ -931,6 +937,14 @@ class Invoice(BaseModel):
                 ),
             ),
         )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_business_premises_lease_kind(self) -> Self:
+        """The lessor records a business-premises lease on an issued invoice."""
+        if self.business_premises_lease is not None and self.kind is not InvoiceKind.ISSUED:
+            raise InvoiceValidationError("a business-premises lease only applies to an issued invoice")
         return self
 
     @model_validator(mode="after")
@@ -1114,6 +1128,47 @@ def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
 
 def _is_hex_digest(value: str, *, length: int) -> bool:
     return len(value) == length and all(char in "0123456789abcdef" for char in value)
+
+
+def _require_non_negative_retention_amount(amount: Decimal | None) -> None:
+    if amount is not None and amount < Decimal("0"):
+        raise InvoiceValidationError(
+            "retention_amount must be non-negative",
+            context={"fields": ("retention_amount",)},
+        )
+
+
+def _validate_retention_rate_shape(rate: Decimal | None, amount: Decimal | None) -> None:
+    if rate is not None:
+        if rate < Decimal("0") or rate > Decimal("1"):
+            raise InvoiceValidationError(
+                "retention_rate must be a fraction between 0 and 1 (0.15 for a 15 % retención), not a percentage",
+                context={"fields": ("retention_rate",)},
+            )
+        if amount is None:
+            raise InvoiceValidationError(
+                "retention_rate requires retention_amount; a rate alone declares no withheld figure",
+                context={"fields": ("retention_rate", "retention_amount")},
+            )
+
+
+def _require_retention_amount_within_base(amount: Decimal | None, base: Decimal) -> None:
+    if amount is not None and amount > base:
+        raise InvoiceValidationError(
+            "retention_amount must not exceed base_total; the retención base is the "
+            "base imponible (ingresos íntegros), not the IVA-inclusive total",
+            context={"fields": ("retention_amount", "base_total")},
+        )
+
+
+def _validate_retention_rate_amount(rate: Decimal | None, amount: Decimal | None, base: Decimal) -> None:
+    if rate is not None and amount is not None:
+        expected_retencion = (base * rate).quantize(Decimal("0.0001"))
+        if abs(amount - expected_retencion) > CENT:
+            raise InvoiceValidationError(
+                "retention_amount must equal base_total * retention_rate within 1 cent",
+                context={"fields": ("retention_rate", "retention_amount", "base_total")},
+            )
 
 
 class InvoiceCatalogue(BaseModel):

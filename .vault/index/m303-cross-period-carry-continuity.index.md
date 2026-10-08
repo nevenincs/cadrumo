@@ -4,16 +4,11 @@ tags:
   - '#index'
   - '#m303-cross-period-carry-continuity'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:26a62ec46e717053ae789fa118f25c532ca988c5820d219822224f11ca87aff4'
+body_hash: 'sha256:240368337c5c63da53d41a9411162c994e3b3717c93a2cfdd59c8c5c1667f27a'
 related:
-  - '[[2026-06-03-m303-cross-period-carry-continuity-P01-S01]]'
-  - '[[2026-06-03-m303-cross-period-carry-continuity-P01-S02]]'
-  - '[[2026-06-03-m303-cross-period-carry-continuity-P03-S06]]'
-  - '[[2026-06-03-m303-cross-period-carry-continuity-P03-S07]]'
   - '[[2026-06-03-m303-cross-period-carry-continuity-adr]]'
-  - '[[2026-06-03-m303-cross-period-carry-continuity-plan]]'
   - '[[2026-06-03-m303-cross-period-carry-continuity-research]]'
 ---
 
@@ -26,17 +21,6 @@ Auto-generated index of all documents tagged with `#m303-cross-period-carry-cont
 ### adr
 
 - `2026-06-03-m303-cross-period-carry-continuity-adr` - `m303-cross-period-carry-continuity` adr: M303 cross-period carry continuity diagnostic gate + anti-regression contract | (**status:** `accepted`)
-
-### exec
-
-- `2026-06-03-m303-cross-period-carry-continuity-P01-S01` - `m303-cross-period-carry-continuity` `P01.S01` exec — diagnostic chain trace
-- `2026-06-03-m303-cross-period-carry-continuity-P01-S02` - `m303-cross-period-carry-continuity` `P01.S02` exec — Hypothesis identification
-- `2026-06-03-m303-cross-period-carry-continuity-P03-S06` - `m303-cross-period-carry-continuity` `P03.S06` exec — author cross-period anti-regression test
-- `2026-06-03-m303-cross-period-carry-continuity-P03-S07` - `m303-cross-period-carry-continuity` `P03.S07` exec — final gate sweep
-
-### plan
-
-- `2026-06-03-m303-cross-period-carry-continuity-plan` - `m303-cross-period-carry-continuity` `M303 cross-period carry continuity diagnostic + fix + anti-regression` plan
 
 ### research
 

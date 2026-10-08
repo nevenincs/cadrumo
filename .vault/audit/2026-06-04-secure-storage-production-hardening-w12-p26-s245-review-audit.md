@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:93e01235e67a5e420750bea29846e34527d296d36198f919341044b42b5cbf6b'
+modified: '2026-10-03'
+body_hash: 'sha256:35ddf14cc2760a59cecd2a83660a1d7f442338b5b253231cbefb0532a43cfa47'
 related: []
 ---
 
@@ -35,8 +35,8 @@ an empty tuple for this `StrEnum`.
 
 ## S245-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/registry/__init__.py src/aeat/application/registry/test_corpus.py src/aeat/entrypoints/cli/test_registry_cli.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/registry/test_corpus.py src/aeat/entrypoints/cli/test_registry_cli.py` passed with 64 tests.
+- the historical check passed.
+- the historical check passed with 64 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-143` as `plaintext-exception`.

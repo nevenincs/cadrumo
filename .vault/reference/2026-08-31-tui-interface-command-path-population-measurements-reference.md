@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#tui-interface'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:1eba4dd21dfe1c8ccd9eb1284340cc492c43ecfaf06190678242e2fa7f20f11e'
-related:
-  - "[[2026-08-11-tui-interface-plan]]"
+related: []
 ---
 
 # `tui-interface` reference: `command path population measurements`

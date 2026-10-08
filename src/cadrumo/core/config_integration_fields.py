@@ -41,11 +41,6 @@ class CadrumoIntegrationSettings(CadrumoRuntimeSettings):
         min_length=1,
         description="Folder name created under the Google Drive root for the Cadrumo vault",
     )
-    cadrumo_google_oauth_access_refresh_buffer_s: int = Field(
-        default=300,
-        gt=0,
-        description="Clock-skew buffer (seconds) before nominal expiry when refreshing Google access tokens",
-    )
 
     @field_validator("cadrumo_google_drive_vault_folder_name")
     @classmethod

@@ -11,13 +11,45 @@ modelo:
           insurance contracts.
         title: Withholdings and payments on account - income from movable capital
           from capitalisation transactions and insurance contracts
+      form:
+        column:
+          adicional: Boxes 04–05
+          ordinario: Boxes 01–03
+        context:
+          apellidos: Surname or registered business name
+          declaracion-complementaria: Supplementary self-assessment
+          ejercicio: Tax year
+          iban: IBAN
+          justificante-anterior: Previous self-assessment receipt number
+          nif: Tax identification number (NIF)
+          nombre: Given name
+          periodo: Period
+        page:
+          modelo-128-page-01:
+            heading: Withholding on capitalisation operations and life or disability
+              insurance
+        row:
+          base: Withholding and payments-on-account base
+          perceptores: Number of recipients
+          retenciones: Withholdings and payments on account
+        section:
+          complementaria:
+            heading: Supplementary return (6)
+          devengo:
+            heading: Tax period (2)
+          identificacion:
+            heading: Identification (1)
+          ingreso:
+            heading: Payment (4)
+          liquidacion:
+            heading: Tax calculation (3)
       revision:
         2019-y-siguientes:
           casilla:
             '01':
               label: Number of recipients
             '02':
-              label: Withholding and advance-payment tax base
+              label: Withholding and payment-on-account base
             '03':
               label: Withholdings and payments on account
             '04':

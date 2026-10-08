@@ -7,7 +7,7 @@ row bound to that one cohort. Every OS leg of the packaging-smoke workflow runs
 this against the same downloaded ``cadrumo-release-cohort`` artifact, so all the
 Python rows bind one cohort id (no per-OS rebuild, which would diverge the id).
 
-It installs the cohort's three digest-pinned Python wheels into a fresh
+It installs the cohort's four digest-pinned Python wheels into a fresh
 isolated virtualenv, resolves the installed ``aeat`` executable, runs the
 canonical installed CLI behaviour oracle against it, and emits the record
 through :func:`~dev.packaging.distribution_evidence_emit.emit_installed_oracle_evidence`.
@@ -20,14 +20,15 @@ import shutil
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import UTF_8
 from dev.packaging.command_execution import run_command
 
-from .acquire_common import PYTHON_COHORT_WHEEL_NAMES, AcquisitionError, run_installed_cli_oracle, venv_executable
+from .acquire_common import AcquisitionError, run_installed_cli_oracle, venv_executable
 from .cohort_manifest import load_release_cohort
 from .distribution_evidence_emit import emit_installed_oracle_evidence
 from .evidence import AcquisitionIdentity, DestinationIdentity
-from .python_cohort import load_python_cohort
+from .python_cohort import install_targets, load_python_cohort
 
 _UTF_8: Final[str] = UTF_8
 _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
@@ -98,9 +99,8 @@ def run_oracle_emit_cohort(
         raise AcquisitionError(f"could not create the cohort virtualenv: {create.stderr.strip()[:200]}")
     venv_python = venv_executable(venv, "python")
 
-    wheels = {name: python_cohort.sha256[name] for name in PYTHON_COHORT_WHEEL_NAMES}
+    wheels = {name: python_cohort.sha256[name] for name in PRODUCT_IDENTITY.cohort_distributions}
     root_wheel = python_cohort.root_wheel
-    manuals_wheel, official_wheel = python_cohort.companion_wheels
     install = run_command(
         [
             str(uv),
@@ -108,9 +108,7 @@ def run_oracle_emit_cohort(
             "install",
             "--python",
             str(venv_python),
-            f"cadrumo @ {root_wheel.resolve().as_uri()}",
-            f"cadrumo-data-manuals @ {manuals_wheel.resolve().as_uri()}",
-            f"cadrumo-data-official @ {official_wheel.resolve().as_uri()}",
+            *install_targets(python_cohort, root_artifact=root_wheel),
         ],
         cwd=work,
         errors="replace",

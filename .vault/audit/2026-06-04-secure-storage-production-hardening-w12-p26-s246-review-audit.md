@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:ab3a708e3421d91ac6bdc3b6ed95ffdd018a8677d0774116d168e3b970a07f88'
+modified: '2026-10-03'
+body_hash: 'sha256:d21d7fcbcc60faa12282c1277e91f5a2dd7f91d963564ccb72ae5fdcd6ab1bbd'
 related: []
 ---
 
@@ -28,8 +28,8 @@ Corpus lookup and refusal paths either raise directly or log structured warning/
 
 ## S246-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/registry/_corpus.py src/aeat/application/registry/test_corpus.py src/aeat/entrypoints/cli/test_registry_corpus.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/registry/test_corpus.py src/aeat/entrypoints/cli/test_registry_corpus.py` passed with 33 tests.
+- the historical check passed.
+- the historical check passed with 33 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-144` as `plaintext-exception`.

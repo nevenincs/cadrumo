@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:b7d5360c8255cee39b451b4bb8db474f59154b6b10e15af2c1ff4c844b666164'
+modified: '2026-10-03'
+body_hash: 'sha256:5b0536b79549c0cacf6a9908f6b18e8f311874ecc0ee25faaf24285b4dbadd90'
 related: []
 ---
 
@@ -52,8 +52,8 @@ The module documentation now states the actual layout: ciphertext payload files 
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/blob_store/test_blob_store.py src/aeat/adapters/persistence/storage/test_rotation.py src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py -k "BlobStore or blob_store or blob or sensitive_direct_write"` passed with 37 selected tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/blob_store/_blob_store.py src/aeat/adapters/persistence/storage/blob_store/test_blob_store.py src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py` passed.
+- The historical check passed with 37 selected tests.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - Case-sensitive touched-file hygiene scan found no broad exception catches, suppressing pragmas, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, raw UTF-8 literals, local `Path("db://secure_objects")` construction, direct settings construction, or direct environment access.
 - Final focused reviewer pass returned no findings after direct manifest load localization and ciphertext layout documentation fixes.

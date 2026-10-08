@@ -100,6 +100,7 @@ class AuthConfigureResult(BaseModel):
     model_config = _STRICT_FROZEN
 
     provider: str
+    changed: bool = True
     file: str = ""
     complete: bool = True
     incomplete_reason: str = ""

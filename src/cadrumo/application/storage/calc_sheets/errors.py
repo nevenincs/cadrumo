@@ -29,16 +29,7 @@ class CalcSheetsRecordError(CoreValidationError):
     """
 
 
-class CalcSheetsParityError(CadrumoError):
-    """Raised when a parity-harness scenario references unknown casillas.
-
-    Fired when a test scenario's canonical casilla ids cannot all be resolved
-    in the registry snapshot, making the scenario unprovable.
-    """
-
-
 __all__ = [
     "CalcSheetsEngineError",
-    "CalcSheetsParityError",
     "CalcSheetsRecordError",
 ]

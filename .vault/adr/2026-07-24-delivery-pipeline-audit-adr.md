@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#delivery-pipeline-audit'
 date: '2026-07-24'
-modified: '2026-07-24'
-body_hash: 'sha256:72da407d5c5819d86d3fbb5e18af1ad25c0d0129b3d984a28e43beb623c76d42'
+modified: '2026-10-03'
+body_hash: 'sha256:c63c1c66bc61a61069399745d8f7545f75daa96bbee70b8f6a6e2fcfbbb2fd8d'
 related:
   - "[[2026-07-24-delivery-pipeline-audit-audit]]"
 ---
@@ -42,10 +42,10 @@ session so an implementer can execute without re-deriving.
 - The no-legacy discipline mandates deleting superseded surfaces and forbids "just in
   case" retention without a charter; it equally forbids deleting the only working
   route to an owed obligation.
-- `dev/packaging/sync_aeat_record_design_corpus.py` is registry-corpus acquisition
+- the former source file is registry-corpus acquisition
   tooling; its sole consumer is
-  `src/cadrumo/_data/corpus/tests/test_record_design_support.py`. Its packaging
-  filing is an accident of history. `dev/packaging/extract_manual_corpus_text.py` is
+  the former source file. Its packaging
+  filing is an accident of history. the former source file is
   the same class of corpus tooling with a wider consumer set (justfile recipes,
   registry sidecar-freshness gates, prod comments).
 - The three PyPI distributions ship as one exact-version pinned cohort: `cadrumo`
@@ -55,8 +55,7 @@ session so an implementer can execute without re-deriving.
   (`PRODUCT_IDENTITY`), per the cadrumo-product-authority-names rule and the accepted
   product-rename decision (stem `2026-07-13-product-rename-adr`). The plugin and
   marketplace manifests already derive their author/owner as
-  `f"{PRODUCT_IDENTITY.display_name} tax assistant project"` in
-  `src/cadrumo/agent/_workspace.py`, while `packaging/mcpb/manifest.json` carries the
+  `f"{PRODUCT_IDENTITY.display_name} tax assistant project"` , while `packaging/mcpb/manifest.json` carries the
   hand literal `"Cadrumo project (neve.md)"`.
 - The root pyproject `authors` field names "Gergely Wootsch" — a PEP 621 legal-person
   fact (the copyright holder under the Apache-2.0 licence), a different referent from
@@ -67,7 +66,7 @@ session so an implementer can execute without re-deriving.
   observes the installed result; the MCPB first-launch bootstrap in
   `packaging/mcpb/build.py` runs whatever `uv` the user's machine resolves, with no
   version floor for the constraint-dependencies mechanism.
-- The real-client secret scan in `dev/packaging/emit_real_client_evidence.py` walks
+- The real-client secret scan walks
   string values only (`_iter_strings` skips dict keys), so a secret-shaped or
   email-bearing key ships unscanned.
 
@@ -127,13 +126,12 @@ the interim. Until deletion it stays behind `CADRUMO_PUBLISH_ENABLED` exactly as
 hardened.
 
 **D2 — `dev/corpus/` is the canonical home for corpus acquisition and extraction
-tooling.** `dev/packaging/sync_aeat_record_design_corpus.py` relocates to
+tooling.** the former source file relocates to
 `dev/corpus/sync_aeat_record_design_corpus.py` in one atomic explicit-path commit
 (`relocation:sync_aeat_record_design_corpus`): the module move, the new package
-`__init__.py`, the consumer import in
-`src/cadrumo/_data/corpus/tests/test_record_design_support.py`, and any self-naming
+`__init__.py`, the consumer import , and any self-naming
 strings inside the module, with `uv run --no-sync pytest --collect-only -q` observed
-clean immediately before the commit. `dev/packaging/extract_manual_corpus_text.py`
+clean immediately before the commit. the former source file
 is enrolled under the same home as a follow-up second atomic relocation commit
 (`relocation:extract_manual_corpus_text`) sweeping its wider consumer set: the two
 justfile recipes, the sidecar-freshness tests under `src/cadrumo/_data/corpus/tests/`
@@ -211,8 +209,7 @@ bundle's `constraints.txt` header comment for transparency. A build test asserts
 generated bootstrap source carries the guard and that the constant parses as a
 version triple.
 
-**F3 — real-client secret scan covers dict keys.** `_iter_strings` in
-`dev/packaging/emit_real_client_evidence.py` additionally yields every dict key
+**F3 — real-client secret scan covers dict keys.** `_iter_strings`  additionally yields every dict key
 (keys in session JSON are strings), so `assert_session_carries_no_secret` applies
 the token-length and email refusals to keys and values uniformly; its docstring
 drops the values-only caveat. A test feeds a session whose only secret-shaped

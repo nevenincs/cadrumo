@@ -220,4 +220,3 @@ msgstr ""
 "`CADRUMO_*` aliasai. A hivatal tulajdonában lévő `AEAT_*` integrációs "
 "vezérlők csak akkor maradnak érvényesek, ha a külső hivatali határt "
 "nevezik meg."
-

@@ -161,17 +161,7 @@ def _resolved_sanction_reduction_labels(
             raise SancionParseError(f"duplicate sanction reduction fact entry {entry.key!r}")
         declarations[entry.key] = entry.value
 
-    labels: dict[str, tuple[str, ...]] = {}
-    for field, key in _SANCTION_REDUCTION_FACT_KEYS.items():
-        percentage = declarations.get(key)
-        if percentage is None or percentage <= 0:
-            raise SancionParseError(f"sanction reduction fact is missing a positive {key!r} declaration")
-        rendered = format(percentage.normalize(), "f")
-        if "." in rendered:
-            rendered = rendered.rstrip("0").rstrip(".")
-        rendered = rendered.replace(".", ",")
-        labels[field] = (f"reduccion del {rendered}%", f"reduccion del {rendered} %")
-    return labels
+    return _sanction_reduction_label_variants(declarations)
 
 
 def _fold_char(char: str) -> str:
@@ -622,3 +612,18 @@ def _assert_printed_lines_reconcile(record: SancionLiquidacion) -> None:
 
 
 __all__ = ["parse_sancion_document"]
+
+
+def _sanction_reduction_label_variants(declarations: Mapping[str, Decimal]) -> Mapping[str, tuple[str, ...]]:
+    """Render every positive declared percentage using the same printed-label grammar."""
+    labels: dict[str, tuple[str, ...]] = {}
+    for field, key in _SANCTION_REDUCTION_FACT_KEYS.items():
+        percentage = declarations.get(key)
+        if percentage is None or percentage <= 0:
+            raise SancionParseError(f"sanction reduction fact is missing a positive {key!r} declaration")
+        rendered = format(percentage.normalize(), "f")
+        if "." in rendered:
+            rendered = rendered.rstrip("0").rstrip(".")
+        rendered = rendered.replace(".", ",")
+        labels[field] = (f"reduccion del {rendered}%", f"reduccion del {rendered} %")
+    return labels

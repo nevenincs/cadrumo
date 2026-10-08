@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#mcp-progressive-discovery'
 date: '2026-07-08'
-modified: '2026-07-17'
-body_hash: 'sha256:d8305ce732eae676123a8673dc179397235a15c0aa75491b60cabdf3d9ccd11b'
+modified: '2026-10-03'
+body_hash: 'sha256:43049f3fa2f04ab0892fc3d86dfb9f0227e0062175ab0363cf5839b3ed3e3a7d'
 related:
   - "[[2026-07-08-mcp-progressive-discovery-research]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
@@ -22,7 +22,7 @@ flat surface because dumping the whole verb tree into the tools list "crowds
 out the user's question and degrades tool selection". As shipped, that
 rejection never reached the protocol: the server's tools/list handler returns
 the floor tool, the two grounding tools, the ENTIRE ~273-verb descriptor set,
-and the two meta-tools (`src/cadrumo/entrypoints/mcp/_server.py`, line 499). The
+and the two meta-tools (the former source file, line 499). The
 five manifest-derived toolsets (`_toolsets.py`) are implemented and
 unit-tested but never called from any serving path — finished, tested, dead
 capacity — and no `tools/listChanged` capability exists, so every MCP client

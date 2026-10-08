@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.classification.policies import SensitivityClass
+from ....core.i18n.render import tr
 from ....core.period import Period
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -38,6 +39,7 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.errors import ModeloValidationError
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
@@ -132,13 +134,15 @@ class _InMemoryCalculationRevisionRepository:
     def bucket_id(self) -> str | None:
         return _BUCKET_ID
 
-    def load(self) -> CalculationRevisionCatalogue:
+    def load(self, *, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue:
         return self._catalogue
 
     def exists(self) -> bool:
         return bool(self._catalogue.revisions)
 
-    def load_revisioned(self) -> tuple[CalculationRevisionCatalogue, str]:
+    def load_revisioned(
+        self, *, operation: PinnedAuthorityOperation | None = None
+    ) -> tuple[CalculationRevisionCatalogue, str]:
         return self._catalogue, _REPOSITORY_REVISION_ID
 
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:
@@ -464,3 +468,88 @@ def test_reconcile_skipped_for_unrelated_modelo(
         )
         == []
     )
+
+
+@pytest.mark.parametrize("missing_side", ["local", "sibling", "both"])
+def test_missing_operands_are_incomplete_instead_of_zero(repositories, operation, missing_side):
+    units, revisions = repositories
+    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=units)
+    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=units)
+    own = _m303_values(adquisiciones=Decimal("0"), entregas=Decimal("0"))
+    sibling = _m349_values(importe=Decimal("0"))
+    if missing_side in {"local", "both"}:
+        del own[_M303_ENTREGAS]
+    if missing_side in {"sibling", "both"}:
+        sibling.clear()
+    target = _build_revision(m303, own, operation=operation)
+    _persist_revision(m349, sibling, revisions, operation=operation)
+    findings = _reconcile(
+        m303, target, work_unit_repository=units, calculation_repository=revisions, operation=operation
+    )
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.kind is ModeloVerificationFindingKind.ADVISORY
+    assert finding.message_locale_key == "application.modelo.findings.cross_model_reconciliation_incomplete"
+    assert finding.message_facts["own_missing_count"] == int(missing_side in {"local", "both"})
+    assert finding.message_facts["sibling_missing_count"] == int(missing_side in {"sibling", "both"})
+    assert finding.expectation_id and finding.legal_refs and finding.source_refs
+
+
+@pytest.mark.parametrize("pointer", ["filed_calculation_revision_id", "current_calculation_revision_id"])
+def test_sibling_pointer_cannot_select_another_period_calculation(repositories, operation, pointer):
+    units, revisions = repositories
+    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=units)
+    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=units)
+    other = _seed_work_unit(modelo="349", filing_year=2025, period="2T", repository=units)
+    foreign = _persist_revision(other, _m349_values(importe=Decimal("0")), revisions, operation=operation)
+    units.save(upsert_work_unit(units.load(), m349.model_copy(update={pointer: foreign.calculation_revision_id})))
+    target = _build_revision(m303, _m303_values(adquisiciones=Decimal("0"), entregas=Decimal("0")), operation=operation)
+    with pytest.raises(ModeloValidationError, match="does not belong"):
+        _reconcile(m303, target, work_unit_repository=units, calculation_repository=revisions, operation=operation)
+
+
+def test_stale_sibling_registry_coordinate_refuses_comparison(repositories, operation):
+    units, revisions = repositories
+    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=units)
+    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=units)
+    sibling = _build_revision(m349, _m349_values(importe=Decimal("0")), operation=operation)
+    stale = sibling.model_copy(
+        update={
+            "registry_snapshot_ref": sibling.registry_snapshot_ref.model_copy(update={"revision_id": "stale-revision"})
+        }
+    )
+    revisions.save(upsert_calculation_revision(revisions.load(), stale))
+    target = _build_revision(m303, _m303_values(adquisiciones=Decimal("0"), entregas=Decimal("0")), operation=operation)
+    with pytest.raises(ModeloValidationError, match="does not belong"):
+        _reconcile(m303, target, work_unit_repository=units, calculation_repository=revisions, operation=operation)
+
+
+def test_existing_sibling_without_calculation_is_incomplete(repositories, operation):
+    units, revisions = repositories
+    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=units)
+    _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=units)
+    target = _build_revision(m303, _m303_values(adquisiciones=Decimal("0"), entregas=Decimal("0")), operation=operation)
+    findings = _reconcile(
+        m303, target, work_unit_repository=units, calculation_repository=revisions, operation=operation
+    )
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
+    assert findings[0].message_facts["sibling_missing_count"] == 1
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_incomplete_comparison_renders_its_counts_in_every_locale(locale):
+    key = "application.modelo.findings.cross_model_reconciliation_incomplete"
+    text = tr(
+        key,
+        locale=locale,
+        modelo="303",
+        sibling_modelo="349",
+        period_code="1T",
+        filing_year=2025,
+        own_missing_count=2,
+        sibling_missing_count=1,
+    )
+    assert key not in text
+    assert "%{" not in text and "{" not in text
+    assert all(token in text for token in ("303", "349", "1T", "2025", "2", "1"))

@@ -1,29 +1,13 @@
-"""Projection helpers for the ``aeat app ledger list`` CLI command.
-
-The CLI parser turns ``--filter`` clauses into
-:class:`LedgerReviewFilterSpec`, asks
-:func:`query_ledger_review_rows` for review-derived
-rows, and emits :class:`LedgerListRowPayload`
-instances.
-"""
+"""Render admitted ledger pages as CLI rows and text without opening custody."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...application.ledger.actions_manual import (
-    ledger_transaction_review_payload,
-)
 from ...application.ledger.id_resolution import compute_display_id_width
-from ...application.ledger.list_query import LedgerTransactionListQuery, query_ledger_transaction_list
-from ...application.ledger.models import ManualLedgerTransactionResult
-from ...application.ledger.review_projection import ledger_transaction_review_status
-from ...application.review.filter import LedgerReviewFilterSpec
+from ...application.ledger.list_operation import LedgerListProjection as LedgerListSnapshot
+from ...application.ledger.transaction_projection import LedgerTransactionReviewProjection
 from ...core.i18n.render import tr
-from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
-from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..ledger_action_composition import compose_ledger_action_ports
 from ._ledger_payloads import LedgerListRowPayload
 
 
@@ -41,55 +25,18 @@ class LedgerListProjection:
     lines: list[str]
 
 
-def project_ledger_list(
-    *,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    spec: LedgerReviewFilterSpec,
-    group: str | None,
-    by_group: bool,
-    limit: int | None,
-    offset: int,
-    sort_by: LedgerSortField | None = None,
-    sort_order: LedgerSortOrder = LedgerSortOrder.ASC,
-    exclude_llm_rejected: bool = False,
-) -> LedgerListProjection:
-    """Project, page, and render one ``ledger list`` result set.
-
-    Returns a :class:`LedgerListProjection`.
-
-    When ``sort_by`` is supplied the result set is stably sorted on that closed
-    :class:`LedgerSortField` axis (ascending by default,
-    ``sort_order=DESC`` for descending), applied *after* the C6 filter and the
-    ``--group`` selection and *before* paging, with a deterministic final
-    tie-break on the content-addressed ``transaction_id`` (D5). ``--by-group``
-    still partitions rows by group label first; the sort orders within that
-    partition. With ``exclude_llm_rejected`` the projection drops every row whose
-    latest decision in the :class:`BucketEventHistoryRepository` is an LLM
-    rejection.
-    """
-    bucket_id = transaction_repository.bucket_id
-    with bundled_indexed_authority().operation() as operation:
-        page = query_ledger_transaction_list(
-            LedgerTransactionListQuery(
-                spec=spec,
-                group=group,
-                by_group=by_group,
-                limit=limit,
-                offset=offset,
-                sort_by=sort_by,
-                sort_order=sort_order,
-                exclude_llm_rejected=exclude_llm_rejected,
-            ),
-            bucket_id=bucket_id,
-            ports=compose_ledger_action_ports(bucket_id=bucket_id, operation=operation),
-        )
-    results = page.results
+def project_ledger_list(page: LedgerListSnapshot) -> LedgerListProjection:
+    """Render the admitted immutable page without opening profile custody."""
+    bucket_id = str(page.profile_id)
+    results = page.rows
     total = page.total
     truncated = page.truncated
+    offset = page.offset
+    limit = page.limit
     rows, lines = _ledger_list_rows_and_lines(
         results=results,
         all_transaction_ids=tuple(result.transaction.transaction_id for result in results),
-        by_group=by_group,
+        by_group=page.by_group,
     )
     if truncated:
         lines.append(
@@ -115,7 +62,7 @@ def project_ledger_list(
 
 def _ledger_list_rows_and_lines(
     *,
-    results: tuple[ManualLedgerTransactionResult, ...],
+    results: tuple[LedgerTransactionReviewProjection, ...],
     all_transaction_ids: tuple[str, ...],
     by_group: bool,
 ) -> tuple[list[LedgerListRowPayload], list[str]]:
@@ -130,12 +77,12 @@ def _ledger_list_rows_and_lines(
     ungrouped = tr("cli.ledger.list.ungrouped_label")
     for result in results:
         transaction = result.transaction
-        if by_group and (not first_group_seen or transaction.group_label != current_group):
-            current_group = transaction.group_label
+        if by_group and (not first_group_seen or result.group_label != current_group):
+            current_group = result.group_label
             first_group_seen = True
             lines.append(f"# {current_group or ungrouped}")
-        review_status = ledger_transaction_review_status(transaction)
-        review_payload = ledger_transaction_review_payload(transaction)
+        review_status = result.review_status
+        review_payload = transaction
         display_id = transaction.transaction_id[:display_width]
         # D2: project the review payload (which carries review_status, the
         # non-negative amount + direction, and the D6 timestamps) plus the three
@@ -144,9 +91,10 @@ def _ledger_list_rows_and_lines(
             LedgerListRowPayload.model_validate(
                 {
                     **review_payload.model_dump(mode="json"),
+                    "review_status": review_status,
                     "full_id": transaction.transaction_id,
                     "display_id": display_id,
-                    "group_label": transaction.group_label,
+                    "group_label": result.group_label,
                 },
             ),
         )

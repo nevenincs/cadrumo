@@ -30,7 +30,8 @@ _EDITION_CONTEXTS: tuple[tuple[int, str, str], ...] = (
     (2024, "1T", "2024-hasta-08-y-2t"),
     (2024, "3T", "2024-desde-09-y-3t"),
     (2025, "1T", "2025"),
-    (2026, "1T", "2026-y-siguientes"),
+    (2026, "1T", "2026-hasta-01-y-1t"),
+    (2026, "2T", "2026-y-siguientes"),
 )
 #: Filing years whose Modelo 303 editions declare the quarterly cadence.
 _QUARTERLY_YEARS: tuple[int, ...] = (2022, 2023, 2024, 2025, 2026)
@@ -101,6 +102,23 @@ def test_january_is_not_a_transition_period(filing_year: int) -> None:
         assert (
             _transition_period_applicability_from_registry(
                 Period.from_year_and_code(filing_year, "01"), operation=_authority_operation_for_test
+            )
+            is False
+        )
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "period_code"),
+    [(2024, "2T"), (2024, "08"), (2026, "1T"), (2026, "01")],
+)
+def test_the_last_period_of_an_edition_replaced_mid_year_is_not_a_transition_period(
+    filing_year: int, period_code: str
+) -> None:
+    """A mid-year edition declares only the periods it governs; the cadence ends in its successor."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert (
+            _transition_period_applicability_from_registry(
+                Period.from_year_and_code(filing_year, period_code), operation=_authority_operation_for_test
             )
             is False
         )

@@ -12,26 +12,25 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from pydantic import ValidationError
 
-from cadrumo.core.corpus_text import (
-    CorpusAnchorResolutionError,
-    corpus_redaction_marks,
-    extracted_unit_count,
-    normalise_corpus_text,
-    resolve_anchored_extracted_unit,
-)
+from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
 from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.paths import path_stat_fingerprint
 from cadrumo.core.resources.bundled_data import resolve_companion_binary
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 from cadrumo.domain.calculations.registry.schema_base import CorpusTier
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from dev.corpus.text import corpus_redaction_marks, extracted_unit_count, resolve_anchored_extracted_unit
 
 from .corpus_provenance import classify_normative_corpus_provenance
+
+if TYPE_CHECKING:
+    from dev.docs.preprocess.schema import PreprocessUnit
 
 __all__ = [
     "PROVISION_SUFFIXED_FILENAME",
@@ -302,7 +301,8 @@ def _validate_corpus_tier_declaration(reference: LegalReference, source_root: Pa
         )
 
 
-_LEGAL_CORPUS_CACHE: dict[tuple[str, int, int, str, str, str, str, tuple[str, ...]], str] = {}
+_LegalCorpusCacheKey = tuple[str, int, int, str, str, str, str, tuple[str, ...]]
+_LEGAL_CORPUS_CACHE: dict[_LegalCorpusCacheKey, str] = {}
 
 
 @lru_cache(maxsize=32)
@@ -352,6 +352,25 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
         return _legal_xml_corpus_text(root, path, anchor=anchor, reference=reference)
     if any(root not in candidate.parents and candidate != root for candidate in (annotation, sidecar)):
         raise RegistryValidationError(f"legal reference {reference.id!r} corpus metadata escapes repository root")
+    key, source_path = _sidecar_cache_identity(
+        path_text,
+        path,
+        annotation,
+        sidecar,
+        anchor,
+        reference,
+    )
+    return _resolve_sidecar_cache_entry(key, source_path, annotation, sidecar, anchor, reference)
+
+
+def _sidecar_cache_identity(
+    path_text: str,
+    path: Path,
+    annotation: Path,
+    sidecar: Path,
+    anchor: str,
+    reference: LegalReference,
+) -> tuple[_LegalCorpusCacheKey, Path]:
     if not sidecar.is_file():
         raise RegistryValidationError(
             f"legal reference {reference.id!r} missing extracted corpus sidecar {path_text!r}"
@@ -381,16 +400,29 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
             raise RegistryValidationError(
                 f"legal reference {reference.id!r} PDF annotation could not be fingerprinted: {exc}"
             ) from exc
-    key = (
-        str(sidecar),
-        stat.st_size,
-        stat.st_mtime_ns,
-        digest,
-        annotation_digest,
-        source_digest,
-        anchor,
-        reference.required_text,
+    return (
+        (
+            str(sidecar),
+            stat.st_size,
+            stat.st_mtime_ns,
+            digest,
+            annotation_digest,
+            source_digest,
+            anchor,
+            reference.required_text,
+        ),
+        source_path,
     )
+
+
+def _resolve_sidecar_cache_entry(
+    key: _LegalCorpusCacheKey,
+    source_path: Path,
+    annotation: Path,
+    sidecar: Path,
+    anchor: str,
+    reference: LegalReference,
+) -> str:
     if key not in _LEGAL_CORPUS_CACHE:
         try:
             if annotation.is_file():
@@ -426,22 +458,34 @@ def _legal_xml_corpus_text(root: Path, path: Path, *, anchor: str, reference: Le
     except (OSError, ValueError, RuntimeError) as exc:
         raise RegistryValidationError(f"legal reference {reference.id!r} cannot parse XML corpus source") from exc
     units = tuple(unit for output in outputs for unit in output.units)
+    _reject_fused_xml_redactions(path, reference, len(units))
+    unit = _unique_xml_corpus_unit(units, anchor, reference)
+    rendered = f"# {unit.title}\n\n{unit.text}" if unit.title else unit.text
+    return normalise_corpus_text(rendered)
+
+
+def _reject_fused_xml_redactions(path: Path, reference: LegalReference, unit_count: int) -> None:
     redactions = corpus_redaction_marks(path.read_text(encoding="utf-8", errors="replace"))
     if len(redactions) >= 2:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} points into {reference.corpus_ref.partition('#')[0]!r}, "
             "a corpus document with "
-            f"{len(redactions)} dated redactions fused into {len(units)} extracted units; cite a consolidated "
+            f"{len(redactions)} dated redactions fused into {unit_count} extracted units; cite a consolidated "
             "current-text document or one exact redaction in force"
         )
+
+
+def _unique_xml_corpus_unit(
+    units: tuple[PreprocessUnit, ...],
+    anchor: str,
+    reference: LegalReference,
+) -> PreprocessUnit:
     matches = [unit for unit in units if unit.anchor is not None and unit.anchor.lstrip("#") == anchor.lstrip("#")]
     if len(matches) != 1:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} cannot resolve one XML corpus unit for anchor {anchor!r}"
         )
-    unit = matches[0]
-    rendered = f"# {unit.title}\n\n{unit.text}" if unit.title else unit.text
-    return normalise_corpus_text(rendered)
+    return matches[0]
 
 
 @lru_cache(maxsize=1024)

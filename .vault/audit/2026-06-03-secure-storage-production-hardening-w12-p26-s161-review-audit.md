@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:b0d53a5917ca83c0330e5a853de536b40fbd53ceacf529b2c713d36d9fac0908'
+modified: '2026-10-03'
+body_hash: 'sha256:963fedb107129b22afbae303d4dfd8cfc55ecd62bb4744eb3230ee2031541c35'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S161-001 | PASS | Bucket manifest remains plaintext metadata
 
-`src/aeat/adapters/persistence/storage/bucket/_manifest.py` defines strict pydantic records for bucket manifest metadata: bucket identity, label, UTC timestamps, KDF parameters, public Argon2id salt, recovery enrollment state, idle-lock settings, key schedule, schema version, and lifecycle status.
+The retired module defines strict pydantic records for bucket manifest metadata: bucket identity, label, UTC timestamps, KDF parameters, public Argon2id salt, recovery enrollment state, idle-lock settings, key schedule, schema version, and lifecycle status.
 
 The file does not persist a passphrase, derived key, wrapped DEK, decrypted DEK, recovery secret, taxpayer payload, ledger row, modelo export body, or secure-object ciphertext. The `master-key` signal is accepted because the manifest carries the public KDF and schedule metadata needed to resolve the separate master-key surface, not the master key itself.
 
@@ -30,8 +30,8 @@ The tests exercise strict pydantic validation and real TOML filesystem roundtrip
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/bucket/test_manifest.py src/aeat/adapters/persistence/storage/bucket/test_manifest_roundtrip.py` passed with 16 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/bucket/_manifest.py src/aeat/adapters/persistence/storage/bucket/test_manifest.py src/aeat/adapters/persistence/storage/bucket/test_manifest_roundtrip.py` passed.
+- The historical check passed with 16 tests.
+- The historical check passed.
 - Touched-file hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, direct encoding literals, local secure-object marker construction, direct settings construction, or direct environment access.
 
 Review-agent note: a reviewer subagent was unavailable in this session due the current usage limit, so the supervisor completed the same checklist locally.

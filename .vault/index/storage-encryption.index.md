@@ -4,12 +4,10 @@ tags:
   - '#index'
   - '#storage-encryption'
 date: '2026-08-16'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7f0e5f422df00302164e7c61a74f16b53d898400e333f4de187f8ed4e12302ee'
+body_hash: 'sha256:296744b2f942c7a159a71fd577df04bd02967952b279ca21b842491e13d78a03'
 related:
-  - '[[2026-06-03-suite-redgreen-storage-encryption-P03-summary]]'
-  - '[[2026-06-04-storage-encryption-adr]]'
   - '[[2026-06-04-storage-encryption-research]]'
 ---
 
@@ -18,14 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#storage-encryption`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-storage-encryption-adr` - `storage-encryption` adr: `warning closeout authority alignment` | (**status:** `accepted`)
-
-### exec
-
-- `2026-06-03-suite-redgreen-storage-encryption-P03-summary` - Storage encryption audit suite — P03 summary
 
 ### research
 

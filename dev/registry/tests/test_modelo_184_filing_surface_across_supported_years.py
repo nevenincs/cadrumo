@@ -1,11 +1,14 @@
 """Modelo 184 record-design surface across every supported filing year.
 
-The casillas, member-row bindings and informative construct the ejercicio 2022
-design already lays out are authored once, at the support floor, and inherited
-forward; only the campos a later orden adds are stated on the edition it
-reaches. These tests read every year of the registry's own support envelope,
-so a member re-keyed onto a later edition, or a later edition losing its own
-grounding, fails here rather than in one pinned year.
+The casillas and informative construct the ejercicio 2022 design already lays
+out are authored once, at the support floor, and inherited forward; only the
+campos a later orden adds are stated on the edition it reaches. The member-row
+bindings are the exception: the floor is applicability grade and carries no
+export layout, so nothing on it reads them, and they are declared by the first
+edition whose layout writes the socio record. These tests read every year of the
+registry's own support envelope, so a member re-keyed onto the wrong edition, or
+a later edition losing its own grounding, fails here rather than in one pinned
+year.
 
 The extent of the member record is checked against an oracle independent of
 the registry: the amending ordenes themselves print where the member record's
@@ -37,7 +40,7 @@ _ENTITY_SEGMENT = "184-2-entidad"
 #: The ordenes that re-cut the member record's trailing BLANCOS, by corpus file.
 _MEMBER_RECORD_AMENDMENTS = ("orden-hfp-1192-2022", "orden-hfp-1284-2023")
 
-_FLOOR_BINDINGS = frozenset(
+_MEMBER_ROW_BINDINGS = frozenset(
     {
         "modelo-184-member-row-nif",
         "modelo-184-member-row-name",
@@ -181,10 +184,15 @@ def test_member_row_bindings_and_construct_hydrate_in_every_year(
     bindings = {str(binding.id) for binding in revision.bindings}
     constructs = {str(construct.id): construct for construct in revision.constructs}
 
-    assert bindings >= _FLOOR_BINDINGS, sorted(_FLOOR_BINDINGS - bindings)
-    assert bool(_ESTIMACION_OBJETIVA_BINDINGS & bindings) is (filing_year >= _later_cut_year()), filing_year
     construct = constructs[_CONSTRUCT]
-    assert {str(item) for item in construct.bindings} <= _FLOOR_BINDINGS
+    if filing_year == FLOOR:
+        assert not bindings & _MEMBER_ROW_BINDINGS, sorted(bindings & _MEMBER_ROW_BINDINGS)
+        assert not construct.bindings
+        assert "bindings" in revision.family_dispositions
+    else:
+        assert bindings >= _MEMBER_ROW_BINDINGS, sorted(_MEMBER_ROW_BINDINGS - bindings)
+        assert {str(item) for item in construct.bindings} <= _MEMBER_ROW_BINDINGS
+    assert bool(_ESTIMACION_OBJETIVA_BINDINGS & bindings) is (filing_year >= _later_cut_year()), filing_year
     assert f"modelo-184-{filing_year}-0a" in {str(item) for item in construct.deadline_windows}
 
 
@@ -231,7 +239,7 @@ def test_later_editions_keep_their_own_design_grounding(
     design = str(next(iter(links["modelo-184-export"].source_refs)))
 
     assert design.startswith("aeat-dr-184-"), design
-    for binding_id in _FLOOR_BINDINGS:
+    for binding_id in _MEMBER_ROW_BINDINGS:
         assert tuple(map(str, bindings[binding_id].source_refs)) == (
             "aeat-dr-184-2023-2024",
             "aeat-modelo-184-procedure",
@@ -273,33 +281,16 @@ def _reduccion_lirpf_refs(revision: ModeloRevision) -> dict[str, str]:
     return cited
 
 
-@pytest.mark.parametrize("filing_year", SUPPORTED_YEARS)
+@pytest.mark.parametrize("filing_year", [year for year in SUPPORTED_YEARS if year > FLOOR])
 def test_reduccion_binding_cites_each_lirpf_article_once(
     edition: Callable[[int], RegistrySnapshot], filing_year: int
 ) -> None:
     assert set(_reduccion_lirpf_refs(edition(filing_year).revision)) == _REDUCCION_ARTICLES, filing_year
 
 
-def test_floor_reduccion_cites_the_redactions_in_force_at_its_devengo(
-    edition: Callable[[int], RegistrySnapshot],
-) -> None:
-    """The floor edition grounds the campo in the LIRPF text that governed its own ejercicio."""
-    revision = edition(FLOOR).revision
-    catalogue = load_shared_catalogues(bundled_path("registry", "aeat")).legal
-    devengo = revision.valid_to
-    assert devengo is not None and devengo.year == FLOOR
-
-    for article, legal_id in _reduccion_lirpf_refs(revision).items():
-        reference = catalogue[legal_id]
-        assert reference.effective_from <= devengo, (article, legal_id)
-        assert reference.effective_to is None or reference.effective_to >= devengo, (article, legal_id)
-
-
 @pytest.mark.parametrize("filing_year", [year for year in SUPPORTED_YEARS if year > FLOOR])
 def test_later_reduccion_keys_its_own_redactions(edition: Callable[[int], RegistrySnapshot], filing_year: int) -> None:
-    """Moving the binding to the floor leaves the later editions' citations as they were."""
+    """Each edition that writes the socio record grounds REDUCCION in the LIRPF redactions it keys."""
     cited = _reduccion_lirpf_refs(edition(filing_year).revision)
-    floor_cited = _reduccion_lirpf_refs(edition(FLOOR).revision)
 
     assert cited == {"23": "ley-35-2006:art-23", "32": "ley-35-2006:art-32"}, filing_year
-    assert cited != floor_cited

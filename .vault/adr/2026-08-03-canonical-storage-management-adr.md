@@ -3,14 +3,15 @@ tags:
   - '#adr'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-10'
+modified: '2026-10-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:1191f51b18f93bdee35866c04fa2a791ca86ababcb9d8c1520c593b6009b7456'
+body_hash: 'sha256:71cb40a661927d6cd1033b91794d1d74c865245b9d1fcf36131be6cef6a52dcb'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
   - "[[2026-08-07-dev-harness-bleed-adr]]"
   - "[[2026-08-07-pdf-sanitizer-contributor-tooling-adr]]"
+  - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
 ---
 
 # `canonical-storage-management` adr: `canonical storage management API and config storage surface` | (**status:** `accepted`)
@@ -199,11 +200,11 @@ governs, and would silently create a directory over a file. The existing
 assertion that the file-valued entry gets its parent created, not its leaf,
 keeps passing.
 
-**R3 — The `cache/` prefix asymmetry is preserved, and no path moves.** Each
+**R3 — The `cache/` prefix asymmetry is preserved; path preservation is subject to explicit amendments.** Each
 member declares its literal relative subpath verbatim as it exists today. The
 conceptual grouping is a separate declared field with no effect on the resolved
 path. This decision changes representation, layer, and enforcement; it changes
-no on-disk location. The pre-release regime would permit stranding local data
+no on-disk location except as subsequently ruled in R28 and the 2026-10-08 Darwin transport exception below. The pre-release regime would permit stranding local data
 and this decision declines to use that permission.
 
 **R4 — Three orthogonal axes, and the lifecycle gate keeps the larger set.**
@@ -233,7 +234,12 @@ a burndown agent applies to get a yes or no without judgement:
 - names a child of the root, at any depth, by string literal or module-local
   constant;
 - calls `Path.home()`, `expanduser`, or a platform-directory lookup to *derive*
-  a location rather than to normalise a path it already holds;
+  a location rather than to normalise a path it already holds (the installed
+  default of the root anchor in `storage_environment.py` is a sanctioned
+  owner-level lookup per `2026-10-04-canonical-environment-adr`; the only
+  additional location lookup sanctioned here is the canonical owner's lazy
+  default-installed-Darwin transport query under the 2026-10-08 exception,
+  never a lookup invented by a consumer);
 - creates a directory whose name came from anywhere but a taxonomy member;
 - pins a category to a literal in a test fixture or override instead of
   deriving it from the taxonomy.
@@ -352,12 +358,11 @@ invisible to the gate's own selector because of its name, is declared an
 external executable; the selector widens from name-suffix to `Path`-typed
 annotation so no field can hide by being named inconveniently.
 
-Three root-anchored fields currently reading as oversights get explicit
+Two root-anchored fields currently reading as oversights get explicit
 categories rather than silence: `cadrumo_registry_disk_cache_dir` (an opt-in
-override whose production branch derives under the cache namespace),
+override whose production branch derives under the cache namespace) and
 `cadrumo_wallet_diagnostic_dump_dir` (an opt-in diagnostic capture, off by
-default), and the MCP session-telemetry directory (a full member — it is
-application-chosen and application-written, so it fails no escape test).
+default).
 
 **R7 — The CRUD surface.** `config storage` registers as a
 `LIFECYCLE_OPERATIONS_ONLY` noun-group: an operator cannot create or destroy a
@@ -679,7 +684,7 @@ sites at a layer that has no application imports by design and cannot accept
 them.
 
 *Tier one — collection-time bootstrapping. Exempt, untouched, not a target.*
-`src/cadrumo/tests/_collection_storage_root.py` and its two conftest callers
+the former source file and its two conftest callers
 point the root environment variable at a process-private temporary directory
 **before any import can resolve settings**, so collection never resolves against
 a real platform root on a machine still carrying retired-product state. Verified:
@@ -756,12 +761,12 @@ therefore not the same cardinality by construction, and a ruling that quotes
 one number as if it were the other will drift the moment either axis grows
 independently of the other.
 
-**Verified at committed HEAD `c16bb9a0ae`: nine excluded members, all nine
-carrying a `settings_field`, so both counts currently agree at 9** —
-`LLM_USAGE`, `LLM_RUN_TELEMETRY`, `MCP_TELEMETRY`, `RUNS`, `LLM_CACHE`,
+**Verified at committed HEAD `c16bb9a0ae`: every excluded member carries a
+`settings_field`, so both counts currently agree** —
+`LLM_USAGE`, `RUNS`, `LLM_CACHE`,
 `CORPUS_TEXT_CACHE`, `CORPUS_SEARCH_CACHE`, `VALIDATION_VERDICT_CACHE`,
-`REGISTRY_DISK_CACHE`. The rise from the original eight to nine is not
-drift: two of the nine — `CORPUS_SEARCH_CACHE` and `VALIDATION_VERDICT_CACHE`
+`REGISTRY_DISK_CACHE`. The later additions are not
+drift: two of the members — `CORPUS_SEARCH_CACHE` and `VALIDATION_VERDICT_CACHE`
 — are categories this campaign itself enrolled (R6, R17) that had no
 corresponding settings field for the old eight-field tuple to have read in
 the first place.
@@ -1240,3 +1245,11 @@ runtime dependencies stay.
 Deleting `bucket.audit` removes a directory from new bucket layouts and from
 disk-usage reporting. Real audit events are unaffected because they were never
 written there.
+
+## 2026-10-08 accepted Darwin transient transport exception
+
+2026-10-08-canonical-environment-darwin-transport-adr refines R1/R3/R5 only for the default `RUNTIME_SOCKETS` namespace in installed Darwin mode. The typed declaration represents its external transient anchor explicitly; it does not describe the native cache directory as a child of the data root. The owner-level public native query and product-family directory are declared and projected to Python/Rust with shared vectors. Native lookup and filesystem validation remain outside Settings construction. All other locations and the no-migration rule remain unchanged by this amendment.
+
+R7/R25 materialisation and reclaim must consume the external member's declared policy. The OS query may materialise its cache base before validation; application operations create only a missing product directory with mode 0700. Insecure existing directories refuse without repair. Ordinary materialisation, reclaim and uninstall never delete the shared transport directory or its namespace-lock inodes. Socket cleanup remains incarnation-checked; transient transport does not become a recursively reclaimable cache merely because its native base is called a cache. The four public storage areas and protected-descendant preflight are unchanged. Development roots remain root-relative and explicit synthetic/operator socket namespaces keep their isolation; custom installed data roots retain root-derived endpoint identities; no taxpayer payload, credential, durable record or existing tree is moved or migrated.
+
+Accepted 2026-10-08 under the user's advance authorization to fix defects and code/build all installer/manager work except signing. The successor records the evidence, exact scope and refusal contract; acceptance does not establish implemented consumer parity or native lifecycle acceptance.

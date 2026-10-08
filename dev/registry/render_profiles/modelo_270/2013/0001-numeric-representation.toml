@@ -1,0 +1,767 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+signed_composite_rules = []
+literal_numeric_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 427
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo1-row-427-59"
+decision_statement = "Render BOE Annex II @59+9 with reviewed digit-string policy."
+justification = "BOE-A-2013-13228 Annex II parent row 424 explicitly subdivides @59+49; child row 427 prints 'TELÉFONO : Campo numérico de 9' at @59+9."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 427
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 393
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo1-row-393-1"
+decision_statement = "Render BOE Annex II @1+1 with reviewed enumerated-digits policy."
+justification = "BOE-A-2013-13228 Annex II row 393 prints 'TIPO DE REGISTRO' at @1+1 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 393
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["270"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 395
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo1-row-395-2"
+decision_statement = "Render BOE Annex II @2+3 with reviewed enumerated-digits policy."
+justification = "BOE-A-2013-13228 Annex II row 395 prints 'MODELO DECLARACIÓN.' at @2+3 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 395
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 397
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo1-row-397-5"
+decision_statement = "Render BOE Annex II @5+4 with reviewed four-digit-year policy."
+justification = "BOE-A-2013-13228 Annex II row 397 prints 'EJERCICIO' at @5+4 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 397
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 433
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo1-row-433-108"
+decision_statement = "Render BOE Annex II @108+13 with reviewed identifier-digits policy."
+justification = "BOE-A-2013-13228 Annex II row 433 prints 'NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN' at @108+13 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 433
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 472
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo1-row-472-123"
+decision_statement = "Render BOE Annex II @123+13 with reviewed identifier-digits policy."
+justification = "BOE-A-2013-13228 Annex II row 472 prints 'NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN ANTERIOR' at @123+13 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 472
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 482
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "11"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo1-row-482-136"
+decision_statement = "Render BOE Annex II @136+9 with reviewed unsigned-integer policy."
+justification = "BOE-A-2013-13228 Annex II row 482 prints 'NÚMERO TOTAL DE REGISTROS DECLARADOS' at @136+9 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 482
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "11"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 499
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo1-row-499-145"
+decision_statement = "Render BOE Annex II @145+15 with reviewed integer-part policy."
+justification = "BOE-A-2013-13228 Annex II parent row 489 explicitly subdivides @145+17; child row 499 prints 'Parte entera del total importe o valoración' at @145+15."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 499
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 501
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo1-row-501-160"
+decision_statement = "Render BOE Annex II @160+2 with reviewed fractional-digits policy."
+justification = "BOE-A-2013-13228 Annex II parent row 489 explicitly subdivides @145+17; child row 501 prints 'Parte decimal del total importe o valoración' at @160+2."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 501
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 516
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo1-row-516-162"
+decision_statement = "Render BOE Annex II @162+15 with reviewed integer-part policy."
+justification = "BOE-A-2013-13228 Annex II parent row 504 explicitly subdivides @162+17; child row 516 prints 'Parte entera del total importe base de' at @162+15."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 516
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 518
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo1-row-518-177"
+decision_statement = "Render BOE Annex II @177+2 with reviewed fractional-digits policy."
+justification = "BOE-A-2013-13228 Annex II parent row 504 explicitly subdivides @162+17; child row 518 prints 'Parte decimal del total importe base de' at @177+2."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 518
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 531
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo1-row-531-179"
+decision_statement = "Render BOE Annex II @179+15 with reviewed integer-part policy."
+justification = "BOE-A-2013-13228 Annex II parent row 521 explicitly subdivides @179+17; child row 531 prints 'Parte entera del total importe de la' at @179+15."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 531
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 533
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo1-row-533-194"
+decision_statement = "Render BOE Annex II @194+2 with reviewed fractional-digits policy."
+justification = "BOE-A-2013-13228 Annex II parent row 521 explicitly subdivides @179+17; child row 533 prints 'Parte decimal del total importe de la' at @194+2."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 533
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 593
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-593-1"
+decision_statement = "Render BOE Annex II @1+1 with reviewed enumerated-digits policy."
+justification = "BOE-A-2013-13228 Annex II row 593 prints 'TIPO DE REGISTRO' at @1+1 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 593
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["270"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 595
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-595-2"
+decision_statement = "Render BOE Annex II @2+3 with reviewed enumerated-digits policy."
+justification = "BOE-A-2013-13228 Annex II row 595 prints 'MODELO DECLARACIÓN' at @2+3 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 595
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 597
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-597-5"
+decision_statement = "Render BOE Annex II @5+4 with reviewed four-digit-year policy."
+justification = "BOE-A-2013-13228 Annex II row 597 prints 'EJERCICIO' at @5+4 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 597
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2", "3", "4", "5"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 666
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "9"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-666-116"
+decision_statement = "Render BOE Annex II @116+1 with reviewed enumerated-digits policy."
+justification = "BOE-A-2013-13228 Annex II row 666 prints 'TIPO DE PERCEPTOR' at @116+1 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 666
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "9"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 694
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "11"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-694-118"
+decision_statement = "Render BOE Annex II @118+2 with reviewed identifier-digits policy."
+justification = "BOE-A-2013-13228 Annex II row 694 prints 'CÓDIGO DE PROVINCIA' at @118+2 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 694
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "11"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 742
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "12"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-742-120"
+decision_statement = "Render BOE Annex II @120+8 with reviewed yyyymmdd policy."
+justification = "BOE-A-2013-13228 Annex II row 742 prints 'FECHA DE CELEBRACION DEL SORTEO O APUESTA' at @120+8 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 742
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "12"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 749
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "13"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-749-128"
+decision_statement = "Render BOE Annex II @128+8 with reviewed yyyymmdd policy."
+justification = "BOE-A-2013-13228 Annex II row 749 prints 'FECHA DE PAGO DEL PREMIO' at @128+8 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 749
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "13"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 768
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-768-136"
+decision_statement = "Render BOE Annex II @136+13 with reviewed integer-part policy."
+justification = "BOE-A-2013-13228 Annex II parent row 753 explicitly subdivides @136+15; child row 768 prints 'Parte entera del importe íntegro dinerario o' at @136+13."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 768
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 773
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-773-149"
+decision_statement = "Render BOE Annex II @149+2 with reviewed fractional-digits policy."
+justification = "BOE-A-2013-13228 Annex II parent row 753 explicitly subdivides @136+15; child row 773 prints 'Parte decimal del importe íntegro dinerario' at @149+2."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 773
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 801
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-801-151"
+decision_statement = "Render BOE Annex II @151+13 with reviewed integer-part policy."
+justification = "BOE-A-2013-13228 Annex II parent row 781 explicitly subdivides @151+15; child row 801 prints 'Parte entera de la base de retención o' at @151+13."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 801
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 803
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-803-164"
+decision_statement = "Render BOE Annex II @164+2 with reviewed fractional-digits policy."
+justification = "BOE-A-2013-13228 Annex II parent row 781 explicitly subdivides @151+15; child row 803 prints 'Parte decimal de la base de retención o' at @164+2."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 803
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 820
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-820-166"
+decision_statement = "Render BOE Annex II @166+13 with reviewed integer-part policy."
+justification = "BOE-A-2013-13228 Annex II parent row 806 explicitly subdivides @166+15; child row 820 prints 'Parte entera del importe de la retención o' at @166+13."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 820
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 822
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-822-179"
+decision_statement = "Render BOE Annex II @179+2 with reviewed fractional-digits policy."
+justification = "BOE-A-2013-13228 Annex II parent row 806 explicitly subdivides @166+15; child row 822 prints 'Parte decimal del importe de la retención o' at @179+2."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 822
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 855
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "20"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2013-tipo2-row-855-453"
+decision_statement = "Render BOE Annex II @453+8 with reviewed yyyymmdd policy."
+justification = "BOE-A-2013-13228 Annex II row 855 prints 'FECHA DE NACIMIENTO.' at @453+8 as Numérico; its source content governs the selected representation."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 855
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "20"
+
+[design_identity]
+modelo = "270"
+design_epoch = "2013"
+source_ref = "boe-dr-270-2013-2022"
+source_sha256 = "97dfc0a9640f2bdd32c97b89702427ba708c858fe173ab31a68d179f247c3b69"

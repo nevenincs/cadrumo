@@ -65,7 +65,7 @@ from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now as _utc_now
 from ...core.time.utc import UtcInstant
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .review_package import assert_review_package_verifies
 
 if TYPE_CHECKING:
@@ -108,22 +108,6 @@ class ReviewPackageSigningKeypair(BaseModel):
         return ed25519_public_key_from_hex(self.public_key_hex)
 
 
-class ReviewPackageSigningPublicKey(BaseModel):
-    """The exportable, non-secret half of a profile's signing keypair.
-
-    Safe to hand to a receiving accountant so they can verify a package's
-    signature independently. Carries no secrecy requirement -- unlike
-    :class:`ReviewPackageSigningKeypair`, this model is fine to write to a
-    plaintext file, print, or transmit.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    bucket_id: BucketId
-    public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    created_at: UtcInstant
-
-
 class SignedReviewPackage(BaseModel):
     """Signature envelope binding a review package's manifest digest to a signer.
 
@@ -163,26 +147,12 @@ def ensure_review_package_signing_keypair(
     return signing_keypair.ensure_keypair(bucket_id=bucket_id, generated_at=generated_at)
 
 
-def review_package_signing_public_key(
-    keypair: ReviewPackageSigningKeypair,
-) -> ReviewPackageSigningPublicKey:
-    """Project the exportable public half out of a full keypair.
-
-    The projection never touches ``private_key_hex``; the returned model is
-    safe to hand to a receiving accountant.
-    """
-    return ReviewPackageSigningPublicKey(
-        bucket_id=keypair.bucket_id,
-        public_key_hex=keypair.public_key_hex,
-        created_at=keypair.created_at,
-    )
-
-
 def sign_review_package(
     package_path: Path,
     *,
     keypair: ReviewPackageSigningKeypair,
     signed_at: datetime | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> SignedReviewPackage:
     """Verify ``package_path``'s checksum manifest, then sign its digest.
 
@@ -198,6 +168,7 @@ def sign_review_package(
             :func:`ensure_review_package_signing_keypair`).
         signed_at: Optional override for the envelope's ``signed_at``
             timestamp (tests only); defaults to the current UTC time.
+        operation: Retained authority operation for the package integrity check.
 
     Raises:
         FileNotFoundError: If ``package_path`` does not exist.
@@ -205,7 +176,10 @@ def sign_review_package(
             verification (propagated from
             :func:`~application.modelo.review_package.assert_review_package_verifies`).
     """
-    with bundled_indexed_authority().operation() as operation:
+    if operation is None:
+        with bundled_indexed_authority().operation() as supplied_operation:
+            manifest = assert_review_package_verifies(package_path, operation=supplied_operation)
+    else:
         manifest = assert_review_package_verifies(package_path, operation=operation)
     manifest_sha256 = _package_manifest_sha256(package_path)
     signature_hex = sign_digest_hex(
@@ -247,7 +221,7 @@ def verify_review_package_signature(
         signed_package: The :class:`SignedReviewPackage` envelope produced by
             :func:`sign_review_package`.
         public_key_hex: The signer's raw public key, as 64 lowercase hex
-            characters (see :attr:`~ReviewPackageSigningPublicKey.public_key_hex`).
+            characters (see :attr:`~ReviewPackageSigningKeypair.public_key_hex`).
             Passed explicitly (never read off ``signed_package``) so a
             verifier must supply the key it actually trusts, rather than
             trusting whatever key the envelope claims.
@@ -294,10 +268,8 @@ def _package_manifest_sha256(package_path: Path) -> str:
 __all__ = [
     "ReviewPackageSigningError",
     "ReviewPackageSigningKeypair",
-    "ReviewPackageSigningPublicKey",
     "SignedReviewPackage",
     "ensure_review_package_signing_keypair",
-    "review_package_signing_public_key",
     "sign_review_package",
     "verify_review_package_signature",
 ]

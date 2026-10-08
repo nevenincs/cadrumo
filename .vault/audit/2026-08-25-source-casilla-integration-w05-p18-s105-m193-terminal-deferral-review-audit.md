@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:ca2c30415186917d3034c1729b034f847b4d0f361c3d0bee25d77eb3b4ffa8c8'
 related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-25-source-casilla-integration-m193-row-source-grounding-research]]"
 ---
 # `source-casilla-integration` audit: `W05 P18 S105 Modelo 193 terminal deferral review`

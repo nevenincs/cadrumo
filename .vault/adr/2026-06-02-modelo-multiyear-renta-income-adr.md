@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#modelo-multiyear-renta-income'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:1d0a8521388672682a0fa54d6806275fccf7f89c530b3d8f04a97082de979099'
+modified: '2026-10-03'
+body_hash: 'sha256:4cbfb251e49ad6f2ada7281bb7ca4a00abdf942b632e775279b8101993453859'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-income-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
   - '[[2026-06-04-modelo-multiyear-renta-research]]'
+  - '[[2026-10-03-duplication-remediation-m200-stock-verification-adr]]'
 ---
 
 # `modelo-multiyear-renta-income` adr: `income-tax prior-year cross-renta binding hooks (M200 BIN / M100 / M202)` | (**status:** `accepted`)
@@ -57,11 +58,13 @@ no-silent-under-declaration and no-tautological-calculation-tests disciplines.
   statute plus an AEAT worked manual; M100's 4-year period is grounded only at summary
   strength in the corpus JSON; M202's 40.2 base and instalment calendar are grounded
   verbatim in the AEAT instrucciones.
-- The manual→computed footprint is deliberately minimal and pinned to exact casillas. M200
-  `DP200014:00552` stays manual but gains a computed consistency check (the existing advisory
-  upgraded); the new computed quantity is the capped BIN-aplicada. M202 `01` flips manual →
-  prior-year-bound, while `03` and its 18% rate are already computed. M100's three carryforward
-  casillas become binding-fed (copy of the prior-year saldo). No other casilla changes kind.
+- The manual→computed footprint is deliberately minimal and pinned to exact casillas. The
+  companion M200 base-determination decision now owns computed `DP200014:00550` and
+  `DP200014:00552`; applied compensation `DP200014:00547` remains manual/elective, with a
+  separate computed maximum used only for verification. The dated M200 stock amendment
+  below adds no computed casilla. M202 `01` flips manual → prior-year-bound, while `03` and
+  its 18% rate are already computed. M100's three carryforward casillas become binding-fed
+  (copy of the prior-year saldo). No other casilla changes kind.
 
 ## Constraints
 
@@ -85,9 +88,12 @@ no-silent-under-declaration and no-tautological-calculation-tests disciplines.
 
 ## Implementation
 
-Each hook is a registry binding (re-using the M130 shape) plus, where a cap is needed, a
-registry formula built from the existing operator set. No resolver, schema, or CLI code
-changes.
+Each hook reuses the M130 registry binding shape plus, where a cap is needed, a registry
+formula built from the existing formula operators. No resolver or CLI changes are required.
+The authorized M200 stock amendment of 2026-10-03 is the narrow exception to the original
+no-schema/no-new-operator commitment: it adds one typed verification operator through the
+existing canonical specification/evaluator and authoring validator. Other hooks retain
+this ADR's original reuse boundary.
 
 **Modelo 200 — BIN compensation.** Add a `previous_filing` binding in
 `modelos/200/revisions/2024-y-siguientes/` whose `bin_disponible` input is a prior-year copy
@@ -105,7 +111,7 @@ build (landed separately) makes the base chain computed — base imponible previ
 `DP200014:00552 = max(00550 − 01032 − 00547, 0)` — consuming `00547` as the applied-BIN
 subtrahend. `00547` is the handoff point this A4 hook layers onto.
 
-**Cap design — ELECTIVE-CAPPED, not forced-to-cap (as built).** An earlier draft proposed making
+**Cap design — elective application, with the accepted stock-rule amendment.** An earlier draft proposed making
 `00552` (or `00547`) *equal* the cap. That is over-specified and would ship wrong tax: LIS
 art. 26.1 — «las bases imponibles negativas ... **podrán** ser compensadas ... **con el límite**
 del 70 por ciento ... En todo caso ... hasta el importe de 1 millón de euros» — makes BIN
@@ -116,12 +122,16 @@ design keeps `00547` **operator-elective (`input_kind = "manual"`)** and adds, o
 **separate computed ceiling casilla** `DP200014:bin-aplicada-maxima` (internal; no `export_refs`)
 `= min(00670, max(literal(1000000), percent(70, DP200014:00550)))` — the cap base is `00550`, the
 base imponible previa **before** the reserva de capitalización (`01032`) and the compensación
-(`00547`), per art. 26.1 — plus **two `BLOCKING_RULE` `cap_le_when_positive` verification
-predicates**: `cap_le_when_positive(["DP200014:00547", "DP200014:bin-aplicada-maxima"])` (the
-applied amount must not exceed the art.26.1 ceiling) and
-`cap_le_when_positive(["DP200014:00547", "00670"])` (cannot compensate more than the BIN stock
-held). `cap_le_when_positive` is the existing operator (grounded in the M131 C11≤C10 / M130
-C15≤C14 cap analogues); no new operator is added, and it holds vacuously when the ceiling ≤ 0.
+(`00547`), per art. 26.1. Keep the statutory-limit `BLOCKING_RULE`
+`cap_le_when_positive(["DP200014:00547", "DP200014:bin-aplicada-maxima"])` and the generic
+operator's existing positive-ceiling semantics unchanged. The opening-stock `BLOCKING_RULE`
+uses `positive_application_le_present_stock(["DP200014:00547", "00670"])`: omitted or
+non-positive application holds for this stock check; positive application requires a
+present stock key in the Decimal value mapping and application no greater than that actual
+value. Present zero or negative stock cannot support positive application. Source-clean
+verification and sign validation remain separate. This accepted contract changes the stock
+operator only; source installation, validated publication and runtime adoption remain
+separate deliverables.
 This is the `no-silent-under-declaration` "Good" path applied to the **over-application**
 direction — the gate **refuses** an over-claim while **permitting** electing less. The existing
 `implies_nonzero(["00501", "DP200014:00552"])` ADVISORY (under-declaration direction) is owned by
@@ -182,10 +192,13 @@ instalment key.
 both layers — domain (`test_modelo_130_registry.py` family) and application
 (`test_modelo_130_carry_forward_continuity.py`) — driving the real registry engine across two
 distinct filing years so the gate's recorder observes >=2 distinct renta years. M200 seeds a
-2023 BIN loss into `00671`, calculates 2024 profit, asserts the bound `bin_disponible` equals
-the 2023 `00671`, asserts the capped aplicada equals `min(that, max(1M, 0.70·base_previa_2024))`,
-and asserts the consistency check fires (BLOCKING) when the manually entered `DP200014:00552`
-disagrees with `base_previa − aplicada`. M100 asserts the 2025 carryforward casilla equals the
+2023 BIN loss into `00671`, calculates 2024 profit and asserts the bound opening stock equals
+the prior pending balance. Assert the separate computed maximum, and prove that a partial
+manual `DP200014:00547` remains the elected amount while the computed base consumes it.
+For stock verification, independently cover absent, zero, negative, insufficient and
+sufficient stock, including equality, and retain the unchanged positive/zero public-profile
+regression against an authorized pinned publication. Do not require the election to equal
+its maximum or describe the now-computed `DP200014:00552` as an elective input. M100 asserts the 2025 carryforward casilla equals the
 2024 generated saldo and that integración reduces the 2025 savings base (wiring/provenance
 oracle only). M202 seeds an M200/2023 cuota, asserts the M202/2024 1/P `01` equals that cuota
 with the `-2` offset (and a 2/P/3/P case with `-1`), and that `03` recomputes as
@@ -195,8 +208,9 @@ with the `-2` offset (and a 2/P/3/P case with `-1`), and that `03` recomputes as
 
 Re-using the M130 `previous_filing` template means the cross-year mechanism for all three
 modelos is expressed in data the resolver already understands, so the campaign adds tax
-semantics without adding runtime surface — consistent with the foundational gate ADR's
-"registry-authoring, not new infra" posture. Grounding each binding in a reviewed legal_ref
+semantics without new resolver or CLI infrastructure — consistent with the foundational
+gate ADR's "registry-authoring, not new infra" posture. The dated stock amendment adds one
+closed verification operator within existing ownership; it does not add a second runtime. Grounding each binding in a reviewed legal_ref
 (`ley-27-2014:art-26`, `ley-35-2006:art-49`, `ley-27-2014:art-40`) keeps the calculation
 non-tautological: the M200 cap is checkable against the AEAT 2024 manual, and the M100 and
 M202 hooks assert wiring and reconciliation where no per-casilla numeric oracle exists, per
@@ -220,11 +234,36 @@ rather than silently shipping past them follows the no-silent-under-declaration 
   expiry are advisory/Phase-2; the advisory surface must fire so a filer is not silently led
   to over-compensate.
 
+## Scoped M200 stock amendment and decision history (2026-10-03)
+
+Authorized under the user's instruction, "make the decisision", as recorded in
+`2026-10-03-duplication-remediation-m200-stock-verification-adr`. This refinement changes
+only the opening-stock comparison and reconciles the M200 elective-amount description.
+It preserves the existing statutory-limit predicate and generic cap semantics, the 00671
+roll-forward advisory, source-clean gates, finding taxonomy, narrative predicate identifier
+and locale key. It adds no casilla, formula, export field, public DTO, default or persistence
+wire format. BIN-continuity and internal-casilla-exemption commitments remain unchanged.
+
+The original M200 footprint described `00552` as manual and a capped aplicada as computed;
+the companion base decision's implemented status now owns computed bases, and `00547`
+remains the taxpayer's optional manual election. The original stock choice used
+`cap_le_when_positive(["DP200014:00547", "00670"])` alongside the statutory cap and stated
+that no new operator was added. Its deliberate vacuous truth for non-positive ceilings
+cannot enforce a positive election against zero or missing stock. That stock-only choice
+and the related no-verification-schema-change sentence are superseded by the present,
+typed, exact-two-operand stock rule. The earlier enrollment wording that forced the
+applied amount to its maximum is historical design text, not an operative test obligation.
+
+The separate 00547/00550 condition, including statutory adjustments, and special-regime
+applicability remain unresolved by this amendment. Neither this acceptance nor Temp
+candidate checks establish validated publication or current runtime repair. No whole-ADR
+supersession or source-path release is made.
+
 ## Codification candidates
 
 - **Rule slug:** `previous-filing-binding-reuse-over-new-infra`.
   **Rule:** A modelo's prior-year cross-renta hook must be expressed by re-using the proven
   `previous_filing` binding shape plus existing formula operators against
-  `ValidatedRegistryAuthority` snapshots, never by adding resolver, schema, or CLI code, and
-  any legal-grounding gap (summary-strength statute, period-specific year offsets) must be
+  `ValidatedRegistryAuthority` snapshots, without new resolver or CLI code. The dated M200
+  stock amendment is the sole scoped verification-schema exception in this ADR. Any legal-grounding gap (summary-strength statute, period-specific year offsets) must be
   recorded as an explicit constraint rather than assumed.

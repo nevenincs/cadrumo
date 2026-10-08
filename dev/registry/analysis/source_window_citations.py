@@ -121,20 +121,35 @@ def cited_sources(revision_dir: Path, known: set[str]) -> dict[str, list[str]]:
     found: dict[str, list[str]] = {}
     for path in sorted(revision_dir.rglob("*.toml")):
         relative = str(path.relative_to(revision_dir)).replace("\\", "/")
-        open_key = ""
-        for raw in path.read_text(encoding="utf-8").splitlines():
-            line = raw.strip()
-            if line.startswith("#"):
-                continue
-            key, separator, _remainder = line.partition("=")
-            if separator and not key.strip().startswith("["):
-                open_key = key.strip()
-            for source_id in known:
-                if f'"{source_id}"' in line:
-                    found.setdefault(source_id, []).append(f"{relative}#{open_key}")
-            if line.endswith("]") and "[" not in line:
-                open_key = ""
+        for source_id, locations in _citation_file_sources(path, relative, known).items():
+            found.setdefault(source_id, []).extend(locations)
     return found
+
+
+def _citation_file_sources(path: Path, relative: str, known: set[str]) -> dict[str, list[str]]:
+    """Read known source ids and their active TOML key from one file."""
+    found: dict[str, list[str]] = {}
+    open_key = ""
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        open_key, citation_key, source_ids = _citation_line(raw, known, open_key)
+        for source_id in source_ids:
+            found.setdefault(source_id, []).append(f"{relative}#{citation_key}")
+    return found
+
+
+def _citation_line(raw: str, known: set[str], open_key: str) -> tuple[str, str, tuple[str, ...]]:
+    """Return the next active key, citation key, and known ids named on one TOML line."""
+    line = raw.strip()
+    if line.startswith("#"):
+        return open_key, open_key, ()
+    key, separator, _remainder = line.partition("=")
+    if separator and not key.strip().startswith("["):
+        open_key = key.strip()
+    citation_key = open_key
+    source_ids = tuple(source_id for source_id in known if f'"{source_id}"' in line)
+    if line.endswith("]") and "[" not in line:
+        open_key = ""
+    return open_key, citation_key, source_ids
 
 
 #: A citation's FILE ROLE decides whether a non-overlapping window is a defect.
@@ -196,33 +211,34 @@ def classify(cited_in: list[str], *, superseded: bool = False, calendar_evidence
     """Classify a citation whose declared window does not overlap its revision."""
     if superseded:
         return "superseded_alongside_current"
-    roles = set()
-    for where in cited_in:
-        location, _, key = where.partition("#")
-        head = location.split("/")[0]
-        if head in {"casilla_continuidad_evolutions", "identifier_evolutions"}:
-            roles.add("evolution_origin")
-        elif key in {"additional_source_refs", "continuidad_evidence"}:
-            # A shard comparing two generations cites the earlier one on purpose.
-            roles.add("evolution_origin")
-        elif head in {"deadline_windows", "filing_schedules"}:
-            roles.add("presentation_calendar")
-        elif head == "constructs" and calendar_evidence:
-            # A construct citing the SAME source a deadline window on this
-            # revision cites is referencing that deadline evidence, not making an
-            # independent claim. A construct citing a source NO deadline window
-            # cites is governing: modelo 131's editions name a Sede help page
-            # only from constructs, and reading that as a filing calendar let the
-            # same source be classified two different ways on two editions
-            # depending on which other files happened to cite it.
-            roles.add("presentation_calendar")
-        elif head == "application_links" and key in {"source_refs", "source_ref"}:
-            # An application link whose surface is filing or deadline points at
-            # the Sede page for the year the return is PRESENTED.
-            roles.add("presentation_calendar")
-        else:
-            roles.add("governing_non_overlap")
+    roles = {_citation_role(where, calendar_evidence=calendar_evidence) for where in cited_in}
     return "governing_non_overlap" if "governing_non_overlap" in roles else sorted(roles)[0]
+
+
+def _citation_role(where: str, *, calendar_evidence: bool) -> str:
+    """Read a citation file's semantic role without inferring it from its date."""
+    location, _, key = where.partition("#")
+    head = location.split("/")[0]
+    if head in {"casilla_continuidad_evolutions", "identifier_evolutions"}:
+        return "evolution_origin"
+    if key in {"additional_source_refs", "continuidad_evidence"}:
+        # A shard comparing two generations cites the earlier one on purpose.
+        return "evolution_origin"
+    if head in {"deadline_windows", "filing_schedules"}:
+        return "presentation_calendar"
+    if head == "constructs" and calendar_evidence:
+        # A construct citing the SAME source a deadline window on this
+        # revision cites is referencing that deadline evidence, not making an
+        # independent claim. A construct citing a source NO deadline window
+        # cites is governing: modelo 131's editions name a Sede help page only
+        # from constructs, and reading that as a filing calendar let the same
+        # source be classified two different ways across editions.
+        return "presentation_calendar"
+    if head == "application_links" and key in {"source_refs", "source_ref"}:
+        # An application link whose surface is filing or deadline points at
+        # the Sede page for the year the return is PRESENTED.
+        return "presentation_calendar"
+    return "governing_non_overlap"
 
 
 ROLES = (
@@ -281,76 +297,157 @@ def scan(
     # catalogue wins so an id is never counted twice under two roles.
     legal = {k: v for k, v in legal.items() if k not in windows}
     known = set(windows) | set(legal)
+    return _scan_modelos(modelos_dir or MODELOS, only_modelo, windows, legal, known)
+
+
+def _scan_modelos(
+    modelos_dir: Path,
+    only_modelo: str | None,
+    windows: dict[str, tuple[date | None, date | None, str]],
+    legal: dict[str, tuple[date | None, date | None, str]],
+    known: set[str],
+) -> tuple[list[SourceWindowFinding], int, int]:
+    """Visit the selected modelo directories and combine their revision scans."""
     findings: list[SourceWindowFinding] = []
     revisions_checked = citations_checked = 0
-
-    for modelo_dir in sorted((modelos_dir or MODELOS).iterdir()):
+    for modelo_dir in sorted(modelos_dir.iterdir()):
         if not modelo_dir.is_dir():
             continue
         if only_modelo and modelo_dir.name != only_modelo:
             continue
-        for revision_dir in sorted((modelo_dir / "revisions").glob("*")):
-            if not revision_dir.is_dir():
-                continue
-            span = revision_spans(revision_dir)
-            if span is None:
-                continue
-            revisions_checked += 1
-            span_from, span_to = span
-            cited = cited_sources(revision_dir, known)
-            covering = {
-                source_id
-                for source_id in cited
-                if applies_across(
-                    applies_from=(legal.get(source_id) or windows[source_id])[0],
-                    applies_to=(legal.get(source_id) or windows[source_id])[1],
-                    span_from=span_from,
-                    span_to=span_to,
-                )
-            }
-            for source_id, where in cited.items():
-                is_legal = source_id in legal
-                applies_from, applies_to, catalogue = legal[source_id] if is_legal else windows[source_id]
-                if applies_from is None and applies_to is None:
-                    continue  # an undeclared window makes no claim to contradict
-                citations_checked += 1
-                if applies_across(
-                    applies_from=applies_from,
-                    applies_to=applies_to,
-                    span_from=span_from,
-                    span_to=span_to,
-                ):
-                    continue
-                findings.append(
-                    {
-                        "modelo": modelo_dir.name,
-                        "revision": revision_dir.name,
-                        "revision_span": [
-                            span_from.isoformat(),
-                            span_to.isoformat() if span_to else None,
-                        ],
-                        "source": source_id,
-                        "source_window": [
-                            applies_from.isoformat() if applies_from else None,
-                            applies_to.isoformat() if applies_to else None,
-                        ],
-                        "catalogue": catalogue,
-                        "cited_in": where,
-                        "role": (
-                            "legal_window_non_overlap"
-                            if is_legal
-                            else classify(
-                                where,
-                                superseded=has_current_sibling(source_id, covering),
-                                calendar_evidence=any(
-                                    entry.split("#")[0].split("/")[0] in {"deadline_windows", "filing_schedules"}
-                                    for entry in where
-                                ),
-                            )
-                        ),
-                    }
-                )
+        model_findings, model_revisions, model_citations = _scan_modelo(modelo_dir, windows, legal, known)
+        findings.extend(model_findings)
+        revisions_checked += model_revisions
+        citations_checked += model_citations
     return findings, revisions_checked, citations_checked
+
+
+def _scan_modelo(
+    modelo_dir: Path,
+    windows: dict[str, tuple[date | None, date | None, str]],
+    legal: dict[str, tuple[date | None, date | None, str]],
+    known: set[str],
+) -> tuple[list[SourceWindowFinding], int, int]:
+    """Walk one modelo's revision directories and aggregate measured citations."""
+    findings: list[SourceWindowFinding] = []
+    revisions_checked = citations_checked = 0
+    for revision_dir in sorted((modelo_dir / "revisions").glob("*")):
+        if not revision_dir.is_dir():
+            continue
+        revision_findings, checked, citations = _scan_revision(modelo_dir.name, revision_dir, windows, legal, known)
+        findings.extend(revision_findings)
+        revisions_checked += checked
+        citations_checked += citations
+    return findings, revisions_checked, citations_checked
+
+
+def _scan_revision(
+    modelo: str,
+    revision_dir: Path,
+    windows: dict[str, tuple[date | None, date | None, str]],
+    legal: dict[str, tuple[date | None, date | None, str]],
+    known: set[str],
+) -> tuple[list[SourceWindowFinding], int, int]:
+    """Inspect citations within one revision's declared validity span."""
+    span = revision_spans(revision_dir)
+    if span is None:
+        return [], 0, 0
+    span_from, span_to = span
+    cited = cited_sources(revision_dir, known)
+    covering = _covering_sources(cited, windows, legal, span_from, span_to)
+    findings: list[SourceWindowFinding] = []
+    citations_checked = 0
+    for source_id, where in cited.items():
+        window = legal[source_id] if source_id in legal else windows[source_id]
+        finding, checked = _citation_finding(
+            modelo,
+            revision_dir.name,
+            source_id,
+            where,
+            window,
+            source_id in legal,
+            covering,
+            span_from,
+            span_to,
+        )
+        citations_checked += checked
+        if finding is not None:
+            findings.append(finding)
+    return findings, 1, citations_checked
+
+
+def _covering_sources(
+    cited: dict[str, list[str]],
+    windows: dict[str, tuple[date | None, date | None, str]],
+    legal: dict[str, tuple[date | None, date | None, str]],
+    span_from: date,
+    span_to: date | None,
+) -> set[str]:
+    """Collect cited source ids whose declared windows cover this revision."""
+    return {
+        source_id
+        for source_id in cited
+        if applies_across(
+            applies_from=(legal.get(source_id) or windows[source_id])[0],
+            applies_to=(legal.get(source_id) or windows[source_id])[1],
+            span_from=span_from,
+            span_to=span_to,
+        )
+    }
+
+
+def _citation_finding(
+    modelo: str,
+    revision: str,
+    source_id: str,
+    where: list[str],
+    window: tuple[date | None, date | None, str],
+    is_legal: bool,
+    covering: set[str],
+    span_from: date,
+    span_to: date | None,
+) -> tuple[SourceWindowFinding | None, int]:
+    """Create one non-overlap finding and return whether its window was measured."""
+    applies_from, applies_to, catalogue = window
+    if applies_from is None and applies_to is None:
+        return None, 0
+    if applies_across(
+        applies_from=applies_from,
+        applies_to=applies_to,
+        span_from=span_from,
+        span_to=span_to,
+    ):
+        return None, 1
+    return (
+        {
+            "modelo": modelo,
+            "revision": revision,
+            "revision_span": [span_from.isoformat(), span_to.isoformat() if span_to else None],
+            "source": source_id,
+            "source_window": [
+                applies_from.isoformat() if applies_from else None,
+                applies_to.isoformat() if applies_to else None,
+            ],
+            "catalogue": catalogue,
+            "cited_in": where,
+            "role": _finding_role(source_id, where, is_legal, covering),
+        },
+        1,
+    )
+
+
+def _finding_role(source_id: str, where: list[str], is_legal: bool, covering: set[str]) -> str:
+    """Select legal-window role or classify a source citation by its file roles."""
+    if is_legal:
+        return "legal_window_non_overlap"
+    calendar_evidence = any(
+        entry.split("#")[0].split("/")[0] in {"deadline_windows", "filing_schedules"} for entry in where
+    )
+    return classify(
+        where,
+        superseded=has_current_sibling(source_id, covering),
+        calendar_evidence=calendar_evidence,
+    )
 
 
 def main() -> int:

@@ -22,6 +22,7 @@ from ..pipeline.semantic_map import (
     SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION,
     SemanticMapFragment,
     load_semantic_map,
+    load_semantic_map_for_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -141,6 +142,37 @@ def test_loads_fragments_in_filename_order_independent_of_creation_order(tmp_pat
     assert semantic_map.source_sha256 == "a" * 64
     assert tuple(record.export_record_id for record in semantic_map.records) == ("registro-tipo-1",)
     assert tuple(entry.export_field_id for entry in semantic_map.entries) == ("registro-tipo-1.declarante-nif",)
+
+
+def test_selects_only_the_exact_revision_map_within_a_shared_epoch(tmp_path: Path) -> None:
+    root = tmp_path / "shared-epoch"
+    root.mkdir()
+    for revision_id, casilla in (("esquema-union", "union-cuota"), ("esquema-exterior", "exterior-cuota")):
+        edition = root / revision_id
+        edition.mkdir()
+        body = (
+            (_RECORD + _ENTRY)
+            .replace('kind = "header"', 'kind = "casilla"')
+            .replace('producer_key = "presenter.tax_id"', f'casilla_id = "{casilla}"')
+        )
+        _write(edition / "0001-design.toml", _fragment(fragment_id="design", body=body))
+
+    selected = load_semantic_map_for_revision(root, "esquema-union")
+    assert selected.entries[0].casilla_id == "union-cuota"
+    with pytest.raises(RegistryValidationError, match="no reviewed map for revision"):
+        load_semantic_map_for_revision(root, "esquema-importacion")
+
+    _write(root / "0001-design.toml", _fragment(fragment_id="design", body=_RECORD + _ENTRY))
+    with pytest.raises(RegistryValidationError, match="mixes unscoped fragments"):
+        load_semantic_map_for_revision(root, "esquema-union")
+
+
+def test_revision_map_loader_keeps_ordinary_epoch_behavior(tmp_path: Path) -> None:
+    root = tmp_path / "ordinary-epoch"
+    root.mkdir()
+    _write(root / "0001-design.toml", _fragment(fragment_id="design", body=_RECORD + _ENTRY))
+
+    assert load_semantic_map_for_revision(root, "some-revision") == load_semantic_map(root)
 
 
 def test_compiled_semantics_have_canonical_order_across_fragments(tmp_path: Path) -> None:
@@ -676,7 +708,9 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
             "ExportFieldId",
             "ModeloId",
             "RecordId",
+            "RevisionId",
             "SourceRefId",
+            "is_registry_id",
         },
         "cadrumo.domain.calculations.registry.schema_base": {"LegalRefs", "SourceRefs"},
         "cadrumo.domain.calculations.registry.schema_exports": {"FilingEnvelopePrefixRole", "RecordDiscriminator"},

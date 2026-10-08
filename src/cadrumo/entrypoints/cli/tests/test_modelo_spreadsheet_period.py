@@ -4,24 +4,23 @@ from __future__ import annotations
 
 import pytest
 
+from ....application.operations.public_period import PublicPeriod
 from ....core.period import Period
 from ..errors import CliRefusedBoundaryError
-from ..modelo_spreadsheet_cli import filing_period_or_refusal, load_snapshot
+from ..modelo_spreadsheet_cli import filing_period_or_refusal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def test_modelo_spreadsheet_cli_snapshot_loader_accepts_typed_period() -> None:
-    """The local snapshot loader receives a typed Period, not raw year/period text."""
+def test_modelo_spreadsheet_cli_converts_the_filing_coordinate_to_a_closed_period() -> None:
+    """The registered request receives the same canonical period the CLI parsed."""
 
     period = filing_period_or_refusal(modelo="303", period="1T", year=2026)
-
-    snapshot = load_snapshot("303", period)
+    public_period = PublicPeriod.from_period(period)
 
     assert period == Period.from_year_and_code(2026, "1T")
-    assert snapshot.filing_period == period
-    assert snapshot.filing_year == period.filing_year
-    assert snapshot.period == period.registry_token
+    assert public_period.filing_year == period.filing_year
+    assert public_period.code == period.registry_token
 
 
 def test_modelo_spreadsheet_cli_period_refuses_combined_shape() -> None:

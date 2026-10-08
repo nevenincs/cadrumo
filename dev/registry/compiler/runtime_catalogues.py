@@ -39,7 +39,7 @@ def compile_runtime_catalogues(registry_root: Path) -> RuntimeRegistryCatalogues
         PublishedIvaPlaceOfSupplyRule,
         "rule_id",
     )
-    recargo = _recargo_bands(read_catalogue_document(root / "legal" / "ley-58-2003-recargo-bands.toml"))
+    recargo = published_recargo_bands(read_catalogue_document(root / "legal" / "ley-58-2003-recargo-bands.toml"))
     version = apoderamientos.get("catalogue_version")
     if not isinstance(version, str) or not version:
         raise RegistryValidationError("apoderamientos catalogue has no version")
@@ -153,7 +153,8 @@ def published_iva_regulations(document: Mapping[str, object]) -> dict[str, Publi
     return compiled
 
 
-def _recargo_bands(document: Mapping[str, object]) -> dict[str, PublishedRecargoBand]:
+def published_recargo_bands(document: Mapping[str, object]) -> dict[str, PublishedRecargoBand]:
+    """Validate a source document's published recargo bands for compiler and audit readers."""
     rows = document.get("band")
     if not isinstance(rows, list) or not rows:
         raise RegistryValidationError("runtime recargo catalogue must contain bands")

@@ -4,6 +4,8 @@ The selected Modelo 210 registry revision owns the income-code catalogue,
 labels, and payer applicability. This module retains only the transaction
 validation/type shell while that registry declaration is consumed by the
 calculation path.
+
+Core types: :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
 """
 
 from __future__ import annotations
@@ -24,6 +26,22 @@ from .errors import TransactionValidationError
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.schema import ModeloRevision
+
+
+def _retained_m210_operation(operation: PinnedAuthorityOperation | None) -> PinnedAuthorityOperation | None:
+    """Keep nested transaction validation on its caller's published generation."""
+    if operation is not None:
+        return operation
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
+
+    scoped = governed_facts_in_scope()
+    if scoped is None:
+        return None
+    if not isinstance(scoped, PinnedAuthorityOperation):
+        raise TransactionValidationError("M210 classification requires a published generation-pinned authority")
+    return scoped
 
 
 def _resolved_m210_detail_declarations(
@@ -43,6 +61,7 @@ def _resolved_m210_detail_declarations(
         date_axis=DateAxis.FILING_PERIOD,
         effective_date=effective_date,
     )
+    operation = _retained_m210_operation(operation)
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return _resolved_m210_detail_declarations(effective_date, operation=indexed_operation)
@@ -60,6 +79,14 @@ def _registry_m210_payer_mode_declarations(
     """Resolve payer-mode membership, default, and model applicability."""
     as_of = effective_date or today_madrid()
     declarations = _resolved_m210_detail_declarations(as_of, operation=operation)
+    modes, default_mode = _payer_mode_membership(declarations)
+    _validate_m210_payer_mode_declarations(modes, declarations)
+    if default_mode not in modes:
+        raise TransactionValidationError("detail M349/M210 catalogue declares an unknown payer-mode default")
+    return frozenset(modes), default_mode, declarations
+
+
+def _payer_mode_membership(declarations: Mapping[str, str]) -> tuple[tuple[str, ...], str]:
     order_text = declarations.get("m210.payer_mode_order")
     default_mode = declarations.get("m210.payer_mode.default")
     if order_text is None or default_mode is None:
@@ -67,6 +94,10 @@ def _registry_m210_payer_mode_declarations(
     modes = tuple(token.strip() for token in order_text.split(",") if token.strip())
     if not modes or len(modes) != len(set(modes)):
         raise TransactionValidationError("detail M349/M210 catalogue has invalid payer-mode membership")
+    return modes, default_mode
+
+
+def _validate_m210_payer_mode_declarations(modes: tuple[str, ...], declarations: Mapping[str, str]) -> None:
     for mode in modes:
         if declarations.get(f"m210.payer_mode.{mode}.value") != mode:
             raise TransactionValidationError(f"payer-mode declaration is missing canonical value for {mode!r}")
@@ -77,9 +108,6 @@ def _registry_m210_payer_mode_declarations(
         )
         if not applicable_modelos:
             raise TransactionValidationError(f"payer-mode declaration is missing model applicability for {mode!r}")
-    if default_mode not in modes:
-        raise TransactionValidationError("detail M349/M210 catalogue declares an unknown payer-mode default")
-    return frozenset(modes), default_mode, declarations
 
 
 def resolve_m210_payer_mode(
@@ -124,19 +152,39 @@ def _registry_m210_declarations(
 ) -> tuple[frozenset[str], frozenset[str], M210PayerMode]:
     """Resolve the selected M210 code and payer-applicability declarations."""
     from ..calculations.registry.authority import bundled_indexed_authority
-    from ..calculations.registry.temporal import select_revision_metadata_for_year
 
     effective_date = today_madrid()
+    operation = _retained_m210_operation(operation)
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return _registry_m210_declarations(operation=indexed_operation)
+    revision = _selected_m210_revision(operation, effective_date)
+    code_catalogue, multiple_payer_codes = _m210_code_and_payer_sets(revision)
+    required_mode = required_m210_payer_mode_for_code(
+        "35",
+        effective_date=effective_date,
+        operation=operation,
+    )
+    if required_mode is None:
+        raise TransactionValidationError("detail M349/M210 catalogue lacks code-35 payer-mode declaration")
+    return code_catalogue, multiple_payer_codes, required_mode
+
+
+def _selected_m210_revision(operation: PinnedAuthorityOperation, effective_date: date) -> ModeloRevision:
+    from ..calculations.registry.temporal import select_revision_metadata_for_year
+
     directory = operation.modelo_directory("210")
     selected = select_revision_metadata_for_year(
         directory,
         filing_year=effective_date.year,
         on=effective_date,
     )
-    revision = operation.revision("210", str(selected.id))
+    return operation.revision("210", str(selected.id))
+
+
+def _m210_code_and_payer_sets(
+    revision: ModeloRevision,
+) -> tuple[frozenset[str], frozenset[str]]:
     code_parameter = next(
         (parameter for parameter in revision.parameters if "tipo-renta-code" in str(parameter.id)),
         None,
@@ -147,17 +195,9 @@ def _registry_m210_declarations(
     )
     if code_parameter is None or payer_parameter is None:
         raise TransactionValidationError("selected M210 registry revision lacks income-code declarations")
-    required_mode = required_m210_payer_mode_for_code(
-        "35",
-        effective_date=effective_date,
-        operation=operation,
-    )
-    if required_mode is None:
-        raise TransactionValidationError("detail M349/M210 catalogue lacks code-35 payer-mode declaration")
     return (
         frozenset(str(entry.key) for entry in code_parameter.keyed_brackets),
         frozenset(str(entry.key) for entry in payer_parameter.keyed_brackets),
-        required_mode,
     )
 
 

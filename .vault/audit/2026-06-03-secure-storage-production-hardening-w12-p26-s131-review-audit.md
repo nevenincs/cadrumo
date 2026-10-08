@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:56ffff4e4ce3abb2f1065d0222b45ccddb7a257df1a8b81e02c200d7951e0baa'
+modified: '2026-10-03'
+body_hash: 'sha256:97ad16e0bf7a9d4adabb70b625f7ec9f91f6294b822b2f0c6fa71e0252dce37a'
 related: []
 ---
 
@@ -18,9 +18,9 @@ The `active-profile` scanner signal is from human-facing error documentation for
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/core/errors/test_registry_enforcement.py src/aeat/adapters/outbound/google/test_package_module_allowlist.py` passed with 6 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/google/test_records.py src/aeat/entrypoints/cli/_config/test_google_error_localisation.py` passed with 22 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/google/_errors.py src/aeat/core/errors/test_registry_enforcement.py src/aeat/adapters/outbound/google/test_package_module_allowlist.py` passed.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/google/test_records.py src/aeat/entrypoints/cli/_config/test_google_error_localisation.py` passed.
+- the historical check passed with 6 tests.
+- the historical check passed with 22 tests.
+- the historical check passed.
+- the historical check passed.
 
 Disposition: close `AFR-029` as `manifest-discovery` false positive for this file.

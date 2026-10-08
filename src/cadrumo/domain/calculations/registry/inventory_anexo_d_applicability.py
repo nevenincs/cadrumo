@@ -6,7 +6,7 @@ from datetime import date
 
 from .errors import RegistryValidationError
 from .facts.resolution import ResolvedScalarFact, ScalarFactQuery
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
 _FACT_ID = "inventory-anexo-d-applicability"
@@ -19,11 +19,7 @@ def resolve_inventory_anexo_d_filing_year(
     authority: GovernedFactSource | None = None,
 ) -> int:
     """Resolve the applicable Anexo D filing year, failing closed if absent."""
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError(
-            "inventory Anexo D applicability requires an explicit authority operation or scope"
-        )
+    authority = require_governed_fact_authority(authority, subject="inventory Anexo D applicability")
     resolved = authority.resolve_governed_fact(
         ScalarFactQuery(
             fact_id=_FACT_ID,

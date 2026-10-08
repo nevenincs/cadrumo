@@ -9487,11 +9487,6 @@ position = 5
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "renta-profile-descendientes-count"
-position = 7
-
-[[revisions."2024".family_positions]]
-family = "bindings"
 id = "renta-profile-marriage-full-year"
 position = 8
 
@@ -9507,18 +9502,8 @@ position = 10
 
 [[revisions."2024".family_positions]]
 family = "bindings"
-id = "renta-profile-guarderia-gastos-reales"
-position = 11
-
-[[revisions."2024".family_positions]]
-family = "bindings"
 id = "renta-profile-cotizaciones-ss-madre"
 position = 12
-
-[[revisions."2024".family_positions]]
-family = "bindings"
-id = "renta-profile-descendientes-guarderia"
-position = 13
 
 [[revisions."2024".family_positions]]
 family = "bindings"

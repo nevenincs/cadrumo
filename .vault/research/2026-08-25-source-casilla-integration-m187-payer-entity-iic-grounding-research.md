@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:580d47c1072c5ae373bbd2a4c9d34bb24b8116bd8b21617cbfc0ec4dd4973765'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+body_hash: 'sha256:798b119e95762cec0ce16ecd165c81e10d4391734a557c71cba74896304a3766'
+related: []
 ---
 # `source-casilla-integration` research: `m187 payer entity iic grounding`
 
@@ -26,7 +25,6 @@ referred to by Article 42 RGAT are also obliged to file Modelo 187.  The
 canonical legal entry preserves those distinct limbs and their official
 locator at `src/cadrumo/_data/registry/aeat/legal/irpf.toml:2008`; the current
 one-fact registry selector deliberately resolves only the former at
-`src/cadrumo/_data/registry/aeat/modelos/187/revisions/2022-y-siguientes/applicability/0001-applicability.toml:4`.
 
 ### Type-1 and type-2 have distinct record grain
 
@@ -43,7 +41,7 @@ its official AEAT URL.  The BOE layout authority similarly remains pinned at
 ### Current surfaces do not identify a source carrier
 
 The registry's four M187 summary casillas are direct manual fields at
-`src/cadrumo/_data/registry/aeat/modelos/187/revisions/2022-y-siguientes/casillas/c01__c04.toml:1`.
+
 They establish an operator entry route, not capture identity, provenance,
 secure persistence, replay, review, or a source owner.  Exact repository
 search finds no M187-specific source-mesh resolver, source-connectivity census

@@ -1,0 +1,636 @@
+---
+tags:
+  - '#exec'
+  - '#desktop-shell'
+date: '2026-10-04'
+modified: '2026-10-05'
+body_schema: 'body-v2'
+body_hash: 'sha256:44334764c657a83fdf0482dc0d59cf29702ff914e4eb6c14765ccb50b64b672a'
+related:
+  - "[[2026-10-04-desktop-shell-plan]]"
+---
+
+# `desktop-shell` ledger
+
+## Changes
+
+- `S02` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S02` `M` `native/desktop/src-tauri/src/python/environment.py`
+- `S02` `M` `native/desktop/src-tauri/src/main.rs`
+- `S02` `M` `native/desktop/src-tauri/src/app.rs`
+- `S02` `M` `native/desktop/src-tauri/src/terminal/mod.rs`
+- `S02` `A` `native/desktop/src-tauri/src/terminal/ipc.rs`
+- `S02` `M` `native/desktop/src-tauri/src/terminal/tests.rs`
+- `S02` `A` `native/desktop/src-tauri/src/docs/mod.rs`
+- `S02` `A` `native/desktop/src-tauri/src/logs/mod.rs`
+- `S02` `A` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S02` `A` `native/desktop/src-tauri/src/shell/token.rs`
+- `S02` `A` `native/desktop/src-tauri/src/shell/token.js`
+- `S02` `A` `native/desktop/tests/shell-token.test.mjs`
+- `S02` `M` `native/desktop/src-tauri/Cargo.toml`
+- `S02` `M` `native/desktop/src-tauri/Cargo.lock`
+- `S02` `M` `.gitignore`
+- `S02` `M` `src/cadrumo/core/logging.py`
+- `S02` `M` `src/cadrumo/core/tests/test_logging_rotation.py`
+- `S02` `verify:` `cmake --build build/s02-desktop-host --target desktop-host-test` -> `pass`
+- `S02` `verify:` `cmake --build build/s02-desktop-host --target desktop-host-clippy` -> `pass`
+- `S02` `verify:` `cargo fmt --check` -> `pass`
+- `S02` `verify:` `node native/desktop/tests/headless.test.mjs` -> `pass`
+- `S02` `verify:` `node --test native/desktop/tests/shell-token.test.mjs` -> `pass`
+- `S02` `verify:` `pytest src/cadrumo/core/tests/test_logging_rotation.py` -> `pass`
+- `S02` `verify:` `ruff check, ruff format --check, ty check on touched Python` -> `pass`
+- `S02` `by:` `vaultspec-high-executor`
+- `S03` `M` `docs/conf.py`
+- `S03` `A` `docs/_static/cadrumo-desktop-bridge.js`
+- `S03` `M` `docs/_static/cadrumo-docs.js`
+- `S03` `M` `dev/docs/build.py`
+- `S03` `M` `dev/docs/tests/test_docs_build.py`
+- `S03` `A` `dev/docs/tests/test_docs_desktop_flavor.py`
+- `S03` `verify:` `pytest -m integration dev/docs/tests/test_docs_desktop_flavor.py (16 tests: real docs/conf.py Sphinx builds, Chromium bridge gates)` -> `pass`
+- `S03` `verify:` `pytest -m unit dev/docs/tests/test_docs_build.py flavor tests` -> `pass`
+- `S03` `verify:` `python -m dev.docs.build --flavor desktop --language en --out-dir <scratch> --isolated-source (sequence check skipped in scratch only): 561 pages, 0 remote loaded resources, bridge before cadrumo-docs.js on every page, pagefind present` -> `pass`
+- `S03` `verify:` `ruff check, ruff format --check, ty check on touched Python` -> `pass`
+- `S03` `by:` `opus-s03-executor`
+- `S02` `A` `native/desktop/src-tauri/src/shell/channel.rs`
+- `S02` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S02` `verify:` `cmake --build build/s02-desktop-host --target desktop-host-test` -> `pass`
+- `S02` `verify:` `cmake --build build/s02-desktop-host --target desktop-host-clippy` -> `pass`
+- `S02` `verify:` `node native/desktop/tests/headless.test.mjs` -> `pass`
+- `S03` `verify:` `after moving the bridge to the browser-reported parent origin (plan: origins computed at runtime): pytest -m integration test_docs_desktop_flavor.py 16 tests` -> `pass`
+- `S03` `verify:` `mutation check: bridge without the source check, with a document bubble-phase key listener, or without the top-window check is each caught by one browser gate` -> `pass`
+- `S03` `verify:` `desktop English whole-scope build re-run with the final conf.py: 561 pages, 0 remote loaded resources, bridge first on every page, pagefind present` -> `pass`
+- `S01` `A` `dev/packaging/native/docs_build.py`
+- `S01` `A` `dev/packaging/native/docs_stage.py`
+- `S01` `A` `dev/packaging/native/package_inventory.py`
+- `S01` `A` `native/cmake/Docs.cmake`
+- `S01` `A` `dev/packaging/tests/test_native_docs_staging.py`
+- `S01` `A` `dev/packaging/tests/test_native_delegated_inventory.py`
+- `S01` `M` `dev/packaging/native/assemble.py`
+- `S01` `M` `dev/packaging/native/cmake_build.py`
+- `S01` `M` `dev/packaging/native/installation.py`
+- `S01` `M` `dev/packaging/tests/test_native_installation.py`
+- `S01` `M` `native/cmake/BuildPaths.cmake`
+- `S01` `M` `native/cmake/Packaging.cmake`
+- `S01` `M` `native/desktop/CMakeLists.txt`
+- `S01` `M` `native/CONTRACT.md`
+- `S01` `M` `native/package-layout.json`
+- `S01` `M` `native/interpreter/bootstrap.py`
+- `S01` `M` `native/application/src/package.rs`
+- `S01` `M` `native/application/tests/application.rs`
+- `S01` `M` `dev/docs/terminology/cli_projection.py`
+- `S01` `verify:` `pytest dev/packaging docs staging, delegated inventory, installation, layout entrypoints (79 passed, 2 skipped)` -> `pass`
+- `S01` `verify:` `cargo test application crate via CTest application.rust` -> `pass`
+- `S01` `verify:` `real python.exe --check-package with delegated docs, tamper and unlisted falsifiers` -> `pass`
+- `S01` `verify:` `CADRUMO-BUILD-RUNTIME verify-package docs-off Release ZIP` -> `pass`
+- `S01` `verify:` `cmake desktop-host-build full four-language docs build` -> `fail`
+- `S01` `by:` `orchestrator`
+- `S01` `M` `dev/packaging/native/docs_build.py`
+- `S01` `M` `dev/packaging/tests/test_native_docs_staging.py`
+- `S01` `verify:` `pytest test_native_docs_staging.py (15 passed) and ruff, format, ty` -> `pass`
+- `S05` `M` `native/desktop/src-tauri/src/docs/mod.rs`
+- `S05` `A` `native/desktop/src-tauri/src/docs/policy.rs`
+- `S05` `A` `native/desktop/src-tauri/src/docs/request.rs`
+- `S05` `A` `native/desktop/src-tauri/src/docs/site.rs`
+- `S05` `A` `native/desktop/src-tauri/src/docs/tests.rs`
+- `S05` `A` `native/desktop/src-tauri/src/docs/webview.rs`
+- `S05` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S05` `M` `native/desktop/src-tauri/src/app.rs`
+- `S05` `M` `native/desktop/scripts/configuration.mjs`
+- `S05` `M` `native/desktop/scripts/configuration.d.mts`
+- `S05` `M` `native/desktop/tests/configuration.test.mjs`
+- `S05` `verify:` `cargo clippy --locked --all-targets --features live-package-tests -D warnings (isolated HEAD snapshot plus S05 files, fresh contract)` -> `pass`
+- `S05` `verify:` `cargo test docs:: (13 tests: containment and encoded traversal, junction escape, membership, MIME, HEAD, methods, host, CSP on every response, origins Windows Linux dev, shell frame-src recheck against generated TAURI_CONFIG)` -> `pass`
+- `S05` `verify:` `live: real staged en+es desktop-flavor tree (scratch dev.docs.build --flavor desktop, staged with docs_stage scan and hash rules) serves index.html, es/index.html, pagefind.js, pagefind-worker.js, pagefind-entry.json, pf_index, pf_fragment, pf_meta, wasm.en.pagefind with CSP and nosniff` -> `pass`
+- `S05` `verify:` `mutation check: host check, canonical containment, encoded-escape refusal, CSP header, method gate removed each fail a docs test` -> `pass`
+- `S05` `verify:` `node --test native/desktop/tests/configuration.test.mjs` -> `pass`
+- `S05` `verify:` `prettier --check and rustfmt --check on S05 files` -> `pass`
+- `S05` `verify:` `full desktop crate cargo test in snapshot: packaged_pty_unicode_input_resize_output_exit_and_cleanup timed out under load, passes alone (HEAD terminal code, not S05)` -> `fail`
+- `S05` `by:` `opus-s05-executor`
+- `S08` `A` `native/desktop/frontend/src/ipc/contract.ts`
+- `S08` `verify:` `npx tsc --noEmit -p native/desktop/frontend` -> `pass`
+- `S08` `verify:` `npx eslint src/ipc/contract.ts` -> `pass`
+- `S08` `verify:` `npx prettier --check src/ipc/contract.ts` -> `pass`
+- `S08` `by:` `vaultspec-high-executor`
+- `S09` `M` `native/desktop/frontend/src/App.tsx`
+- `S09` `M` `native/desktop/frontend/src/main.tsx`
+- `S09` `M` `native/desktop/frontend/src/styles.css`
+- `S09` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S09` `D` `native/desktop/frontend/src/components/DiagnosticsPanel.tsx`
+- `S09` `D` `native/desktop/frontend/src/components/TerminalView.tsx`
+- `S09` `A` `native/desktop/frontend/src/tokens.css`
+- `S09` `A` `native/desktop/frontend/src/components/CommandPalette.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ContextMenu.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/DocsFrame.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/Icon.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/PaneHeader.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/Rail.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/RecordList.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/Settings.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/Split.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/TerminalPane.tsx`
+- `S09` `A` `native/desktop/frontend/src/shell/actions.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/host.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/layout.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/metrics.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/strings.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/terminalThemes.ts`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npx playwright test` -> `pass`
+- `S09` `by:` `CADRUMO-BUILD-TAURI-DESIGNER`
+- `S08` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S08` `A` `dev/locales/desktop_chrome.py`
+- `S08` `A` `dev/locales/tests/test_desktop_chrome.py`
+- `S08` `M` `dev/locales/manager.py`
+- `S08` `A` `dev/docs/desktop_palette.py`
+- `S08` `A` `dev/docs/tests/test_desktop_palette.py`
+- `S08` `M` `native/desktop/CMakeLists.txt`
+- `S08` `M` `native/desktop/frontend/.gitignore`
+- `S08` `M` `src/cadrumo/locales/en/common.yml`
+- `S08` `M` `src/cadrumo/locales/es/common.yml`
+- `S08` `M` `src/cadrumo/locales/ca/common.yml`
+- `S08` `M` `src/cadrumo/locales/hu/common.yml`
+- `S08` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `pass`
+- `S08` `verify:` `pytest dev/docs/tests/test_desktop_palette.py` -> `pass`
+- `S08` `verify:` `ruff check and ruff format --check on touched Python` -> `pass`
+- `S08` `verify:` `ty check on touched Python` -> `pass`
+- `S08` `verify:` `ninja desktop-frontend-generated (scratch configure) and no-op rebuild` -> `pass`
+- `S08` `verify:` `npx tsc --noEmit and npx eslint . in native/desktop/frontend` -> `pass`
+- `S08` `verify:` `python -m dev.quality.import_gate` -> `fail`
+- `S09` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ContextMenu.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/DocsFrame.tsx`
+- `S06` `M` `native/desktop/src-tauri/src/logs/mod.rs`
+- `S06` `A` `native/desktop/src-tauri/src/logs/format.rs`
+- `S06` `A` `native/desktop/src-tauri/src/logs/host.rs`
+- `S06` `A` `native/desktop/src-tauri/src/logs/record.rs`
+- `S06` `A` `native/desktop/src-tauri/src/logs/tail.rs`
+- `S06` `A` `native/desktop/src-tauri/src/logs/tests.rs`
+- `S06` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S06` `verify:` `cmake --build build/s06-desktop-host --target desktop-host-clippy (integrated tree, -D warnings)` -> `pass`
+- `S06` `verify:` `cargo test --features live-package-tests -- logs:: app:: (integrated tree, real package)` -> `pass`
+- `S06` `verify:` `cargo clippy --all-targets --features live-package-tests -D warnings (HEAD snapshot plus src/logs)` -> `pass`
+- `S06` `verify:` `live rotation test across two Python processes, repeated runs on HEAD snapshot` -> `pass`
+- `S06` `verify:` `rustfmt --edition 2024 --check src/logs, src/environment.rs` -> `pass`
+- `S06` `by:` `vaultspec-high-executor`
+- `S04` `A` `native/desktop/src-tauri/src/terminal/console.rs`
+- `S04` `A` `native/desktop/src-tauri/src/terminal/credit.rs`
+- `S04` `A` `native/desktop/src-tauri/src/terminal/frame.rs`
+- `S04` `A` `native/desktop/src-tauri/src/terminal/session.rs`
+- `S04` `A` `native/desktop/src-tauri/src/terminal/tests/live.rs`
+- `S04` `M` `native/desktop/src-tauri/src/terminal/mod.rs`
+- `S04` `M` `native/desktop/src-tauri/src/terminal/ipc.rs`
+- `S04` `M` `native/desktop/src-tauri/src/terminal/tests.rs`
+- `S04` `M` `native/desktop/src-tauri/src/app.rs`
+- `S04` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S04` `M` `native/application/src/process/status.rs`
+- `S04` `verify:` `cmake --build build/s04-desktop-host --target desktop-host-clippy (all=deny, -D warnings)` -> `pass`
+- `S04` `verify:` `cmake --build build/s04-desktop-host --target desktop-host-test: all 33 terminal and app tests incl. live PTY (python, tui, console, burst ordering, 10 MB credit flood, paused settle, Ctrl+C while paused, IPC raw+JSON write, page-load replacement, relocated storage root)` -> `pass`
+- `S04` `verify:` `rustfmt --edition 2024 --check on touched Rust` -> `pass`
+- `S04` `verify:` `cargo test native/application` -> `pass`
+- `S04` `by:` `opus-s04-executor`
+- `S09` `A` `native/desktop/frontend/src/shell/tauriTerminal.ts`
+- `S18` `M` `dev/locales/desktop_chrome.py`
+- `S18` `M` `dev/locales/tests/test_desktop_chrome.py`
+- `S18` `M` `src/cadrumo/locales/en/common.yml`
+- `S18` `M` `src/cadrumo/locales/es/common.yml`
+- `S18` `M` `src/cadrumo/locales/ca/common.yml`
+- `S18` `M` `src/cadrumo/locales/hu/common.yml`
+- `S18` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `pass`
+- `S18` `verify:` `python -m dev.locales.desktop_chrome` -> `pass`
+- `S18` `by:` `vaultspec-high-executor`
+- `S07` `A` `native/desktop/src-tauri/src/shell/external.rs`
+- `S07` `A` `native/desktop/src-tauri/src/shell/clipboard.rs`
+- `S07` `A` `native/desktop/src-tauri/src/shell/menu.rs`
+- `S07` `A` `native/desktop/src-tauri/src/shell/webview.rs`
+- `S07` `A` `native/desktop/src-tauri/src/shell/interrupts.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S07` `M` `native/desktop/src-tauri/src/docs/mod.rs`
+- `S07` `M` `native/desktop/src-tauri/src/docs/site.rs`
+- `S07` `M` `native/desktop/src-tauri/src/docs/webview.rs`
+- `S07` `M` `native/desktop/src-tauri/src/docs/tests.rs`
+- `S07` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S07` `M` `native/desktop/src-tauri/src/app.rs`
+- `S07` `M` `native/desktop/src-tauri/Cargo.toml`
+- `S07` `M` `native/desktop/src-tauri/Cargo.lock`
+- `S07` `M` `native/platform/Cargo.toml`
+- `S07` `M` `native/platform/Cargo.lock`
+- `S07` `M` `native/platform/src/desktop.rs`
+- `S07` `verify:` `cargo clippy --locked --all-targets --features live-package-tests -- -D warnings (desktop, working-tree snapshot)` -> `pass`
+- `S07` `verify:` `cargo test --locked -- --test-threads=1 (desktop, 83 tests)` -> `pass`
+- `S07` `verify:` `cargo test --locked --features live-package-tests shell::interrupts (live PTY Ctrl+C)` -> `pass`
+- `S07` `verify:` `cargo test --locked [--features webview2] (platform)` -> `pass`
+- `S07` `verify:` `cmake --build build/s07-cmake --config Debug --target platform_static_consumer platform_dll_consumer; ctest -R ^platform\.` -> `pass`
+- `S07` `by:` `vaultspec-high-executor`
+- `S07` `A` `native/desktop/src-tauri/src/shell/window_state.rs`
+- `S07` `verify:` `cargo test --locked -- --test-threads=1 (desktop, 87 tests incl. window_state round trip, corrupt record, off-screen fit)` -> `pass`
+- `S07` `verify:` `cargo clippy --locked --all-targets --features live-package-tests -- -D warnings (snapshot with HEAD platform lib.rs)` -> `pass`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S18` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (16 passed) with desktop.toast.copy_failed named by App.tsx` -> `pass`
+- `S18` `by:` `orchestrator`
+- `S09` `M` `native/desktop/frontend/src/errors.ts`
+- `S09` `M` `native/desktop/frontend/src/components/CommandPalette.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/Rail.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/RecordList.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/Settings.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/TerminalPane.tsx`
+- `S09` `M` `native/desktop/frontend/src/shell/actions.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/tauriTerminal.ts`
+- `S09` `M` `.vault/adr/2026-10-04-desktop-shell-adr.md`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npx playwright test` -> `pass`
+- `S09` `verify:` `mutation: bridge shortcut allow-list removed -> new security test fails` -> `pass`
+- `S14` `M` `docs/_static/cadrumo-desktop-bridge.js`
+- `S14` `M` `docs/_static/cadrumo-docs.js`
+- `S14` `M` `dev/docs/tests/test_docs_desktop_flavor.py`
+- `S14` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S14` `verify:` `pytest -n0 -m integration dev/docs/tests/test_docs_desktop_flavor.py (24 tests: real docs/conf.py desktop build, real Pagefind index with injected term/casilla/CLI records, Chromium bridge gates)` -> `pass`
+- `S14` `verify:` `mutation check: 23 single-guard mutants (query/limit/id bounds, per-id and eight-in-flight limits, result origin filter, markup excerpt, summary ranges, limit cut, navigate origin, home fragment, Ctrl+K and trigger relay, appearance storage/echo/validation, ready features, source and origin checks, stray token field, context-menu pointer) each fail their matching test; unmutated control passes` -> `pass`
+- `S14` `verify:` `real desktop-en build (S03 scratch build, 561 pages, 14,813 indexed; new bridge and cadrumo-docs.js overlaid): ready.features exact, 5 queries match the page palette order with cards above pages, plain-text excerpts, same-origin URLs, home from a nested page lands on index.html, foreign navigate refused, appearance applied, page palette stays shut` -> `pass`
+- `S14` `verify:` `ruff check, ruff format --check, ty check on the test file; node --check on both scripts; tsc --noEmit, prettier --check, eslint on contract.ts` -> `pass`
+- `S14` `verify:` `pytest test_palette_ranking, test_search_page_inline_ladder, test_palette_loading_state, test_search_page_query_param, test_search_page_fulltext_class_ranking: 6 pass, 3 fail at RegistryValidationError before any browser step (current invalid registry, not this change)` -> `fail`
+- `S14` `by:` `opus-s14-executor`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npx playwright test` -> `pass`
+- `S08` `verify:` `npx tsc --noEmit` -> `pass`
+- `S08` `verify:` `npx eslint src/ipc/contract.ts` -> `pass`
+- `S08` `verify:` `npx prettier --check src/ipc/contract.ts` -> `pass`
+- `S08` `verify:` `npm run check` -> `pass`
+- `S08` `verify:` `grep -P step-id and ADR-stem patterns in contract.ts zero matches` -> `pass`
+- `S08` `by:` `implementation-engineer-high`
+- `S09` `A` `native/desktop/frontend/src/shell/hostCall.ts`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npx playwright test` -> `pass`
+- `S09` `verify:` `mutation: terminal_open argument renamed back to output -> tsc rejects` -> `pass`
+- `S04` `M` `native/desktop/src-tauri/src/terminal/credit.rs`
+- `S04` `M` `native/desktop/src-tauri/src/terminal/session.rs`
+- `S04` `M` `native/desktop/src-tauri/src/terminal/tests/live.rs`
+- `S04` `verify:` `groupb integrated rustfmt and cargo fmt --check (S04-S07 snapshot on HEAD, contract from HEAD generate.py)` -> `pass`
+- `S04` `verify:` `groupb integrated cargo clippy --locked --all-targets -D warnings, with and without live-package-tests` -> `pass`
+- `S04` `verify:` `groupb integrated cargo test --locked --features live-package-tests full desktop suite: 101 of 102, the one failure a projection query TimedOut under load 30-35 that passes in isolation` -> `fail`
+- `S04` `verify:` `groupb integrated isolated rerun of the load-failed live tests` -> `pass`
+- `S04` `verify:` `groupb integrated cargo test native/application` -> `pass`
+- `S04` `verify:` `groupb integrated relocated storage-root test with explicit root override, and pin-kept mutant fails` -> `pass`
+- `S04` `by:` `groupb-integration`
+- `S05` `verify:` `groupb integrated rustfmt and cargo fmt --check (S04-S07 snapshot on HEAD, contract from HEAD generate.py)` -> `pass`
+- `S05` `verify:` `groupb integrated cargo clippy --locked --all-targets -D warnings, with and without live-package-tests` -> `pass`
+- `S05` `verify:` `groupb integrated cargo test --locked --features live-package-tests full desktop suite: 101 of 102, the one failure a projection query TimedOut under load 30-35 that passes in isolation` -> `fail`
+- `S05` `verify:` `groupb integrated isolated rerun of the load-failed live tests` -> `pass`
+- `S05` `verify:` `groupb integrated node --test native/desktop/tests/configuration.test.mjs` -> `pass`
+- `S05` `verify:` `groupb integrated docs staged test with CADRUMO_DESKTOP_DOCS_ROOT` -> `pass`
+- `S05` `by:` `groupb-integration`
+- `S06` `verify:` `groupb integrated rustfmt and cargo fmt --check (S04-S07 snapshot on HEAD, contract from HEAD generate.py)` -> `pass`
+- `S06` `verify:` `groupb integrated cargo clippy --locked --all-targets -D warnings, with and without live-package-tests` -> `pass`
+- `S06` `verify:` `groupb integrated cargo test --locked --features live-package-tests full desktop suite: 101 of 102, the one failure a projection query TimedOut under load 30-35 that passes in isolation` -> `fail`
+- `S06` `verify:` `groupb integrated isolated rerun of the load-failed live tests` -> `pass`
+- `S06` `verify:` `groupb integrated logs live rotation and lines tests in isolation` -> `pass`
+- `S06` `by:` `groupb-integration`
+- `S07` `verify:` `groupb integrated rustfmt and cargo fmt --check (S04-S07 snapshot on HEAD, contract from HEAD generate.py)` -> `pass`
+- `S07` `verify:` `groupb integrated cargo clippy --locked --all-targets -D warnings, with and without live-package-tests` -> `pass`
+- `S07` `verify:` `groupb integrated cargo test --locked --features live-package-tests full desktop suite: 101 of 102, the one failure a projection query TimedOut under load 30-35 that passes in isolation` -> `fail`
+- `S07` `verify:` `groupb integrated isolated rerun of the load-failed live tests` -> `pass`
+- `S07` `verify:` `groupb integrated platform cargo test --locked with and without webview2` -> `pass`
+- `S07` `verify:` `groupb integrated platform C consumers static and dll linked against the snapshot crate built --locked without webview2` -> `pass`
+- `S07` `verify:` `groupb integrated platform cargo clippy -D warnings: 5 missing_safety_doc in HEAD lib.rs, identical on pure HEAD` -> `fail`
+- `S07` `by:` `groupb-integration`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npm run build` -> `pass`
+- `S09` `verify:` `npx playwright test (12)` -> `pass`
+- `S01` `M` `dev/packaging/native/docs_stage.py`
+- `S01` `A` `dev/packaging/tests/test_native_docs_references.py`
+- `S01` `A` `dev/packaging/tests/test_native_docs_build.py`
+- `S01` `verify:` `pytest docs references, staging, build and layout-consumer packaging tests (124 passed, 2 skipped) and ruff, format, ty` -> `pass`
+- `S01` `verify:` `17 gate-check removals and 2 owner-environment removals each fail their falsifier test; source restored byte-identical` -> `pass`
+- `S01` `verify:` `widened gate over real es/ca/hu web roots and S05 desktop staging (only the MathJax CDN script refused; desktop es clean)` -> `pass`
+- `S01` `by:` `implementation-engineer-high`
+- `S05` `M` `native/desktop/scripts/tauri.mjs`
+- `S05` `verify:` `node --test native/desktop/tests/configuration.test.mjs` -> `pass`
+- `S05` `verify:` `npm run check in native/desktop/frontend` -> `pass`
+- `S05` `verify:` `node scripts/tauri.mjs build Release, expanded context shows FrontendDist Directory and 7 embedded assets` -> `pass`
+- `S05` `by:` `high-executor`
+- `S15` `A` `native/desktop/src-tauri/src/shell/single_instance/mod.rs`
+- `S15` `A` `native/desktop/src-tauri/src/shell/single_instance/linux.rs`
+- `S15` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S15` `M` `native/desktop/src-tauri/src/main.rs`
+- `S15` `M` `native/platform/src/desktop.rs`
+- `S15` `verify:` `platform cargo test --locked --lib desktop:: (10 instance tests: activation, families, release and abandonment, refused request timeout, waiting handover, same-thread refusal, serve twice, owner comparison, foreign-DACL and wrong-type squatters), with and without webview2` -> `pass`
+- `S15` `verify:` `platform mutation check: dropping the same-thread guard, acknowledging refused requests, or skipping ReleaseMutex each fail a platform test` -> `pass`
+- `S15` `verify:` `platform cargo clippy --all-targets -D warnings with and without webview2: only the 5 missing_safety_doc findings in HEAD lib.rs; none in desktop.rs` -> `pass`
+- `S15` `verify:` `desktop cargo test --locked single_instance (6 tests: two copied test binaries at two install paths, second exits 0 activated and the holder counts 1, then the second takes the lock; key ignores version and path; key equals generate_context identifier; headless passthrough never resolves the key; pending activation focuses once and closing refuses)` -> `pass`
+- `S15` `verify:` `desktop mutation check: keying the claim by install directory fails the two-install-path and headless-control tests` -> `pass`
+- `S15` `verify:` `desktop cargo clippy --locked --all-targets -D warnings with and without live-package-tests` -> `pass`
+- `S15` `verify:` `desktop cargo test --locked full suite without live tests (93)` -> `pass`
+- `S15` `verify:` `desktop cargo test --locked --features live-package-tests (S02 scratch package): 106 of 108, failures are docs staged_documentation PackageUnavailable and console_kind missing aeat entrypoint, both package-fixture mismatches outside S15` -> `fail`
+- `S15` `verify:` `real cadrumo.exe --headless -- --version and --version while a helper held the md.neve.cadrumo lock: rc 0, same 8.6-9.2 s latency as without the lock, holder counted 0 activations` -> `pass`
+- `S15` `verify:` `linux backend std-only rustc --test and clippy-driver -D clippy::all in rust:1.96-slim container (5 tests: activation without reading the connection, families, stale socket, refusing holder timeout, open directory and invalid family refusal)` -> `pass`
+- `S15` `verify:` `rustfmt --check on touched files` -> `pass`
+- `S15` `by:` `high-executor`
+- `S05` `A` `native/desktop/src-tauri/src/docs/media.rs`
+- `S05` `A` `native/desktop/src-tauri/src/docs/media_type_cases.json`
+- `S05` `M` `native/desktop/src-tauri/src/docs/request.rs`
+- `S05` `M` `native/desktop/src-tauri/src/docs/tests.rs`
+- `S05` `M` `dev/packaging/tests/test_native_docs_references.py`
+- `S05` `verify:` `cmake --build build/s05b-desktop-host --target desktop-host-clippy (all targets, -D warnings)` -> `pass`
+- `S05` `verify:` `cargo test docs::tests:: in build/s05b-desktop-host snapshot: 17 of 18 docs tests incl. 5 media-type tests` -> `pass`
+- `S05` `verify:` `staged_documentation_serves_pages_search_and_worker_with_the_policy against s02 pkg-current (package has no docs/user manifest)` -> `fail`
+- `S05` `verify:` `pytest dev/packaging/tests/test_native_docs_references.py (68 incl. 24 shared cases, 19 shared malformed tables)` -> `pass`
+- `S05` `verify:` `mutants in build snapshot: old hard-coded table, hard-coded htm, case-insensitive extension each fail the shared-case test; Python first-dot, case-insensitive, extension-first, hard-coded htm each fail shared cases` -> `pass`
+- `S05` `by:` `s05b-high-executor`
+- `S19` `M` `native/platform/src/desktop.rs`
+- `S19` `M` `native/desktop/src-tauri/src/shell/single_instance/mod.rs`
+- `S19` `M` `native/desktop/src-tauri/src/shell/single_instance/linux.rs`
+- `S19` `M` `native/CONTRACT.md`
+- `S19` `verify:` `platform cargo test --locked --lib desktop:: (13 instance tests, new: other-session holder reported in under 2 s with 0 requests while a same-session claim activates; grace covers a holder that takes the lock 150 ms before creating its events; a per-session event with a foreign DACL is refused), with and without webview2` -> `pass`
+- `S19` `verify:` `platform tests under runas /trustlevel:0x20000 (no privileges incl. SeCreateGlobalPrivilege, Administrators deny-only, Session 0): 13 of 13 including Global creation` -> `pass`
+- `S19` `verify:` `platform mutation check: zero grace, session-blind event names, and never reporting other-session each fail a platform test` -> `pass`
+- `S19` `verify:` `platform cargo clippy --all-targets -D warnings with and without webview2: only the 5 HEAD lib.rs missing_safety_doc findings` -> `pass`
+- `S19` `verify:` `desktop snapshot of HEAD 9ed6b9fae7 plus S19 files with a regenerated contract: cargo clippy --locked --all-targets -D warnings with and without live-package-tests` -> `pass`
+- `S19` `verify:` `desktop cargo test --locked full suite without live tests (98, incl. two-install-path processes and the other-session report mapping)` -> `pass`
+- `S19` `verify:` `linux backend in rust:1.96-slim: rustc --test (7 tests, 3 runs) and clippy-driver -D clippy::all` -> `pass`
+- `S19` `verify:` `linux mutation check: zero grace, no stale-socket sweep, session-blind socket name, never reporting other-session each fail a test` -> `pass`
+- `S19` `verify:` `rustfmt --check on touched Rust files` -> `pass`
+- `S19` `by:` `high-executor`
+- `S05` `M` `native/desktop/src-tauri/src/docs/media.rs`
+- `S05` `M` `native/desktop/src-tauri/src/docs/media_type_cases.json`
+- `S05` `M` `dev/packaging/native/docs_stage.py`
+- `S05` `verify:` `pytest docs references and staging (84 passed) with header-injection and non-ASCII refusal cases shared with Rust` -> `pass`
+- `S05` `verify:` `desktop-host-clippy` -> `pass`
+- `S05` `verify:` `desktop-host-test 111 passed, 2 known package-input failures (no docs/user, no aeat in the scratch package)` -> `pass`
+- `S05` `by:` `orchestrator`
+- `S11` `M` `native/CONTRACT.md`
+- `S11` `verify:` `every new claim traced to committed native/desktop, native/platform, dev/packaging/native and src/cadrumo/core source` -> `pass`
+- `S11` `verify:` `git apply --cached --check of the S11-only patch against a temporary HEAD index` -> `pass`
+- `S11` `verify:` `npx prettier --check on the desktop tree` -> `pass`
+- `S11` `by:` `vaultspec-high-executor`
+- `S07` `M` `native/desktop/src-tauri/src/terminal/tests/live.rs`
+- `S07` `verify:` `live relocated test: window-state.json saves and loads in Launch.webview, the declared webview member under the explicit root` -> `pass`
+- `S07` `by:` `vaultspec-high-executor`
+- `S19` `verify:` `platform cargo test --locked --lib desktop:: in a HEAD snapshot with the working desktop.rs (15 tests, new two-process a_late_acknowledgement_does_not_answer_a_later_claim: a claim that timed out is acknowledged late, the holder then closes, and a later claim times out instead of reporting activated), 3 runs, with and without webview2` -> `pass`
+- `S19` `verify:` `platform mutation check: removing the acknowledgement drain fails the late-acknowledgement test with activated` -> `pass`
+- `S19` `verify:` `platform cargo clippy --all-targets -D clippy::all -D warnings with and without webview2: only the 5 HEAD lib.rs missing_safety_doc findings, clean with that lint allowed on the command line` -> `pass`
+- `S19` `verify:` `desktop cargo test --locked single_instance in a HEAD snapshot with the working platform desktop.rs (7 tests incl. the two-install-path processes)` -> `pass`
+- `S19` `verify:` `linux backend in rust:1.96-slim: rustc --test (8 tests, new late acknowledgement reaches only its own connection, 3 runs) and clippy-driver -D clippy::all -D warnings` -> `pass`
+- `S19` `verify:` `rustfmt --check on desktop.rs and linux.rs` -> `pass`
+- `S19` `verify:` `contract patch of only the single-instance hunks: git apply --cached --check against a temporary index read from HEAD 4376485759` -> `pass`
+- `S19` `verify:` `private namespace probe on Windows 11 26200: a foreign-SID boundary is refused with error 5; the namespace survives its creator while another process holds a namespace handle, and once none does a new CreatePrivateNamespace makes a separate namespace` -> `pass`
+- `S19` `by:` `implementation-engineer-high`
+- `S06` `M` `native/desktop/src-tauri/src/logs/record.rs`
+- `S06` `M` `native/desktop/src-tauri/src/logs/tail.rs`
+- `S06` `M` `native/desktop/src-tauri/src/logs/tests.rs`
+- `S06` `verify:` `cargo clippy --locked --all-targets --features live-package-tests -- -D warnings (full desktop crate, logsfix snapshot)` -> `pass`
+- `S06` `verify:` `cargo test --locked -- --test-threads=1 (non-live, 121 tests)` -> `pass`
+- `S06` `verify:` `cargo test --features live-package-tests logs::tests::live (copied smoke kit package)` -> `pass`
+- `S06` `verify:` `mutation checks (sync first poll, lock across read, no byte cap, poll while idle, no tail reset, ignored delivery failure, size without seq; each killed by its test)` -> `pass`
+- `S06` `by:` `high-tier implementation executor (logsfix)`
+- `S04` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S04` `verify:` `cargo clippy --locked --all-targets --features live-package-tests -- -D warnings (desktop, working tree incl. logs)` -> `pass`
+- `S04` `verify:` `cargo test --locked -- --test-threads=1 (desktop non-live, 122 tests)` -> `pass`
+- `S04` `verify:` `cargo test --locked --features live-package-tests terminal::tests::live:: (11 tests, copied smoke package)` -> `pass`
+- `S04` `verify:` `mutation checks: post-check, pre-check, page-load count, sink delivery check, session abandon all caught by their tests` -> `pass`
+- `S04` `by:` `vaultspec-high-executor`
+- `S07` `M` `native/desktop/src-tauri/src/shell/channel.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/clipboard.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/external.rs`
+- `S07` `A` `native/desktop/src-tauri/src/shell/navigation.rs`
+- `S07` `A` `native/desktop/src-tauri/src/shell/webview_environment.rs`
+- `S07` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S07` `verify:` `cargo clippy --locked --all-targets --features live-package-tests[,webview2-remote-debugging] -- -D warnings (desktop)` -> `pass`
+- `S07` `verify:` `cargo test --locked -- --test-threads=1 (desktop non-live, 122 tests)` -> `pass`
+- `S07` `verify:` `tsc --noEmit and prettier --check src/ipc/contract.ts (frontend)` -> `pass`
+- `S07` `verify:` `mutation checks: channel record, navigation port and user info, env list, case and argument rules, mailto headers, clipboard byte bound all caught` -> `pass`
+- `S19` `M` `native/desktop/src-tauri/src/main.rs`
+- `S19` `M` `native/application/src/error/application.rs`
+- `S19` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S19` `verify:` `cargo test --locked shell::single_instance (desktop, PowerShell mutex and event squatters)` -> `pass`
+- `S19` `verify:` `cargo test --locked --lib [--features webview2] (platform, 21 tests)` -> `pass`
+- `S19` `verify:` `cargo test --locked (application)` -> `pass`
+- `S19` `verify:` `mutation checks: foreign mapping off and platform type conversion off both caught` -> `pass`
+- `S19` `by:` `vaultspec-high-executor`
+- `S13` `M` `native/platforms/windows-x64.json`
+- `S13` `M` `dev/packaging/native/layout.py`
+- `S13` `M` `dev/packaging/native/assemble.py`
+- `S13` `M` `dev/packaging/native/cmake_build.py`
+- `S13` `M` `dev/packaging/native/installation.py`
+- `S13` `M` `dev/packaging/native/platforms/windows_verify.py`
+- `S13` `M` `native/cmake/Packaging.cmake`
+- `S13` `M` `native/desktop/CMakeLists.txt`
+- `S13` `M` `native/desktop/scripts/tauri.mjs`
+- `S13` `M` `native/CONTRACT.md`
+- `S13` `A` `dev/packaging/tests/test_native_application_images.py`
+- `S13` `M` `dev/packaging/tests/test_native_installation.py`
+- `S13` `verify:` `pytest dev/packaging/tests/test_native_*.py dev/packaging/native/tests (242 passed, 3 platform skips)` -> `pass`
+- `S13` `verify:` `mutation check: 14 mutations of layout, assemble, windows_verify and installation each killed` -> `pass`
+- `S13` `verify:` `ruff check, ruff format --check and ty check on touched Python` -> `pass`
+- `S13` `verify:` `docs OFF: bundle target Release in build/s13-package, python.exe --check-package, ctest bundle rows (4)` -> `pass`
+- `S13` `verify:` `docs ON: generated bundle.vcxproj references desktop-host-build and passes --image cadrumo.exe=<cargo release path>; tauri.mjs refuses a mismatched CADRUMO_DESKTOP_HOST_EXECUTABLE` -> `pass`
+- `S13` `verify:` `docs ON stage via the assemble action run directly: cadrumo.exe at root, manifest sha256 equals the Cargo artifact, --check-package, ctest bundle rows (5, incl. bundle.image.cadrumo.exe), cpack ZIP, artifact_verify with application probe` -> `pass`
+- `S13` `verify:` `distribution configure accepts CADRUMO_DESKTOP_EXECUTABLE=cadrumo.exe and refuses python.exe` -> `pass`
+- `S13` `by:` `implementation-high`
+- `S13` `verify:` `cmake configure docs OFF: desktop project not configured, cadrumo.exe omitted; docs ON: configured and staged` -> `pass`
+- `S13` `verify:` `pytest application images and installation (56 passed, 2 skipped)` -> `pass`
+- `S13` `by:` `orchestrator`
+- `S09` `M` `dev/locales/desktop_chrome.py`
+- `S09` `M` `src/cadrumo/locales/en/common.yml`
+- `S09` `M` `src/cadrumo/locales/es/common.yml`
+- `S09` `M` `src/cadrumo/locales/ca/common.yml`
+- `S09` `M` `src/cadrumo/locales/hu/common.yml`
+- `S09` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (16)` -> `pass`
+- `S09` `verify:` `dev.locales status: 0 findings on desktop.toast.paste_* keys; exit 1 from pre-existing 23312 inventory violations` -> `pass`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npx playwright test (12)` -> `pass`
+- `S17` `A` `native/desktop/frontend/src/components/SignIn.tsx`
+- `S17` `A` `native/desktop/frontend/src/shell/signIn.ts`
+- `S17` `M` `native/desktop/frontend/src/App.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/Settings.tsx`
+- `S17` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S17` `M` `native/desktop/frontend/src/styles.css`
+- `S17` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S17` `M` `dev/locales/desktop_chrome.py`
+- `S17` `verify:` `npm run build` -> `pass`
+- `S17` `verify:` `npx playwright test (17 browser presentation tests)` -> `pass`
+- `S17` `verify:` `npm run check` -> `pass`
+- `S17` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (16 tests)` -> `pass`
+- `S17` `verify:` `ruff check and format dev/locales/desktop_chrome.py` -> `pass`
+- `S17` `verify:` `ty check dev/locales/desktop_chrome.py` -> `pass`
+- `S16` `M` `native/desktop/src-tauri/Cargo.toml`
+- `S16` `M` `native/desktop/src-tauri/Cargo.lock`
+- `S16` `M` `native/desktop/src-tauri/src/app.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/sign_in/process.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S16` `verify:` `cargo test desktop bin cadrumo locked test-threads 1 (132 tests)` -> `pass`
+- `S16` `verify:` `cargo clippy desktop locked all-targets -D warnings` -> `pass`
+- `S16` `verify:` `cargo fmt desktop check` -> `pass`
+- `S16` `verify:` `git diff check desktop src-tauri` -> `pass`
+- `S16` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S16` `verify:` `cmake --build build/windows-x86-64/e2e-desktop --config Release --target desktop-packaged-host` -> `pass`
+- `S10` `M` `native/desktop/tests/packaged-harness.test.mjs`
+- `S10` `M` `native/desktop/tests/packaged.test.mjs`
+- `S10` `M` `native/desktop/tests/packaged/browser.mjs`
+- `S10` `M` `native/desktop/tests/packaged/standin.mjs`
+- `S10` `A` `native/desktop/tests/packaged/docs-ui.mjs`
+- `S10` `A` `native/desktop/tests/packaged/runtime_fixture.py`
+- `S10` `A` `native/desktop/tests/packaged/sign-in.mjs`
+- `S10` `verify:` `node --test native/desktop/tests/packaged-harness.test.mjs (final reviewed source, CADRUMO_CMAKE_BINARY_DIR=build/windows-x86-64/e2e-desktop)` -> `pass`
+- `S10` `verify:` `node --check native/desktop/tests/packaged.test.mjs and changed packaged modules` -> `pass`
+- `S10` `verify:` `ruff check native/desktop/tests/packaged/runtime_fixture.py` -> `pass`
+- `S10` `verify:` `prettier --check changed packaged JavaScript` -> `pass`
+- `S10` `M` `src/cadrumo/entrypoints/cli/ledger_lifecycle_cli.py`
+- `S10` `M` `src/cadrumo/application/ledger/update_contracts.py`
+- `S10` `M` `src/cadrumo/application/ledger/update_operation.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_update.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_merge.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_update.py`
+- `S10` `M` `src/cadrumo/application/ledger/tests/test_update_operation.py`
+- `S10` `verify:` `pytest focused ledger update/merge CLI and operation tests (21 tests)` -> `pass`
+- `S10` `verify:` `pytest related ledger update repository/merge/command runtime unit regressions (14 tests)` -> `pass`
+- `S10` `verify:` `pytest encrypted ledger update repository integration (2 tests)` -> `pass`
+- `S10` `verify:` `ruff check and format check seven ledger files` -> `pass`
+- `S10` `verify:` `ty check seven ledger files` -> `pass`
+- `S10` `M` `native/desktop/tests/packaged/sign-in.mjs`
+- `S10` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_logout.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/config/custody.py`
+- `S10` `verify:` `logout selection integration tests (4)` -> `pass`
+- `S10` `verify:` `logout Ruff and ty` -> `pass`
+- `S10` `A` `dev/docs/sequences/receipt_fixture.py`
+- `S10` `A` `dev/docs/sequences/tests/test_receipt_fixture.py`
+- `S10` `M` `dev/docs/sequences/runner.py`
+- `S10` `M` `dev/docs/sequences/runtime_fixture.py`
+- `S10` `M` `docs/_sequences/contracts/how-to/profile-setup/profile-setup-delete.seq`
+- `S10` `verify:` `scoped receipt fixture tests (9)` -> `pass`
+- `S10` `verify:` `receipt fixture Ruff check and format` -> `pass`
+- `S10` `verify:` `docs sequence structural tests (79 pass, 1 fail orphan Sheets contracts)` -> `fail`
+- `S10` `M` `native/desktop/tests/packaged/runtime_fixture.py`
+- `S10` `verify:` `GUI candidate package --check-package` -> `pass`
+- `S10` `verify:` `WebView2 packaged host release build` -> `pass`
+- `S10` `verify:` `packaged setup smoke` -> `fail`
+- `S10` `verify:` `packaged runtime verified hello and clean teardown` -> `pass`
+- `S10` `verify:` `canonical runtime client connection phase` -> `pass`
+- `S10` `verify:` `Session0 sign-in-status native admission` -> `fail`
+- `S10` `verify:` `PowerShell interactive wrapper syntax` -> `pass`
+- `S10` `verify:` `final packaged harness regression (20)` -> `pass`
+- `S10` `verify:` `final harness Ruff format ty syntax` -> `pass`
+- `S10` `verify:` `interactive packaged acceptance 20261005-190156 (6 pass, 1 fail, 1 info)` -> `fail`
+- `S10` `M` `native/desktop/frontend/src/shell/signIn.ts`
+- `S10` `M` `native/desktop/frontend/tests/desktop.spec.ts`
+- `S10` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/sign_in/process.rs`
+- `S10` `verify:` `frontend focused browser regression (7)` -> `pass`
+- `S10` `verify:` `native sign_in subprocess and wire tests (11)` -> `pass`
+- `S10` `verify:` `packaged harness regression (20)` -> `pass`
+- `S10` `verify:` `frontend npm check` -> `pass`
+- `S10` `verify:` `packaged host release rebuild` -> `pass`
+- `S10` `verify:` `native all-target Clippy -D warnings` -> `pass`
+- `S10` `verify:` `interactive run 20261005-200924 (7 pass, 8 fail, 1 skip, 1 info)` -> `fail`
+- `S10` `M` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S10` `A` `native/desktop/src-tauri/src/shell/sign_in/wire_contract_tests.rs`
+- `S10` `A` `native/desktop/src-tauri/src/shell/sign_in/cli_contract_fixtures.py`
+- `S10` `A` `native/desktop/src-tauri/src/shell/sign_in/cli_contract_fixtures.json`
+- `S10` `M` `native/desktop/scripts/tauri.mjs`
+- `S10` `A` `native/desktop/scripts/backend-snapshot.mjs`
+- `S10` `A` `native/desktop/tests/backend-snapshot.test.mjs`
+- `S10` `A` `native/desktop/tests/run-backend.ps1`
+- `S10` `verify:` `run-backend.ps1 Mode Unit current native host 138 tests` -> `pass`
+- `S10` `verify:` `run-backend.ps1 Mode Package eight selected terminal capabilities existing app-v1` -> `pass`
+- `S10` `verify:` `run-backend.ps1 Mode Clippy native all targets warnings denied` -> `pass`
+- `S10` `verify:` `configured node snapshot/build-paths/configuration seven tests` -> `pass`
+- `S10` `verify:` `Python CLI producer freshness Ruff format ty and native rustfmt` -> `pass`
+- `S10` `verify:` `Node syntax PowerShell parser Prettier and scoped git diff check` -> `pass`
+- `S10` `M` `justfile`
+- `S10` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_sign_in_native.py`
+- `S10` `verify:` `Ruff check and format native source authentication test` -> `pass`
+- `S10` `verify:` `ty check native source authentication test` -> `pass`
+- `S10` `verify:` `pytest collect-only native authentication selects one test` -> `pass`
+- `S10` `verify:` `just show test-runtime-auth` -> `pass`
+- `S10` `verify:` `just test-runtime-auth agent Session0 native desktop prerequisite` -> `fail`
+
+## Notes
+
+- `S02` Live tests used build 1761 Release acceptance package (2026-10-03) relocated to scratch with current src/cadrumo overlaid on site-packages; no current package could be built. Launch carries no new fields until Group B consumers land (orchestrator ruling A).
+- `S03` docs-build recipe not run to completion: the full build refuses at the cli-sequence gate on the stale shared .authority (pre-existing; reproduced on the web flavor without S03 involvement)
+- `S03` `test_docs_build.py:` `test_a_changed_source_check_builds_the_stub_its_build_generates` (stale authority) and `test_docs_build_directory_contains_only_canonical_html` (doctrees, locale-logs left in the shared build root on 2026-10-03/04 by other runs) fail pre-existing
+- `S02` Added the plan's `channel_interceptor` (shell/channel.rs) and a table-driven dispatcher token test after first logging; tauri test feature added as a dev-dependency for mock-runtime tests.
+- `S01` S01 stays open: en refuses at the stale-authority sequence gate; no-op rebuild, touch-rebuild, Release docs bundle and runtime rendering unproven until one full docs build succeeds
+- `S01` Committed jointly with CADRUMO-BUILD-RUNTIME's console entrypoint change in a87038dd6d; `cli_projection` stale-import fix in 233a8c2e33
+- `S05` WebView2 `ICoreWebView2_22` and ICoreWebView2Settings3 startup probe not implemented: docs/webview.rs is a doc-only seam; the platform function `missing_webview_interface` and its call are assigned to S07 by the orchestrator
+- `S05` No live window run: the shell frontend (S09) and a docs-bearing package do not exist yet; iframe load, pagefind search and CSP console checks remain with S10
+- `S05` Working-tree crate does not compile while S04 and S06 edits are in flight; S05 checks ran on an isolated HEAD snapshot plus S05 files
+- `S08` Terminal command and frame types left as a delimited S04 placeholder pending S04's encoding
+- `S09` Checkpoint, S09 stays open: terminals await the S04 terminal contract (tauriHost.openTerminal rejects TerminalContractPending); context-menu separators and shortcut text await the S08 contract update; chrome strings and palette tokens await S08 landing 2.
+- `S08` Chrome keys authored via dev.locales set-batch (97) then `desktop.palette.kind_page` removed via remove-batch on the orchestrator's ruling; 96 keys remain
+- `S08` Import gate is a tool failure: `dev/quality/metadata/import_load_targets*.json` is stale (concurrently regenerated by other sessions, lacks `dev.docs.desktop_palette);` needs just generate-import-load-targets before commit
+- `S08` Terminal contract still a delimited S04 placeholder; S08 stays open
+- `S09` Checkpoint, S09 stays open: menus now carry separators and shortcuts through the contract item shape; verified against generated chrome strings and palette; terminals still await the S04 terminal contract.
+- `S06` Live tests used the S02 scratch package (pkg-current) and a contract regenerated into build/s06-desktop-host/contract. Under 100% machine load two of four live repeats timed out in the 30 s environment projection before reaching log assertions.
+- `S06` Python timestampMs is null by orchestrator ruling A: asctime is local wall time without an offset.
+- `S04` Live tests used S02's relocated build-1761 package (hard-linked copy) plus cadrumo-runtime.exe copied from build/windows-x64/runtime-entrypoint/bin/Release into its bin/; contract regenerated from current dev/packaging/native/generate.py. desktop-host-test overall reports 2 failures in S05 docs and S06 logs live tests, not S04.
+- `S04` Real WebView2 interceptor throughput unmeasured: agent runs in Session 0 (WebView2 'Invalid window handle'); host-side interceptor measured with the mock runtime; delivery measurement left to S10.
+- `S09` Terminal transport wired to the S04 contract as stated by the orchestrator; awaiting a live smoke in the desktop host before S09 closes.
+- `S07` S07 stays open: tauri-plugin-window-state 2.5.0 always runs `create_dir_all(app_config_dir)` on save, creating `<operator-home>\AppData\Roaming\<identifier>` outside the canonical root even with an absolute filename; not added pending a ruling
+- `S07` No real WebView2 run: agent runs in Session 0 (non-interactive); settings readback, F5/Ctrl+R/F12/Ctrl+P and the probe on this machine are left to S10
+- `S07` Context menus refuse with `unsupported_platform` off Windows: the GTK popup returns before the menu closes, so the sentinel cannot await the choice
+- `S07` Busy popup refusal uses `session_unavailable/webview;` no dedicated error code exists in the application crate
+- `S07` Console Ctrl+C attribute cleared in the shell plugin setup (GUI only, no main.rs change), added on the orchestrator's request from S04 findings
+- `S07` Window state resolved by orchestrator ruling B: host module `shell/window_state.rs` writes `<Launch.webview>/window-state.json` atomically (temp file then rename); tauri-plugin-window-state not used; ADR wording amendment requested from the designer by the orchestrator
+- `S07` Final checks built against HEAD native/platform/src/lib.rs because the runtime owner's in-flight lib.rs needs a newer generated contract
+- `S09` Independent review findings fixed: critical bridge shortcut allow-list, ack accounting from the first frame and on refusal, close ordering, slice writes, no silent paste drop, separator/menu/settings accessibility, bounded selection and link schemes, rail roving state, palette grouping. Keyboard-opened docs menus need the bridge to report pointer origin (S14).
+- `S14` A fresh desktop build is blocked: the casilla reference hook fails registry validation (modelo 720 unknown bindings, stale form layout); the first attempt failed on another session's in-progress OsLockState import. Real-build verification used the S03 scratch build with the two changed scripts overlaid; `CADRUMO_DOCS_SKIP_SEQUENCE_CHECK=1` in scratch only.
+- `S14` Chromium reports a keyboard-opened contextmenu with pointerType mouse and detail 0, like a right-click; only button differs (-1 vs 2), so pointer is derived from pointerType empty or button -1.
+- `S04` groupb integration: live-only Credit::sent, Session::delivered and Session::paused gated on live-package-tests (clippy without the feature failed on dead code); relocated test rewritten to an explicit canonical root override with a pin-removal falsifier
+- `S05` Earlier host builds embedded no frontend: tauriConfig wrote frontendDist as an absolute Windows path, which Tauri parsed as FrontendDist::Url with scheme y:, leaving the EmbeddedAssets map empty. Fixed to a forward-slash path relative to the generated src-tauri directory.
+- `S05` Falsification: the new configuration test fails when frontendDist is reverted to the absolute path.
+- `S15` Mechanism: own named mutex plus activation events in native/platform/src/desktop.rs, not tauri-plugin-single-instance 2.4.0. The plugin keys by identifier (ok) but its Windows mutex has default security and no user component, it sends cwd and all argv over `WM_COPYDATA` to any same-named window and parses lpData with `CStr::from_ptr` without checking cbData, it falls through to a second GUI when the mutex exists but the window is not up yet, and on Linux it sends argv and cwd over the session D-Bus and unwraps or falls through on bus errors `(platform_impl/windows.rs:58-95,145-158;` linux.rs:56-88)
+- `S15` Windows names are `Local\<identifier>.desktop.<user` SID>.{lock,activate,acknowledge}, owner-only SDDL `O:<sid>D:P(A;;GA;;;<sid>),` and an existing object not owned by the token user is refused. Local is per session: the same user in two concurrent sessions would get two windows; the ADR states per user and the orchestrator asked for session-local
+- `S15` The owner-mismatch refusal is covered only by a direct comparison test (TrustedInstaller-owned System32 file); a claim against an object another account owns needs a second account
+- `S15` Linux backend: flock on `XDG_RUNTIME_DIR/<identifier>.desktop.lock` plus a Unix socket; tested standalone in a container; the desktop crate was not compiled for Linux here (no GTK toolchain)
+- `S15` GUI focus and restore were not exercised: the agent runs in Session 0; left to the live smoke run
+- `S15` Cross-version invariant: every future version must keep these object names and the activation protocol, or two versions could open windows at once
+- `S15` Checks ran on an isolated snapshot (build/s15-desktop-host/snap) of HEAD plus the S15 files, with HEAD native/platform/src/lib.rs and the s07-cmake generated contract; another worker has uncommitted edits in native/desktop/src-tauri/src/docs and native/desktop/scripts/configuration.mjs
+- `S05` Served media types now come from the contract's `layout.user_docs.media_types,` parsed once in docs::plugin; the shared case list `media_type_cases.json` is read by Rust tests and pytest
+- `S05` Rust also refuses a media type that is not a valid HTTP header value; the Python staging parser does not check this
+- `S05` Live docs test still fails pre-existing: the s02 package lacks docs/user/manifest.json and no staged docs tree exists in the worktree
+- `S19` Scheme: holder-only per-session events named `<base>.session.<N>.activate/.acknowledge` under Global; a claimant opens (never creates) its own session's events; held lock plus absent events for a 500 ms grace means other session. Claimants reopen the events every round so their own handles cannot keep a departed holder's events alive
+- `S19` Other-session outcome writes the token line `{"outcome":"open_in_other_session"}` to stderr and maps to Admission::Activated so main.rs stays unchanged; no localized operator text was added (needs the coordinator's ruling)
+- `S19` Unproven: a real second interactive session (activation across sessions, focus, and Global creation from a non-zero session where only sections and symlinks need SeCreateGlobalPrivilege per the Kernel Object Namespaces documentation); the basic-user run kept the High mandatory label and ran in Session 0
+- `S19` Linux session key is `XDG_SESSION_ID` or 'unnamed' when unset: two sessions that both lack it behave as one session
+- `S19` native/CONTRACT.md working copy is CRLF throughout (another writer); the section was inserted with CRLF and only the new section was added
+- `S19` Desktop checks used a contract regenerated from the worktree (build/s15-desktop-host/contract) because HEAD 9ed6b9fae7 docs tests need the media type table; platform checks used HEAD lib.rs with the s07-cmake contract.rs
+- `S11` Webview profile and window-state.json still live under the development tool cache (desktop-webview); the declared webview member `(CADRUMO_WEBVIEW_DIR)` is not consumed yet; the contract records the current location
+- `S11` Mutable-root rows state the declared per-OS, per-channel default; the committed native host still resolves the root from its working directory until the uncommitted native platform resolver lands
+- `S11` Minimum WebView2 runtime recorded as required interfaces only; no runtime version measured; no automated packaged window test exists
+- `S19` S19 Global names kept: private namespace cross-session visibility undocumented and unverifiable from this session-0 shell; residual denial of service by another standard account recorded in native/CONTRACT.md
+- `S06` Review fixes logs-ui-thread, log-batch-bytes, log-idle-polling and the log-sink part of interceptor-failure-invisible; subscribe returns a probe state (list and 1 KiB open) before the first poll, the first batch carries the polled state
+- `S06` An idle hub clears its ring and tail; the next subscription re-reads the 16 MiB window, so host records older than the diagnostics ring are not replayed
+- `S06` frontend/src/ipc/contract.ts:178 still says the first batch carries the whole backlog; a large backlog now spans several paced batches (outside this lane's write scope, shapes unchanged)
+- `S06` Checks ran on build/logsfix-desktop-host/snap with the worktree native/platform and a contract regenerated by the worktree generator; not committed
+- `S04` reload-orphan-session: `terminal_open` now reads the top-frame document count at dispatch, before its arguments are parsed on the async runtime; a dispatch-versus-poll mutation was caught in two runs but the test cannot force that interleaving deterministically
+- `S04` interceptor-failure-invisible: a frame whose eval failed fails the terminal sink through shell::channel::Deliveries and the session stops itself; eval fails only once the webview or event loop is gone, so a reload is covered by the document count, not by this signal
+- `S07` no-top-navigation-policy: wry 0.57.0 src/webview2/mod.rs:740-760 hooks only CoreWebView2 NavigationStarting (top frame); FrameNavigationStarting is not subscribed, so the docs frame is unaffected; tauri-runtime-wry 2.12.1 src/lib.rs:4820-4826 admits a URI it cannot parse, a residual
+- `S07` webview2-ambient-overrides: refused set taken from strings in the webview2-com-sys 0.39.1 loader and runtime 154.0.4258.53 EmbeddedBrowserWebView.dll; HKLM/HKCU `Software\Policies\Microsoft\Edge\WebView2` policy values carry the same overrides and are not checked; the webview2-remote-debugging feature is not yet wired into the S10 package build
+- `S07` `open_external:` ShellExecute now runs on a blocking worker without COM initialization, as tauri-plugin-opener 2.7.0 does; a DelegateExecute handler needing an STA is unverified until S10
+- `S07` clipboard reads over 1 MiB and wiring of the env refusal and navigation handler in app::run are not unit-reachable; the decision functions are tested
+- `S19` platform cargo clippy -D warnings fails on five pre-existing `missing_safety_doc` findings in native/platform/src/lib.rs:411-514, untouched here; desktop.rs has none
+- `S13` cadrumo.exe is not in `startup_files,` unlike the Step text: it never runs the package bootstrap and checks the interpreter digest itself; decided on evidence at the orchestrator's request; the Step text needs that correction
+- `S13` docs ON stage proven with a synthetic four-language docs tree staged by the real `docs_stage` step and the desktop-host-build command run without its `user_docs` prerequisite; the bundle target was not built end to end with docs ON because the docs build is blocked by a stale authority
+- `S13` import boundary gate: 0 hard findings but status unavailable because `dev/quality/metadata/import_load_targets.json` is stale for src/cadrumo; pre-existing, no src module changed
+- `S13` Desktop subdirectory gated on a staged desktop image so docs-off source builds need neither Node.js nor npm, per CADRUMO-BUILD-RUNTIME review
+- `S17` Browser boundary fixtures verify presentation, not native package acceptance. Isolated build/d2-desktop uses ports 15370/15371. S16/S10 retain native/platform and packaged acceptance; S12 retains manager-start integration; S09 retains live desktop-host smoke. Canonical S18 translations reused, and 26 now-consumed keys removed from awaiting-consumer declaration.
+- `S16` Windows host checkpoint only: S16 stays open for authoritative GNOME observer capability and packaged CLI/UI acceptance. Exact tested snapshot and generated contract at build/s16-desktop-host; logs test-all.log test-sign-in.log clippy.log. SHA256 of all seven changed files matched tested snapshot. Runner reaps its direct aeat child; current login/status/logout leaves connect to existing runtime and spawn no descendants. No descendant containment proof. Non-Windows sign-in conservatively unsupported pending backend capability.
+- `S16` Acceptance preparation found the host used unsupported leaf --json; corrected to the canonical root --format json before config. Built test host SHA256 e07fb22ff0bf24d0183d7ac32d20c5ca884787f27e7ed9d03cf3add38a053687. S16 remains open pending real interactive packaged sign-in and non-Windows capability acceptance.
+- `S10` Prepared real packaged profile/runtime/sign-in/status/logout checks, secret-isolation observation, palette exact-result navigation, localized Home and docs appearance flows. Actual acceptance not run: agent is Session 0; user agreed to run prepared command in active desktop. First harness regression exposed EPERM profile teardown and left handles open; corrected graceful browser close, all-release cleanup and bounded retries. Final 20 tests pass, zero failures; build/windows-x86-64/e2e-desktop/harness-tests-reviewed.log. These regression tests use stand-in pages and establish harness assertions only. S10 remains open; fresh full package and documentation sequence gate are still in progress.
+- `S10` Necessary backend corrections found by fresh docs prerequisite for packaged E2E: successful amount/narrative update changes transaction identity, so correlate against new authoritative `source_transaction_id` rather than resulting ID; preserve profile/result/effect/patch checks. Repeated merge CLI IDs now normalize list to tuple at strict request boundary. Root reviewed seven previously clean paths; 37 tests pass. Logs var/storage/development/.logs/test-runs/2026-10-05/{20261005T155911.682204Z-pytest-37640-be893697,20261005T160139.195827Z-pytest-29836-92f91dea,20261005T160216.305991Z-pytest-35060-8c83b635}/run.log. New result shape requires fresh worker/package snapshots. S10 remains open; broader docs gate still failed.
+- `S10` S10 remains open. Logout retains selected profile after human-access revocation; exact-profile packaged assertions prevent empty pointer falsely proving revocation. Mixed custody.py includes external B4 work and remains uncommitted. Synthetic cold profile setup bound 300s; other fixture commands and production host deadlines unchanged. Actual GUI acceptance pending interactive run.
+- `S10` Docs executable-example prerequisite remains failed; no goldens refreshed. Synthetic shared receipt custody is selected only for three explicit sign-out scenarios or cumulative pages enrolling them; default no-vault behavior remains. Profile-setup deletion is unresolved: accepted selected-profile deletion refusal conflicts with docs guidance to logout now that logout retains selection; no auth bypass or silent reauthentication added. Retained profile-setup-inspect run passed all four expected frame exits at unchanged deadlines after docs renders ended (41.77s); this is execution, not golden equality.
+- `S10` Fresh GUI candidate app-v1 assembled from rebuilt product wheels; full docs gate remains failed. Setup exposed missing profile-custody adapter composition in test helper, corrected at pointer observation. Subsequent real runtime hello and teardown pass, but canonical CLI sign-in-status returns `runtime_unavailable;` exact retained diagnostic pending root cause. Interactive handoff not yet ready; no session bridge or runtime bypass.
+- `S10` Conclusive status-diagnostic-v3.log separates successful canonical client connection from sign-in-status refusal. Native `windows_desktop_logon._native_token_fields_are_supported` explicitly excludes session zero; native-session-observation.log traces `runtime_unavailable` to that check. Runtime alive before/after CLI, identical endpoint identity, helper teardown exit0 and exact receipt absence confirmed. Requires real signed-in desktop; user already agreed to run prepared command. No bridge or observation override. Docs gate and manager-start S12 still open.
+- `S10` Harness frozen for interactive handoff. Evidence build/windows-x86-64/e2e-desktop/harness-tests-handoff.log; scope remains harness assertions, not actual UI acceptance.
+- `S10` User executed prepared command in Session1. Profile creation/runtime handshake, native WebView2 launch, override refusal, docs origin and cleanup pass. Canonical-sign-in fails before password submission: screenshot shows `queue_full;` host status observation collides with another initial status invocation. Host Windows supported flag is compile-time true, identifying failed before.ok assertion. Full acceptance remains open; bounded status concurrency repair in progress. Evidence build/windows-x86-64/e2e-desktop/desktop/test-results/packaged/20261005-190156.
+- `S10` Corrected interactive run's initial `queue_full` status race. Frontend coalesces status/focus calls and waits before single credential mutation; host read-only calls wait within existing total30s deadline off UI thread, mutations remain single-flight. Regression covers failed-slot cleanup, pending-read mutation, real subprocess contention and close fencing. Harness retains initial status evidence and continues independent checks after sign-in failure, with dependent checks explicitly skipped. Fixed test host SHA256 5e94b8fc6e7e8830a331b82de4b0f52fcc762e27741f3f1649868e4ea5ce113d. Actual interactive rerun required; S10 remains open.
+- `S10` Final native lint passed against exact two-module test snapshot; all current regression/build checks pass. Awaiting user desktop rerun.
+- `S10` Operator redirected session to define package/runtime integration proof and separate Tauri development. Scope recorded in desktop-shell audit; no application fixes started from this run. Manager launch remains unproven (fixture-owned runtime), positive sign-in/revocation and active host boundary checks remain open. Original full UI/packaging acceptance obligations retained; no narrowing of recorded verdicts.
+- `S10` Operator explicitly moved frontend development to another session and prohibited full application compilation as the development loop. Current work compiles only native test/lint artifacts and reuses existing app-v1 for real PTYs. Fixes canonical credential refusal and throttle metadata. Logs `build/windows-x86-64/e2e-desktop/backend-*.log.` Native capability passes do not close full WebView/sign-in/manager/package acceptance; no plan checkbox closed.
+- `S10` Live authentication remains pending signed-in desktop execution. Operator deleted disposable build outputs; abandoned package-specific runner changes were removed. Canonical just test-runtime-auth uses current development entrypoints, shared environment resolver, pytest storage and standard reporting; no build or preserved package prerequisite. Session0 refusal is not a passing auth test.

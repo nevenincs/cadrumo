@@ -10,8 +10,8 @@ import pytest
 from cadrumo.tests.audited_process import run_audited_process
 
 from ....core.config import override_settings
+from ..command_parameter_contracts import OptionSpec
 from ..command_schema import command_registration_metadata, command_schema_refs
-from ..command_spec import OptionSpec
 from ..command_specs import COMMAND_GRAPH
 from ..verb_input_schema import build_verb_input_schemas, is_exposable_command
 

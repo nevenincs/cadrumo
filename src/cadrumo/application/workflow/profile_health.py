@@ -62,6 +62,7 @@ from .state_models import WorkflowState
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.user_profile.values import UserProfileRecord
 
 
 class ProfileHealthStatus(StrEnum):
@@ -528,6 +529,8 @@ def _assess_selected_profile(
     total_keys: int,
     state: WorkflowState | None,
     operation: PinnedAuthorityOperation,
+    *,
+    include_private_record: bool,
 ) -> ActiveProfileHealth:
     """Resolve one selected profile through its committed capsule and record."""
     try:
@@ -558,7 +561,14 @@ def _assess_selected_profile(
             ),
             label=None,
         )
-    return _assess_registered_profile(registered_pointer, source, total_keys, state, operation)
+    return _assess_registered_profile(
+        registered_pointer,
+        source,
+        total_keys,
+        state,
+        operation,
+        include_private_record=include_private_record,
+    )
 
 
 def _profile_record_session_is_missing(
@@ -621,6 +631,20 @@ def _health_from_record_resolution(
             label=label,
         )
 
+    return assess_profile_record_health(record, source=source, label=label, operation=operation)
+
+
+def assess_profile_record_health(
+    record: UserProfileRecord,
+    *,
+    source: ProfileSource,
+    label: str,
+    operation: PinnedAuthorityOperation,
+) -> ActiveProfileHealth:
+    """Judge one already-authorized record without resolving an ambient profile.
+
+    Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
+    """
     values = record_to_path_values(record)
     # Key COUNTS come from the compiled key catalogue, which is what the
     # progress projection is about. Which required fields are still MISSING is
@@ -638,7 +662,7 @@ def _health_from_record_resolution(
     )
     return _finalise_health(
         ActiveProfileHealth(
-            active_profile=active_profile,
+            active_profile=record.profile_id,
             source=source,
             status=status,
             registered_bucket=True,
@@ -657,10 +681,12 @@ def _assess_registered_profile(
     total_keys: int,
     state: WorkflowState | None,
     operation: PinnedAuthorityOperation,
+    *,
+    include_private_record: bool,
 ) -> ActiveProfileHealth:
     """Assess the committed profile after discovery has established its identity."""
     active_profile = pointer.bucket_id
-    if _profile_record_session_is_missing(active_profile, operation=operation):
+    if not include_private_record or _profile_record_session_is_missing(active_profile, operation=operation):
         return _finalise_health(
             ActiveProfileHealth(
                 active_profile=active_profile,
@@ -713,6 +739,7 @@ def assess_active_profile_health(
     state: WorkflowState | None = None,
     *,
     operation: PinnedAuthorityOperation,
+    include_private_record: bool = True,
 ) -> ActiveProfileHealth:
     """Return a redacted, non-secret projection from current authenticated state.
 
@@ -728,6 +755,10 @@ def assess_active_profile_health(
     refuses a selector with no committed capsule as ``dangling_pointer``, so
     real data loss keeps its own verdict rather than hiding behind the benign
     one.
+
+    With ``include_private_record=False``, only committed capsule discovery
+    and pointer policy run. A selected committed capsule is reported as locked
+    without probing process-local custody or encrypted workflow state.
     """
     settings = load_settings()
     override = (settings.cadrumo_active_profile or "").strip()
@@ -743,7 +774,14 @@ def assess_active_profile_health(
     source: ProfileSource = "env_override" if override else ("pointer" if active_profile is not None else "none")
     if active_profile is None:
         return _assess_without_active_profile(source, total_keys)
-    return _assess_selected_profile(active_profile, source, total_keys, state, operation)
+    return _assess_selected_profile(
+        active_profile,
+        source,
+        total_keys,
+        state,
+        operation,
+        include_private_record=include_private_record,
+    )
 
 
 def repair_active_profile_pointer(

@@ -41,7 +41,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.add",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_event_ids": [
             "2db62f858773cb6a333db409b8321094557fa580bd514110e48d1214f0f437b5"
@@ -89,7 +97,7 @@
           "transaction_id": "aebcbdf126dab613bfff9204b98d9bdce07dd43b900d9b0e1c00e24c709a2618"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -111,7 +119,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "review_status": "pending",
@@ -156,7 +172,7 @@
           "transaction_id": "aebcbdf126dab613bfff9204b98d9bdce07dd43b900d9b0e1c00e24c709a2618"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

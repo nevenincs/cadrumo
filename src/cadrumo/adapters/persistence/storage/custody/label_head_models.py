@@ -8,6 +8,7 @@ from uuid import UUID, uuid4
 from pydantic import Field, field_validator, model_validator
 
 from .....core.errors.hierarchy import pydantic_validation_boundary
+from .....core.hashing import validate_prefixed_digest
 from .....core.identity.digest import PrefixedContentDigest
 from .capsule_records import ProfileCustodyCapsuleLabel
 from .digest_model import CustodyDigestModel
@@ -43,13 +44,7 @@ class ProfileLabelHead(CustodyDigestModel):
     def _validate_digest(cls, value: str | None) -> str | None:
         if value is None:
             return None
-        if (
-            len(value) != 71
-            or not value.startswith("sha256:")
-            or any(character not in "0123456789abcdef" for character in value[7:])
-        ):
-            raise ValueError("profile label head digest must be a lowercase sha256 digest")
-        return value
+        return validate_prefixed_digest(value, field_name="profile label head digest")
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -153,13 +148,7 @@ class ProfileLabelHeadPendingAdvance(CustodyDigestModel):
     @classmethod
     @pydantic_validation_boundary
     def _validate_expected_head_digest(cls, value: str) -> str:
-        if (
-            len(value) != 71
-            or not value.startswith("sha256:")
-            or any(character not in "0123456789abcdef" for character in value[7:])
-        ):
-            raise ValueError("pending profile label head digest must be a lowercase sha256 digest")
-        return value
+        return validate_prefixed_digest(value, field_name="pending profile label head digest")
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

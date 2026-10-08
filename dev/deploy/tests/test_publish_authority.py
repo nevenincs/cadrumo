@@ -15,14 +15,10 @@ from pathlib import Path
 
 import pytest
 
-from ...deploy import docs_static_site
-from ..docs_static_site import (
-    _CI_MARKERS,
-    DELIVERY_CREDENTIAL_ENV,
-    _require_authorized_publish_environment,
-    language_build_command,
-    site_build_environment,
-)
+from ...deploy import docs_delivery_activation
+from ..docs_delivery_contracts import _CI_MARKERS, DELIVERY_CREDENTIAL_ENV
+from ..docs_delivery_policy import _require_authorized_publish_environment
+from ..docs_site_languages import site_build_environment, translated_roots_compile_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -32,7 +28,7 @@ _CREDENTIALS = {name: f"placeholder-{index}" for index, name in enumerate(DELIVE
 
 def test_an_automated_run_inside_the_delivery_environment_is_authorised() -> None:
     """An automated run carrying every delivery credential proceeds."""
-    assert not hasattr(docs_static_site, "_require_human_publish_environment"), (
+    assert not hasattr(docs_delivery_activation, "_require_human_publish_environment"), (
         "the documentation publisher must not retain a human-only guard"
     )
     for marker in _CI_MARKERS:
@@ -69,7 +65,7 @@ def test_an_unprovisioned_automated_publish_stops_before_any_cloud_call(
 ) -> None:
     """Driven through the real publish entry point: the refusal precedes every command and request."""
     with pytest.raises(SystemExit) as refusal:
-        docs_static_site._publish(tmp_path, environment={"GITHUB_ACTIONS": "true"})
+        docs_delivery_activation._publish(tmp_path, environment={"GITHUB_ACTIONS": "true"})
     assert "CLOUDFLARE_API_TOKEN" in str(refusal.value)
     assert capsys.readouterr().out == "", "an unprovisioned run must not start a build, upload or deploy"
 
@@ -78,7 +74,7 @@ def test_zone_wiring_refuses_every_automated_run() -> None:
     """Provisioning changes the shared zone and is a local, human decision."""
     for marker in _CI_MARKERS:
         with pytest.raises(SystemExit) as refusal:
-            docs_static_site._provision(environment={marker: "true", **_CREDENTIALS})
+            docs_delivery_activation._provision(environment={marker: "true", **_CREDENTIALS})
         assert marker in str(refusal.value)
 
 
@@ -91,19 +87,19 @@ def test_the_build_path_carries_no_automation_conditional() -> None:
     deploy_keys = ("CADRUMO_DOCS_BASE_URL", "CADRUMO_DOCS_JOBS", "CADRUMO_DOCS_PAGEFIND_MODE")
 
     local_environment = {key: site_build_environment(base_environment={})[key] for key in deploy_keys}
-    local_command = language_build_command("es", Path("out"))
+    local_command = translated_roots_compile_command(Path("out"), ("es",), jobs=2)
 
     automated_base = {"CI": "true", "GITHUB_ACTIONS": "true", **_CREDENTIALS}
     automated_environment = {key: site_build_environment(base_environment=automated_base)[key] for key in deploy_keys}
 
     assert automated_environment == local_environment
-    assert language_build_command("es", Path("out")) == local_command
+    assert translated_roots_compile_command(Path("out"), ("es",), jobs=2) == local_command
 
 
 def test_a_cutover_publish_refuses_every_automated_run(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
     """The cutover changes the shared zone; CI publishes without it and is refused with it."""
     for marker in _CI_MARKERS:
         with pytest.raises(SystemExit) as refusal:
-            docs_static_site._publish(tmp_path, cutover=True, environment={marker: "true", **_CREDENTIALS})
+            docs_delivery_activation._publish(tmp_path, cutover=True, environment={marker: "true", **_CREDENTIALS})
         assert marker in str(refusal.value)
     assert capsys.readouterr().out == "", "a refused cutover must not start a build, upload or deploy"

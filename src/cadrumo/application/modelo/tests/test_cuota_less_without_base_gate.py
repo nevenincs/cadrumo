@@ -25,7 +25,7 @@ from ....domain.modelos.verification_report import ModeloVerificationFindingSeve
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..verification_actions import _cuota_less_without_base_findings
+from ..verification_gate_findings import cuota_less_without_base_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -104,7 +104,7 @@ class _TargetWorkUnit:
 
 def _findings(transactions: dict[str, Transaction], *, consumed: tuple[str, ...] | None = None):
     ids = tuple(transactions) if consumed is None else consumed
-    return _cuota_less_without_base_findings(
+    return cuota_less_without_base_findings(
         target=_TargetRevision(ids),  # ty: ignore[invalid-argument-type]  # reason: the gate reads two fields
         work_unit=_TargetWorkUnit(),  # ty: ignore[invalid-argument-type]  # reason: the gate reads bucket_id
         transaction_repository=_InMemoryRepository(transactions),  # ty: ignore[invalid-argument-type]  # reason: load() only

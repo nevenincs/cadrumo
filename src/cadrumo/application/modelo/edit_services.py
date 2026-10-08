@@ -1,24 +1,30 @@
-"""Edit admission, schema projection, parsing, and preflight for the Modelo Edit Contract V1.
+"""Shared baseline and intent checks for the Modelo Edit Contract V1.
 
-Behind :mod:`cadrumo.application.modelo`. This module owns the read-only half
-of the edit contract: it independently re-resolves a target, projects the
-registry-declared permitted surface, and rechecks a submission before
-execution. It never writes -- persistence and the guarded compare-and-swap
-commit belong to :mod:`.revision_persistence` and :mod:`._edit_execution`.
+This module owns the comparisons admission, preflight and execution all make:
+the work-unit-scoped concurrency digests, the baseline recheck, the lookup of
+admitted surface entries, intent admissibility and the detail-row natural
+key. Admission lives in :mod:`.edit_admission`, parsing in
+:mod:`.edit_parsing` and preflight in :mod:`.edit_preflight`. It never writes
+-- persistence and the guarded compare-and-swap commit belong to
+:mod:`.revision_persistence` and :mod:`._edit_execution`.
 
 A :class:`~.workspace_models.ModeloWorkspaceBaselineV1` read-consistency token
 is never accepted here as mutation authority: every coordinate below is
 independently re-resolved from the target and the current catalogues, never
 copied from a Workspace read.
+
+See Also:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+        The stored calculation head carrying values, provenance and lifecycle facts.
 """
 
 from __future__ import annotations
 
 from ...core.hashing import content_hash_hex
 from ...core.time.clock import now as clock_now
-from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from ...domain.modelos.row_models import ModeloDetailRow
-from ...domain.modelos.work_unit import WorkUnitCatalogue
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from .edit_models import (
     ModeloEditAddressV1,
     ModeloEditBaselineV1,
@@ -48,15 +54,18 @@ def reconfirm_modelo_edit_baseline(
 
     Returns ``None`` when nothing has drifted, or the exact typed
     compare-and-swap refusal naming every coordinate that disagreed. Shared by
-    preflight (D3) and, once execution lands, the guarded commit point (D6) so
-    both recheck through one comparison.
+    preflight and the guarded commit point so both recheck through one
+    comparison. The coordinates are the edited work unit's own record and its
+    calculation head: a change to any other declaration does not stale it.
     """
     mismatches: list[str] = []
-    if content_hash_hex(work_catalogue.model_dump(mode="json")) != baseline.work_catalogue_revision:
-        mismatches.append("work_catalogue_revision")
-    if content_hash_hex(calculation_catalogue.model_dump(mode="json")) != baseline.calculation_catalogue_revision:
-        mismatches.append("calculation_catalogue_revision")
     work_unit = work_catalogue.work_units.get(baseline.work_unit_id)
+    if work_unit is None or work_unit_record_digest(work_unit) != baseline.work_unit_record_digest:
+        mismatches.append("work_unit_record_digest")
+    head_id = work_unit.current_calculation_revision_id if work_unit is not None else None
+    head = calculation_catalogue.get(head_id) if head_id is not None else None
+    if calculation_head_digest(head) != baseline.calculation_head_digest:
+        mismatches.append("calculation_head_digest")
     if work_unit is None or work_unit.current_calculation_revision_id != baseline.current_calculation_revision_id:
         mismatches.append("current_calculation_revision_id")
     if clock_now() >= baseline.expires_at:
@@ -69,6 +78,24 @@ def reconfirm_modelo_edit_baseline(
         responsible_owner=RESPONSIBLE_OWNER,
         reconsideration_condition="admit a fresh baseline and resubmit",
     )
+
+
+def work_unit_record_digest(work_unit: WorkUnit) -> str:
+    """The concurrency digest of one work unit's own catalogue record."""
+    return content_hash_hex(work_unit.model_dump(mode="json"))
+
+
+def calculation_head_digest(head: CalculationRevision | None) -> str:
+    """The concurrency digest of one calculation head, or of its absence.
+
+    A verify or a filing changes the head's lifecycle fields, and so this
+    digest, even though its id stays the same.
+
+    See Also:
+        :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            The stored calculation head carrying values, provenance and lifecycle facts.
+    """
+    return content_hash_hex({"calculation_head": None if head is None else head.model_dump(mode="json")})
 
 
 def writable_scalar_entry(
@@ -100,11 +127,11 @@ literals would be free to drift into addressing different rows.
 """
 
 _DETAIL_ROW_NATURAL_KEY_FIELDS: dict[str, tuple[str, ...]] = {
+    "afiliado": ("nif", "numero_afiliacion"),
     "miembro": ("nif", "clave", "subclave"),
     "vinculada": ("nif",),
     "operador": ("nif_comunitario", "clave_operacion"),
     "rectificacion": ("nif_comunitario", "clave_operacion"),
-    "contraparte": ("nif",),
     "agrupacion_renta": ("source_id",),
 }
 
@@ -165,11 +192,13 @@ def validate_binding_intent(
 
 
 __all__ = [
+    "calculation_head_digest",
     "detail_row_identity_components",
     "detail_row_natural_key",
     "reconfirm_modelo_edit_baseline",
     "validate_binding_intent",
     "validate_scalar_intent",
+    "work_unit_record_digest",
     "writable_binding_entry",
     "writable_scalar_entry",
 ]

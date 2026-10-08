@@ -1,0 +1,1043 @@
+schema_version = 1
+fragment_id = 'records'
+modelo = '180'
+design_epoch = '2014'
+source_ref = 'aeat-dr-180-2014'
+source_sha256 = '281ddf824a9c5de2cd54b377ac4072cb9a1f1e1b6231fce9e775b6d814bcd741'
+
+[[records]]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+export_record_id = 'modelo-180-declarante'
+record_type = 'declarante'
+
+[[records]]
+sheet = 'Tipo 2 - Registro De Perceptor'
+record_identity = 'Tipo 2 - Registro De Perceptor'
+export_record_id = 'modelo-180-perceptor'
+record_type = 'perceptor'
+required = false
+repeat = 'binding_rows'
+binding_record = 'perceptor'
+
+[records.row_field_casilla_ids]
+perceptor_nif = 'perc.nif'
+representative_nif = 'perc.nif-representante-legal'
+perceptor_name = 'perc.nombre'
+recipient_province_code = 'perc.provincia'
+modality = 'perc.modalidad'
+taxable_base = 'perc.base'
+withholding_percentage = 'perc.porcentaje-retencion'
+retencion_amount = 'perc.retenciones'
+accrual_year = 'perc.ejercicio-devengo'
+situation = 'perc.situacion-inmueble'
+cadastral_reference = 'perc.referencia-catastral'
+street_type = 'perc.inmueble-tipo-via'
+street_name = 'perc.inmueble-nombre-via'
+number_type = 'perc.inmueble-tipo-numeracion'
+house_number = 'perc.inmueble-numero-casa'
+number_qualifier = 'perc.inmueble-calificador-numero'
+block = 'perc.inmueble-bloque'
+portal = 'perc.inmueble-portal'
+staircase = 'perc.inmueble-escalera'
+floor = 'perc.inmueble-planta'
+door = 'perc.inmueble-puerta'
+complement = 'perc.inmueble-complemento'
+locality = 'perc.inmueble-localidad'
+municipality = 'perc.inmueble-municipio'
+municipality_code = 'perc.inmueble-codigo-municipio'
+province_code = 'perc.inmueble-provincia'
+postal_code = 'perc.inmueble-codigo-postal'
+
+[[entries]]
+export_field_id = 'modelo-180-decl-record-type'
+kind = 'literal'
+literal = '1'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 19
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '1'
+
+[[entries]]
+export_field_id = 'modelo-180-decl-modelo'
+kind = 'literal'
+literal = '180'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 22
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '2'
+
+[[entries]]
+export_field_id = 'modelo-180-decl-year'
+kind = 'draft'
+draft_attribute = 'filing_year'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 25
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '3'
+
+[[entries]]
+export_field_id = 'modelo-180-decl-nif'
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 29
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '4'
+
+[[entries]]
+export_field_id = 'modelo-180-decl-apellidos-razon-social'
+kind = 'header'
+producer_key = 'taxpayer.full_name'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 39
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '5'
+
+[[entries]]
+export_field_id = 'modelo-180-decl-tipo-soporte'
+kind = 'literal'
+literal = 'T'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 54
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '6'
+
+[[entries]]
+export_field_id = 'modelo-180-decl-persona-relacion-telefono'
+kind = 'header'
+producer_key = 'contact_person.phone'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 61
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-180-decl-persona-relacion-nombre'
+kind = 'header'
+producer_key = 'contact_person.full_name'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 62
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-180-decl-numero-identificativo'
+kind = 'casilla'
+casilla_id = 'decl.numero-identificativo'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 66
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '8'
+
+[[entries]]
+export_field_id = 'modelo-180-decl-complementaria-sustitutiva'
+kind = 'casilla'
+casilla_id = 'decl.complementaria-sustitutiva'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 72
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '9'
+
+[[entries]]
+export_field_id = 'modelo-180-decl-numero-identificativo-anterior'
+kind = 'casilla'
+casilla_id = 'decl.numero-identificativo-anterior'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 97
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '10'
+
+[[entries]]
+export_field_id = 'modelo-180-decl-total-perceptores'
+kind = 'casilla'
+casilla_id = 'decl.total-perceptores'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 106
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '11'
+
+[[entries]]
+export_field_id = 'modelo-180-decl-base-total'
+kind = 'casilla'
+casilla_id = 'decl.base-total'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 116
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '12'
+
+[[entries]]
+export_field_id = 'modelo-180-decl-retenciones-total-integer-part'
+kind = 'casilla'
+casilla_id = 'decl.retenciones-total'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 159
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-180-decl-retenciones-total-fractional-part'
+kind = 'casilla'
+casilla_id = 'decl.retenciones-total'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 161
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-180-decl-blancos'
+kind = 'filler'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 165
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '14'
+
+[[entries]]
+export_field_id = 'modelo-180-decl-sello-electronico'
+kind = 'filler'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+source_row = 167
+record_identity = 'Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos'
+ordinal = '15'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-record-type'
+kind = 'literal'
+literal = '2'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 193
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '1'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-modelo'
+kind = 'literal'
+literal = '180'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 196
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '2'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-year'
+kind = 'draft'
+draft_attribute = 'filing_year'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 199
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '3'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-decl-nif'
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 203
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '4'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-nif'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-nif'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 207
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '5'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-nif-representante-legal'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-representative-nif'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 235
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '6'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-nombre'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-name'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 243
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '7'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-provincia'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-recipient-province'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 258
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '8'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-modalidad'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-modality'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 295
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '9'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-base'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-base'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 302
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '10'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-porcentaje-retencion-integer-part'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-withholding-percentage'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 339
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-180-perc-porcentaje-retencion-fractional-part'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-withholding-percentage'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 341
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal_absent = true
+
+[[entries]]
+export_field_id = 'modelo-180-perc-retenciones'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-retenciones'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 346
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '12'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-ejercicio-devengo'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-accrual-year'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 357
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '13'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-situacion-inmueble'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-property-situation'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 399
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '14'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-referencia-catastral'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-cadastral-reference'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 410
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '15'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-tipo-via'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-street-type'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 135
+length = 5
+aeat_type = 'Alfabético'
+statement = '135-139 TIPO DE VÍA Se consignará el código alfabético de tipo de vía, normalizado según Instituto Nacional de Estadística (INE).'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-nombre-via'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-street-name'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 140
+length = 50
+aeat_type = 'Alfanumérico'
+statement = '140-189 NOMBRE VÍA PÚBLICA Se consignará el nombre largo de la vía pública, si no cupiese completo el nombre, no se harán constar los artículos, preposiciones ni conjunciones y se pondrán en abreviatura los títulos (vgr. cd = Conde). Los demás casos se abreviarán utilizando las siglas de uso general.'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-tipo-numeracion'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-number-type'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 190
+length = 3
+aeat_type = 'Alfanumérico'
+statement = '190-192 TIPO DE NUMERACIÓN Se consignará el tipo de numeración (Valores: NÚM ; KM. ; S/N; etc.).'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-numero-casa'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-house-number'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 193
+length = 5
+aeat_type = 'Alfanumérico'
+statement = '193-197 NÚMERO DE CASA Se consignará el número de casa o punto kilométrico.'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-calificador-numero'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-number-qualifier'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 198
+length = 3
+aeat_type = 'Alfanumérico'
+statement = '198-200 CALIFICADOR DEL NÚMERO Se consignará el calificador del número (valores BIS; DUP; MOD; ANT; etc / metros si Tipo Numer = KM.)'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-bloque'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-block'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 201
+length = 3
+aeat_type = 'Alfanumérico'
+statement = '201-203 BLOQUE Se consignará el bloque (número o letras).'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-portal'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-portal'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 204
+length = 3
+aeat_type = 'Alfanumérico'
+statement = '204-206 PORTAL Se consignará el portal (número o letras).'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-escalera'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-staircase'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 207
+length = 3
+aeat_type = 'Alfanumérico'
+statement = '207-209 ESCALERA Se consignará la escalera (número o letras).'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-planta'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-floor'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 210
+length = 3
+aeat_type = 'Alfanumérico'
+statement = '210-212 PLANTA O PISO Se consignará la planta o el piso (número o letras).'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-puerta'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-door'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 213
+length = 3
+aeat_type = 'Alfanumérico'
+statement = '213-215 PUERTA Se consignará la puerta (número o letras).'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-complemento'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-complement'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 216
+length = 40
+aeat_type = 'Alfanumérico'
+statement = '216-255 COMPLEMENTO'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-localidad'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-locality'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 256
+length = 30
+aeat_type = 'Alfanumérico'
+statement = '256-285 LOCALIDAD O POBLACIÓN Se consignará el nombre de la localidad, de la población, etc, si es distinta al Municipio'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-municipio'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-municipality'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 286
+length = 30
+aeat_type = 'Alfanumérico'
+statement = '286-315 MUNICIPIO Se consignará el nombre de municipio Se consignará el correspondiente al inmueble arrendado.'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-codigo-municipio'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-municipality-code'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 316
+length = 5
+aeat_type = 'Alfanumérico'
+statement = '316-320 CÓDIGO DE MUNICIPIO Se consignará el CODIGO de municipio normalizado según Instituto Nacional de Estadística (INE).'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-provincia'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-property-province'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 321
+length = 2
+aeat_type = 'Numérico'
+statement = '321-322 CÓDIGO PROVINCIA Se consignará el código de la provincia. Se consignarán los dos dígitos numéricos que correspondan a la provincia o, en su caso, ciudad autónoma, que corresponda al inmueble arrendado, según la siguiente relación: ARABA/ÁLAVA 01 LEÓN 24 ALBACETE 02 LLEIDA 25 ALICANTE/ALACANT 03 LUGO 27 ALMERIA 04 MADRID 28 ASTURIAS 33 MÁLAGA 29 ÁVILA 05 MELILLA 52 BADAJOZ 06 MURCIA 30 BARCELONA 08 NAVARRA 31 BURGOS 09 OURENSE 32 CÁCERES 10 PALENCIA 34'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-inmueble-codigo-postal'
+kind = 'binding'
+binding = 'modelo-180-perceptor-row-postal-code'
+legal_refs = [
+    'ley-35-2006:art-99',
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014', 'aeat-modelo-180-procedure']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 413
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '16'
+
+[entries.part]
+offset = 323
+length = 5
+aeat_type = 'Alfanumérico'
+statement = '323-327 CÓDIGO POSTAL Se consignará el código postal correspondiente a la dirección del inmueble arrendado.'
+
+[[entries]]
+export_field_id = 'modelo-180-perc-resto'
+kind = 'filler'
+legal_refs = [
+    'orden-hap-1732-2014:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-101',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-180-2014']
+
+[entries.anchor]
+sheet = 'Tipo 2 - Registro De Perceptor'
+source_row = 507
+record_identity = 'Tipo 2 - Registro De Perceptor'
+ordinal = '17'

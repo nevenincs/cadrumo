@@ -71,7 +71,15 @@ def test_both_evidence_surfaces_declare_the_provenance_channel(command: str) -> 
 
 def test_the_extract_envelope_body_carries_every_envelope_whole() -> None:
     dumped = json.loads(_draft().model_dump_json())
-    payload = {"bucket_id": "b", "evidence_id": "e", "attachment_id": None, **dumped}
+    payload = {
+        "bucket_id": "b",
+        "evidence_id": "e",
+        "attachment_id": None,
+        "source_sha256": "a" * 64,
+        "draft_review_sha256": "b" * 64,
+        "consent_audit_effect": "none",
+        **dumped,
+    }
 
     emitted = EvidenceExtractResult.model_validate_json(json.dumps(payload)).model_dump(mode="json")
 
@@ -85,6 +93,8 @@ def test_the_confirm_envelope_body_carries_the_drafts_provenance() -> None:
         "bucket_id": "b",
         "evidence_id": "e",
         "attachment_id": None,
+        "source_sha256": "a" * 64,
+        "reviewed_draft_sha256": "c" * 64,
         "created": True,
         "invoice_id": "a" * 64,
         "kind": "received",

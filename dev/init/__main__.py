@@ -89,6 +89,39 @@ SELECTIONS = {
 }
 
 
+def _run_selected_phases(
+    repo_root: Path,
+    selection: tuple[str, ...],
+    emitter: Emitter,
+    force: bool,
+    phases: list[PhaseResult],
+    code: int,
+    remediation: list[str],
+) -> int:
+    """Run selected phases."""
+    if code == OK:
+        digests = dict(read_stamp(repo_root))
+        failure = ""
+        for name in selection:
+            phase = plan.PHASE_PLAN[name]
+            if failure:
+                reason = f"not attempted: init-{failure} failed"
+                emitter.say(f"init-{name}: skipped - {reason}")
+                emitter.event("phase", name=name, status=SKIPPED, reason=reason)
+                phases.append(PhaseResult(name=name, status=SKIPPED, reason=reason))
+                continue
+            result = _run_phase(repo_root, phase, emitter, force=force)
+            phases.append(result)
+            if result.status == FAILED:
+                failure = name
+                code = result.exit_code
+                remediation.append(result.reason)
+            elif phase.steps:
+                digests[name] = phase_digest(repo_root, phase)
+        write_stamp(repo_root, digests)
+    return code
+
+
 def _repo_root() -> Path:
     """Return the worktree root.
 
@@ -325,26 +358,7 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
 
-    if code == OK:
-        digests = dict(read_stamp(repo_root))
-        failure = ""
-        for name in selection:
-            phase = plan.PHASE_PLAN[name]
-            if failure:
-                reason = f"not attempted: init-{failure} failed"
-                emitter.say(f"init-{name}: skipped - {reason}")
-                emitter.event("phase", name=name, status=SKIPPED, reason=reason)
-                phases.append(PhaseResult(name=name, status=SKIPPED, reason=reason))
-                continue
-            result = _run_phase(repo_root, phase, emitter, force=force)
-            phases.append(result)
-            if result.status == FAILED:
-                failure = name
-                code = result.exit_code
-                remediation.append(result.reason)
-            elif phase.steps:
-                digests[name] = phase_digest(repo_root, phase)
-        write_stamp(repo_root, digests)
+    code = _run_selected_phases(repo_root, selection, emitter, force, phases, code, remediation)
 
     status = DONE if code == OK else FAILED
     report = build_report(

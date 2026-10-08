@@ -2,29 +2,32 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import BaseModel, field_validator
 
-from ....core.aggregation import (
-    BindingAggregationOp,
-    BindingSourceKind,
-)
+from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ._ledger_binding_resolution import (
+    deductible_amount_aggregate,
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,
 )
-from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
-from .errors import RegistryValidationError
+from .binding_selector_utils import provider_member
 from .ids import BindingId
 from .ledger_binding_selector_support import casilla_id_set
+from .ledger_binding_validation import (
+    ledger_binding_build_diagnostics,
+    ledger_binding_selector,
+    require_ledger_aggregation_op,
+    require_ledger_fact,
+    require_ledger_target_casilla,
+)
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
@@ -47,6 +50,9 @@ _RENTA_100_FIRST_SLICE_CASILLAS: frozenset[CasillaId] = casilla_id_set(
     "0208",
     "0217",
 )
+
+
+_DEDUCTIBLE_AMOUNT_FACTS: frozenset[str] = frozenset({"deductible_amount_sum"})
 
 
 class RentaGastosEstimacionDirectaObservationProtocol(Protocol):
@@ -105,42 +111,23 @@ class LedgerRentaGastosEstimacionDirectaProvider(BaseModel):
         return value
 
 
-def _renta_ledger_gastos_estimacion_directa_selector(
-    binding: BindingDefinition,
-) -> LedgerRentaGastosEstimacionDirectaProvider:
-    try:
-        return provider_member(binding, LedgerRentaGastosEstimacionDirectaProvider)
-    except (ValueError, TypeError) as exc:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed ledger_renta_gastos_estimacion_directa_aggregation selector: {exc}",
-        ) from exc
-
-
 def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition(
     binding: BindingDefinition,
 ) -> None:
     """Validate a ``ledger_renta_gastos_estimacion_directa_aggregation`` binding definition."""
-    if binding.source != BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} is not a ledger_renta_gastos_estimacion_directa_aggregation source"
-        )
-    selector = _renta_ledger_gastos_estimacion_directa_selector(binding)
-    if selector.target_casilla_id not in _RENTA_100_FIRST_SLICE_CASILLAS:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} target_casilla_id {selector.target_casilla_id!r} "
-            "is outside the first Modelo 100 Renta ledger gastos slice",
-        )
-    op = binding_aggregation_op(binding)
-    if op != BindingAggregationOp.SUM:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_renta_gastos_estimacion_directa_aggregation supports only "
-            f"aggregation op 'sum', got {op.value!r}",
-        )
-    if selector.fact != "deductible_amount_sum":
-        raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_renta_gastos_estimacion_directa_aggregation supports only "
-            f"fact 'deductible_amount_sum', got {selector.fact!r}",
-        )
+    selector = ledger_binding_selector(
+        binding,
+        BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+        LedgerRentaGastosEstimacionDirectaProvider,
+    )
+    require_ledger_target_casilla(
+        binding,
+        selector.target_casilla_id,
+        _RENTA_100_FIRST_SLICE_CASILLAS,
+        scope="first Modelo 100 Renta ledger gastos slice",
+    )
+    require_ledger_aggregation_op(binding)
+    require_ledger_fact(binding, selector.fact, _DEDUCTIBLE_AMOUNT_FACTS)
 
 
 def _renta_gastos_estimacion_directa_build_matcher(
@@ -156,14 +143,6 @@ def _renta_gastos_estimacion_directa_build_matcher(
         )
 
     return matcher
-
-
-def _renta_gastos_estimacion_directa_aggregate(
-    matched: Sequence[RentaGastosEstimacionDirectaObservationProtocol],
-    selector: LedgerRentaGastosEstimacionDirectaProvider,
-) -> Decimal:
-    del selector  # single declared fact (deductible_amount_sum); nothing to dispatch on
-    return sum((observation.deductible_amount for observation in matched), Decimal("0"))
 
 
 def resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
@@ -185,9 +164,9 @@ def resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
-        parse_selector=_renta_ledger_gastos_estimacion_directa_selector,
+        provider_model=LedgerRentaGastosEstimacionDirectaProvider,
         build_matcher=_renta_gastos_estimacion_directa_build_matcher,
-        aggregate=_renta_gastos_estimacion_directa_aggregate,
+        aggregate=deductible_amount_aggregate,
     )
 
 
@@ -218,7 +197,7 @@ def unsupported_ledger_renta_gastos_estimacion_directa_observations(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
-        parse_selector=_renta_ledger_gastos_estimacion_directa_selector,
+        provider_model=LedgerRentaGastosEstimacionDirectaProvider,
         build_matcher=_renta_gastos_estimacion_directa_build_matcher,
         is_declarable=lambda observation: observation.deductible_amount != Decimal("0"),
     )
@@ -250,7 +229,7 @@ def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> froze
             inspected.
     """
     return frozenset(
-        _renta_ledger_gastos_estimacion_directa_selector(binding).target_casilla_id
+        provider_member(binding, LedgerRentaGastosEstimacionDirectaProvider).target_casilla_id
         for binding in revision.bindings
         if binding.source == BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     )
@@ -264,12 +243,9 @@ def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding(binding:
     :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition`.
     """
-    failures = selector_against_model(binding, LedgerRentaGastosEstimacionDirectaProvider)
-    if failures:
-        return failures
-    return invariant_diagnostics(
+    return ledger_binding_build_diagnostics(
         binding,
-        "ledger_renta_gastos_estimacion_directa_aggregation",
+        LedgerRentaGastosEstimacionDirectaProvider,
         validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
     )
 

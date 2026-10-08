@@ -332,7 +332,7 @@ matching as `width: 0`.
 """
 _TUI_ROOT = Path(__file__).resolve().parents[1]
 
-_STRUCTURAL_VALUES = frozenset({"auto", "100%", "none", "hidden", "0"})
+_STRUCTURAL_VALUES = frozenset({"auto", "100%", "none", "hidden", "initial", "0"})
 
 _FRACTION = re.compile(r"^\d+fr$")
 """Any ``Nfr`` is a proportion, not a measure.
@@ -351,7 +351,7 @@ def _is_structural(word: str) -> bool:
 
 ``auto``/``1fr``/``100%`` say "fill what is there", which is a layout
 relationship and not a number the design system should own. ``none`` and
-``hidden`` remove a treatment rather than choosing one.
+``hidden`` remove a treatment; ``initial`` resets an inherited constraint.
 """
 
 
@@ -435,6 +435,8 @@ def test_the_hardcoded_measure_scan_actually_fires() -> None:
     assert _offending_declarations("Foo { padding: 0 1; }") == ["padding: 0 1"]
     assert _offending_declarations("Foo { border: round $primary; }") == ["border: round $primary"]
     assert _offending_declarations("Foo { padding: $cadrumo-gutter; height: auto; width: 100%; }") == []
+    assert _offending_declarations("Foo { max-height: initial; }") == []
+    assert _offending_declarations("Foo { max-height: 80vh; }") == ["max-height: 80vh"]
 
 
 def test_every_token_bearing_stylesheet_is_wrapped_in_the_resolver() -> None:

@@ -3,17 +3,17 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ae675fa26d7e66dcd11e88aad35618bb51ced17fb4a402001bdebe111f4cfbbe'
+body_hash: 'sha256:fd2857db706cac2affc51a8e2f6a6c0973f8497617a228c27d0720760a555822'
 related:
-  - "[[2026-08-05-modelo-parity-rollup-plan]]"
   - "[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]"
   - "[[2026-08-05-modelo-parity-rollup-denominator-research]]"
 ---
+
 ## Scope
 
-Reviewed W01.P05.S07 against the accepted five-domain parity contract, the denominator research, and the execution plan. The review covered the construct evidence models and registry fold in `src/cadrumo/domain/calculations/registry/_coverage.py`, their public exports, and the real registry tests in `src/cadrumo/domain/calculations/registry/tests/test_construct_evidence.py`. The delegated reviewer returned a checkpoint without a completed report, so the supervisor completed the bounded review.
+Reviewed W01.P05.S07 against the accepted five-domain parity contract, the denominator research, and the execution plan. The review covered the construct evidence models and registry fold in the retired module, their public exports, and the real registry tests in the retired test. The delegated reviewer returned a checkpoint without a completed report, so the supervisor completed the bounded review.
 
 ## Findings
 
@@ -37,9 +37,9 @@ The registry-wide function validates through `RegistryValidator`, builds authori
 
 ## Verification
 
-- `uv run --no-sync pytest -q src/cadrumo/domain/calculations/registry/tests/test_construct_evidence.py` â€” 3 passed.
-- `uv run --no-sync pytest -q src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification.py -k "coverage" src/cadrumo/domain/calculations/registry/tests/test_construct_evidence.py` â€” 4 passed.
-- `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/_coverage.py src/cadrumo/domain/calculations/registry/__init__.py src/cadrumo/domain/calculations/registry/tests/test_construct_evidence.py` â€” all checks passed.
-- `uv run --no-sync ruff format --check src/cadrumo/domain/calculations/registry/_coverage.py src/cadrumo/domain/calculations/registry/__init__.py src/cadrumo/domain/calculations/registry/tests/test_construct_evidence.py` â€” 3 files already formatted.
-- `uv run --no-sync basedpyright src/cadrumo/domain/calculations/registry/_coverage.py src/cadrumo/domain/calculations/registry/__init__.py src/cadrumo/domain/calculations/registry/tests/test_construct_evidence.py` â€” 0 errors and 1 private-support warning in the real-registry test import.
+- the historical check â€” 3 passed.
+- the historical check â€” 4 passed.
+- the historical check â€” all checks passed.
+- the historical check â€” 3 files already formatted.
+- the historical check â€” 0 errors and 1 private-support warning in the real-registry test import.
 - `git diff --check` on the S07-owned tracked files â€” clean.

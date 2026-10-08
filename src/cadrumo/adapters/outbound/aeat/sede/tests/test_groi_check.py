@@ -36,16 +36,11 @@ from ..groi_check import (
     READ_GUARD_POLICY,
     GroiNifVerdict,
     GroiResult,
-    GroiSedeDriver,
     _assert_query_browser_action,
     assert_groi_read_landing,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-
-
-def test_driver_mode_is_live() -> None:
-    assert GroiSedeDriver().mode == "live"
 
 
 def test_url_pins_to_aeat_www2_groi_servlet() -> None:
@@ -60,36 +55,6 @@ def test_url_pins_to_aeat_www2_groi_servlet() -> None:
 
 def test_default_timeout_is_thirty_seconds() -> None:
     assert DEFAULT_GROI_TIMEOUT_MS == 30_000
-
-
-def test_planned_operations_lists_form_open_per_nif_discard() -> None:
-    driver = GroiSedeDriver()
-
-    operations = driver.planned_operations(
-        b"",
-        expected={"A28015865": "valid", "B12345678": "invalid"},
-    )
-
-    # Four steps: form GET, open-form, two per-NIF checks (sorted), discard.
-    assert len(operations) == 5
-    assert operations[0].kind == "http"
-    assert operations[0].method == "GET"
-    assert str(operations[0].url) == Settings.external_constants().aeat.oracles.groi_check
-    assert operations[1].kind == "browser_action"
-    assert operations[1].action == "open-groi-form"
-    assert operations[2].kind == "browser_action"
-    assert operations[2].action == "check-nif-A28015865"
-    assert operations[3].kind == "browser_action"
-    assert operations[3].action == "check-nif-B12345678"
-    assert operations[4].kind == "browser_action"
-    assert operations[4].action == "discard-session"
-
-
-def test_planned_operations_rejects_empty_expected() -> None:
-    driver = GroiSedeDriver()
-
-    with pytest.raises(RegistryValidationError, match="at least one expected NIF"):
-        driver.planned_operations(b"", expected={})
 
 
 def test_direct_driver_query_guard_rejects_unclassified_browser_action() -> None:

@@ -28,25 +28,27 @@ from ....domain.calculations.registry.binding_terminal_origin import TerminalOri
 from ....domain.calculations.registry.inventory_bindings import InventoryProjectionOperation, InventoryProvider
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
+from ....domain.contribuyente.inventory.closing_foundations import (
+    InventoryClosingAuthority,
+    InventoryClosingDecisionEvidence,
+    InventoryClosingDecisionEvidenceRole,
+    InventoryClosingValuationBasis,
+    InventoryLedgerError,
+    PhysicalClosingEvidence,
+    PhysicalClosingEvidenceRole,
+    PhysicalClosingObservation,
+    PriorClosingContinuityEvidence,
+    fingerprint_prior_authoritative_closing,
+)
 from ....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
     InventoryAcquisitionEvidenceKind,
-    InventoryClosingAuthority,
-    InventoryClosingDecisionEvidence,
-    InventoryClosingDecisionEvidenceRole,
-    InventoryClosingValuationBasis,
     InventoryLedger,
     InventoryLedgerDocument,
-    InventoryLedgerError,
     MovementRecord,
-    PhysicalClosingEvidence,
-    PhysicalClosingEvidenceRole,
-    PhysicalClosingObservation,
-    PriorClosingContinuityEvidence,
     ValuationMethod,
-    fingerprint_prior_authoritative_closing,
 )
 from ....domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
 from ....domain.filing_evidence import FilingEvidenceReference

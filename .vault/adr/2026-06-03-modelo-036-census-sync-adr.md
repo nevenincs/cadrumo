@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-036-census-sync'
 date: '2026-06-03'
-modified: '2026-09-24'
-body_hash: 'sha256:8a4f6aee837a45fbe4b089d0cac6dca6ae9726ed3b85c55fda6289fe2909ae7b'
+modified: '2026-10-03'
+body_hash: 'sha256:ce3f242a73df917b682aa56ff11466cc2ab5a15fa39c6badf7c26623ea97f680'
 related:
   - '[[2026-06-03-m036-lifecycle-verbs-research]]'
   - '[[2026-06-03-cli-workflow-redesign-adr]]'
@@ -16,14 +16,14 @@ related:
 
 ## Problem Statement
 
-The M036 declarative-recording verbs (`aeat app modelo m036 {alta,modificacion,baja}`) need a persistence backbone. The content-addressed helper `derive_m036_declaration_id` and the typed `M036DeclarationCommand` / `M036DeclarationResult` contracts landed in commit `e5783f5d7`; the `LIVE_M036_DECLARATION_NAMESPACE` with the bucket-scoped grammar `m036-declaration:{bucket_id}:{declaration_id}` is registered; the three `CENSO_DECLARATION_*` `BucketEventType` members exist. The open question is the contract shape between the future `M036DeclarationService` and the secure-object persistence layer: should the service consume the existing generic `SecureSnapshotRepository` (which presumes payload models carry both `bucket_id` and `snapshot_id` attributes per the `_bucket_id_of` / `_snapshot_id_of` helpers in `src/cadrumo/application/live/_snapshot_base.py`) by extending `M036DeclarationResult` with a `bucket_id` field, or build a parallel content-addressed repository whose bucket scope stays implicit on the active-bucket session?
+The M036 declarative-recording verbs (`aeat app modelo m036 {alta,modificacion,baja}`) need a persistence backbone. The content-addressed helper `derive_m036_declaration_id` and the typed `M036DeclarationCommand` / `M036DeclarationResult` contracts landed in commit `e5783f5d7`; the `LIVE_M036_DECLARATION_NAMESPACE` with the bucket-scoped grammar `m036-declaration:{bucket_id}:{declaration_id}` is registered; the three `CENSO_DECLARATION_*` `BucketEventType` members exist. The open question is the contract shape between the future `M036DeclarationService` and the secure-object persistence layer: should the service consume the existing generic `SecureSnapshotRepository` (which presumes payload models carry both `bucket_id` and `snapshot_id` attributes per the `_bucket_id_of` / `_snapshot_id_of` helpers ) by extending `M036DeclarationResult` with a `bucket_id` field, or build a parallel content-addressed repository whose bucket scope stays implicit on the active-bucket session?
 
 ## Considerations
 
 - `SecureSnapshotRepository` is the shared persistence primitive for every bucket-scoped live snapshot service (Borrador100, Censo, Expedientes, Notifications). Its save/load/list/resolve flow already enforces classification, envelope schema-version, namespace, object-key derivation, bucket-id cross-check on read, and prefix-resolution with ambiguity errors. Re-deriving any of these in a parallel repository duplicates load-bearing invariants.
 - The `composition-service-no-parallel-write-path` rule forbids a new application-layer service from re-implementing an existing single-writer primitive. A parallel `SecureDeclarationRepository` targeting the same `SecureObjectRepository` substrate with its own envelope wrapping and bucket cross-check is exactly the shadow-write-path shape the rule names.
 - The `aeat-architecture-boundaries` rule mandates that domain records flow as strict, validated typed envelopes -- no `dict[str, Any]`, no bare scalars. A `bucket_id` field on `M036DeclarationResult` is a strict typed field, not a leak.
-- The auth-configure flow at `src/cadrumo/application/auth/_operator.py` lines 250-340 resolves `active_bucket_id` once and threads it into both the `BucketEvent` (which DOES carry `bucket_id` as a typed field on the event record) and the `secure_object_repository_for_active_bucket().save_many(...)` call. The pattern is: bucket scope is resolved from session, then stamped onto the typed record. Bucket scope is not hidden ambient state; every persisted typed record carries it.
+- The auth-configure flow lines 250-340 resolves `active_bucket_id` once and threads it into both the `BucketEvent` (which DOES carry `bucket_id` as a typed field on the event record) and the `secure_object_repository_for_active_bucket().save_many(...)` call. The pattern is: bucket scope is resolved from session, then stamped onto the typed record. Bucket scope is not hidden ambient state; every persisted typed record carries it.
 - `M036DeclarationResult` is the operator-facing return value of the verb. Operators and audit consumers reading the result of a declaration call need the bucket id to correlate the declaration with the profile bucket whose state changed. An implicit, session-only bucket scope erases that correlation at the return surface.
 - The content-addressed `declaration_id` (SHA-256 over the canonical tuple) is semantically distinct from a `snapshot_id`. `SecureSnapshotRepository` already exposes object-key derivation as a `Callable` parameter precisely so a consumer can supply its own naming. Re-using the persistence-substrate `snapshot_id` attribute name as a substrate-only alias is a substrate concern, not an operator-surface concern.
 
@@ -60,7 +60,7 @@ Pre-condition Steps (must land before the service module is authored, each per t
 
 - PRE-1: promote `SecureSnapshotRepository`, `SnapshotNotFoundError`, and `SnapshotRepository` to the `cadrumo.application.live` package `__all__` (they currently live on the `_snapshot_base` private submodule). Add a regression gate test that pins these as public surface, mirroring `test_bundle_reexports.py`.
 - PRE-2: promote `LIVE_M036_DECLARATION_NAMESPACE` to the `cadrumo.adapters.persistence.storage` package `__all__` so the service imports it through the package boundary, not by dotting into `_namespace_registry`.
-- PRE-3: extend `M036DeclarationResult` with the typed `bucket_id: BucketId` field AND the `snapshot_id` computed-field alias in one atomic commit; add a round-trip-equality test under `src/cadrumo/application/modelo/test_m036_lifecycle.py` that asserts `M036DeclarationResult` survives a save/load cycle through a real `SecureSnapshotRepository` with strict pydantic equality, every default field populated non-default, per the `aeat-roundtrip-discipline` rule. Pair with an anti-tautology test that mutates the on-disk envelope to drop `bucket_id` and asserts reload surfaces a `ValidationError`.
+- PRE-3: extend `M036DeclarationResult` with the typed `bucket_id: BucketId` field AND the `snapshot_id` computed-field alias in one atomic commit; add a round-trip-equality test that asserts `M036DeclarationResult` survives a save/load cycle through a real `SecureSnapshotRepository` with strict pydantic equality, every default field populated non-default, per the `aeat-roundtrip-discipline` rule. Pair with an anti-tautology test that mutates the on-disk envelope to drop `bucket_id` and asserts reload surfaces a `ValidationError`.
 
 3-commit landing plan (replaces the research sketch with the bucket-scoping-resolved sequence):
 

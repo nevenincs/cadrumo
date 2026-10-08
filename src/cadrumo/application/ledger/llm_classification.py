@@ -78,6 +78,7 @@ from .action_ports import LedgerActionPorts
 from .actions_common import (
     build_ledger_bucket_event,
     build_manual_ledger_result,
+    resolve_revision_guarded_transaction_repository,
     resolve_transaction_repository,
     save_transaction_catalogue_and_events,
 )
@@ -291,7 +292,7 @@ def classify_with_evidence(
     """
     if evidence is not None and evidence.is_images:
         # The vision path shells out through LLMClient.complete, which records
-        # its own run-timing telemetry -- do not double-record here.
+        # its own run-timing record -- do not double-record here.
         vision = vision_classifier or ports.make_vision_classifier(spec, vision_model)
         images = evidence.images
         response = _reader_classification(
@@ -328,7 +329,7 @@ def classify_with_evidence(
 def _reader_classification(result: object) -> LLMClassificationResponse:
     """Return one reader result as the classification the readers are declared to emit.
 
-    The run ports are declared over an opaque result so telemetry and reader
+    The run ports are declared over an opaque result so run records and reader
     recovery stay reader-agnostic; this boundary states what this caller asked
     for, and refuses a result that is not it rather than carrying it further.
     """
@@ -365,7 +366,7 @@ def _split_with_evidence(
     """
     if evidence is not None and evidence.is_images:
         # The vision path shells out through LLMClient.complete, which records
-        # its own run-timing telemetry -- do not double-record here.
+        # its own run-timing record -- do not double-record here.
         vision = vision_classifier or ports.make_vision_classifier(spec, vision_model)
         images = evidence.images
         response = _reader_split(
@@ -395,9 +396,17 @@ def _load_llm_transaction(
     bucket_id: str,
     transaction_id: str,
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None,
+    reviewed_transaction: Transaction | None = None,
 ) -> tuple[TransactionCatalogueCoCommitWriterProtocol, Transaction]:
-    """Resolve the catalogue port and load one addressed ledger transaction."""
+    """Resolve the catalogue port and use the reviewed row or load its exact id."""
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    if reviewed_transaction is not None:
+        if reviewed_transaction.transaction_id != transaction_id:
+            raise TransactionValidationError(
+                "reviewed transaction does not match the suggestion target",
+                context={"transaction_id": transaction_id},
+            )
+        return repository, reviewed_transaction
     transaction = repository.load().get(transaction_id)
     if transaction is None:
         raise TransactionNotFoundError(
@@ -445,6 +454,7 @@ def suggest_llm_classification(
     read_evidence: bool = False,
     settings: Settings,
     ports: LLMClassificationPorts,
+    reviewed_transaction: Transaction | None = None,
 ) -> LLMClassificationSuggestion:
     """Run the LLM classifier for one transaction and return a suggestion.
 
@@ -472,6 +482,8 @@ def suggest_llm_classification(
             local vision model (no consent needed). Off by default.
         settings: Injected settings; defaults to ``load_settings()``.
         ports: Injected evidence-reading and classifier execution ports.
+        reviewed_transaction: Immutable caller-captured row used instead of
+            reloading the catalogue before provider work; its id must match.
 
     Returns:
         A :class:`~application.ledger.llm_classification_ports.LLMClassificationSuggestion`.
@@ -485,6 +497,7 @@ def suggest_llm_classification(
         bucket_id=bucket_id,
         transaction_id=transaction_id,
         transaction_repository=transaction_repository,
+        reviewed_transaction=reviewed_transaction,
     )
     resolved_settings = settings
     resolved_classifier = classifier
@@ -546,7 +559,7 @@ def _validate_llm_application_business_pct(
         )
 
 
-def _validate_active_llm_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> None:
+def _validate_active_llm_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Transaction:
     """Refuse missing or immutable rows before the classification write."""
     current = catalogue.get(transaction_id)
     if current is None:
@@ -562,6 +575,7 @@ def _validate_active_llm_transaction(catalogue: TransactionCatalogue, transactio
                 "lifecycle_state": current.lifecycle_state.value,
             },
         )
+    return current
 
 
 def _llm_category_id(suggestion: LLMClassificationSuggestion) -> str | None:
@@ -581,6 +595,7 @@ def apply_llm_classification(
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
     bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
     occurred_at: datetime | None = None,
+    expected_current: Transaction | None = None,
 ) -> ManualLedgerTransactionResult:
     """Persist an accepted LLM suggestion with ``llm:`` provenance.
 
@@ -609,6 +624,8 @@ def apply_llm_classification(
         transaction_repository: Injected catalogue repository.
         bucket_event_repository: Injected audit-event repository.
         occurred_at: Override clock for deterministic tests.
+        expected_current: Immutable transaction reviewed before provider work.
+            Its exact row is compared atomically with the classification write.
 
     Returns:
         A :class:`~application.ledger.models.ManualLedgerTransactionResult`
@@ -625,7 +642,12 @@ def apply_llm_classification(
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = bucket_event_repository
     catalogue = repository.load()
-    _validate_active_llm_transaction(catalogue, suggestion.transaction_id)
+    current = _validate_active_llm_transaction(catalogue, suggestion.transaction_id)
+    if expected_current is not None and expected_current.transaction_id != suggestion.transaction_id:
+        raise TransactionValidationError(
+            "reviewed transaction does not match the classification target",
+            context={"transaction_id": suggestion.transaction_id},
+        )
     category_id = _llm_category_id(suggestion)
     updated_catalogue = set_classification(
         catalogue,
@@ -665,6 +687,8 @@ def apply_llm_classification(
         event_repository=event_repository,
         catalogue=updated_catalogue,
         events=(event,),
+        expected_current=current if expected_current is None else expected_current,
+        replacement=updated_transaction,
     )
     _logger.info(
         "llm apply: transaction=%s classified_by=%s classification=%s",
@@ -738,6 +762,7 @@ def saturate_llm_classification(
     read_evidence: bool = False,
     settings: Settings,
     ports: LLMClassificationPorts,
+    reviewed_transaction: Transaction | None = None,
 ) -> LLMSaturatedSuggestion:
     """Run the saturating LLM classifier for one transaction and return a suggestion.
 
@@ -766,6 +791,8 @@ def saturate_llm_classification(
             its text on-host, and inject it into the prompt. Off by default.
         settings: Injected settings; defaults to ``load_settings()``.
         ports: Injected evidence-reading and classifier execution ports.
+        reviewed_transaction: Immutable caller-captured row used instead of
+            reloading the catalogue before provider work; its id must match.
 
     Returns:
         A :class:`~application.ledger.llm_classification_ports.LLMSaturatedSuggestion`
@@ -780,6 +807,7 @@ def saturate_llm_classification(
         bucket_id=bucket_id,
         transaction_id=transaction_id,
         transaction_repository=transaction_repository,
+        reviewed_transaction=reviewed_transaction,
     )
     resolved_settings = settings
     resolved_classifier = classifier
@@ -848,6 +876,7 @@ def apply_saturated_llm_classification(
     source_command: str,
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
+    expected_current: Transaction | None = None,
 ) -> ManualLedgerTransactionResult:
     """Persist an accepted saturated suggestion through the manual write path.
 
@@ -877,6 +906,7 @@ def apply_saturated_llm_classification(
         ports: Injected ledger action ports for the catalogue and audit-event
             repositories.
         occurred_at: Override clock for deterministic tests.
+        expected_current: Immutable transaction reviewed before provider work.
 
     Returns:
         A :class:`~application.ledger.models.ManualLedgerTransactionResult`
@@ -924,6 +954,7 @@ def apply_saturated_llm_classification(
         classified_by_override=suggestion.provenance,
         ports=ports,
         occurred_at=occurred_at,
+        expected_current=expected_current,
     )
     _logger.info(
         "llm saturate apply: transaction=%s classified_by=%s iva_category=%s derived=%s",
@@ -948,6 +979,7 @@ def derive_operator_iva_substrate(
     source_command: str,
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
+    expected_current: Transaction | None = None,
 ) -> OperatorIvaDerivationResult:
     """Derive and persist the IVA substrate for an OPERATOR-chosen category.
 
@@ -962,6 +994,9 @@ def derive_operator_iva_substrate(
     manual write with ``derived:`` provenance. Only the IVA substrate is
     touched; the business classification stays as-is. A non-derivable category
     persists nothing and returns an explanatory note.
+
+    ``expected_current`` pins the operator's reviewed transaction through the
+    existing manual writer's comparison and atomic replacement.
 
     Returns:
         The
@@ -1018,6 +1053,7 @@ def derive_operator_iva_substrate(
         classified_by_override="derived:iva-category",
         ports=ports,
         occurred_at=occurred_at,
+        expected_current=expected_current,
     )
     _logger.info(
         "operator iva derive: transaction=%s iva_category=%s rate=%s base=%s amount=%s",
@@ -1133,6 +1169,7 @@ def suggest_evidence_split(
     read_evidence: bool = True,
     settings: Settings,
     ports: LLMClassificationPorts,
+    reviewed_transaction: Transaction | None = None,
 ) -> LLMSplitSuggestion:
     """Propose an evidence-driven N-way split for one transaction.
 
@@ -1163,6 +1200,8 @@ def suggest_evidence_split(
             into the prompt.
         settings: Injected settings; defaults to ``load_settings()``.
         ports: Injected evidence-reading and classifier execution ports.
+        reviewed_transaction: Immutable caller-captured parent used instead of
+            reloading the catalogue before provider work; its id must match.
 
     Returns:
         A :class:`~application.ledger.llm_classification_ports.LLMSplitSuggestion`
@@ -1177,6 +1216,7 @@ def suggest_evidence_split(
         bucket_id=bucket_id,
         transaction_id=transaction_id,
         transaction_repository=transaction_repository,
+        reviewed_transaction=reviewed_transaction,
     )
     resolved_settings = settings
     resolved_proposer = proposer
@@ -1256,6 +1296,7 @@ def apply_evidence_split(
     source_command: str,
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
+    expected_current: Transaction | None = None,
 ) -> LLMSplitApplyResult:
     """Apply a reviewed evidence-driven split through the single-writer split path.
 
@@ -1284,6 +1325,7 @@ def apply_evidence_split(
         ports: Injected ledger action ports for the catalogue and audit-event
             repositories.
         occurred_at: Override clock for deterministic tests.
+        expected_current: Immutable parent reviewed before provider work.
 
     Returns:
         An :class:`~application.ledger.llm_classification_ports.LLMSplitApplyResult`
@@ -1339,6 +1381,7 @@ def apply_evidence_split(
         reason=suggestion.reason,
         ports=ports,
         occurred_at=occurred_at,
+        expected_current=expected_current,
     )
     classified = len(split_result.child_transactions)
 
@@ -1368,6 +1411,7 @@ def apply_evidence_classification(
     source_command: str,
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
+    expected_current: Transaction | None = None,
 ) -> ManualLedgerTransactionResult:
     """Apply a no-split (single-child) evidence suggestion in place on the parent.
 
@@ -1393,6 +1437,7 @@ def apply_evidence_classification(
         ports: Injected ledger action ports for the catalogue and audit-event
             repositories.
         occurred_at: Override clock for deterministic tests.
+        expected_current: Immutable parent reviewed before provider work.
 
     Returns:
         The :class:`~application.ledger.models.ManualLedgerTransactionResult`
@@ -1439,6 +1484,7 @@ def apply_evidence_classification(
         classified_by_override=suggestion.provenance,
         ports=ports,
         occurred_at=occurred_at,
+        expected_current=expected_current,
     )
     _logger.info(
         "llm auto-classify (no split): transaction=%s classified_by=%s category=%s iva_category=%s",
@@ -1470,8 +1516,10 @@ def reject_llm_suggestion(
     (after approve = apply and update = manual override). It captures *what* the
     model proposed and the operator's reason in a
     ``LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED`` bucket event, and **mutates
-    nothing** — the transaction's classification, numbers, and lifecycle are
-    untouched, so its review status stays ``pending`` (it is still unclassified).
+    no transaction fields** — the current transaction's classification, numbers,
+    and lifecycle are untouched, including changes made since this proposal was
+    reviewed. The audit event and freshly loaded catalogue revision are committed
+    conditionally together, so a concurrent catalogue write refuses the decline.
     No regulated number is written; the model emitted none and reject writes none.
 
     Args:
@@ -1494,8 +1542,8 @@ def reject_llm_suggestion(
         TransactionNotFoundError: When the transaction id is unknown.
         TransactionValidationError: When the transaction is not active.
     """
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    catalogue = repository.load()
+    repository = resolve_revision_guarded_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    catalogue, catalogue_revision = repository.load_revisioned()
     transaction = catalogue.get(suggestion.transaction_id)
     if transaction is None:
         raise TransactionNotFoundError(
@@ -1554,6 +1602,7 @@ def reject_llm_suggestion(
         event_repository=_event_repo_arg,
         catalogue=catalogue,
         events=(event,),
+        expected_catalogue_revision=catalogue_revision,
     )
     _logger.info(
         "llm reject: transaction=%s kind=%s provenance=%s",

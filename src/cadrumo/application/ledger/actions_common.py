@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 from pydantic import TypeAdapter
 
 from ...core.decimal.formatting import format_decimal
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time.clock import now
 
@@ -36,6 +37,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
 from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
+from ...domain.transactions.own_accounts import OwnAccountRegister, OwnAccountRegisterError, OwnBankAccount
 from ...domain.usage_ratios.errors import UsageRatioValidationError
 from ...domain.usage_ratios.model import UsageRatioProfile, validate_usage_ratio_reference
 from .evidence import PurchaseInvoiceEvidence
@@ -53,6 +55,7 @@ from .persistence_ports import LedgerPersistenceConflictError
 from .protocols import (
     BucketEventHistoryCoCommitWriterProtocol,
     InvoiceCatalogueCoCommitWriterProtocol,
+    RevisionGuardedTransactionCatalogueCoCommitWriterProtocol,
     TransactionCatalogueCoCommitWriterProtocol,
 )
 
@@ -104,6 +107,18 @@ def resolve_transaction_repository(
             context={"command_bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
     return repository
+
+
+def resolve_revision_guarded_transaction_repository(
+    *,
+    bucket_id: str,
+    repository: TransactionCatalogueCoCommitWriterProtocol | None,
+) -> RevisionGuardedTransactionCatalogueCoCommitWriterProtocol:
+    """Resolve the optional full-snapshot capability for a whole-catalogue ledger write."""
+    resolved = resolve_transaction_repository(bucket_id=bucket_id, repository=repository)
+    if not isinstance(resolved, RevisionGuardedTransactionCatalogueCoCommitWriterProtocol):
+        raise InternalInvariantError("whole-catalogue ledger write requires revision-guarded transaction persistence")
+    return resolved
 
 
 def resolve_invoice_repository(
@@ -714,7 +729,26 @@ def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
         transaction.attachment_ids,
         transaction.notes,
         transaction.group_label,
+        transaction.own_account_id,
     )
+
+
+def require_registered_own_account(own_accounts: OwnAccountRegister, own_account_id: str) -> OwnBankAccount:
+    """Return the registered own account ``own_account_id``, or refuse the ledger write.
+
+    A transaction may only name an account the profile's own-account register
+    holds, so every ledger surface that binds a row checks it here.
+
+    Raises:
+        TransactionValidationError: When the register holds no such account.
+    """
+    try:
+        return own_accounts.account(own_account_id)
+    except OwnAccountRegisterError as exc:
+        raise TransactionValidationError(
+            translated_message="errors.transaction.own_account_unknown",
+            context={"own_account_id": own_account_id},
+        ) from exc
 
 
 def _persisted_classified_by(command: ManualLedgerTransactionCommand) -> str:
@@ -797,6 +831,7 @@ def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict
         "attachment_ids": command.attachment_ids,
         "notes": command.notes,
         "group_label": command.group_label,
+        "own_account_id": command.own_account_id,
         "classified_by": _persisted_classified_by(command),
     }
 
@@ -848,6 +883,7 @@ def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
         "attachment_ids": current.attachment_ids,
         "notes": current.notes,
         "group_label": current.group_label,
+        "own_account_id": current.own_account_id,
         "classified_by": current.classified_by,
     }
 
@@ -960,7 +996,10 @@ def save_transaction_catalogue_and_events(
     events: tuple[BucketEvent, ...],
     expected_current: Transaction | None = None,
     replacement: Transaction | None = None,
+    expected_catalogue_revision: str | None = None,
 ) -> None:
+    if expected_current is not None and expected_catalogue_revision is not None:
+        raise ValueError("transaction co-commit accepts only one expected snapshot guard")
     if expected_current is not None:
         if replacement is None:
             raise ValueError("baseline-guarded transaction write requires its replacement")
@@ -971,6 +1010,19 @@ def save_transaction_catalogue_and_events(
                 expected_current,
                 replacement,
                 (event_write,),
+            ),
+        )
+        return
+    if expected_catalogue_revision is not None:
+        if not isinstance(transaction_repository, RevisionGuardedTransactionCatalogueCoCommitWriterProtocol):
+            raise InternalInvariantError("revision-guarded transaction co-commit capability is unavailable")
+        _commit_with_guarded_events(
+            event_repository=event_repository,
+            events=events,
+            commit=lambda event_write: transaction_repository.save_if_revision_with_secure_object_writes(
+                catalogue,
+                expected_revision_id=expected_catalogue_revision,
+                extra_writes=(event_write,),
             ),
         )
         return

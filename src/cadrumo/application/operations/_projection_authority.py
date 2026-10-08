@@ -5,6 +5,7 @@ from __future__ import annotations
 import secrets
 from collections.abc import Callable
 from datetime import datetime
+from secrets import compare_digest
 from threading import RLock
 from typing import TYPE_CHECKING, Protocol
 
@@ -125,6 +126,43 @@ class OperationResponseAuthorityBrokerMixin(_AuthorityHost):
                 raise ValueError("response authority is already issued")
             self._entries[operation_id] = (actor_ref, capability_digest, pending, token)
 
+    @staticmethod
+    def _entry_matches(
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        capability: OperationResponseCapability,
+        entry: tuple[OperationActorReference, ContentDigest, OperationPendingInteraction | None, bytearray | None],
+        *,
+        clock: Callable[[], datetime],
+    ) -> bool:
+        actor_ref, capability_digest, issued_pending, issued_token = entry
+        return (
+            capability.matches(request.operation_id, actor_ref, capability_digest)
+            and request.actor_ref == actor_ref
+            and issued_pending == pending
+            and issued_token is not None
+            and pending.request.identity.operation_id == request.operation_id
+            and pending.request.interaction_id == request.interaction_id
+            and pending.request.revision == request.revision
+            and (pending.request.expires_at is None or clock() <= pending.request.expires_at)
+            and compare_digest(content_hash_hex(issued_token.decode("ascii")), pending.response_token_digest)
+        )
+
+    def inspect(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        capability: OperationResponseCapability,
+        *,
+        clock: Callable[[], datetime],
+    ) -> frozenset[OperationResponseIntent]:
+        """Check one current bearer without transferring or copying its token."""
+        with self._lock:
+            entry = self._entries.get(request.operation_id)
+            if entry is None or not self._entry_matches(request, pending, capability, entry, clock=clock):
+                raise ValueError("response authority is unavailable")
+            return frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT})
+
     def bind(
         self,
         request: OperationResponseControlRequestV1,
@@ -144,18 +182,9 @@ class OperationResponseAuthorityBrokerMixin(_AuthorityHost):
             entry = self._entries.get(request.operation_id)
             if entry is None:
                 return UnavailableOperationSecureResponseAuthority()
-            actor_ref, capability_digest, issued_pending, issued_token = entry
-            valid = (
-                capability.matches(request.operation_id, actor_ref, capability_digest)
-                and request.actor_ref == actor_ref
-                and issued_pending == pending
-                and issued_token is not None
-                and pending.request.identity.operation_id == request.operation_id
-                and pending.request.interaction_id == request.interaction_id
-                and pending.request.revision == request.revision
-            )
-            if not valid:
+            if not self._entry_matches(request, pending, capability, entry, clock=clock):
                 return UnavailableOperationSecureResponseAuthority()
+            _actor_ref, _capability_digest, _issued_pending, issued_token = entry
             self._entries.pop(request.operation_id)
             token = issued_token
         capability.close()

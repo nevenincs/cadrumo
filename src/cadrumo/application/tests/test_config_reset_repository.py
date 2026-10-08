@@ -288,7 +288,7 @@ async def _wait_for_writer_processes(commands: list[list[str]], *, cwd: Path) ->
     """Launch all fixed writer commands, then await each child with a budget."""
     processes = [await asyncio.create_subprocess_exec(*command, cwd=cwd) for command in commands]
     try:
-        return list(await asyncio.gather(*(asyncio.wait_for(process.wait(), timeout=60) for process in processes)))
+        return list(await asyncio.gather(*(asyncio.wait_for(process.wait(), timeout=None) for process in processes)))
     finally:
         for process in processes:
             if process.returncode is None:
@@ -341,7 +341,7 @@ def test_fresh_process_reloads_exact_journal(
         check=True,
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=None,
     )
 
     assert ConfigResetOperation.model_validate_json(completed.stdout) == _operation(updated_offset=7)

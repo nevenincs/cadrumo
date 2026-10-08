@@ -96,7 +96,7 @@ def _header_facts() -> tuple[ObservedHeaderFact, ...]:
     """
     return (
         ObservedHeaderFact(
-            header_key="declaration_type",
+            header_key="filing.result_disposition",
             value="C",
             source_artefact_kind="submitted_file",
             source_locator="modelo-303-fichero-boe:modelo-303-page-01:modelo-303-declaration-type:13:1",

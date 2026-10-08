@@ -34,8 +34,6 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from ..core.external_constants import UTF_8_ENCODING
-
 
 def parse_env_text(text: str) -> dict[str, str]:
     """Parse the given text into a ``{KEY: value}`` mapping.
@@ -82,7 +80,7 @@ def load_env_file(path: Path) -> dict[str, str]:
     """
     if not path.exists():
         return {}
-    return parse_env_text(path.read_text(encoding=UTF_8_ENCODING))
+    return parse_env_text(path.read_text(encoding="utf-8"))
 
 
 def bridge_env_file_into_environ(path: Path) -> dict[str, str]:

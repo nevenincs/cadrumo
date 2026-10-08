@@ -5,14 +5,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import Final
 
 from ....core.descendant_relacion import DescendantRelacion
-from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+)
+from .governed_fact_scope import GovernedFactSource
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "descendant relationship catalogue"
@@ -58,28 +61,10 @@ class DescendantRelacionCatalogue:
         return token
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("descendant relationship entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate descendant relationship key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("descendant relationship catalogue must resolve as a mapping fact")
-    return _mapping_entries(resolved)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def resolve_descendant_relacion_catalogue(
@@ -88,13 +73,28 @@ def resolve_descendant_relacion_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> DescendantRelacionCatalogue:
     """Resolve the complete Art. 58/81 relationship catalogue."""
-    coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError(
-            "descendant relationship catalogue requires an explicit authority operation or scope"
-        )
-    entries = _resolve_entries(effective_date=coordinate, authority=selected)
+    entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
+    relations, default_token, adoption_token, maternity_tokens, entitling_tokens = _parse_relation_declarations(entries)
+    catalogue = DescendantRelacionCatalogue(
+        relations=relations,
+        default_token=default_token,
+        adoption_token=adoption_token,
+        maternity_tokens=maternity_tokens,
+        entitling_tokens=entitling_tokens,
+    )
+    _validate_relation_declaration_membership(catalogue)
+    return catalogue
+
+
+def _parse_relation_declarations(
+    entries: Mapping[str, str],
+) -> tuple[
+    tuple[DescendantRelacion, ...],
+    DescendantRelacion,
+    DescendantRelacion,
+    tuple[DescendantRelacion, ...],
+    tuple[DescendantRelacion, ...],
+]:
     try:
         relations = tuple(
             DescendantRelacion.from_registry(raw)
@@ -116,15 +116,12 @@ def resolve_descendant_relacion_catalogue(
         )
     except (TypeError, ValueError) as exc:
         raise RegistryValidationError("descendant relationship catalogue contains an invalid token") from exc
-    catalogue = DescendantRelacionCatalogue(
-        relations=relations,
-        default_token=default_token,
-        adoption_token=adoption_token,
-        maternity_tokens=maternity_tokens,
-        entitling_tokens=entitling_tokens,
-    )
+    return relations, default_token, adoption_token, maternity_tokens, entitling_tokens
+
+
+def _validate_relation_declaration_membership(catalogue: DescendantRelacionCatalogue) -> None:
     declared = catalogue.all_relations
-    if len(relations) != len(declared):
+    if len(catalogue.relations) != len(declared):
         raise RegistryValidationError("descendant relationship catalogue contains duplicate relations")
     if catalogue.default_token not in declared or catalogue.adoption_token not in declared:
         raise RegistryValidationError("descendant relationship semantic tokens must be declared in catalogue.ids")
@@ -132,7 +129,6 @@ def resolve_descendant_relacion_catalogue(
         raise RegistryValidationError("Art. 81.1 relations must be declared in catalogue.ids")
     if not set(catalogue.entitling_tokens).issubset(declared):
         raise RegistryValidationError("Art. 58.2 entitling relations must be declared in catalogue.ids")
-    return catalogue
 
 
 def require_descendant_relacion(

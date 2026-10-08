@@ -38,6 +38,8 @@ records a gesture that did not actually work.
 | `journal` | print the walk so far |
 | `size WxH` / `theme ...` / `locale ...` | re-render the same walk elsewhere |
 | `shot [--out PATH]` | write the frame as SVG, for colour review |
+| `sequences` | list the sequence-backed scenarios and their pages, as JSON |
+| `sequence NAME --size WxH --out DIR [--theme ...] [--page ...]` | run a scenario's documentation sequence once and capture its pages as SVG; prints the captures as JSON |
 
 `--locale`/`locale` drives the same `OUTPUT_LANGUAGE_ENV_VAR` axis the CLI's
 `--output-language` uses, so a surface can be read under `es`, `en`, `ca` or
@@ -72,6 +74,16 @@ the same bucket and active-profile pointer. Without it everyone shares
 plus one per declared workbench fixture state. Each uses the canonical public
 profile and presentation contracts. The manager surface exercises
 authenticated profile editing and logout.
+
+## Sequence scenarios
+
+`sequences` lists scenarios that show the Modelo workspace over a declaration a
+documentation `cli-sequence` built. `sequence` runs one: the sequence executes
+once in the documentation engine's sandbox, is checked against its committed
+golden, and every requested page is captured on a fresh app composed over that
+sandbox exactly as the installed TUI composes itself. A scenario whose sequence
+leaves no single declaration of its modelo, or whose walk lands on a different
+page, is refused rather than captured.
 
 ## The frame
 

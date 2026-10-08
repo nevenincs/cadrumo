@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d0318ceecea5f0f787bd7733e14b3adad1c80ad67e011a78e4d2c5048d479f43'
+body_hash: 'sha256:f8661a9a44dc3c4396ecf09e9052df0896d8e6811db6d05ba6f50d3c34ed0a04'
 related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-25-registry-completeness-closure-s85-independent-classification-review-audit]]"
 ---
 
@@ -15,7 +14,7 @@ related:
 
 ## Scope
 
-Read-only re-review of remediation commit `07a99c8e12` against the prior independent classification review. The reviewed surface is the diagnostic classifier in `src/cadrumo/domain/calculations/registry/_authority.py`, its public registry exports, the dynamic enrollment and canonical/live proof factories in `dev/registry/filing_export_proof.py`, its three focused integration tests, the closure plan row, and the S85 execution record. Later shared-worktree commits and any subsequent remediation are explicitly outside this review.
+Read-only re-review of remediation commit `07a99c8e12` against the prior independent classification review. Later shared-worktree commits and any subsequent remediation are explicitly outside this review.
 
 The prior plan-metadata finding is resolved: exact source-and-test searches find no S85 or W03.P05 tracking identifiers in the reviewed production or test files. The remediation also retains the dynamic law-selected denominator, empty canonical live-entry/vector tuples, typed residues, and the diagnostic enrollment postcondition that a recorded full-registry error has an empty materialized-vector tuple. The execution record's measured clean-load observation remains 66 filing-grade revisions with zero materialized vectors: 16 canonical-builder-missing, 41 generated-provenance-missing, seven generated-provenance-invalid, and two period-unrepresentable. It does not credit the concurrent Modelo 200 re-pin and continues to route that predecessor conflict to W04.P08.S22. S86 remains blocked by the plan and by zero successful enrollment.
 

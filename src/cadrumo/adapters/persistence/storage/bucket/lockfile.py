@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from .....core.config import load_settings as _load_settings
+from .....core.descriptor_write import write_all
 from .....core.errors.hierarchy import InternalInvariantError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
@@ -204,14 +205,7 @@ def _cleanup_created_lockfile(target: Path, *, reason: str) -> None:
 
 def _write_lockfile_pid(fd: int, pid: int) -> None:
     """Write the PID payload fully to an already-created lockfile descriptor."""
-    payload = f"{pid}\n".encode("ascii")
-    view = memoryview(payload)
-    offset = 0
-    while offset < len(view):
-        written = os.write(fd, view[offset:])
-        if written <= 0:
-            raise OSError("bucket lockfile pid write made no progress")
-        offset += written
+    write_all(fd, f"{pid}\n".encode("ascii"))
 
 
 def _try_create_lock(target: Path, pid: int) -> bool:

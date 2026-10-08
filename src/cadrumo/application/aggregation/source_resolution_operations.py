@@ -9,7 +9,8 @@ contract while preserving one implementation for every merge collision rule.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Generator, Iterable, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
@@ -19,7 +20,10 @@ from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
+from ...domain.calculations.record_row_membership import ClosedRecordRowSet
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_provider_registration import registration_for
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.ids import BindingId, RelationId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
@@ -29,6 +33,7 @@ from ...domain.modelos.row_models import ModeloDetailRow
 from .errors import AggregationValidationError
 from .source_mesh import (
     BorradorSourceProvenance,
+    CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceDiagnosticReason,
     CalculationSourceProvenance,
@@ -75,20 +80,26 @@ def source_diagnostics_for[T](
     )
 
 
-def source_issue_diagnostics(
-    issues: Sequence[_SourceIssue],
+def source_issue_diagnostics[T: _SourceIssue](
+    issues: Sequence[T],
     *,
     source_kind: str,
     resolver_id: str,
     suppressed_reasons: frozenset[object] = frozenset(),
+    held_back_reasons: frozenset[object] = frozenset(),
+    source_ref: Callable[[T], str | None] = _no_source_text,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Project typed aggregation issues, optionally excluding known non-advisories."""
-    return source_diagnostics_for(
-        (issue for issue in issues if issue.reason not in suppressed_reasons),
-        reason="source_issue",
-        source_kind=source_kind,
-        resolver_id=resolver_id,
-        message=lambda issue: issue.detail,
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="source_domain_not_ready" if issue.reason in held_back_reasons else "source_issue",
+            source_kind=source_kind,
+            resolver_id=resolver_id,
+            message=issue.detail,
+            source_ref=source_ref(issue) if issue.reason in held_back_reasons else None,
+        )
+        for issue in issues
+        if issue.reason not in suppressed_reasons
     )
 
 
@@ -121,11 +132,13 @@ class _SourceResolutionMergeState:
     boolean_binding_values: dict[BindingId, bool] = field(default_factory=dict)
     row_binding_values: dict[RowBindingKey, str | Decimal | int | bool] = field(default_factory=dict)
     row_source_identities: dict[RowBindingKey, RowSourceIdentity] = field(default_factory=dict)
+    closed_record_row_sets: list[ClosedRecordRowSet] = field(default_factory=list)
     row_casilla_values: dict[RowCasillaKey, Decimal] = field(default_factory=dict)
     row_casilla_provenance: dict[RowCasillaKey, DirectRowMaterializationProvenance] = field(default_factory=dict)
     relation_values: dict[RelationId, Decimal] = field(default_factory=dict)
     unresolved_relation_ids: set[RelationId] = field(default_factory=set)
     unresolved_binding_ids: set[BindingId] = field(default_factory=set)
+    inapplicable_binding_ids: set[BindingId] = field(default_factory=set)
     bound_inputs_by_casilla_id: dict[CasillaId, Decimal] = field(default_factory=dict)
     detail_rows: list[ModeloDetailRow] = field(default_factory=list)
     source_transaction_ids: set[str] = field(default_factory=set)
@@ -141,6 +154,7 @@ class _SourceResolutionMergeState:
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
 
     def absorb(self, resolution: CalculationSourceResolution) -> None:
+        self._absorb_closed_record_rows(resolution)
         self._absorb_metadata(resolution)
         self._absorb_binding_values(resolution)
         self._absorb_row_binding_values(resolution)
@@ -150,12 +164,37 @@ class _SourceResolutionMergeState:
 
     def absorb_by_precedence(self, resolution: CalculationSourceResolution) -> None:
         """Overlay one tier, retaining the later tier's value for each key."""
+        self._absorb_closed_record_rows(resolution)
         self._absorb_metadata(resolution)
         self._absorb_precedence_values(resolution)
         self._absorb_precedence_row_bindings(resolution)
         self._absorb_precedence_row_casillas(resolution)
         self._absorb_precedence_relations(resolution)
         self.bound_inputs_by_casilla_id.update(resolution.bound_inputs_by_casilla_id)
+
+    def _absorb_closed_record_rows(self, resolution: CalculationSourceResolution) -> None:
+        """A source's membership and values cannot be overlaid independently."""
+        existing_claims = {binding for row_set in self.closed_record_row_sets for binding in row_set.binding_ids}
+        incoming_claims = {binding for row_set in resolution.closed_record_row_sets for binding in row_set.binding_ids}
+        existing_values = (
+            set(self.binding_values)
+            | set(self.enum_binding_values)
+            | set(self.date_binding_values)
+            | set(self.boolean_binding_values)
+            | {binding for binding, _ in self.row_binding_values}
+        )
+        incoming_values = (
+            set(resolution.binding_values)
+            | set(resolution.enum_binding_values)
+            | set(resolution.date_binding_values)
+            | set(resolution.boolean_binding_values)
+            | {binding for binding, _ in resolution.row_binding_values}
+        )
+        if existing_claims.intersection(incoming_claims | incoming_values) or incoming_claims.intersection(
+            existing_values
+        ):
+            raise AggregationValidationError(tr("aggregation.source_mesh.errors.closed_record_rows_conflict"))
+        self.closed_record_row_sets.extend(resolution.closed_record_row_sets)
 
     def _absorb_metadata(self, resolution: CalculationSourceResolution) -> None:
         """Accumulate source facts whose merge rule is independent of value precedence."""
@@ -166,6 +205,7 @@ class _SourceResolutionMergeState:
         self.source_transaction_ids.update(resolution.source_transaction_ids)
         self.unresolved_relation_ids.update(resolution.unresolved_relation_ids)
         self.unresolved_binding_ids.update(resolution.unresolved_binding_ids)
+        self.inapplicable_binding_ids.update(resolution.inapplicable_binding_ids)
         if resolution.borrador_provenance is not None:
             self.borrador_provenance = resolution.borrador_provenance
         handoff = resolution.m303_regimen_simplificado_annual_summary_handoff
@@ -278,11 +318,13 @@ class _SourceResolutionMergeState:
             boolean_binding_values=self.boolean_binding_values,
             row_binding_values=self.row_binding_values,
             row_source_identities=self.row_source_identities,
+            closed_record_row_sets=tuple(self.closed_record_row_sets),
             row_casilla_values=self.row_casilla_values,
             row_casilla_provenance=self.row_casilla_provenance,
             relation_values=self.relation_values,
             unresolved_relation_ids=tuple(sorted(self.unresolved_relation_ids.difference(self.relation_values))),
             unresolved_binding_ids=self._unresolved_binding_ids(),
+            inapplicable_binding_ids=tuple(self.inapplicable_binding_ids),
             bound_inputs_by_casilla_id=self.bound_inputs_by_casilla_id,
             detail_rows=tuple(self.detail_rows),
             source_transaction_ids=tuple(sorted(self.source_transaction_ids)),
@@ -321,9 +363,14 @@ def collect_unhandled_source_diagnostics(
     revision: ModeloRevision,
     *,
     handled_sources: frozenset[str],
-    manual_sources: frozenset[str] = frozenset({"manual_input"}),
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return diagnostics for revision bindings with no enrolled resolver.
+
+    A kind whose provider registration is ``non_runtime`` -- an operator's
+    typed value, a constant the record design fixes -- is enrolled on the route
+    with nothing to run, so it never needs a resolver and is never reported. A
+    ``deferred`` kind is reported as deferred; every other kind outside
+    ``handled_sources`` is reported as unhandled.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
@@ -331,9 +378,12 @@ def collect_unhandled_source_diagnostics(
     diagnostics: list[CalculationSourceDiagnostic] = []
     for binding in revision.bindings:
         source = str(binding.source)
-        if source in handled_sources or source in manual_sources:
+        if source in handled_sources:
             continue
-        if registration_for(binding.source).disposition == "deferred":
+        disposition = registration_for(binding.source).disposition
+        if disposition == "non_runtime":
+            continue
+        if disposition == "deferred":
             diagnostics.append(
                 CalculationSourceDiagnostic(
                     reason="deferred_binding_source",
@@ -352,6 +402,17 @@ def collect_unhandled_source_diagnostics(
             ),
         )
     return tuple(diagnostics)
+
+
+@contextmanager
+def source_context_operation(context: CalculationSourceContext) -> Generator[PinnedAuthorityOperation]:
+    """Reuse a caller's lease; admit one only for a standalone resolver boundary."""
+    if context.operation is not None:
+        with validating_governed_facts(context.operation):
+            yield context.operation
+        return
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 def storage_degradation_resolution(
@@ -458,6 +519,7 @@ __all__ = [
     "merge_source_resolutions",
     "merge_source_resolutions_by_precedence",
     "sorted_source_ids",
+    "source_context_operation",
     "source_diagnostics_for",
     "source_issue_diagnostics",
     "source_provenance_for",

@@ -62,6 +62,7 @@ from ...domain.transactions.models import (
     BucketTransactionRef,
     Transaction,
 )
+from ...domain.transactions.own_accounts import OwnAccountId
 from ...domain.transactions.repository import ImportSummary
 from ..export.tabular import ExportSerializationFormat, verify_export_metadata
 from ..review.filter import LedgerReviewStatus
@@ -247,6 +248,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     classified_by_override: _LedgerOptionalText = None
     source_jurisdiction: str | None = None
     group_label: str | None = Field(default=None, max_length=_GROUP_LABEL_MAX_LENGTH)
+    own_account_id: OwnAccountId | None = None
 
     @field_validator(
         "bucket_id",
@@ -352,6 +354,7 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     counterparty_identification_state: EUMemberState | None = None
     source_jurisdiction: str | None = None
     group_label: _LedgerOptionalGroupLabel = None
+    own_account_id: OwnAccountId | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -608,6 +611,7 @@ class LedgerSourceImportCommand(BaseModel):
     verify: bool = False
     source: Path | None = None
     period: Period | None = None
+    own_account_id: OwnAccountId | None = None
     actor: str = Field(default="operator", min_length=1, max_length=64)
     source_command: str = Field(default="aeat app ledger import", min_length=1, max_length=128)
 
@@ -667,6 +671,7 @@ class LedgerReviewQuery(BaseModel):
     classification: str | None = None
     text: str | None = None
     direction: str | None = None
+    own_account_id: OwnAccountId | None = None
     transaction_id: TransactionId | None = None
 
     @field_validator(

@@ -51,8 +51,7 @@
     // per-user and per-machine and is never baked into the image (see
     // docs/workstation-setup.md); mount or set CADRUMO_CERTIFICATE_PATH after
     // the container starts if you need `aeat app live ...` locally.
-    "CADRUMO_BROWSER_HEADLESS": "true",
-    "CADRUMO_BROWSER_CHANNEL": "chromium"
+    "CADRUMO_BROWSER_HEADLESS": "true"
   },
 
   "customizations": {

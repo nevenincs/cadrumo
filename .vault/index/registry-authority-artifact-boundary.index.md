@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-10'
-modified: '2026-09-24'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:17f33d2c4a8c07379df5e61a2930a38da9a101998f891f7f6bb409bec927d382'
+body_hash: 'sha256:8b7c069ad1257b202b0a05057ed22cb1d675e3742e55125d3bfa055ec5d20b8e'
 related:
   - '[[2026-09-10-registry-authority-artifact-boundary-adr]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-artifact-contract-audit]]'
@@ -14,8 +14,6 @@ related:
   - '[[2026-09-10-registry-authority-artifact-boundary-authority-relocation-audit]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-development-publication-audit]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-evidence-projection-audit]]'
-  - '[[2026-09-10-registry-authority-artifact-boundary-ledger]]'
-  - '[[2026-09-10-registry-authority-artifact-boundary-plan]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-provider-relocation-audit]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-raw-loader-removal-audit]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-research]]'
@@ -47,8 +45,6 @@ related:
   - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-readiness-audit]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-research]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-source-enrollment-reference]]'
-  - '[[2026-09-14-registry-authority-artifact-boundary-ledger]]'
-  - '[[2026-09-14-registry-authority-artifact-boundary-plan]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-remediation-result-reference]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-storage-loaders-and-facts-scratch-research]]'
@@ -103,16 +99,6 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 - `2026-09-15-registry-authority-artifact-boundary-lane3-integration-review-audit` - `registry-authority-artifact-boundary` audit: `lane 3 integration review`
 - `2026-09-15-registry-authority-artifact-boundary-migration-r02-runtime-adoption-closure-audit` - `registry-authority-artifact-boundary` audit: `migration r02 runtime adoption closure`
 - `2026-09-19-registry-authority-artifact-boundary-fresh-worktree-bootstrap-audit` - `registry-authority-artifact-boundary` audit: `fresh worktree bootstrap`
-
-### exec
-
-- `2026-09-10-registry-authority-artifact-boundary-ledger` - `registry-authority-artifact-boundary` ledger
-- `2026-09-14-registry-authority-artifact-boundary-ledger` - `registry-authority-artifact-boundary` ledger
-
-### plan
-
-- `2026-09-10-registry-authority-artifact-boundary-plan` - `registry-authority-artifact-boundary` plan
-- `2026-09-14-registry-authority-artifact-boundary-plan` - Authority backend implementation plan
 
 ### reference
 

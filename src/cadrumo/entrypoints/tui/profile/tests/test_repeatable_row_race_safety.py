@@ -30,7 +30,8 @@ from .....domain.user_profile.values import ProfileSetupState
 from ...components.host import ScreenHostApp
 from ...components.status import PinnedStatusBar
 from ...tests.manager_pilot import wait_until_settled
-from ..overview import ProfileManagerScreen, RepeatableRowAddScreen, RepeatableRowRemoveScreen
+from ..edit_screens import RepeatableRowAddScreen, RepeatableRowRemoveScreen
+from ..overview import ProfileManagerScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

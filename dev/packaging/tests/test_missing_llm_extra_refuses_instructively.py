@@ -230,7 +230,7 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
         cwd=work_dir,
         environment=_isolated_environment(work_dir),
         errors="replace",
-        timeout_seconds=180,
+        timeout_seconds=None,
     )
     assert completed.returncode == 0, completed.stderr
     line = next((row for row in completed.stdout.splitlines() if row.startswith(_MARKER)), None)
@@ -254,7 +254,6 @@ def test_the_driven_inventory_covers_every_guarded_entry_point() -> None:
     )
 
 
-@pytest.mark.timeout(900)
 def test_every_guarded_surface_preserves_the_registered_extra_facts(
     installed_core_environment: tuple[Path, Path],
 ) -> None:

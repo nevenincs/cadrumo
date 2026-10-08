@@ -11,6 +11,7 @@ Core types:
 from __future__ import annotations
 
 import secrets
+from collections.abc import Callable
 from datetime import datetime, timedelta
 
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
@@ -67,10 +68,17 @@ def _recipient_encryption_key_object_key(bucket_id: str) -> str:
 class RecipientEncryptionAdapter:
     """Concrete recipient-encryption capability backed by secure objects."""
 
-    def __init__(self, *, repository: SecureObjectRepository | None = None, bucket_id: str | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        repository: SecureObjectRepository | None = None,
+        bucket_id: str | None = None,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> None:
         """Bind optional keypair persistence while retaining stateless cryptographic operations."""
         self._repository = repository
         self._bucket_id = canonical_bucket_id(bucket_id) if bucket_id is not None else None
+        self._mutation_writer = mutation_writer
 
     def _keypair_repository(self) -> SecureObjectRepository:
         if self._repository is None:
@@ -142,17 +150,25 @@ class RecipientEncryptionAdapter:
             public_key_hex=private_key.public_key().public_bytes_raw().hex(),
             created_at=generated_at or _utc_now(),
         )
-        try:
+        payload = keypair.model_dump_json().encode(UTF_8_ENCODING)
+
+        def save() -> None:
             self._keypair_repository().save(
                 namespace=_NAMESPACE.namespace,
                 object_key=object_key,
                 classification=_NAMESPACE.sensitivity,
                 schema_version=_NAMESPACE.schema_version,
                 written_at=keypair.created_at,
-                payload=keypair.model_dump_json().encode(UTF_8_ENCODING),
+                payload=payload,
                 write_provenance="adapters.persistence.profile.review_package_recipient_encryption",
                 expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
             )
+
+        try:
+            if self._mutation_writer is None:
+                save()
+            else:
+                self._mutation_writer(save)
         except SecureObjectRevisionConflictError as exc:
             winner = self._load_keypair(bucket_id=normalized_bucket_id, object_key=object_key)
             if winner is None:

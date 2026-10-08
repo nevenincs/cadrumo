@@ -86,3 +86,10 @@ def test_binding_restores_the_previous_gate() -> None:
         with bind_tax_identity_admission(inner):
             assert tax_identity_admission() is inner
         assert tax_identity_admission() is outer
+
+
+def test_custom_gate_still_controls_an_alphabetic_scan_candidate() -> None:
+    with bind_tax_identity_admission(_FixedAdmission(answer=True)):
+        assert _hashed("SIGN")
+    with bind_tax_identity_admission(_FixedAdmission(answer=False)):
+        assert not _hashed("SIGN")

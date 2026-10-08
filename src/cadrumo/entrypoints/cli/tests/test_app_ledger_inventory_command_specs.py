@@ -12,15 +12,8 @@ from ..app_ledger_inventory_common_command_parameters import (
     INVENTORY_ACTIVIDAD_ID_OPTION,
     INVENTORY_YEAR_OPTION,
 )
-from ..command_spec import (
-    ArgumentSpec,
-    DeferredTarget,
-    LiteralValue,
-    OptionSpec,
-    ParameterDefault,
-    TranslationKey,
-    ValueContract,
-)
+from ..command_parameter_contracts import ArgumentSpec, OptionSpec
+from ..command_shared_contracts import DeferredTarget, LiteralValue, ParameterDefault, TranslationKey, ValueContract
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

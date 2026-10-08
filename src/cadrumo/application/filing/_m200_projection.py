@@ -10,10 +10,9 @@ One occurrence is emitted per row a family actually carries. A family with no ro
 occurrence, which is what AEAT expects of a page a filer has nothing to put on; whether
 that absence is admissible is the record's own ``required`` flag, checked by the caller.
 
-Unlike modelo 296's perceptores, whose data already exists as ``Withholding296Observation``,
-these rows are genuinely operator-supplied -- the application holds no separate detail
-register elsewhere -- so they are read from the typed profile rather than projected from
-an existing substrate.
+These rows are operator-supplied through the typed producer snapshot, as are modelo 296's
+perceptor detail rows. No separate detail register feeds this projection; the builder
+reads the selected row families from the snapshot's typed profile.
 """
 
 from __future__ import annotations
@@ -25,6 +24,7 @@ from datetime import date
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.filing_projection_ref import FilingProjectionRef
 from ...core.type_guards import is_object_tuple
+from ...domain.calculations.registry.facts.payloads import MappingFactEntry
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -68,17 +68,27 @@ def _registry_m200_projection_catalogue(
     suffix = ".family"
     family_by_kind: dict[str, str] = {}
     for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise TypeError("M200 projection declarations must be string-to-string")
-        if not entry.key.startswith(prefix) or not entry.key.endswith(suffix):
-            continue
-        kind = entry.key[len(prefix) : -len(suffix)]
-        if not kind.strip() or kind in family_by_kind:
-            raise ValueError(f"duplicate or empty M200 projection declaration key {entry.key!r}")
-        family_by_kind[kind] = entry.value.strip()
+        _add_m200_family_declaration(family_by_kind, entry, prefix=prefix, suffix=suffix)
     if not family_by_kind:
         raise ValueError("M200 projection mapping contains no row-family declarations")
     return _M200ProjectionCatalogue(family_by_kind=family_by_kind)
+
+
+def _add_m200_family_declaration(
+    family_by_kind: dict[str, str],
+    entry: MappingFactEntry,
+    *,
+    prefix: str,
+    suffix: str,
+) -> None:
+    if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+        raise TypeError("M200 projection declarations must be string-to-string")
+    if not entry.key.startswith(prefix) or not entry.key.endswith(suffix):
+        return
+    kind = entry.key[len(prefix) : -len(suffix)]
+    if not kind.strip() or kind in family_by_kind:
+        raise ValueError(f"duplicate or empty M200 projection declaration key {entry.key!r}")
+    family_by_kind[kind] = entry.value.strip()
 
 
 def _m200_address(reference: FilingProjectionRef) -> tuple[int, str] | None:

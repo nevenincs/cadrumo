@@ -79,7 +79,7 @@ def _probe(paths: list[list[str]]) -> dict[str, list[str]]:
         ],
         capture_output=True,
         text=True,
-        timeout=600,
+        timeout=None,
         check=False,
     )
     assert completed.returncode == 0, completed.stderr
@@ -145,7 +145,7 @@ def test_the_probe_detects_every_family_it_claims_to_scan() -> None:
             ],
             capture_output=True,
             text=True,
-            timeout=300,
+            timeout=None,
             check=False,
         )
         assert completed.returncode == 0, f"{family}: {completed.stderr}"

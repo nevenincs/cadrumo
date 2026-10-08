@@ -209,6 +209,7 @@ def test_catalogue_declarations_cannot_carry_predicates_text_paths_or_runtime_va
         "action_id",
         "target_command_key",
         "argument_specifications",
+        "materialisable_without_arguments",
     }
     assert set(ActionArgumentBindingSpecification.model_fields) == {
         "argument_name",
@@ -217,6 +218,21 @@ def test_catalogue_declarations_cannot_carry_predicates_text_paths_or_runtime_va
         "source_evidence_id",
     }
     assert all("aeat " not in entry.target_command_key for entry in OPERATOR_ACTION_CATALOGUE.entries)
+
+
+def test_an_argument_free_waiver_requires_an_argument_to_waive() -> None:
+    """The waiver names declared arguments the live verb does not require.
+
+    On an entry that declares none it would read as a property of the action
+    while asserting nothing, so a later reader could not tell a deliberate
+    waiver from a copied line.
+    """
+    with pytest.raises(ValidationError, match="materialisable_without_arguments"):
+        ActionCatalogueEntry(
+            action_id="operator.profile.status",
+            target_command_key="config.profile.status",
+            materialisable_without_arguments=True,
+        )
 
 
 def test_catalogue_contains_only_local_canonical_action_declarations() -> None:

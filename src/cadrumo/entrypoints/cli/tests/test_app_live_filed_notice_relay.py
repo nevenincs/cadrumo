@@ -22,16 +22,14 @@ from typing import NotRequired, TypedDict
 
 import pytest
 
-from ....application.live.filed_data_capture import (
-    FiledHistoryOnboardingRun,
-    FiledHistoryPairOutcome,
-)
+from ....application.live.filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
 from ....application.live.filed_observation_persistence import (
     FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
     FiledJustificanteUnreachedReason,
 )
 from ....application.live.remote_state_models import (
     BulkFiledDataCaptureReport,
+    FiledCapturePairOutcome,
     FiledDataCaptureReport,
     SourceFiledDataCaptureReport,
 )
@@ -63,6 +61,9 @@ def _answered_pair() -> FiledHistoryPairOutcome:
         modelo="303",
         ejercicio=2025,
         signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,),
+        walk_attempted=True,
+        walk_completed=True,
+        reached_count=0,
         row_count=1,
     )
 
@@ -138,6 +139,9 @@ def test_the_transport_keeps_run_advisories_and_evidence_advisories_distinct() -
         modelo="303",
         ejercicio=2024,
         signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,),
+        walk_attempted=True,
+        walk_completed=False,
+        reached_count=0,
         row_count=0,
         refused=True,
     )
@@ -211,8 +215,7 @@ def _capture_report_fields(
         "calculation_observation_keys": (),
         "evidence_notices": (notice,),
     }
-    if reached_count is not None:
-        fields["reached_count"] = reached_count
+    fields["reached_count"] = captured_count if reached_count is None else reached_count
     return fields
 
 
@@ -245,6 +248,17 @@ def test_the_submitted_file_advisory_reaches_every_filed_pull_envelope() -> None
         year_from=2025,
         year_to=2025,
         failed_count=0,
+        pair_outcomes=(
+            FiledCapturePairOutcome(
+                modelo="303",
+                year=2025,
+                walk_attempted=True,
+                walk_completed=True,
+                row_count=1,
+                reached_count=1,
+                captured_count=1,
+            ),
+        ),
         **_capture_report_fields(notice),
     )
 
@@ -257,6 +271,7 @@ def test_the_submitted_file_advisory_reaches_every_filed_pull_envelope() -> None
         modelo=single_report.modelo,
         year=single_report.year,
         captured_count=single_report.captured_count,
+        reached_count=single_report.reached_count,
         observation_paths=list(single_report.observation_paths),
         artefact_refs=list(single_report.artefact_refs),
         casilla_count=single_report.casilla_count,
@@ -269,6 +284,7 @@ def test_the_submitted_file_advisory_reaches_every_filed_pull_envelope() -> None
         target_year=source_report.target_year,
         target_period=source_report.target_period,
         captured_count=source_report.captured_count,
+        reached_count=source_report.reached_count,
         observation_paths=list(source_report.observation_paths),
         artefact_refs=list(source_report.artefact_refs),
         casilla_count=source_report.casilla_count,
@@ -413,6 +429,17 @@ def test_every_limit_bearing_filed_read_reports_its_own_truncation() -> None:
         year_from=2025,
         year_to=2025,
         failed_count=0,
+        pair_outcomes=(
+            FiledCapturePairOutcome(
+                modelo="303",
+                year=2025,
+                walk_attempted=True,
+                walk_completed=True,
+                row_count=6,
+                reached_count=6,
+                captured_count=0,
+            ),
+        ),
         **_capture_report_fields(
             _submitted_file_notice(),
             captured_count=0,
@@ -443,6 +470,17 @@ def test_a_capture_given_no_limit_keeps_its_notices_untouched() -> None:
         year_from=2025,
         year_to=2025,
         failed_count=0,
+        pair_outcomes=(
+            FiledCapturePairOutcome(
+                modelo="303",
+                year=2025,
+                walk_attempted=True,
+                walk_completed=True,
+                row_count=9999,
+                reached_count=9999,
+                captured_count=1,
+            ),
+        ),
         **_capture_report_fields(notice, reached_count=9999),
     )
 

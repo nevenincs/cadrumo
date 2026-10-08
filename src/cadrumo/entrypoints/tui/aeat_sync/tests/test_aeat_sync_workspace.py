@@ -6,6 +6,8 @@ import ast
 from collections.abc import Callable
 from datetime import UTC, date, datetime
 from pathlib import Path
+from threading import get_ident
+from types import SimpleNamespace
 from typing import cast
 
 import pytest
@@ -48,6 +50,14 @@ from .....application.aeat_sync.workspace import (
     project_aeat_sync_workspace,
 )
 from .....application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from .....application.live.notification_ports import NotificationsPorts
+from .....application.live.notifications_read_operation import (
+    NOTIFICATIONS_LIST_DEFINITION_ID,
+    NotificationsListPublicResultV1,
+    NotificationsSnapshotSummaryPublicV1,
+    build_notifications_list_definition,
+    build_notifications_list_registration,
+)
 from .....application.operations.models import OperationDefinitionId
 from .....application.operations.registry import OperationPublicContractSetV1
 from .....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
@@ -59,17 +69,26 @@ from .....application.user_profile.censal_operation import (
 from .....core.config import override_settings
 from .....core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
 from .....core.identity.bucket import BucketId
+from .....core.operations import OperationTerminalCondition
 from .....core.period import Period
 from .....domain.modelos.codes import ModeloCode
+from .....tests.aeat_literal_fixtures import (
+    CENSO_SOURCE_URL_FIXTURE,
+    OBLIGACIONES_SOURCE_URL_FIXTURE,
+)
 from ...components.host import ScreenHostApp
+from ...destination_alias import closed_destination_ids
 from ...navigation import TuiScreenContextV1
+from ...operations.controller_port import OperationControllerPort
+from ...operations.modal import OperationModal, OperationModalSettledOutcomeV1
 from ..controller import AeatSyncWorkspaceController
 from ..models import (
+    AeatSyncDestinationIdV1,
     AeatSyncNotificationDocumentHandoffV1,
     AeatSyncOperationHandoffV1,
     AeatSyncOperationRequestV1,
 )
-from ..routes import AEAT_SYNC_ROUTES, declared_aeat_sync_destination_ids, resolve_aeat_sync_screen
+from ..routes import AEAT_SYNC_ROUTES, resolve_aeat_sync_screen
 from ..screens import (
     AeatSyncCensusScreen,
     AeatSyncEvidenceComparisonScreen,
@@ -95,8 +114,19 @@ _AEAT_SYNC_INTENTIONAL_IDENTICAL_HU = frozenset(
         "sources.entry",
         "sources.joined",
         "value.none",
+        "address.declaration",
     }
 )
+
+
+class _StartedOperationController:
+    """Minimal controller identity; these screen tests replace modal mounting."""
+
+    operation_id = "a" * 64
+
+
+def _started_operation_controller() -> OperationControllerPort:
+    return cast(OperationControllerPort, _StartedOperationController())
 
 
 def _flatten_locale(node: object, prefix: str = "") -> dict[str, str]:
@@ -133,7 +163,6 @@ def _projection(
     availability: AeatSyncWorkspaceAvailability = AeatSyncWorkspaceAvailability.AVAILABLE,
     *,
     unread: bool = False,
-    unknown_pair: bool = False,
     census_status: AeatSyncCensusStatus = AeatSyncCensusStatus.CONFLICT,
     notification_specs: tuple[tuple[str, date], ...] | None = None,
     overview_area: AeatSyncOverviewArea | None = None,
@@ -156,11 +185,9 @@ def _projection(
             action_catalogue=OPERATOR_ACTION_CATALOGUE,
             operation_contracts=_contracts(),
         )
-    resolved_action_id = action_id or ("operator.live.notifications.list" if unknown_pair else "operator.profile.edit")
+    resolved_action_id = action_id or "operator.profile.edit"
     action = ActionReference(action_id=resolved_action_id)
-    resolved_area = overview_area or (
-        AeatSyncOverviewArea.NOTIFICATIONS if unknown_pair else AeatSyncOverviewArea.CENSUS
-    )
+    resolved_area = overview_area or AeatSyncOverviewArea.CENSUS
     overview = AeatSyncWorkspaceOverviewRowV1(
         area=resolved_area,
         local_state=AeatSyncSourceState.PRESENT,
@@ -169,7 +196,7 @@ def _projection(
         aeat_observed_at=_T2,
         discrepancy_kind=AeatSyncDiscrepancyKind.NONE,
         supported_actions=(action,),
-        supported_operations=() if unknown_pair else (operation_id,),
+        supported_operations=(operation_id,),
     )
     period = Period.from_year_and_code(2026, "1T")
     return project_aeat_sync_workspace(
@@ -304,11 +331,19 @@ def _contracts(
     operation_id: OperationDefinitionId = "user-profile.censo-review",
 ) -> OperationPublicContractSetV1:
     """Build a public contract whose operation/action join is explicit."""
+    if action_id == "operator.live.notifications.list" and operation_id == NOTIFICATIONS_LIST_DEFINITION_ID:
+
+        def unused_notification_ports() -> NotificationsPorts:
+            raise AssertionError("public contract projection must not open notification ports")
+
+        definition = build_notifications_list_definition(unused_notification_ports)
+        return OperationPublicContractSetV1.build((build_notifications_list_registration(definition).contract,))
     definition = build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
         browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         censal_fetch_port=build_censal_fetch_port(),
+        provider_preflight=lambda _profile_id, _operation: None,
     ).model_copy(
         update={
             "action_reference": ActionReference(action_id=action_id),
@@ -351,8 +386,8 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.overview.title",
         {
             "en": "AEAT Sync overview",
-            "es": "Resumen de sincronización AEAT",
-            "ca": "Resum de sincronització de l'AEAT",
+            "es": "Resumen de Sincronización AEAT",
+            "ca": "Resum de Sincronització AEAT",
             "hu": "Az AEAT-szinkron áttekintése",
         },
         ("overview:census",),
@@ -362,9 +397,9 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.census.title",
         {
             "en": "AEAT Sync census",
-            "es": "Censo de sincronización AEAT",
-            "ca": "Cens de sincronització de l'AEAT",
-            "hu": "AEAT-szinkronizálási nyilvántartás",
+            "es": "Censo de Sincronización AEAT",
+            "ca": "Cens de Sincronització AEAT",
+            "hu": "AEAT-szinkron: törzsadatok",
         },
         ("census:tax address",),
     ),
@@ -373,8 +408,8 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.filed_declarations.title",
         {
             "en": "AEAT Sync filed declarations",
-            "es": "Declaraciones presentadas en sincronización AEAT",
-            "ca": "Declaracions presentades a l'AEAT",
+            "es": "Declaraciones presentadas en Sincronización AEAT",
+            "ca": "Declaracions presentades a Sincronització AEAT",
             "hu": "Az AEAT-szinkron benyújtott bevallásai",
         },
         ("filed:130|2026|1T",),
@@ -384,8 +419,8 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.notifications.title",
         {
             "en": "AEAT Sync notifications",
-            "es": "Notificaciones de sincronización AEAT",
-            "ca": "Notificacions de l'AEAT",
+            "es": "Notificaciones de Sincronización AEAT",
+            "ca": "Notificacions de Sincronització AEAT",
             "hu": "Az AEAT-szinkron értesítései",
         },
         (),
@@ -394,10 +429,10 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         AeatSyncEvidenceComparisonScreen,
         "tui.aeat_sync.evidence_comparison.title",
         {
-            "en": "AEAT Sync evidence comparison",
-            "es": "Comparación de evidencias de sincronización AEAT",
-            "ca": "Comparació d'evidències de l'AEAT",
-            "hu": "Az AEAT-szinkron bizonyítékainak összehasonlítása",
+            "en": "AEAT Sync: comparison with AEAT",
+            "es": "Sincronización AEAT: comparación con la AEAT",
+            "ca": "Sincronització AEAT: comparació amb l'AEAT",
+            "hu": "AEAT-szinkron: összehasonlítás az AEAT-tal",
         },
         ("comparison:130|2026|1T",),
     ),
@@ -406,8 +441,8 @@ _SCREEN_CASES: tuple[tuple[_ScreenFactory, str, dict[str, str], tuple[str, ...]]
         "tui.aeat_sync.reconciliation.title",
         {
             "en": "AEAT Sync reconciliation",
-            "es": "Conciliación de sincronización AEAT",
-            "ca": "Conciliació de l'AEAT",
+            "es": "Conciliación de Sincronización AEAT",
+            "ca": "Conciliació de Sincronització AEAT",
             "hu": "Az AEAT-szinkron egyeztetése",
         },
         ("reconciliation:130|2026|1T",),
@@ -507,7 +542,7 @@ def test_aeat_sync_namespace_matches_all_locales_and_hu_has_only_explicit_invari
 def test_six_routes_are_total_and_locked_projection_refuses_body() -> None:
     controller = _controller()
     assert tuple(route.zone for route in AEAT_SYNC_ROUTES) == tuple(AeatSyncWorkspaceZone)
-    assert {route.destination for route in AEAT_SYNC_ROUTES} == declared_aeat_sync_destination_ids()
+    assert {route.destination for route in AEAT_SYNC_ROUTES} == closed_destination_ids(AeatSyncDestinationIdV1)
     assert isinstance(
         resolve_aeat_sync_screen(controller, controller.target(AeatSyncWorkspaceZone.OVERVIEW)),
         AeatSyncOverviewScreen,
@@ -516,6 +551,22 @@ def test_six_routes_are_total_and_locked_projection_refuses_body() -> None:
     assert not locked.can_open(AeatSyncWorkspaceZone.CENSUS)
     with pytest.raises(ValueError, match="not observable"):
         resolve_aeat_sync_screen(locked, locked.target(AeatSyncWorkspaceZone.CENSUS))
+
+
+@pytest.mark.parametrize(
+    "availability",
+    (AeatSyncWorkspaceAvailability.NEVER_CAPTURED, AeatSyncWorkspaceAvailability.UNAVAILABLE),
+)
+def test_overview_remains_reachable_when_sources_are_unobservable(
+    availability: AeatSyncWorkspaceAvailability,
+) -> None:
+    controller = _controller(availability)
+    assert isinstance(
+        resolve_aeat_sync_screen(controller, controller.target(AeatSyncWorkspaceZone.OVERVIEW)),
+        AeatSyncOverviewScreen,
+    )
+    assert controller.state_for(AeatSyncWorkspaceZone.OVERVIEW).availability is availability
+    assert not controller.can_open(AeatSyncWorkspaceZone.CENSUS)
 
 
 @pytest.mark.asyncio
@@ -548,8 +599,9 @@ async def test_all_six_routes_mount_without_firing_a_host_handoff_or_leaking_sco
     """
     calls: list[object] = []
 
-    async def operation(request: AeatSyncOperationRequestV1) -> None:
+    async def operation(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         calls.append(request)
+        return _started_operation_controller()
 
     async def document(row: AeatSyncWorkspaceNotificationRowV1) -> None:
         calls.append(row)
@@ -567,13 +619,22 @@ async def test_all_six_routes_mount_without_firing_a_host_handoff_or_leaking_sco
 
 
 @pytest.mark.asyncio
-async def test_explicit_overview_operation_invokes_host_once_and_missing_host_refuses() -> None:
+async def test_explicit_overview_operation_invokes_host_once_and_missing_host_refuses(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     calls: list[AeatSyncOperationRequestV1] = []
 
-    async def handoff(request: AeatSyncOperationRequestV1) -> None:
+    controllers: list[OperationControllerPort] = []
+
+    async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         calls.append(request)
+        controller = _started_operation_controller()
+        controllers.append(controller)
+        return controller
 
     screen = AeatSyncOverviewScreen(_controller(operation_handoff=handoff))
+    presented: list[OperationControllerPort] = []
+    monkeypatch.setattr(screen, "_show_operation_modal", presented.append)
     async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
         await pilot.pause()
         await pilot.click("#aeat-sync-operation-0")
@@ -586,6 +647,7 @@ async def test_explicit_overview_operation_invokes_host_once_and_missing_host_re
             operation="user-profile.censo-review",
         )
     ]
+    assert presented == controllers
     refused = AeatSyncOverviewScreen(_controller())
     async with ScreenHostApp[None](refused).run_test(size=(100, 30)) as pilot:
         await pilot.pause()
@@ -597,12 +659,41 @@ async def test_explicit_overview_operation_invokes_host_once_and_missing_host_re
 
 
 @pytest.mark.asyncio
-async def test_unknown_pair_is_visible_refusal_and_unread_notification_never_calls_document_door() -> None:
+async def test_started_filed_pull_handoff_pushes_the_canonical_operation_modal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    started_controller = _started_operation_controller()
+
+    async def handoff(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        return started_controller
+
+    screen = AeatSyncOverviewScreen(
+        _controller(
+            operation_handoff=handoff,
+            overview_area=AeatSyncOverviewArea.FILED_DECLARATIONS,
+            action_id="operator.live.filed.pull_all",
+            operation_id="live.filed-history.pull",
+        )
+    )
+    presented: list[tuple[OperationModal, object]] = []
+    async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        monkeypatch.setattr(screen.app, "push_screen", lambda modal, callback: presented.append((modal, callback)))
+        await pilot.click("#aeat-sync-operation-0")
+        await pilot.pause()
+
+    assert len(presented) == 1
+    assert isinstance(presented[0][0], OperationModal)
+    assert presented[0][0]._controller is started_controller
+    assert presented[0][1] == screen._on_operation_settled
+
+
+@pytest.mark.asyncio
+async def test_missing_session_contract_is_visible_refusal_and_unread_notification_never_calls_document_door() -> None:
     unknown = AeatSyncOverviewScreen(
         AeatSyncWorkspaceController(
             TuiScreenContextV1(destination="workbench.aeat_sync"),
-            _projection(unknown_pair=True),
-            operation_contracts=_contracts(),
+            _projection(),
         )
     )
     async with ScreenHostApp[None](unknown).run_test(size=(100, 30)) as pilot:
@@ -666,6 +757,118 @@ def test_controller_refuses_forged_contract_join_and_catalogue_command() -> None
         operation_contracts=_contracts(),
     )
     assert canonical_guard.admitted_operation((action,), (operation,)) is None
+
+
+@pytest.mark.asyncio
+async def test_successful_operation_refreshes_aeat_sync_off_ui_loop_and_rearms_button() -> None:
+    filed_projection = _projection(
+        overview_area=AeatSyncOverviewArea.FILED_DECLARATIONS,
+        action_id="operator.live.filed.pull_all",
+        operation_id="live.filed-history.pull",
+    )
+    refreshed = filed_projection.model_copy(deep=True)
+    reads: list[int] = []
+
+    def refresh() -> AeatSyncWorkspaceProjectionV1:
+        reads.append(get_ident())
+        return refreshed
+
+    async def handoff(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        raise AssertionError("refresh cannot submit a second operation")
+
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        filed_projection,
+        operation_handoff=handoff,
+        refresh_snapshot=refresh,
+        operation_contracts=_contracts("operator.live.filed.pull_all", "live.filed-history.pull"),
+    )
+    screen = AeatSyncOverviewScreen(controller)
+    succeeded = OperationModalSettledOutcomeV1.model_construct(
+        view_model=SimpleNamespace(projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.SUCCEEDED))
+    )
+    refused = OperationModalSettledOutcomeV1.model_construct(
+        view_model=SimpleNamespace(projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.REFUSED))
+    )
+    async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        screen._consumed_request_ids.add("aeat-sync-operation-0")
+        ui_thread = get_ident()
+        screen._on_operation_settled(refused)
+        await pilot.pause()
+        assert reads == []
+        screen._on_operation_settled(succeeded)
+        await pilot.pause()
+        assert reads and reads[0] != ui_thread
+        assert controller.projection is refreshed
+        assert screen._consumed_request_ids == set()
+        assert not screen.query_one("#aeat-sync-operation-1-0", Button).disabled
+
+
+@pytest.mark.asyncio
+async def test_successful_notification_list_projects_capture_times_and_row_counts() -> None:
+    """The TUI renders only the registered public summary fields after settlement."""
+    captured_at = datetime(2026, 9, 28, 12, 30, tzinfo=UTC)
+    result = NotificationsListPublicResultV1(
+        bucket_id=_BUCKET_ID,
+        count=2,
+        rows=(
+            NotificationsSnapshotSummaryPublicV1(
+                snapshot_id="1" * 64,
+                captured_at=captured_at,
+                row_count=7,
+            ),
+            NotificationsSnapshotSummaryPublicV1(
+                snapshot_id="2" * 64,
+                captured_at=captured_at.replace(day=27),
+                row_count=0,
+            ),
+        ),
+    )
+    projected: list[object] = []
+
+    class _NotificationsListResultReader:
+        async def read_notifications_list_result(self, projection: object) -> NotificationsListPublicResultV1:
+            projected.append(projection)
+            return result
+
+    result_reader = _NotificationsListResultReader()
+
+    async def handoff(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        return cast(OperationControllerPort, result_reader)
+
+    request = AeatSyncOperationRequestV1(
+        action=ActionReference(action_id="operator.live.notifications.list"),
+        operation=NOTIFICATIONS_LIST_DEFINITION_ID,
+    )
+    screen = AeatSyncOverviewScreen(
+        _controller(
+            operation_handoff=handoff,
+            overview_area=AeatSyncOverviewArea.NOTIFICATIONS,
+            action_id="operator.live.notifications.list",
+            operation_id=NOTIFICATIONS_LIST_DEFINITION_ID,
+        )
+    )
+    operation_projection = SimpleNamespace(terminal_condition=OperationTerminalCondition.SUCCEEDED)
+    settled = OperationModalSettledOutcomeV1.model_construct(
+        view_model=SimpleNamespace(projection=operation_projection)
+    )
+    screen._active_operation_request = request
+    screen._active_operation_controller = cast(OperationControllerPort, result_reader)
+
+    async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        screen._on_operation_settled(settled)
+        await pilot.pause()
+        status = str(screen.query_one("#aeat-sync-status", Static).render())
+
+    assert projected == [operation_projection]
+    assert "2026-09-28T12:30:00+00:00" in status
+    assert "2026-09-27T12:30:00+00:00" in status
+    assert tr("tui.aeat_sync.status.items", count=2) in status
+    assert tr("tui.aeat_sync.status.items", count=7) in status
+    assert tr("tui.aeat_sync.status.items", count=0) in status
+    assert "1" * 64 not in status and "2" * 64 not in status
 
 
 @pytest.mark.asyncio
@@ -818,7 +1021,7 @@ async def test_operation_failure_and_refusal_copy_is_localized(
 ) -> None:
     """Host failure and absent-door refusal are both translated operator states."""
 
-    async def fail(_request: AeatSyncOperationRequestV1) -> None:
+    async def fail(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         raise RuntimeError("sentinel host failure C:\\protected\\taxpayer.txt 12345678Z")
 
     token = I18N_STRICT_MISSING_KEYS.set(True)
@@ -925,12 +1128,16 @@ async def test_census_adoption_is_local_wording_and_no_remote_push_control(local
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
-async def test_filed_pull_all_uses_action_specific_copy_and_exact_one_shot_handoff(locale: str) -> None:
+async def test_filed_pull_all_uses_action_specific_copy_and_exact_one_shot_handoff(
+    locale: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Filed history pull comes from the overview declaration, never a filed DTO."""
     calls: list[AeatSyncOperationRequestV1] = []
 
-    async def handoff(request: AeatSyncOperationRequestV1) -> None:
+    async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         calls.append(request)
+        return _started_operation_controller()
 
     token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
@@ -942,6 +1149,7 @@ async def test_filed_pull_all_uses_action_specific_copy_and_exact_one_shot_hando
                 operation_id="live.filed-history.pull",
             )
             for screen in (AeatSyncOverviewScreen(controller), AeatSyncFiledDeclarationsScreen(controller)):
+                monkeypatch.setattr(screen, "_show_operation_modal", lambda _controller: None)
                 async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
                     await pilot.pause()
                     button = screen.query_one("#aeat-sync-operation-0", Button)
@@ -963,11 +1171,11 @@ async def test_filed_pull_all_uses_action_specific_copy_and_exact_one_shot_hando
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
-async def test_overview_census_label_is_distinct_and_notification_listing_has_no_operation(locale: str) -> None:
-    """Local census review is not pull copy; notifications remain a local route."""
+async def test_overview_actions_use_distinct_localized_census_and_notification_copy(locale: str) -> None:
+    """Census review and notification listing retain their own action copy."""
 
-    async def handoff(_request: AeatSyncOperationRequestV1) -> None:
-        return None
+    async def handoff(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        return _started_operation_controller()
 
     token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
@@ -980,24 +1188,27 @@ async def test_overview_census_label_is_distinct_and_notification_listing_has_no
                 assert label != tr("tui.aeat_sync.action.pull_filed_all", locale=locale)
 
             notifications = AeatSyncOverviewScreen(
-                AeatSyncWorkspaceController(
-                    TuiScreenContextV1(destination="workbench.aeat_sync"),
-                    _projection(unknown_pair=True),
-                    operation_contracts=_contracts(),
+                _controller(
+                    operation_handoff=handoff,
+                    overview_area=AeatSyncOverviewArea.NOTIFICATIONS,
+                    action_id="operator.live.notifications.list",
+                    operation_id=NOTIFICATIONS_LIST_DEFINITION_ID,
                 )
             )
             async with ScreenHostApp[None](notifications).run_test(size=(80, 24)) as pilot:
                 await pilot.pause()
-                assert not tuple(notifications.query(Button))
-                status = str(notifications.query_one("#aeat-sync-status", Static).render())
-                assert tr("tui.aeat_sync.refusal.operation_handoff", locale=locale) not in status
+                label = str(notifications.query_one("#aeat-sync-operation-0", Button).label)
+                assert label == tr("tui.search.action.list_notifications", locale=locale)
     finally:
         I18N_STRICT_MISSING_KEYS.reset(token)
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("first_fails", (False, True))
-async def test_completing_one_overview_operation_keeps_the_other_action_reachable(first_fails: bool) -> None:
+async def test_completing_one_overview_operation_keeps_the_other_action_reachable(
+    first_fails: bool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """The global in-flight guard must not become a global consumed-state guard."""
     rows = (
         AeatSyncWorkspaceOverviewRowV1(
@@ -1049,10 +1260,11 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
     )
     calls: list[AeatSyncOperationRequestV1] = []
 
-    async def handoff(request: AeatSyncOperationRequestV1) -> None:
+    async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         calls.append(request)
         if first_fails and request.action.action_id == "operator.profile.edit":
             raise RuntimeError("C:\\protected\\taxpayer.txt 12345678Z")
+        return _started_operation_controller()
 
     screen = AeatSyncOverviewScreen(
         AeatSyncWorkspaceController(
@@ -1062,6 +1274,10 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
             operation_handoff=handoff,
         )
     )
+    mounted_controllers: list[OperationControllerPort] = []
+    # Each handoff returns a controller; this test isolates the in-flight and
+    # one-shot controls from the modal's independent polling lifecycle.
+    monkeypatch.setattr(screen, "_show_operation_modal", mounted_controllers.append)
     async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
         await pilot.pause()
         first = screen.query_one("#aeat-sync-operation-0", Button)
@@ -1158,3 +1374,264 @@ async def test_every_comparison_surface_shows_both_values_or_neither(screen_type
     assert ("local_value" in keys) == ("aeat_value" in keys), (
         f"{type(screen).__name__} at {width} columns shows half a comparison: {sorted(keys)}"
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("width", [80, 120])
+async def test_complete_census_evidence_survives_reopen_and_selected_value_is_readable(width: int) -> None:
+    """Operate the real evidence table after serialized workspace readback."""
+    from .....application.user_profile.censal_observation import (
+        CensalCell,
+        CensalConsultation,
+        CensalObservation,
+        CensalObservationAddress,
+        CensalObservationIdentity,
+        CensalRow,
+        CensalSection,
+    )
+
+    long_value = "Valor censal completo " * 20
+    observation = CensalObservation(
+        identity=CensalObservationIdentity(nif="00000001R", apellidos_y_nombre="Persona Sintética"),
+        domicilio_fiscal=CensalObservationAddress(codigo_postal="28001"),
+        domicilio_notificacion=CensalObservationAddress(),
+        captured_at=_T2,
+        source_url=CENSO_SOURCE_URL_FIXTURE,
+        consultations=(
+            CensalConsultation(
+                kind="obligaciones",
+                source_url=OBLIGACIONES_SOURCE_URL_FIXTURE,
+                sections=(
+                    CensalSection(
+                        title="Mis Obligaciones",
+                        rows=(
+                            CensalRow(
+                                label="Obligación sintética",
+                                cells=(CensalCell(role="value", column="Nueva columna AEAT", text=long_value),),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    )
+    serialized = _projection().model_copy(update={"census_observation": observation}).model_dump_json()
+    for _ in range(2):
+        restored = AeatSyncWorkspaceProjectionV1.model_validate_json(serialized)
+        screen = AeatSyncCensusScreen(
+            AeatSyncWorkspaceController(
+                TuiScreenContextV1(destination="workbench.aeat_sync"),
+                restored,
+            )
+        )
+        async with ScreenHostApp[None](screen).run_test(size=(width, 30)) as pilot:
+            await pilot.pause()
+            table = screen.query_one("#aeat-sync-census-evidence", DataTable)
+            assert table.row_count > 1
+            table.focus()
+            table.move_cursor(row=table.row_count - 1)
+            await pilot.press("enter")
+            await pilot.pause()
+            detail = str(screen.query_one("#aeat-sync-census-value", Static).render())
+            assert long_value in detail
+            assert "Nueva columna AEAT" in detail
+            assert "Mis Obligaciones" in detail
+            assert table.max_scroll_x == 0
+            assert restored.census_observation == observation
+
+
+def test_controller_pairs_the_single_operation_with_its_contract_joined_action() -> None:
+    """A row's catalogue-only actions do not hide the operation its contract joins."""
+    controller = _controller(
+        overview_area=AeatSyncOverviewArea.FILED_DECLARATIONS,
+        action_id="operator.live.filed.pull_all",
+        operation_id="live.filed-history.pull",
+    )
+    pull = ActionReference(action_id="operator.live.filed.pull_all")
+    listing = ActionReference(action_id="operator.modelo.filing_record.list")
+    operation: OperationDefinitionId = "live.filed-history.pull"
+
+    assert controller.admitted_operation((listing, pull), (operation,)) == AeatSyncOperationRequestV1(
+        action=pull, operation=operation
+    )
+    assert controller.admitted_operation((listing,), (operation,)) is None
+    assert controller.admitted_operation((listing, pull), (operation, "user-profile.censo-review")) is None
+
+
+@pytest.mark.asyncio
+async def test_reader_projected_filed_history_door_renders_and_hands_off_before_any_local_filing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The real overview row pairs the pull with the local filing-record listing.
+
+    A first-run profile holds no local filing, yet both the overview and the
+    filed-declarations zone must offer one filed-history door, hand off its
+    exact request, and state no refusal beside it.
+    """
+    from .....application.aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
+
+    contracts = OperationPublicContractSetV1.build(
+        (*_contracts().definitions, *_contracts("operator.live.filed.pull_all", "live.filed-history.pull").definitions)
+    )
+    projection = read_local_aeat_sync_workspace_projection(
+        bucket_id=_BUCKET_ID,
+        subject_key=_SUBJECT_KEY,
+        observed_at=_T2,
+        filings=(),
+        operation_contracts=contracts,
+        censo_values={},
+    )
+    filed_row = next(row for row in projection.overview if row.area is AeatSyncOverviewArea.FILED_DECLARATIONS)
+    assert {str(action.action_id) for action in filed_row.supported_actions} == {
+        "operator.live.filed.pull_all",
+        "operator.modelo.filing_record.list",
+    }
+    calls: list[AeatSyncOperationRequestV1] = []
+
+    async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        calls.append(request)
+        return _started_operation_controller()
+
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_handoff=handoff,
+        operation_contracts=contracts,
+    )
+    pull_label = tr("tui.aeat_sync.action.pull_filed_all")
+    for screen in (AeatSyncOverviewScreen(controller), AeatSyncFiledDeclarationsScreen(controller)):
+        monkeypatch.setattr(screen, "_show_operation_modal", lambda _controller: None)
+        async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
+            doors = [button for button in screen.query(Button) if str(button.label) == pull_label]
+            assert len(doors) == 1
+            status = str(screen.query_one("#aeat-sync-status", Static).render())
+            assert tr("tui.aeat_sync.refusal.operation_handoff") not in status
+            doors[0].scroll_visible(animate=False)
+            await pilot.pause()
+            await pilot.click(doors[0])
+            await pilot.pause()
+            assert doors[0].disabled
+
+    expected = AeatSyncOperationRequestV1(
+        action=ActionReference(action_id="operator.live.filed.pull_all"),
+        operation="live.filed-history.pull",
+    )
+    assert calls == [expected, expected]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("width", (80, 120))
+async def test_persisted_drift_renders_each_diff_values_and_grounding_without_overflow(width: int) -> None:
+    from .....application.aeat_sync.tests.reconciliation_fixtures import (
+        reconciliation_projection as persisted_projection,
+    )
+    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
+    from .....application.modelo.reconciliation_records import ModeloReconciliationDiff, ModeloReconciliationDiffKind
+
+    diff = ModeloReconciliationDiff(
+        field_name="iva.resultado",
+        work_unit_value="0.00",
+        evidence_value="125.50",
+        kind="value_mismatch",
+        diff_kind=ModeloReconciliationDiffKind.CASILLA,
+        legal_refs=("ley-37-1992:art-99",),
+        source_refs=("aeat-test",),
+    )
+    record = _record().model_copy(update={"diffs": (_record().diffs[0], diff)})
+    projection = AeatSyncWorkspaceProjectionV1.model_validate_json(persisted_projection((record,)).model_dump_json())
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_contracts=_contracts(),
+    )
+    screen = AeatSyncReconciliationScreen(controller)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(width, 35)) as pilot:
+            await pilot.pause()
+            table = screen.query_one("#aeat-sync-rows", DataTable)
+            assert table.row_count == 2
+            table.move_cursor(row=1)
+            await pilot.pause()
+            detail = str(screen.query_one("#aeat-sync-reconciliation-detail", Static).render())
+            assert all(
+                value in detail
+                for value in (
+                    "0.00",
+                    "125.50",
+                    "iva.resultado",
+                    "ley-37-1992:art-99",
+                    "aeat-test",
+                    "casilla",
+                    "1 advisories",
+                )
+            )
+            assert not any(table.max_scroll_x for table in screen.query(DataTable))
+
+
+@pytest.mark.asyncio
+async def test_stored_match_with_advisories_shows_incomplete_comparison() -> None:
+    from .....application.aeat_sync.tests.reconciliation_fixtures import (
+        reconciliation_projection as persisted_projection,
+    )
+    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
+
+    projection = persisted_projection((_record(mismatches=False),))
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_contracts=_contracts(),
+    )
+    screen = AeatSyncReconciliationScreen(controller)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 35)) as pilot:
+            await pilot.pause()
+            table = screen.query_one("#aeat-sync-rows", DataTable)
+            assert "Not fully compared" in table.get_row_at(0)
+            detail = str(screen.query_one("#aeat-sync-reconciliation-detail", Static).render())
+            assert "Not fully compared" in detail
+            assert "1 advisories" in detail
+            assert "No differences in compared fields" not in detail
+
+
+@pytest.mark.asyncio
+async def test_distinct_comparisons_at_same_address_have_unique_rows_and_historical_identity() -> None:
+    from .....application.aeat_sync.tests.reconciliation_fixtures import (
+        reconciliation_projection as persisted_projection,
+    )
+    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
+    from .....application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
+
+    first = _record().model_copy(
+        update={
+            "source_kind": ModeloReconciliationEvidenceKind.DECLARATION,
+            "calculation_revision_id": "d" * 64,
+        }
+    )
+    second = _record(mismatches=False).model_copy(update={"bucket_event_id": "c" * 64})
+    projection = persisted_projection((first, second))
+    controller = AeatSyncWorkspaceController(
+        TuiScreenContextV1(destination="workbench.aeat_sync"),
+        projection,
+        operation_contracts=_contracts(),
+    )
+    screen = AeatSyncReconciliationScreen(controller)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 35)) as pilot:
+            await pilot.pause()
+            table = screen.query_one("#aeat-sync-rows", DataTable)
+            assert table.row_count == 2
+            assert len(set(table.rows)) == 2
+            for index in range(2):
+                table.move_cursor(row=index)
+                await pilot.pause()
+                detail = str(screen.query_one("#aeat-sync-reconciliation-detail", Static).render())
+                assert "Stored comparison; current calculation has not been rechecked." in detail
+                assert first.work_unit_id in detail
+                row_key = str(table.ordered_rows[index].key.value)
+                if first.bucket_event_id in row_key:
+                    assert "Compared calculation:" in detail
+                    assert first.calculation_revision_id is not None
+                    assert first.calculation_revision_id in detail
+                else:
+                    assert "Compared calculation revision was not recorded." in detail

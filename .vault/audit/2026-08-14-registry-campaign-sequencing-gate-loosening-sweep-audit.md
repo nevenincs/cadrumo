@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-campaign-sequencing'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:45f154f1aadb25e443597380343847b2f61207f307d0d1885c2c2ac08a558f14'
+body_hash: 'sha256:88e8fdc25ca149f623b7ad110eba5020f415b93f7c0d1c4c62ed5e4f5fe8cc7f'
 related:
   - "[[2026-08-14-registry-campaign-sequencing-audit]]"
 ---
@@ -78,7 +78,7 @@ site that still needs the stricter one).
 **The three, each read independently rather than trusted from team-lead's
 ruling:**
 
-1. `src/cadrumo/domain/iva/_grounding.py` — `verify_legal_reference` swapped
+1. the retired module — `verify_legal_reference` swapped
    for `verify_legal_reference_grounding` when checking an IVA rate table
    row's citations. Read both functions in `_legal.py`:
    `verify_legal_reference` is `if review_status is not OPERATOR_REVIEWED:
@@ -108,7 +108,7 @@ ruling:**
    and on Modelo 303's numbered casillas); a foreign-rate case is not yet
    traceable at all since its only real consumer (Modelo 369) has no export
    layout today.
-2. `src/cadrumo/application/_foreign_asset_thresholds.py` — production code,
+2. the retired module — production code,
    `authority.snapshot(...)` (filing-grade) swapped for
    `authority.inspect_revision(...)` (non-filing) in
    `foreign_asset_declaration_thresholds()`, the function answering "is this
@@ -127,7 +127,7 @@ ruling:**
    `calculations/_foreign_asset_redeclaration.py`); neither feeds
    `export_draft` or any byte-emission path with this data, both produce
    calculation/advisory output only.
-3. `src/cadrumo/domain/calculations/registry/_validate.py` —
+3. the retired module —
    `verify_legal_catalogue` swapped for `verify_legal_catalogue_grounding`
    inside `RegistryValidator._validate_catalogues()`, part of the core
    registry-build validation every modelo load runs. Not previously flagged
@@ -304,7 +304,6 @@ correct a previously-wrong `runtime: None` type annotation to
 
 ### Gate-loosening sweep of today's working tree | info | Ten "MM" (staged+unstaged) files — zero net diff, not a real change
 
-`src/cadrumo/application/aggregation/tests/_secure_objects_fixtures.py`,
 `test_sectoral_hint_activity_declaration.py`, `test_source_mesh_profile_live.py`,
 and seven files under `src/cadrumo/application/modelo/tests/` (advisory
 tests) show `MM` status, which is the signal most worth suspecting of
@@ -340,8 +339,8 @@ own framing describes, applied consistently and documented at every site.
 
 ### Gate-loosening sweep of today's working tree | info | `bundled_authority()` → `load_registry_tree()` swap in the M303 census tooling — legitimate compile-tier verification, not a filing bypass
 
-`dev/registry/m303_semantic_census.py` and
-`dev/registry/tests/test_modelo_303_semantic_maps.py` both replace
+The retired module and
+The retired test both replace
 `bundled_authority()` / `bundled_revision_inspection()` calls with
 `load_registry_tree()` + `RegistryRevisionInspection.from_revision(...)`.
 `bundled_authority()` is the filing-grade authority, which now refuses at
@@ -362,7 +361,7 @@ opt-downs above.
 
 ### Gate-loosening sweep of today's working tree | info | M303 2025/2026 census expectation changes — a correction that TIGHTENS grounding, not a loosening
 
-`dev/registry/m303_semantic_census.py` changes the 2025 epoch's expected
+The retired module changes the 2025 epoch's expected
 `casilla` count from 111 to 113 and `literal` from 42 to 40 (2026: 112 to
 114, 42 to 40 — the same shift). The accompanying comment in
 `test_modelo_303_semantic_maps.py`'s retired-homes table explains why:
@@ -379,7 +378,7 @@ this change removes two instances of it.
 
 ### Gate-loosening sweep of today's working tree | info | Deleted test — exact 1:1 coverage move, matches the "nothing is withdrawn" terminology purge
 
-`src/cadrumo/application/filing/tests/test_withdrawn_export_refusal.py` was
+The retired test was
 deleted. Read both the deleted file (via `git show HEAD:<path>`) and its
 replacement, the new untracked
 `test_unbuilt_layout_export_refusal.py`, in full. The two are functionally
@@ -415,7 +414,7 @@ CLI-owned generated API reference; spot-checked one deletion
 (`cadrumo.domain.contribuyente.family.rst`) against the source tree and
 confirmed `family.py` was genuinely split into `_family_profile.py` /
 `_family_types.py`, with matching new stubs generated for both — a real
-relocation, not an orphaned coverage drop. `src/cadrumo/tests/_bucket_id_fixture.py`
+relocation, not an orphaned coverage drop. the retired test
 shows both `D` (staged delete) and `??` (untracked) status at the identical
 path; diffed the pre-deletion committed content against the current
 untracked content and they are byte-identical — a git-index artifact, not a

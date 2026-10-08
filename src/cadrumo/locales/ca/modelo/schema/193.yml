@@ -1,6 +1,16 @@
 modelo:
   schema:
     '193':
+      binding:
+        modelo-193-123-base-anual:
+          label: Base anual de retencions i ingressos a compte · Model 123, casella
+            06
+        modelo-193-123-retenciones-anual:
+          label: Retencions i ingressos a compte de l’any · Model 123, casella 09
+        modelo-193-perceptor-rows-base-total:
+          label: Total de bases de retencions i ingressos a compte dels perceptors
+        modelo-193-perceptor-rows-retenciones-total:
+          label: Total de retencions i ingressos a compte dels perceptors
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
@@ -116,6 +126,48 @@ modelo:
           a compte sobre determinats rendiments del capital mobiliari i determinades
           rendes. Resum anual.
         title: Resum anual de retencions sobre capital mobiliari
+      form:
+        context:
+          ejercicio:
+            heading: Exercici
+          nif:
+            heading: NIF del declarant
+          nombre:
+            heading: Cognoms i nom o raó social
+        page:
+          gastos:
+            heading: 'Annex: relació de despeses'
+          perceptores-1:
+            heading: Relació de perceptors · 1
+          perceptores-2:
+            heading: Relació de perceptors · 2
+          perceptores-3:
+            heading: Relació de perceptors · 3
+          resumen:
+            heading: Full resum
+        section:
+          contacto:
+            heading: Persona de contacte
+          declaracion:
+            heading: Identificació i tipus de declaració
+          declarante:
+            heading: Declarant i exercici
+          gastos:
+            heading: Despeses d’administració i dipòsit
+          identificacion:
+            heading: Identificació del perceptor
+          importes:
+            heading: Percepcions i retencions
+          operacion:
+            heading: Identificació de l’operació
+          prestamos:
+            heading: Préstecs de valors i altres dades
+          rendimiento:
+            heading: Rendiment i compte de valors
+          territorio:
+            heading: Distribució territorial
+          totales:
+            heading: Resum de les dades incloses en la declaració
       revision:
         '2022':
           field:

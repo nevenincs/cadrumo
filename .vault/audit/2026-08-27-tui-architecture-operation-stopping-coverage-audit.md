@@ -3,21 +3,16 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7da332fa09590a5c1c8e19b49ff3e99e28db6d88b485b1d09d011e17a7d454e6'
+body_hash: 'sha256:9fd1d859b0ae4ac943981377dd642f0bd1431e71893682b6ae73b03d95e37a90'
 related: []
 ---
-
 # `tui-architecture` audit: `What the operation platform's stopping clauses can actually prove`
 
 ## Scope
 
-## Findings
-
-## Recommendations
-
-## Why this exists
+### Why this exists
 
 `W07.P16.S94` asks for cancellation at every declared cancellable phase proving
 acknowledgement, cleanup completion, lock release and child-process reaping.
@@ -27,7 +22,9 @@ have substantial coverage under other names. This records what those clauses
 can actually prove against the population the registry composes, so neither row
 is closed on approximate coverage nor left open for reasons nobody wrote down.
 
-## What the composed population declares
+## Findings
+
+### What the composed population declares
 
 Measured against the nineteen definitions in the production registry.
 
@@ -36,7 +33,7 @@ Measured against the nineteen definitions in the production registry.
 - Owned resources: one definition owns an `async_task`. **No definition owns a
   `process`.**
 
-## Clause by clause
+### Clause by clause
 
 **Cancellation at every declared cancellable phase** — for this population that
 means the cooperative path, and it is covered: cancellation during a running
@@ -67,7 +64,7 @@ expired resumable checkpoint restarting through real storage.
 unknown interruption without claiming success, which is the honest half. There
 is no separate reporting surface that enumerates orphans.
 
-## The finding worth carrying forward
+### The finding worth carrying forward
 
 Three capabilities the platform models are declarable and enforced but
 unexercised by any production operation: `contained` cancellation, `enforced`
@@ -79,3 +76,7 @@ That is the honest reason S94 cannot be closed as written: two of its clauses
 describe a shape of operation this system does not currently have. Closing it
 would require either an operation that owns a process, or a decision that the
 row's scope is the cooperative population it actually has.
+
+## Recommendations
+
+Before S94 closes, either add an owned production operation that exercises contained cancellation, enforced deadlines, and process ownership, or amend the Step to cover the cooperative population that exists today.

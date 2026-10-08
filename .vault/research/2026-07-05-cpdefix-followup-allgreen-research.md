@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#cpdefix-followup-allgreen'
 date: '2026-07-05'
-modified: '2026-07-17'
-body_hash: 'sha256:3e9853ac6591261495b3d83716ebb0d5e0c06be9de4ecf17a2898b3184ae0a76'
+modified: '2026-10-03'
+body_hash: 'sha256:dabd962e7ad564e17993b9c25977a160703beffb533222bbe729796b6474b187'
 related:
   - "[[2026-06-30-cpdefix-calculation-allgreen-audit]]"
   - "[[2026-07-05-cpdefix-followup-allgreen-adr]]"
-  - "[[2026-07-05-modelo-720-prior-year-baseline-plan]]"
 ---
 
 # `cpdefix-followup-allgreen` research: `campaign disposition grounding`
@@ -23,9 +22,9 @@ RAG and source confirmation showed the older resolver-contract closeout still na
 
 Source locators:
 
-- `src/aeat/application/aggregation/_source_mesh.py`: row-indexed binding carrier and merge ownership.
-- `src/aeat/application/aggregation/_foreign_assets.py`: foreign-assets resolver returns `row_binding_values`.
-- `src/aeat/application/modelo/_calculation_actions.py`: calculate path includes `ForeignAssetsAggregationSourceResolver`.
+- the former source file: row-indexed binding carrier and merge ownership.
+- the former source file: foreign-assets resolver returns `row_binding_values`.
+- the former source file: calculate path includes `ForeignAssetsAggregationSourceResolver`.
 - `.vault/plan/2026-07-05-modelo-720-prior-year-baseline-plan.md`: W03 row-carrier and enrollment steps checked.
 - `.vault/audit/2026-07-05-modelo-720-prior-year-baseline-audit.md`: close review finds no S16 blockers.
 
@@ -35,9 +34,9 @@ M347 no longer has zero relevant bindings. The current registry declares invoice
 
 Source locators:
 
-- `src/aeat/domain/calculations/registry/tests/test_modelo_347_registry_bindings.py`: proves M347 summary binding source and threshold behavior.
-- `src/aeat/_data/registry/aeat/modelos/347/revisions/2008-y-siguientes/bindings/0001-counterpart-summary.toml`: M347 summary binding data.
-- `src/aeat/application/aggregation/tests/test_per_modelo_service.py`: counterpart service tests assert the reserved resolver does not claim invoice-owned M347 bindings.
+- the former source file: proves M347 summary binding source and threshold behavior.
+- the former source file: M347 summary binding data.
+- the former source file: counterpart service tests assert the reserved resolver does not claim invoice-owned M347 bindings.
 - `.vault/audit/2026-07-04-m347-invoice-source-summary-audit.md`: records the invoice-owned M347 summary route.
 
 ### The counterpart provider remains intentionally gated
@@ -47,8 +46,8 @@ The accepted counterpart-source provider ADR remains authoritative for `ledger_t
 Source locators:
 
 - `.vault/adr/2026-07-05-cpdefix-followup-allgreen-adr.md`: accepted provider design and promotion trigger.
-- `src/aeat/application/aggregation/_source_mesh.py`: `RESERVED_SOURCE_KINDS` still contains `ledger_transaction` and `purchase_invoice_evidence`.
-- `src/aeat/application/aggregation/_counterpart.py`: repository-free resolver remains a supplied-observation adapter.
+- the former source file: `RESERVED_SOURCE_KINDS` still contains `ledger_transaction` and `purchase_invoice_evidence`.
+- the former source file: repository-free resolver remains a supplied-observation adapter.
 
 ### The campaign needs a tracker, not forced code churn
 

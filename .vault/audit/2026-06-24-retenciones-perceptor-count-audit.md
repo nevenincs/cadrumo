@@ -5,11 +5,10 @@ tags:
 date: '2026-06-24'
 related:
   - "[[2026-06-24-retenciones-perceptor-count-adr]]"
-  - "[[2026-06-24-retenciones-perceptor-count-plan]]"
 promoted_to:
   - 'rule:uncommitted-wip-is-not-orphaned'
-modified: '2026-07-17'
-body_hash: 'sha256:e3012f349934e2b35ab8275f7705a6431bb5dd312679b9bed6e8332f28b43817'
+modified: '2026-10-03'
+body_hash: 'sha256:96959db9c92b68a3e93c078165abe08caf7abdcc47e170227605060f2f27aabf'
 ---
 # `retenciones-perceptor-count` audit: `Shared-worktree WIP-discard incident + RET-1 P02 live-contention; uncommitted is not orphaned`
 
@@ -26,7 +25,7 @@ record, written by the coordinator about its own action.
 ### INCIDENT-1 (HIGH) — discarded a LIVE peer's working-tree WIP on a false "orphaned" premise
 
 A casilla-id-canonicalization change (adds `validate_casilla_input_ids`, threads it through
-`calculate_modelo_revision`) sat uncommitted in `src/aeat/application/modelo/_calculation_actions.py`
+`calculate_modelo_revision`) sat uncommitted in the retired module
 for many turns. It blocked RET-1 P02's mesh enrollment (which must edit that file) and caused
 locale-scaffold drift. Grounding suggested orphaned: `git grep HEAD` found zero committed consumers
 of the symbol (uncommitted-only), and both *reachable* teammates disclaimed it. On that basis the

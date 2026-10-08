@@ -16,6 +16,8 @@ seams (``CADRUMO_DOCS_FORCE_CLI_TREE`` / ``CADRUMO_DOCS_SKIP_CLI_TREE``).
 from __future__ import annotations
 
 import re
+import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
@@ -129,6 +131,27 @@ def test_sequence_check_skip_env_suppresses_the_check(tmp_path: Path) -> None:
         check_sequence_goldens(app, pages=None)
 
 
+def test_skipped_sequence_check_needs_no_engine_import() -> None:
+    """A rendering-only pass must not load the engine it explicitly skips."""
+    script = (
+        "import sys\n"
+        "from types import SimpleNamespace\n"
+        "sys.modules['dev.docs.sequences.checks'] = None\n"
+        "from dev.docs.sequence_build_gate import check_sequence_goldens\n"
+        "check_sequence_goldens(SimpleNamespace(), pages=None)\n"
+    )
+    with scoped_env_var("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", "1"):
+        result = subprocess.run(  # noqa: S603 - trusted interpreter and literal regression fixture.
+            [sys.executable, "-c", script],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=None,
+        )
+    assert result.returncode == 0, result.stderr
+
+
 def test_an_unpublished_authority_fails_the_build_before_any_verdict_is_reused(tmp_path: Path) -> None:
     """The gate refuses a non-current authority ahead of the verdict cache.
 
@@ -141,6 +164,39 @@ def test_an_unpublished_authority_fails_the_build_before_any_verdict_is_reused(t
         check_sequence_goldens(app, pages=None)
     assert PUBLISH_AUTHORITY_REMEDY in str(refusal.value)
     assert not (tmp_path / "never-read").exists()
+
+
+@pytest.mark.parametrize("problems", [[], ["strict sequence failure"]])
+def test_full_gate_bounds_actual_page_workers_and_keeps_failures(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, problems: list[str]
+) -> None:
+    from ..sequences import authority_currency, checks, verdict_cache
+
+    app = cast(
+        Sphinx,
+        SimpleNamespace(
+            srcdir=str(tmp_path), config=SimpleNamespace(cadrumo_sequences_goldens_root=tmp_path / "goldens")
+        ),
+    )
+    observed: list[tuple[Path, Path | None, int]] = []
+    currency_checks: list[bool] = []
+
+    def execute(*, docs_root: Path, goldens_root: Path | None, jobs: int) -> list[str]:
+        assert currency_checks == [True]
+        observed.append((docs_root, goldens_root, jobs))
+        return problems
+
+    monkeypatch.delenv("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", raising=False)
+    monkeypatch.setattr(authority_currency, "require_current_authority", lambda: currency_checks.append(True))
+    monkeypatch.setattr(verdict_cache, "published_verdict_key", lambda **_kwargs: "fixture-key")
+    monkeypatch.setattr(verdict_cache, "check_reusing_verdict", lambda _key, run: (run(), None))
+    monkeypatch.setattr(checks, "check_sequences_in_subprocess", execute)
+    if problems:
+        with pytest.raises(SphinxError, match="strict sequence failure"):
+            check_sequence_goldens(app)
+    else:
+        check_sequence_goldens(app)
+    assert observed == [(tmp_path, tmp_path / "goldens", 2)]
 
 
 def test_no_golden_carries_a_version_literal() -> None:

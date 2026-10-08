@@ -6,14 +6,13 @@ import argparse
 import json
 from typing import TypedDict
 
-from .lane_verification_core import (
+from .dependency_contract import (
     assert_optional_extra_registry_matches_pyproject,
-    find_repo_root,
     optional_extra_registry,
     pyproject_surfaces,
-    require_executable,
     validate_frozen_exports,
 )
+from .lane_verification_core import find_repo_root, require_executable
 
 
 class DependencySurfaceSummary(TypedDict):

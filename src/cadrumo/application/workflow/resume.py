@@ -1,7 +1,7 @@
 """Workflow-resumption preconditions and context assembly.
 
-Loads a prior :class:`application.workflow.run_models.WorkflowResult` by ``run_id``
-and decides whether the operator may start a fresh attempt against the same
+Captures a prior :class:`application.workflow.run_models.WorkflowResult` through
+explicit profile-bound ports and decides whether the operator may start a fresh attempt against the same
 ``(modelo, period)`` axis. Returns a
 :class:`application.workflow.resume.WorkflowResumeContext` the caller hands to
 :meth:`application.workflow.engine.WorkflowEngine.run_for_period` to drive the new
@@ -55,6 +55,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, replace
 from datetime import datetime
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
@@ -67,8 +68,8 @@ from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..modelo.calculation_action_ports import CalculationActionPorts
 from .abort import WorkflowAbortReason
 from .errors import WorkflowError
-from .persistence import list_runs, load_run
 from .run_models import WorkflowObligationFacts, WorkflowResult, WorkflowStage
+from .run_read_ports import WorkflowRunReader
 
 if TYPE_CHECKING:
     #: ``RevisionId`` is an ``Annotated[str, ...]`` alias, but importing it from
@@ -88,8 +89,30 @@ if TYPE_CHECKING:
     from ..modelo.work_addressing import ModeloResolvedRevisionProjection, ModeloWorkTarget
 
 
+class WorkflowResumeRefusalReason(StrEnum):
+    """Closed reasons for refusing a captured run's resume context."""
+
+    NOT_ABORTED = "not_aborted"
+    NO_ABORTED_REASON = "no_aborted_reason"
+    TERMINAL_REASON = "terminal_reason"
+    NO_OBLIGATION = "no_obligation"
+
+
 class WorkflowResumeRefusedError(WorkflowError):
     """Raised when a prior :class:`application.workflow.run_models.WorkflowResult` cannot be resumed."""
+
+    def __init__(self, *, reason: WorkflowResumeRefusalReason, prior: WorkflowResult) -> None:
+        """Retain a typed reason while preserving canonical localized guidance."""
+        self.reason = reason
+        super().__init__(
+            f"workflow run {prior.run_id} cannot be resumed: {reason.value}",
+            translated_message=f"application.workflow.errors.resume_refused_{reason.value}",
+            context={
+                "run_id": prior.run_id,
+                "final_stage": prior.final_stage.value,
+                "reason": prior.aborted_reason.value if prior.aborted_reason is not None else "",
+            },
+        )
 
 
 class WorkflowResumeRunAmbiguousError(WorkflowError):
@@ -126,13 +149,18 @@ _NON_RESUMABLE_REASONS: frozenset[WorkflowAbortReason] = frozenset(
 )
 
 
-def _captured_work_catalogue(bucket_id: str | None) -> tuple[WorkUnitCatalogue, str]:
-    """Capture the catalogue once at the workflow operation boundary."""
-    from ..modelo.work_selection import ModeloWorkSelectorRequest, resolve_modelo_work_bucket
-    from ..modelo.work_unit_repository import work_unit_catalogue_repository
-
-    resolved_bucket_id = resolve_modelo_work_bucket(ModeloWorkSelectorRequest(bucket_id=bucket_id))
-    return (work_unit_catalogue_repository(bucket_id=resolved_bucket_id).load(), resolved_bucket_id)
+def _captured_work_catalogue(ports: CalculationActionPorts, bucket_id: str | None) -> tuple[WorkUnitCatalogue, str]:
+    """Capture only the catalogue supplied by the profile-bound composition."""
+    repository = ports.work_lifecycle_ports.work_unit_repository
+    resolved_bucket = repository.bucket_id
+    if resolved_bucket is None:
+        raise WorkflowError("workflow resume requires its bound profile catalogue")
+    if bucket_id is not None and bucket_id != resolved_bucket:
+        raise WorkflowError("workflow resume requires its bound profile catalogue")
+    catalogue = repository.load()
+    if any(unit.bucket_id != resolved_bucket for unit in catalogue):
+        raise WorkflowError("workflow resume catalogue contains a foreign profile")
+    return catalogue, resolved_bucket
 
 
 _WORKFLOW_RUN_ID_RE = re.compile(HEX_PATTERN_16)
@@ -196,6 +224,26 @@ class WorkflowResumeContext(BaseModel):
     aborted_reason: WorkflowAbortReason
 
 
+@dataclass(frozen=True, slots=True)
+class WorkflowResumeSelection:
+    """A selected address and the same immutable record used to resolve it."""
+
+    resolution: WorkflowResumeTargetResolution
+    prior: WorkflowResult
+
+    def __post_init__(self) -> None:
+        """Keep the selector metadata bound to the exact captured prior run."""
+        if self.resolution.run_id != self.prior.run_id:
+            raise ValueError("workflow resume selection names another run")
+        obligation = self.prior.obligation
+        if self.resolution.period is not None and (
+            obligation is None
+            or obligation.period != self.resolution.period
+            or obligation.modelo != self.resolution.modelo
+        ):
+            raise ValueError("workflow resume selection differs from its captured obligation")
+
+
 @dataclass(frozen=True)
 class _ResumeTargetInputs:
     """Normalised operator selectors used by the unified resume resolver."""
@@ -213,8 +261,8 @@ class _ResumeTargetInputs:
     visible_supplied: bool
 
 
-def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
-    """Validate that ``run_id`` may be resumed and return a fresh-attempt context.
+def resume_modelo_workflow(prior: WorkflowResult) -> WorkflowResumeContext:
+    """Validate a captured run and return its fresh-attempt context.
 
     The caller is expected to drive
     :meth:`application.workflow.engine.WorkflowEngine.run_for_period` with
@@ -222,8 +270,7 @@ def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
     a fresh :class:`application.workflow.run_models.WorkflowResult`.
 
     Args:
-        run_id: The 16-character hex run id of the prior aborted workflow
-            run to resume.
+        prior: The exact immutable record captured by target resolution.
 
     Returns:
         A :class:`application.workflow.resume.WorkflowResumeContext` carrying the
@@ -234,40 +281,15 @@ def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
             ``ABORTED`` state, was aborted for a non-resumable reason,
             or lacks an ``obligation``.
     """
-    prior: WorkflowResult = load_run(run_id)
-
-    if prior.final_stage is not WorkflowStage.ABORTED:
-        raise WorkflowResumeRefusedError(
-            translated_message="application.workflow.errors.resume_refused_not_aborted",
-            context={"run_id": run_id, "final_stage": prior.final_stage.value},
-        )
-    if prior.aborted_reason is None:  # defensive: validator enforces this
-        raise WorkflowResumeRefusedError(
-            translated_message="application.workflow.errors.resume_refused_no_aborted_reason",
-            context={"run_id": run_id},
-        )
-    if prior.aborted_reason in _NON_RESUMABLE_REASONS:
-        raise WorkflowResumeRefusedError(
-            # BOTH message and translated_message, deliberately. The
-            # operator-facing envelope resolves ``translated_message`` first
-            # (``core.errors.error_codes.resolve_error_message``), so this
-            # ``message`` changes nothing an operator sees -- it changes only
-            # ``str(exc)``, which is what a traceback and a failing test's own
-            # summary line show.
-            #
-            # Without it the failure line is the bare key, identical for every
-            # non-resumable reason, with the discriminating one reachable only
-            # through ``context["reason"]``. That is how two unrelated defects
-            # come to present byte-identically and get triaged as one.
-            f"workflow run {run_id} cannot be resumed: aborted as {prior.aborted_reason.value}",
-            translated_message="application.workflow.errors.resume_refused_terminal_reason",
-            context={"run_id": run_id, "reason": prior.aborted_reason.value},
-        )
-    if prior.obligation is None:
-        raise WorkflowResumeRefusedError(
-            translated_message="application.workflow.errors.resume_refused_no_obligation",
-            context={"run_id": run_id},
-        )
+    reason = workflow_resume_refusal_reason(
+        final_stage=prior.final_stage,
+        aborted_reason=prior.aborted_reason,
+        has_obligation=prior.obligation is not None,
+    )
+    if reason is not None:
+        raise WorkflowResumeRefusedError(reason=reason, prior=prior)
+    if prior.obligation is None or prior.aborted_reason is None:
+        raise WorkflowError("resumability policy returned incomplete context")
 
     return WorkflowResumeContext(
         resumed_from_run_id=prior.run_id,
@@ -276,6 +298,21 @@ def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
         obligation=prior.obligation,
         aborted_reason=prior.aborted_reason,
     )
+
+
+def workflow_resume_refusal_reason(
+    *, final_stage: WorkflowStage, aborted_reason: WorkflowAbortReason | None, has_obligation: bool
+) -> WorkflowResumeRefusalReason | None:
+    """Classify captured terminal facts through the shared resumability policy."""
+    if final_stage is not WorkflowStage.ABORTED:
+        return WorkflowResumeRefusalReason.NOT_ABORTED
+    if aborted_reason is None:
+        return WorkflowResumeRefusalReason.NO_ABORTED_REASON
+    if aborted_reason in _NON_RESUMABLE_REASONS:
+        return WorkflowResumeRefusalReason.TERMINAL_REASON
+    if not has_obligation:
+        return WorkflowResumeRefusalReason.NO_OBLIGATION
+    return None
 
 
 def resolve_modelo_workflow_resume_target(
@@ -291,8 +328,9 @@ def resolve_modelo_workflow_resume_target(
     bucket_id: str | None = None,
     selector: object | None = None,
     ports: CalculationActionPorts,
-) -> WorkflowResumeTargetResolution:
-    """Resolve the operator's resume address and return a target resolution.
+    runs: WorkflowRunReader,
+) -> WorkflowResumeSelection:
+    """Resolve an address and retain the exact record used by that lookup.
 
     Exact run ids remain the direct path. Work-unit ids, calculation-revision
     ids, and visible modelo/year/period selectors resolve through the public
@@ -300,8 +338,7 @@ def resolve_modelo_workflow_resume_target(
     not duplicate modelo selector policy.
 
     Returns:
-        A :class:`application.workflow.resume.WorkflowResumeTargetResolution`
-        carrying the selected run id and any resolved modelo work metadata.
+        A selection containing the resolved address and its captured record.
     """
     inputs = _resume_target_inputs(
         target=target,
@@ -319,13 +356,14 @@ def resolve_modelo_workflow_resume_target(
     inputs = _classify_resume_target(inputs)
 
     if inputs.workflow_run_id is not None:
-        return _workflow_run_id_resolution(inputs.workflow_run_id, source="workflow_run_id")
+        resolution = _workflow_run_id_resolution(inputs.workflow_run_id, source="workflow_run_id")
+        return WorkflowResumeSelection(resolution, runs.load(resolution.run_id))
     if inputs.calculation_revision_id is not None:
-        return _resolve_resume_from_calculation_revision(inputs.calculation_revision_id, ports=ports)
+        return _resolve_resume_from_calculation_revision(inputs.calculation_revision_id, ports=ports, runs=runs)
     if inputs.work_unit_id is not None:
-        return _resolve_resume_from_work_unit_id(inputs.work_unit_id, selector=inputs.selector, ports=ports)
+        return _resolve_resume_from_work_unit_id(inputs.work_unit_id, selector=inputs.selector, ports=ports, runs=runs)
     if inputs.visible_supplied:
-        return _resolve_resume_from_visible_inputs(inputs, ports=ports)
+        return _resolve_resume_from_visible_inputs(inputs, ports=ports, runs=runs)
     raise WorkflowError(translated_message="application.workflow.errors.resume_target_required")
 
 
@@ -383,13 +421,20 @@ def _classify_resume_target(inputs: _ResumeTargetInputs) -> _ResumeTargetInputs:
     """Map the generic target token onto its canonical exact-id field."""
     if inputs.target is None:
         return inputs
-    if _WORKFLOW_RUN_ID_RE.fullmatch(inputs.target):
-        return replace(inputs, workflow_run_id=inputs.target)
-    if _WORK_UNIT_ID_RE.fullmatch(inputs.target):
-        return replace(inputs, work_unit_id=inputs.target)
+    target = validate_workflow_resume_target_token(inputs.target)
+    if _WORKFLOW_RUN_ID_RE.fullmatch(target):
+        return replace(inputs, workflow_run_id=target)
+    return replace(inputs, work_unit_id=target)
+
+
+def validate_workflow_resume_target_token(value: str) -> str:
+    """Validate an exact CLI address without loading private workflow history."""
+    target = value.strip()
+    if _WORKFLOW_RUN_ID_RE.fullmatch(target) or _WORK_UNIT_ID_RE.fullmatch(target):
+        return target
     raise WorkflowError(
         translated_message="application.workflow.errors.resume_target_invalid",
-        context={"target": inputs.target},
+        context={"target": value},
     )
 
 
@@ -397,7 +442,8 @@ def _resolve_resume_from_visible_inputs(
     inputs: _ResumeTargetInputs,
     *,
     ports: CalculationActionPorts,
-) -> WorkflowResumeTargetResolution:
+    runs: WorkflowRunReader,
+) -> WorkflowResumeSelection:
     """Validate and resolve a visible modelo filing selector."""
     if inputs.modelo is None or inputs.year is None or inputs.period is None:
         raise WorkflowError(
@@ -416,6 +462,7 @@ def _resolve_resume_from_visible_inputs(
         bucket_id=inputs.bucket_id,
         selector=inputs.selector,
         ports=ports,
+        runs=runs,
     )
 
 
@@ -432,16 +479,18 @@ def _resolve_resume_from_calculation_revision(
     calculation_revision_id: CalculationRevisionId,
     *,
     ports: CalculationActionPorts,
-) -> WorkflowResumeTargetResolution:
-    from ..modelo.calculation_actions import get_calculation_revision
+    runs: WorkflowRunReader,
+) -> WorkflowResumeSelection:
+    from ..modelo.calculation_actions import get_recorded_calculation_revision
     from ..modelo.work_lifecycle import get_work_unit
 
-    revision = get_calculation_revision(calculation_revision_id, ports=ports)
+    revision = get_recorded_calculation_revision(calculation_revision_id, ports=ports)
     work_unit = get_work_unit(revision.work_unit_id, ports=ports.work_lifecycle_ports)
     return _resolve_resume_from_work_unit(
         work_unit,
         source="calculation_revision_id",
         calculation_revision_id=revision.calculation_revision_id,
+        runs=runs,
     )
 
 
@@ -450,11 +499,12 @@ def _resolve_resume_from_work_unit_id(
     *,
     selector: object | None,
     ports: CalculationActionPorts,
-) -> WorkflowResumeTargetResolution:
+    runs: WorkflowRunReader,
+) -> WorkflowResumeSelection:
     from ..modelo.work_addressing import ModeloExactWorkUnitTarget, resolve_modelo_work_address_unit
 
     target = ModeloExactWorkUnitTarget(work_unit_id=work_unit_id)
-    catalogue, bucket_id = _captured_work_catalogue(None)
+    catalogue, bucket_id = _captured_work_catalogue(ports, None)
     if selector is not None:
         _resolve_revision_for_resume_target(
             target=target,
@@ -467,6 +517,7 @@ def _resolve_resume_from_work_unit_id(
         resolve_modelo_work_address_unit(target.to_work_address(), catalogue=catalogue, bucket_id=bucket_id),
         source="work_unit_id",
         latest=True,
+        runs=runs,
     )
 
 
@@ -479,7 +530,8 @@ def _resolve_resume_from_visible_target(
     bucket_id: str | None,
     selector: object | None,
     ports: CalculationActionPorts,
-) -> WorkflowResumeTargetResolution:
+    runs: WorkflowRunReader,
+) -> WorkflowResumeSelection:
     from ..modelo.work_addressing import (
         ModeloExactWorkUnitTarget,
         ModeloVisibleFilingTarget,
@@ -494,7 +546,7 @@ def _resolve_resume_from_visible_target(
         registry_revision_id=registry_revision_id,
         bucket_id=bucket_id,
     )
-    catalogue, resolved_bucket_id = _captured_work_catalogue(bucket_id)
+    catalogue, resolved_bucket_id = _captured_work_catalogue(ports, bucket_id)
     if selector is not None:
         revision = _resolve_revision_for_resume_target(
             target=target,
@@ -504,26 +556,31 @@ def _resolve_resume_from_visible_target(
             ports=ports,
         )
         exact_target = ModeloExactWorkUnitTarget(work_unit_id=revision.work_unit_id)
-        resolution = _resolve_resume_from_work_unit(
+        selection = _resolve_resume_from_work_unit(
             resolve_modelo_work_address_unit(
                 exact_target.to_work_address(),
                 catalogue=catalogue,
                 bucket_id=resolved_bucket_id,
             ),
             source="visible_target_revision_selector",
+            runs=runs,
         )
-        return resolution.model_copy(
-            update={
-                "source": "visible_target_revision_selector",
-                "calculation_revision_id": revision.calculation_revision_id,
-                "short_calculation_revision_id": revision.short_calculation_revision_id,
-            },
+        return WorkflowResumeSelection(
+            selection.resolution.model_copy(
+                update={
+                    "source": "visible_target_revision_selector",
+                    "calculation_revision_id": revision.calculation_revision_id,
+                    "short_calculation_revision_id": revision.short_calculation_revision_id,
+                },
+            ),
+            selection.prior,
         )
     return resolve_modelo_workflow_run_for_resume(
         target,
         source="visible_target",
         catalogue=catalogue,
         bucket_id=resolved_bucket_id,
+        runs=runs,
     )
 
 
@@ -568,7 +625,7 @@ def _resolve_visible_period(*, modelo: str, year: int, period: Period) -> Period
     return period
 
 
-def find_latest_run_for_period(*, modelo: str, period: Period) -> WorkflowResult:
+def find_latest_run_for_period(*, modelo: str, period: Period, runs: WorkflowRunReader) -> WorkflowResult:
     """Return the most recent persisted workflow run for ``(modelo, period)``.
 
     A workflow run id is a 16-character hash an operator cannot derive
@@ -577,14 +634,15 @@ def find_latest_run_for_period(*, modelo: str, period: Period) -> WorkflowResult
     persisted run history and returns the newest run whose resolved
     obligation matches the supplied ``(modelo, period)``.
 
-    The returned run is *not* gated for resumability — pass its
-    ``run_id`` to :func:`application.workflow.resume.resume_modelo_workflow`, which
+    The returned run is *not* gated for resumability — pass the captured record
+    to :func:`application.workflow.resume.resume_modelo_workflow`, which
     applies the resumability rules and produces a precise refusal if the latest
     run cannot be retried.
 
     Args:
         modelo: Target modelo identifier.
         period: Target typed workflow period.
+        runs: Explicit profile-bound reader used to capture candidate records.
 
     Returns:
         The newest matching :class:`application.workflow.run_models.WorkflowResult`.
@@ -592,7 +650,7 @@ def find_latest_run_for_period(*, modelo: str, period: Period) -> WorkflowResult
     Raises:
         WorkflowError: When no persisted run targets ``(modelo, period)``.
     """
-    matches = _runs_for_period(modelo=modelo, period=period)
+    matches = _runs_for_period(modelo=modelo, period=period, runs=runs)
     if not matches:
         raise WorkflowError(
             translated_message="application.workflow.errors.no_run_for_period",
@@ -607,6 +665,7 @@ def find_unique_run_for_period(
     period: Period,
     work_unit_id: str | None = None,
     short_work_unit_id: str | None = None,
+    runs: WorkflowRunReader,
 ) -> WorkflowResult:
     """Return a workflow run for ``(modelo, period)`` or refuse ambiguity.
 
@@ -617,7 +676,7 @@ def find_unique_run_for_period(
     Returns:
         The unique matching :class:`application.workflow.run_models.WorkflowResult`.
     """
-    matches = _runs_for_period(modelo=modelo, period=period)
+    matches = _runs_for_period(modelo=modelo, period=period, runs=runs)
     if not matches:
         raise WorkflowError(
             translated_message="application.workflow.errors.no_run_for_period",
@@ -645,7 +704,8 @@ def resolve_modelo_workflow_run_for_resume(
     source: str = "modelo_work_target",
     catalogue: WorkUnitCatalogue,
     bucket_id: str,
-) -> WorkflowResumeTargetResolution:
+    runs: WorkflowRunReader,
+) -> WorkflowResumeSelection:
     """Resolve a modelo work target to a resume target resolution.
 
     The modelo application facade remains the owner of visible filing
@@ -655,8 +715,8 @@ def resolve_modelo_workflow_run_for_resume(
     resolved workflow period.
 
     Returns:
-        A :class:`application.workflow.resume.WorkflowResumeTargetResolution`
-        suitable for passing to :func:`application.workflow.resume.resume_modelo_workflow`.
+        A selection whose captured prior can be passed to
+        :func:`application.workflow.resume.resume_modelo_workflow`.
     """
     from ..modelo.work_addressing import ModeloExactWorkUnitTarget, ModeloWorkAddress, resolve_modelo_work_target
 
@@ -670,6 +730,7 @@ def resolve_modelo_workflow_run_for_resume(
         resolution.work_unit,
         source=source,
         latest=exact_target,
+        runs=runs,
     )
 
 
@@ -679,22 +740,24 @@ def _resolve_resume_from_work_unit(
     source: str,
     latest: bool = False,
     calculation_revision_id: CalculationRevisionId | None = None,
-) -> WorkflowResumeTargetResolution:
+    runs: WorkflowRunReader,
+) -> WorkflowResumeSelection:
     from ..modelo.work_addressing import project_modelo_work_unit
     from ..modelo.workflow_gate import workflow_period_for_work_unit
 
     projection = project_modelo_work_unit(work_unit)
     workflow_period = workflow_period_for_work_unit(work_unit)
     if latest:
-        run = find_latest_run_for_period(modelo=projection.modelo, period=workflow_period)
+        run = find_latest_run_for_period(modelo=projection.modelo, period=workflow_period, runs=runs)
     else:
         run = find_unique_run_for_period(
             modelo=projection.modelo,
             period=workflow_period,
             work_unit_id=projection.work_unit_id,
             short_work_unit_id=projection.short_work_unit_id,
+            runs=runs,
         )
-    return WorkflowResumeTargetResolution(
+    resolution = WorkflowResumeTargetResolution(
         run_id=run.run_id,
         source=source,
         modelo=projection.modelo,
@@ -705,6 +768,7 @@ def _resolve_resume_from_work_unit(
         calculation_revision_id=calculation_revision_id,
         short_calculation_revision_id=calculation_revision_id[-12:] if calculation_revision_id is not None else None,
     )
+    return WorkflowResumeSelection(resolution, run)
 
 
 def workflow_resume_candidate_lines(candidates: tuple[WorkflowResumeRunCandidate, ...]) -> str:
@@ -736,10 +800,10 @@ def workflow_resume_candidate_lines(candidates: tuple[WorkflowResumeRunCandidate
     return "\n".join(rows)
 
 
-def _runs_for_period(*, modelo: str, period: Period) -> list[WorkflowResult]:
+def _runs_for_period(*, modelo: str, period: Period, runs: WorkflowRunReader) -> list[WorkflowResult]:
     matches = [
         run
-        for run in list_runs()
+        for run in runs.list()
         if run.obligation is not None and run.obligation.modelo == modelo and run.obligation.period == period
     ]
     matches.sort(key=lambda run: run.started_at, reverse=True)
@@ -768,14 +832,18 @@ def _workflow_resume_run_candidate(
 
 __all__ = [
     "WorkflowResumeContext",
+    "WorkflowResumeRefusalReason",
     "WorkflowResumeRefusedError",
     "WorkflowResumeRunAmbiguousError",
     "WorkflowResumeRunCandidate",
+    "WorkflowResumeSelection",
     "WorkflowResumeTargetResolution",
     "find_latest_run_for_period",
     "find_unique_run_for_period",
     "resolve_modelo_workflow_resume_target",
     "resolve_modelo_workflow_run_for_resume",
     "resume_modelo_workflow",
+    "validate_workflow_resume_target_token",
     "workflow_resume_candidate_lines",
+    "workflow_resume_refusal_reason",
 ]

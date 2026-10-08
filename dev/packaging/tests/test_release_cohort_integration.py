@@ -23,17 +23,6 @@ from ..release_cohort import build_release_cohort
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-#: Wall ceiling for the real double build. This test snapshots the source and
-#: builds the eleven-member cohort TWICE, entirely inside child processes, so
-#: it runs far past the repository's 300s default.
-#:
-#: It needs its own ceiling for a reason beyond simply being slow. When the
-#: default fires, this test's thread is parked in a subprocess call that the
-#: thread timeout method cannot interrupt -- so the xdist WORKER exits
-#: uncleanly instead of the test failing, and the run is then re-scheduled or
-#: wedged rather than reported. It was observed killing worker gw1.
-_REAL_DOUBLE_BUILD_TIMEOUT = 3600
-
 
 def _stable_source_snapshot(repo_root: Path, destination: Path) -> Path:
     """Snapshot the working repository into a source whose content cannot move.
@@ -57,7 +46,6 @@ def _stable_source_snapshot(repo_root: Path, destination: Path) -> Path:
     return destination
 
 
-@pytest.mark.timeout(_REAL_DOUBLE_BUILD_TIMEOUT)
 def test_real_clean_source_build_is_complete_and_reproducible() -> None:
     """Build the real 12-member cohort twice from the same content and compare every digest."""
     repo_root = REPO_ROOT

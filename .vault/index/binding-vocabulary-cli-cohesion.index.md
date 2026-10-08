@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bdbdf96331269a04c54c48600323efeb0805c5967fd5b04d4bcad96791c5d6d8'
+body_hash: 'sha256:0b73c105737231793336f4de63788085f656a976511925b064d44a662a1ad92f'
 related:
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]'
-  - '[[2026-06-26-binding-vocabulary-cli-cohesion-ledger]]'
-  - '[[2026-06-26-binding-vocabulary-cli-cohesion-plan]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-reference]]'
   - '[[2026-07-02-binding-vocabulary-cli-cohesion-audit]]'
   - '[[2026-07-04-binding-vocabulary-cli-cohesion-audit]]'
@@ -31,14 +29,6 @@ Auto-generated index of all documents tagged with `#binding-vocabulary-cli-cohes
 
 - `2026-07-02-binding-vocabulary-cli-cohesion-audit` - `binding-vocabulary-cli-cohesion` audit: `Wave 1 D9 close-blocker audit`
 - `2026-07-04-binding-vocabulary-cli-cohesion-audit` - `binding-vocabulary-cli-cohesion` audit: `S23/S24 evidence review`
-
-### exec
-
-- `2026-06-26-binding-vocabulary-cli-cohesion-ledger` - `binding-vocabulary-cli-cohesion` ledger
-
-### plan
-
-- `2026-06-26-binding-vocabulary-cli-cohesion-plan` - `binding-vocabulary-cli-cohesion` plan
 
 ### reference
 

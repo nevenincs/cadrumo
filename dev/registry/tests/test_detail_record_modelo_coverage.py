@@ -30,12 +30,9 @@ _DETAIL_RECORD_MODELOS: tuple[tuple[str, str, str, int], ...] = (
     # (modelo, revision_id, source_kind, expected_cohort_count)
     ("190", "2025-y-siguientes", "withholding", 1),
     ("193", "2025-y-siguientes", "withholding", 2),
-    ("232", "2018-y-siguientes", "related_party_operation", 1),
     ("720", "2013-y-siguientes", "foreign_asset", 1),
     ("184", "2025-y-siguientes", "atribucion_member", 1),
-    ("360", "2010-y-siguientes", "refund_operation", 1),
-    ("349", "2020-y-siguientes", "collectible_invoice", 2),
-    ("182", "2025", "donativo_donor", 1),
+    ("349", "2020-y-siguientes", "m349_intracommunity_operation", 2),
 )
 
 

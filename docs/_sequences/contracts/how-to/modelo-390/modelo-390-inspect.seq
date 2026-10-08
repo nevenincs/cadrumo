@@ -2,22 +2,22 @@
 @setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2025-01-01
 @setup aeat --format json app modelo work create --modelo 390 --year 2025 --period 0A
 @setup aeat --format json app modelo work calculate --modelo 390 --year 2025 --period 0A
-@step List every saved work unit on the profile.
+@step List every saved declaration on the profile.
 aeat app modelo work list
-@step Check the annual ledger window with preflight and status.
+@step Check the annual records window with preflight and status.
 aeat app ledger preflight --year 2025 --period 0A
 aeat app ledger status --year 2025 --period 0A
-@step Inspect the annual work unit's status and bindings.
+@step Inspect the annual declaration's status and inputs.
 aeat app modelo work status --modelo 390 --year 2025 --period 0A
 aeat app modelo bindings list --modelo 390 --year 2025 --period 0A --missing
-@step List the annual casillas.
+@step List the annual boxes.
 aeat app modelo casillas 390 --period 0A
-@step List the annual revisions and inspect the current one.
+@step List the annual calculations and inspect the current one.
 aeat app modelo work revisions --modelo 390 --year 2025 --period 0A
 aeat app modelo work revision --modelo 390 --year 2025 --period 0A
-@step Track the IVA compensation wallet across the year.
+@step Track the VAT compensation wallet across the year.
 aeat app modelo iva-wallet balance --as-of-year 2025
 @step Explain how each annual formula is computed, with its legal references.
 @result aeat --format json app modelo formulas 390 --period 0A --explain
-@expect result.formula_count == 19
+@expect result.formula_count == 26
 @expect exit_code == 0

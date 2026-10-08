@@ -1,1 +1,1 @@
-"""Encrypted persistence for the outbound LLM adapter's cache, usage, telemetry and consent records."""
+"""Encrypted persistence for the outbound LLM adapter's cache, usage, run-record and consent records."""

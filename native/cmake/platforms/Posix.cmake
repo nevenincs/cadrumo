@@ -1,0 +1,138 @@
+# The shared owner supplies target pins and exact SDK paths; no find_package(Python).
+string(JSON sdk_include GET "${package_layout}" sdk include)
+string(JSON sdk_library GET "${package_layout}" sdk link_library)
+string(JSON entrypoint_suffix GET "${package_layout}" entrypoint_suffix)
+if(NOT entrypoint_suffix STREQUAL "")
+  message(FATAL_ERROR "POSIX entrypoints must have no executable suffix")
+endif()
+set(CADRUMO_RUST_ROOT "" CACHE PATH "Pinned target-capable Rust toolchain root")
+if(NOT EXISTS "${CADRUMO_RUST_ROOT}/bin/rustc")
+  message(FATAL_ERROR "Supply CADRUMO_RUST_ROOT for the pinned Rust toolchain")
+endif()
+execute_process(COMMAND "${CADRUMO_RUST_ROOT}/bin/rustc" --version
+  OUTPUT_VARIABLE rust_version OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+if(NOT rust_version MATCHES "^rustc ${CADRUMO_PIN_rust} ")
+  message(FATAL_ERROR "Rust ${CADRUMO_PIN_rust} is required")
+endif()
+set(CADRUMO_ENTRYPOINTS)
+string(JSON entrypoint_count LENGTH "${package_layout}" entrypoints)
+if(entrypoint_count GREATER 0)
+  math(EXPR entrypoint_last "${entrypoint_count} - 1")
+  foreach(index RANGE ${entrypoint_last})
+    string(JSON entrypoint MEMBER "${package_layout}" entrypoints ${index})
+    list(APPEND CADRUMO_ENTRYPOINTS "${entrypoint}")
+  endforeach()
+endif()
+cadrumo_cached_command(metadata_command native_metadata SHARED
+  INPUTS ${metadata_inputs} "${CONTRACT_DIR}/identity.json"
+  OUTPUTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json")
+add_custom_target(native_metadata
+  COMMAND ${metadata_command} ${CADRUMO_HELPER} run -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.metadata "${CONTRACT_DIR}"
+    --number "${CADRUMO_BUILD_NUMBER}" --date "${CADRUMO_BUILD_DATE}" --tools "${CADRUMO_PATH_TOOLS}"
+    --channel "${CADRUMO_CHANNEL}" --target "${CADRUMO_TARGET}"
+  BYPRODUCTS "${CONTRACT_DIR}/build_metadata.h" "${CONTRACT_DIR}/build.json"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+
+set(rust_profile "$<IF:$<CONFIG:Debug>,debug,release>")
+string(TOUPPER "${CADRUMO_PIN_rust_target}" cargo_target)
+string(REPLACE "-" "_" cargo_target "${cargo_target}")
+set(linker_variable "CARGO_TARGET_${cargo_target}_LINKER")
+set(CADRUMO_RUST_ENVIRONMENT_NAMES "${linker_variable}")
+include("${CMAKE_CURRENT_LIST_DIR}/RustLinker.cmake")
+cadrumo_posix_rust_linker(rust_linker)
+set("CADRUMO_RUST_ENV_${linker_variable}" "${rust_linker}")
+if(APPLE)
+  list(APPEND CADRUMO_RUST_ENVIRONMENT_NAMES MACOSX_DEPLOYMENT_TARGET)
+  set(CADRUMO_RUST_ENV_MACOSX_DEPLOYMENT_TARGET "${CMAKE_OSX_DEPLOYMENT_TARGET}")
+endif()
+cadrumo_cargo_command(platform_cargo --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs")
+set(platform_dir "${CADRUMO_PATH_CARGO}/${CADRUMO_PIN_rust_target}/${rust_profile}")
+set(platform_static "${platform_dir}/libcadrumo_platform.a")
+# Separate crate types let one native library be rebuilt without linking its sibling.
+add_custom_target(rust_platform_static
+  COMMAND ${platform_cargo} rustc --locked --lib --crate-type staticlib
+    --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
+    --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>"
+  BYPRODUCTS "${platform_static}"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+add_custom_target(rust_platform_shared
+  COMMAND ${platform_cargo} rustc --locked --lib --crate-type cdylib
+    --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
+    --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>"
+  BYPRODUCTS "${platform_dir}/${CMAKE_SHARED_LIBRARY_PREFIX}cadrumo_platform${CMAKE_SHARED_LIBRARY_SUFFIX}"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+add_dependencies(rust_platform_static native_contract)
+add_dependencies(rust_platform_shared native_contract)
+add_custom_target(rust_platform DEPENDS rust_platform_static rust_platform_shared)
+set(platform_consumer "${platform_dir}/platform-consumer${CMAKE_EXECUTABLE_SUFFIX}")
+add_custom_target(rust_platform_consumer
+  COMMAND ${platform_cargo} build --locked --bin platform-consumer
+    --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
+    --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>"
+  BYPRODUCTS "${platform_consumer}"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
+add_dependencies(rust_platform_consumer native_contract)
+if(BUILD_TESTING)
+  # Preserve the default test build while keeping either producer individually addressable.
+  add_custom_target(platform_test_binaries ALL DEPENDS rust_platform_consumer)
+endif()
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CADRUMO_PATH_BIN}/$<CONFIG>")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CADRUMO_PATH_BIN}/$<CONFIG>")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CADRUMO_PATH_LIB}/$<CONFIG>")
+add_executable(cadrumo_python interpreter/posix/host.c)
+set_target_properties(cadrumo_python PROPERTIES OUTPUT_NAME "${production_name}")
+add_executable(cadrumo_python_d EXCLUDE_FROM_ALL interpreter/posix/host.c)
+set_target_properties(cadrumo_python_d PROPERTIES OUTPUT_NAME "${development_name}")
+target_compile_definitions(cadrumo_python_d PRIVATE CADRUMO_DEVELOPMENT=1)
+set(CADRUMO_ENTRYPOINT_TARGETS)
+foreach(entrypoint IN LISTS CADRUMO_ENTRYPOINTS)
+  string(MAKE_C_IDENTIFIER "cadrumo_entrypoint_${entrypoint}" target)
+  add_executable(${target} interpreter/posix/host.c)
+  set_target_properties(${target} PROPERTIES OUTPUT_NAME "${entrypoint}")
+  target_compile_definitions(${target} PRIVATE "CADRUMO_ENTRYPOINT=\"${entrypoint}\"")
+  list(APPEND CADRUMO_ENTRYPOINT_TARGETS ${target})
+endforeach()
+set(host_targets cadrumo_python cadrumo_python_d ${CADRUMO_ENTRYPOINT_TARGETS})
+add_library(cadrumo_python_bridge SHARED interpreter/python.c)
+set_target_properties(cadrumo_python_bridge PROPERTIES PREFIX "" OUTPUT_NAME "${bridge_name}"
+  BUILD_WITH_INSTALL_RPATH YES INSTALL_RPATH "$ORIGIN")
+if(APPLE)
+  set_target_properties(cadrumo_python_bridge PROPERTIES INSTALL_RPATH "@loader_path")
+  target_link_options(cadrumo_python_bridge PRIVATE "LINKER:-headerpad_max_install_names")
+endif()
+target_include_directories(cadrumo_python_bridge PRIVATE "${CPYTHON_ROOT}/${sdk_include}")
+target_link_libraries(cadrumo_python_bridge PRIVATE "${CPYTHON_ROOT}/${sdk_library}")
+add_dependencies(cadrumo_python_bridge python_sdk)
+include("${PROJECT_SOURCE_DIR}/native/cmake/CompilePolicy.cmake")
+foreach(target ${host_targets} cadrumo_python_bridge)
+  cadrumo_compile_policy(${target})
+  target_include_directories(${target} PRIVATE "${CONTRACT_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/platform/include")
+  add_dependencies(${target} native_contract native_metadata)
+endforeach()
+foreach(target ${host_targets})
+  target_link_libraries(${target} PRIVATE "${platform_static}" ${CMAKE_DL_LIBS} pthread m)
+  # Each interpreter entry needs the bridge at runtime. Ninja also emits an alias
+  # for OUTPUT_NAME (python), which can take precedence over the aggregate target.
+  add_dependencies(${target} rust_platform_static cadrumo_python_bridge)
+  if(APPLE)
+    target_link_options(${target} PRIVATE "LINKER:-headerpad_max_install_names")
+  endif()
+endforeach()
+add_custom_target(python DEPENDS cadrumo_python cadrumo_python_bridge)
+add_custom_target(python_d DEPENDS cadrumo_python_d cadrumo_python_bridge)
+cadrumo_register_clean(TARGET python DEPENDS cadrumo_python cadrumo_python_bridge)
+cadrumo_register_clean(TARGET python_d DEPENDS cadrumo_python_d cadrumo_python_bridge)
+if(BUILD_TESTING)
+  add_test(NAME platform.linker_contract COMMAND "${CMAKE_COMMAND}"
+    "-DTEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/linker-contract"
+    -P "${CMAKE_CURRENT_LIST_DIR}/tests/RustLinker.cmake")
+  add_executable(platform_invocation_test interpreter/posix/tests/invocation.c)
+  cadrumo_compile_policy(platform_invocation_test)
+  target_compile_options(platform_invocation_test PRIVATE -UNDEBUG)
+  add_test(NAME platform.invocation COMMAND platform_invocation_test)
+  add_test(NAME platform.resolver COMMAND ${platform_cargo} test --locked --lib
+    --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
+    --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>")
+  set_tests_properties(platform.resolver PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 0)
+endif()

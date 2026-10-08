@@ -69,7 +69,7 @@ def test_core_run_health_diagnostics_does_not_depend_on_the_optional_subpackage(
     """The division line: the run-health verb stays unconditional.
 
     ``application/diagnostics_run_health.py`` is a core, non-ledger consumer of
-    LLM run telemetry. That telemetry store deliberately stayed on the core
+    LLM run record. That run-record store deliberately stayed on the core
     side of the division precisely so this verb keeps working on an install
     that never enables inference. If this module reached into the subpackage,
     a bare install would raise instead of reporting run health.
@@ -98,7 +98,7 @@ def test_core_run_health_diagnostics_does_not_depend_on_the_optional_subpackage(
             )
     assert reaches == [], (
         "core run-health diagnostics must not import the optional inference subpackage; "
-        f"it reads run telemetry from the core-side store instead. Reaches: {reaches}"
+        f"it reads run record from the core-side store instead. Reaches: {reaches}"
     )
 
 

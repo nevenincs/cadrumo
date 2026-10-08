@@ -21,7 +21,7 @@ from ...browser.factory import opened_browser_page, shared_playwright_runtime
 from ...browser.profile import Profile
 from .._declarations_diagnostics import declarations_page_shape_context as _declarations_page_shape_context
 from .._declarations_listbox import _parse_listbox, _parse_presented_at
-from ..declarations import _select_combobox_value
+from ..declarations import _EJERCICIO_OPTION_RE, _MODELO_OPTION_RE, _combobox_option_texts, _select_combobox_value
 from ..declarations_observations import (
     _verify_submitted_file_context,
     _with_derived_303_compensation_available_observation,
@@ -41,6 +41,7 @@ from ._declarations_support import (
     _select_authoritative_declaration,
     _submitted_file_payload,
 )
+from .declarations_register_test_support import aeat_sede_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -609,8 +610,17 @@ class TestParsePresentedAt:
             _parse_presented_at("01/02/2024")
 
 
+def _combobox_html(label_text: str, labels: tuple[str, ...]) -> str:
+    """Render one ZK-shaped combobox whose options record their own index when clicked."""
+    items = "".join(
+        f'<div class="z-comboitem-text" onclick="window.selectedIndex = {index}">{label}</div>'
+        for index, label in enumerate(labels)
+    )
+    return f'<main><span>{label_text}</span><a class="z-combobox-button" href="#">abrir</a>{items}</main>'
+
+
 class TestSearchOptionSelection:
-    """Verify AEAT combobox selection failures do not select another offered value."""
+    """Verify AEAT combobox selection picks the exact offered value and never another one."""
 
     @pytest.mark.asyncio
     async def test_unavailable_ejercicio_option_returns_false_without_selecting_another_year(
@@ -634,11 +644,151 @@ class TestSearchOptionSelection:
                 """,
             )
 
-            selected = await _select_combobox_value(page, label_text="Ejercicio (*)", option_match="2026")
+            selected = await _select_combobox_value(
+                page,
+                label_text="Ejercicio (*)",
+                option_pattern=_EJERCICIO_OPTION_RE,
+                option_match="2026",
+            )
             selected_year = await page.evaluate("window.selectedYear ?? null")
 
         assert selected is False
         assert selected_year is None
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("label_text", "option_pattern", "option_match", "substring_needle", "labels", "expected_index", "lookalike"),
+        [
+            pytest.param(
+                "Modelo (*)",
+                _MODELO_OPTION_RE,
+                "303",
+                "303 -",
+                ("-- Seleccione --", "322 - IVA. GRUPO DE ENTIDADES. MODELO 303 - INDIVIDUAL", "303 - IVA"),
+                2,
+                1,
+                id="description-naming-the-modelo-is-not-the-modelo",
+            ),
+            pytest.param(
+                "Modelo (*)",
+                _MODELO_OPTION_RE,
+                "30",
+                "30 -",
+                ("130 - IRPF. PAGO FRACCIONADO", "30 - SINTETICO"),
+                1,
+                0,
+                id="shorter-code-never-matches-longer-code",
+            ),
+            pytest.param(
+                "Ejercicio (*)",
+                _EJERCICIO_OPTION_RE,
+                "2024",
+                "2024",
+                ("ATF - ANEXO 2024", "2025", "2024"),
+                2,
+                0,
+                id="label-naming-the-year-is-not-the-year",
+            ),
+            pytest.param(
+                "Modelo (*)",
+                _MODELO_OPTION_RE,
+                "341",
+                "341 -",
+                ("322 - IVA. MODELO 341 - OTRO", "341 - DECLARACION", "341 - DECLARACION"),
+                1,
+                0,
+                id="identical-duplicate-labels-collapse-to-the-first",
+            ),
+            pytest.param(
+                "Modelo (*)",
+                _MODELO_OPTION_RE,
+                "303",
+                "303 -",
+                ("322 - IVA. MODELO 303 - INDIVIDUAL",),
+                None,
+                0,
+                id="absent-modelo-is-not-replaced-by-a-lookalike",
+            ),
+        ],
+    )
+    async def test_selection_picks_the_exact_parsed_option_not_a_substring_lookalike(
+        self,
+        tmp_path: Path,
+        label_text: str,
+        option_pattern: re.Pattern[str],
+        option_match: str,
+        substring_needle: str,
+        labels: tuple[str, ...],
+        expected_index: int | None,
+        lookalike: int,
+    ) -> None:
+        settings = Settings(cadrumo_token_dir=tmp_path)
+        profile = Profile(name="test-declarations")
+        async with (
+            shared_playwright_runtime() as playwright,
+            opened_browser_page(playwright, settings, profile) as (page, _context),
+        ):
+            await page.set_content(_combobox_html(label_text, labels))
+            substring_pick = (
+                await page.locator(".z-comboitem-text").filter(has_text=substring_needle).first.text_content()
+            )
+            selected = await _select_combobox_value(
+                page,
+                label_text=label_text,
+                option_pattern=option_pattern,
+                option_match=option_match,
+            )
+            clicked_index = await page.evaluate("window.selectedIndex ?? null")
+
+        assert substring_pick == labels[lookalike], "the fixture must place a lookalike the old substring match picks"
+        assert selected is (expected_index is not None)
+        assert clicked_index == expected_index
+
+    @pytest.mark.asyncio
+    async def test_distinct_labels_for_one_code_are_refused_without_a_click(self, tmp_path: Path) -> None:
+        settings = Settings(cadrumo_token_dir=tmp_path)
+        profile = Profile(name="test-declarations")
+        async with (
+            shared_playwright_runtime() as playwright,
+            opened_browser_page(playwright, settings, profile) as (page, _context),
+        ):
+            await page.set_content(_combobox_html("Modelo (*)", ("303 - IVA. AUTOLIQUIDACION", "303 - IVA. OTRA")))
+
+            with pytest.raises(SedeParseError, match="refusing to guess"):
+                await _select_combobox_value(
+                    page,
+                    label_text="Modelo (*)",
+                    option_pattern=_MODELO_OPTION_RE,
+                    option_match="303",
+                )
+            clicked_index = await page.evaluate("window.selectedIndex ?? null")
+
+        assert clicked_index is None
+
+    @pytest.mark.asyncio
+    async def test_real_register_modelos_select_by_code_including_the_twice_listed_one(self, tmp_path: Path) -> None:
+        labels = _combobox_option_texts(aeat_sede_fixture("declaraciones-modelo-100-2022"))
+        settings = Settings(cadrumo_token_dir=tmp_path)
+        profile = Profile(name="test-declarations")
+        async with (
+            shared_playwright_runtime() as playwright,
+            opened_browser_page(playwright, settings, profile) as (page, _context),
+        ):
+            await page.set_content(_combobox_html("Modelo (*)", labels))
+
+            for code in ("14A", "174", "303", "341"):
+                selected = await _select_combobox_value(
+                    page,
+                    label_text="Modelo (*)",
+                    option_pattern=_MODELO_OPTION_RE,
+                    option_match=code,
+                )
+                clicked_index = await page.evaluate("window.selectedIndex ?? null")
+
+                assert selected is True
+                assert clicked_index == next(
+                    index for index, label in enumerate(labels) if label.split("\xa0")[0] == code
+                )
 
 
 class TestExtractCsvFromUrl:

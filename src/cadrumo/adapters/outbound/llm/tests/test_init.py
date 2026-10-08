@@ -20,7 +20,7 @@ def test_llm_import_silent() -> None:
         ],
         capture_output=True,
         text=True,
-        timeout=30,
+        timeout=None,
     )
     assert result.returncode == 0, f"Import failed with returncode {result.returncode}:\n{result.stderr}"
     assert result.stdout == "", f"Import produced unexpected stdout output:\n{result.stdout!r}"

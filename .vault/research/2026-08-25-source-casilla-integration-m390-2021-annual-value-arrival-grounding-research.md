@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:721c612191b2ed7fa06b509ec8f3f504573b1c314886e846fa38de5b40045c67'
+body_hash: 'sha256:5568e9241fa44ed9585b0878abab344d0dcf86f955b9ed03ab40ba8b91f2f363'
 related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
   - '[[2026-08-25-source-casilla-integration-m390-2021-source-owner-deferral-adr]]'
 ---
 
@@ -116,17 +115,8 @@ undocumented substitute.
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:504`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:566`
 - `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2021/revision.toml:1`
-- `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2021/casillas/civa.anual.repercutido.super-reducido__civa.anual.compensacion-generada-ejercicio-no-97.toml:1`
-- `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2021/extraction_profiles/0001-extraction-profiles.toml:1`
-- `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2021/application_links/0001-application-links.toml:1`
+
 - `src/cadrumo/domain/calculations/registry/tests/test_modelo_390_rate_box_total_invariant.py:115`
 - `.vault/audit/2026-08-22-issue-604-m390-real-parse-implementation-review-audit.md:85`
-- `src/cadrumo/application/calculations/_iva_compensation_annual_partition.py:96`
-- `src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py:120`
-- `src/cadrumo/adapters/outbound/aeat/sede/_schema.py:417`
-- `src/cadrumo/adapters/outbound/aeat/sede/_observation_store.py:198`
-- `src/cadrumo/adapters/outbound/aeat/sede/_declarations_observations.py:456`
+
 - `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/revision.toml:48`
-- `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/bindings/0012-page-01-declared.toml:1`
-- `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/export_layouts/0013-export-layouts-page-01-identity.toml:1`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py:595`

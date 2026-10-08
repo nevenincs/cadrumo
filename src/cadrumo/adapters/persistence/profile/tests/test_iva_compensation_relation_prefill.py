@@ -47,12 +47,13 @@ from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.relations import relation_prefill_values_as_binding_values
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     registry_grounded_observations,
     revision_id_for_observation,
 )
+
+from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -591,7 +592,7 @@ def test_annual_partition_refuses_underdeclared_and_conflicting_disposition_evid
             update={
                 "source_headers": (
                     ObservedHeaderFact(
-                        header_key="declaration_type",
+                        header_key="filing.result_disposition",
                         value="D",
                         source_artefact_kind="submitted_file",
                         source_locator="modelo-303:test:declaration_type:13:1",

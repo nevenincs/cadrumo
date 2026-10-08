@@ -24,6 +24,7 @@ from typing import Final
 
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT, UTF_8
+from dev.first_party_source import is_test_module_name
 
 SRC_ROOT = REPO_ROOT / "src"
 _UTF_8: Final[str] = UTF_8
@@ -50,15 +51,6 @@ def module_name_for(path: Path, *, src_root: Path = SRC_ROOT) -> str:
     else:
         parts[-1] = parts[-1][: -len(".py")]
     return ".".join(parts)
-
-
-def is_test_module(mod: str, path: Path) -> bool:
-    """True if the module is a test module (under ``tests/`` or ``test_*``)."""
-    parts = path.parts
-    if "tests" in parts:
-        return True
-    last = mod.rsplit(".", 1)[-1]
-    return last.startswith("test_") or last == "conftest"
 
 
 def resolve_relative_import(
@@ -146,7 +138,7 @@ def walk_module_imports(path: Path, *, src_root: Path = SRC_ROOT) -> list[Import
     mod = module_name_for(path, src_root=src_root)
     is_pkg = path.name == "__init__.py"
     sites: list[ImportSite] = []
-    test_flag = is_test_module(mod, path)
+    test_flag = is_test_module_name(mod)
 
     type_checking_nodes = type_checking_guarded_nodes(tree)
 
@@ -210,7 +202,7 @@ def is_shipped_module(
     """True if ``path`` lands in the installed wheel.
 
     A module is shipped unless the packaging config excludes it. Note this is
-    NOT the same partition as :func:`is_test_module`: a package-root
+    NOT the same partition as :func:`dev.first_party_source.is_test_module_name`: a package-root
     ``conftest.py`` carries no ``tests/`` path component, so it ships and is
     treated as shipped here even though it is test infrastructure by name.
 

@@ -9,6 +9,136 @@ from ._application_profile_bundle import PROFILE_BUNDLE_ERROR_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.application.user_profile.google_configuration_operation_refusal.GoogleConfigurationRefusedError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_CONFIGURATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_google_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile.google_configuration_operation_contracts.GoogleConfigurationExportDisabledError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_CONFIGURATION_EXPORT_DISABLED",
+            category=ErrorCategory.REFUSED,
+            message_key="cli.config.google.export_capability_disabled",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.invoices.catalogue_intake_refusal.InvoiceWizardFieldsValidationError",
+        ErrorCode(
+            code="ERROR_INVOICE_WIZARD_FIELDS",
+            category=ErrorCategory.ERROR,
+            message_key="application.invoices.wizard.errors.field_errors",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.invoices.catalogue_intake_refusal.InvoiceWizardValidationRefusedError",
+        ErrorCode(
+            code="REFUSED_INVOICE_WIZARD_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="application.invoices.wizard.errors.field_errors",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.invoices.catalogue_intake_operation_ports.InvoiceIntakeCommitConflictError",
+        ErrorCode(
+            code="LOCKED_INVOICE_INTAKE_COMMIT_CONFLICT",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.canonical_ledger_persistence_conflict",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.link_operation.LedgerLinkValidationRefusedError",
+        ErrorCode(
+            code="REFUSED_LEDGER_LINK_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_financial_invoices_invoice_link",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.prorrata_register.sector_lifecycle.ProrrataSectorLifecycleUnavailableError",
+        ErrorCode(
+            code="REFUSED_PROFILE_PRORRATA_SECTOR_LIFECYCLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_prorrata_register_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.prorrata_register.service.ProrrataWholeSeedUnavailableError",
+        ErrorCode(
+            code="REFUSED_PROFILE_PRORRATA_WHOLE_SEED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_prorrata_register_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile.access_errors.ProfileAccessRefusedError",
+        ErrorCode(
+            code="REFUSED_PROFILE_ACCESS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.runtime.contracts.RuntimeRefusalError",
+        ErrorCode(
+            code="REFUSED_LOCAL_RUNTIME",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_operator_surface_contract",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.runtime.contracts.RuntimeShutdownIncompleteError",
+        ErrorCode(
+            code="REFUSED_LOCAL_RUNTIME_SHUTDOWN",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_operator_surface_contract",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile.automation_custody_port.AutomationCustodyError",
+        ErrorCode(
+            code="REFUSED_AUTOMATION_CUSTODY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile.automation_operations.AutomationAdministrationRefusedError",
+        ErrorCode(
+            code="REFUSED_AUTOMATION_ADMINISTRATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.work_addressing.ModeloWorkCaptureError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_CAPTURE_NOT_CURRENT",
@@ -264,6 +394,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_MODELO_EXPORT_EVIDENCE_MISSING",
             category=ErrorCategory.REFUSED,
             message_key="errors.fail.modelo_export",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.calculation_note_gate.ModeloCalculationBlockedError",
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATION_BLOCKED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_modelos",
             retryable=False,
             runbook_id=None,
         ),
@@ -590,6 +730,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_profile_login_throttled",
             retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile.login_session.ProfileReceiptRefusedError",
+        ErrorCode(
+            code="REFUSED_PROFILE_RECEIPT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_receipt",
+            retryable=False,
             runbook_id=None,
         ),
     ),
@@ -1020,7 +1170,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_GOOGLE_SHEETS_EXPORT_CLIENT_MISSING",
             category=ErrorCategory.REFUSED,
-            message_key="adapters.outbound.storage._factory.errors.google_client_missing",
+            message_key="errors.refused.refused_google_client_metadata_unavailable",
             retryable=False,
             runbook_id=None,
         ),
@@ -1081,16 +1231,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_CALC_SHEETS_RECORD",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_calc_sheets_record",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.storage.calc_sheets.errors.CalcSheetsParityError",
-        ErrorCode(
-            code="ERROR_CALC_SHEETS_PARITY",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_calc_sheets_parity",
             retryable=False,
             runbook_id=None,
         ),

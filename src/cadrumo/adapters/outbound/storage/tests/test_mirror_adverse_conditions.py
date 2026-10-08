@@ -12,16 +12,42 @@ from ....persistence.storage.sql.secure_object_records import SecureObjectRawRow
 from ..local import LocalFileSystemProvider
 from ..mirror_manifest import (
     build_remote_mirror_namespace_manifest,
+    get_remote_mirror_namespace_manifest,
     inspect_remote_mirror_download,
     inspect_remote_mirror_upload,
     put_remote_mirror_namespace_manifest,
 )
+from ..mirror_push import _push_mirror_manifests
 from ..records import RemoteMirrorIssueKind, RemoteMirrorObjectManifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _NAMESPACE = "aeat.remote.mirror.adverse"
 _NOW = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
+
+
+@pytest.mark.parametrize("corrupted", [False, True])
+def test_namespace_manifest_is_not_published_before_ciphertext_integrity(tmp_path: Path, corrupted: bool) -> None:
+    row = _row("first", b"ciphertext", revision="a" * 64)
+    manifest = build_remote_mirror_namespace_manifest(_NAMESPACE, (row,))
+    entry = manifest.objects[0]
+    provider = LocalFileSystemProvider(tmp_path / "mirror")
+    if corrupted:
+        _put_ciphertext(provider, entry, row.payload)
+        target = provider.root / _NAMESPACE / f"{entry.object_key_hmac[:8]}--remote-mirror-adverse.bin"
+        target.write_bytes(b"tampered-ciphertext")
+    failures: list[tuple[str, str]] = []
+
+    published = _push_mirror_manifests(
+        provider=provider,
+        manifests_by_namespace={_NAMESPACE: manifest},
+        failed_namespaces=set(),
+        manifest_failed=failures,
+    )
+
+    assert published == {}
+    assert failures and failures[0][0] == _NAMESPACE
+    assert get_remote_mirror_namespace_manifest(provider, _NAMESPACE) is None
 
 
 def test_remote_mirror_upload_inspection_detects_manifest_partial_upload(tmp_path: Path) -> None:

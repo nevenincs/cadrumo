@@ -1,0 +1,64 @@
+# The existing corpus file contains the whole order, including Annex III.
+# Its name records its initial 390 capture; no duplicate PDF is needed.
+# First applicable returns: February 2026 monthly, second quarter quarterly.
+[sources.boe-modelo-303-2026-form-pdf]
+# The annex also states calculation instructions, including the complete
+# box-88 expression on printed page 12132; it is not used only for geometry.
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf"
+sha256 = "0552f1b8b0e30b22a63e0cc4be29f5ba8ab050609dcb04ed16549b8eb5030694"
+bytes = 1810016
+retrieved_at = 2026-09-30
+published_at = 2026-01-26
+applies_from = 2026-02-01
+source_url = "https://www.boe.es/boe/dias/2026/01/26/pdfs/BOE-A-2026-1761.pdf"
+review_status = "pending_review"
+
+# Annex II, printed pages 75943-75948, including the administration copy.
+# The whole order is already captured for Modelo 322.
+[sources.boe-modelo-303-2021-form-pdf]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2021-10509-modelos-322-303-390.pdf"
+sha256 = "215afcbf4fda0dc396c6ba6efe90d083d91c64710b966ffe278786830a6cc559"
+bytes = 1266413
+retrieved_at = 2026-10-06
+published_at = 2021-06-24
+applies_from = 2021-07-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/boe/dias/2021/06/24/pdfs/BOE-A-2021-10509.pdf"
+review_status = "pending_review"
+
+# Annex II of the already captured whole order is the six-page Modelo 303.
+# First applicable periods begin January 2023; HAC/819/2024 later replaces it.
+[sources.boe-modelo-303-2023-form-pdf]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2022-19290-modelos-322-390.pdf"
+sha256 = "71caf415a830b8f8bd08edb6d239bc3e85a1c6ca0e276512f9717a5d2c19c590"
+bytes = 1200305
+retrieved_at = 2026-10-06
+published_at = 2022-11-22
+applies_from = 2023-01-01
+source_url = "https://www.boe.es/boe/dias/2022/11/22/pdfs/BOE-A-2022-19290.pdf"
+review_status = "pending_review"
+
+# HAC/819/2024 replaces the complete annex. Its first applicable periods are
+# September 2024 (monthly) and 3T 2024 (quarterly), not all of tax year 2024.
+# Printed pages 99216-99221 contain the six-page form and calculation expressions.
+[sources.boe-modelo-303-2024-form-pdf]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2024-16129-modelo-303-form.pdf"
+sha256 = "6fba5a18a81ab328bfe42249a6bc236bd790959ae1a936ec4334dab6f7b14cf5"
+bytes = 557667
+retrieved_at = 2026-10-07
+published_at = 2024-08-05
+applies_from = 2024-07-01
+source_url = "https://www.boe.es/boe/dias/2024/08/05/pdfs/BOE-A-2024-16129.pdf"
+review_status = "pending_review"

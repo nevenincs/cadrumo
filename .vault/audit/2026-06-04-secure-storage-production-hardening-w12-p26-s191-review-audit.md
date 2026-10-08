@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:a28b093dc5c555fb5a1ff103801d22f6742586056328066cacdf072adc69f741'
+modified: '2026-10-03'
+body_hash: 'sha256:76f2e73edb365d46d0f4e78bf3729e4fa199f37c32289addd018a18bc8b815b5'
 related: []
 ---
 
@@ -24,8 +24,8 @@ The modelo binding module still does not read or write storage directly. It coor
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/application/aggregation/test_modelo_source_mesh_ledger.py` passed with 5 tests.
-- `uv run --no-sync ruff check src/aeat/application/aggregation/_modelo_bindings.py src/aeat/application/aggregation/test_modelo_source_mesh_ledger.py` passed.
+- the historical check passed with 5 tests.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -c "from aeat.application.aggregation._modelo_bindings import LedgerIvaAggregationSourceResolver; print(LedgerIvaAggregationSourceResolver.resolver_id)"` printed `ledger_iva_aggregation`.
 

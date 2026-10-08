@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:a0e143713bf3e8e005de60d9eb8c3a17682484686c615404be38d23cdb1458fa'
-related:
-  - "[[2026-08-07-unstructured-document-ingestion-plan]]"
+related: []
 ---
 # `unstructured-document-ingestion` audit: `Confirm-boundary under-declaration sweep`
 

@@ -66,7 +66,7 @@ _COVERED = [
 def _workbook_emitted_ids(snapshot: RegistrySnapshot) -> set[str]:
     plan = build_export_plan(snapshot)
     emitted = {cell.casilla_id for cell in plan.value_cells if cell.casilla_id is not None}
-    emitted.update(cell.casilla_id for cell in plan.formula_cells)
+    emitted.update(cell.casilla_id for cell in plan.formula_cells if cell.casilla_id is not None)
     return emitted
 
 

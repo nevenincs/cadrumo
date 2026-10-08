@@ -25,11 +25,7 @@ import pytest
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.json_contract import NoticeSeverity
 from ....core.register_scoping_signal import RegisterScopingSignal
-from ..filed_data_capture import (
-    FiledHistoryOnboardingRun,
-    FiledHistoryPairOutcome,
-    expected_but_not_found_notice,
-)
+from ..filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome, expected_but_not_found_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,12 +44,17 @@ def _pair(
     signals: tuple[FiledHistoryDiscoverySignal, ...] = _PROFILE,
     row_count: int = 0,
     refused: bool = False,
+    walk_attempted: bool = True,
+    walk_completed: bool | None = None,
 ) -> FiledHistoryPairOutcome:
     return FiledHistoryPairOutcome(
         modelo=modelo,
         ejercicio=ejercicio,
         signals=signals,
+        walk_attempted=walk_attempted,
+        walk_completed=not refused if walk_completed is None else walk_completed,
         row_count=row_count,
+        reached_count=row_count,
         captured_count=row_count,
         refused=refused,
         failure_type="SedeParseError" if refused else None,
@@ -200,7 +201,9 @@ def test_a_pair_nominated_by_nothing_is_refused() -> None:
     from pydantic import ValidationError
 
     with pytest.raises(ValidationError, match="signals"):
-        FiledHistoryPairOutcome(modelo="303", ejercicio=2025, signals=())
+        FiledHistoryPairOutcome(
+            modelo="303", ejercicio=2025, signals=(), walk_attempted=True, walk_completed=True, reached_count=0
+        )
 
 
 # ------------------------- the run model's justificante unreached-evidence slot
@@ -292,3 +295,57 @@ def test_a_run_given_no_evidence_advisories_defaults_to_carrying_none() -> None:
     # The empty default matters: a truthy default would make every clean run look
     # like it had an unreached artefact. It says nothing about what a transport does.
     assert FiledHistoryOnboardingRun(pairs=(_pair(row_count=1),)).evidence_notices == ()
+
+
+def test_unattempted_expected_pair_is_neither_empty_nor_missing() -> None:
+    """A cap prevents a register answer; zero is not proof of absent filings."""
+    pair = _pair(walk_attempted=False, walk_completed=False)
+    pair.require_consistent()
+    run = FiledHistoryOnboardingRun(pairs=(pair,))
+    assert pair.is_a_genuine_empty is False
+    assert run.genuinely_empty_pairs == ()
+    assert expected_but_not_found_notice(run) is None
+
+
+def test_preview_register_rows_are_present_without_persisted_captures() -> None:
+    """Actual positive rows remain positive when the preview deliberately writes nothing."""
+    pair = FiledHistoryPairOutcome(
+        modelo="100",
+        ejercicio=2025,
+        signals=_PROFILE,
+        walk_attempted=True,
+        walk_completed=True,
+        row_count=2,
+        reached_count=2,
+        captured_count=0,
+    )
+    pair.require_consistent()
+    run = FiledHistoryOnboardingRun(pairs=(pair,), dry_run=True, reached_count=2, captured_count=0)
+    assert pair.row_count == 2
+    assert pair.is_a_genuine_empty is False
+    assert run.genuinely_empty_pairs == ()
+    assert expected_but_not_found_notice(run) is None
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"walk_attempted": False, "walk_completed": True},
+        {"walk_attempted": False, "walk_completed": False, "row_count": 1},
+        {"walk_attempted": True, "walk_completed": False, "reached_count": 1},
+        {"row_count": 1, "reached_count": 2},
+        {"row_count": 1, "reached_count": 0, "captured_count": 1},
+    ],
+    ids=[
+        "completed-without-attempt",
+        "unattempted-rows",
+        "incomplete-reached",
+        "reached-exceeds-rows",
+        "captured-exceeds-reached",
+    ],
+)
+def test_history_pair_refuses_impossible_walk_and_counter_facts(changes: dict[str, bool | int]) -> None:
+    """Malformed accounting must not become a public filing-absence claim."""
+    pair = _pair().model_copy(update=changes)
+    with pytest.raises(ValueError):
+        pair.require_consistent()

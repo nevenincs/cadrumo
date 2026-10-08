@@ -15,6 +15,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ..core.errors.hierarchy import pydantic_validation_boundary
+from ..core.hashing import validate_prefixed_digest
 from ..core.identity.digest import PrefixedContentDigest
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import validate_utc_aware
@@ -63,13 +64,7 @@ class ProfileDeletionHoldOwnerProjection(BaseModel):
     @field_validator("source_record_digest")
     @classmethod
     def _validate_source_record_digest(cls, value: str) -> str:
-        if (
-            len(value) != 71
-            or not value.startswith("sha256:")
-            or any(character not in "0123456789abcdef" for character in value[7:])
-        ):
-            raise ValueError("profile deletion hold source record digest must be lowercase sha256")
-        return value
+        return validate_prefixed_digest(value, field_name="profile deletion hold source record digest")
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

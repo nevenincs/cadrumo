@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:cf6b00e1125f903462ce124796811f61b2ca0e6a2c0e064de0ff9e646b15ce58'
+modified: '2026-10-03'
+body_hash: 'sha256:651023e2e4e2d7fa15bd37aff1df9d9031f84960e6a133d1260d214795b251a7'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S395-001 | PASS | Locale manager stays inside catalogue maintenance
 
-`src/aeat/locales/manager.py` owns locale YAML loading, strict duplicate-key parsing, key discovery, scaffold reconciliation, and single-leaf set/remove operations. It does not manage secure-object repositories, active-profile buckets, master-key material, or application data storage.
+The retired module owned locale YAML loading, strict duplicate-key parsing, key discovery, scaffold reconciliation, and single-leaf set/remove operations. It does not manage secure-object repositories, active-profile buckets, master-key material, or application data storage.
 
 ## S395-002 | PASS | Exceptions and diagnostics follow project conventions
 
@@ -32,8 +32,8 @@ Vaultspec RAG semantic search clustered the slice with `LocaleManager` set/remov
 
 ## S395-006 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/locales/manager.py src/aeat/locales/test_parity.py`
-- `uv run --no-sync pytest -q src/aeat/locales/test_parity.py`
+- the historical check
+- the historical check
 - `PYTHONPATH=src uv run --no-sync -q python -m aeat.locales audit`
 - `uvx vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md`
 

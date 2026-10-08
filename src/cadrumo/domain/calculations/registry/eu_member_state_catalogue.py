@@ -11,11 +11,17 @@ from typing import Final
 from ....core.time.clock import today_madrid
 from ...iva.schema import EUMemberState
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, unique_mapping_tokens
+from .facts.resolution import unique_mapping_tokens
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+)
 from .governed_fact_scope import (
     GovernedFactSource,
     cache_governed_projection,
     governed_facts_in_scope,
+    require_governed_fact_authority,
     validating_governed_facts,
 )
 from .schema_base import DateAxis
@@ -81,48 +87,28 @@ class EuMemberStateCatalogue:
         return next(definition for definition in self.definitions if definition.token == token)
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("EU member-state entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate EU member-state key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _resolve_entries(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource,
-) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("EU member-state catalogue must resolve as a mapping fact")
-    return _mapping_entries(resolved)
-
-
-def _scoped_entries(effective_date: date) -> Mapping[str, str]:
-    authority = governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("EU member-state catalogue requires an explicit authority operation or scope")
-    return _resolve_entries(effective_date=effective_date, authority=authority)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 @cache_governed_projection(maxsize=512)
 def _scoped_catalogue(effective_date: date) -> EuMemberStateCatalogue:
-    entries = _scoped_entries(effective_date)
+    entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=None)
     raw_order = unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT)
     raw_aliases = unique_mapping_tokens(entries, _ALIASES_KEY, subject=_ENTRY_SUBJECT)
+    aliases, aliases_by_token = _member_state_aliases(raw_aliases)
+    definitions = _member_state_definitions(raw_order, aliases_by_token)
+    catalogue = EuMemberStateCatalogue(definitions=definitions, aliases=MappingProxyType(aliases))
+    _validate_member_state_catalogue(catalogue, raw_order)
+    return catalogue
+
+
+def _member_state_aliases(
+    raw_aliases: tuple[str, ...],
+) -> tuple[dict[str, EUMemberState], dict[EUMemberState, list[str]]]:
     aliases: dict[str, EUMemberState] = {}
-    definitions: list[EuMemberStateDefinition] = []
     aliases_by_token: dict[EUMemberState, list[str]] = {}
     for raw_alias in raw_aliases:
         parts = raw_alias.split("=", 1)
@@ -137,6 +123,14 @@ def _scoped_catalogue(effective_date: date) -> EuMemberStateCatalogue:
             raise RegistryValidationError(f"EU member-state alias {alias!r} has conflicting targets")
         aliases[alias_key] = token
         aliases_by_token.setdefault(token, []).append(alias_key)
+    return aliases, aliases_by_token
+
+
+def _member_state_definitions(
+    raw_order: tuple[str, ...],
+    aliases_by_token: Mapping[EUMemberState, list[str]],
+) -> tuple[EuMemberStateDefinition, ...]:
+    definitions: list[EuMemberStateDefinition] = []
     for raw_token in raw_order:
         token = EUMemberState.from_registry(raw_token.lower())
         if token in {definition.token for definition in definitions}:
@@ -146,12 +140,17 @@ def _scoped_catalogue(effective_date: date) -> EuMemberStateCatalogue:
         definitions.append(
             EuMemberStateDefinition(token=token, aliases=tuple(aliases_by_token[token])),
         )
-    catalogue = EuMemberStateCatalogue(definitions=tuple(definitions), aliases=MappingProxyType(aliases))
+    return tuple(definitions)
+
+
+def _validate_member_state_catalogue(
+    catalogue: EuMemberStateCatalogue,
+    raw_order: tuple[str, ...],
+) -> None:
     if len(catalogue.all_states) != len(raw_order):
         raise RegistryValidationError("EU member-state catalogue contains duplicate tokens")
-    if any(alias_target not in catalogue.all_states for alias_target in aliases.values()):
+    if any(alias_target not in catalogue.all_states for alias_target in catalogue.aliases.values()):
         raise RegistryValidationError("EU member-state aliases target undeclared tokens")
-    return catalogue
 
 
 def resolve_eu_member_state_catalogue(
@@ -161,9 +160,7 @@ def resolve_eu_member_state_catalogue(
 ) -> EuMemberStateCatalogue:
     """Resolve the complete EU member-state vocabulary through fact 0131."""
     coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError("EU member-state catalogue requires an explicit authority operation or scope")
+    selected = require_governed_fact_authority(authority, subject=_ENTRY_SUBJECT)
     with validating_governed_facts(selected):
         return _scoped_catalogue(coordinate)
 

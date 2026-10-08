@@ -21,8 +21,8 @@ See Also:
         Central error envelope and exit-code mapping used at transport
         boundaries.
 
-Consumers import from the owning module -- :mod:`censal_review`,
-:mod:`operation_composition`, :mod:`adapter_composition` -- rather than from
+Consumers import from the owning module -- :mod:`operation_composition`,
+:mod:`adapter_composition` -- rather than from
 this package root, which is inert.
 """
 

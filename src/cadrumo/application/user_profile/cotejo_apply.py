@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.values import UserProfileRecord
     from .censal_operation import CensalReviewedOperand
+    from .projections import EffectiveFact
 
 #: Schema field family the deferred divergence rows persist under, indexed
 #: as ``censo.divergencia.{n}.{axis,artefact_value,source}``. This is the
@@ -277,6 +278,7 @@ def _reviewed_censal_effects(
     """Verify one approved operand and derive only its explicitly reviewed effects."""
     from .censal_operation import CensalFieldIntent, CensalReviewedOperand
     from .censo_sync import CENSO_SOURCE_TAG, censal_facts_from_read
+    from .projections import record_to_effective_facts
 
     verified = CensalReviewedOperand.model_validate_json(proposal.model_dump_json(), strict=True)
     baseline = verified.baseline
@@ -288,23 +290,42 @@ def _reviewed_censal_effects(
         raise ProfileRecordConflictError("reviewed censal proposal baseline is stale")
 
     observed = {fact.path: fact for fact in censal_facts_from_read(verified.observation)}
+    effective = record_to_effective_facts(record)
     adopted: list[UserProfileFact] = []
     divergences: list[CensoDivergence] = []
     for field_intent in verified.field_intents:
         fact = observed.get(field_intent.path)
         if fact is None:
             continue
-        if field_intent.intent is CensalFieldIntent.ADOPT:
-            adopted.append(fact)
-        else:
-            divergences.append(
-                CensoDivergence(
-                    axis=field_intent.path,
-                    artefact_value=str(fact.value),
-                    source=CENSO_SOURCE_TAG,
-                )
-            )
+        adopting = field_intent.intent is CensalFieldIntent.ADOPT
+        current = None if adopting else effective.get(field_intent.path)
+        adopted_fact, divergence = _reviewed_censal_field_effect(
+            adopting=adopting,
+            axis=field_intent.path,
+            fact=fact,
+            current=current,
+            source=CENSO_SOURCE_TAG,
+        )
+        if adopted_fact is not None:
+            adopted.append(adopted_fact)
+        if divergence is not None:
+            divergences.append(divergence)
     return tuple(adopted), tuple(divergences)
+
+
+def _reviewed_censal_field_effect(
+    *,
+    adopting: bool,
+    axis: str,
+    fact: UserProfileFact,
+    current: EffectiveFact | None,
+    source: str,
+) -> tuple[UserProfileFact | None, CensoDivergence | None]:
+    if adopting:
+        return fact, None
+    if current is not None and current.value is not None and current.value.strip() == str(fact.value).strip():
+        return None, None
+    return None, CensoDivergence(axis=axis, artefact_value=str(fact.value), source=source)
 
 
 __all__ = [

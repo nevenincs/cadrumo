@@ -1,0 +1,1391 @@
+# Export-only page bindings withdrawn from the ejercicio-2026 edition.
+#
+# Each binding below transcribes one position of the ejercicio-2025 diseno de
+# registro and is read only by that design's export layout. This edition clears
+# export_layouts because AEAT has not published the ejercicio-2026 diseno, so
+# nothing in it can write these positions; inheriting them would offer inputs
+# that reach no casilla, formula or file. They return with the 2026 design.
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-1a"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-2a"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-3a"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-4a"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-5a"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-a-actividades-principal"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-1a"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-2a"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-3a"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-4a"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-5a"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-principal"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-1o"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-2o"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-3o"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-4o"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-5o"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-principal"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-d-declaracion-anual-operac-con-terceras-personas"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-declaracion-conjunta-nif"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.datos-estadisticos-declaracion-conjunta-razon-social"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.devengo-sustitutiva"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.devengo-sustitutiva-por-rectificacion-de-cuotas"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-apellidos-y-nombre-razon-social"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-calle-pza-avda"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-codigo-postal"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-esc"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-municipio"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-nif"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-nombre-de-la-via-publica"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-numero"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-piso"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-provincia"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-prta"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-telefono"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-juridicas-represent-1-fecha-poder-ddmmaaaa"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-juridicas-represent-1-nif"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-juridicas-represent-1-nombre-y-apellidos"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-juridicas-represent-1-notaria"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-juridicas-represent-2-fecha-poder-ddmmaaaa"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-juridicas-represent-2-nif"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-juridicas-represent-2-nombre-y-apellidos"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-juridicas-represent-2-notaria"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-juridicas-represent-3-fecha-poder-ddmmaaaa"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-juridicas-represent-3-nif"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-juridicas-represent-3-nombre-y-apellidos"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.representante-personas-juridicas-represent-3-notaria"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.sujeto-pasivo-dependiente"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.sujeto-pasivo-dominante"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.sujeto-pasivo-nif-entidad-dominante"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.sujeto-pasivo-numero-de-grupo"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.sujeto-pasivo-regimen-especial-del-grupo-de-entidades"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.sujeto-pasivo-registro-de-devolucion-mensual"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_1.sujeto-pasivo-tipo-regimen-especial-aplicable-art-163-sexies-cinco-si-o-no"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.indicador-de-pagina-complementaria"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-codigo"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-derivada-regimen-simplif"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-devengada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-soportada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-indice-cuota"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-volumen-ingresos"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-codigo"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-derivada-regimen-simplif"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-devengada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-soportada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-indice-cuota"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-volumen-ingresos"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-codigo"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-derivada-regimen-simplif"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-devengada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-soportada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-indice-cuota"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-volumen-ingresos"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-codigo"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-derivada-regimen-simplif"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-devengada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-soportada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-indice-cuota"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-volumen-ingresos"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-codigo"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-derivada-regimen-simpl"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-devengada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-soportada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-indice-cuota"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-volumen-ingresos"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-1"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-2"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-3"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-4"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-5"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-6"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-7"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-1"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-2"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-3"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-4"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-5"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-6"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-7"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-c-cuota-devengada-operaciones-corrientes"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-cuota-derivada-regimen-simplificado-j1"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-d-cuota-soportadas-operaciones-corrientes"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-e-indice-corrector"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-epigrafe-i-a-e"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-epigrafe-iae-indicador-auxiliar-de-actividad-en-el-cas"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-f-resultado"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-g-porcentaje-cuota-minima"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-h-devolucion-cuotas-soportadas-otros-paises"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-i-cuota-minima"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-1"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-2"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-3"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-4"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-5"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-6"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-7"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-1"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-2"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-3"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-4"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-5"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-6"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-7"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-c-cuota-devengada-operaciones-corrientes"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-cuota-derivada-regimen-simplificado-j2"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-d-cuota-soportadas-operaciones-corrientes"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-e-indice-corrector"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-epigrafe-i-a-e"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-epigrafe-iae-indicador-auxiliar-de-actividad-en-el-cas"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-f-resultado"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-g-porcentaje-cuota-minima"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-h-devolucion-cuotas-soportadas-otros-paises"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-i-cuota-minima"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-deducciones-iva-soportado-en-adquisicion-de-activos-fijos"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-deducciones-regularizacion-de-bienes-de-inversion"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-deducciones-suma-de-deducciones"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-en-adquisiciones-intracomunitarias"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-iva-devengado-en-entregas-de-activos-fijos"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-iva-devengado-por-inversion-del-sujeto-pasivo"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-agric-ganad-y-forest"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-no-agric-ganad-y-forest"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-resultado-regimen-simplificado"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.indicador-de-pagina-complementaria"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-1-actividad-desarrollada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-1-codigo-cnae"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-1-importe-de-operaciones"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-1-importe-de-operaciones-con-derecho-a-deduccion"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-1-porcentaje-de-prorrata"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-1-tipo-de-prorrata"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-2-actividad-desarrollada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-2-codigo-cnae"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-2-importe-de-operaciones"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-2-importe-de-operaciones-con-derecho-a-deduccion"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-2-porcentaje-de-prorrata"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-2-tipo-de-prorrata"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-3-actividad-desarrollada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-3-codigo-cnae"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-3-importe-de-operaciones"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-3-importe-de-operaciones-con-derecho-a-deduccion"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-3-porcentaje-de-prorrata"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-3-tipo-de-prorrata"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-4-actividad-desarrollada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-4-codigo-cnae"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-4-importe-de-operaciones"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-4-importe-de-operaciones-con-derecho-a-deduccion"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-4-porcentaje-de-prorrata"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-4-tipo-de-prorrata"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-5-actividad-desarrollada"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-5-codigo-cnae"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-5-importe-de-operaciones"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-5-importe-de-operaciones-con-derecho-a-deduccion"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-5-porcentaje-de-prorrata"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]
+
+[[revisions."2026".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-390.page_7.prorratas-5-tipo-de-prorrata"
+to_revision = "2026"
+legal_refs = ["orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
+source_refs = ["boe-modelo-390-2026-form"]

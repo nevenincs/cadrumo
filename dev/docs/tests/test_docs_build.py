@@ -4,9 +4,10 @@ Asserts the docs build machinery's hygiene contracts and the focused rendered
 surfaces (identity page, sequence widget), each in a ``tmp_path`` with
 ``CADRUMO_DOCS_OFFLINE`` set so intersphinx inventories are not fetched. The
 heavy whole-tree ``-n -W`` builds live one-per-module beside this file
-(``test_docs_build_full_scope``, ``test_docs_build_user_scope``, and one
-``test_docs_build_localized_<lang>`` per translation target) so pytest-xdist's
-per-file distribution runs them concurrently; their shared machinery is
+(``test_docs_build_full_scope``, and ``test_docs_build_localized_compile``
+carrying the one compile of every language with the one language build it is
+measured against) so pytest-xdist's per-file distribution runs them
+concurrently; their shared machinery is
 :mod:`dev.docs.tests._sphinx_build_harness`.
 """
 
@@ -25,7 +26,6 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
-from dev.source_tree import repository_files
 
 from ..apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
 from ..build import (
@@ -38,36 +38,19 @@ from ..build import (
     resolve_preview_targets,
     sphinx_build_environment,
 )
+from ..build_paths import docs_build_root, docs_html_root, pin_docs_build_root
 from ..sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
-#: A real nitpicky whole-tree Sphinx build is minutes of work, not seconds, so
-#: the project-wide 300 s per-test ceiling (``pyproject.toml``) cannot hold it.
-#: That ceiling exists to fail a DEADLOCKED test in minutes instead of wedging
-#: the run for hours; a legitimately long build is not a deadlock, and letting
-#: it trip the ceiling produced a faulthandler stack dump carrying no docs
-#: diagnostic at all -- the gate could not report a verdict either way. 1800 s
-#: matches the sibling ``test_built_site_resolvability_sweep`` module, which
-#: runs the same class of work.
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs, pytest.mark.timeout(1800)]
-
-#: Wall ceiling for every spawned subprocess here, set BELOW the per-test
-#: ceiling above so the subprocess timeout wins the race and names itself
-#: (``TimeoutExpired`` reports the command and the limit) instead of pytest
-#: dumping a stack with no indication of which build hung.
-_SUBPROCESS_TIMEOUT_S = 1200
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 _REPO_ROOT = REPO_ROOT
 _DOCS = _REPO_ROOT / "docs"
-_DOCS_BUILD = _DOCS / "_build"
-_CANONICAL_BUILD_ROOT = "html"
-_DOCS_BUILD_LITERAL_RE = re.compile(r"docs[/\\]_build[/\\]([A-Za-z0-9_.-]+)")
-_PATH_BUILD_ROOT_RE = re.compile(r"[\"']_build[\"']\s*/\s*[\"']([^\"']+)[\"']")
-_BUILD_ROOT_SCAN_PREFIXES = ("src/", "dev/", ".github/")
-_BUILD_ROOT_SCAN_FILES = {"justfile", "pyproject.toml", "docs/conf.py"}
+_DOCS_BUILD = docs_build_root(_REPO_ROOT)
+_CANONICAL_BUILD_ROOTS = frozenset({"html", "doctrees"})
 
 
 def _docs_build_entries() -> set[str]:
-    """Return entry names currently present directly under ``docs/_build``."""
+    """Return entry names currently present directly under the configured docs build root."""
     if not _DOCS_BUILD.exists():
         return set()
     return {path.name for path in scan_directory(_DOCS_BUILD)}
@@ -166,33 +149,62 @@ def test_changed_source_the_generator_excludes_plans_nothing() -> None:
 
 
 def test_docs_build_directory_contains_only_canonical_html() -> None:
-    """The repository docs build directory must not contain preview/test output."""
+    """Only canonical HTML and the owned persistent doctree cache may remain."""
     entries = _docs_build_entries()
-    extra = sorted(entries - {_CANONICAL_BUILD_ROOT})
+    extra = sorted(entries - _CANONICAL_BUILD_ROOTS)
     assert not extra, (
-        "docs/_build must contain only the actual canonical HTML build root. "
+        "CADRUMO_DOCS_BUILD_ROOT must contain only canonical HTML and the doctree cache. "
         "Tests and changed-page validation must write to tmp_path or an OS temp "
         f"directory, not docs/_build. Extra entries: {extra}"
     )
+
+
+def test_docs_build_hygiene_refuses_unowned_output(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(sys.modules[__name__], "_DOCS_BUILD", tmp_path)
+    (tmp_path / "html").mkdir()
+    (tmp_path / "doctrees").mkdir()
+    test_docs_build_directory_contains_only_canonical_html()
+    (tmp_path / "preview-output").mkdir()
+    with pytest.raises(AssertionError, match="preview-output"):
+        test_docs_build_directory_contains_only_canonical_html()
+
+
+def test_docs_build_root_refinement_is_relative_and_pinned_before_isolation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    storage_root = tmp_path / "storage"
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", "")
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(storage_root))
+    monkeypatch.setenv("CADRUMO_DOCS_BUILD_ROOT", "compiled/docs")
+
+    resolved = pin_docs_build_root(_REPO_ROOT)
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(tmp_path / "isolated-product-state"))
+
+    assert resolved == storage_root / "compiled" / "docs"
+    assert docs_build_root(_REPO_ROOT) == resolved
+    assert docs_html_root(_REPO_ROOT) == resolved / "html"
 
 
 def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None:
     """Canonical docs builds clear stale preview files from their build root."""
     from ..build import remove_noncanonical_build_entries
 
-    docs_root = tmp_path / "docs"
-    build_root = docs_root / "_build"
-    html_root = build_root / _CANONICAL_BUILD_ROOT
+    build_root = tmp_path / "storage" / "development" / "build" / "docs"
+    html_root = build_root / "html"
+    doctree_root = build_root / "doctrees"
     preview_dir = build_root / "index-preview"
     preview_file = build_root / "md-preview.html"
     html_root.mkdir(parents=True)
+    doctree_root.mkdir()
+    (doctree_root / "cache.pickle").write_bytes(b"doctree cache")
     preview_dir.mkdir()
     preview_file.write_text("<title>preview</title>\n", encoding="utf-8")
 
-    remove_noncanonical_build_entries(docs_root)
+    remove_noncanonical_build_entries(build_root)
 
-    assert sorted(path.name for path in scan_directory(build_root)) == [_CANONICAL_BUILD_ROOT]
+    assert sorted(path.name for path in scan_directory(build_root)) == sorted(_CANONICAL_BUILD_ROOTS)
     assert html_root.is_dir()
+    assert (doctree_root / "cache.pickle").is_file()
 
 
 def test_an_isolated_full_build_reads_a_private_copy_it_discards(tmp_path: Path) -> None:
@@ -227,6 +239,49 @@ def test_an_isolated_source_is_refused_for_a_named_target() -> None:
         main(["--isolated-source", "docs/index.md"])
 
 
+def test_docs_build_flavor_defaults_to_web_and_refuses_unknown_values() -> None:
+    """The environment selects web or desktop; a mistyped flavor fails rather than building the web site."""
+    from ..build import docs_build_flavor
+
+    assert docs_build_flavor({}) == "web"
+    assert docs_build_flavor({"CADRUMO_DOCS_FLAVOR": "web"}) == "web"
+    assert docs_build_flavor({"CADRUMO_DOCS_FLAVOR": "desktop"}) == "desktop"
+    with pytest.raises(SystemExit, match="CADRUMO_DOCS_FLAVOR must be one of web, desktop"):
+        docs_build_flavor({"CADRUMO_DOCS_FLAVOR": "Desktop"})
+
+
+def test_a_desktop_build_is_refused_outside_its_own_output_root(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A desktop build never writes the canonical web output, from the flag or the environment."""
+    from ..build import main
+
+    # ``main`` writes the resolved flavor into ``os.environ`` for the Sphinx
+    # child; setting the key here first is what makes monkeypatch restore it.
+    monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "web")
+    with pytest.raises(SystemExit, match="--flavor desktop builds a whole scope into --out-dir"):
+        main(["--flavor", "desktop", "--scope", "user"])
+    with pytest.raises(SystemExit, match="--flavor desktop builds a whole scope into --out-dir"):
+        main(["--flavor", "desktop", "--single-page", "index"])
+    monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "desktop")
+    with pytest.raises(SystemExit, match="--flavor desktop builds a whole scope into --out-dir"):
+        main(["--single-page", "index"])
+    with pytest.raises(SystemExit, match="--out-dir applies to a whole-scope build"):
+        main(["--flavor", "desktop", "--out-dir", "unused", "docs/index.md"])
+
+
+def test_the_flavor_flag_overrides_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``--flavor`` wins over ``CADRUMO_DOCS_FLAVOR`` and is what the Sphinx child reads."""
+    from ..build import _docs_build_arguments, _docs_flavor
+
+    monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "desktop")
+    assert _docs_flavor(_docs_build_arguments(["--flavor", "web"])) == "web"
+    assert os.environ["CADRUMO_DOCS_FLAVOR"] == "web"
+    monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "web")
+    assert _docs_flavor(_docs_build_arguments(["--flavor", "desktop", "--out-dir", "out"])) == "desktop"
+    assert os.environ["CADRUMO_DOCS_FLAVOR"] == "desktop"
+    with pytest.raises(SystemExit):
+        _docs_build_arguments(["--flavor", "mobile"])
+
+
 def test_docs_build_jobs_accepts_only_serial_or_auto_settings() -> None:
     """The deployment override pins serial or parallel Sphinx workers."""
     from ..build import docs_build_jobs
@@ -239,13 +294,20 @@ def test_docs_build_jobs_accepts_only_serial_or_auto_settings() -> None:
         docs_build_jobs({"CADRUMO_DOCS_JOBS": "two"})
 
 
-def test_pagefind_index_mode_defaults_to_full_and_accepts_pages() -> None:
-    """Local docs keep records; deployment may index rendered pages alone."""
+def test_pagefind_index_mode_defaults_to_full_and_accepts_pages_and_none() -> None:
+    """Local docs keep records; a deployment may index pages alone, or nothing.
+
+    ``none`` is what a build of several language roots selects for each root:
+    the site has one index, built over every root after they are all built, and
+    a root that indexed itself would write one addressed to its build directory
+    rather than to the served site.
+    """
     from ..build import pagefind_index_mode
 
     assert pagefind_index_mode({}) == "full"
     assert pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "full"}) == "full"
     assert pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "pages"}) == "pages"
+    assert pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "none"}) == "none"
 
 
 def test_pagefind_index_mode_rejects_unknown_values() -> None:
@@ -254,6 +316,148 @@ def test_pagefind_index_mode_rejects_unknown_values() -> None:
 
     with pytest.raises(SystemExit, match="CADRUMO_DOCS_PAGEFIND_MODE"):
         pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "records-only"})
+
+
+def test_only_the_full_contract_injects_records() -> None:
+    """``pages`` and ``none`` both inject nothing, and ``full`` injects.
+
+    The resolver is the single decision point the deployment-parity gate reads,
+    so the ``none`` contract must reach it as "no records" rather than fall
+    through the ``pages`` comparison it is not spelled as.
+    """
+    from ..build import resolve_record_injector
+
+    assert resolve_record_injector(_REPO_ROOT, {"CADRUMO_DOCS_PAGEFIND_MODE": "pages"}) is None
+    assert resolve_record_injector(_REPO_ROOT, {"CADRUMO_DOCS_PAGEFIND_MODE": "none"}) is None
+    assert resolve_record_injector(_REPO_ROOT, {"CADRUMO_DOCS_PAGEFIND_MODE": "full"}) is not None
+
+
+def test_the_site_prefix_defaults_to_the_root_being_the_whole_site() -> None:
+    """A root is its own site unless the build says where it sits in a larger one.
+
+    The default matters: a local single-language build, and a published layout
+    whose languages are peer directories each carrying their own index, both
+    want no prefix. Only a layout that nests a root under a directory -- the
+    packaged desktop site, whose apex language sits at the top -- names one, and
+    then a page resolves the site's one index and a shared result's destination
+    against it.
+    """
+    from ..build_paths import docs_site_prefix
+
+    assert docs_site_prefix({}) == ""
+    assert docs_site_prefix({"CADRUMO_DOCS_SITE_PREFIX": ""}) == ""
+    assert docs_site_prefix({"CADRUMO_DOCS_SITE_PREFIX": "es"}) == "es/"
+    assert docs_site_prefix({"CADRUMO_DOCS_SITE_PREFIX": "es/"}) == "es/"
+
+
+def test_the_layout_places_every_root_and_agrees_with_this_root_s_own_prefix() -> None:
+    """The whole layout, which a link from one root to another is written against.
+
+    Four configurations, each with the places it serves the four roots stated by
+    hand: the packaged copy compiled in English, one root of that copy built on
+    its own, the published site, and a local single-language build that is its
+    own whole site. In every one of them the build's own entry is the prefix the
+    build was given, because the two are the same fact read twice.
+    """
+    from ..build_paths import docs_site_prefixes
+
+    languages = ("en", "es", "ca", "hu")
+    apex = {"en": "", "es": "es/", "ca": "ca/", "hu": "hu/"}
+    published = {"en": "en/", "es": "es/", "ca": "ca/", "hu": "hu/"}
+
+    # The packaged copy, compiled in the language it is authored in: that root
+    # is the apex and is given no directory of its own.
+    assert docs_site_prefixes(languages, build_language="en", source_language="en", environ={}) == apex
+    # One root of the same packaged copy, built on its own in its own directory.
+    # Nothing says the site has an address, so its apex is still the authored
+    # language and not this root.
+    assert (
+        docs_site_prefixes(
+            languages,
+            build_language="es",
+            source_language="en",
+            environ={"CADRUMO_DOCS_SITE_PREFIX": "es"},
+        )
+        == apex
+    )
+    # The published site, served from an address of its own: every language sits
+    # under its own code, the authored one included, and no root is at the apex.
+    for build_language in languages:
+        assert (
+            docs_site_prefixes(
+                languages,
+                build_language=build_language,
+                source_language="en",
+                environ={
+                    "CADRUMO_DOCS_SITE_PREFIX": build_language,
+                    "CADRUMO_DOCS_BASE_URL": "https://example.test/docs",
+                },
+            )
+            == published
+        ), build_language
+    # A local single-language build, which is its own whole site: the root it
+    # builds is the apex whichever language it is.
+    assert docs_site_prefixes(languages, build_language="ca", source_language="en", environ={}) == {
+        "en": "en/",
+        "es": "es/",
+        "ca": "",
+        "hu": "hu/",
+    }
+    # The authored language told its own directory and no address: it cannot be
+    # the apex it was just placed below, so no root is.
+    assert (
+        docs_site_prefixes(
+            languages,
+            build_language="en",
+            source_language="en",
+            environ={"CADRUMO_DOCS_SITE_PREFIX": "en"},
+        )
+        == published
+    )
+
+
+@pytest.mark.parametrize("build_language", ["en", "es", "ca", "hu"])
+@pytest.mark.parametrize(
+    "environ",
+    [
+        {},
+        {"CADRUMO_DOCS_SITE_PREFIX": "own"},
+        {"CADRUMO_DOCS_SITE_PREFIX": "own", "CADRUMO_DOCS_BASE_URL": "https://example.test/docs"},
+        {"CADRUMO_DOCS_BASE_URL": "https://example.test/docs"},
+    ],
+    ids=["no-prefix", "prefix", "prefix-and-address", "address-only"],
+)
+def test_a_build_given_a_directory_is_never_placed_at_the_apex(build_language: str, environ: dict[str, str]) -> None:
+    """The layout's entry for this build and the prefix this build was given are one fact.
+
+    A page resolves the site's one search index by walking back out of its own
+    root's directory, and the switcher walks out of it the same way. If the
+    layout placed a root at the apex that was told it sits in a directory, every
+    page of that root would look for the index, and for the other languages, one
+    level too low.
+    """
+    from ..build_paths import docs_site_prefix, docs_site_prefixes
+
+    environment = {key: (build_language if value == "own" else value) for key, value in environ.items()}
+    layout = docs_site_prefixes(
+        ("en", "es", "ca", "hu"), build_language=build_language, source_language="en", environ=environment
+    )
+
+    assert layout[build_language] == docs_site_prefix(environment)
+
+
+@pytest.mark.parametrize("value", ["/es", "a/b", "..", ".", "es\\x", "/"])
+def test_the_site_prefix_refuses_anything_but_one_segment(value: str) -> None:
+    """A prefix that climbs or names several segments is refused, not normalised.
+
+    A reader's search controller walks back exactly the segments this names to
+    reach the site apex, so a value it cannot walk back would silently point
+    the one index and every shared destination at the wrong directory.
+    """
+    from ..build_paths import docs_site_prefix
+
+    with pytest.raises(ValueError, match="CADRUMO_DOCS_SITE_PREFIX"):
+        docs_site_prefix({"CADRUMO_DOCS_SITE_PREFIX": value})
 
 
 def test_deployment_sitemap_uses_canonical_human_doc_urls(tmp_path: Path) -> None:
@@ -310,7 +514,6 @@ def test_changed_docs_validation_does_not_pollute_repository_docs(changed_path: 
         capture_output=True,
         text=True,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     after = _docs_build_entries()
     paths_after = _docs_source_paths()
@@ -347,7 +550,6 @@ def test_single_page_rejects_generated_documentation_sources(generated_page: str
         capture_output=True,
         text=True,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode != 0
     assert "--single-page does not support generated API/CLI pages" in result.stderr
@@ -374,7 +576,6 @@ def test_a_changed_source_check_builds_the_stub_its_build_generates() -> None:
         capture_output=True,
         text=True,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
 
     output = _ANSI_ESCAPE.sub("", (result.stdout or "") + (result.stderr or ""))
@@ -497,12 +698,13 @@ def test_previews_skip_sequence_execution_and_full_builds_keep_it() -> None:
     assert SEQUENCE_CHECK_SKIP_ENV not in changed_env
 
 
-def test_the_preview_doctree_cache_is_stable_and_outside_the_build_root() -> None:
-    """The cache path depends only on its inputs, sits under var/, and separates configurations."""
+def test_the_preview_doctree_cache_is_stable_and_outside_the_html_root() -> None:
+    """The cache path depends only on its inputs and separates configurations."""
     english_user = preview_doctree_dir(_REPO_ROOT, scope="user", language=OutputLanguage.EN)
 
     assert english_user == preview_doctree_dir(_REPO_ROOT, scope="user", language=OutputLanguage.EN)
-    assert english_user.relative_to(_REPO_ROOT).parts[0] == "var"
+    assert english_user.is_relative_to(docs_build_root(_REPO_ROOT))
+    assert not english_user.is_relative_to(docs_html_root(_REPO_ROOT))
     assert english_user != preview_doctree_dir(_REPO_ROOT, scope="full", language=OutputLanguage.EN)
     assert english_user != preview_doctree_dir(_REPO_ROOT, scope="user", language=OutputLanguage.ES)
 
@@ -533,14 +735,13 @@ def _run_fixture_preview(repo_root: Path, storage: Path) -> str:
         text=True,
         env=env,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     output = _ANSI_ESCAPE.sub("", (result.stdout or "") + (result.stderr or ""))
     assert result.returncode == 0, output
     return output
 
 
-def test_a_repeat_preview_rereads_only_the_pages_that_changed(tmp_path: Path) -> None:
+def test_a_repeat_preview_rereads_only_the_pages_that_changed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """The preview keeps its doctree cache between runs, so an unchanged tree reads nothing."""
     repo_root = tmp_path / "repo"
     docs_root = repo_root / "docs"
@@ -550,6 +751,8 @@ def test_a_repeat_preview_rereads_only_the_pages_that_changed(tmp_path: Path) ->
     (docs_root / "guide" / "one.rst").write_text("One\n===\n", encoding="utf-8")
     (docs_root / "guide" / "two.rst").write_text("Two\n===\n", encoding="utf-8")
     storage = tmp_path / "storage"
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(storage))
+    monkeypatch.setenv("CADRUMO_DOCS_BUILD_ROOT", "")
 
     first = _run_fixture_preview(repo_root, storage)
     cache = preview_doctree_dir(repo_root, scope="user", language=OutputLanguage.EN)
@@ -563,28 +766,23 @@ def test_a_repeat_preview_rereads_only_the_pages_that_changed(tmp_path: Path) ->
     (docs_root / "guide" / "two.rst").write_text("Two\n===\n\nEdited.\n", encoding="utf-8")
     third = _run_fixture_preview(repo_root, storage)
     assert _environment_update(third) == (0, 1, 0), third
-    assert (docs_root / "_build" / "html" / "guide" / "one.html").is_file()
+    assert (docs_build_root(repo_root) / "html" / "guide" / "one.html").is_file()
 
 
-def test_tracked_sources_do_not_name_noncanonical_docs_build_roots() -> None:
-    """Tracked code must not introduce preview/test output roots under ``docs/_build``."""
-    violations: list[str] = []
-    for raw_path in repository_files(_REPO_ROOT):
-        if not (raw_path in _BUILD_ROOT_SCAN_FILES or raw_path.startswith(_BUILD_ROOT_SCAN_PREFIXES)):
-            continue
-        path = _REPO_ROOT / raw_path
-        if not path.is_file() or "docs/_build" in raw_path:
-            continue
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        roots = [*_DOCS_BUILD_LITERAL_RE.findall(text), *_PATH_BUILD_ROOT_RE.findall(text)]
-        for root in roots:
-            if root != _CANONICAL_BUILD_ROOT:
-                violations.append(f"{raw_path}: docs/_build/{root}")
-
-    assert not violations, (
-        "Only docs/_build/html is an allowed repository-local docs build root. "
-        "Use tmp_path or an OS temporary directory for validation/previews:\n  " + "\n  ".join(sorted(set(violations)))
-    )
+def test_docs_compiled_output_consumers_share_the_canonical_root() -> None:
+    consumers = {
+        _REPO_ROOT / "dev" / "docs" / "build.py": ("pin_docs_build_root", "docs_html_root"),
+        _REPO_ROOT / "dev" / "docs" / "serve.py": ("docs_html_root", "CADRUMO_DOCS_BUILD_ROOT"),
+        _REPO_ROOT / "dev" / "deploy" / "docs_site_build.py": ("docs_html_root", "CADRUMO_DOCS_BUILD_ROOT"),
+        _REPO_ROOT / "docs" / "conf.py": ("dev.docs.build_paths", "_DOCS_HTML_ROOT"),
+    }
+    missing = [
+        f"{path.relative_to(_REPO_ROOT)}: {marker}"
+        for path, markers in consumers.items()
+        for marker in markers
+        if marker not in path.read_text(encoding="utf-8")
+    ]
+    assert not missing, "compiled docs outputs diverged from the shared storage root:\n  " + "\n  ".join(missing)
 
 
 def _scope_config(scope: str, tmp_path: Path) -> dict[str, object]:
@@ -620,7 +818,6 @@ def _scope_config(scope: str, tmp_path: Path) -> dict[str, object]:
         text=True,
         env=env,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, result.stdout + result.stderr
     line = next(row for row in result.stdout.splitlines() if row.startswith("SCOPE_CONFIG="))
@@ -697,7 +894,6 @@ def _conf_read_set(tmp_path: Path, argv: list[str], *, scope: str = "full") -> d
         text=True,
         env=env,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, result.stdout + result.stderr
     line = next(row for row in result.stdout.splitlines() if row.startswith("READ_SET="))
@@ -838,7 +1034,6 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
         text=True,
         env=env,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, result.stdout + result.stderr
 
@@ -991,7 +1186,6 @@ def _build_html(root: Path) -> tuple[str, Path, str]:
         capture_output=True,
         text=True,
         check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     combined = result.stdout + result.stderr
     assert result.returncode == 0, combined

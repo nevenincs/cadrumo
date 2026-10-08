@@ -125,16 +125,16 @@ def test_the_measured_host_search_probes_ten_times_not_the_whole_grid() -> None:
     probe = _CountingProbe(_MEASURED_HOST)
 
     assert _search(probe) == (256, 4, 4)
-    # 256 MiB, p=4: bisect t=4 (in band), t=8 and t=6 (over), then five
-    # confirming samples of t=4. The p=2 and p=1 columns need only one probe
-    # each, at t=6, the first iteration count that could outrank t=4.
+    # 256 MiB, p=4: bisect t=4 (in band), t=8 and t=6 (over). Eliminate p=2
+    # and p=1 with one probe each at t=6, the first iteration count that could
+    # outrank t=4, before taking the five confirming samples of the winner.
     assert probe.calls == [
         (256, 4, 4),
         (256, 8, 4),
         (256, 6, 4),
-        *[(256, 4, 4)] * PROFILE_CUSTODY_KDF_SAMPLE_COUNT,
         (256, 6, 2),
         (256, 6, 1),
+        *[(256, 4, 4)] * PROFILE_CUSTODY_KDF_SAMPLE_COUNT,
     ]
 
 

@@ -39,6 +39,12 @@ PRODUCT_IDENTITY = import_module("cadrumo.core.product_identity").PRODUCT_IDENTI
 # here rather than rendering English inside a localized site.
 site_chrome = import_module("dev.docs.site_chrome").site_chrome
 site_labels = import_module("dev.docs.site_chrome").site_labels
+_DOCS_HTML_ROOT = import_module("dev.docs.build_paths").docs_html_root(_PROJECT_ROOT)
+_DOCS_SITE_PREFIX = import_module("dev.docs.build_paths").docs_site_prefix(os.environ)
+_DOCS_SITE_PREFIXES = import_module("dev.docs.build_paths").docs_site_prefixes
+_LANGUAGE_SWITCHER = import_module("dev.docs.language_switcher")
+_UNTRANSLATED_TYPESETTING = import_module("dev.docs.untranslated_typesetting")
+_PAGE_DESCRIPTIONS = import_module("dev.docs.page_descriptions")
 
 warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
 
@@ -57,7 +63,23 @@ _PYPROJECT = _project_metadata()
 _PROJECT_URLS = _PYPROJECT.get("urls", {})
 if not isinstance(_PROJECT_URLS, dict):
     raise ValueError("pyproject.toml [project.urls] must be a table")
-_DOCS_BASE_URL = os.environ.get("CADRUMO_DOCS_BASE_URL", "").rstrip("/")
+
+# ── Build flavor ─────────────────────────────────────────────────────────────
+# ``CADRUMO_DOCS_FLAVOR`` selects who the built pages are for:
+#   * ``web`` (default): the published site.
+#   * ``desktop``: the copy packaged into the desktop application, where every
+#     page runs inside the application window's documentation frame and nothing
+#     may load from the network. It drops the hoverxref extension, whose glossary
+#     tooltips fetch the Read the Docs embed API and whose always-include asset
+#     policy is what puts the MathJax CDN script on every page (no page renders
+#     math), and the Open Graph extension, whose tags only a link preview
+#     reads; it carries no web base URL, and loads the frame bridge before
+#     ``cadrumo-docs.js``.
+_DOCS_FLAVOR = os.environ.get("CADRUMO_DOCS_FLAVOR", "web")
+if _DOCS_FLAVOR not in {"web", "desktop"}:
+    raise ValueError(f"CADRUMO_DOCS_FLAVOR must be 'web' or 'desktop'; got {_DOCS_FLAVOR!r}")
+_DESKTOP_FLAVOR = _DOCS_FLAVOR == "desktop"
+_DOCS_BASE_URL = "" if _DESKTOP_FLAVOR else os.environ.get("CADRUMO_DOCS_BASE_URL", "").rstrip("/")
 # Cadrumo documentation type ramp: Newsreader for display headings,
 # Hanken Grotesk for text, JetBrains Mono for code. The display face matches
 # the product site so headings read as one brand across both surfaces.
@@ -139,12 +161,19 @@ if _USER_SCOPE:
     # never fires without autodoc).
     _AUTODOC_ONLY_EXTENSIONS = {"sphinx.ext.autodoc", "sphinx.ext.viewcode", "sphinx_autodoc_typehints"}
     extensions = [name for name in extensions if name not in _AUTODOC_ONLY_EXTENSIONS]
-
-# Hover tooltip cards on :term: cross-references to the generated glossary.
-# One term per glossary entry (the shared-entry rendering bug); aliases ride as
-# additional term lines on the same entry, so every declared surface resolves.
-hoverxref_roles = ["term"]
-hoverxref_role_types = {"term": "tooltip"}
+if _DESKTOP_FLAVOR:
+    # The tooltips load from ``/_/api/v3/embed/``, an endpoint only Read the
+    # Docs serves; ``:term:`` references stay ordinary links to the glossary.
+    # Open Graph tags describe a page to a site that previews its link; a
+    # packaged page has no public address to share.
+    extensions = [name for name in extensions if name not in {"hoverxref.extension", "sphinxext.opengraph"}]
+else:
+    # Hover tooltip cards on :term: cross-references to the generated glossary.
+    # One term per glossary entry (the shared-entry rendering bug); aliases ride
+    # as additional term lines on the same entry, so every declared surface
+    # resolves.
+    hoverxref_roles = ["term"]
+    hoverxref_role_types = {"term": "tooltip"}
 
 # Source file types — both reStructuredText (autodoc stubs, index) and MyST
 # Markdown (narrative pages, generated API surface) are first-class.
@@ -173,6 +202,32 @@ if language not in _VALID_DOCS_LANGUAGES:
 locale_dirs = ["locales"]
 gettext_compact = False
 _BUILD_LANGUAGE = OutputLanguage(language)
+
+# ── One compile carrying every language ──────────────────────────────────────
+# ``CADRUMO_DOCS_MULTILINGUAL`` makes this the ONE compile the documentation
+# gets: wherever a string depends on the language the pages carry a mark and
+# every language's string for it is recorded beside them, and the driver that
+# ran this build factors the output into the structure and each language's text
+# (:mod:`dev.docs.compile_slots`, :func:`dev.docs.compile_once.compile_once`).
+# Recording starts here, above the first resolver that resolves a string, and
+# the record is written into the output when the build finishes, because the
+# resolvers run inside this child process and the driver does not.
+_COMPILE_SLOTS = import_module("dev.docs.compile_slots")
+_MESSAGE_MARKS = import_module("dev.docs.message_marks")
+_MESSAGE_MARKS_TRANSFORM = _MESSAGE_MARKS.DeclareBlockLanguage
+_MESSAGE_MARKS_TITLE_TRANSFORM = _MESSAGE_MARKS.NoteToctreeTitleMarks
+_MESSAGE_MARKS_HEADING_TRANSFORM = _MESSAGE_MARKS.NoteDroppedHeadingTranslations
+_MESSAGE_MARKS_POST_TRANSFORM = _MESSAGE_MARKS.ResolveOwnPageAnchors
+_MULTILINGUAL = os.environ.get("CADRUMO_DOCS_MULTILINGUAL") == "1"
+if _MULTILINGUAL:
+    _COMPILE_SLOTS.activate([member.value for member in OutputLanguage])
+    # The authored pages are translated through gettext, so the one compile
+    # needs a catalogue of its own: it is generated into the source tree being
+    # read, and its translation of every message is that message's mark
+    # (:mod:`dev.docs.message_marks`). It is kept out of ``locales``, where the
+    # authored catalogues live, and searched first so it is the primary one.
+    locale_dirs = [_MESSAGE_MARKS.PSEUDO_LOCALE_DIR, *locale_dirs]
+
 _SITE_LABELS = site_labels(_BUILD_LANGUAGE)
 
 exclude_patterns = [
@@ -183,13 +238,27 @@ exclude_patterns = [
     "**/_test_*.py",
     "USERDOCS-KICKOFF-BRIEF.md",
 ]
+# The pages only the English full-scope root publishes: the generated API
+# reference, the viewcode ``_modules`` source pages and the technical collection.
+# They document the code for the people who work on it, in English, and are not
+# part of what a taxpayer reads, of what is translated, or of what is packaged.
+# No other language's root has them, so this one list decides both what the user
+# scope leaves out and where the language switcher sends a reader from one.
+_ENGLISH_ONLY_SOURCES = ("api/**", "_modules/**", "technical/**")
 if _USER_SCOPE:
-    # User scope excludes the generated API autodoc tree and the viewcode
-    # ``_modules`` source pages from the read set entirely, so no app module is
-    # imported to render them.
-    exclude_patterns += ["api/**", "_modules/**"]
+    # Excluded from the read set entirely, so no app module is imported to
+    # render them.
+    exclude_patterns += list(_ENGLISH_ONLY_SOURCES)
 
 _DOCS_ROOT = Path(__file__).resolve().parent
+
+# The committed generator-owned pages, which nobody translates and which are
+# therefore typeset in the language they are authored in rather than four ways
+# (:mod:`dev.docs.untranslated_typesetting`). Read here, before this build's own
+# generators write their pages into the source tree: those carry each language's
+# own strings and are translated prose.
+cadrumo_source_language_pages = _UNTRANSLATED_TYPESETTING.source_language_pages(_DOCS_ROOT)
+
 _ONLY_SOURCES = {
     Path(item).as_posix() for item in os.environ.get("CADRUMO_DOCS_ONLY", "").split(os.pathsep) if item.strip()
 }
@@ -353,7 +422,7 @@ intersphinx_mapping = {
     "pydantic": ("https://docs.pydantic.dev/latest", None),
     "typer": ("https://typer.tiangolo.com/", None),
 }
-_SELF_INVENTORY = Path(__file__).resolve().parent / "_build" / "html" / "objects.inv"
+_SELF_INVENTORY = _DOCS_HTML_ROOT / "objects.inv"
 if os.environ.get("CADRUMO_DOCS_SELF_INVENTORY") and _SELF_INVENTORY.is_file():
     intersphinx_mapping["cadrumo-local"] = ((_SELF_INVENTORY.parent).as_uri() + "/", str(_SELF_INVENTORY))
 intersphinx_disabled_reftypes = ["std:doc"]
@@ -372,6 +441,23 @@ if os.environ.get("CADRUMO_DOCS_OFFLINE"):
 html_theme = "furo"
 html_title = _SITE_LABELS["meta_title"]
 html_short_title = _SITE_LABELS["meta_short_title"]
+if _MULTILINGUAL and _DOCS_BASE_URL:
+    # A single-language build is given the address of its OWN root, because
+    # that is the only root it writes. One compile writes every root, so it is
+    # given the address ABOVE the language directories and completes it here
+    # with the language's own code -- as a mark, which is what makes the
+    # canonical link, ``og:url``, ``og:image`` and the absolute links of the
+    # error page each language's own instead of the compile's
+    # (:func:`dev.docs.compile_once.compile_language_roots`). The strings are
+    # recorded verbatim: a language tag carries no character any writer between
+    # here and the page would escape, and one of those writers is an inline
+    # script's own text.
+    _LANGUAGE_SEGMENT = _COMPILE_SLOTS.language_text(
+        lambda carried: carried,
+        language,
+        rendering=_COMPILE_SLOTS.Rendering.VERBATIM,
+    )
+    _DOCS_BASE_URL = f"{_DOCS_BASE_URL}/{_LANGUAGE_SEGMENT}"
 html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
 # The error page is served at whatever path missed, so its links are absolute.
 # They are rooted at this site root's own path; the extension's default is a
@@ -381,6 +467,14 @@ html_meta = {"description": _SITE_LABELS["meta_description"]}
 html_favicon = "_static/cadrumo-favicon.svg"
 html_static_path = ["_static"]
 templates_path = ["_templates"]
+# Search is Pagefind, so Sphinx builds no index of its own (see
+# ``_skip_stock_search_index``) and the search page is rendered as an ordinary
+# additional page from the same template.
+html_additional_pages = {"search": "search.html"}
+# The theme's view and edit buttons link to the repository (``source_repository``
+# below), so no page links the ``_sources`` copy Sphinx would write of every
+# source file into every site root.
+html_copy_source = False
 html_css_files = [
     "cadrumo-docs.css",
     # The generated reference surfaces carry their own stylesheets so the
@@ -389,7 +483,9 @@ html_css_files = [
     "cadrumo-casilla-reference.css",
     "cadrumo-legal-reference.css",
 ]
-html_js_files = ["cadrumo-docs.js"]
+# The desktop bridge goes first, so its capture-phase key listener exists
+# before ``cadrumo-docs.js`` registers its own.
+html_js_files = ["cadrumo-desktop-bridge.js", "cadrumo-docs.js"] if _DESKTOP_FLAVOR else ["cadrumo-docs.js"]
 # The left sidebar carries the command-palette trigger and the navigation tree;
 # brand and the stock search box move into the sticky site header / palette.
 html_sidebars = {
@@ -400,6 +496,10 @@ html_sidebars = {
         "sidebar/scroll-end.html",
     ],
 }
+# The legal reference is one page per official document. Its index lists them
+# all, so a provision page's sidebar names the section and the document being
+# read rather than repeating every other document on every one of them.
+cadrumo_navigation_listed_on_index = [f"{import_module('dev.docs.legal_reference_routing').LEGAL_REFERENCE_DIR}/index"]
 html_theme_options = {
     "light_logo": "cadrumo-mark-light.svg",
     "dark_logo": "cadrumo-mark-dark.svg",
@@ -585,12 +685,13 @@ if _USER_SCOPE:
     html_context["cadrumo_nav"] = [entry for entry in html_context["cadrumo_nav"] if entry.get("doc") != "api/index"]
 
 # ── Language switcher ────────────────────────────────────────────────────────
-# The deploy publisher emits per-language site roots (``/`` = en, ``/es/``,
-# ``/ca/``, ``/hu/``). The header language switcher (docs/_templates) links the
-# current page to its counterpart under each language root. The set derives from
-# OutputLanguage (English first as the authoring source, then the translation
-# targets in enum order) - never a second hand-listed set - and each entry
-# carries its endonym, the language's own name, which is the same in every build.
+# The header language switcher (docs/_templates) links the current page to its
+# counterpart under each language root. The set derives from OutputLanguage
+# (English first as the authoring source, then the translation targets in enum
+# order) - never a second hand-listed set - and each entry carries its endonym,
+# the language's own name, which is the same in every build. Where each of those
+# roots is served is the layout's own fact, which the switcher reads from the
+# prefixes below rather than from the language.
 _DOCS_LANGUAGE_ENDONYMS = {
     OutputLanguage.EN: "English",
     OutputLanguage.ES: "Español",
@@ -598,27 +699,78 @@ _DOCS_LANGUAGE_ENDONYMS = {
     OutputLanguage.HU: "Magyar",
 }
 _DOCS_LANGUAGE_ORDER = (OutputLanguage.EN, *(member for member in OutputLanguage if member is not OutputLanguage.EN))
-html_context["cadrumo_docs_language"] = language
-html_context["cadrumo_docs_default_language"] = OutputLanguage.EN.value
-html_context["cadrumo_docs_language_is_default"] = language == OutputLanguage.EN.value
 html_context["cadrumo_docs_languages"] = [
     {"code": member.value, "label": _DOCS_LANGUAGE_ENDONYMS[member]} for member in _DOCS_LANGUAGE_ORDER
 ]
 
+
+def _per_language_template_value(value_of):
+    """Return each carried language's own value as one mark, or this build's value alone.
+
+    The theme's templates write these, so under the one compile they are
+    recorded as the templates' own: Sphinx renders them without autoescaping,
+    and nothing a template writes meets the smart-quotes transform.
+
+    Args:
+        value_of: Returns the value for one language tag.
+
+    Returns:
+        The mark reading every carried language's value, or the build
+        language's value outside the one compile.
+    """
+    slots = _COMPILE_SLOTS.active()
+    if slots is None:
+        return value_of(language)
+    return slots.mark(_COMPILE_SLOTS.Rendering.TEMPLATE, [value_of(carried) for carried in slots.languages])
+
+
+# The ``lang`` attribute of every page, which the theme takes from the template
+# context when it is set there and from the build's one Sphinx language when it
+# is not.
+html_context["language"] = _per_language_template_value(lambda carried: carried)
+# This root's own path inside the served site, which the search controller needs
+# because the site carries ONE index, at the apex above every language root. The
+# prefix is how a page walks back from its own root to that apex, and how a
+# record shared by every language is opened inside the root being read.
+_SITE_PREFIXES = _DOCS_SITE_PREFIXES(
+    [member.value for member in OutputLanguage],
+    build_language=language,
+    source_language=OutputLanguage.EN.value,
+    environ=os.environ,
+)
+html_context["cadrumo_docs_site_prefix"] = _per_language_template_value(lambda carried: _SITE_PREFIXES[carried])
+# The whole layout, which the language switcher needs because it writes a link
+# from this page to every other root: where each one is served is a property of
+# the layout and not of the language, and it is the same mapping in every root,
+# so it is carried as itself rather than as one value per language.
+html_context["cadrumo_docs_site_prefixes"] = _SITE_PREFIXES
+# The Python module index is written only where modules are documented, which
+# is the English full-scope root, so it joins the pages no other root has.
+html_context["cadrumo_docs_english_only_pages"] = (*_ENGLISH_ONLY_SOURCES, "py-modindex")
+
 # ── Site chrome ──────────────────────────────────────────────────────────────
 # Every template-rendered label, accessible name, and interaction-layer string,
 # flat and resolved for this root's language. The templates read it by name and
-# serialise it once per page as the payload docs/_static/cadrumo-docs.js reads,
-# so the server-rendered and browser-written chrome share one authority.
+# the build publishes it once per root as the script docs/_static/cadrumo-docs.js
+# reads, so the server-rendered and browser-written chrome share one authority.
+# The endonym is the name of the language the ROOT is in, so under the one
+# compile it depends on the language exactly as the chrome around it does: a
+# value resolved for one language would read "Language: English" inside every
+# other root.
 html_context["cadrumo_chrome"] = site_chrome(
     _BUILD_LANGUAGE,
-    language_endonym=_DOCS_LANGUAGE_ENDONYMS[_BUILD_LANGUAGE],
+    language_endonym=_per_language_template_value(lambda carried: _DOCS_LANGUAGE_ENDONYMS[OutputLanguage(carried)]),
 )
 
 # ── Publishing metadata ─────────────────────────────────────────────────────
+#: The most characters a page's description reads as. Cadrumo's own, because
+#: the description is derived here rather than by the Open Graph extension
+#: (:mod:`dev.docs.page_descriptions`); the extension is told the same number
+#: so nothing it computes is shaped by a second one.
+_DESCRIPTION_LENGTH = 180
 ogp_site_name = _SITE_LABELS["meta_short_title"]
 ogp_site_url = html_baseurl
-ogp_description_length = 180
+ogp_description_length = _DESCRIPTION_LENGTH
 ogp_type = "website"
 ogp_image = "_static/cadrumo-mark-light.svg"
 
@@ -704,6 +856,15 @@ nitpick_ignore_regex = [
         r"^(FieldInfo|MinLen|MaxLen|NoneType|EllipsisType|Annotated|"
         r"Strict[A-Za-z]*|[A-Za-z]*Constraints|_PydanticGeneralMetadata)$",
     ),
+    # pydantic's ``JsonValue`` is a recursive type alias, not a class, and
+    # autodoc renders it by its BARE name wherever a signature carries it, so
+    # even the online pydantic inventory has nothing the short form reaches.
+    (r"py:class", r"^JsonValue$"),
+    # A fragment of a regular expression. A pydantic field's ``pattern`` is
+    # rendered inside its annotation, the annotation is split at ``|``, and the
+    # alternative ``activities(...)`` of the censal fact-path pattern leaves
+    # this one word as a cross-reference target. It is not a type.
+    (r"py:class", r"^activities$"),
     # Autodoc's ``show-inheritance`` renders a base class by its BARE name, so a
     # TUI class deriving from Textual emits ``Widget`` rather than
     # ``textual.widget.Widget``. The vendored inventory carries the qualified
@@ -860,8 +1021,7 @@ nitpick_ignore_regex = [
     # ``extract_pages_text_from_bytes`` / ``LLMProvider`` x2), which the
     # last-segment suffix resolver cannot disambiguate by design; and (2) a
     # project object written by a path that omits the ``cadrumo.`` root
-    # (``core.telemetry.workspace_hash``,
-    # ``application.modelo.emit_collab_workspace_opened_event``,
+    # (``application.modelo.emit_collab_workspace_opened_event``,
     # ``adapters.persistence.storage.SensitivityClass.SECRET``). ``core-struct-
     # docstring-links`` bars adding a dotted path to a bare project anchor, so
     # these are ignored rather than qualified; a py:func / py:attr short-reference
@@ -873,7 +1033,7 @@ nitpick_ignore_regex = [
         r"reset_workflow_state|output_language|extract_pages_text|"
         r"extract_pages_text_from_bytes|emit_collab_workspace_opened_event|"
         r"LLMProvider|PersonaAction|parse_declaracion|parse_declaracion_bytes|"
-        r"parse_justificante|parse_justificante_bytes|zeroise|"
+        r"parse_justificante|parse_justificante_bytes|zeroise|write_all|"
         r"NotificationsSnapshot)$",
     ),
     # Enum members are emitted as ``:ivar:`` entries by Napoleon
@@ -920,14 +1080,39 @@ nitpick_ignore_regex = [
         r"py:(data|meth|obj)",
         r"^(datetime\.date\.min|pathlib\.Path\.with_name|typing\.PydanticArgs)$",
     ),
+    # Stdlib classes autodoc renders by their BARE name in an annotation
+    # (``threading.RLock`` and ``Event``, ``logging.Logger``, the ``contextlib``
+    # context-manager bases), exactly as ``Buffer`` above, and
+    # ``weakref.ReferenceType``, which the inventory carries only as
+    # ``weakref.ref``. No project class has any of these names.
+    (
+        r"py:class",
+        r"^(RLock|Event|Logger|AbstractContextManager|AbstractAsyncContextManager|"
+        r"ReferenceType|weakref\.ReferenceType)$",
+    ),
+    # A ``ParamSpec`` named ``P`` is rendered under ``typing``, where no such
+    # object exists; same category as the bare type parameters above.
+    (r"py:obj", r"^typing\.P$"),
+    # ``PyOVERLAPPED`` is pywin32's overlapped-I/O structure, annotated in the
+    # Windows native I/O adapter. pywin32 ships no inventory.
+    (r"py:class", r"^PyOVERLAPPED$"),
     # Textual and Rich classes autodoc renders by their BARE name, exactly as
     # ``Widget`` above: the TUI screens subclass ``Screen`` and annotate Rich
     # ``Style`` and Textual ``AutopilotCallbackType``. The vendored textual
     # inventory carries the qualified targets, unreachable from the short form.
     (r"py:class", r"^(Screen|Style|AutopilotCallbackType)$"),
-    # A ``TYPE_CHECKING``-only alias of a googleapiclient stub type; the Google
-    # API client ships no inventory, and the alias is not a project class.
-    (r"py:class", r"^SheetsValueRange$"),
+    # The same, for what the profile and workbench screens annotate: Textual's
+    # ``App`` and its visual types, Rich's ``RenderableType``, and the message
+    # classes Textual nests in a widget (``Button.Pressed``), which autodoc
+    # renders as written in the handler's signature.
+    (
+        r"py:class",
+        r"^(App|VisualType|ContentText|RenderableType|"
+        r"Button\.Pressed|DataTable\.RowHighlighted|Worker\.StateChanged)$",
+    ),
+    # ``TYPE_CHECKING``-only aliases of googleapiclient stub types; the Google
+    # API client ships no inventory, and the aliases are not project classes.
+    (r"py:class", r"^(SheetsValueRange|SheetsResource|DriveResource)$"),
     # Project objects written by a path that omits the ``cadrumo.`` root and
     # whose package is excluded from the documented surface (``entrypoints.cli``
     # has no stubs) or whose bare name the resolver cannot reach
@@ -939,8 +1124,7 @@ nitpick_ignore_regex = [
     ),
     (
         r"py:.*",
-        r"^(core\.telemetry\.workspace_hash|"
-        r"application\.modelo\.emit_collab_workspace_opened_event|"
+        r"^(application\.modelo\.emit_collab_workspace_opened_event|"
         r"adapters\.persistence\.storage\.SensitivityClass\.SECRET)$",
     ),
     # Registry typed-id aliases (``CasillaId``, ``RelationId``, ``OracleId``,
@@ -1504,6 +1688,12 @@ def setup(app):
     Returns:
         The extension metadata declaring parallel-read/write safety.
     """
+    # Sphinx's own words come from one translator the build language settles.
+    # They are replaced here, before the builder captures one for its
+    # templates, so the one compile can answer them for every language.
+    from dev.docs.sphinx_messages import register as _register_sphinx_messages
+
+    _register_sphinx_messages(app)
 
     def _skip_non_owner_autodoc_member(app, what, name, obj, skip, options):
         """Keep private/generated typing objects out of public object indexing."""
@@ -1667,7 +1857,8 @@ def setup(app):
         """
         if _skip_generated_output_for_i18n("legal_reference"):
             return
-        from dev.docs.legal_reference import LEGAL_REFERENCE_DIR, generate_legal_reference
+        from dev.docs.legal_reference import generate_legal_reference
+        from dev.docs.legal_reference_routing import LEGAL_REFERENCE_DIR
 
         if not _build_reads(LEGAL_REFERENCE_DIR):
             return
@@ -1691,6 +1882,21 @@ def setup(app):
         from dev.docs.sequence_build_gate import emit_cli_tree
 
         emit_cli_tree(app, specific_sources=_specific_build_sources())
+
+    def _skip_stock_search_index(app):
+        """Build no Sphinx search index, which nothing in the site reads.
+
+        The search page and the command palette query the Pagefind index the
+        post-build pass writes. Sphinx's own ``searchindex.js`` was two megabytes
+        in every site root and a pass over every page to build.
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        from sphinx.builders.html import StandaloneHTMLBuilder
+
+        if isinstance(app.builder, StandaloneHTMLBuilder):
+            app.builder.search = False
 
     def _check_cli_sequences(app):
         """Fail the build on any cli-sequence golden divergence.
@@ -1722,7 +1928,190 @@ def setup(app):
                     continue
         check_sequence_goldens(app, pages=pages)
 
-    app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings)
+    def _mark_authored_messages(app):
+        """Put a mark where each authored page's translation goes, for every language.
+
+        The source tree is discovered here rather than waited for, because the
+        generated catalogue has to exist before Sphinx reads a document and the
+        fragment documents have to exist before it lists them. Discovery is the
+        builder's own, so the pages marked are exactly the pages this scope
+        reads.
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        import logging
+
+        slots = _COMPILE_SLOTS.active()
+        if slots is None:
+            return
+        plan = _MESSAGE_MARKS.prepare(
+            Path(app.srcdir),
+            slots=slots,
+            # The exclusions are the builder's own, so the pages marked are the
+            # pages this scope reads and no more; Sphinx discovers again for
+            # its read phase and picks the fragment documents up then.
+            docnames=app.project.discover(
+                app.config.exclude_patterns + app.config.templates_path + app.builder.get_asset_paths(),
+                app.config.include_patterns,
+            ),
+            doc2path=lambda docname: Path(app.project.doc2path(docname, absolute=True)),
+            source_language=OutputLanguage.EN.value,
+            compact=app.config.gettext_compact,
+        )
+        logging.getLogger(__name__).info(
+            "DOCS_MESSAGE_MARKS pages=%d messages=%d languages=%d",
+            len(plan.pages),
+            plan.messages,
+            len(plan.languages),
+        )
+
+    def _read_authored_messages(app, exception):
+        """Record what each fragment document rendered, then drop the fragments.
+
+        Args:
+            app: The Sphinx application instance.
+            exception: The build's failure, or None when it succeeded.
+        """
+        slots = _COMPILE_SLOTS.active()
+        plan = _MESSAGE_MARKS.active()
+        if exception is not None or slots is None or plan is None:
+            return
+        # What the read phase noted lives on the environment, because a worker
+        # process reading its own chunk of documents can return nothing else.
+        _MESSAGE_MARKS.collect_notes(app.env, plan)
+        _MESSAGE_MARKS.harvest(plan, slots, lambda docname: Path(app.builder.get_outfilename(docname)))
+
+    def _write_compile_slots(app, exception):
+        """Leave the recorded marks where the driver that ran this build reads them.
+
+        Args:
+            app: The Sphinx application instance.
+            exception: The build's failure, or None when it succeeded. A failed
+                build's record says nothing about a site that was not written.
+        """
+        slots = _COMPILE_SLOTS.active()
+        if exception is not None or slots is None:
+            return
+        slots.write(Path(app.outdir) / _COMPILE_SLOTS.SLOTS_FILE)
+
+    #: Each reserved mark standing for a page's description, and the page's own
+    #: text it is derived from. The text still holds this compile's marks, so
+    #: the descriptions are finished once every one of them has its strings.
+    description_marks: dict[str, str] = {}
+
+    def _write_page_description(app, pagename, templatename, context, doctree):
+        """Replace the page's description tags with one derived from its blocks of text.
+
+        Runs after ``sphinxext.opengraph``'s own handler, whose description is
+        a join of the doctree's LEAF text cut at a character count: under the
+        one compile the count is of marks rather than of the text they stand
+        for, and the join loses the whitespace around inline markup in every
+        build (:mod:`dev.docs.page_descriptions`).
+
+        Under the one compile the tag carries a mark, because the text each
+        language reads is not known until every message has been rendered;
+        :func:`_supply_page_descriptions` finishes them.
+
+        Args:
+            app: The Sphinx application instance.
+            pagename: The page being written (unused).
+            templatename: The template rendering it (unused).
+            context: The template context, whose meta tags are rewritten.
+            doctree: The page's resolved doctree, or None for a page the
+                builder collected rather than read, which has no text of its
+                own to describe.
+        """
+        if not doctree:
+            return
+        # The title as the page's own heading reads, which stands in og:title
+        # already and so is left out of the description, exactly as the
+        # extension leaves it out.
+        titles = {_COMPILE_SLOTS.plain_text(context.get("title") or "")}
+        source = _PAGE_DESCRIPTIONS.description_source(doctree, titles=titles)
+        slots = _COMPILE_SLOTS.active()
+        if slots is None or not source:
+            content = _PAGE_DESCRIPTIONS.description_content(source, length=_DESCRIPTION_LENGTH)
+        else:
+            content = slots.reserve(_COMPILE_SLOTS.Rendering.VERBATIM)
+            description_marks[content] = source
+        context["metatags"] = _PAGE_DESCRIPTIONS.with_description(context["metatags"], content)
+
+    def _supply_page_descriptions(app, exception):
+        """Record what each page's description reads in every language.
+
+        Between the pass that reads the rendered translations back and the one
+        that writes the record: a description is the page's own text, so it can
+        only be cut once every mark in that text has its strings, and it has to
+        be recorded before the record is written.
+
+        Args:
+            app: The Sphinx application instance (unused).
+            exception: The build's failure, or None when it succeeded.
+        """
+        slots = _COMPILE_SLOTS.active()
+        if exception is not None or slots is None:
+            return
+        for mark, source in description_marks.items():
+            descriptions = [
+                _PAGE_DESCRIPTIONS.description_content(
+                    slots.plain_resolved(source, index),
+                    length=_DESCRIPTION_LENGTH,
+                )
+                for index in range(len(slots.languages))
+            ]
+            slots.supply(mark, descriptions, descriptions)
+        description_marks.clear()
+
+    def _write_the_compiled_site_in_this_process(app):
+        """Keep the one compile's write phase in the process that records its marks.
+
+        Sphinx writes documents in worker processes where it can, and discards
+        whatever they leave behind: a worker's return value is thrown away and
+        its memory goes with it. The marks for Sphinx's own interface strings,
+        the language switcher and the per-language scripts are created while a
+        page is written, so under the one compile they have to be created here.
+        Reading stays parallel, which is where the time goes, and clearing the
+        builder's own permission rather than declaring an extension unsafe is
+        what keeps the build quiet about it (``Builder.build`` asks the builder
+        first and only then asks the extensions).
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        app.builder.allow_parallel = False
+
+    if _MULTILINGUAL:
+        # The messages are marked after the generated pages are written, so the
+        # discovered source tree is the one Sphinx will read, and read back
+        # before the marks are written, which is what the record needs them for.
+        app.connect("builder-inited", _mark_authored_messages, priority=900)
+        app.connect("builder-inited", _write_the_compiled_site_in_this_process)
+        app.connect("env-purge-doc", _MESSAGE_MARKS.purge_notes)
+        app.connect("env-merge-info", _MESSAGE_MARKS.merge_notes)
+        app.connect("build-finished", _read_authored_messages, priority=100)
+        app.connect("build-finished", _supply_page_descriptions, priority=150)
+        app.connect("build-finished", _write_compile_slots, priority=200)
+        app.add_transform(_MESSAGE_MARKS_TITLE_TRANSFORM)
+        app.add_transform(_MESSAGE_MARKS_HEADING_TRANSFORM)
+        app.add_transform(_MESSAGE_MARKS_TRANSFORM)
+        app.add_post_transform(_MESSAGE_MARKS_POST_TRANSFORM)
+    if not _DESKTOP_FLAVOR:
+        # Priority 600 runs after sphinxext.opengraph's own handler, which sits
+        # at the default and whose description tags this one replaces. The
+        # packaged copy loads no Open Graph extension and carries no
+        # description tags at all, so nothing there is described either.
+        app.connect("html-page-context", _write_page_description, priority=600)
+    _LANGUAGE_SWITCHER.register(app)
+    # Every build, not only the one compile: a page no language translates is
+    # typeset in the language it is authored in wherever it is built, which is
+    # what makes one page in one compile the page every language publishes.
+    _UNTRANSLATED_TYPESETTING.register(app)
+    # Ahead of the default priority, so the fences are gone before the type-hint
+    # extension reads the docstring: it parses every docstring once on its own
+    # to find where a return type goes, and what it reported there carried no
+    # source, once for every screen that inherits Textual's ``compose``.
+    app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings, priority=400)
     app.connect("autodoc-skip-member", _skip_non_owner_autodoc_member, priority=100)
     app.connect("builder-inited", _resolve_deferred_models)
     app.connect("builder-inited", _generate_cli_reference)
@@ -1732,6 +2121,7 @@ def setup(app):
     app.connect("builder-inited", _generate_legal_reference)
     app.connect("builder-inited", _emit_cli_tree)
     app.connect("builder-inited", _check_cli_sequences)
+    app.connect("builder-inited", _skip_stock_search_index)
     # Priority 700 runs after intersphinx (which resolves external targets at the
     # default priority) so the short-name bridge only fires for genuinely
     # unresolved in-tree references.
@@ -1757,4 +2147,23 @@ def setup(app):
     from dev.docs.navigation import register as _register_collapsed_navigation
 
     _register_collapsed_navigation(app)
+
+    # A generated page's heading is written in the reader's language, so the
+    # anchor its section would be named after is too. Each such heading names
+    # its own anchor instead, the same one in every language root.
+    from dev.docs.section_anchors import register as _register_section_anchors
+
+    _register_section_anchors(app)
+
+    # The theme variables and the chrome strings are one file per site root
+    # rather than a block in every page's head.
+    from dev.docs.shared_page_assets import register as _register_shared_page_assets
+
+    _register_shared_page_assets(app)
+
+    # Sphinx's own interface strings are one script per language, which the one
+    # compile writes for every language rather than for the build's own.
+    from dev.docs.translations_js import register as _register_translations_js
+
+    _register_translations_js(app)
     return {"parallel_read_safe": True, "parallel_write_safe": True}

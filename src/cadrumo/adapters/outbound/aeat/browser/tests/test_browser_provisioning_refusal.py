@@ -25,11 +25,11 @@ from ..session import BrowserSession
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-async def _launch_refusal(channel: str) -> BrowserError:
+async def _launch_refusal() -> BrowserError:
     async with async_playwright() as playwright:
         session = BrowserSession(
             playwright,
-            Settings(cadrumo_browser_channel=channel),
+            Settings(),
             Profile(name="provisioning-refusal", locale="es-ES", timezone_id="Europe/Madrid"),
         )
         with pytest.raises(BrowserError) as raised:
@@ -37,13 +37,12 @@ async def _launch_refusal(channel: str) -> BrowserError:
         return raised.value
 
 
-@pytest.mark.parametrize("channel", ("chromium", ""))
 def test_missing_bundled_chromium_names_the_provisioning_command(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, channel: str
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(tmp_path / "empty-cache"))
+    monkeypatch.setenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", str(tmp_path / "empty-cache"))
 
-    error = asyncio.run(_launch_refusal(channel))
+    error = asyncio.run(_launch_refusal())
 
     assert error.failure_mode == BrowserFailureMode.BROWSER_NOT_PROVISIONED.value
     assert error.__cause__ is None

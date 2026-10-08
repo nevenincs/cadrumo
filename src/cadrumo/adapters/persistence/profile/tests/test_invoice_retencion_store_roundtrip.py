@@ -42,13 +42,15 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import RETENCION_OBSERVATIONS_NAMESPACE
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.invoice_retencion import project_received_invoice_retencion
+from cadrumo.application.aggregation.retenciones import RetencionObservation
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
 from cadrumo.core.period import Period
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
+
+from .retencion_observation_authoring import replace_retencion_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -99,12 +101,21 @@ def _received_invoice() -> Invoice:
     )
 
 
-def _routed_observation():
-    """The one observation the invoice projects, before any persistence."""
-    projection = project_received_invoice_retencion(_received_invoice(), scheme=_SCHEME)
-    assert projection.defects == (), "the fixture invoice must route; a defect here would empty the test"
-    assert projection.observation is not None
-    return projection.observation
+def _routed_observation() -> RetencionObservation:
+    """The one observation a received invoice contributes, before any persistence."""
+    invoice = _received_invoice()
+    assert invoice.base_total_eur is not None
+    assert invoice.retention_amount_eur is not None
+    return RetencionObservation(
+        source_kind=BindingSourceKind.PAYABLE_INVOICE,
+        source_object_id=invoice.invoice_id,
+        perceptor_nif=_PERCEPTOR_NIF,
+        perceptor_name=invoice.counterparty_name,
+        scheme=_SCHEME,
+        taxable_base=invoice.base_total_eur,
+        retencion_amount=invoice.retention_amount_eur,
+        accrued_on=invoice.issued_at.isoformat(),
+    )
 
 
 def test_the_projected_observation_carries_its_defaultable_field_non_default() -> None:
@@ -136,7 +147,8 @@ def test_an_invoice_sourced_observation_survives_the_encrypted_boundary_intact(t
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repository = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        repository.replace_observations(
+        replace_retencion_observations(
+            repository,
             modelo=_MODELO,
             filing_year=_PERIOD.filing_year,
             period=_PERIOD,

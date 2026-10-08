@@ -5,28 +5,19 @@ aggregation:
         sol·licitat.
   invoice_retencion:
     defects:
-      fx_unresolved: La factura és en moneda estrangera i no té tipus de canvi a euros.
-      iva_treatment_undeclared: No s'ha declarat el tractament d'IVA, de manera que
-        no es pot determinar el sentit de la retenció.
+      fx_unresolved: La factura és en moneda estrangera i no té cap tipus de canvi
+        per convertir-la a euros.
+      iva_treatment_undeclared: No s'ha declarat cap tractament d'IVA, de manera que
+        no es pot saber si la retenció s'ha d'ingressar o s'acredita.
       missing_counterparty_tax_id: La factura no indica el NIF del perceptor, que
         la declaració de retencions exigeix.
-      no_retencion_declared: La factura no declara cap import retingut.
+      no_retencion_declared: La factura no indica cap import retingut.
       non_resident_supplier: El proveïdor no és resident a Espanya; les retencions
         sobre pagaments a no residents es declaren a l'Impost sobre la Renda de no
         Residents.
       not_a_retenedor_liability: Amb aquest tractament d'IVA i aquest tipus de factura,
-        la retenció no és una obligació del contribuent com a retenidor; la retenció
-        d'una factura emesa és un crèdit al seu favor.
-    errors:
-      euro_figures_unavailable_after_defect_sweep: Les xifres en euros no estan disponibles
-        en una factura que ha superat l'escombrat de defectes.
-      perceptor_tax_id_unavailable_after_defect_sweep: L'identificador fiscal del
-        perceptor no està disponible en una factura que ha superat l'escombrat de
-        defectes.
-      projection_defects_repeat: Una projecció de retenció de factura repeteix el
-        mateix defecte.
-      projection_outcome_ambiguous: Una projecció de retenció de factura ha de portar
-        o una observació o defectes, mai tots dos ni cap.
+        la retenció no és una obligació teva com a pagador que reté (retenidor); la
+        retenció d'una factura emesa per tu és un crèdit al teu favor.
   irnr_income_ledger:
     diagnostics:
       foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} queda
@@ -57,8 +48,8 @@ aggregation:
         bucket d'agregació sol·licitat.
       deduction_authority_on_non_deducible_row: Una fila d'IVA que no suporta quota
         deduïble no pot portar una classificació de deducció; la categoria d'IVA %{category}
-        es liquida com %{flow_direction}. Elimineu el tipus de deducció declarat o
-        corregiu la categoria.
+        es liquida com %{flow_direction}. Elimina el tipus de deducció declarat o
+        corregeix la categoria.
       differentiated_sector_inactive_for_filing_year: Un sector diferenciat està inactiu
         per a l'exercici.
       differentiated_sector_without_filing_year_entry: Un sector diferenciat no té
@@ -71,18 +62,18 @@ aggregation:
         no poden portar un Estat membre de la UE; rebut %{member_state}.
       inadmissible_deduction_classification: 'El tipus de deducció d''IVA declarat
         %{deduction_fact_kind} no és admissible en una fila de la categoria d''IVA
-        %{iva_category}: %{refusal}. Corregiu el tipus de deducció declarat, la categoria
+        %{iva_category}: %{refusal}. Corregeix el tipus de deducció declarat, la categoria
         d''IVA o l''evidència vinculada.'
       investment_observations_missing_bienes_inversion_authority: Les observacions
         d'IVA d'inversió requereixen el registre explícit de béns d'inversió i una
         autoritat de perfil coincident.
       missing_counterparty_establishment_on_export: Una exportació està exempta perquè
         l'operació surt de la Unió, de manera que depèn d'on estigui ESTABLERTA la
-        contrapart. Registreu el país de la contrapart; un codi absent o no assignat
+        contrapart. Registra el país de la contrapart; un codi absent o no assignat
         no estableix res, i la seva identificació a efectes d'IVA no pot respondre-hi.
       missing_counterparty_identification_state: Una operació intracomunitària requereix
         l'Estat membre en què la contrapart està identificada a efectes de l'IVA.
-      rectification_consumed_more_than_once: Un fet d'IVA ja corregit només es pot
+      rectification_consumed_more_than_once: Un apunt d'IVA ja corregit només es pot
         rectificar una vegada.
       sectorized_apportionment_duplicate_sectors: El repartiment sectoritzat d'IVA
         declara el mateix sector més d'una vegada.
@@ -104,8 +95,8 @@ aggregation:
         no té estat de registre especial de l'exercici anterior per als sectors afectats.
       prorrata_transition_contradictory_evidence: Les entrades de transició de prorrata
         especial contradiuen la transició declarada.
-      prorrata_transition_declarations_unavailable: La revisió seleccionada del model
-        303 no declara calendari de presentació ni vincle d'arrossegament periòdic,
+      prorrata_transition_declarations_unavailable: La versió seleccionada del Model
+        303 no declara calendari de presentació ni origen d'arrossegament periòdic,
         per la qual cosa no es pot determinar el període de transició de prorrata.
       prorrata_transition_entry_without_evidence: Una entrada de transició de prorrata
         especial no aporta evidència de transició.
@@ -118,14 +109,14 @@ aggregation:
       prorrata_transition_not_applicable_for_period: L'evidència de transició de prorrata
         especial només s'aplica en l'últim període del Model 303 de l'exercici.
       recipient_fact_disagrees_with_ledger_evidence: La dada de destinatari d'operacions
-        en criteri de caixa no concorda amb la seva evidència d'assentaments en règim
+        en criteri de caixa no concorda amb els apunts dels teus registres en règim
         del proveïdor.
       supplier_regime_aggregation_period_mismatch: El període de l'agregació d'IVA
         no coincideix amb el període de declaració sol·licitat.
-      supplier_regime_blank_ledger_identity: L'evidència d'arribada en règim del proveïdor
-        conté una identitat d'assentament en blanc.
-      supplier_regime_duplicate_ledger_evidence: L'evidència d'arribada en règim del
-        proveïdor repeteix el mateix assentament.
+      supplier_regime_blank_ledger_identity: Les dades d'arribada en règim del proveïdor
+        contenen un apunt amb identitat en blanc.
+      supplier_regime_duplicate_ledger_evidence: Les dades d'arribada en règim del
+        proveïdor repeteixen el mateix apunt.
       supplier_regime_observations_outside_period: L'agregació d'IVA conté observacions
         datades fora del període de declaració sol·licitat.
   modelo_bindings:
@@ -133,12 +124,14 @@ aggregation:
       invoice_line_currency_unconverted: Una línia de factura està denominada en moneda
         estrangera sense tipus de canvi a euros resolt, per la qual cosa no es pot
         declarar en aquest model.
-      unsupported_period: Període de model no admès per a l'agregació del llibre.
+      unsupported_period: Període de model no admès per als totals dels teus registres.
   oss_ioss:
     errors:
       exterior_country_code_undeclared: L'Estat membre de consum no té cap codi de
         país declarat per al model 369, de manera que els seus serveis no es poden
         declarar en aquest model.
+      exterior_detail_not_representable: El disseny del règim exterior no pot representar
+        totes les files o tots els seus camps. Revisa el detall abans de continuar.
       exterior_rate_kind_unsupported: El règim exterior de la finestreta única només
         admet serveis al tipus general o reduït de l'Estat membre de consum. L'observació
         aportada declara un altre tipus de gravamen, que no es pot agregar en aquest
@@ -157,16 +150,14 @@ aggregation:
       unsupported_modelo: Model no admès per a l'agregació per model
   renta_ledger:
     errors:
-      annual_period_required: Es requereix un període anual per a l'agregació del
-        llibre de Renda.
-      bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
-        bucket sol·licitat del llibre de Renda.
-      invoice_bucket_mismatch: El bucket del repositori de factures no coincideix
-        amb el bucket sol·licitat del llibre de Renda.
-      modelo_mismatch: El model tributari no coincideix amb el model esperat del llibre
-        de Renda.
-      period_mismatch: El període no coincideix amb el període esperat del llibre
-        de Renda.
+      annual_period_required: Es requereix un període anual per als totals de Renda
+        dels teus registres.
+      bucket_mismatch: El bucket del magatzem de moviments no coincideix amb el bucket
+        de Renda sol·licitat.
+      invoice_bucket_mismatch: El bucket del magatzem de factures no coincideix amb
+        el bucket de Renda sol·licitat.
+      modelo_mismatch: El model no coincideix amb el model de Renda esperat.
+      period_mismatch: El període no coincideix amb el període de Renda esperat.
       quarterly_period_required: Cal un període trimestral per a l'agregació d'ingressos
         del Model 130 (per exemple --year 2024 --period 1T).
       unsupported_period: Es requereix un període anual per a l'agregació d'ingressos
@@ -175,17 +166,17 @@ aggregation:
     errors:
       filing_year_out_of_range: El exercici %{filing_year} queda fora del rang admès
         %{min_year}-%{max_year}.
-      m111_no_retenciones_attestation_missing: 'No hi ha observacions de retenció
-        per perceptor per al model 111 %{filing_year} %{period}. No presentis un Model
+      m111_no_retenciones_attestation_missing: 'No hi ha cap retenció registrada per
+        a cap perceptor al Model 111 %{filing_year} %{period}. No presentis un Model
         111 en blanc: declara el trimestre com a període sense retencions amb `aeat
         config profile edit --modelo-111-no-retenciones-periods %{attestation_period}`
-        (l''opció substitueix la llista desada, així que inclou també, separats per
-        comes, els períodes ja declarats), o registra els pagaments amb retenció amb
-        `aeat app modelo aggregate`, fent servir --received-invoice-retencion per
-        a una factura rebuda o --ledger-payment-withholding per a una nòmina.'
+        (l''opció substitueix la llista desada, així que indica també, separats per
+        comes, els períodes que ja hagis declarat), o registra els pagaments als quals
+        has retingut impost amb `aeat app modelo aggregate`, fent servir --received-invoice-retencion
+        per a una factura rebuda o --ledger-payment-withholding per a una nòmina.'
       m193_phase_allocation_collision: 'Model %{modelo} %{filing_year}: les assignacions
         %{source_allocations} consten declarades manualment i també provenen de les
-        retencions de capital capturades. Elimineu la fila manual.'
+        retencions de capital capturades. Elimina la fila manual.'
       perceptor_nif_blank: El NIF del perceptor no pot estar buit.
       perceptor_observations_missing: No hi ha observacions de retencions per perceptor
         per al model %{modelo} %{filing_year} %{period}; la font %{source_kind} no
@@ -194,10 +185,9 @@ aggregation:
         el calendari de presentació del declarant no assigna el seu model periòdic
         de retencions a tots els trimestres de l''any (el presenta mensualment), i
         sumar només els períodes trimestrals deixaria fora mesos de retencions.'
-      withholding_filer_profile_absent: No s'ha pogut carregar el perfil del declarant
-        per a aquest exercici, de manera que no es pot determinar si les retencions
-        es presenten trimestralment o mensualment. Completeu el perfil i torneu-ho
-        a provar.
+      withholding_filer_profile_absent: No s'ha pogut carregar el teu perfil per a
+        aquest exercici, de manera que no es pot determinar si les retencions es presenten
+        trimestralment o mensualment. Completa el perfil i torna-ho a provar.
       withholding_quarterly_window_not_scheduled: El calendari de presentació del
         declarant no assigna aquest trimestre al model de retencions (una gran empresa
         el presenta mensualment) i els períodes mensuals de retencions encara no s'admeten.
@@ -219,16 +209,22 @@ aggregation:
     errors:
       annual_summary_handoff_duplicate: Més d'un resolutor ha proporcionat el traspàs
         immutable del resum anual del model 303 (primer {first_resolver}; segon {second_resolver}).
-      binding_source_mismatch: source_kind i binding_source fan referència a families
-        d'origen de binding diferents.
-      duplicate_binding_owner: 'Error intern: propietari de vinculació duplicat a
-        la malla de fonts.'
-      duplicate_bound_casilla_owner: 'Error intern: propietari de casella vinculada
-        duplicat a la malla de fonts.'
+      binding_source_mismatch: source_kind i binding_source fan referència a famílies
+        d'origen del valor diferents.
+      closed_record_rows_conflict: La pertinença de les files i els seus valors tenen
+        fonts incompatibles.
+      closed_record_rows_unadmitted: No es pot acreditar una taula completa des d’una
+        font incompleta o no admesa.
+      duplicate_binding_owner: 'Error intern: el mateix origen del valor té dos propietaris
+        a la malla de fonts.'
+      duplicate_bound_casilla_owner: 'Error intern: propietari duplicat d''una casella
+        amb origen de valor a la malla de fonts.'
       duplicate_relation_owner: 'Error intern: propietari de relació duplicat a la
         malla de fonts.'
-      duplicate_row_binding_owner: 'Error intern: propietari de vinculació de fila
-        duplicat a la malla de fonts.'
+      duplicate_row_binding_coordinate: 'Error intern: coordenada de fila de l''origen
+        d''un valor de fila duplicada.'
+      duplicate_row_binding_owner: 'Error intern: el mateix origen del valor de fila
+        té dos propietaris a la malla de fonts.'
       duplicate_row_casilla_coordinate: 'Error intern: coordenada de casella de fila
         duplicada.'
       duplicate_row_casilla_owner: 'Error intern: propietari de casella de fila duplicat
@@ -242,11 +238,11 @@ aggregation:
       owned_sources_duplicate: Les fonts propietat de la malla de fonts han de ser
         úniques.
       provenance_binding_source_mismatch: El tipus d'origen declarat a la fila de
-        procedència no coincideix amb l'origen del vincle al qual diu pertànyer. Tots
+        procedència no coincideix amb l'origen del valor al qual diu pertànyer. Tots
         dos han de nomenar el mateix origen perquè la traçabilitat sigui comprovable.
       provenance_binding_source_missing: La fila de procedència declara un tipus d'origen
-        de vincle reconegut però no indica a quin vincle correspon. Un origen reconeixible
-        sense vincle declarat deixa el valor sense traçabilitat.
+        del valor reconegut però no indica a quin origen correspon. Un origen reconeixible
+        sense origen declarat deixa el valor sense traçabilitat.
       provenance_contributor_missing_parent: Una fila de procedència contribuent ha
         de declarar la fila primària de la qual procedeix. Sense ella, l'aportació
         queda deslligada del valor al qual contribueix.
@@ -261,39 +257,40 @@ aggregation:
       provenance_resolver_mismatch: Alguna fila de procedència nomena un resolutor
         diferent del que va produir la resolució. Totes les files s'han d'atribuir
         al mateix resolutor que signa el resultat.
-      relation_provenance_incomplete: La procedència de la relació ha d'incloure model
-        d'origen, exercici, períodes, caselles, referències legals i referències d'origen.
+      relation_provenance_incomplete: La procedència d'un valor relacionat ha d'incloure
+        model d'origen, exercici, períodes, caselles, referències legals i referències
+        d'origen.
       reserved_composite_resolver_id: L'identificador de resolutor indicat està reservat
         per a les resolucions compostes i no es pot fer servir en una resolució simple.
-      row_binding_index_invalid: 'Error intern: l''índex de fila de la vinculació
-        ha de ser 1 o superior.'
-      row_binding_value_invalid: 'Error intern: el valor decimal de la vinculació
-        de fila no és vàlid.'
+      row_binding_index_invalid: 'Error intern: l''índex de fila de l''origen d''un
+        valor de fila ha de ser 1 o superior.'
+      row_binding_value_invalid: 'Error intern: el valor decimal de l''origen d''un
+        valor de fila no és vàlid.'
       row_casilla_index_invalid: 'Error intern: l''índex de casella de fila ha de
         ser 1 o superior.'
       row_casilla_provenance_coordinate_mismatch: Cada valor de casella de fila ha
-        de tenir exactament una procedència.
-      row_casilla_row_index_mismatch: La casella de fila i la vinculació d'origen
+        de tenir exactament una fila de procedència.
+      row_casilla_row_index_mismatch: La casella de fila i l'origen del seu valor
         han d'usar el mateix índex.
-      row_casilla_source_coordinate_missing: Falta el valor o la identitat de la vinculació
-        d'origen d'una casella de fila.
+      row_casilla_source_coordinate_missing: Falta el valor o la identitat de l'origen
+        del valor d'una casella de fila.
       row_casilla_source_identity_mismatch: La identitat de procedència de la casella
         de fila difereix de la identitat d'origen.
       row_casilla_source_value_mismatch: El valor de la casella de fila difereix del
-        valor de la vinculació d'origen.
+        valor del seu origen.
       row_casilla_value_invalid: 'Error intern: el valor decimal de la casella de
         fila no és vàlid.'
-      row_source_identity_coordinate_mismatch: Tota coordenada d'identitat de fila
-        ha de correspondre a un valor de vincle present a la mateixa fila. S'ha declarat
-        una coordenada que la fila no aporta.
+      row_source_identity_coordinate_mismatch: Tota coordenada d'identitat d'origen
+        de fila ha de correspondre a un valor d'origen present a la mateixa fila.
+        S'ha declarat una coordenada que la fila no aporta.
       source_transaction_ids_blank: Els identificadors de transacció de la malla de
         fonts no poden contenir blancs.
       source_transaction_ids_duplicate: Els identificadors de transacció de la malla
         de fonts han de ser únics.
-      unresolved_binding_ids_blank: 'Error intern: els ids de vinculació sense resoldre
-        no poden estar en blanc.'
-      unresolved_binding_ids_duplicate: 'Error intern: els ids de vinculació sense
-        resoldre no poden estar duplicats.'
+      unresolved_binding_ids_blank: 'Error intern: els ids d''origen del valor sense
+        resoldre no poden estar en blanc.'
+      unresolved_binding_ids_duplicate: 'Error intern: els ids d''origen del valor
+        sense resoldre no poden estar duplicats.'
       unresolved_relation_ids_blank: 'Error intern: els ids de relació sense resoldre
         no poden estar en blanc.'
       unresolved_relation_ids_duplicate: 'Error intern: els ids de relació sense resoldre
@@ -493,11 +490,303 @@ categories:
     viajes_transporte:
       label: Transport de viatge
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
+common:
+  manager:
+    action_failed: No s’ha pogut completar l’acció. Comprova el registre del gestor.
+    open_application: Obrir Cadrumo
+    open_logs: Obrir registres
+    quit: Sortir
+    quit_warning: Vols sortir dels serveis en segon pla? Es pot interrompre la feina
+      en curs. Els serveis continuaran aturats fins que els iniciïs manualment o tornis
+      a iniciar la sessió.
+    restart: Reiniciar
+    restart_warning: Vols reiniciar el motor en segon pla? Es pot interrompre la feina
+      en curs.
+    retry: Torna-ho a provar
+    running: Motor preparat
+    start_at_sign_in: Iniciar en iniciar la sessió
+    starting: Iniciant el motor
+    stopping: Aturant el motor
+    unavailable: Motor no disponible
+    update_deferred: L’actualització espera que acabi la feina en curs. No s’ha aturat
+      cap feina.
+    update_failed: Actualització fallida
+    update_failed_notice: L’actualització ha fallat. S’està restaurant la versió anterior.
+      Tria Torna-ho a provar per tornar a intentar l’actualització.
+    update_pending: Hi ha una actualització preparada. Els serveis en segon pla canviaran
+      quan acabi la feina en curs.
+    waiting: Esperant el control del motor
+  runtime:
+    manager_unavailable_remedy: Obre {product} i comprova el gestor de serveis en
+      segon pla. Si vas desactivar l’inici en iniciar la sessió, inicia el gestor
+      manualment i torna-ho a provar.
 core:
   profile:
     errors:
       output_language_type: L'idioma de sortida del perfil ha de ser un codi d'idioma
         admès en forma de text.
+desktop:
+  account:
+    create:
+      back: Torna a l'inici de sessió
+      confirm: Repeteix la contrasenya
+      done: S'ha creat el perfil «{name}». Escriu-ne la contrasenya per iniciar la
+        sessió.
+      keep_safe: Guarda bé aquesta contrasenya. Res en aquesta finestra la pot recuperar.
+      lead: Un perfil desa les dades d'un contribuent en aquest equip, xifrades amb
+        la seva contrasenya.
+      mismatch: Les dues contrasenyes no coincideixen.
+      name: Nom del perfil
+      name_characters: Aquí un nom no pot contenir * ? [ % ni $, començar per ~, ni
+        contenir una tabulació.
+      name_hyphen: El nom no pot començar amb un guionet.
+      name_long: Fes servir un nom més curt.
+      name_missing: Posa un nom al perfil.
+      name_taken: Ja hi ha un perfil amb aquest nom.
+      password_long: Fes servir una contrasenya més curta.
+      password_short: Fes servir almenys {min} caràcters.
+      policy: Almenys {min} caràcters.
+      refused: No s'ha creat el perfil ({code}).
+      submit: Crea el perfil
+      submitting: S'està creant…
+      title: Crea un perfil
+      unknown: No se sap si el perfil s'ha creat ({code}). Busca'l entre els perfils
+        abans de tornar-ho a provar.
+      wait: 'Triga al voltant de mig minut: s''està generant la clau del perfil a
+        partir de la contrasenya.'
+    create_profile: Configura un perfil
+    first_run_lead: Crea un perfil per començar.
+    in_tui: Continues a la TUI
+    new_profile: Perfil nou
+    no_profile: Cap perfil actiu
+    no_profile_lead: Crea un perfil o tria'n un a la TUI.
+    remaining_access: L'accés d'agents que vas activar continua actiu.
+    services_down: Els serveis en segon pla no estan en marxa
+    sign_out: Tanca la sessió
+    sign_out_failed: No s'ha pogut tancar la sessió ({code}).
+    sign_out_hint: Tanca la teva sessió a totes les finestres de Cadrumo.
+    signed_in: Sessió iniciada
+    signed_out: Sense sessió iniciada
+    switch_hint: Per fer servir un altre perfil, tanca la sessió i tria'l en iniciar
+      la sessió.
+    switch_profile: Canvia de perfil
+    unknown: Estat de la sessió desconegut
+  action:
+    docs_back: Enrere
+    docs_forward: Endavant
+    focus_next: Ves a l'àrea següent
+    focus_previous: Ves a l'àrea anterior
+    logs_errors: Mostra només els errors als registres
+    logs_reset: Treu els filtres dels registres
+    zoom_in: Amplia la documentació
+    zoom_out: Redueix la documentació
+    zoom_reset: Restableix el zoom de la documentació
+  calendar:
+    aeat:
+      accepted: Acceptada
+      justificante_verified: Justificant verificat
+      not_observed: Sense justificant observat
+      submitted_observed: Presentació observada
+    as_of: Segons els registres locals a {date}. Aquí no s'ha consultat res a l'AEAT.
+    close: Tanca el calendari
+    empty: No hi ha obligacions de presentació en aquest període.
+    event:
+      filing: Presentació
+      message: Missatge
+    failed: No s'ha pogut llegir el calendari ({code}).
+    loading: S'està carregant el calendari…
+    local:
+      external_baseline_imported: Importat d'una presentació anterior
+      not_ready_to_file: Sense preparar
+      ready_to_file: A punt per presentar
+    maximize: Maximitza el calendari
+    modelo: Modelo {modelo}
+    more: '{count} més'
+    moved: Traslladat des del {date}
+    observed: Historial de presentacions i missatges
+    open_tui: Obre a la TUI
+    payment_cutoff: Domiciliació fins al {date}
+    refresh: Actualitza
+    show_all: Mostra-ho tot
+    show_fewer: Mostra'n menys
+    signed_out: Inicia la sessió per veure el teu calendari de presentacions.
+    standing: Obligacions per estat
+    state:
+      due: Pendent
+      filed: Presentat
+      late: Fora de termini
+      unknown: Desconegut
+    title: Calendari de presentacions
+    to_day: Ves al {date}
+    undetermined: 'No s''ha pogut determinar: {modelos}'
+    view: Vista
+    view_list: Llista
+    view_months: Calendari
+    warnings: Falten dades del perfil; aquestes dates fan servir valors per defecte.
+    window_unknown: Data d'obertura no indicada
+  docs:
+    frame_title: Documentació de Cadrumo
+    loading: S'està carregant la documentació…
+  host:
+    failed: Aquesta part no s'ha pogut carregar.
+    unavailable: Aquesta part necessita l'aplicació d'escriptori.
+  logs:
+    clear_logger: Treu el filtre de logger
+    details: Detalls
+    dropped: 'Registres antics descartats d''aquesta vista: {count}'
+    empty: El registre és buit.
+    errors: 'Errors: {count}'
+    filter: Filtra
+    follow: Segueix
+    follow_hint: Mantén visible el registre més recent
+    level_all: Tots els nivells
+    level_error: Només errors
+    level_info: Info i més greus
+    level_warning: Avisos i més greus
+    loading: S'està carregant el registre…
+    minimum_level: Nivell mínim
+    no_match: Cap registre no coincideix amb aquests filtres.
+    rejected: S'han omès {count} registres amb un format de diagnòstic no vàlid.
+    source_host: Escriptori
+    source_python: Python
+    sources: Orígens
+    state_available: cadrumo.log
+    state_missing_detail: Encara no hi ha cap fitxer de registre. Els registres apareixeran
+      quan un procés de Cadrumo n'escrigui un.
+    state_unreadable: No es pot llegir el registre
+    warnings: 'Avisos: {count}'
+  menu:
+    clear: Neteja
+    copy: Copia
+    copy_line: Copia la línia
+    copy_link: Copia l'adreça de l'enllaç
+    copy_visible: Copia el que es veu
+    only_level: Mostra només {level} i més greus
+    only_logger: Mostra només aquest logger
+    paste: Enganxa
+    select_all: Selecciona-ho tot
+  messages:
+    failed: No s'han pogut llegir ({code})
+    never: Encara sense sincronitzar amb l'AEAT
+    none_unread: Cap sense llegir a l'última sincronització
+    unread: '{count} sense llegir'
+  palette:
+    actions: Accions
+    close: Tanca la cerca
+    documentation: Documentació
+    kind_casilla: Casilla
+    kind_cli: Ordre
+    kind_term: Terme
+    label: Cerca
+    no_results: Cap pàgina no coincideix amb «{query}».
+    placeholder: Cerca a la documentació o executa una acció
+    searching: S'està cercant…
+    type_to_search: Escriu per cercar.
+    unavailable: La cerca a la documentació no està disponible.
+  pane:
+    docs: Documentació
+    maximize_docs: Maximitza la documentació
+    maximize_focused: Maximitza l'àrea activa
+    maximize_panel: Maximitza el panell inferior
+    maximize_tui: Maximitza la TUI
+    restore: Restaura la disposició
+    tui: TUI
+  panel:
+    hide: Amaga el panell inferior
+    label: Panell inferior
+    resize: Canvia la mida del panell inferior
+    show: Mostra el panell inferior
+  rail:
+    aeat: Seu de l'AEAT
+    console: Consola
+    docs_home: Inici de la documentació
+    label: Espai de treball
+    logs: Registres
+    messages: Missatges
+    python: Shell de Python
+    search: Cerca
+    settings: Configuració
+    tui: TUI
+  session:
+    enter_restarts: Retorn el reinicia
+    exit_line: '[El procés ha acabat amb el codi {code}. Prem Retorn per tornar a
+      començar.]'
+    exited: ha acabat ({code})
+    failed: 'La sessió no s''ha pogut iniciar: {reason}'
+  settings:
+    always_dark: Sempre fosc
+    appearance: Aparença
+    dark: Fosc
+    docs_and_tui: Documentació i TUI
+    first_pane: Primer panell
+    follow_cadrumo: Igual que Cadrumo
+    follow_docs: Com la documentació
+    language: Idioma
+    layout_reset: Disposició restablerta
+    light: Clar
+    match_appearance: Segons l'aparença
+    reset_layout: Restableix la disposició
+    session: Inici de sessió
+    side_by_side: Una al costat de l'altra
+    stacked: Apilades
+    terminal_text: Text del terminal
+    terminals: Terminals
+    title: Configuració
+    window: Finestra
+  signin:
+    checking: S'està comprovant la teva sessió…
+    choose_profile: Tria un perfil
+    dismiss: Ara no
+    hide_password: Amaga la contrasenya
+    lead: Escriu la contrasenya del teu perfil per obrir el teu espai de treball.
+    open_tui: Obre la TUI
+    open_tui_hint: Configuració inicial, un altre perfil o recuperació? Fes servir
+      la TUI.
+    password: Contrasenya
+    profile: Perfil
+    profiles_unread: No s'han pogut llegir els perfils d'aquest equip.
+    recovery_hint: Has perdut la contrasenya o el perfil està bloquejat? Fes servir
+      la TUI.
+    refused:
+      custody_changed: La contrasenya o la configuració de recuperació d'aquest perfil
+        ha canviat. Torna a iniciar la sessió.
+      generation_changed: S'ha tancat la teva sessió en un altre lloc. Torna a iniciar
+        la sessió.
+      invalid: Aquesta contrasenya no ha funcionat. Torna-ho a provar.
+      keyring_unavailable: Cadrumo no pot mantenir la teva sessió en aquest dispositiu,
+        així que la TUI et demanarà la contrasenya.
+      login_mismatch: El teu inici de sessió és d'una sessió anterior en aquest ordinador.
+        Torna a iniciar la sessió.
+      other: No s'ha pogut iniciar la sessió ({code}).
+      profile_locked: Aquest perfil està bloquejat. Continua a la TUI per desbloquejar-lo.
+      receipt_absent: No has iniciat la sessió.
+      receipt_expired: La teva sessió ha caducat. Torna a iniciar la sessió.
+      runtime_unavailable: Els serveis en segon pla de Cadrumo no estan en marxa.
+      throttled: Massa intents. Podràs tornar-ho a provar d'aquí a {seconds} s.
+    show_password: Mostra la contrasenya
+    signed_out_lead: Inicia la sessió per obrir el teu espai de treball a la TUI.
+    start_services: Inicia els serveis en segon pla
+    starting_services: S’estan iniciant els serveis en segon pla…
+    submit: Inicia la sessió
+    submitting: S'està iniciant la sessió…
+    title: Inicia la sessió a Cadrumo
+    unnameable: Un perfil amb * ? [ % o $ al nom s'obre a la TUI.
+    unsupported: En aquest sistema, inicia la sessió des de la TUI.
+  split:
+    resize: Canvia la mida de la documentació i la TUI
+    side_by_side: Posa la documentació i la TUI una al costat de l'altra
+    stack: Apila la documentació i la TUI
+    swap: Intercanvia la documentació i la TUI
+  toast:
+    copied: Copiat
+    copy_failed: No s'ha pogut copiar.
+    open_failed: No s'ha pogut obrir.
+    paste_failed: No s'ha pogut enganxar.
+    paste_too_large: És massa text per enganxar d'una vegada.
+  tui:
+    hide: Amaga la TUI
+    label: TUI de Cadrumo
+    show: Mostra la TUI
 entries:
   portal_calendario_contribuyente:
     label: Calendari del contribuent
@@ -529,74 +818,74 @@ entries:
     label: Domiciliació bancària de pagaments
     purpose: Domiciliació bancària d'autoliquidacions i pagaments tributaris.
   portal_m036_censal:
-    label: Model 036 - Declaració censal
+    label: Modelo 036 - Declaració censal
     purpose: Alta, modificació i baixa en el cens d'empresaris i professionals.
   portal_m037_censal_simplificada:
-    label: Model 037 - Declaració censal simplificada (retirat)
+    label: Modelo 037 - Declaració censal simplificada (retirat)
     notes:
       '0': Suprimit per l'Ordre HAC/1526/2024, amb efecte des de 2025-02-03.
-      '1': Utilitzeu el Model 036 per a qualsevol tràmit censal posterior.
+      '1': Utilitza el Model 036 per a qualsevol tràmit censal posterior.
     purpose: Declaració censal simplificada per a autònoms, suprimida el 2025.
   portal_m100_renta:
-    label: Model 100 - Declaració de la Renda (IRPF)
+    label: Modelo 100 - Declaració de la Renda (IRPF)
     purpose: Declaració anual de l'Impost sobre la Renda de les Persones Físiques.
   portal_m111_retenciones_trabajo:
-    label: Model 111 - Retencions del treball i activitats
+    label: Modelo 111 - Retencions del treball i activitats
     purpose: Autoliquidació de retencions i ingressos a compte de l'IRPF sobre rendiments
       del treball.
   portal_m115_retenciones_arrendamientos:
-    label: Model 115 - Retencions per arrendament d'immobles
+    label: Modelo 115 - Retencions per arrendament d'immobles
     purpose: Autoliquidació de retencions de l'IRPF per lloguer d'immobles urbans.
   portal_m123_retenciones_capital:
-    label: Model 123 - Retencions del capital mobiliari
+    label: Modelo 123 - Retencions del capital mobiliari
     purpose: Autoliquidació de retencions de l'IRPF sobre rendiments del capital mobiliari.
   portal_m130_pago_fraccionado_ed:
-    label: Model 130 - Pagament fraccionat IRPF (estimació directa)
+    label: Modelo 130 - Pagament fraccionat IRPF (estimació directa)
     purpose: Pagament fraccionat trimestral de l'IRPF per a autònoms en estimació
       directa.
   portal_m131_pago_fraccionado_eo:
-    label: Model 131 - Pagament fraccionat IRPF (estimació objectiva)
+    label: Modelo 131 - Pagament fraccionat IRPF (estimació objectiva)
     purpose: Pagament fraccionat trimestral de l'IRPF per a autònoms en estimació
       objectiva (mòduls).
   portal_m180_resumen_arrendamientos:
-    label: Model 180 - Resum anual d'arrendaments
+    label: Modelo 180 - Resum anual d'arrendaments
     purpose: Resum anual de retencions per arrendament d'immobles urbans.
   portal_m190_resumen_trabajo:
-    label: Model 190 - Resum anual de retencions del treball
+    label: Modelo 190 - Resum anual de retencions del treball
     purpose: Resum anual de retencions i ingressos a compte sobre rendiments del treball.
   portal_m193_resumen_capital:
-    label: Model 193 - Resum anual de retencions del capital
+    label: Modelo 193 - Resum anual de retencions del capital
     purpose: Resum anual de retencions sobre rendiments del capital mobiliari.
   portal_m200_sociedades_anual:
-    label: Model 200 - Impost sobre Societats
+    label: Modelo 200 - Impost sobre Societats
     purpose: Declaració anual de l'Impost sobre Societats.
   portal_m202_sociedades_fraccionado:
-    label: Model 202 - Pagament fraccionat de l'Impost sobre Societats
+    label: Modelo 202 - Pagament fraccionat de l'Impost sobre Societats
     purpose: Pagament fraccionat a compte de l'Impost sobre Societats.
   portal_m232_vinculadas:
-    label: Model 232 - Operacions vinculades
+    label: Modelo 232 - Operacions vinculades
     purpose: Declaració informativa d'operacions amb persones o entitats vinculades.
   portal_m303_iva_autoliquidacion:
-    label: Model 303 - Autoliquidació de l'IVA
+    label: Modelo 303 - Autoliquidació de l'IVA
     purpose: Autoliquidació periòdica de l'Impost sobre el Valor Afegit.
   portal_m347_operaciones_terceros:
-    label: Model 347 - Operacions amb terceres persones
+    label: Modelo 347 - Operacions amb terceres persones
     purpose: Declaració informativa anual d'operacions amb tercers superiors a 3.005,06
       €.
   portal_m349_intracomunitarias:
-    label: Model 349 - Operacions intracomunitàries
+    label: Modelo 349 - Operacions intracomunitàries
     purpose: Declaració recapitulativa d'operacions intracomunitàries de béns i serveis.
   portal_m369_oss_ioss:
-    label: Model 369 - Finestreta única IVA (OSS/IOSS)
+    label: Modelo 369 - Finestreta única IVA (OSS/IOSS)
     purpose: Autoliquidació de l'IVA en els règims de finestreta única OSS i IOSS.
   portal_m390_resumen_iva:
-    label: Model 390 - Resum anual de l'IVA
+    label: Modelo 390 - Resum anual de l'IVA
     purpose: Declaració resum anual de l'Impost sobre el Valor Afegit.
   portal_m720_bienes_extranjero:
-    label: Model 720 - Béns i drets a l'estranger
+    label: Modelo 720 - Béns i drets a l'estranger
     purpose: Declaració informativa de béns i drets situats a l'estranger.
   portal_m840_iae:
-    label: Model 840 - Impost sobre Activitats Econòmiques
+    label: Modelo 840 - Impost sobre Activitats Econòmiques
     purpose: Declaració de l'Impost sobre Activitats Econòmiques (IAE).
   portal_mi_area_personal:
     label: La Meva Àrea Personal
@@ -652,8 +941,8 @@ filing:
     incomplete_no_rule: 'No es pot determinar l''aplicabilitat d''aquest model: encara
       no se n''ha derivat cap regla d''aplicabilitat. La cobertura de regles és deliberadament
       reduïda (el conjunt inicial de persones) i l''ampliació per entitat i règim
-      està pendent. No és una afirmació sobre el vostre perfil: el vostre tipus de
-      contribuent pot estar correctament declarat.'
+      està pendent. No és una afirmació sobre el teu perfil: el teu tipus de contribuent
+      pot estar correctament declarat.'
     incomplete_undeclared_taxpayer: 'No es pot determinar l''aplicabilitat: el tipus
       de contribuent no està declarat. Falten el tipus d''entitat i, si escau, les
       categories de renda de l''IRPF.'
@@ -663,6 +952,12 @@ filing:
       es declara positivament; altrament no es conjectura cap obligació.'
     incomplete_undetermined_fact_required: 'Fet requerit per a aquest model: %{fact}.'
     incomplete_undetermined_periods_missing: 'Períodes sense declarar: %{periods}.'
+    ledger_derived_basis: 'És una derivació local a partir de les teves factures registrades,
+      no una dada oficial de l''AEAT: per a aquest any mostren que el contribuent
+      %{fact}.'
+    ledger_profile_disagreement: La teva resposta al perfil i les teves factures registrades
+      no coincideixen sobre si %{fact}; l'obligació continua visible fins que corregeixis
+      una de les dues.
     payer_fact:
       iva_group_dominant_entity: està inscrit com a entitat dominant d'un grup d'IVA
       iva_group_member: està inscrit com a entitat membre d'un grup d'IVA
@@ -676,6 +971,82 @@ filing:
     out_of_range: Valor fora de rang permès
     required_missing: Falta camp obligatori
     schema_mismatch: Discrepància amb l'esquema esperat
+google_review:
+  cancel: Cancel·lar la publicació
+  category:
+    calculation: Valors del càlcul desat
+    evidence_package: Paquet de proves
+    ledger: Files del llibre desades
+    original_attachment: Fitxers adjunts originals
+  close: Tancar
+  destination:
+    managed_google_folder: Carpeta de Google configurada i gestionada
+  failure:
+    admission: S’ha rebutjat el permís de publicació.
+    cancelled: S’ha cancel·lat la publicació.
+    create_unknown: No s’ha pogut confirmar la creació del document remot.
+    custody: No s’ha pogut conservar el rebut de custòdia de la publicació.
+    integrity: El contingut remot no ha superat la verificació.
+    population: Ha fallat l’escriptura del contingut desat seleccionat.
+  field: Camp
+  key: Referència
+  label:
+    amount_count: Valors desats
+    calculation_revision_id: Referència del càlcul desat
+    destination: Destinació
+    evidence_count: Referències de proves
+    finding_count: Resultats de la revisió
+    ledger_row_count: Files del llibre desades
+    ledger_snapshot_id: Referència del llibre desat
+    package_digest: Empremta del paquet de proves
+    payload_categories: Contingut llegible
+    publication_id: Referència de la publicació
+    publication_state: Estat de la publicació
+    registry_digest: Empremta del registre
+    review_status: Qualitat de la revisió
+    root_folder_id: Referència de la carpeta gestionada
+    selection: Selecció desada
+    snapshot_digest: Empremta de la instantània desada
+    work_unit_id: Referència del treball
+  notice:
+    calculation_required: Seleccioneu un càlcul desat abans de publicar.
+    evidence_index: S’hi inclouen referències de proves; no es publiquen els fitxers
+      adjunts originals.
+    external_copy: La publicació crea una còpia llegible a Google. Els usuaris autoritzats
+      per accedir a la destinació poden llegir-ne el contingut financer.
+    incomplete: Aquesta revisió desada té proves o atribucions incompletes.
+    missing_evidence: Algunes proves seleccionades no estan disponibles; les dades
+      absents continuen sent desconegudes.
+    prerequisite_unavailable: No estan disponibles els requisits previs de la revisió
+      desada.
+    provisional: Aquesta revisió desada és provisional.
+    receipt_unavailable: No està disponible un rebut de publicació verificat.
+    staged_edits: Deseu o descarteu els canvis pendents abans de revisar el càlcul
+      desat.
+    submission_unresolved: El resultat de la publicació està pendent de resoldre.
+      Consulteu l’operació existent abans de tornar-la a sol·licitar.
+  offer:
+    title: Revisar a Google Sheets
+  open_document: Obrir el full de càlcul
+  publication:
+    partial: Publicada parcialment
+    populated: Contingut desat escrit
+    prepared: Preparada localment
+    published: Publicada i verificada
+    remote-created: Document remot creat
+    uncertain: Resultat de la publicació incert
+    verified: Contingut remot verificat
+  publish: Publicar una còpia llegible
+  result:
+    title: Publicació de la revisió a Google
+  selection:
+    ledger: Llibre desat
+  status:
+    incomplete: Incompleta
+    provisional: Provisional
+    verified: Verificada
+  technical: Referències tècniques
+  value: Valor
 ledger:
   evidence:
     reader:
@@ -703,9 +1074,9 @@ live:
         {offered_only} parells recorreguts provenen de la llista d''opcions que ofereix
         l''AEAT, la vinculació de la qual a aquest NIF no està confirmada. Aquesta
         execució no mesura res.'
-      expected_but_not_found: 'El vostre perfil declarat espera una declaració en
-        {count} parell(s) model/exercici per als quals el registre de l''AEAT no en
-        va retornar cap: {pairs}. Comproveu si es van arribar a presentar.'
+      expected_but_not_found: 'El teu perfil declarat espera una declaració en {count}
+        parell(s) model/exercici per als quals el registre de l''AEAT no en va retornar
+        cap: {pairs}. Comprova si es van arribar a presentar.'
       recapture_divergence: 'Tornar a capturar el model {modelo} {period} {ejercicio}
         ha canviat {count} valor(s) de casella observats anteriorment: {casillas}.
         L''AEAT pot tenir una declaració rectificada.'
@@ -721,62 +1092,6 @@ llm:
         per a aquesta invocació.'
       mint_refused: 'Rebutjat: la lectura externa de documents del contribuent no
         està permesa per a aquesta invocació.'
-mcp:
-  call:
-    timeout: '''{command}'' ha superat el límit de temps del nivell {tier} ({seconds}s)
-      i s''ha cancel·lat. Torna-ho a provar o executa l''ordre equivalent de Cadrumo
-      directament en un terminal si l''operació és llarga.'
-    timeout_may_complete: '''{command}'' ha superat el seu límit de temps; l''operació
-      encara pot estar completant-se en segon pla. Torna a executar-la amb la mateixa
-      clau d''idempotència per comprovar-ho: la garantia d''idempotència fa que el
-      reintent sigui segur i mai no escriu dues vegades.'
-  elicitation:
-    confirm:
-      consequence_handoff: Això genera l'arxiu definitiu que el contribuent presentarà
-        davant l'AEAT pel seu compte. En confirmar no s'envia res a cap lloc.
-      consequence_local: Això modifica dades locals del perfil de contribuent actiu.
-      declined: L'usuari no ha confirmat '{command}' ({outcome}); no s'ha executat
-        res.
-      field_description: Vols executar '{command}' ara?
-      message: Confirma l'execució de '{command}'. {consequence} Respon sí per continuar
-        o no per aturar.
-    refusal:
-      blocked: '''{command}'' està bloquejat de manera permanent: l''enviament en
-        directe a l''AEAT està prohibit per disseny. Exporta en local; el contribuent
-        presenta pel seu compte.'
-      no_channel: '''{command}'' necessita una confirmació humana i aquest client
-        no admet sol·licituds interactives. Executa''l des d''un client que pugui
-        fer-te preguntes o executa l''ordre equivalent de Cadrumo CLI directament
-        en un terminal.'
-  faithfulness:
-    advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]
-      que cap resultat d''eina d''aquesta sessió ha produït. Verifica la xifra amb
-      una lectura de càlcul o revisió abans de confiar-hi.'
-  harness:
-    off_host_consent: 'Avís de privadesa: llegeix-lo abans de continuar. Aquesta consola
-      la maneja un assistent d''IA que s''executa en el proveïdor de LLM que hagis
-      triat. Les teves paraules i les xifres amb què treballa l''assistent (imports,
-      valors de casella, obligacions) s''envien a aquest proveïdor per operar la consola.
-      Els teus DOCUMENTS D''ORIGEN (factures, extractes bancaris i qualsevol byte
-      d''evidència) MAI no surten del teu equip: es queden en emmagatzematge local
-      xifrat i no es transmeten mai. Si actues per compte d''un tercer (un gestor
-      o professional), confirma que això és acceptable abans de continuar.'
-  identity_gate:
-    elicitation_echo: 'Actuant com el perfil de contribuent: %{label}.'
-    first_mutation_refused: 'Rebutjat: confirma el contribuent actiu abans del primer
-      canvi d''aquesta sessió. Una presentació o edició mai no s''ha d''executar amb
-      la identitat equivocada. Crida whoami (o ''config profile status'' / ''overview
-      status'') per veure quin contribuent està actiu i torna-ho a provar: una sola
-      lectura d''identitat allibera això durant la sessió fins que canviïs de perfil.'
-  persona:
-    handoff_denied: '''{command}'' és el límit irreversible de lliurament per a la
-      presentació, propietat del rol ''{owner}''; al rol ''{persona}'' se li denega
-      estructuralment. Lliura la unitat de treball verificada a la sessió verificadora
-      per generar l''exportació o el marcador de registre.'
-  serving:
-    warm_degraded: '''{command}'' s''ha atès mitjançant el transport de subprocés
-      perquè l''entorn d''execució en calent estava {reason}; el resultat és idèntic,
-      només més lent. L''atenció en calent es reprèn quan acaba la crida lenta.'
 operation:
   modal:
     action:
@@ -797,6 +1112,7 @@ operation:
       cancellation_unavailable: La cancel·lació no està disponible ara mateix. Torna-ho
         a provar d'aquí a poc.
       cancellation_unsupported: Aquesta operació no es pot cancel·lar un cop iniciada.
+      detach_not_allowed: Aquesta operació no es pot desvincular.
       operation_terminal: L'operació ja ha acabat, així que no hi ha res a cancel·lar.
       response_authority_unavailable: No s'ha pogut registrar la resposta ara mateix.
         Torna-ho a provar d'aquí a poc.
@@ -806,9 +1122,13 @@ operation:
       unknown_operation: El backend ja no coneix aquesta operació.
       unsupported_cancellation_version: Aquesta versió no pot cancel·lar aquesta operació.
         Actualitza Cadrumo.
+      unsupported_detach_version: Aquesta versió no pot desvincular aquesta operació.
+        Actualitza l'aplicació.
       unsupported_response_control_version: Aquesta versió no pot respondre a aquesta
         operació. Actualitza Cadrumo.
     status:
+      access_unavailable: L'accés a aquesta operació no està disponible. Tanca aquesta
+        vista i torna a iniciar la sessió si cal.
       running: En curs
     terminal:
       cancelled: Cancel·lada
@@ -818,33 +1138,46 @@ operation:
       succeeded: Completada
       succeeded_partial: Completada en part
       timed_out: Temps esgotat
+  notice:
+    clave_movil_approval_pending: 'Cl@ve Móvil: obre ara l''app Cl@ve i aprova la
+      sol·licitud pendent de l''AEAT abans que caduqui, d''aquí a uns dos minuts.'
+    clave_movil_approval_pending_with_code: 'Cl@ve Móvil: obre ara l''app Cl@ve i
+      aprova la sol·licitud pendent de l''AEAT abans que caduqui, d''aquí a uns dos
+      minuts. Comprova que el codi %{code} coincideix a l''app.'
+    clave_movil_qr_scan_pending: 'Cl@ve Móvil: obre ara l''app Cl@ve, escaneja el
+      codi QR que apareix a la finestra del navegador i aprova la sol·licitud de l''AEAT
+      abans que caduqui, d''aquí a uns dos minuts.'
+    clave_movil_qr_scan_pending_with_code: 'Cl@ve Móvil: obre ara l''app Cl@ve, escaneja
+      el codi QR que apareix a la finestra del navegador i aprova la sol·licitud de
+      l''AEAT abans que caduqui, d''aquí a uns dos minuts. Comprova que el codi %{code}
+      coincideix a l''app.'
 overview:
   no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT.
   no_aeat_history_sociedades: Aquest perfil no té cap presentació confirmada per l'AEAT.
     La recuperació automàtica no pot obtenir l'historial de presentacions de l'Impost
-    sobre Societats (model 200/202); consulti'l directament a la seu electrònica de
+    sobre Societats (model 200/202); consulta'l directament a la seu electrònica de
     l'AEAT.
 provisioning:
   condition:
     role_model_fit_for_role: '%{model} ha respost al document de prova, però la seva
-      resposta no serveix per llegir una factura. Trieu un altre model de text.'
+      resposta no serveix per llegir una factura. Tria un altre model de text.'
     role_model_fitness_verified: 'No hi ha cap comprovació d''aptitud registrada per
-      als pesos actuals de %{model}. Això no vol dir que el model no sigui apte: executeu
+      als pesos actuals de %{model}. Això no vol dir que el model no sigui apte: executa
       `aeat config provision verify` per comprovar-ho.'
     role_model_fitness_within_timeout: '%{model} no ha acabat la resposta de prova
       abans que s''esgotés el temps límit. Pot ser massa lent per a aquest equip;
-      trieu un model més petit o augmenteu el temps d''espera de l''LLM i torneu a
-      executar `aeat config provision verify`.'
+      tria un model més petit o augmenta el temps d''espera de l''LLM i torna a executar
+      `aeat config provision verify`.'
   model:
     licence:
       non_commercial_advisory: El model %{model} està subjecte a la %{licence}, que
-        no permet l'ús comercial. L'heu indicat de manera explícita, així que Cadrumo
+        no permet l'ús comercial. L'has indicat tu de manera explícita, així que Cadrumo
         l'utilitzarà, però una gestoria comercial necessita una llicència a part de
         l'editor.
 review:
   adapters:
     errors:
-      drafts_load_failed: No s han pogut carregar els esborranys de presentació des
+      drafts_load_failed: No s'han pogut carregar els esborranys de presentació des
         del backend segur.
       invoices_load_failed: No s'han pogut carregar les factures de l'adaptador.
       transactions_load_failed: No s'han pogut carregar les transaccions de l'adaptador.
@@ -887,11 +1220,14 @@ sheets:
       ascendants_under_75_whole: Ascendents < 75 anys (sencers)
       asset_class_code: Clau del bé
       asset_identifier: Identificació del bé
+      asset_ref: Referència interna del bé
       base_imponible: Base imposable
       base_imponible_assigned: Base imposable atribuïda
       base_retenciones: Base de retencions i ingressos a compte
       block: Bloc
+      business_premises_lease_mark: Arrendament de local de negoci
       cadastral_reference: Referència cadastral
+      cash_accounting_mark: Criteri de caixa
       clave: Clau
       clave_codigo: Clau codi
       clave_declarado: Clau de titularitat de l'immoble
@@ -900,6 +1236,7 @@ sheets:
       codigo_cuenta: Codi compte valors / n.º operació préstec
       codigo_emisor: Codi emissor
       codigo_provincia: Codi de província
+      community_iva_number: NIF de l'operador comunitari
       compensaciones: Compensacions
       complement: Complement del domicili
       complemento_infancia_clave: Complement d'ajuda a la infància
@@ -907,10 +1244,35 @@ sheets:
       contract_relation_clave: Contracte o relació
       contributor_legal_name: Cognoms i nom del contribuent
       contributor_tax_id: NIF del contribuent
+      cotizacion_01_importe: Import cotitzat al gener
+      cotizacion_01_situacion: Situació de cotització al gener
+      cotizacion_02_importe: Import cotitzat al febrer
+      cotizacion_02_situacion: Situació de cotització al febrer
+      cotizacion_03_importe: Import cotitzat al març
+      cotizacion_03_situacion: Situació de cotització al març
+      cotizacion_04_importe: Import cotitzat al abril
+      cotizacion_04_situacion: Situació de cotització al abril
+      cotizacion_05_importe: Import cotitzat al maig
+      cotizacion_05_situacion: Situació de cotització al maig
+      cotizacion_06_importe: Import cotitzat al juny
+      cotizacion_06_situacion: Situació de cotització al juny
+      cotizacion_07_importe: Import cotitzat al juliol
+      cotizacion_07_situacion: Situació de cotització al juliol
+      cotizacion_08_importe: Import cotitzat al agost
+      cotizacion_08_situacion: Situació de cotització al agost
+      cotizacion_09_importe: Import cotitzat al setembre
+      cotizacion_09_situacion: Situació de cotització al setembre
+      cotizacion_10_importe: Import cotitzat al octubre
+      cotizacion_10_situacion: Situació de cotització al octubre
+      cotizacion_11_importe: Import cotitzat al novembre
+      cotizacion_11_situacion: Situació de cotització al novembre
+      cotizacion_12_importe: Import cotitzat al desembre
+      cotizacion_12_situacion: Situació de cotització al desembre
       counterparty_legal_name: Raó social de la contrapart
       counterparty_tax_id: NIF de la contrapart
       country_code: Codi de país
       currency_code: Codi de divisa
+      declarado_tax_id: NIF del declarat
       deduction_percentage: Percentatge de deducció
       descendants_disabled_33_65_total: Descendents amb discapacitat 33-65% (total)
       descendants_disabled_33_65_whole: Descendents amb discapacitat 33-65% (sencers)
@@ -935,6 +1297,10 @@ sheets:
       fecha_devengo: Data de meritació
       fecha_inicio_prestamo: Data d'inici del préstec
       fecha_vencimiento_prestamo: Data de venciment del préstec
+      financial_asset_acquisition_value: Valor d’adquisició de l’actiu financer
+      financial_asset_disposal_value: Valor de transmissió de l’actiu financer
+      financial_asset_origin: Origen de l’actiu financer
+      financial_asset_related_entity: Entitat vinculada a l’actiu financer
       first_child_compute: Còmput del 1r fill
       floor: Pis
       foral_retention_araba: Retencions i ingressos a compte ingressats a Araba/Àlaba
@@ -975,9 +1341,12 @@ sheets:
       naturaleza: Naturalesa
       naturaleza_declarante: Naturalesa del declarant
       naturaleza_inmueble: Naturalesa de l'immoble
+      nif: NIF
       nif_pagador_anterior: NIF del pagador anterior
+      nombre: Nom
       number_qualifier: Qualificador del número
       number_type: Tipus de numeració
+      numero_afiliacion: Número d’afiliació
       numero_orden: Número d'ordre
       opening_minus_closing_positive: Diferència positiva entre obertura i tancament
       operation_date: Data de l'operació
@@ -1006,7 +1375,9 @@ sheets:
       porcentaje_titularidad_inmueble: Percentatge de titularitat de l'immoble
       portal: Portal
       postal_code: Codi postal
+      premises_address: Adreça de l'immoble
       province_code: Província
+      provincia_code: Codi de província
       recipient_province_code: Codi de província del perceptor
       rectified_base_previous: Base imposable anterior (rectificació)
       rectified_period: Període rectificat
@@ -1021,8 +1392,10 @@ sheets:
       rendimiento_neto_previo_eo: Rendiment net previ (estimació objectiva)
       representative_nif: NIF del representant
       representative_tax_id: NIF del representant legal
+      residence_country_code: Codi del país de residència
       retencion_amount: Import de la retenció
       retencion_practicada: Retenció practicada
+      reverse_charge_mark: Inversió del subjecte passiu
       second_child_compute: Còmput del 2n fill
       share_percentage: Percentatge de participació
       situacion_inmueble: Situació de l'immoble
@@ -1044,6 +1417,8 @@ sheets:
       transfer_pricing_method_code: Mètode de valoració
       unit_convivencia_titular_clave: Titular de la unitat de convivència
       valuation_amount: Valoració
+      valuation_event: Esdeveniment de valoració
+      valuation_event_date: Data de l'esdeveniment de valoració
       withholding_percentage: Percentatge de retenció
 topic:
   authentication:
@@ -1135,21 +1510,21 @@ tui:
       accepted: Acceptada
       not_observed: No observada
       rejected: Rebutjada
-      submitted: Presentada
+      submitted: Presentació observada
     area:
       census: Cens
-      evidence_comparison: Comparació d'evidències
+      evidence_comparison: Comparació amb l'AEAT
       filed_declarations: Declaracions presentades
       notifications: Notificacions
       reconciliation: Conciliació
     availability:
       available: Disponible
       locked: Bloquejat
-      never_captured: Mai capturat
+      never_captured: Encara sense llegir
       stale: Desactualitzat
       unavailable: No disponible
     census:
-      title: Cens de sincronització de l'AEAT
+      title: Cens de Sincronització AEAT
     census_category:
       activity: Activitat
       address: Adreça
@@ -1177,26 +1552,27 @@ tui:
       local_filing: Presentació local
       local_value: Valor local
       read: Llegida
-      receipt: Justificant
+      receipt: Justificant de l'AEAT
       resolution: Resolució
-      sources: Fonts
+      sources: Orígens
       status: Estat
     discrepancy:
       aeat_only: Només AEAT
-      contradictory_source: Font contradictòria
+      contradictory_source: Origen contradictori
+      incomplete: Comparació incompleta
       local_only: Només local
       none: Cap diferència
       state_mismatch: Estat no coincident
       unobserved: No observat
     document_custody_state:
       held: En custòdia
-      not_captured: No capturat
+      not_captured: Sense custòdia
       refused: Rebutjat
       unavailable: No disponible
     evidence_comparison:
-      title: Comparació d'evidències de l'AEAT
+      title: 'Sincronització AEAT: comparació amb l''AEAT'
     filed_declarations:
-      title: Declaracions presentades a l'AEAT
+      title: Declaracions presentades a Sincronització AEAT
     justificante_state:
       available: Disponible
       not_observed: No observat
@@ -1204,9 +1580,9 @@ tui:
       verified: Verificat
     local_filing_state:
       draft: Esborrany
-      filed: Presentada
+      filed: Registrada com a presentada
       not_observed: No observada
-      ready: Preparada
+      ready: Preparada per presentar
     notification:
       already_handled: Aquesta notificació ja s'ha obert.
       document_handed_off: Document de notificació lliurat a l'amfitrió.
@@ -1220,16 +1596,26 @@ tui:
       unknown: Desconeguda
       unread: No llegida
     notifications:
-      title: Notificacions de l'AEAT
+      title: Notificacions de Sincronització AEAT
     operation:
       already_handled: Aquesta operació ja s'ha lliurat a l'amfitrió.
       failed: No s'ha pogut iniciar l'operació.
       handed_off: Operació lliurada a l'amfitrió.
       in_flight: Ja hi ha una operació en curs.
     overview:
-      title: Resum de sincronització de l'AEAT
+      title: Resum de Sincronització AEAT
     reconciliation:
-      title: Conciliació de l'AEAT
+      advisories_withheld: '%{count} avisos pendents de traducció.'
+      calculation_revision: 'Càlcul comparat: %{revision}'
+      calculation_revision_unknown: No es va registrar la revisió del càlcul comparat.
+      evidence:
+        declaration: Declaració presentada
+        justificante: Justificant AEAT
+      historical: Comparació desada; el càlcul actual no s’ha tornat a comprovar.
+      identity: 'Unitat de treball: %{work} | Evidència: %{evidence}'
+      incomplete: Comparació incompleta
+      matches: Sense diferències en els camps comparats
+      title: Conciliació de Sincronització AEAT
     reconciliation_state:
       accept_aeat: Accepta l'AEAT
       dismissed: Descartada
@@ -1240,7 +1626,7 @@ tui:
       notification_handoff: La recuperació del document de notificació no està disponible.
       operation_handoff: Les operacions amb l'AEAT no es poden iniciar des d'aquesta
         sessió.
-      source: Aquesta font no està disponible per consultar-la.
+      source: Aquest origen no està disponible per consultar-lo.
       sources_missing: 'Aquesta àrea necessita dades que encara no estan disponibles:
         %{sources}.'
       unread_notification: Les notificacions no llegides no poden obrir documents.
@@ -1261,6 +1647,7 @@ tui:
       absent: Absent
       accepted: Acceptat
       conflict: Conflicte
+      incomplete: Comparació incompleta
       not_observed: No observat
       present: Present
       rejected: Rebutjat
@@ -1274,17 +1661,113 @@ tui:
       unobserved: No observat
     zone:
       census: Cens
-      evidence_comparison: Comparació d'evidències
+      evidence_comparison: Comparació amb l'AEAT
       filed_declarations: Declaracions presentades
       notifications: Notificacions
       overview: Resum
       reconciliation: Conciliació
+  automation_decision:
+    access_lost: L’accés al perfil ha finalitzat. Torna a autenticar-te per consultar
+      l’operació.
+    busy: S’està registrant la teva decisió…
+    cancel: Cancel·lar
+    completed: Decisió registrada.
+    confirm_approve: Aprovar aquesta sol·licitud exacta
+    confirm_decline: Rebutjar aquesta sol·licitud exacta
+    consent: Accés sol·licitat
+    effect: Efecte observat
+    missing_selection: Selecciona una sol·licitud per revisar-la.
+    operation_id: Operació
+    password: Contrasenya actual del perfil
+    terminal_condition: Estat terminal
+    title: Revisar la sol·licitud d’automatització
+    unavailable: No s’ha pogut confirmar la decisió. Consulta l’operació abans de
+      tornar-ho a provar.
+    unknown_effect: Desconegut; consulta l’operació abans de tornar-ho a provar.
+  automation_inventory:
+    access_lost: Aquesta sessió del perfil ja no està disponible.
+    actions: Accions
+    all_periods: Tots els períodes de declaració
+    approve: Aprovar la sol·licitud
+    client: Client
+    close: Tanca
+    decline: Rebutjar la sol·licitud
+    delegation: Delegació
+    destination: Destinació
+    details: Detalls
+    disclosures: Dades que es poden revelar
+    empty: No hi ha elements
+    expires: Caduca
+    grant: Concessió
+    grant_expires: Caducitat proposada de la concessió
+    grants: Concessions
+    id: ID
+    key_expires: Caducitat proposada de la clau
+    keys: Claus
+    kind: Tipus
+    last_used: Últim ús
+    no_periods: Cap període de declaració
+    not_applicable: No aplicable
+    operations: Operacions
+    os_lock: Permès amb el sistema bloquejat
+    period_independent: Independent del període
+    periods: Períodes
+    profile: Perfil
+    refresh: Actualitza
+    requests: Sol·licituds
+    review_digest: Empremta de revisió
+    state: Estat
+    target_grant: Concessió de destinació
+    target_key: Clau de destinació
+    title: Accés automatitzat
+    unattended: Sense supervisió
+    unattended_notice: Amb una autorització vàlida per a l'accés sense supervisió,
+      aquesta instal·lació pot desbloquejar el perfil després de tancar la sessió
+      humana. Les normes de blocatge i revocació continuen vigents.
+    unavailable: L'inventari d'automatització no està disponible. Actualitza per tornar-ho
+      a provar.
+  automation_request:
+    actions: Accions
+    capability_note: Les operacions llistades descriuen capacitats, no la disponibilitat
+      actual.
+    change_scope: Canvia l'abast
+    complete: Aprovat i completat
+    credential_reference: UUID de la referència de credencial protegida existent
+    declined: Rebutjat
+    delegation: Permet la delegació
+    disclosures: Divulgacions
+    enroll: Crea un accés
+    grant_expiry: Caducitat de la concessió (data i hora ISO)
+    invalid: Sol·licitud no vàlida o no disponible
+    key_expiry: Caducitat de la clau (data i hora ISO)
+    kind: Tipus de sol·licitud
+    operations: Operacions
+    os_lock: Permet l'ús amb el sistema operatiu bloquejat
+    period_add: Afegeix un període
+    period_code: Codi del període
+    period_independent: Permet operacions independents del període
+    period_mode: Abast dels períodes
+    period_selected: Períodes seleccionats
+    period_year: Any
+    reference: Referència de credencial protegida
+    renew: Renova la concessió
+    request_id: ID de la sol·licitud
+    requested: Pendent d'una revisió humana independent
+    review_digest: Empremta de la revisió
+    rotate: Canvia la clau
+    submit: Envia a revisió
+    target_grant: UUID de la concessió existent
+    target_key: UUID de la clau existent (només en canviar-la)
+    title: Sol·licita accés a l'API
+    unattended: Permet l'ús sense supervisió
+    uncertain: Resultat desconegut; conserva l'ID de la sol·licitud
+    waiting: S'està enviant la sol·licitud
   declarations:
     availability:
       available: Disponible
       locked: Bloquejat
-      never_captured: Mai capturat
-      stale: Últimes dades capturades
+      never_captured: Encara sense llegir
+      stale: Desactualitzat
       unavailable: No disponible
     calendar:
       action:
@@ -1292,33 +1775,33 @@ tui:
         open: Obre aquesta declaració
       aeat:
         accepted: Acceptada
-        justificante_verified: Justificant verificat
+        justificante_verified: Justificant de l'AEAT verificat
         not_observed: No observada
-        submitted_observed: Enviament observat
-        unknown: Font no observable
+        submitted_observed: Presentació observada
+        unknown: Desconegut
       column:
-        aeat: Evidència AEAT
-        close: Tancament
+        aeat: Estat a l'AEAT
+        close: Termini
         declaration: Declaració
         legal: Situació legal
         local: Estat local
       detail:
         action: 'Acció en prémer Retorn: {action}'
-        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant: {receipt}
-          · Coherència de l''evidència: {conflict}'
-        dates: 'Obertura: {opening} · Pagament: {payment} · Tancament original: {original}
-          · Tancament efectiu: {effective} · Avaluat: {evaluated} · Dies de retard:
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant de l''AEAT:
+          {receipt} · Coherència amb l''AEAT: {conflict}'
+        dates: 'Obertura: {opening} · Pagament: {payment} · Termini original: {original}
+          · Termini efectiu: {effective} · Avaluat: {evaluated} · Dies de retard:
           {overdue} · Ajust: {shift}'
         holidays: 'Festius: {coverage}'
         source: '{source}: {availability} · Observat: {observed}'
       empty:
         known: No hi ha obligacions en aquest interval.
         search: Cap obligació coincideix amb la cerca i l'àmbit.
-        stale: L'última agenda observada ({observed}) no té files; les dades estan
-          desactualitzades.
+        stale: L'últim calendari fiscal observat ({observed}) no té files; les dades
+          estan desactualitzades.
       evidence:
         clear: No s'ha observat cap conflicte
-        conflicted: S'ha observat evidència AEAT contradictòria
+        conflicted: S'ha observat un estat contradictori a l'AEAT
       justificante:
         not_verified: No verificat
         unknown: Desconegut
@@ -1326,17 +1809,17 @@ tui:
       legal:
         due_soon: Venç aviat
         due_today: Venç avui
-        filed: Presentada
-        not_applicable: No aplicable
+        filed: Registrada com a presentada
+        not_applicable: No s'aplica
         overdue: Vençuda
         upcoming: Propera
       local:
-        external_baseline_imported: Registre extern importat
-        not_ready_to_file: No preparada
+        external_baseline_imported: Presentació externa importada
+        not_ready_to_file: No preparada per presentar
         ready_to_file: Preparada per presentar
-        unknown: Font no observable
+        unknown: Desconegut
       never_observed: Mai observat
-      none: No aplicable
+      none: No s'aplica
       observation:
         not_recorded: Actual i disponible; hora d'observació no registrada
         time_not_recorded: Hora d'observació no registrada
@@ -1350,8 +1833,8 @@ tui:
         success: S'ha creat {address}. Apareixerà a Declaracions quan hi tornis.
       scope:
         all: Totes
-        evidence_unknown: Evidència AEAT desconeguda
-        filed: Presentades localment
+        evidence_unknown: Estat a l'AEAT desconegut
+        filed: Registrades com a presentades
         overdue: Vençudes
         past: Passades
         upcoming: Properes
@@ -1359,28 +1842,26 @@ tui:
         placeholder: Cerca per model, exercici, període, estat o data
       source:
         aeat:
-          evidence: Evidència AEAT
+          evidence: Estat a l'AEAT
         local:
           filing: Presentació local
         schedule: Calendari legal
-      title: Agenda de declaracions
+      title: Calendari fiscal
       user:
         due: Pendent
-        filed: Presentada localment
-        late: Endarrerida
+        filed: Registrada com a presentada
+        late: Vençuda
         unknown: Desconeguda
     column:
       aeat_confirmation: Confirmació AEAT
-      aeat_evidence: Evidència de l'AEAT
-      availability: Disponibilitat
-      calculation: Càlcul actual
+      aeat_evidence: Estat a l'AEAT
+      availability: Estat
       current: Actual
       declaration: Declaració
-      destination: Destinació
-      filed: Presentada
+      destination: Àrea
+      filed: Registrada com a presentada
       local_filing: Estat local de presentació
       local_state: Estat local
-      result: Resultat
       updated: Actualitzada
       when: Data
     confirmation:
@@ -1396,46 +1877,129 @@ tui:
     destination:
       calendar: Calendari fiscal
       filing_history: Historial de presentacions
-      modelo_workspace: Obre l'espai de declaració
+      modelo_workspace: Obre una declaració per emplenar-la i presentar-la
       overview: Declaracions
-      revisions: Revisions de càlcul
+      revisions: Càlculs anteriors
     empty: Encara no hi ha res registrat aquí.
     evidence:
       aeat_csv_register: Registre CSV de l'AEAT observat
       aeat_justificante_pdf: Justificant PDF de l'AEAT observat
       aeat_live_capture: Observació en directe de l'AEAT
-      none: Sense evidència observada de l'AEAT
+      none: Sense estat observat a l'AEAT
     filing_history:
-      axes: L'estat local de presentació, la confirmació de l'AEAT i l'evidència observada
-        de l'AEAT són fets separats.
+      axes: L'estat local de presentació, la confirmació de l'AEAT i l'estat observat
+        a l'AEAT són fets separats.
       chain_detail: 'Origen: {origin} · Tipus: {kind} · AEAT: {confirmation} · Corregeix
         una declaració anterior: {amends}'
       title: Historial de presentacions
     filing_state:
-      supersedido: Registre local substituït
-      vigente: Registre local vigent
+      supersedido: Presentació registrada substituïda
+      vigente: Presentació registrada vigent
     lifecycle:
-      amended: Rectificació iniciada
+      amended: Correcció iniciada
       calculated: Càlcul completat
       created: Declaració creada
       discarded: Declaració descartada
       exported: Declaració exportada
-      external_evidence_imported: Evidència externa de l'AEAT importada
-      filed: Presentació registrada localment
-      observation_overridden: Observació substituïda per l'operador
-      observation_override_cleared: Substitució de l'operador eliminada
+      external_evidence_imported: Dades externes de l'AEAT importades
+      filed: Presentació registrada
+      observation_overridden: Observació substituïda manualment
+      observation_override_cleared: Substitució manual eliminada
       reconciled: Conciliada amb l'AEAT
       renamed: Declaració reanomenada
-      superseded: Presentació substituïda localment
-      verification_refused: Verificació rebutjada
-      verified: Verificació completada
+      superseded: Presentació registrada substituïda
+      verification_refused: Comprovació rebutjada
+      verified: Comprovació completada
+    list:
+      advice:
+        applicability_undetermined: El teu perfil no permet determinar si has de presentar
+          aquest model. Comprova les teves obligacions.
+        applicable_window_missing: Et pot afectar, però Cadrumo no disposa d'un termini
+          de presentació. Consulta el calendari oficial.
+        registry_unmodeled: Cadrumo encara no admet aquesta obligació. Comprova-la
+          i, si correspon, presenta-la per una altra via.
+      aeat_needs_check:
+        help: Comprova l'evidència de l'AEAT per saber si aquest període està presentat.
+      aeat_unlinked:
+        help:
+          confirmed: La confirmació oficial de l'AEAT indica que aquest període està
+            presentat.
+          no_refile: Vincular-la no requereix tornar-la a presentar.
+          unavailable: Encara no es pot vincular aquesta presentació ni obrir-ne el
+            justificant des d'aquesta llista. No cal tornar a presentar la mateixa
+            declaració.
+      column:
+        deadline: Termini
+        declaration: Declaració
+        period: Període
+        state: Estat
+      empty: Encara no tens declaracions. Prem + per començar-ne una.
+      filter:
+        all: Totes
+        attention: Requereix atenció
+        not_started: Sense començar
+        recorded: Registrades com a presentades
+        this_year: Aquest any
+      group:
+        attention: Requereix atenció
+        in_progress: En curs
+        maybe: Comprova si t'afecten
+        not_started: Per presentar, sense començar
+        ready: Comprovades, a punt de registrar
+        recorded: Registrades com a presentades
+      key:
+        new: Nova declaració
+        toggle_group: Obre/tanca el grup
+      maybe:
+        help: Cadrumo no ha pogut saber pel teu perfil si l'has de presentar. Comprova-ho
+          abans del termini.
+      new:
+        choose_modelo: Quin model?
+        choose_period: Quin període?
+        create: Crear i obrir
+        exists: Aquesta declaració ja existeix. Obrir-la?
+        period_selection_hint: Prem Enter per triar el període; després, crea i obre
+          la declaració.
+        show_all: Mostra tots els models, no només els teus
+        start_confirm: Començar el {modelo} de {period}?
+      next:
+        check_aeat: Comprova la presentació a l'AEAT
+        continue: Continuar emplenant
+        create_file: Generar el fitxer
+        fix: 'Resoldre el que impedeix presentar: {count}'
+        link_aeat: Vincula la presentació de l'AEAT
+        none: Res pendent
+        open_local_draft: Obre l'esborrany local
+        start: Començar-la
+      not_openable:
+        help: Aquesta fila encara no es pot obrir des d'aquí.
+      search:
+        hint: Cerca per número de model, nom o període
+      sort:
+        deadline: Termini
+        modelo: Model
+        result: Resultat
+        state: Estat
+      state:
+        aeat_needs_check: Presentació a l'AEAT pendent de comprovar
+        aeat_unlinked: Presentada a l'AEAT, sense vincular aquí
+        aeat_unlinked_on: Presentada a l'AEAT el {date}, sense vincular aquí
+        blocked: Alguna cosa n'impedeix la presentació
+        calculated: Calculada, sense comprovar
+        checked: Comprovada
+        correction: Correcció
+        draft: En preparació
+        local_draft: Esborrany local
+        not_started: Sense començar
+        superseded: Substituïda per una presentació posterior
+        unreadable: No s'ha pogut llegir
+      title: Les teves declaracions
+      unreadable:
+        help: Cadrumo no ha pogut llegir aquesta declaració. La resta de la llista
+          no es veu afectada.
     origin:
       aeat: AEAT
       local: Local
-    overview:
-      areas: Àrees de declaracions
-      declarations: Declaracions
-      title: Resum de declaracions
     refusal:
       handoff: Això no es pot obrir des d'aquesta sessió.
       reason:
@@ -1451,42 +2015,34 @@ tui:
             taxpayer_profile_incomplete: El calendari fiscal no es pot calcular fins
               que es completin les respostes obligatòries del perfil. Completa-les
               a la secció Perfil.
-      source: Aquesta font no està disponible actualment.
+      source: Aquest origen no està disponible actualment.
     revision_state:
       borrador: Esborrany
       descartado: Descartat
-      presentado: Càlcul presentat
-      presentado_supersedido: Càlcul presentat substituït
-      verificado_completo: Verificació completa
+      presentado: Registrat com a presentat
+      presentado_supersedido: Registrat com a presentat i substituït
+      verificado_completo: Comprovació completa
     revisions:
-      explanation: Les revisions de càlcul són versions desades del càlcul, no revisions
-        del registre del model.
-      title: Revisions de càlcul
+      explanation: Els càlculs anteriors són les versions desades del càlcul d'aquesta
+        declaració.
+      title: Càlculs anteriors
     unavailable:
       title: Àrea de declaracions no disponible
     value:
-      available: Disponible
       'no': 'No'
-      none: Cap
-      not_applicable: No aplicable
+      not_applicable: No s'aplica
       result_unknown: No disponible
       'yes': Sí
     work_create:
       created: S'ha creat {address}. Torna a Declaracions per treballar-hi.
-      modelo: Model
-      period: Període
       progress: Creant o reprenent la declaració seleccionada…
       refusal:
-        modelo: Indica un número de model.
         not_applicable: 'El model %{modelo} no s''aplica a aquest perfil: %{reason}
           Si s''hi hauria d''aplicar, corregeix el perfil a Perfil (F4) i torna-ho
           a provar.'
         period: Indica un període vàlid per a l'exercici seleccionat.
         year: Indica un exercici admès de quatre xifres.
       reused: S'ha reprès {address}. Torna a Declaracions per treballar-hi.
-      submit: Crear o reprendre
-      title: Crear o reprendre una declaració
-      year: Exercici
     work_state:
       borrador: Esborrany
       descartado: Descartat
@@ -1494,15 +2050,9 @@ tui:
     aeat_sync: Sincronització AEAT
     declarations: Declaracions
     home: Inici
-    ledger: Llibre registre
+    ledger: Registres
     profile: Perfil
     withholding: Retencions
-  filing_year_route:
-    invalid: Introduïu un exercici vàlid de quatre xifres.
-    open: Obre les retencions
-    prompt: Seleccioneu un exercici (AAAA)
-    unavailable: Els justificants de retencions no estan disponibles per a aquest
-      perfil i exercici.
   home:
     account_fallback: Compte
     action:
@@ -1510,7 +2060,7 @@ tui:
       reason: Suggerida pel resum local
     action_context: '%{label} - %{reason} · %{context}'
     address: Model %{modelo} · %{filing_year} · %{period}
-    aeat_evidence: 'Evidència de l''AEAT: %{state}'
+    aeat_evidence: 'Estat a l''AEAT: %{state}'
     aeat_state:
       accepted: acceptada per l'AEAT
       justificante_verified: justificant de l'AEAT verificat
@@ -1521,35 +2071,35 @@ tui:
       available: Disponible
       available_empty: '%{label} - %{detail}'
       locked: Blocat - desbloca el perfil seleccionat per veure aquesta informació
-      never_captured: Encara sense capturar
+      never_captured: Encara sense llegir
       reason:
         workbench:
           calendar:
-            aeat_reader_unavailable: Encara sense capturar - apareix després de la
-              primera Sincronització AEAT
+            aeat_reader_unavailable: Encara sense llegir - apareix després de la primera
+              Sincronització AEAT
             taxpayer_model_undeclared: No disponible - el perfil encara no indica
               quin tipus de contribuent és
           home:
             actions_projector_unavailable: No disponible - les properes accions apareixen
-              quan s'han comprovat totes les àrees del llibre
+              quan s'han comprovat tots els teus registres
             agenda_projector_unavailable: No disponible - no s'ha pogut calcular el
               calendari de presentació
             declarations_resume_projector_unavailable: No disponible - no s'han pogut
               llegir les declaracions per reprendre
-            messages_never_pulled: Encara sense capturar - els missatges de l'AEAT
-              apareixen després de la primera Sincronització AEAT
+            messages_never_pulled: Encara sense llegir - els missatges de l'AEAT apareixen
+              després de la primera Sincronització AEAT
             taxpayer_profile_incomplete: No disponible - al perfil li falten respostes
               obligatòries; completa-les a Perfil
           ledger:
             snapshot_projector_unavailable: No disponible - es mostra quan s'han comprovat
-              totes les àrees del llibre
+              tots els teus registres
       stale: Desactualitzat - la darrera còpia local necessita actualitzar-se
       stale_observed: '%{label}; darrera observació %{observed_at}'
       unavailable: No disponible - aquesta informació no es pot mostrar ara
     declaration_state:
       discarded: Descartada
       draft: Esborrany
-      filed: Presentada
+      filed: Registrada com a presentada
       needs_review: Necessita revisió
       ready: Llesta
     empty:
@@ -1559,29 +2109,29 @@ tui:
     evidence: 'Local: %{local} · AEAT: %{aeat}'
     heading:
       actions: Properes accions
-      agenda: Agenda de presentació
+      agenda: Calendari fiscal
       declarations: Declaracions
-      ledger: Preparació del llibre
+      ledger: Preparació dels registres
       messages: Missatges
     ledger_summary: Disponible - %{entries} apunts; %{requiring_review} necessiten
       revisió; %{unclassified} sense classificar; %{missing_evidence} sense justificant
     local_state:
-      external_baseline_imported: base de presentació externa desada localment
-      not_ready_to_file: no llesta localment
-      ready_to_file: llesta localment
+      external_baseline_imported: presentació externa importada
+      not_ready_to_file: no preparada per presentar
+      ready_to_file: preparada per presentar
     messages_summary: Disponible - %{count} requereixen atenció
     period_state:
       due: Pendent
-      filed: Presentada
-      late: Fora de termini
+      filed: Registrada com a presentada
+      late: Vençuda
       unknown: Calendari desconegut
     reason:
       blocked_dependency: Una dependència de la declaració està blocada
-      blocked_evidence: Un bloqueig necessita justificant de suport
+      blocked_evidence: Un bloqueig necessita un justificant
       blocked_review: La feina blocada necessita revisió
       declaration_needs_review: La declaració necessita revisió
-      evidence_missing: Falta el justificant de suport
-      ledger_classification_pending: Falta classificar apunts del llibre
+      evidence_missing: Falta un justificant
+      ledger_classification_pending: Falta classificar apunts a Registres
     session:
       active: Sessió local activa
       expired: Sessió caducada
@@ -1599,9 +2149,9 @@ tui:
       review: Revisió
     availability:
       available: Disponible
-      choose_entry: Tria un assentament
+      choose_entry: Tria un apunt
       locked: Bloquejat
-      never_captured: Encara no capturat
+      never_captured: Encara sense llegir
       stale: Desactualitzat
       unavailable: No disponible
     classification:
@@ -1615,10 +2165,10 @@ tui:
       failure: No s'ha pogut desar la classificació.
       field:
         business_pct: Percentatge professional (fracció de 0 a 1; només Mixta)
-        deduction_fact_kind: Tipus de fet de deducció (identificador del registre)
-        irpf_category: Categoria d'IRPF (identificador del registre)
+        deduction_fact_kind: Tipus de deducció (codi)
+        irpf_category: Categoria d'IRPF (codi)
         iva_amount: Quota d'IVA
-        iva_category: Categoria d'IVA (identificador del registre)
+        iva_category: Categoria d'IVA (codi)
         iva_rate: Tipus d'IVA (fracció decimal; p. ex., 0.21)
         prorrata_reference: Referència de prorrata
         taxable_base: Base imposable
@@ -1626,10 +2176,10 @@ tui:
       mixed: Mixta (percentatge professional)
       personal: Personal
       progress: S'està desant la classificació…
-      prompt: Tria una classificació per a l'assentament seleccionat.
+      prompt: Tria una classificació per a l'apunt seleccionat.
       success: Classificació desada.
-      target: Assentament {position} de {total} · referència {short_id}
-      title: Classificar assentament comptable
+      target: Apunt {position} de {total} · referència {short_id}
+      title: Classificar apunt
     column:
       amount: Import
       area: Àrea
@@ -1646,8 +2196,8 @@ tui:
       review_status: Estat de revisió
       status: Estat
     entries:
-      empty: Aquesta captura no conté cap apunt.
-      title: Apunts del llibre comptable
+      empty: Encara no hi ha cap apunt.
+      title: Apunts
     entry_label: '{date} · {description}'
     evidence:
       add: Afegeix el document
@@ -1666,25 +2216,61 @@ tui:
       confirm_failed: La factura no s'ha registrat.
       confirmed: 'Factura {number} registrada: total {total} {currency}.'
       confirming: S'està registrant la factura a partir del document…
-      detail: 'Mida: {size} bytes · capturat {captured}'
+      detail: 'Mida: {size} bytes · afegit {captured}'
       draft:
+        adjustments: 'Recàrrec: {recargo} · percentatge de retenció: {retention_rate}
+          · retenció: {retention} · bestretes per compte del client: {suplidos}'
         amounts: Base {base} · IVA {rate}% = {iva} · total {total} {currency}
+        breakdown: '{index}. tipus: {rate} · base: {base} · IVA: {iva} · tipus de
+          recàrrec: {recargo_rate} · recàrrec: {recargo}'
+        breakdown_empty: No hi ha desglossament per tipus
+        breakdown_heading: Desglossament
+        candidate: 'Valor proposat: {field} = {value} · referència: {anchor} · nota:
+          {note}'
+        customer_role: Client
         discrepancies: 'Comprovacions que no quadren amb el document: {count}'
+        document: 'Document {number} · sèrie: {series} · data: {date} · rectifica:
+          {rectifies} · naturalesa del subministrament: {supply_nature} · categoria
+          d’IVA: {iva_category} · tipus suggerit: {suggested_kind}'
+        finding: '{kind}: {field} · {detail} · esperat: {expected} · observat: {observed}'
+        findings_empty: No hi ha observacions
+        findings_heading: Resultats de la revisió
         identity: Factura {number} amb data {date}
         label_reading:
-          busy_refused: 'Una altra lectura estava fent servir la inferència d''aquest
-            equip, de manera que no s''ha executat el model de lectura. {count} camps
-            que les etiquetes no han llegit queden buits: {fields}. Torneu a llegir
-            el document quan acabi.'
-          headroom_refused: 'No s''ha carregat el model de lectura: aquest equip no
-            ha mostrat marge de memòria per a ell. {count} camps que les etiquetes
-            no han llegit queden buits: {fields}. Allibereu memòria i torneu a llegir
-            el document.'
-          reader_unavailable: 'No s''ha pogut executar el lector local, de manera
-            que {count} camps que les etiquetes no han llegit queden buits: {fields}.
-            Comproveu el lector i torneu a llegir el document.'
+          busy_refused: 'El lector automàtic no s''ha executat perquè una altra lectura
+            feia servir aquest equip. {count} camps que les etiquetes no cobrien encara
+            no s''han llegit i queden buits: {fields}. Torna a llegir el document
+            quan acabi l''altra lectura.'
+          headroom_refused: 'El lector automàtic no s''ha executat perquè aquest equip
+            no té prou memòria lliure. {count} camps que les etiquetes no cobrien
+            encara no s''han llegit i queden buits: {fields}. Allibera memòria i torna
+            a llegir el document.'
+          reader_unavailable: 'El lector automàtic no s''ha pogut iniciar. {count}
+            camps que les etiquetes no cobrien encara no s''han llegit i queden buits:
+            {fields}. Torna a llegir el document més tard.'
+        line: '{index}. {description} · quantitat: {quantity} · preu unitari: {unit_price}
+          · base: {base} · tipus: {rate} · IVA: {iva} · tipus de recàrrec: {recargo_rate}
+          · recàrrec: {recargo}'
+        lines_empty: No hi ha línies
+        lines_heading: Línies
+        'no': 'No'
+        party: '{role}: {name} · identificador fiscal: {tax_id} · codi postal: {postal_code}
+          · país: {country} · codi de país: {country_code} · codi de país declarat:
+          {stated_country_code}'
+        provenance: 'Camp: {field} · origen: {origin} · fonament: {grounding} · referència:
+          {anchor} · referència rebutjada: {refused_anchor} · declaració pròpia: {self_reported}
+          · derivat de: {derived_from} · prova del rol: {role_evidence} · no verificat:
+          {unverified} · nota: {note}'
+        provenance_empty: No hi ha dades de procedència
+        provenance_heading: Procedència de les dades
+        regime: 'Règim: {value}'
+        source_metadata: 'Metadades de la font · SHA-256 de la transcripció: {transcription_sha256}
+          · longitud del text original: {raw_text_length}'
+        structured_class: 'Classificació del document: {kind} · codi d’origen: {source_code}'
         supplier: 'Proveïdor: {name} · NIF {nif}'
+        supplier_role: Proveïdor
         unread: sense llegir
+        'yes': Sí
       empty: No hi ha justificants pendents de revisió.
       extract: Llegeix el document
       loading: S'estan llegint els documents…
@@ -1699,9 +2285,6 @@ tui:
         amb `aeat config provision status`.
       reader_ready: El lector de documents està a punt en aquest equip.
       reading: S'està llegint el document en aquest equip…
-      reading_refused:
-        reader: Encara no es poden llegir documents en aquest equip ({condition}).
-          Inicia o instal·la el lector amb `aeat config provision` i torna-ho a provar.
       record_detail: '{kind} · proveïdor {supplier} · afegit el {added} · {status}'
       record_status:
         awaiting: Pendent de confirmar
@@ -1711,15 +2294,21 @@ tui:
       records_empty: Encara no hi ha documents de factura registrats.
       records_heading: Documents de factura en aquest equip
       reviewed: Revisat
-      safe_metadata: Només metadades segures; el contingut del document continua protegit.
+      safe_metadata: El document d’origen continua protegit i xifrat; els camps recuperats
+        es mostren per revisar-los.
       title: Revisió de justificants
     flow:
       in_flight_refusal: Espera que acabi l'operació actual abans de sortir d'aquesta
         pantalla.
       refresh_failed: El canvi s'ha desat, però aquesta vista no s'ha pogut tornar
         a llegir. Torna a l'Inici per actualitzar-la.
-      refreshing: S'està actualitzant l'espai de treball…
+      refreshing: S'està actualitzant…
     import:
+      account_label: Compte bancari propi de l'extracte
+      account_line: 'Compte: %{account}'
+      account_line_unbound: 'Compte: els moviments només es vinculen si l''extracte
+        indica un dels teus comptes'
+      account_unbound: Vincula pel número de compte de l'extracte
       again: Importa un altre fitxer
       browse: Navega
       cancel: Cancel·la
@@ -1731,18 +2320,22 @@ tui:
       country_required: Indica el país de la contrapart amb dues lletres, per exemple
         ES.
       failure: No s'ha pogut completar la importació.
+      invoice_book_unavailable: Encara no es poden previsualitzar llibres de factures
+        aquí; importa'ls amb app ledger invoice import.
       kind:
         bank_statement: Extracte bancari
         invoices_issued: Factures emeses
         invoices_received: Factures rebudes
       kind_label: Què conté el fitxer
+      nothing_previewed: La previsualització no ha llegit cap fitxer importable, així
+        que no hi ha res a confirmar.
       outcome:
         diagnostic: 'Nota: {message}'
         did_import: 'Importades: {count}'
         did_skip: 'Omeses perquè ja estaven registrades: {count}'
         files: 'Fitxers llegits: {count}'
-        likely_duplicates: 'Possibles duplicats: {count} (ja al llibre o abans en
-          aquest fitxer). S''importen; revisa''ls.'
+        likely_duplicates: 'Possibles duplicats: {count} (ja als teus registres o
+          abans en aquest fitxer). S''importen; revisa''ls.'
         not_measured: Les factures noves i les ja registrades només es compten en
           aplicar la importació.
         refused_file: 'No llegit: {file}: {reason}'
@@ -1767,8 +2360,14 @@ tui:
         pdf_n26: Extracte PDF d'N26
         xlsx: Llibre d'Excel
       provider_label: Format de l'extracte
+      refusal:
+        own_account_mismatch: l'extracte indica un compte diferent del que has triat
+        result_limit: la importació ha arribat al límit de files abans d'aquest fitxer
+        source_changed: el fitxer ha canviat després de la previsualització i no se
+          n'ha importat res; torna a previsualitzar-lo
+        transaction_validation: el fitxer no s'ha pogut llegir com a extracte
       success: 'Importats: {imported}; omesos: {skipped}.'
-      title: Importar assentaments comptables
+      title: Importar apunts
     invoice:
       again: Afegeix una altra factura
       cancel: Cancel·la
@@ -1784,6 +2383,7 @@ tui:
         fins que s'hi afegeixi un tipus.
       failure: La factura no s'ha registrat.
       field:
+        arrendamiento_local_negocio: Arrendament de local de negoci
         counterparty_name: Nom de la contrapart
         counterparty_nif: NIF de la contrapart
         country_code: País de la contrapart (dues lletres)
@@ -1791,7 +2391,7 @@ tui:
         invoice_class: Classe de factura
         invoice_date: Data de la factura (AAAA-MM-DD)
         invoice_number: Número de factura
-        iva_category: Tractament de l'IVA (clau del registre)
+        iva_category: Tractament de l'IVA (codi)
         iva_rate: Tipus d'IVA (%)
         kind: Tipus de factura
         notes: Notes
@@ -1799,20 +2399,25 @@ tui:
         operation_type: Clau d'operació del model 349
         recargo_amount: Import del recàrrec d'equivalència
         rectifies_invoice_number: Número de la factura que rectifica
+        referencia_catastral: Referència cadastral
         retention_amount: Import de la retenció d'IRPF
         retention_rate: Tipus de retenció d'IRPF (%)
         series: Sèrie
+        situacion_inmueble: Situació de l'immoble
         taxable_base: Base imposable
       kind:
         issued: Emesa
         received: Rebuda
+      lease:
+        'no': 'No'
+        'yes': Sí
       line:
         add: Afegeix una línia
         field:
           description: Descripció de la línia
           iva_amount: Quota d'IVA de la línia
-          iva_rate: Tipus d'IVA (clau del registre, com RATE_21)
-          oss_rate_kind: Classe de tipus OSS (clau del registre)
+          iva_rate: Tipus d'IVA (codi, com RATE_21)
+          oss_rate_kind: Classe de tipus OSS (codi)
           quantity: Quantitat
           spending_category_id: Categoria de despesa
           subtotal: Base de la línia
@@ -1840,12 +2445,20 @@ tui:
       prompt: Introdueix la factura tal com està impresa. Es comprova i es registra
         només després de revisar-la.
       review: Revisa
+      situacion:
+        '1': Espanya, excepte el País Basc i Navarra
+        '2': País Basc o Navarra
+        '3': Espanya sense referència cadastral
+        '4': A l'estranger
+      situacion_none: Tria una situació de l'immoble (opcional)
       success: 'Factura {number} registrada: base {base}, IVA {iva}, total {total}
         {currency}.'
       summary:
         amounts: Base imposable {base} {currency} · tipus d'IVA {rate}
         counterparty: 'Contrapart: {name} · NIF {nif} · {country}'
         identity: Factura {kind} {number} amb data {date}
+        lease: Arrendament de local de negoci · situació {situacion} · referència
+          cadastral {referencia}
         operation: Clau del model 349 {code} · data de l'operació {date}
         recargo: Recàrrec d'equivalència {amount} {currency}
         rectifies: Rectifica la factura {number}
@@ -1853,9 +2466,91 @@ tui:
       title: Afegeix una factura
     overview:
       affected_declarations: Declaracions afectades
-      areas: Àrees del llibre
+      areas: Àrees de Registres
       quality: Qualitat de les dades i feina pendent
-      title: Resum del llibre comptable
+      title: 'Registres: resum'
+    own_accounts:
+      cancel: Cancel·la
+      choose_account: Tria primer un compte de la llista.
+      column:
+        account: IBAN
+        holding: Titularitat
+        id: Compte
+        label: Nom
+        roles: S'utilitza per a
+        state: Estat
+      confirm: Desa el canvi revisat
+      detail:
+        absent: sense registrar
+        account: '%{id} · %{label} · %{account}'
+        bank: 'SWIFT-BIC: %{bic} · banc estranger: %{block}'
+        dates: 'Obertura: %{opened} · %{state}'
+        holding: 'Titularitat: %{holding} · país %{country} · %{currency}'
+        present: registrat
+        roles: 'S''utilitza per a: %{roles}'
+      empty: Encara no hi ha comptes propis.
+      field:
+        bank_address: Adreça del banc
+        bank_block: Banc estranger (només fora de la zona SEPA)
+        bank_city: Ciutat del banc
+        bank_country: País del banc (codi ISO)
+        bank_name: Nom del banc
+        closed_on: Data de tancament
+        currency: Moneda
+        date_placeholder: AAAA-MM-DD
+        holding: La teva titularitat (has de ser titular del compte)
+        iban: IBAN (ocult)
+        label: Nom del compte
+        modelo: Model (en blanc per a tots)
+        opened_on: Data d'obertura (opcional)
+        role: Rol
+        swift_bic: SWIFT-BIC (ocult; obligatori fora de la zona SEPA)
+      field_name:
+        bank_address: adreça del banc
+        bank_city: ciutat del banc
+        bank_country_code: país del banc
+        bank_name: nom del banc
+        closed_on: Data de tancament
+        currency: moneda
+        holding: titularitat
+        iban: IBAN
+        label: nom
+        opened_on: data d'obertura
+        swift_bic: SWIFT-BIC
+      holding:
+        cotitular: Cotitular
+        titular: Titular
+      mode:
+        add: Afegiràs un compte nou.
+        edit: Edites %{label} (%{account}). Deixa l'IBAN o el SWIFT-BIC en blanc per
+          conservar el valor desat.
+      new: Compte nou
+      open: Comptes bancaris propis
+      prompt: Comptes dels quals ets titular, emmascarats. Tria'n un per editar-lo,
+        tancar-lo o fer-lo servir per a càrrecs o devolucions.
+      review: Revisa el compte
+      review_close: Revisa el tancament
+      review_designate: Revisa l'ús per al rol
+      review_remove: Revisa l'eliminació
+      review_undesignate: Revisa la retirada del rol
+      role:
+        charge: Càrrec (domiciliació)
+        refund: Devolució
+      scope:
+        all: tots els models
+        modelo: Model %{modelo}
+      stage:
+        add: Afegir %{label} · %{account} · %{holding}
+        close: Tancar %{account} el %{date}
+        designate: Fer servir %{account} per a %{role} · %{scope}
+        remove: Eliminar %{label} (%{account}); si té moviments al llibre es rebutja
+          i l'has de tancar
+        undesignate: Deixar de fer servir un compte per a %{role} · %{scope}
+        update: 'Canviar %{account}: %{fields}'
+      state:
+        closed: Tancat el %{date}
+        open: Obert
+      title: Comptes bancaris propis
     reconciliation:
       affected: Declaracions afectades
       amount_match: Coincideix l'import
@@ -1866,24 +2561,25 @@ tui:
       counterparty_match: Coincideix la contrapart
       direction: Direcció
       direction_state:
-        invoice_only: Només la factura cita l'assentament
-        transaction_only: Només l'assentament cita la factura
+        invoice_only: Només la factura cita l'apunt
+        transaction_only: Només l'apunt cita la factura
       empty: No hi ha tasques locals de conciliació disponibles.
-      entry: Assentament
+      entry: Apunt
       failure: No s'ha pogut desar l'enllaç.
       inconsistencies: Incoherències d'enllaços
       invoice: Factura
       invoice_label: '{counterparty} · {total}'
-      local_only: Només dades locals del llibre. Sincronització AEAT és un espai diferent.
-      match_evidence: Evidència canònica de coincidència
+      local_only: Només dades locals de Registres. Sincronització AEAT és una altra
+        àrea.
+      match_evidence: Per què coincideixen
       modelo: Model
       'no': 'No'
       period: Període
       progress: S'està enllaçant…
-      score: Puntuació canònica
+      score: Puntuació de coincidència
       success: Enllaç desat.
       suggestions: Enllaços suggerits
-      title: Conciliació local del llibre
+      title: 'Registres: conciliació local'
       'yes': Sí
     records:
       failed: El canvi s'ha rebutjat o no s'ha pogut desar.
@@ -1893,18 +2589,17 @@ tui:
       lines: Línies
       links: Registres vinculats
       loading: Llegint el registre…
-      no_change: Introduïu un valor diferent abans de revisar.
+      no_change: Introdueix un valor diferent abans de revisar.
       open_invoices: Veure factures
-      open_transaction: Veure o editar l'assentament seleccionat
-      reviewed: Reviseu el valor i després deseu-lo.
+      open_transaction: Veure o editar l'apunt seleccionat
+      reviewed: Revisa el valor i després desa'l.
       save: Desar el canvi
       saved: Canvi desat.
       saving: Desant el canvi…
       source: Fitxer d'origen
-      transaction_detail: Detall de l'assentament
+      transaction_detail: Detall de l'apunt
     refusal:
-      application_state: Aquesta àrea no està disponible en l'estat actual del llibre
-        comptable.
+      application_state: Aquesta àrea no està disponible en l'estat actual de Registres.
       destination_pending: Aquesta àrea encara no està disponible en aquesta versió.
       no_entries: Encara no hi ha apunts per classificar.
       selection_required: Selecciona primer un apunt i obre després aquesta tasca
@@ -1913,17 +2608,17 @@ tui:
         aquesta sessió.
     review:
       empty: Ara mateix no hi ha cap apunt per revisar.
-      exclude_cancel: Mantén l'assentament
-      exclude_confirm: Exclou l'assentament
-      exclude_failed: L'assentament no s'ha exclòs.
-      exclude_hint: Prem x per excloure de la declaració l'assentament ressaltat.
-      exclude_question: Excloure {entry} de la declaració? Continua al llibre i es
-        pot tornar a classificar més endavant.
+      exclude_cancel: Mantén l'apunt
+      exclude_confirm: Exclou l'apunt
+      exclude_failed: L'apunt no s'ha exclòs.
+      exclude_hint: Prem x per excloure de la declaració l'apunt ressaltat.
+      exclude_question: Excloure {entry} de la declaració? Continua als teus registres
+        i es pot tornar a classificar més endavant.
       excluded: '{entry} s''ha exclòs de la declaració.'
-      excluding: S'està excloent l'assentament…
+      excluding: S'està excloent l'apunt…
       filter_all: 'Filtre: tots els estats de revisió'
       open: Obre la revisió
-      title: Revisió del llibre comptable
+      title: 'Registres: revisió'
     review_status:
       excluded: Exclòs
       pending: Pendent
@@ -1935,130 +2630,26 @@ tui:
       ready: Preparat
       unmeasured: Sense mesurar
     unavailable:
-      title: Àrea del llibre comptable no disponible
+      title: Registres no disponibles
   local_reader:
-    answer:
-      'no': 'no'
-      unmeasured: sense mesurar
-      'yes': sí
     card:
       action: Obre el lector de documents
       description: Comprova si els documents de factura es poden llegir en aquest
         equip i prepara el lector, el seu runtime i els seus models.
       title: Lector de documents
-    checklist:
-      models_loaded: Models carregats
-      service_installed: Runtime instal·lat
-      service_running: Runtime en marxa
-      text_model_pulled: Model de text baixat
-      verified: Lector verificat
-      vision_model_pulled: Model d'escanejos baixat
-    choose_role: Tria una tasca de la taula per baixar, carregar, comprovar o eliminar-ne
-      el model.
-    column:
-      fitness: Prova del model
-      installed: Instal·lat
-      loaded: Carregat
-      model: Model
-      ready: A punt
-      role: Tasca
-      state: Estat
-      step: Pas
-    confirm:
-      cancel: Cancel·la
-      install_accept: Instal·la
-      install_message: La instal·lació executa {installer} per baixar i instal·lar
-        el runtime local de models en aquest equip. Vols continuar?
-      install_title: Vols instal·lar el runtime local?
-      remove_accept: Elimina
-      remove_message: Vols eliminar {model} d'aquest equip? Caldrà tornar-lo a baixar
-        abans de fer-lo servir.
-      remove_title: Vols eliminar aquest model?
-    extraction_not_ready: Encara no es poden llegir documents de factura en aquest
-      equip.
-    extraction_ready: Els documents de factura es poden llegir en aquest equip.
-    fitness:
-      fit: apte
-      not_verified: sense verificar
-      timed_out: temps esgotat
-      unfit: no apte
-    host: 'Runtime a {endpoint} · instal·lat: {installed} · respon: {reachable} ·
-      versió {version}'
-    install: Instal·la el runtime
-    install_cancelled: Instal·lació cancel·lada; no s'ha canviat res.
-    intro: El lector local llegeix els documents de factura en aquest equip. No s'envia
-      res enlloc.
-    last_pull: 'Darrera baixada en aquesta sessió: {model} · completada: {outcome}
-      · {size} bytes'
-    load: Carrega el model
-    measuring: S'està comprovant el lector…
-    no_installer: No hi ha cap instal·lador disponible en aquest sistema. Instal·la
-      tu mateix el runtime de models i torna a comprovar.
-    no_model: cap seleccionat
-    pull: Baixa el model
-    refresh: Torna a comprovar
-    refused: No s'ha pogut iniciar l'acció.
-    remove: Elimina el model
-    remove_cancelled: Eliminació cancel·lada; no s'ha canviat res.
-    role:
-      column_role_mapping: Columnes de fulls de càlcul
-      supply_nature_proposal: Proposta de béns o serveis
-      text_extraction: Documents amb text
-      vision_transcription: Documents escanejats
-    selected_role: 'Seleccionada: {role}'
-    setup: Prepara el lector
-    setup_done: El lector està preparat.
-    setup_step:
-      install: la instal·lació
-      load: la càrrega
-      pull: la baixada
-      start: l'arrencada
-      verify: la verificació
-    setup_stopped: 'La preparació s''ha aturat a {step}: {condition}.'
-    start: Inicia el runtime
-    state:
-      done: fet
-      missing: pendent
-    submitting: S'està iniciant…
-    title: Lector de documents
-    unreadable: No s'ha pogut llegir l'estat del lector.
-    verify: Comprova el model
   modelo:
-    assertion:
-      matched: Coincideix
-      mismatched: No coincideix
-      not_present: Cap de registrada
-    capability:
-      calculation_materialization: Valors calculats
-      filing_draft_readiness: Esborrany de presentació
-      schema_inspection: Estructura del formulari
-      verification_readiness: Verificació
-    destination:
-      column: Pàgina
-      filing: Presentació
-      heading: Pàgines d'aquesta declaració
-      inputs: Entrades
-      provenance: Procedència
-      results: Resultats
-      verification: Verificació
-    disposition:
-      available: Disponible
-      not_applicable: No s'aplica
-      refused: Rebutjat
-      unmeasured: Sense mesurar
-    edit:
-      apply: Aplica els valors declarats
-      binding: Dada declarada {binding}
-      scalar: Casella {casilla}
-    evidence_kind:
-      legal: Referència legal
-      source: Referència d'origen
     export:
+      account:
+        charge_label: Compte on l'AEAT carrega (domiciliació)
+        designated: Segons la designació dels teus comptes propis
+        designated_option: '%{account} (designat)'
+        refund_label: Compte on l'AEAT ingressa la devolució
       artefact:
         calculation_report_csv: Informe de càlcul (CSV), només registre local
         calculation_report_pdf: Resum del càlcul signat (PDF), només registre local
+        calculation_review_xlsx: Revisió del càlcul desat (XLSX)
         fichero_boe: Fitxer BOE per presentar a l'AEAT
-        label: Artefacte a exportar
+        label: Document a exportar
       payment_election:
         cuenta_corriente: Compte corrent tributari
         domiciliacion: Domiciliació bancària
@@ -2073,27 +2664,31 @@ tui:
         devolver: Sol·licitar la devolució
         label: 'Resultat negatiu: compensar o sol·licitar la devolució'
       replace_existing:
-        label: Substituir el fitxer que ja existeixi en aquesta ruta
+        label: Substituir el fitxer que ja existeixi en aquest camí
       result:
+        account_in_filing: inclosa en les dades de la mateixa declaració
         close: Tanca
         completeness:
           not_assessed: 'No avaluada: un informe de càlcul no és un fitxer de presentació'
-          not_flagged: L'exportació no ha emès cap avís d'integritat
-          unverified: 'Sense verificar: la revisió no declara cap manifest d''integritat'
+          not_flagged: L'exportació no ha assenyalat cap incidència d'integritat
+          unverified: 'Sense comprovar: Cadrumo no té llista d''integritat per a aquesta
+            versió del model'
         evidence_status:
           local_calculation_report_not_official_aeat_filing_evidence: Informe de càlcul
             local; no és evidència oficial de presentació davant l'AEAT
           local_export_not_official_aeat_filing_evidence: Exportació local; no és
             evidència oficial de presentació davant l'AEAT
         label:
-          artefact: Artefacte exportat
+          artefact: Document exportat
           byte_size: Mida (bytes)
-          calculation_revision_id: Revisió del càlcul
+          calculation_revision_id: Càlcul desat
+          charge_account: Compte de càrrec
           completeness: Integritat
           evidence_status: Estat com a evidència
           export_format: Format
           file_sha256: SHA-256 del fitxer
           output_path: Fitxer
+          refund_account: Compte de devolució
           software_identity_grade: Identitat de programari a la capçalera del fitxer
         software_identity_grade:
           development_mock: Identitat de desenvolupament (tot zeros); l'AEAT no l'accepta
@@ -2103,13 +2698,15 @@ tui:
         title: Resultat de l'exportació
         unavailable: L'exportació ha acabat, però no se n'ha pogut llegir el resultat,
           de manera que se'n desconeixen l'estat com a evidència, la integritat i
-          la identitat de programari. Reviseu el fitxer abans de confiar-hi.
+          la identitat de programari. Revisa el fitxer abans de confiar-hi.
         warning:
-          completeness_unverified: 'No s''ha verificat la integritat d''aquest fitxer
-            de presentació: la seva revisió no declara cap manifest d''integritat,
-            de manera que la comprovació de paritat estructural no ha pogut confirmar
-            que totes les caselles obligatòries arribin al fitxer. Reviseu les caselles
-            exportades amb el Diseño de Registros oficial abans de presentar.'
+          completeness_unverified: 'No s''ha comprovat la integritat d''aquest fitxer
+            de presentació: Cadrumo no té llista d''integritat per a aquesta versió
+            del model, així que no ha pogut confirmar que totes les caselles obligatòries
+            arribin al fitxer. Revisa les caselles exportades amb el Diseño de Registros
+            oficial abans de presentar.'
+          cutoff_unverified: El termini de presentació no indica data límit de domiciliació,
+            així que no s'ha pogut comprovar si l'AEAT encara accepta aquesta domiciliació.
           development_software_identity: La capçalera del fitxer porta la identitat
             de programari de desenvolupament amb tot zeros; l'AEAT no acceptarà aquest
             fitxer per presentar-lo.
@@ -2119,98 +2716,685 @@ tui:
           not_official: 'Aquest fitxer no és evidència oficial de presentació davant
             l''AEAT. L''evidència oficial l''emet l''AEAT després de la presentació:
             justificant; consulta de declaracions presentades; o acarament per CSV.'
-    finding_kind:
-      advisory: Consell
-      blocking_rule: Regla no complerta
-      cross_period_dependency_unclean: Un període anterior requereix atenció
-      missing_required_casilla: Falta una casella obligatòria
-      reconciliation_mismatch: Els totals no quadren
-    finding_severity:
-      blocking: Impedeix presentar
-      warning: Avís
-    input_kind:
-      bound: S'omple amb els teus registres
-      computed: Calculat
-      informational: Només informatiu
-      manual: L'introdueixes tu
-      projection_only: Es mostra, no es presenta
     m303_evidence:
-      admission_unavailable: Aquí no es pot registrar una atestació nova per a aquesta
+      admission_unavailable: Aquí no es pot registrar una confirmació nova per a aquesta
         declaració. No s'ha calculat res.
-      attestation_attachment_id: Identificador de l'atestació existent
-      attestation_sha256: SHA-256 de l'atestació existent
+      attestation_attachment_id: Identificador de la confirmació existent
+      attestation_sha256: SHA-256 de la confirmació existent
       cancel: Cancel·la
       cancelled: Càlcul cancel·lat; no s'ha registrat cap dada de l'autoliquidació.
-      existing_attestation_hint: Responeu la pregunta. Després, indiqueu una atestació
-        existent que no escau l'apartat d'exoneració del Model 390 (el seu identificador
-        i SHA-256), o deixeu-los en blanc i indiqueu quan ho vau confirmar per registrar
-        una atestació nova.
+      existing_attestation_hint: Respon la pregunta. Després, indica una confirmació
+        existent que no escau la secció d'exoneració del Model 390 (el seu identificador
+        i SHA-256), o deixa'ls en blanc i indica quan ho vas confirmar per registrar
+        una confirmació nova.
       joint_return_elected: Autoliquidació conjunta?
-      no_modelo_390_question_hint: Responeu la pregunta. L'autoliquidació d'aquest
-        període no pregunta per l'exoneració del Model 390; només ho fa la de l'últim
-        període de l'any (12 o 4T).
-      observed_at: Confirmat el, per a una atestació nova (ISO 8601 amb desplaçament
+      no_modelo_390_question_hint: Respon la pregunta. L'autoliquidació d'aquest període
+        no pregunta per l'exoneració del Model 390; només ho fa la de l'últim període
+        de l'any (desembre o quart trimestre).
+      observed_at: Confirmat el, per a una confirmació nova (data i hora amb desplaçament
         UTC, per exemple 2025-04-01T12:00:00Z)
-      required: Responeu la pregunta sobre l'autoliquidació conjunta. A l'últim període
-        de l'any indiqueu també una atestació existent completa o una hora de confirmació
+      required: Respon la pregunta sobre l'autoliquidació conjunta. A l'últim període
+        de l'any indica també una confirmació existent completa o una hora de confirmació
         amb el seu desplaçament UTC, però no totes dues.
       stale_context: La declaració seleccionada ha canviat mentre el formulari era
-        obert. No s'ha calculat res; torneu a triar Calcula.
+        obert. No s'ha calculat res; torna a triar Calcula.
       title: Dades de l'autoliquidació del Model 303
-    record_family:
-      bindings: Valors dels teus registres
-      casillas: Caselles
-      formulas: Fórmules
-      parameters: Paràmetres
-      relations: Vincles amb altres models
-    recovery_action:
-      operator:
-        modelo:
-          work:
-            calculate: Calculeu aquesta unitat de treball
-            create: Creeu la unitat de treball d'aquesta declaració
-            status: Reviseu l'estat d'aquesta unitat de treball
-            verify: Verifiqueu aquesta unitat de treball
-    review_status:
-      agent_reviewed: Revisat automàticament
-      operator_reviewed: Revisat per una persona
-      pending_review: Encara sense revisar
-    technical:
-      column:
-        field: Detall
-        value: Identificador
-      finding_refs: Referències legals, troballa {position}
-      producer_of: Origen de «{capability}»
-      record_family: Secció
-    technical_details: Detalls tècnics
-    workspace_refusal:
-      facts:
-        modelo: Model
-        period: Període
-        required_grade: Grau requerit
-        work_unit_id: Unitat de treball
-      reason:
-        authority_grade_unavailable: L'autoritat de la revisió seleccionada encara
-          no admet la vista calculada sol·licitada.
-        bucket_assertion_mismatch: La identitat emmagatzemada de la declaració no
-          coincideix amb la sol·licitada.
-        calculation_unavailable: Aquesta declaració encara no s'ha calculat, així
-          que no hi ha valors disponibles.
-        consistency_unavailable: No s'ha pogut confirmar la coherència de la declaració.
-        locale_unavailable: No s'han pogut llegir les etiquetes traduïdes de la declaració.
-        schema_unavailable: No s'ha pogut llegir l'esquema de la declaració.
-        static_inspection_unavailable: No s'ha pogut llegir el disseny del formulari
-          d'aquesta declaració.
-        target_not_found: Encara no existeix treball per a aquesta declaració, així
-          que no hi ha res a calcular.
-        visible_target_ambiguous: Més d'una declaració coincideix amb aquesta adreça,
-          així que cap es pot obrir com una de sola.
-        workspace_changed: Aquesta declaració ha canviat mentre estava oberta; torneu-la
-          a obrir per veure l'estat actual.
-      static_fallback: Només es mostra el disseny del formulari. No es mostren valors
-        calculats a continuació.
+    workbench:
+      applicability:
+        month: No s'aplica aquest mes
+        period: No s'aplica en aquest període
+        quarter: No s'aplica aquest trimestre
+        year: No s'aplica aquest any
+      apply_prerequisite:
+        action: Revisa aquesta casella i el seu origen abans de tornar a aplicar.
+        earlier: Per a aquest recàlcul, no està disponible el valor d’una declaració
+          anterior.
+        legacy: Aquest càlcul anterior no pot reutilitzar tots els valors introduïts.
+        next: Revisa l’origen del càlcul
+        notice: 'No s’ha aplicat; canvis conservats. {box}: revisa’n l’origen a Incidències
+          [i].'
+        source_boxes: 'Caselles d’origen anteriors: {boxes}'
+        what: Per a aquest recàlcul, el valor d’origen d’aquesta casella no està disponible.
+      attention:
+        staged: Canviada, sense aplicar
+      browse:
+        last_to_do: 'Era l''últim que quedava per fer. Següent: {action}'
+      bulk_confirm:
+        column:
+          value: Valor suposat
+        confirm: Confirmar i deixar per revisar
+        count: 'Caselles per confirmar: {count}'
+        intro: Cadrumo té aquests valors, però ningú no els ha introduït. Confirma'ls
+          només si són correctes per a tu.
+        left_out:
+          not_changeable: 'No hi apareixen, no es poden canviar aquí: {count}. Obre''n
+            una per veure per què.'
+          sourced: 'No hi apareixen, s''emplenen des d''un origen: {count}. S''actualitzen
+            des d''ell.'
+        none_in_section: En aquesta secció no hi ha valors suposats per confirmar.
+        none_on_page: En aquesta pàgina no hi ha valors suposats per confirmar.
+        tick: He revisat aquests valors i són correctes per a mi
+        title: Confirmar valors suposats
+      calculate:
+        apply_first: Aplica o descarta els teus canvis abans de recalcular [R].
+        at_risk_cancel: Conserva els valors actuals
+        at_risk_proceed: Recalcula
+        at_risk_title: Vols recalcular a partir dels teus orígens?
+        kept: No s'ha recalculat res. Introdueix els valors que vulguis conservar
+          i després recalcula.
+        operator_entries_at_risk: 'Algunes caselles tenen valors que no es van introduir
+          en aquesta pantalla ({count}): {boxes}. Aquesta declaració es va calcular
+          per última vegada fora d''aquesta pantalla, així que Cadrumo no pot saber
+          si els vas escriure tu. En tornar a calcular, cadascuna d''aquestes caselles
+          pren el valor que li donin el seu origen o el model oficial, o queda buida
+          perquè l''emplenis. Per conservar un valor, introdueix-lo aquí abans.'
+        operator_entries_unknown: Aquesta declaració es va calcular per última vegada
+          fora d'aquesta pantalla, així que Cadrumo no pot saber quins valors vas
+          escriure. En tornar a calcular només es conserven els valors introduïts
+          aquí.
+      details_page: Detalls del càlcul
+      disclosure:
+        official_spanish: text oficial en castellà
+        spanish_fallback: text en castellà, encara sense traduir
+        technical: nom tècnic
+        unnamed: el formulari no li dona nom
+      editability:
+        calculated: Cadrumo la calcula a partir d'altres caselles.
+        design_constant: El disseny oficial fixa aquest valor.
+        edit_at_profile: Surt del teu perfil; corregeix-ho una vegada al perfil.
+        editable_override: Aquesta dada l'aportes tu; escriu-la aquí.
+        editable_value: Escriu l'import o la dada d'aquesta casella.
+        informational: Es mostra com a informació; no es declara aquí.
+        locked_source: Surt dels teus registres; corregeix-ho allà i torna a calcular.
+        no_admission: L'edició no està disponible ara mateix per a aquesta declaració.
+        not_writable: Aquesta casella no es pot editar aquí.
+        overridable_source: Ve d'una declaració anterior; el pots substituir, i es
+          mostra com a substituït fins que restauris l'origen.
+        source_policy_undecided: Encara no pots substituir aquest valor aquí. Corregeix-lo
+          on s'origina i torna a calcular.
+      editor:
+        affects:
+          is_result: Aquesta casella és el resultat de la declaració.
+          not_result: El càlcul de Cadrumo no enllaça aquesta casella amb el resultat.
+          now: (ara {amount})
+          others: 'Altres caselles que també canvia: {count}'
+        area:
+          none: el lloc d'on surt
+        block:
+          affects: Afecta
+          asks: Què demana
+          calculation: Càlcul
+          can_change: El pots canviar?
+          new_value: Nou valor
+          now: Ara
+          saved_value: Valor desat
+          where_from: D'on surt
+        can_change:
+          calculated: No. Cadrumo ho calcula a partir d'altres caselles. Canvia aquelles
+            caselles.
+          fixed: No. El model oficial fixa aquest valor.
+          here: Sí. Escriu el nou valor a sota.
+          not_here: Aquí no. Canvia-ho a {area} i torna a calcular.
+          not_yet: Aquí encara no. Canvia-ho a {area}.
+          recorded: No. Està registrada com a presentada. Per canviar-la, inicia una
+            correcció d'aquesta declaració.
+          replace: Sí. El teu valor substituirà el de l'origen ({value}), només en
+            aquesta declaració. Els teus registres no canvien i pots tornar al valor
+            de l'origen quan vulguis.
+          replace_unknown: Sí. El teu valor substituirà el de l'origen, només en aquesta
+            declaració. Els teus registres no canvien i pots tornar al valor de l'origen
+            quan vulguis.
+        cancel: Cancel·la
+        clear: Buida
+        confirm_hint: Prem ⏎ per confirmar {value} o escriu el valor correcte.
+        format:
+          boolean: Respon sí o no.
+          date: Una data del calendari.
+          decimal: Nombre decimal; sense arrodoniments.
+          integer: Nombre enter.
+          money: Import en euros; sense arrodoniments.
+          ratio: Escriu el valor tal com figura a l'imprès.
+          text: Text lliure.
+          year: Un any de quatre xifres.
+        keys: 'Tecles: ⏎ {save_next} · Ctrl+⏎ {save}'
+        open_area: Obre {area}
+        open_keys: 'Tecles: a {open} · Esc {back}'
+        placeholder:
+          boolean: sí o no
+          date: Data, p. ex. 31/03/2026
+          decimal: Nombre, p. ex. 12,5
+          integer: Nombre enter, p. ex. 3
+          money: Import, p. ex. 1.234,56
+          ratio: Percentatge, p. ex. 21
+          text: Text
+          year: Any, p. ex. 2026
+        read_as: ✓ Es llegirà com {value}
+        restore: Tornar al valor de l'origen
+        save: Deixar per revisar
+        save_next: Deixar i passar a la següent
+        unreadable: No s'ha pogut llegir aquest valor.
+      export:
+        confirm_first: 'Confirma els valors suposats abans de generar el fitxer o
+          registrar la presentació (per confirmar: {count}) [n].'
+        resolve_first: 'Resol el que impedeix presentar abans de generar el fitxer
+          o registrar la presentació (impedeixen presentar: {count}) [i].'
+        title: Exporta la declaració
+        verify_first: Comprova la declaració abans d'exportar-la [F8].
+      filed:
+        read_only: 'Registrada com a presentada: la pots consultar, però no canviar.
+          Per canviar-la, inicia una correcció d''aquesta declaració.'
+      filter:
+        all: totes les caselles
+        amount: només les caselles amb import
+        attention: només el que està pendent
+        calculated: només els valors calculats
+        empty: No hi ha res en aquesta pàgina amb aquest filtre.
+        empty_next: 'No hi ha res en aquesta pàgina amb aquest filtre. Pàgina següent
+          amb alguna cosa: {page}'
+        mine: només els teus valors
+        records: només el que ve dels teus registres
+      go_to:
+        missing: No hi ha cap casella [{box}] en aquest model.
+        prompt: 'Anar a la casella: escriu-ne el número i prem Retorn.'
+      grid:
+        column_unnamed: Columna {number}
+        records_read_only: Aquesta taula s'omple amb els teus registres. Canvia'ls
+          allà.
+        records_unknown: Cadrumo no sap quants registres hi ha.
+        row_boxes: '{heading} · [{first}] a [{last}]'
+      header:
+        chip:
+          blocks: 'impedeixen presentar: {count}'
+          check: 'per revisar: {count}'
+          confirm: 'per confirmar: {count}'
+          missing: 'falten: {count}'
+        deadline: 'Termini fins al {date} · dies restants: {days}'
+        deadline_passed: 'El termini va acabar el {date}: presentar ara és fora de
+          termini'
+        deadline_shifted_help: El termini habitual és el {nominal}. Passa al {date}
+          per un cap de setmana o festiu.
+        deadline_today: El termini acaba avui, {date}
+        file_created: Fitxer generat el {date}
+        file_out_of_date: El fitxer del {date} està desactualitzat. Torna a generar-lo
+          [{key}]
+        no_deadline: No consta cap termini per a aquest període
+        no_deadline_short: Termini no registrat
+        own_calculation: Càlcul de Cadrumo. L'AEAT no l'ha vist.
+        result:
+          choice_pending: 'A compensar o a retornar: ho tries en generar el fitxer'
+          choice_pending_short: A compensar o a retornar
+          direction_unknown_help: Cadrumo encara no indica si aquest import és a ingressar
+            o a retornar. Comprova-ho al model oficial abans de presentar.
+          failed: 'Resultat: no s''ha pogut calcular [{key}]'
+          negative: 'Resultat negatiu: res a ingressar'
+          negative_carried: 'Resultat negatiu: {amount} a deduir en els trimestres
+            següents'
+          not_calculated: 'Resultat: encara sense calcular [{key}]'
+          other_boxes: 'Altres caselles de resultat d''aquest model: {boxes}'
+          sign_help: La casella [{box}] figura al model oficial com a {value}. A dalt
+            es mostra l'import sense signe i el sentit en paraules.
+          to_carry_forward: A compensar
+          to_pay: A ingressar
+          to_refund: A retornar
+          unknown: Resultat
+          zero: Resultat zero
+        stale:
+          changes: 'desactualitzat: canvis sense aplicar: {count} [{key}]'
+          recalculate: 'desactualitzat: torna a calcular [{key}]'
+      help:
+        box_opening: 'Casella {box}:'
+        empty: No hi ha caselles en aquesta vista.
+        feeds: 'S''utilitza a: {boxes}'
+        formula: 'Càlcul: {formula}'
+        keys: 'Tecles: {keys}'
+        legal: 'Base legal: {citations}'
+        no_explanation: Encara no hi ha cap explicació escrita per a aquesta casella.
+        official: 'Text oficial ({source}): «{text}»'
+        origin: 'Origen: {origin}'
+        origin_no_earlier_declaration: Aquesta casella val 0 perquè aquest any no
+          hi ha cap declaració anterior d'on portar un valor.
+      in_spanish: (en castellà)
+      issues:
+        action:
+          confirm: Obre cada casella i confirma'n el valor, o escriu el correcte.
+          confirm_by_section: Obre cada secció i confirma'n els valors, o escriu els
+            correctes.
+          fill: Obre cada casella i escriu-ne el valor. Si el valor correcte és zero,
+            escriu 0.
+          fill_by_section: Obre cada secció i escriu-hi els valors que necessita.
+          records_at_source: Obre la taula, afegeix o corregeix el registre al seu
+            origen i torna a calcular.
+        assumed: Ningú no ha escrit els valors d'aquestes caselles.
+        box_not_on_form: La casella {box} no apareix a les pàgines d'aquesta declaració.
+        confirm_all: Confirmar valors suposats d'aquesta secció
+        detail:
+          advisory: És un consell. Pots presentar la declaració tal com està.
+          blocking_rule: No es compleix una regla del model; encara no es pot registrar
+            la presentació.
+          cross_period_dependency_unclean: Aquesta declaració fa servir xifres d'un
+            període anterior que encara no està resolt, així que el resultat encara
+            pot canviar.
+          missing_required_casilla: Cal aquest valor per presentar. Si és zero, escriu
+            0 perquè consti.
+          reconciliation_mismatch: 'Dues xifres que haurien de coincidir no coincideixen.
+            No se''n tria cap per tu: revisa-les totes dues i corregeix la que estigui
+            malament.'
+          stale_calculation: Els teus registres han canviat des que es va calcular
+            aquesta declaració, així que les seves xifres poden no coincidir-hi. No
+            es pot registrar la presentació fins que la tornis a calcular.
+        empty: No hi ha res a revisar.
+        go_to_box: Anar a la casella
+        key:
+          less: Mostra'n menys
+          more: Mostra'n més
+        missing: La declaració necessita valors en aquestes caselles i ningú no els
+          ha donat.
+        open_area: Obrir {area}
+        open_records: Obrir la taula
+        open_section: Obrir la secció
+        records:
+          field_missing: Un registre d'aquesta taula no té aquesta dada.
+          none: Aquesta taula encara no té registres, i cada registre necessita aquesta
+            dada.
+        technical: Detalls tècnics
+        title: Incidències per revisar
+        verdict:
+          blocked: La comprovació ha trobat alguna cosa que impedeix presentar.
+          complete: La comprovació és correcta.
+          incomplete: 'La comprovació no és completa: falten dades que la declaració
+            necessita.'
+          none: La declaració encara no s'ha comprovat.
+          saved_with_changes: El càlcul desat ha superat la comprovació; els teus
+            canvis no s'han aplicat.
+        what_to_do: 'Què cal fer: {action}'
+        where:
+          declaration: Tota la declaració
+          not_on_form: Una casella que no apareix a les pàgines d'aquesta declaració
+          record_value: Una dada que necessita cada registre d'una taula
+          records: Als teus registres
+          unnumbered: 'Valors sense número de casella: {count}'
+      key:
+        back: Tornar
+        calculate: Calcula
+        close: Tanca
+        confirm_section: Confirmar secció
+        edit: Editar
+        export: Exporta
+        filter: Filtre
+        fold: Obre o tanca la pàgina
+        go_to: Anar a la casella
+        help: Ajuda
+        issues: Incidències
+        next_attention: Següent pendent
+        next_page: Pàgina següent
+        next_step: Pas següent
+        previous_page: Pàgina anterior
+        review: Revisa els canvis
+        scroll: Desplaçar
+        search: Cerca
+        sort: Ordena
+        sources: Orígens
+      layout:
+        generated: pàgines ordenades automàticament
+        inspection_only: 'sense distribució oficial: només consulta, per número de
+          casella'
+      leave:
+        discard: Descarta i surt
+        message: 'Tens canvis sense aplicar: {count}. Si surts ara, es perden.'
+        stay: Continua editant
+        title: Canvis sense aplicar
+      legend:
+        first_open: És la primera vegada? Prem ? per veure què vol dir cada símbol.
+        group:
+          empty: Buida a propòsit, o encara sense valor
+          keys: Tecles
+          needs_you: Et necessita
+          origin: D'on surt el valor
+          progress: Canvis i progrés
+        intro: Cada símbol significa sempre el mateix, surti on surti.
+        keys:
+          grid: Moure's entre les cel·les d'una taula
+        meaning:
+          level:
+            blocks: Cal resoldre-ho abans de registrar la presentació.
+            check: Convé revisar-ho. No t'impedeix presentar.
+            info: Una explicació, per exemple per què no s'ha fet servir un origen.
+          mark:
+            collapsed: Prem → per obrir-la.
+            done: 'Acabat: aquí no queda res per fer.'
+            earlier: Portat d'una declaració anterior registrada com a presentada.
+            expanded: Prem ← per tancar-la.
+            here: La casella seleccionada o el pas en què ets.
+            staged: Has canviat aquesta casella. El canvi encara no s'ha aplicat.
+            stale: El resultat encara no inclou els teus últims canvis.
+          origin:
+            calculated: Calculat a partir d'altres caselles.
+            calculation_failed: Cadrumo no ho ha pogut calcular. La llista d'incidències
+              explica per què.
+            cleared: Has buidat aquesta casella.
+            default_to_confirm: Cadrumo té aquí un valor que ningú no ha introduït.
+              Confirma'l o escriu el correcte.
+            entered: Has escrit tu aquest valor.
+            imported: 'De les teves dades a Cadrumo: els teus registres, el teu perfil
+              o dades de l''AEAT que has importat.'
+            informational: El fixa el model oficial o es mostra com a referència.
+              No l'has d'emplenar.
+            needs_input: La declaració necessita aquesta dada i ningú no l'ha donada.
+            not_applicable: Queda buida per norma o no s'aplica a aquesta declaració.
+            not_calculated_yet: Calcula la declaració per emplenar-la.
+            not_imported_yet: Les seves dades encara no s'han portat.
+            optional_empty: Opcional. Deixa-la buida si no t'afecta.
+            overrides_source: El teu valor substitueix el del seu origen, només en
+              aquesta declaració.
+        more: Prem ? un altre cop per veure tots els símbols i tecles.
+        name:
+          collapsed: Secció tancada
+          done: Fet
+          earlier: D'una declaració anterior
+          expanded: Secció oberta
+          from_your_data: De les teves dades
+          here: Ets aquí
+          stale: Desactualitzat
+        on_screen: En aquesta pantalla
+        title: Símbols i tecles
+      level:
+        blocks: Impedeix presentar
+        check: Convé revisar-ho
+        info: Per a la teva informació
+      loading: Carregant la declaració…
+      modelo_number: Modelo {modelo}
+      modelo_title: Modelo {modelo} · {title}
+      next:
+        apply: 'Revisa i aplica els teus canvis (sense aplicar: {count})'
+        calculate: Calcula la declaració
+        confirm: 'Confirma els valors suposats (per confirmar: {count})'
+        export: Genera el fitxer per presentar-lo a l'AEAT
+        export_again: 'Torna a generar el fitxer: la declaració ha canviat després
+          del {date}'
+        fill: 'Completa les caselles marcades (pendents: {count})'
+        recalculate: 'Torna a calcular: els teus registres han canviat'
+        record_after_file: Fitxer generat el {date}. Quan l'hagis presentat a l'AEAT,
+          registra'n aquí la presentació
+        recorded: Registrada com a presentada el {date}
+        resolve: 'Resol el que impedeix presentar (pendents: {count})'
+        verify: Comprova la declaració
+      next_line: 'Següent: {action} [{key}]'
+      not_writable:
+        absent_from_admission: Aquesta casella no es pot editar aquí.
+        capability_unavailable: Editar aquesta casella encara no està disponible en
+          aquesta versió.
+        computed_by_formula: Cadrumo la calcula a partir d'altres caselles.
+        override_policy_undecided: Encara no pots substituir aquest valor aquí. Corregeix-lo
+          on s'origina i torna a calcular.
+        row_field_template: Aquesta casella representa una columna de línies repetides;
+          introdueix les línies on es guarden.
+        schema_declared_read_only: El disseny oficial no permet escriure en aquesta
+          casella.
+        source_locked: Segueix els teus registres; corregeix-la allà i recalcula.
+        value_channel_unavailable: Encara no s'hi poden introduir valors d'aquest
+          tipus.
+      operation:
+        calculated: Calculada. {direction} {value}.
+        checked:
+          blocked: 'Comprovada: alguna cosa n''impedeix la presentació. Obre les incidències
+            per veure-ho [{key}].'
+          complete: 'Comprovada: res no n''impedeix la presentació.'
+          incomplete: 'Comprovada: falten dades que la declaració necessita [{key}].'
+        done: Fet. La declaració s'ha actualitzat.
+        not_done: No s'ha completat; els teus canvis continuen aquí.
+      origin:
+        calculated: Calculada
+        calculation_failed: No s'ha pogut calcular
+        cleared: Buidada per tu
+        default_to_confirm: Suposada, confirma-la
+        entered: Introduïda per tu
+        imported: Importada
+        informational: Valor de referència
+        needs_input: Falta la teva dada
+        not_applicable: No s'aplica
+        not_calculated_yet: Encara sense calcular
+        not_imported_yet: Encara sense importar
+        optional_empty: Opcional, buida
+        overrides_source: El teu valor substitueix l'origen
+      origin_filed:
+        default_to_confirm: Suposada, ningú no la va introduir
+        needs_input: Buida, ningú no la va omplir
+      origin_held_zero:
+        optional_empty: Opcional, es queda a 0
+      origin_source:
+        aeat_imported_on: De dades de l'AEAT, importades el {date}
+        imported:
+          aeat_draft: De dades de l'AEAT
+          earlier_filings: D'una declaració anterior
+          earlier_filings_none: Cap declaració anterior aquest any
+          fixed_by_design: Fixat pel model
+          named_filing: Del model {modelo}, {period}
+          profile: Del teu perfil
+          records: Dels teus registres
+          registers: D'un registre que portes
+          your_entries: Del que vas escriure
+        not_imported_yet:
+          aeat_draft: Encara no és a les dades de l'AEAT
+          earlier_filings: Encara sense declaració anterior
+          fixed_by_design: Encara sense fixar pel model
+          named_filing: Encara no és al model {modelo}, {period}
+          profile: Encara no és al teu perfil
+          records: Encara no és als teus registres
+          registers: Encara no és al teu registre
+          your_entries: Encara sense escriure
+        overrides_source:
+          aeat_draft: Teu, substitueix les dades de l'AEAT
+          earlier_filings: Teu, substitueix una declaració anterior
+          fixed_by_design: Teu, substitueix el valor del model
+          named_filing: Teu, substitueix el model {modelo}, {period}
+          profile: Teu, substitueix el teu perfil
+          records: Teu, substitueix els teus registres
+          registers: Teu, substitueix el teu registre
+          your_entries: Teu, substitueix el que vas escriure
+      page_number: Pàgina {page}
+      page_position: pàgina {current} de {total}
+      period:
+        annual: Anual {year}
+        month_01: gener {year}
+        month_02: febrer {year}
+        month_03: març {year}
+        month_04: abril {year}
+        month_05: maig {year}
+        month_06: juny {year}
+        month_07: juliol {year}
+        month_08: agost {year}
+        month_09: setembre {year}
+        month_10: octubre {year}
+        month_11: novembre {year}
+        month_12: desembre {year}
+        quarter_1: 1r trimestre {year}
+        quarter_2: 2n trimestre {year}
+        quarter_3: 3r trimestre {year}
+        quarter_4: 4t trimestre {year}
+      rate:
+        not_grounded: Cadrumo no fixa cap tipus per a aquesta fila, així que aquí
+          no se'n mostra cap. Consulta a les instruccions oficials el tipus que et
+          correspon.
+        of_row: El tipus d'aquesta fila és el {rate}.
+        of_row_printed: 'El model oficial imprimeix aquest tipus en aquesta fila:
+          {rate}.'
+        printed_by_form: El model oficial imprimeix aquest tipus en aquesta fila.
+      read_failed: No s'ha pogut llegir la declaració. Torna enrere i obre-la de nou.
+      rebase:
+        changed: 'Caselles que ara mostren un altre valor: {count}.'
+        dropped: 'Canvis que ja no s''apliquen i s''han tret: {count}.'
+        moved: La declaració ha canviat des que vas escriure canvis que encara no
+          has aplicat.
+        still_moving: La declaració continua canviant. Espera un moment i torna a
+          revisar els teus canvis [R].
+      record:
+        refused_file_out_of_date: El fitxer del {date} està desactualitzat. Torna
+          a generar-lo. Si ja has presentat aquell fitxer anterior a l'AEAT, inicia
+          una correcció.
+      repeating: 'Files de detall: {count}'
+      result_diff:
+        close: Tanca
+        column:
+          why: Motiu
+        count:
+          calculated: 'recalculades: {count}'
+          other: 'altres canvis: {count}'
+          sourced: 'dels teus orígens: {count}'
+          yours: 'els teus canvis: {count}'
+        group:
+          calculated: Recalculada
+          other: Un altre canvi
+          sourced: Dels teus orígens
+          yours: El teu canvi
+        not_shown: no es mostra
+        nothing_changed: Fet. Cap casella no ha canviat.
+        title: 'Caselles que han canviat: {count}'
+      review:
+        acknowledge: He comprovat el que fa aplicar
+        and_more: '{shown} i {count} més'
+        apply: Aplica i recalcula
+        back: Torna a editar
+        before_changed: la casella ha canviat des que vas escriure això
+        blocked: Resol el que està marcat amb ▲ abans d'aplicar.
+        change_line: '{box}{concept}: {before} passa a {after} ({effect})'
+        check_failed: No s'han pogut comprovar els teus canvis. Continuen aquí; torna-ho
+          a provar.
+        column:
+          after: Després
+          before: Abans
+          box: Casella
+          concept: Concepte
+        discard: Descarta-ho tot
+        discarded: S'han descartat els teus canvis.
+        displacing: 'Canvis que substitueixen un valor importat o calculat: {count}.
+          El teu valor manarà fins que restauris l''origen.'
+        effect:
+          clear: quedarà sense valor
+          replaces_aeat_draft: substitueix el valor de les dades de l'AEAT
+          replaces_earlier_filings: substitueix el valor d'una declaració anterior
+          replaces_fixed_by_design: substitueix el valor fixat pel model
+          replaces_named_filing: substitueix el valor del model {modelo}, {period}
+          replaces_profile: substitueix el valor del teu perfil
+          replaces_records: substitueix el valor dels teus registres
+          replaces_registers: substitueix el valor d'un registre que portes
+          replaces_your_entries: substitueix el valor del que vas escriure
+          restore: torna al valor d'origen
+          set_calculation: substitueix el valor calculat
+          set_filer: canvia el teu valor
+          set_nothing: valor nou
+          set_source: substitueix el valor del seu origen
+        finding:
+          clear_of_source_fed_casilla: Un origen emplena aquesta casella, així que
+            no es pot buidar. Torna-la al seu origen en lloc d'això.
+          intent_not_admitted: Aquesta casella no es pot canviar d'aquesta manera.
+          nothing_to_restore: Aquesta casella ja mostra el valor del seu origen.
+          required_empty: La declaració necessita aquesta casella i quedarà buida.
+        findings_heading: 'El que ha trobat la comprovació:'
+        none: No hi ha canvis per aplicar.
+        nothing_saved: No es desa res fins que premis «Aplica i recalcula».
+        operator_entries_at_risk: 'Algunes caselles tenen valors que no es van introduir
+          en aquesta pantalla ({count}): {boxes}. Aquesta declaració es va calcular
+          per última vegada fora d''aquesta pantalla, així que Cadrumo no pot saber
+          si els vas escriure tu. En aplicar, cadascuna d''aquestes caselles pren
+          el valor que li donin el seu origen o el model oficial, o queda buida perquè
+          l''emplenis. Per conservar un valor, introdueix-lo aquí abans.'
+        operator_entries_unknown: Aquesta declaració es va calcular per última vegada
+          fora d'aquesta pantalla, així que Cadrumo no pot saber quins valors vas
+          escriure. En aplicar només es conserven els canvis d'aquesta llista. Qualsevol
+          altre valor escrit fora d'aquesta pantalla pren el valor que li donin el
+          seu origen o el model oficial, o queda buit.
+        rebased: 'La declaració va canviar després que escrivissis aquests canvis,
+          que encara no estan aplicats. Revisa de nou les línies marcades (canviades:
+          {count}).'
+        title: 'Canvis per aplicar: {count}'
+      search:
+        count: 'Caselles trobades: {count}'
+        empty: Cap casella no coincideix amb {query}.
+        prompt: Cerca a totes les pàgines per número de casella o per paraules. Retorn
+          et porta a la casella.
+      section:
+        box: Casella {box}
+        boxes: Caselles {first} a {last}
+        part: Pàgina {page}, part {part}
+        pending: '{heading} · pendents: {count}'
+      sort:
+        all_pages: Totes les pàgines
+        amount: ordenades per import, de més gran a més petit
+        attention: primer el que requereix atenció
+        box: ordenades per número de casella
+        form: en l'ordre del model
+      sources:
+        and_more: i {count} més
+        count: 'Caselles: {count}'
+        group:
+          aeat_data: Dades de l'AEAT
+          aeat_data_imported_on: Dades de l'AEAT, importades el {date}
+          assumed: Suposats, confirma'ls
+          blank: En blanc o no s'apliquen
+          calculated: Calculats
+          earlier_declarations: Declaracions anteriors
+          earlier_declarations_none: Cap declaració anterior aquest any
+          information: Només informatius
+          needs_you: Falta la teva dada
+          profile: El teu perfil
+          records: Els teus registres
+          registers: Llibres registre que portes
+          replaced: Els teus valors en substitueixen d'altres
+          set_by_form: Fixats pel model
+          unnamed: D'un origen sense nom
+          yours: Escrits o confirmats per tu
+        group_filed:
+          assumed: Suposats, ningú no els va introduir
+          needs_you: Buides, ningú no les va omplir
+        intro: Totes les caselles, agrupades segons d'on surt el valor. Obre un grup
+          per veure'n les caselles.
+        key:
+          expand: Mostra les caselles
+          go: Obre la casella
+          open: Obre l'origen
+        no_source: Aquesta casella no s'omple des d'un altre apartat.
+        no_surface: «{source}» no té un apartat propi per obrir.
+        none: Aquesta declaració no té caselles per mostrar.
+        none_found: '{source}: no s''ha trobat res'
+        not_here: Des d'aquí no es pot obrir aquest apartat; obre'l des del menú principal.
+        not_yet: '{source}: encara sense consultar'
+        title: D'on surten els valors
+      stage_refused:
+        not_editable: Aquesta casella no es pot canviar així.
+        nothing_to_clear: No hi ha cap valor teu per buidar en aquesta casella.
+        nothing_to_confirm: Aquesta casella no té cap valor suposat per confirmar.
+        nothing_to_restore: Aquesta casella ja mostra el valor del seu origen.
+      staged:
+        clear: (es buidarà)
+        restore: (torna a l'origen)
+      step:
+        calculate: Calcular
+        file: Registrar presentació
+        fill: Emplenar
+        review: Comprovar
+      value:
+        not_applicable: no s'aplica
+      was: 'abans: {value}'
+  restricted:
+    actions: 'Accions permeses: {values}'
+    all_periods: Tots els períodes
+    availability: 'Disponibilitat - emmagatzematge: {storage}; autoritat: {authority};
+      proveïdor: {provider}'
+    change_user: Canvia d’usuari
+    close: Tanca
+    grant: 'Concessió vàlida: {valid}; venç: {expires_at}'
+    lock: Bloqueja aquesta sessió
+    'no': 'No'
+    none: Cap
+    operations: 'Operacions permeses: {values}'
+    periods: 'Períodes: {values}; treball sense període: {independent}'
+    profile: 'Perfil: {label} ({profile_id})'
+    session_expiry: 'La sessió venç: {expires_at}'
+    title: Sessió API restringida
+    'yes': Sí
   root:
     account:
+      access: Accés
       appearance: Aparença
       change_user: Canvia d'usuari
       default_profile: Compte
@@ -2223,6 +3407,7 @@ tui:
       line: '{label} · {status}'
       line_with_expiry: '{label} · {status} · fins a les {expires_at}'
     account_help:
+      access: Gestionar sessions i accés d'automatització
       appearance: Canvia entre l'aparença clara i la fosca
       change_user: Inicia la sessió en un altre perfil d'aquest ordinador
       language: Tria l'idioma en què es mostren les pàgines d'aquest perfil
@@ -2230,6 +3415,7 @@ tui:
       profile: Revisa i edita les dades d'aquest perfil
       sign_out: Tanca la sessió d'aquest perfil i bloqueja les seves dades
     account_key:
+      access: Accés
       appearance: Tema
       change_user: Usuari
       language: Idioma
@@ -2239,45 +3425,98 @@ tui:
     navigation:
       unavailable: No es pot obrir l'àrea sol·licitada en aquesta sessió.
     no_areas: Cap àrea no està disponible encara en aquesta sessió.
-    opening: S'està obrint la teva àrea de treball…
+    opening: S'està obrint Cadrumo…
     palette:
       placeholder: Cerca àrees, registres i accions…
     system:
       quit: Surt
       quit_help: Surt de Cadrumo; la sessió del perfil queda com està
     title: 'Cadrumo: sessió de terminal'
-    updating: S'està actualitzant l'àrea de treball…
+    updating: S'està actualitzant…
+  runtime_access:
+    access_lost: L'accés a aquest perfil no està disponible. Torna a iniciar la sessió.
+    busy: S'està processant…
+    close: Tanca
+    completed: Completat.
+    denial_acknowledgement: 'Accés denegat: {access_denied} · Neteja de credencials
+      pendent: {cleanup_pending}'
+    deny_all: Revoca tota l'automatització
+    deny_grant: Revoca la concessió
+    deny_key: Revoca la clau
+    deny_target: UUID de la destinació
+    invalid_grants: Introdueix UUID vàlids de concessions.
+    invalid_target: Introdueix un UUID de destinació vàlid.
+    lock_current: Bloqueja aquesta sessió
+    lock_profile: Bloqueja el perfil arreu
+    refresh: Actualitza
+    refused: S'ha rebutjat l'accés.
+    resume: Desbloqueja el perfil
+    resume_grants: UUID de les concessions que es reactivaran
+    resume_password: Contrasenya del perfil
+    revoke_session: Revocar la sessió
+    session_details: 'Sessió: {session_id} | Client: {client_id} | Sessió pare: {parent_session_id}
+      | Autorització: {grant_id} | Clau: {key_id} | Tipus: {kind} | Estat: {state}
+      | Caduca: {expires_at}'
+    sessions: Sessions
+    sessions_empty: No hi ha sessions actuals.
+    sessions_locked: 'Sessions blocades: {session_ids}'
+    title: Accés al perfil
+    unknown: Desconegut
+    view_automation: Mostra l'automatització
+  runtime_login:
+    cancel: Cancel·la
+    credential_hint_api_key: Introdueix la clau del perfil seleccionat.
+    credential_hint_api_reference: Llegeix la clau exacta de les credencials locals
+      protegides i autentica't al servei local.
+    credential_hint_receipt: Fa servir el rebut protegit d’aquest perfil; no cal introduir
+      cap contrasenya ni clau API.
+    credential_label_api_key: Clau d'API
+    credential_label_api_reference: Referència de credencial (UUID)
+    credential_label_password: Contrasenya
+    credential_required: Introdueix una credencial.
+    method_api_key: Clau d'API
+    method_api_reference: Clau API desada
+    method_label: Mètode d'inici de sessió
+    method_password: Contrasenya
+    method_receipt: Reprèn amb el rebut protegit
+    profile_label: Perfil
+    progress: S'està iniciant la sessió…
+    reference_invalid: Introdueix un UUID vàlid de referència de credencial.
+    refused: S'ha rebutjat l'inici de sessió.
+    stay_signed_in: Mantén la sessió iniciada
+    submit: Inicia la sessió
+    title: Inicia la sessió en un perfil
   search:
     action:
-      classify_ledger: Classifica el llibre major
+      classify_ledger: Classifica els registres
       edit_profile: Edita el perfil
       explain_overview: Explica el resum
-      link_ledger: Enllaça el registre del llibre major
+      link_ledger: Enllaça l'apunt
       list_filing_records: Mostra les presentacions
       list_notifications: Mostra les notificacions
-      list_work_revisions: Mostra les revisions del treball
-      review_ledger: Revisa el llibre major
-      review_ledger_evidence: Revisa l'evidència del llibre major
-      unknown: Acció no reconeguda de l'espai de treball
-      validate_ledger: Valida el llibre major
+      list_work_revisions: Mostra els càlculs anteriors
+      review_ledger: Revisa els registres
+      review_ledger_evidence: Revisa els justificants
+      unknown: Acció no reconeguda
+      validate_ledger: Comprova els registres
     destination:
-      aeat_sync: Obre la sincronització AEAT
-      declarations: Obre les declaracions
-      home: Obre inici
-      ledger: Obre el llibre major
-      profile: Obre el perfil
-      unknown: Obre l'espai de treball
-      withholding: Obre els justificants de retencions
+      aeat_sync: Obre Sincronització AEAT
+      declarations: Obre Declaracions
+      home: Obre Inici
+      ledger: Obre Registres
+      profile: Obre Perfil
+      unknown: Obre l'àrea
+      withholding: Obre Retencions
     destination_help:
       aeat_sync: El que s'ha llegit de l'AEAT i el que es pot llegir a continuació
-      declarations: Declaracions, revisions de càlcul, historial de presentacions
-        i calendari
+      declarations: Declaracions, càlculs anteriors, historial de presentacions i
+        calendari
       home: Properes accions, declaracions i terminis d'un cop d'ull
       ledger: Apunts, revisió, classificació i justificants
-      profile: Les dades d'aquest perfil i les fonts que les completen
+      profile: Les dades d'aquest perfil i els orígens que les completen
       withholding: Registra i consulta les retencions de factures de l'exercici seleccionat
     refusal:
-      not_composed: Encara no s'han pogut llegir totes les fonts de l'espai de treball.
+      not_composed: Encara no s'han pogut llegir totes les àrees.
       refresh_failed: La darrera actualització no ha pogut reconstruir l'índex.
       unavailable: La cerca no està disponible en aquesta sessió
       unknown: No s'ha pogut preparar la cerca.
@@ -2287,39 +3526,39 @@ tui:
         declaration: Declaració
         filing: Presentació
         history: Historial de presentacions
-        ledger_entry: Apunt del llibre major
-        ledger_evidence: Evidència del llibre major
+        ledger_entry: Apunt
+        ledger_evidence: Justificant
         modelo: Model
         notification: Notificació
         reconciliation: Conciliació
-        revision: Revisió de càlcul
+        revision: Càlcul anterior
       source:
-        declaration: Registres de declaracions
-        filing: Registres de presentacions
+        declaration: Declaracions
+        filing: Presentacions
         history: Historial de presentacions
-        ledger_entry: Registres locals
-        ledger_evidence: Evidència del llibre major
+        ledger_entry: Registres
+        ledger_evidence: Justificants
         modelo: Catàleg de models
         notification: Notificacions de l'AEAT
         reconciliation: Incidències de conciliació
-        revision: Historial de càlculs
+        revision: Càlculs anteriors
       status:
         declaration_draft: Esborrany
-        declaration_filed: Presentada
+        declaration_filed: Registrada com a presentada
         declaration_in_progress: En curs
         declaration_needs_attention: Requereix atenció
         declaration_ready: A punt per presentar
         filing_accepted: Acceptada
         filing_rejected: Rebutjada
-        filing_submitted: Enviada
+        filing_submitted: Presentació observada
         history_not_observed: No observada
         history_observed: Observada
         ledger_entry_classified: Classificat
         ledger_entry_needs_review: Requereix revisió
         ledger_entry_ready: Preparat
-        ledger_evidence_captured: Capturada
+        ledger_evidence_captured: Afegit
         ledger_evidence_missing: Absent
-        ledger_evidence_stale: Desactualitzada
+        ledger_evidence_stale: Desactualitzat
         modelo_available: Disponible
         modelo_unavailable: No disponible
         notification_read: Llegida

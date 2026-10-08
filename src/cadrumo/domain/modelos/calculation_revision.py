@@ -43,7 +43,8 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Literal, TypedDict, override
+from types import MappingProxyType
+from typing import Final, Literal, TypedDict, override
 
 from pydantic import (
     BaseModel,
@@ -65,12 +66,14 @@ from ...core.identity.hex_ids import CalculationRevisionId, SnapshotId, WorkUnit
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
+from ..calculations.record_row_membership import ClosedRecordRowSet, validate_closed_record_row_sets
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ..calculations.registry.ids import BindingId, RelationId
 from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from ..calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ..calculations.row_coordinate import index_unique_row_coordinates
 from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from .calculation_revision_amendment import CalculationRevisionAmendmentIdentity, CalculationRevisionAmendmentKind
 from .calculation_revision_identity import (
@@ -86,10 +89,28 @@ from .calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
+from .calculation_revision_operator_layer import CalculationOperatorLayer
+from .calculation_revision_rendering import CalculationRenderingSnapshot
 from .errors import ModeloError, ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 from .ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from .row_models import ModeloDetailRow
+
+PERSISTED_BOOLEAN_BINDING_TOKENS: Final[Mapping[bool, str]] = MappingProxyType({True: "true", False: "false"})
+"""How a boolean-channel binding's value is written into ``binding_overrides``.
+
+The overrides mapping carries every binding channel as text: decimals as
+canonical decimal strings, enums as their member, dates in ISO form, and a
+boolean as one of these two tokens. A reader that expects a quantity must
+recognise a truth token rather than refuse it as corrupt storage."""
+
+
+def persisted_boolean_binding_value(raw: str) -> bool | None:
+    """Read a persisted truth token back, or return ``None`` when ``raw`` is none."""
+    for value, token in PERSISTED_BOOLEAN_BINDING_TOKENS.items():
+        if raw == token:
+            return value
+    return None
 
 
 class CalculationRevisionState(StrEnum):
@@ -177,6 +198,7 @@ class CalculationRevisionIdentityInputs(TypedDict):
     binding_overrides: Mapping[BindingId, str]
     row_binding_values: Mapping[BindingId, Mapping[str, str]] | None
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity]
+    closed_record_row_sets: Sequence[ClosedRecordRowSet]
     row_casilla_values: Mapping[RowCasillaKey, Decimal]
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance]
     casilla_values: Mapping[CasillaId, Decimal]
@@ -193,6 +215,8 @@ class CalculationRevisionIdentityInputs(TypedDict):
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None
     amendment_identity: CalculationRevisionAmendmentIdentity | None
     cleared_casilla_ids: Sequence[CasillaId]
+    operator_layer: CalculationOperatorLayer | None
+    rendering_snapshot: CalculationRenderingSnapshot | None
 
 
 def calculation_revision_identity_inputs(
@@ -202,6 +226,7 @@ def calculation_revision_identity_inputs(
     binding_overrides: Mapping[BindingId, str],
     row_binding_values: Mapping[BindingId, Mapping[str, str]] | None = None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
+    closed_record_row_sets: Sequence[ClosedRecordRowSet] = (),
     row_casilla_values: Mapping[RowCasillaKey, Decimal] | None = None,
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -218,6 +243,8 @@ def calculation_revision_identity_inputs(
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
     cleared_casilla_ids: Sequence[CasillaId] = (),
+    operator_layer: CalculationOperatorLayer | None = None,
+    rendering_snapshot: CalculationRenderingSnapshot | None = None,
 ) -> CalculationRevisionIdentityInputs:
     """Build the one complete target-id-free calculation-revision identity input.
 
@@ -232,6 +259,7 @@ def calculation_revision_identity_inputs(
         "binding_overrides": binding_overrides,
         "row_binding_values": row_binding_values,
         "row_source_identities": row_source_identities or {},
+        "closed_record_row_sets": closed_record_row_sets,
         "row_casilla_values": row_casilla_values or {},
         "row_casilla_provenance": row_casilla_provenance or {},
         "casilla_values": casilla_values,
@@ -248,6 +276,8 @@ def calculation_revision_identity_inputs(
         "m303_regimen_simplificado_annual_summary_handoff": (m303_regimen_simplificado_annual_summary_handoff),
         "amendment_identity": amendment_identity,
         "cleared_casilla_ids": cleared_casilla_ids,
+        "operator_layer": operator_layer,
+        "rendering_snapshot": rendering_snapshot,
     }
 
 
@@ -258,6 +288,7 @@ def derive_calculation_revision_id(
     binding_overrides: Mapping[BindingId, str],
     row_binding_values: Mapping[BindingId, Mapping[str, str]] | None = None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
+    closed_record_row_sets: Sequence[ClosedRecordRowSet] = (),
     row_casilla_values: Mapping[RowCasillaKey, Decimal] | None = None,
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -274,6 +305,8 @@ def derive_calculation_revision_id(
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
     cleared_casilla_ids: Sequence[CasillaId] = (),
+    operator_layer: CalculationOperatorLayer | None = None,
+    rendering_snapshot: CalculationRenderingSnapshot | None = None,
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt."""
     return derive_calculation_revision_id_from_identity_inputs(
@@ -283,6 +316,7 @@ def derive_calculation_revision_id(
             binding_overrides=binding_overrides,
             row_binding_values=row_binding_values,
             row_source_identities=row_source_identities,
+            closed_record_row_sets=closed_record_row_sets,
             row_casilla_values=row_casilla_values,
             row_casilla_provenance=row_casilla_provenance,
             casilla_values=casilla_values,
@@ -299,6 +333,8 @@ def derive_calculation_revision_id(
             m303_regimen_simplificado_annual_summary_handoff=(m303_regimen_simplificado_annual_summary_handoff),
             amendment_identity=amendment_identity,
             cleared_casilla_ids=cleared_casilla_ids,
+            operator_layer=operator_layer,
+            rendering_snapshot=rendering_snapshot,
         ),
     )
 
@@ -430,6 +466,20 @@ class CalculationSourceIssue(BaseModel):
     per-perceptor-clave detail store held no observation for the year, so its
     percepciones count rests on a zero the store cannot support. A contradictory
     source is refused during calculation before a revision can be persisted.
+
+    The remaining reasons each mean a filed figure is missing or cannot be
+    trusted. ``unresolved_binding`` is a box printed on the form whose declared
+    source produced no value, named by ``casilla_id``, which must never read as
+    a zero. ``unhandled_binding_source`` is a declared source with no
+    executable route. ``source_domain_not_ready`` is a source store that could
+    not be read yet. ``invoice_reverse_charge_cuota_not_derivable`` is a
+    reverse-charge invoice whose IVA owed could not be derived. These four block
+    filing until a recalculation clears them. ``terminal_origin_mismatch`` is a
+    value that reached the declaration by an undeclared route; it persists so
+    a reopened declaration still shows it, but withholds nothing, because the
+    route it reports may lack a terminal origin by design.
+    ``binding_source`` is ``None`` only where the condition names no binding
+    source kind.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -440,11 +490,17 @@ class CalculationSourceIssue(BaseModel):
         "iva_selected_scope_evidence_failure",
         "iva_compensation_annual_source_evidence_failure",
         "withholding_detail_absent",
+        "unresolved_binding",
+        "terminal_origin_mismatch",
+        "unhandled_binding_source",
+        "source_domain_not_ready",
+        "invoice_reverse_charge_cuota_not_derivable",
     ]
-    binding_source: BindingSourceKind
+    binding_source: BindingSourceKind | None
     message: str = Field(min_length=1, max_length=512)
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
+    casilla_id: CasillaId | None = None
 
 
 def _validate_revision_identity(revision: CalculationRevision, derived: CalculationRevisionId) -> None:
@@ -512,6 +568,18 @@ def _validate_replay_channels(revision: CalculationRevision) -> None:
         "relation_overrides",
         revision.relation_overrides,
     )
+
+
+def _validate_operator_layer(revision: CalculationRevision) -> None:
+    """Keep an operator value and an explicit clear of the same casilla mutually exclusive."""
+    layer = revision.operator_layer
+    if layer is None:
+        return
+    both = sorted(layer.casilla_ids().intersection(revision.cleared_casilla_ids))
+    if both:
+        raise ModeloValidationError(
+            f"calculation revision operator layer sets casillas it also records as cleared: {both!r}",
+        )
 
 
 def _validate_observation_projection(revision: CalculationRevision) -> None:
@@ -678,6 +746,18 @@ def _validate_row_casilla_coordinate(
 
 
 def _validate_row_materialization(revision: CalculationRevision) -> None:
+    try:
+        validate_closed_record_row_sets(
+            revision.closed_record_row_sets,
+            supplied_binding_ids=set(revision.binding_overrides) | set(revision.row_binding_values),
+        )
+    except ValueError as exc:
+        raise ModeloValidationError("closed record rows disagree with saved binding values or scope") from exc
+    if any(
+        row_set.work_unit_id != revision.work_unit_id or row_set.registry_snapshot_ref != revision.registry_snapshot_ref
+        for row_set in revision.closed_record_row_sets
+    ):
+        raise ModeloValidationError("closed record rows do not belong to the calculation revision")
     row_value_keys = {
         (binding_id, int(row_index)) for binding_id, rows in revision.row_binding_values.items() for row_index in rows
     }
@@ -804,6 +884,7 @@ class CalculationRevision(BaseModel):
     work_unit_id: WorkUnitId
     registry_snapshot_ref: RegistrySnapshotRef
     state: CalculationRevisionState
+    rendering_snapshot: CalculationRenderingSnapshot | None = None
     input_values_by_casilla_id: Mapping[CasillaId, str] = Field(default_factory=dict)
     binding_overrides: Mapping[BindingId, str] = Field(default_factory=dict)
     row_binding_values: Mapping[BindingId, Mapping[str, str]] = Field(default_factory=dict)
@@ -812,6 +893,7 @@ class CalculationRevision(BaseModel):
         repr=False,
     )
     row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=empty_row_casilla_values, repr=False)
+    closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = Field(default=(), repr=False)
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] = Field(
         default_factory=empty_row_casilla_provenance,
         repr=False,
@@ -829,6 +911,13 @@ class CalculationRevision(BaseModel):
     # absent from ``input_values_by_casilla_id``, but only the cleared one
     # appears here.
     cleared_casilla_ids: tuple[CasillaId, ...] = Field(default_factory=tuple)
+    # The caller tier this revision was calculated from, apart from every
+    # source tier merged into ``input_values_by_casilla_id`` and
+    # ``binding_overrides``. ``None`` means UNKNOWN -- every revision stored
+    # before the layer existed -- never "the operator authored nothing"; a
+    # calculation that knew its caller tier records an empty layer instead. It
+    # joins the content address only when present, so stored ids are unchanged.
+    operator_layer: CalculationOperatorLayer | None = Field(default=None, repr=False)
     casilla_values: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     # Typed envelope carrying formula provenance for every computed
     # casilla. Revisions with output values must populate this from the
@@ -931,11 +1020,16 @@ class CalculationRevision(BaseModel):
     def _enforce_invariants(self, info: ValidationInfo) -> CalculationRevision:
         validation_context = _string_keyed_context(info.context)
         _validate_secure_revision_context(self, validation_context)
+        if self.rendering_snapshot is not None and (
+            self.rendering_snapshot.registry_snapshot.snapshot_ref != self.registry_snapshot_ref
+        ):
+            raise ModeloValidationError("saved rendering snapshot belongs to another calculation coordinate")
         _validate_source_provenance(self)
         derived = derive_calculation_revision_id_from_revision(self)
         _validate_revision_identity(self, derived)
         _validate_annual_summary_handoff_target(self)
         _validate_replay_channels(self)
+        _validate_operator_layer(self)
         _validate_row_materialization(self)
         _validate_observation_projection(self)
         _validate_lifecycle_order(self)
@@ -1013,21 +1107,27 @@ class CalculationRevision(BaseModel):
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowBindingKey, RowSourceIdentity]).validate_python(value)
         elif isinstance(value, (list, tuple)):
-            typed = {}
-            for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value):
-                key = (raw.get("binding_id"), raw.get("row_index"))
-                identity = RowSourceIdentity.model_validate(
-                    {
-                        "source_kind": raw.get("source_kind"),
-                        "source_row_identity": raw.get("source_row_identity"),
-                        "fingerprint": raw.get("fingerprint"),
-                        "row_set_grouping": raw.get("row_set_grouping"),
-                    },
-                )
-                parsed_key = TypeAdapter(tuple[BindingId, int]).validate_python(key)
-                if parsed_key in typed:
-                    raise ModeloValidationError("row source identities contain a duplicate coordinate")
-                typed[parsed_key] = identity
+            typed = index_unique_row_coordinates(
+                (
+                    (
+                        TypeAdapter(tuple[BindingId, int]).validate_python(
+                            (raw.get("binding_id"), raw.get("row_index"))
+                        ),
+                        RowSourceIdentity.model_validate(
+                            {
+                                "source_kind": raw.get("source_kind"),
+                                "source_row_identity": raw.get("source_row_identity"),
+                                "fingerprint": raw.get("fingerprint"),
+                                "row_set_grouping": raw.get("row_set_grouping"),
+                            },
+                        ),
+                    )
+                    for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value)
+                ),
+                duplicate=lambda _coordinate: ModeloValidationError(
+                    "row source identities contain a duplicate coordinate"
+                ),
+            )
         else:
             raise ModeloValidationError("row source identities must be a coordinate mapping")
         if any(row_index < 1 for _binding_id, row_index in typed):
@@ -1049,12 +1149,20 @@ class CalculationRevision(BaseModel):
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowCasillaKey, Decimal]).validate_python(value)
         elif isinstance(value, list):
-            typed = {}
-            for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value):
-                key = TypeAdapter(tuple[CasillaId, int]).validate_python((raw.get("casilla_id"), raw.get("row_index")))
-                if key in typed:
-                    raise ModeloValidationError("row casilla values contain a duplicate coordinate")
-                typed[key] = TypeAdapter(Decimal).validate_python(raw.get("value"))
+            typed = index_unique_row_coordinates(
+                (
+                    (
+                        TypeAdapter(tuple[CasillaId, int]).validate_python(
+                            (raw.get("casilla_id"), raw.get("row_index"))
+                        ),
+                        TypeAdapter(Decimal).validate_python(raw.get("value")),
+                    )
+                    for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value)
+                ),
+                duplicate=lambda _coordinate: ModeloValidationError(
+                    "row casilla values contain a duplicate coordinate"
+                ),
+            )
         else:
             raise ModeloValidationError("row casilla values must be a coordinate mapping")
         if any(row_index < 1 for _casilla_id, row_index in typed):
@@ -1078,25 +1186,39 @@ class CalculationRevision(BaseModel):
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowCasillaKey, DirectRowMaterializationProvenance]).validate_python(value)
         elif isinstance(value, list):
-            typed = {}
-            for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value):
-                key = TypeAdapter(tuple[CasillaId, int]).validate_python((raw.get("casilla_id"), raw.get("row_index")))
-                if key in typed:
-                    raise ModeloValidationError("row casilla provenance contains a duplicate coordinate")
-                typed[key] = DirectRowMaterializationProvenance.model_validate(
-                    {
-                        "source_binding_id": raw.get("source_binding_id"),
-                        "source_row_index": raw.get("source_row_index"),
-                        "source_identity": raw.get("source_identity"),
-                        "materialization_rule_id": raw.get("materialization_rule_id"),
-                        "materialization_rule_version": raw.get("materialization_rule_version"),
-                    }
-                )
+            typed = index_unique_row_coordinates(
+                (
+                    (
+                        TypeAdapter(tuple[CasillaId, int]).validate_python(
+                            (raw.get("casilla_id"), raw.get("row_index"))
+                        ),
+                        DirectRowMaterializationProvenance.model_validate(
+                            {
+                                "source_binding_id": raw.get("source_binding_id"),
+                                "source_row_index": raw.get("source_row_index"),
+                                "source_identity": raw.get("source_identity"),
+                                "materialization_rule_id": raw.get("materialization_rule_id"),
+                                "materialization_rule_version": raw.get("materialization_rule_version"),
+                            }
+                        ),
+                    )
+                    for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value)
+                ),
+                duplicate=lambda _coordinate: ModeloValidationError(
+                    "row casilla provenance contains a duplicate coordinate"
+                ),
+            )
         else:
             raise ModeloValidationError("row casilla provenance must be a coordinate mapping")
         if any(row_index < 1 for _casilla_id, row_index in typed):
             raise ModeloValidationError("row casilla provenance contains a non-positive row index")
         return dict(sorted(typed.items()))
+
+    @field_validator("closed_record_row_sets")
+    @classmethod
+    @pydantic_validation_boundary
+    def _canonical_closed_record_rows(cls, value: tuple[ClosedRecordRowSet, ...]) -> tuple[ClosedRecordRowSet, ...]:
+        return tuple(sorted(value, key=lambda row_set: row_set.record_id))
 
     @model_serializer(mode="wrap")
     def _redact_or_persist_row_materialization(
@@ -1108,8 +1230,11 @@ class CalculationRevision(BaseModel):
         if not isinstance(handled, dict):
             return handled
         payload = TypeAdapter(dict[str, object]).validate_python(handled)
+        if self.rendering_snapshot is None:
+            payload.pop("rendering_snapshot", None)
         context = _string_keyed_context(getattr(info, "context", None))
         if context is None or context.get("secure_calculation_revision") is not True:
+            payload.pop("closed_record_row_sets", None)
             payload.pop("row_source_identities", None)
             payload.pop("row_casilla_values", None)
             payload.pop("row_casilla_provenance", None)
@@ -1135,6 +1260,7 @@ def calculation_revision_identity_inputs_from_revision(
         binding_overrides=revision.binding_overrides,
         row_binding_values=revision.row_binding_values,
         row_source_identities=revision.row_source_identities,
+        closed_record_row_sets=revision.closed_record_row_sets,
         row_casilla_values=revision.row_casilla_values,
         row_casilla_provenance=revision.row_casilla_provenance,
         relation_overrides=revision.relation_overrides,
@@ -1151,6 +1277,8 @@ def calculation_revision_identity_inputs_from_revision(
         m303_regimen_simplificado_annual_summary_handoff=(revision.m303_regimen_simplificado_annual_summary_handoff),
         amendment_identity=revision.amendment_identity,
         cleared_casilla_ids=revision.cleared_casilla_ids,
+        operator_layer=revision.operator_layer,
+        rendering_snapshot=revision.rendering_snapshot,
     )
 
 
@@ -1266,6 +1394,7 @@ def assert_revision_snapshot_evidence_coverage(revision: CalculationRevision) ->
 
 
 __all__ = [
+    "PERSISTED_BOOLEAN_BINDING_TOKENS",
     "CalculationRevision",
     "CalculationRevisionAmendmentIdentity",
     "CalculationRevisionAmendmentKind",
@@ -1280,4 +1409,5 @@ __all__ = [
     "calculation_revision_identity_inputs_from_revision",
     "derive_calculation_revision_id",
     "derive_calculation_revision_id_from_revision",
+    "persisted_boolean_binding_value",
 ]

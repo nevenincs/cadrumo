@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#ledger-evidence-enforcement'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:7ed0018d886f7a7027a76b472b143a6b9b9cc35a4db71d4d6788fa0ff408d1ee'
+modified: '2026-10-03'
+body_hash: 'sha256:453dd2be7f0ec8b7586beb2897a88d81022b52e7eadc2f4dd1c7ed5dcd7cbadc'
 related: []
 ---
 
@@ -31,8 +31,8 @@ modelo export evidence-bundle surface (the C-cluster siblings own those).
 `ManualLedgerTransactionCommand` carries two evidence references:
 `purchase_invoice_evidence_id` (a single id) and `attachment_ids` (a tuple). The
 CLI `aeat app ledger add` exposes both as `--purchase-invoice-evidence-id` and
-repeatable `--attachment-id` options (`src/aeat/entrypoints/cli/_ledger.py`).
-`create_manual_transaction` (`src/aeat/application/ledger/_actions_manual.py`)
+repeatable `--attachment-id` options .
+`create_manual_transaction`
 calls `_verify_evidence_references` before persisting, which confirms the
 purchase-invoice evidence record exists, belongs to the same bucket, and is in
 the expected lifecycle state, and that every attachment id resolves in the
@@ -53,7 +53,7 @@ contract point).
 ### Byte storage is already encrypted and bucket-scoped
 
 The `AttachmentStore` adapter
-(`src/aeat/adapters/persistence/storage/attachment.py`) routes every byte write
+ routes every byte write
 — `put_file`, `put_bytes`, `write_manifest` — through `SecureObjectRepository`
 bound to the active bucket via `secure_object_repository_for_active_bucket()`.
 Blobs land in `ATTACHMENT_BLOB_NAMESPACE`; manifests in
@@ -66,7 +66,7 @@ tolerantly.
 Purchase-invoice evidence has its own encrypted store:
 `PurchaseInvoiceEvidenceRepository` (a `SecureBoundRepository`) over
 `LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE`
-(`src/aeat/application/ledger/_evidence.py`). `PurchaseInvoiceEvidenceService.add`
+. `PurchaseInvoiceEvidenceService.add`
 SHA-256-hashes the source file and persists a bucket-local encrypted catalogue;
 input is restricted to PDF and image media kinds, and a non-PDF/non-image source
 is refused with a typed `PurchaseInvoiceEvidenceInputError`. So both evidence
@@ -75,12 +75,12 @@ the secure-storage invariant for *file* inputs.
 
 ### The single byte-custody leak: `add_link_attachment`
 
-`add_link_attachment` (`src/aeat/domain/attachments/_service.py`) is the one path
+`add_link_attachment`  is the one path
 that violates the campaign invariant. Given a Gmail / Drive / URL reference it
 stores the *reference text* as the payload (`mime_type = "text/uri-list"`,
 `put_bytes(source_reference.encode(...))`) and never fetches the remote document.
 The CLI verb `aeat app ledger doclink`
-(`src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`) is its sole caller: it maps
+ is its sole caller: it maps
 the `--source` (`DocumentLinkSource`: gmail / google_drive / url) to an
 `AttachmentKind`, calls `add_link_attachment`, then links the resulting
 attachment id to the transaction via `attach_manual_transaction_evidence`.
@@ -97,7 +97,7 @@ link.
 
 Crucially, the fetch-and-refuse machinery the locked decision needs is *already
 implemented*: `resolve_document_link`
-(`src/aeat/adapters/outbound/google/_document_link_resolver.py`) takes an
+ takes an
 `AttachmentSource` + reference + Google OAuth credentials and returns the fetched
 bytes. Its posture is exactly the one the campaign wants:
 
@@ -119,7 +119,7 @@ actionable message rather than fall back to storing a link.
 
 ### No evidence-presence advisory exists on the verify path
 
-`verify_modelo_revision` (`src/aeat/application/modelo/_verification_actions.py`)
+`verify_modelo_revision`
 already aggregates findings from registry, clean-state, provenance, and workflow
 gates, and the calculate path already surfaces non-blocking
 `CalculationSourceDiagnostic` advisories (the unconsumed-declarable-IVA advisory

@@ -3,16 +3,19 @@ tags:
   - '#audit'
   - '#corpus-evidence-integrity'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:5feef9fdf7cebdfbcddd5d5d9f1ee00a5d2c555e2c40a1a047e7701b284ffb63'
+body_hash: 'sha256:72f9626a7cc9169b1a16dee9955fce2c9e495030288692968a3dbbbe5796cf05'
 related: []
 ---
 
 # `corpus-evidence-integrity` audit: `Five corpus files mix BOE text with an editorial gloss; no citation currently relies on it`
 
-## Finding
+## Scope
 
+Assess whether editorial gloss in corpus entries adds unsupported meaning or influences any live citation or calculation.
+
+## Findings
 Five of the 476 bundled normative corpus files carry an **appended editorial
 gloss** — authored commentary sitting in the same file as the BOE text, closing
 with a `Fuente:` attribution. The `required_text` evidence gate cannot distinguish
@@ -22,6 +25,18 @@ law.
 **No current citation relies on the gloss.** All 18 `required_text` phrases across
 those five entries resolve to BOE text. The hazard is latent, and this audit
 records it before it is load-bearing rather than after.
+
+## Recommendations
+The cheap option is to mark the gloss so it can be excluded — a wrapper element,
+or moving the commentary into the legal entry's `notes` where it belongs and
+leaving the corpus file as pure BOE text. The latter is more faithful: a file
+under `corpus/normatives/` should contain the normative text and nothing else, and
+the commentary is genuinely useful where a reader of the catalogue entry will find
+it.
+
+Either way the gate could then assert that every `required_text` resolves against
+normative text only. Note that five files is small enough to fix by hand and large
+enough that the next one will be added without noticing.
 
 ## The files, and what the gloss adds
 
@@ -74,19 +89,6 @@ future authorship, and it is asymmetric in an unhelpful way: a gloss-derived
 `required_text` would *pass*, so nothing would ever surface it. Unlike a missing
 phrase, which the gate refuses loudly, a phrase matching commentary is
 indistinguishable from a phrase matching law.
-
-## Remediation — owner's decision, not taken here
-
-The cheap option is to mark the gloss so it can be excluded — a wrapper element,
-or moving the commentary into the legal entry's `notes` where it belongs and
-leaving the corpus file as pure BOE text. The latter is more faithful: a file
-under `corpus/normatives/` should contain the normative text and nothing else, and
-the commentary is genuinely useful where a reader of the catalogue entry will find
-it.
-
-Either way the gate could then assert that every `required_text` resolves against
-normative text only. Note that five files is small enough to fix by hand and large
-enough that the next one will be added without noticing.
 
 ## Method note: ABSENT is a free correctness oracle
 

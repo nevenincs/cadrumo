@@ -116,7 +116,6 @@ def test_search_page_renders_the_tier_ladder(tmp_path: Path) -> None:
     out = tmp_path / "site"
     out.mkdir()
     build = _build_search_site(out)
-    (build / "pagefind.yml").write_bytes((_DOCS / "pagefind.yml").read_bytes())
 
     materialised = _approved_concept_records()
 

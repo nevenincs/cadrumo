@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#import-centralization'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:e6a52835e70282bb60426f38bb045a25bec035db46bc6799e320993a75eb7768'
-related:
-  - "[[2026-07-01-import-centralization-plan]]"
+related: []
 ---
 # `import-centralization` audit: `S403 import-integrity closure review`
 

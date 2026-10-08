@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:1254b6341e5e078f4c2d93eea8b485188e8806404e7622773611076055607ed0'
+body_hash: 'sha256:c6215222fbf036e351d91466e5a21b078318e6c38ae130de09970c63190ebd60'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
-  - '[[2026-08-03-canonical-storage-management-plan]]'
   - '[[2026-08-03-canonical-storage-management-closure-statement-reference]]'
   - '[[2026-08-03-canonical-storage-management-honesty-review-audit]]'
   - '[[2026-08-04-canonical-storage-management-declared-location-sql-persistence-audit]]'
@@ -126,7 +125,7 @@ retyped inside `grammar=`. The fifteen remaining have no `segment=` field at all
 so there was no second spelling to collapse. Complete as scoped.
 
 **The residual is real and is a different duplication.** Those fifteen — the
-blob, run-trace, `llm-usage`, `llm-run-telemetry` and `tokens` fan-out shapes —
+blob, run-trace, `llm-usage` and `tokens` fan-out shapes —
 still hand-type a directory segment that a `StorageCategory` declares. That
 duplication is **across modules** (taxonomy against definitions), not within one,
 and the directory-agreement gate **pins it rather than eliminating it**. It is
@@ -173,7 +172,7 @@ duplicate safe, it does not make it one declaration.
 the taxonomy and its three resolution entry points; the seven gates including
 the directory-agreement and grammar-vocabulary pair; the liveness gate's
 namespace qualification, now closed at both instance and class level with a null
-re-run; the storage-management service; `dev/write_site_census.py` with its
+re-run; the storage-management service; the retired module with its
 selector corrections pinned in both directions; 113 of 114 plan Steps; the
 `BUCKET_DATABASE_FILE` prefix derivation; the `atexit` cleanup ordering, verified
 at delta 0.
@@ -241,7 +240,7 @@ more work than the evidence supports. It is not a defect — the provenance gate
 governs path *composition*, not which door a consumer opens — but it is an
 unmeasured assumption sitting under a closure claim.
 
-**The census tool's own coverage.** `dev/write_site_census.py` is now cited by the
+**The census tool's own coverage.** the retired module was now cited by the
 closure statement as the criterion's instrument, and `_trace()` bottoms out at
 `self` or a caller parameter for **43 of 98** production sites. That 44%
 unresolved floor is a property of the instrument the closure rests on, and it is

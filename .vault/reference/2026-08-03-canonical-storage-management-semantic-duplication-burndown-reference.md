@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:58f8629de0cca38c8f243bbe34a4d669e1f05253446cd3702cbf43d22a166b60'
+body_hash: 'sha256:f4f0abcf4e17a9bcd1fe72b8c7a9f5a788a510d250c8d03d2bdefd79c9cfa5f9'
 related:
   - "[[2026-08-03-canonical-storage-management-adr]]"
 ---
@@ -59,10 +59,7 @@ spanned roughly 28 files. The isolation axis has not landed and is not counted
 after confirming that directory is not nested under `buckets/` or a bucket's
 `db/`.
 
-*Canonical:* `keystore_path` and `validate_keystore_separation`, both in
-`src/cadrumo/adapters/persistence/storage/bucket/_keystore_paths.py:29`. The
-primitives are already correct and already reused — the duplication is the
-two-line validate-then-join **call sequence** wrapping them, not the path math.
+The primitives are already correct and already reused — the duplication is the two-line validate-then-join **call sequence** wrapping them, not the path math.
 
 *Members:* `master_key/_persisted_session.py:527` (`profile_session_path`),
 `master_key/_master_key_bucket_dek.py:27` (`bucket_dek_path`),
@@ -158,16 +155,16 @@ example of successful convergence.
 
 *Canonical:* `adapters/outbound/llm/_retention.py:27`
 (`select_retention_removal_keys`), a pure rank-and-bound function. Members:
-`_cache.py:237`, `_usage.py:183`, `_run_telemetry.py:258`. **No burndown
+`_cache.py:237`, `_usage.py:183`. **No burndown
 target.**
 
-Worth preserving as a signal: these three **cross-cite each other's docstrings**.
+Worth preserving as a signal: these two **cross-cite each other's docstrings**.
 That is what a converged cluster looks like, and it is the direct contrast with
-L3, whose four members reference nothing.
+L3, whose three members reference nothing.
 
-### L3 — Raw-filesystem retention eviction: four implementations, no shared helper
+### L3 — Raw-filesystem retention eviction: three implementations, no shared helper
 
-The real duplication find of the lifecycle axis. Four independent hand-rolled
+The real duplication find of the lifecycle axis. Three independent hand-rolled
 implementations of enumerate, rank by mtime, apply a bound, remove the excess,
 swallow `OSError`, log:
 
@@ -175,13 +172,12 @@ swallow `OSError`, log:
 |---|---|---|---|---|
 | `core/observability/_store.py:501` | directories | age then total-size (AND) | `rmtree` | oldest first; newest never size-pruned |
 | `adapters/outbound/aeat/sede/_iva_compensation_wallet.py:803` | files | age only | `unlink` | none |
-| `entrypoints/mcp/_telemetry.py:132` | `*.jsonl` files | age OR count | `unlink` | newest first by (mtime, name) |
 | `domain/calculations/registry/_compiled_cache.py:319` | glob-matched files | count only | `unlink` | newest first by mtime_ns |
 
-*Verdict:* **CONVERGE-eligible**, four sites. The differences — entity type,
+*Verdict:* **CONVERGE-eligible**, three sites. The differences — entity type,
 bound composition, tie-break — are composable parameters of one primitive, not
 hard semantic incompatibilities. Nobody appears to have searched for "prune
-files by age" before writing any of the later three.
+files by age" before writing any of the later two.
 
 *Target:* one pure helper mirroring L2's shape —
 `select_filesystem_retention_survivors(entries, *, timestamp, cutoff, max_count,
@@ -353,7 +349,6 @@ Recorded so a future pass does not re-litigate them:
   vault-corpus review measured 46 entries and 15 files at the SHA it checked,
   and a later burndown wave has since added more. Any number written here would
   be stale before this document's next read. The authority is `len(STORAGE_TAXONOMY)`
-  in `src/cadrumo/core/_storage_taxonomy.py`, plus the file-kind count from
   iterating each member's `node_kind`; recompute against a pinned HEAD rather
   than trusting a number in this or any other prose document.
 
@@ -389,10 +384,9 @@ default against its declared subpath, with a positive control so a change
 making the defaults non-path cannot empty the comparison and leave it green.
 Mutation-proved by re-drifting one default and confirming the gate reds.
 
-*Note for the P3 cluster:* the MCP session-telemetry echo was carried by plan
-step `W02.P05.S43` rather than by this document's cluster list, and the
-diagnostic-log join by `W02.P05.S54`. A reader treating the cluster list as the
-complete duplication inventory would miss both; the plan is the wider record.
+*Note for the P3 cluster:* the diagnostic-log join was carried by plan
+step `W02.P05.S54` rather than by this document's cluster list. A reader treating the cluster list as the
+complete duplication inventory would miss it; the plan is the wider record.
 
 ### Cross-cutting lesson: removing dependence is not preventing the artefact
 

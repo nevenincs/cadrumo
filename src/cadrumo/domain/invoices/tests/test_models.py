@@ -253,6 +253,39 @@ def test_invoice_accepts_oss_axes_and_destination_rate_line() -> None:
     assert invoice.iva_total == Decimal("19")
 
 
+def test_invoice_refuses_explicit_oss_axes_for_northern_ireland_goods_destination() -> None:
+    """Published OSS axes cannot turn an XI goods destination into an EU OSS destination."""
+    line = InvoiceLine(
+        description="XI goods destination with unsupported OSS projection",
+        quantity=Decimal("1"),
+        unit_price=Decimal("100"),
+        subtotal=Decimal("100"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
+        oss_rate_kind=IvaRateKind("general"),
+        iva_amount=Decimal("19"),
+    )
+
+    with pytest.raises(ValidationError, match="OSS/IOSS invoice projection requires an EU destination member state"):
+        Invoice.model_validate(
+            {
+                "kind": InvoiceKind.ISSUED,
+                "invoice_number": "OSS-XI-GOODS-001",
+                "issued_at": date(2026, 4, 1),
+                "counterparty_name": "Northern Ireland customer",
+                "counterparty_tax_id": "XI123456789",
+                "counterparty_country": "XI",
+                "base_total": Decimal("100"),
+                "iva_total": Decimal("19"),
+                "grand_total": Decimal("119"),
+                "currency": "EUR",
+                "lines": (line,),
+                "payment_status": PaymentStatus.PAID,
+                "oss_ioss_regime": OssIossRegime("union_scheme"),
+                "oss_transaction_kind": TransactionKind("oss_union_goods_distance_sale"),
+            },
+        )
+
+
 def test_invoice_rejects_incomplete_oss_axes() -> None:
     """OSS regime and transaction-kind axes must travel together."""
     with pytest.raises(ValidationError, match=r"oss_ioss_regime and oss_transaction_kind"):

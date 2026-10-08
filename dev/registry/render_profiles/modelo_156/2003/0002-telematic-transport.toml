@@ -1,0 +1,35 @@
+schema_version = 1
+fragment_id = "telematic-transport"
+width_17_rules = []
+singleton_rules = []
+
+[design_identity]
+modelo = "156"
+design_epoch = "2003"
+source_ref = "enrolled-modelo-156-layout"
+source_sha256 = "d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068"
+
+[[telematic_transport_choice_rules]]
+rule_kind = "telematic_transport_choice"
+selected_literal = "T"
+alternative_literals = ["C", "D"]
+selection_condition = "telematic_transmission"
+expected_source_content = "Se cumplimentará una de las siguientes claves: 'C': Si la información se presenta en cartucho magnético. 'D': Si la información se presenta en disquete. 'T': Transmisión telemática."
+
+[telematic_transport_choice_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 78
+ordinal = "6"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[telematic_transport_choice_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m156-2003-row-78-telematic-transport"
+decision_statement = "This generated export is transmitted telematically and therefore selects the source-listed T code."
+justification = "The exact enrolled source at row 78, position 58 lists C for magnetic cartridge, D for diskette, and T for telematic transmission."
+
+[telematic_transport_choice_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 78
+ordinal = "6"
+record_identity = "Tipo 1 - Registro De Declarante"

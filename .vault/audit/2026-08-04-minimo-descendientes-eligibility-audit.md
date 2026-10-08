@@ -3,19 +3,19 @@ tags:
   - '#audit'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9da14c0ebb30974636650cf6363016bb3cea693750e965ffb02df479e48d660e'
+body_hash: 'sha256:8f36e1124d2ef1673f1c89eb4740c1b518e17e6bb7c76602cebfabc8e46b510a'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
-  - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-research]]"
   - "[[2026-08-04-profile-derived-selectors-audit]]"
 ---
-
 # `minimo-descendientes-eligibility` audit: closing honesty review
 
-## Context
+## Scope
+
+### Context
 
 A fresh-context honesty review of the campaign, run before closure was declared, as the
 campaign-close honesty-review discipline requires. Performed read-only by an independent
@@ -175,7 +175,7 @@ about the assumption rather than hiding it, advertising a split between both.
 Carried to the follow-up as a note rather than implemented, on the same principle as the other
 residuals: a statute-widening change does not belong inside a closing campaign.
 
-## Verified clean
+### Verified clean
 
 The three claims flagged as most at risk before the review all hold.
 
@@ -241,7 +241,7 @@ Hungarian strings — the legal qualifiers, the two-part rule, the entitlement f
 choice mapping — not whether the phrasing reads naturally to a native speaker. That needs a
 speaker, not a probe, and is not claimed.
 
-## The live legal cross-check
+### The live legal cross-check
 
 The campaign's grounding record admitted no live source was consulted for the two threshold
 figures, relying on the bundled manual. The legal-grounding discipline is explicit that the
@@ -265,7 +265,7 @@ modelling would have silently destroyed. It was not modelled that way.
 An undeclared rentas figure excludes nothing, which is the fail-open direction; the advisory
 that fires in exactly that state is what keeps it visible rather than silent.
 
-### Second pass: the two deferred amounts, cross-checked before anyone authors a parameter
+#### Second pass: the two deferred amounts, cross-checked before anyone authors a parameter
 
 Run because the grounding discipline requires a live check for any numeric amount and the
 reviewer who sized these residuals has no network access. It declined to author a registry
@@ -306,7 +306,7 @@ None of these three is expressible today, and together they raise the norma 4ª 
 above the flat-amount framing it carried when it was sized — it is not one figure but an
 interaction with the supplement, the window and the autonomic table.
 
-## The defect this review's finding-class predicted
+### The defect this review's finding-class predicted
 
 Recorded because it is the campaign's most consequential find and it arrived through the
 review rather than through the implementation.
@@ -329,7 +329,7 @@ reading the assigned agent's own uncommitted fix in flight — a false all-clear
 the one party positioned to find the bug. It was found anyway, by writing the test instead of
 trusting the read.
 
-## Residuals carried forward
+### Residuals carried forward
 
 Unchanged from the ADR's own deferrals, and tracked in the consolidated open-work plan rather
 than here: the three unmodelled Art. 58/61 conditions, all of which under-grant and therefore
@@ -370,7 +370,7 @@ becomes the source, and note that it distinguishes registered from unregistered 
 hecho while the article does not — so both must count as partnered, or an unregistered couple
 over-grants.
 
-## One predicate, four divergent legal tests — the canonicalization the other fixes wait on
+### One predicate, four divergent legal tests — the canonicalization the other fixes wait on
 
 The single largest structural finding of the session, reached by three independent routes
 that each started somewhere else. `is_eligible_menor_tres` tests cohabitation and age under
@@ -425,7 +425,7 @@ guardería increment is governed by Art. 81.2, not Art. 81 bis. The implementing
 docstrings say *bis* and misdirected two separate passes into citing the wrong statute; the
 registry formula's own legal references were correct throughout.
 
-## The Art. 58.2 supplement: attempted, stopped at the boundary, and why that was right
+### The Art. 58.2 supplement: attempted, stopped at the boundary, and why that was right
 
 Added after the review, when acting on one of its own residuals surfaced a defect the
 residual list had not anticipated. Recorded in full because the reasons are non-obvious and
@@ -480,7 +480,7 @@ is not required, and a foster carer has no correct field for either today; and p
 predicates rather than one shared test. Whether Art. 81 bis carries its own adoption clause
 is unread — if it does, the count is four statutes rather than three.
 
-## Assessment
+### Assessment
 
 The review ran before closure was declared, which is the gate. Four items, none blocking, and
 the one that could not be left was the artefact contradiction — with a Step unticked and a

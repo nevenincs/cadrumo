@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#post-release-distribution'
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:96068563d59a6c2751a1f77b14c4aab56e5f8c3c6c353735601888c9129e5ba8'
+modified: '2026-10-03'
+body_hash: 'sha256:f64c8126e7f3941c1722ae6475cbc5018fc0e7cde3440c25827dcf10735a3055'
 related: []
 ---
 
@@ -134,7 +134,7 @@ Three plan rows name `CADRUMO_SCOOP_BUCKET_REPO` and `CADRUMO_MARKETPLACE_REPO`.
 The workflow now reads `CLAUDE_MARKETPLACE_REPO` and `CLAUDE_MARKETPLACE_TOKEN`
 (`.github/workflows/publish-release.yml:507-508`) and `HOMEBREW_TAP_REPO` /
 `HOMEBREW_TAP_TOKEN` (`:478-479`), and the Scoop pair no longer exists at all,
-with `dev/release/tests/test_publish_release_workflow.py:436` asserting its
+with the retired test asserting its
 absence.
 
 What is lost is that an operator following the plan would set variables nothing
@@ -195,7 +195,7 @@ three strings above to the negative assertions the previous finding requires.
 ### publish-is-not-atomic | medium | A multi-plugin cohort that refuses partway leaves the marketplace tree mutated and its index unmerged, and no test covers a cohort declaring more than one plugin
 
 `publish_cohort_plugins` validates and mutates in a single loop
-(`dev/packaging/marketplace_publish.py:108-117`), so a refusal on the Nth plugin
+, so a refusal on the Nth plugin
 occurs after plugins 1..N-1 have already been removed and replaced, while the
 index merge at `:119-126` never runs. Executed against a cohort declaring two
 plugins whose second has no tree, the first plugin's tree was replaced with the
@@ -203,7 +203,7 @@ cohort version and the index left unmerged, with the function refusing as
 designed — a torn state that is neither the old nor the new.
 
 Every test cohort declares exactly one plugin: the `_cohort` helper at
-`dev/packaging/tests/test_marketplace_publish.py:51` hardcodes a single entry
+The retired test hardcoded a single entry
 and no test constructs a multi-entry cohort. The scenario is therefore entirely
 uncovered.
 
@@ -224,7 +224,7 @@ idempotence claim in the docstring to name the refusal path.
 
 Ownership is keyed on plugin name alone. `merge_marketplace_index` retains only
 published entries whose name the cohort does not declare
-(`dev/packaging/marketplace_publish.py:87-89`), and the tree copy removes and
+, and the tree copy removes and
 replaces `plugins/<name>` regardless of which product published it (`:113-117`).
 A cohort declaring a name a sibling already owns therefore overwrites the
 sibling's tree and its index entry with no refusal and no warning — the exact
@@ -292,7 +292,7 @@ and is not a false positive.
 One wording caveat is worth recording. The retired behaviour was a shell command
 inside the publish workflow and the replacement is a Python function, so there is
 no seam at which the shipped test can be run against the old behaviour; the
-docstring at `dev/packaging/tests/test_marketplace_publish.py:9-12` asserts an
+docstring at the retired test asserted an
 executable counterfactual that requires an out-of-tree reconstruction to check.
 The suite itself is real: `8 passed in 4.44s` on a confirmed non-empty selection.
 
@@ -321,7 +321,7 @@ the mechanical gain is nil, keeping the transferability argument
 (`.vault/adr/2026-07-25-distribution-repo-topology-adr.md:105-112`). The sweep
 itself is clean: no product-prefixed distribution variable survives outside the
 vault documents, and the sole remaining occurrence is a negative assertion
-proving absence at `dev/release/tests/test_publish_release_workflow.py:436`.
+proving absence at the retired test.
 
 The vault half of the sweep is incomplete and is carried as its own finding
 above. Recorded here so the code-side sweep is not re-audited.

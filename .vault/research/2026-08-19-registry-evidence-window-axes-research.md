@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-evidence-window-axes'
 date: '2026-08-19'
-modified: '2026-08-19'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:8a972df20c015ef10ac87db8f7d2100c92710403c73ebb7621d6d12bd58f2f9b'
+body_hash: 'sha256:d1f76122aaae729063514c230549cc254f22ba3366dc10556b4d4f38f15b87c1'
 related: []
 ---
 # `registry-evidence-window-axes` research: `evidence windows are validated on the axis the citation defends`
@@ -20,8 +20,7 @@ fabricates grounding.
 
 ### A filing deadline lawfully falls outside the period it closes
 
-`_check_revision_scoped_source_windows` in
-`src/cadrumo/domain/calculations/registry/_snapshot.py` intersected every
+`_check_revision_scoped_source_windows`  intersected every
 revision-scoped `source_ref` with the revision's `[valid_from, valid_to]`. A
 fourth-quarter return is filed in the January of the following year, so the
 calendario stating its deadline is the following year's, and the check rejected
@@ -63,7 +62,7 @@ provision amends the La Palma deduction "durante los periodos impositivos 2022,
 2023, 2024 y 2025", enumerating the governed periods explicitly. It modifies
 `ley-35-2006:art-68.4`, which the same citing casilla also cites. The two citing
 rows are
-`src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/bindings/0002-bindings.toml:131`
+
 and the `cperc.provincia__cperc.situacion-familiar.toml:32` casilla.
 
 So `effective_from` / `effective_to` record when the norm entered force, and
@@ -76,7 +75,7 @@ and corrupt every other consumer of that field.
 
 ### The model has no field for governed periods
 
-`LegalReference` (`src/cadrumo/domain/calculations/registry/_schema_references.py:161`)
+`LegalReference`
 carries `published_at`, `effective_from`, `effective_to` and
 `consolidated_as_of`. None expresses retroactive reach; `consolidated_as_of` is
 a corpus-vintage marker, not a governed-period claim.
@@ -98,10 +97,10 @@ validation, which has its own window logic in
 
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/_snapshot.py` — `_check_revision_scoped_source_windows`, `_deadline_window_source_spans`, `_source_applies_across`
-- `src/cadrumo/domain/calculations/registry/_schema_references.py:161` — `LegalReference`
-- `src/cadrumo/domain/calculations/registry/_schema.py:572` — `DeadlineWindowDefinition`
-- `src/cadrumo/domain/calculations/registry/tests/test_source_applicability_window.py` — the three deadline-axis regressions
+- the former source file — `_check_revision_scoped_source_windows`, `_deadline_window_source_spans`, `_source_applies_across`
+- the former source file — `LegalReference`
+- the former source file — `DeadlineWindowDefinition`
+- the former source file — the three deadline-axis regressions
 - `src/cadrumo/_data/corpus/normatives/html/real-decreto-ley-13-2025-art-2.html` — the enumerated periodos impositivos 2022-2025
 - `src/cadrumo/_data/registry/aeat/legal/irpf.toml:1214` — the `real-decreto-ley-13-2025:art-2` catalogue entry
 - commit `ed96dc17d8` — the deadline-axis fix as landed

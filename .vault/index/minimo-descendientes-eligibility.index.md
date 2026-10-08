@@ -4,15 +4,13 @@ tags:
   - '#index'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:91f07f9868ffa4788de4a69693c1fb9a8719b907db4fe7d6b3aa69106dc33ad5'
+body_hash: 'sha256:67a9ccdbd569d0f89a888ea5d428740371bb480a623f08c41d72af7227e4e7ff'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-audit]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
-  - '[[2026-08-04-minimo-descendientes-eligibility-ledger]]'
-  - '[[2026-08-04-minimo-descendientes-eligibility-plan]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-research]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-vaultspec-plan-exec-feature-tag-bind-audit]]'
   - '[[2026-08-05-minimo-descendientes-eligibility-art-81-maternidad-connect-review-audit]]'
@@ -41,14 +39,6 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-05-minimo-descendientes-eligibility-art-81-maternidad-connect-review-audit` - `minimo-descendientes-eligibility` audit: `Art. 81.1 maternidad connect review: two confirmed over-grants`
 - `2026-08-05-minimo-descendientes-eligibility-semantic-overlap-census-audit` - `minimo-descendientes-eligibility` audit: `Semantic-overlap census: one confirmed duplicate, six cleared, and the drift source`
 - `2026-08-10-minimo-descendientes-eligibility-art-81-live-cross-check-audit` - `minimo-descendientes-eligibility` audit: `LIRPF art. 81 excerpt live cross-check`
-
-### exec
-
-- `2026-08-04-minimo-descendientes-eligibility-ledger` - `minimo-descendientes-eligibility` ledger
-
-### plan
-
-- `2026-08-04-minimo-descendientes-eligibility-plan` - `minimo-descendientes-eligibility` plan
 
 ### research
 

@@ -3,14 +3,45 @@ tags:
   - '#audit'
   - '#semantic-consolidation'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:96ba451e4ae1b163ceac769c1413c7429f67b8b3f57865ea70711967d0bf6b27'
+body_hash: 'sha256:faa32c04ab6fea503c7b6d3d3c9d08ac8514bca869bc523bf9b3f6646138e643'
 related: []
 ---
 
 # `semantic-consolidation` audit: `zero base imponible`
 
+## Scope
+
+Review whether a zero taxable base is legitimate at each affected site and reconcile the findings with the assets-model contract.
+
+## Findings
+`gross_amount` on a renta deductible-expense line is the weakest candidate for
+change: a zero-amount deductible expense carries no deduction and asserts a line
+that does nothing. `gt=0` there is defensible on meaning rather than on statute.
+
+`taxable_base` on a bien de inversión is the real question. A fully-annulled
+acquisition would not be an asset record at all, but a fully-discounted one
+plausibly is, and the model already tolerates the zero-IVA half of that state.
+
+## Recommendations
+The bounds were NOT changed. This is a regulated surface feeding renta
+deductible expenses and bien-de-inversión regularisation, and
+`no-silent-under-declaration` cuts both ways: a zero base admitted carelessly
+under-declares as surely as one wrongly refused blocks a legitimate filing.
+
+The ruling needed:
+
+1. Should `assets.taxable_base` admit zero, matching `iva_amount` on the same
+   record and art. 80? The internal contradiction should be resolved either way.
+2. Is `gross_amount > 0` on a renta expense line intended as a meaning
+   constraint rather than a tax one? If so it should say that, because it
+   currently reads as the same bound and invites exactly this collapse.
+
+Question 2 matters for the campaign specifically: the step's premise was to
+COLLAPSE these four onto one canonical bound. If two of them are the same rule
+and two are different rules that merely look alike, collapsing them would create
+the shared-name-different-meaning defect this campaign exists to remove.
 ## Provenance
 
 Agent-authored from the BUNDLED consolidated corpus
@@ -73,33 +104,3 @@ bounds on the same record disagree about whether zero is a real state.
 
 That is a defect regardless of how the tax question is ruled, and it is the part
 that does not need a tax reviewer.
-
-## Assessment, per site
-
-`gross_amount` on a renta deductible-expense line is the weakest candidate for
-change: a zero-amount deductible expense carries no deduction and asserts a line
-that does nothing. `gt=0` there is defensible on meaning rather than on statute.
-
-`taxable_base` on a bien de inversión is the real question. A fully-annulled
-acquisition would not be an asset record at all, but a fully-discounted one
-plausibly is, and the model already tolerates the zero-IVA half of that state.
-
-## What is needed
-
-The bounds were NOT changed. This is a regulated surface feeding renta
-deductible expenses and bien-de-inversión regularisation, and
-`no-silent-under-declaration` cuts both ways: a zero base admitted carelessly
-under-declares as surely as one wrongly refused blocks a legitimate filing.
-
-The ruling needed:
-
-1. Should `assets.taxable_base` admit zero, matching `iva_amount` on the same
-   record and art. 80? The internal contradiction should be resolved either way.
-2. Is `gross_amount > 0` on a renta expense line intended as a meaning
-   constraint rather than a tax one? If so it should say that, because it
-   currently reads as the same bound and invites exactly this collapse.
-
-Question 2 matters for the campaign specifically: the step's premise was to
-COLLAPSE these four onto one canonical bound. If two of them are the same rule
-and two are different rules that merely look alike, collapsing them would create
-the shared-name-different-meaning defect this campaign exists to remove.

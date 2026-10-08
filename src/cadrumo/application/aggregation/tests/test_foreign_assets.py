@@ -16,12 +16,35 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 )
 
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, ForeignAssetClass
-from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
+from ....core.foreign_asset_obligation import (
+    MODELO_720_FOREIGN_ASSET_CLASS_CODES,
+    ForeignAssetObligationGroup,
+    M720AssetClassCode,
+)
 from ....core.identity.transaction_ids import TransactionId
 from ....core.period import Period
-from ....domain.calculations.registry.detail_record_bindings import resolve_foreign_asset_binding_row_values
+from ....domain.calculations.registry.binding_targets import BindingConsumerKind, binding_consumers
+from ....domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
+from ....domain.currency.models import EurRateLookup
+from ....domain.currency.service import ExchangeRateProvider
+from ....domain.currency.tests.fx_lookup import eur_rate_lookup
+from ....domain.foreign_assets.record_join import ForeignAssetRecordJoinRefusedError, M720RecordJoinRefusalReason
+from ....domain.foreign_assets.register import (
+    ForeignAssetDeclarationEntry,
+    ForeignAssetRegister,
+    ForeignAssetRegisterEntry,
+    M720AssetIdentifier,
+    M720DeclarantCondition,
+    M720IdentifierScheme,
+)
+from ....domain.foreign_assets.valuation import (
+    ForeignAssetValuationRefusedError,
+    M720ValuationEvent,
+    M720ValuationRefusalReason,
+)
 from ...foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from ..foreign_assets import (
     ForeignAssetClassRollup,
@@ -29,7 +52,6 @@ from ..foreign_assets import (
     ForeignAssetsAggregation,
     ForeignAssetsAggregationSourceResolver,
     _registry_observation_from_foreign_asset,
-    _registry_observations_from_foreign_assets_aggregation,
     aggregate_foreign_assets_720,
     declarable_asset_classes_720,
 )
@@ -48,6 +70,10 @@ _M720_LEGAL_REFS = (
 )
 _M720_SOURCE_REFS = ("aeat-dr-720", "aeat-modelo-720-procedure")
 _M720_ROW_BINDINGS = (
+    ("modelo-720-asset-row-asset-ref", "asset_ref"),
+    ("modelo-720-asset-row-valuation-event", "valuation_event"),
+    ("modelo-720-asset-row-valuation-event-date", "valuation_event_date"),
+    ("modelo-720-asset-row-declarant-condition", "declarant_condition"),
     ("modelo-720-asset-row-class", "asset_class_code"),
     ("modelo-720-asset-row-country", "country_code"),
     ("modelo-720-asset-row-currency", "currency_code"),
@@ -121,6 +147,24 @@ def ledger_identity(label: str) -> str:
     return hashlib.sha256(label.encode("utf-8")).hexdigest()
 
 
+def asset_ref(label: str) -> str:
+    """Return a stable register identity for a readable asset label."""
+    return "m720a_" + hashlib.sha256(label.encode("utf-8")).hexdigest()[:32]
+
+
+# 2025-12-31 and 2025-06-13 are ECB publication days; the stub answers only them.
+_USD_RATE = Decimal("0.85")
+_RATE_SOURCE = "test-reference"
+
+
+class _UsdRates:
+    rate_source_id = _RATE_SOURCE
+
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        published = currency == "USD" and rate_date in {date(2025, 12, 31), date(2025, 6, 13)}
+        return eur_rate_lookup(_USD_RATE if published else None, rate_date=rate_date, source=_RATE_SOURCE)
+
+
 def _obs(
     *,
     asset_class: ForeignAssetClass,
@@ -131,6 +175,7 @@ def _obs(
     source_id: str = "tx-001",
     held: bool = True,
     acquisition: str = "2023-01-15",
+    currency: str = "EUR",
 ) -> ForeignAssetIngestObservation:
     # source_kind is deliberately BindingSourceKind | str: TestObservationContract
     # exercises both a raw-string coercion (kind.value) and a genuinely-invalid raw
@@ -140,13 +185,89 @@ def _obs(
         {
             "source_kind": source_kind,
             "source_object_id": ledger_identity(source_id) if _is_ledger(source_kind) else source_id,
+            "asset_ref": asset_ref(asset_external_id),
             "asset_class": asset_class,
             "asset_external_id": asset_external_id,
             "country": country,
-            "valuation_eur": Decimal(valuation),
+            "valuation_amount": Decimal(valuation),
+            "currency_code": currency,
+            "valuation_event": M720ValuationEvent.YEAR_END if held else M720ValuationEvent.EXTINCTION,
+            "valuation_event_date": None if held else "2025-06-13",
             "acquisition_date": acquisition,
-            "held_at_year_end": held,
         },
+    )
+
+
+def _context(revision: ModeloRevision | None = None) -> CalculationSourceContext:
+    return CalculationSourceContext(
+        bucket_id="operator",
+        modelo="720",
+        filing_year=2025,
+        period=_P_2025_ANNUAL,
+        revision=revision or _m720_revision(),
+    )
+
+
+def _registered(
+    lot: ForeignAssetIngestObservation | Modelo720RowObservation,
+) -> ForeignAssetRegisterEntry:
+    """Register the asset a lot names, with the official identifier the lot carries."""
+    if isinstance(lot, ForeignAssetIngestObservation):
+        code = MODELO_720_FOREIGN_ASSET_CLASS_CODES[lot.asset_class]
+        country, identifier = lot.country, lot.asset_external_id
+        ceased_on = date.fromisoformat(lot.valuation_event_date) if lot.valuation_event_date else None
+    else:
+        code, country, identifier = lot.asset_class_code, lot.country_code, lot.asset_identifier
+        ceased_on = lot.valuation_event_date
+    if code is M720AssetClassCode.CUENTA:
+        scheme = M720IdentifierScheme.ACCOUNT_CODE
+    elif code in {M720AssetClassCode.VALOR, M720AssetClassCode.INSTITUCION_INVERSION_COLECTIVA}:
+        scheme = M720IdentifierScheme.NO_ISIN_ISSUER_COUNTRY
+    else:
+        scheme, identifier = M720IdentifierScheme.NONE, ""
+    return ForeignAssetRegisterEntry(
+        asset_ref=lot.asset_ref,
+        asset_class=code,
+        subclave=None if code is M720AssetClassCode.INSTITUCION_INVERSION_COLECTIVA else 1,
+        country_code=country,
+        identifier=M720AssetIdentifier(scheme=scheme, value=identifier),
+        description="synthetic asset",
+        held_since=date(2015, 1, 1),
+        ceased_on=ceased_on,
+    )
+
+
+def _declared(asset_ref: str, condition: M720DeclarantCondition = M720DeclarantCondition.TITULAR, pct: str = "100.00"):
+    return ForeignAssetDeclarationEntry(asset_ref=asset_ref, condition=condition, participation_pct=Decimal(pct))
+
+
+def _register_for(*lots: ForeignAssetIngestObservation | Modelo720RowObservation) -> ForeignAssetRegister:
+    # A lot of a class Modelo 720 does not declare is refused before any join.
+    assets = {
+        lot.asset_ref: _registered(lot)
+        for lot in lots
+        if not isinstance(lot, ForeignAssetIngestObservation) or lot.asset_class in MODELO_720_FOREIGN_ASSET_CLASS_CODES
+    }
+    return ForeignAssetRegister(
+        assets=tuple(assets.values()),
+        declarations=tuple(_declared(asset_ref) for asset_ref in assets),
+    )
+
+
+def _resolver(
+    *,
+    observations: tuple[ForeignAssetIngestObservation, ...] = (),
+    row_observations: tuple[Modelo720RowObservation, ...] = (),
+    rate_provider: ExchangeRateProvider | None = None,
+    register: ForeignAssetRegister | None = None,
+) -> ForeignAssetsAggregationSourceResolver:
+    """The resolver over these lots, with every asset registered and declared unless told otherwise."""
+    resolved_register = register if register is not None else _register_for(*observations, *row_observations)
+    return ForeignAssetsAggregationSourceResolver(
+        observations=observations,
+        row_observations=row_observations,
+        rate_provider=rate_provider,
+        register_loader=lambda: resolved_register,
     )
 
 
@@ -240,7 +361,7 @@ class TestAggregateBasic:
 
     def test_rollups_sort_by_asset_class_value(self) -> None:
         observations = (
-            _obs(asset_class=ForeignAssetClass.VIRTUAL_CURRENCY, valuation="1000", asset_external_id="V1"),
+            _obs(asset_class=ForeignAssetClass.REAL_ESTATE, valuation="1000", asset_external_id="R1"),
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="2000", asset_external_id="A1"),
             _obs(asset_class=ForeignAssetClass.SECURITY, valuation="3000", asset_external_id="S1"),
         )
@@ -368,7 +489,7 @@ class TestForeignAssetSourceResolver:
             _obs(
                 asset_class=ForeignAssetClass.SECURITY,
                 valuation="1000.00",
-                asset_external_id="LI-SECURITY-001",
+                asset_external_id="ZLI",
                 country="LI",
                 source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
                 source_id="small-security",
@@ -376,7 +497,7 @@ class TestForeignAssetSourceResolver:
         )
         revision = _m720_revision()
 
-        resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(
+        resolution = _resolver(observations=observations).resolve(
             CalculationSourceContext(
                 bucket_id="operator",
                 modelo="720",
@@ -389,17 +510,25 @@ class TestForeignAssetSourceResolver:
         assert resolution.owned_sources == (BindingSourceKind.FOREIGN_ASSET,)
         assert resolution.binding_values == {}
         assert resolution.source_transaction_ids == (ledger_identity("tx-account-ad"),)
-        # M720 is deliberately grounding-blocked: the resolver emits NO
-        # provenance because no upstream carrier id can truthfully stand in for
-        # an authoritative persisted identity of the resolved asset. The
-        # contributing sources stay visible through source_transaction_ids.
+        # Ledger-side rows carry no primary provenance until the register join
+        # grounds it; the contributing sources stay visible through
+        # source_transaction_ids.
         assert resolution.provenance == ()
 
-        aggregation = aggregate_foreign_assets_720(observations, period=period)
-        row_observations = _registry_observations_from_foreign_assets_aggregation(aggregation, observations)
-        row_values = resolve_foreign_asset_binding_row_values(revision, row_observations)
+        row_values = dict(resolution.row_binding_values)
 
-        assert len(row_observations) == 2
+        application_consumers = binding_consumers(revision)
+        assert {binding_id for binding_id, _ in row_values} == {
+            binding.id
+            for binding in revision.bindings
+            if any(ref.kind is BindingConsumerKind.APPLICATION_ROW_VALUE for ref in application_consumers[binding.id])
+        }
+
+        assert {index for _, index in row_values} == {1, 2}
+        assert row_values[("modelo-720-asset-row-asset-ref", 1)] == asset_ref("AD-ACCOUNT-001")
+        assert row_values[("modelo-720-asset-row-valuation-event", 1)] == "year_end"
+        assert row_values[("modelo-720-asset-row-valuation-event-date", 1)] == ""
+        assert row_values[("modelo-720-asset-row-currency", 1)] == "EUR"
         assert row_values[("modelo-720-asset-row-class", 1)] == "C"
         assert row_values[("modelo-720-asset-row-country", 1)] == "AD"
         assert row_values[("modelo-720-asset-row-identifier", 1)] == "AD-ACCOUNT-001"
@@ -410,7 +539,6 @@ class TestForeignAssetSourceResolver:
         assert row_values[("modelo-720-asset-row-identifier", 2)] == "CH-ACCOUNT-002"
         assert row_values[("modelo-720-asset-row-acquisition-date", 2)] == "2021-02-20"
         assert row_values[("modelo-720-asset-row-valuation", 2)] == Decimal("15000.00")
-        assert dict(resolution.row_binding_values) == row_values
 
     def test_row_projection_uses_official_iic_and_real_estate_codes(self) -> None:
         period = Period.from_year_and_code(2025, "0A")
@@ -418,7 +546,7 @@ class TestForeignAssetSourceResolver:
             _obs(
                 asset_class=ForeignAssetClass.COLLECTIVE_INVESTMENT,
                 valuation="60000.00",
-                asset_external_id="LI-IIC-001",
+                asset_external_id="ZLI",
                 country="LI",
                 source_id="tx-iic-li",
             ),
@@ -430,18 +558,23 @@ class TestForeignAssetSourceResolver:
                 source_id="tx-real-ad",
             ),
         )
-        aggregation = aggregate_foreign_assets_720(observations, period=period)
-        row_observations = _registry_observations_from_foreign_assets_aggregation(aggregation, observations)
+        resolution = _resolver(observations=observations).resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="720",
+                filing_year=2025,
+                period=period,
+                revision=_m720_revision(),
+            ),
+        )
+        row_values = dict(resolution.row_binding_values)
 
-        row_values = resolve_foreign_asset_binding_row_values(_m720_revision(), row_observations)
-
-        assert {observation.asset_class_code for observation in row_observations} == {"I", "B"}
         assert row_values[("modelo-720-asset-row-class", 1)] == "B"
         assert row_values[("modelo-720-asset-row-country", 1)] == "AD"
         assert row_values[("modelo-720-asset-row-identifier", 1)] == "AD-REAL-001"
         assert row_values[("modelo-720-asset-row-class", 2)] == "I"
         assert row_values[("modelo-720-asset-row-country", 2)] == "LI"
-        assert row_values[("modelo-720-asset-row-identifier", 2)] == "LI-IIC-001"
+        assert row_values[("modelo-720-asset-row-identifier", 2)] == "ZLI"
 
     def test_virtual_currency_cannot_be_projected_as_modelo_720_row(self) -> None:
         observations = (
@@ -452,13 +585,13 @@ class TestForeignAssetSourceResolver:
                 source_id="tx-crypto",
             ),
         )
-        aggregation = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
-
         with pytest.raises(ValueError, match="not a Modelo 720 foreign-asset class"):
-            _registry_observations_from_foreign_assets_aggregation(aggregation, observations)
+            aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
+        with pytest.raises(ValueError, match="not a Modelo 720 foreign-asset class"):
+            _resolver(observations=observations).resolve(_context())
 
     def test_resolver_silent_when_revision_declares_no_foreign_asset_source(self) -> None:
-        resolution = ForeignAssetsAggregationSourceResolver(
+        resolution = _resolver(
             observations=(
                 _obs(
                     asset_class=ForeignAssetClass.ACCOUNT,
@@ -618,12 +751,14 @@ def test_ledger_sourced_observation_requires_the_canonical_transaction_identity(
             {
                 "source_kind": BindingSourceKind.LEDGER_TRANSACTION,
                 "source_object_id": not_a_transaction_identity,
+                "asset_ref": asset_ref("AD-ACCOUNT-001"),
                 "asset_class": ForeignAssetClass.ACCOUNT,
                 "asset_external_id": "AD-ACCOUNT-001",
                 "country": "AD",
-                "valuation_eur": Decimal("60000.00"),
+                "valuation_amount": Decimal("60000.00"),
+                "currency_code": "EUR",
+                "valuation_event": M720ValuationEvent.YEAR_END,
                 "acquisition_date": "2023-01-15",
-                "held_at_year_end": True,
             },
         )
 
@@ -672,7 +807,7 @@ def test_resolved_ledger_ids_satisfy_the_revision_identity_contract() -> None:
         ),
     )
 
-    resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(
+    resolution = _resolver(observations=observations).resolve(
         CalculationSourceContext(
             bucket_id="operator",
             modelo="720",
@@ -688,3 +823,324 @@ def test_resolved_ledger_ids_satisfy_the_revision_identity_contract() -> None:
         assert adapter.validate_python(transaction_id) == transaction_id
     # The invoice-sourced external id stays out of the identity tuple.
     assert "INV-2025-0007" not in resolution.source_transaction_ids
+
+
+def _worksheet_row(
+    *,
+    label: str,
+    valuation: str,
+    asset_class: str = "C",
+    country: str = "CH",
+    currency: str = "EUR",
+) -> Modelo720RowObservation:
+    return Modelo720RowObservation.model_validate(
+        {
+            "source_id": f"detalle:per_foreign_asset:{label}",
+            "asset_ref": asset_ref(label),
+            "asset_class_code": M720AssetClassCode(asset_class),
+            "country_code": country,
+            "currency_code": currency,
+            "asset_identifier": label,
+            "acquisition_date": date(2022, 5, 1),
+            "valuation_amount": Decimal(valuation),
+            "valuation_event": M720ValuationEvent.YEAR_END,
+        },
+    )
+
+
+class TestEuroValuation:
+    def test_a_foreign_currency_account_is_declared_at_its_31_december_euro_value(self) -> None:
+        observations = (
+            _obs(
+                asset_class=ForeignAssetClass.ACCOUNT,
+                valuation="100000.00",
+                asset_external_id="US-ACCOUNT-001",
+                country="US",
+                currency="USD",
+            ),
+        )
+
+        resolution = _resolver(observations=observations, rate_provider=_UsdRates()).resolve(_context())
+
+        row_values = dict(resolution.row_binding_values)
+        assert row_values[("modelo-720-asset-row-valuation", 1)] == Decimal("85000.00")
+        assert row_values[("modelo-720-asset-row-currency", 1)] == "USD"
+
+    def test_the_block_threshold_reads_the_converted_value_not_the_face_value(self) -> None:
+        # 55,000 USD is 46,750 EUR at the 31 December rate: below the 50,000 EUR floor.
+        observations = (
+            _obs(
+                asset_class=ForeignAssetClass.ACCOUNT,
+                valuation="55000.00",
+                asset_external_id="US-ACCOUNT-002",
+                country="US",
+                currency="USD",
+            ),
+        )
+
+        resolution = _resolver(observations=observations, rate_provider=_UsdRates()).resolve(_context())
+
+        assert dict(resolution.row_binding_values) == {}
+
+    def test_the_row_identity_fingerprints_the_rate_it_was_converted_at(self) -> None:
+        def resolve_with(rate: Decimal) -> str:
+            class _Rates:
+                rate_source_id = _RATE_SOURCE
+
+                def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+                    return eur_rate_lookup(rate, rate_date=rate_date, source=_RATE_SOURCE)
+
+            resolution = _resolver(
+                observations=(
+                    _obs(
+                        asset_class=ForeignAssetClass.ACCOUNT,
+                        valuation="100000.00",
+                        asset_external_id="US-ACCOUNT-003",
+                        currency="USD",
+                    ),
+                ),
+                rate_provider=_Rates(),
+            ).resolve(_context())
+            return resolution.row_source_identities[("modelo-720-asset-row-valuation", 1)].fingerprint
+
+        assert resolve_with(Decimal("0.85")) != resolve_with(Decimal("0.86"))
+
+    def test_an_unconvertible_amount_refuses_the_calculation_naming_the_asset(self) -> None:
+        observations = (
+            _obs(
+                asset_class=ForeignAssetClass.ACCOUNT,
+                valuation="100000.00",
+                asset_external_id="XX-ACCOUNT-001",
+                currency="XYZ",
+            ),
+        )
+
+        with pytest.raises(ForeignAssetValuationRefusedError) as refused:
+            _resolver(observations=observations, rate_provider=_UsdRates()).resolve(_context())
+
+        assert refused.value.asset_ref == asset_ref("XX-ACCOUNT-001")
+        assert refused.value.reason is M720ValuationRefusalReason.MISSING_RATE
+
+    def test_aggregation_rollups_sum_euro_values(self) -> None:
+        observations = (
+            _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000.00", asset_external_id="A1", currency="USD"),
+            _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000.00", asset_external_id="A2"),
+        )
+
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL, rate_provider=_UsdRates())
+
+        assert result.total_valuation_eur == Decimal("1850.00")
+
+
+class TestLedgerAndWorksheetSources:
+    def test_ledger_and_worksheet_assets_are_declared_together(self) -> None:
+        ledger = (
+            _obs(
+                asset_class=ForeignAssetClass.ACCOUNT,
+                valuation="30000.00",
+                asset_external_id="AD-ACCOUNT-001",
+                source_id="tx-ad",
+            ),
+        )
+        worksheet = (_worksheet_row(label="CH-ACCOUNT-009", valuation="30000.00"),)
+
+        resolution = _resolver(observations=ledger, row_observations=worksheet).resolve(_context())
+
+        row_values = dict(resolution.row_binding_values)
+        # Each side alone is under the 50,000 EUR block floor; together they exceed it.
+        assert {row_values[("modelo-720-asset-row-asset-ref", index)] for index in (1, 2)} == {
+            asset_ref("AD-ACCOUNT-001"),
+            asset_ref("CH-ACCOUNT-009"),
+        }
+        assert resolution.source_transaction_ids == (ledger_identity("tx-ad"),)
+        assert [entry.source_ref for entry in resolution.provenance] == [
+            "worksheet:detalle:per_foreign_asset:CH-ACCOUNT-009#1",
+        ]
+
+    def test_an_asset_from_both_the_ledger_and_the_worksheet_is_refused(self) -> None:
+        ledger = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="60000.00", asset_external_id="SAME"),)
+        worksheet = (_worksheet_row(label="SAME", valuation="60000.00"),)
+
+        with pytest.raises(RegistryValidationError, match="both the ledger and the worksheet"):
+            _resolver(observations=ledger, row_observations=worksheet).resolve(_context())
+
+    def test_two_lots_of_one_asset_from_one_source_are_two_rows(self) -> None:
+        worksheet = (
+            _worksheet_row(label="ZLI", valuation="40000.00", asset_class="V", country="LI"),
+            _worksheet_row(label="ZLI", valuation="40000.00", asset_class="V", country="LI").model_copy(
+                update={"source_id": "detalle:per_foreign_asset:lot-2", "acquisition_date": date(2023, 7, 1)},
+            ),
+        )
+
+        resolution = _resolver(row_observations=worksheet).resolve(_context())
+
+        row_values = dict(resolution.row_binding_values)
+        assert [row_values[("modelo-720-asset-row-acquisition-date", index)] for index in (1, 2)] == [
+            "2022-05-01",
+            "2023-07-01",
+        ]
+
+
+class TestRegisterJoin:
+    def test_two_declared_conditions_make_two_records_with_the_full_valuation_on_each(self) -> None:
+        lot = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="80000.00", asset_external_id="AD-JOINT-001")
+        register = _register_for(lot).model_copy(
+            update={
+                "declarations": (
+                    _declared(lot.asset_ref, M720DeclarantCondition.TITULAR, "50.00"),
+                    _declared(lot.asset_ref, M720DeclarantCondition.AUTORIZADO, "50.00"),
+                ),
+            },
+        )
+
+        resolution = _resolver(observations=(lot,), register=register).resolve(_context())
+
+        row_values = dict(resolution.row_binding_values)
+        assert [row_values[("modelo-720-asset-row-valuation", index)] for index in (1, 2)] == [
+            Decimal("80000.00"),
+            Decimal("80000.00"),
+        ]
+        identities = {
+            identity.source_row_identity
+            for (binding_id, _), identity in resolution.row_source_identities.items()
+            if binding_id == "modelo-720-asset-row-valuation"
+        }
+        source = f"ledger_transaction:{ledger_identity('tx-001')}"
+        assert identities == {f"{source}#1", f"{source}#3"}
+
+    def test_an_asset_sorting_first_leaves_every_declaration_on_its_own_asset(self) -> None:
+        """Detector teeth for the positional join: a new earlier-sorting asset shifts no declaration."""
+        later = _obs(
+            asset_class=ForeignAssetClass.ACCOUNT,
+            valuation="60000.00",
+            asset_external_id="CH-ACC",
+            country="CH",
+            source_id="tx-ch",
+        )
+        earlier = _obs(
+            asset_class=ForeignAssetClass.ACCOUNT,
+            valuation="60000.00",
+            asset_external_id="AD-ACC",
+            country="AD",
+            source_id="tx-ad",
+        )
+
+        def declared_condition_of(lots: tuple[ForeignAssetIngestObservation, ...]) -> dict[str, str]:
+            register = _register_for(*lots).model_copy(
+                update={
+                    "declarations": tuple(
+                        _declared(
+                            lot.asset_ref,
+                            M720DeclarantCondition.AUTORIZADO if lot is later else M720DeclarantCondition.TITULAR,
+                        )
+                        for lot in lots
+                    ),
+                },
+            )
+            resolution = _resolver(observations=lots, register=register).resolve(_context())
+            values = dict(resolution.row_binding_values)
+            indexes = {index for _, index in values}
+            return {
+                str(values[("modelo-720-asset-row-asset-ref", index)]): str(
+                    values[("modelo-720-asset-row-declarant-condition", index)]
+                )
+                for index in indexes
+            }
+
+        assert declared_condition_of((later,))[later.asset_ref] == "3"
+        both = declared_condition_of((later, earlier))
+        assert both[later.asset_ref] == "3"
+        assert both[earlier.asset_ref] == "1"
+
+    @pytest.mark.parametrize(
+        ("register_change", "reason"),
+        [
+            ({"assets": (), "declarations": ()}, M720RecordJoinRefusalReason.UNREGISTERED_ASSET),
+            ({"declarations": ()}, M720RecordJoinRefusalReason.UNDECLARED_ASSET),
+        ],
+    )
+    def test_an_unmatched_lot_is_refused_naming_the_asset(
+        self, register_change: dict[str, tuple[()]], reason: M720RecordJoinRefusalReason
+    ) -> None:
+        lot = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="60000.00", asset_external_id="AD-ACC-9")
+        register = _register_for(lot).model_copy(update=register_change)
+
+        with pytest.raises(ForeignAssetRecordJoinRefusedError) as refused:
+            _resolver(observations=(lot,), register=register).resolve(_context())
+
+        assert (refused.value.asset_ref, refused.value.reason) == (lot.asset_ref, reason)
+
+    def test_a_lot_whose_identifier_disagrees_with_the_register_is_refused(self) -> None:
+        lot = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="60000.00", asset_external_id="AD-ACC-1")
+        moved = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="60000.00", asset_external_id="AD-ACC-2")
+        register = _register_for(moved).model_copy(
+            update={
+                "assets": (_registered(moved).model_copy(update={"asset_ref": lot.asset_ref}),),
+                "declarations": (_declared(lot.asset_ref),),
+            },
+        )
+
+        with pytest.raises(ForeignAssetRecordJoinRefusedError) as refused:
+            _resolver(observations=(lot,), register=register).resolve(_context())
+
+        assert refused.value.reason is M720RecordJoinRefusalReason.REGISTER_MISMATCH
+
+    def test_a_declared_asset_held_this_year_without_a_valuation_is_refused(self) -> None:
+        """Without its valuation the block total, and so the 50.000 EUR test, is unknown."""
+        lot = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="60000.00", asset_external_id="AD-ACC-3")
+        unvalued = _obs(asset_class=ForeignAssetClass.REAL_ESTATE, valuation="1.00", asset_external_id="AD-FLAT")
+        register = _register_for(lot, unvalued)
+
+        with pytest.raises(ForeignAssetRecordJoinRefusedError) as refused:
+            _resolver(observations=(lot,), register=register).resolve(_context())
+
+        assert (refused.value.asset_ref, refused.value.reason) == (
+            unvalued.asset_ref,
+            M720RecordJoinRefusalReason.DECLARATION_WITHOUT_SOURCE,
+        )
+
+    def test_a_declared_asset_that_ceased_in_an_earlier_year_forms_no_record(self) -> None:
+        lot = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="60000.00", asset_external_id="AD-ACC-4")
+        sold = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1.00", asset_external_id="AD-ACC-SOLD")
+        register = _register_for(lot, sold)
+        register = register.model_copy(
+            update={
+                "assets": tuple(
+                    asset.model_copy(update={"ceased_on": date(2024, 5, 31)})
+                    if asset.asset_ref == sold.asset_ref
+                    else asset
+                    for asset in register.assets
+                ),
+            },
+        )
+
+        resolution = _resolver(observations=(lot,), register=register).resolve(_context())
+
+        assert {
+            value for (binding, _), value in resolution.row_binding_values.items() if binding.endswith("asset-ref")
+        } == {lot.asset_ref}
+        assert resolution.diagnostics == ()
+
+    def test_a_lot_outside_the_registered_holding_period_is_refused(self) -> None:
+        lot = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="60000.00", asset_external_id="AD-ACC-5")
+        register = _register_for(lot)
+        register = register.model_copy(
+            update={
+                "assets": tuple(asset.model_copy(update={"ceased_on": date(2025, 3, 1)}) for asset in register.assets)
+            },
+        )
+
+        with pytest.raises(ForeignAssetRecordJoinRefusedError) as refused:
+            _resolver(observations=(lot,), register=register).resolve(_context())
+
+        assert refused.value.reason is M720RecordJoinRefusalReason.REGISTER_MISMATCH
+
+    def test_a_declared_asset_in_a_block_under_its_floor_is_reported_not_exported(self) -> None:
+        lot = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="60000.00", asset_external_id="AD-ACC-6")
+        flat = _obs(asset_class=ForeignAssetClass.REAL_ESTATE, valuation="1000.00", asset_external_id="AD-FLAT-2")
+
+        resolution = _resolver(observations=(lot, flat)).resolve(_context())
+
+        (advisory,) = resolution.diagnostics
+        assert advisory.source_ref == f"foreign_asset_register:{flat.asset_ref}"
+        assert "not exported" in advisory.message

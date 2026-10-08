@@ -1,0 +1,25 @@
+:seed: autonomo-irpf-2026
+@step Register the invoice for a second office-supplies purchase as encrypted supporting document.
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0099 --invoice-date 2026-03-10 --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+@capture second_purchase_evidence_id result.evidence_id
+@step Record the second purchase as a deductible expense, so the quarter's expenses exceed its income.
+aeat app ledger add --date 2026-03-10 --amount 1210 --direction OUTGOING --description "material de oficina" --classification BUSINESS --category-id material_oficina --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --purchase-invoice-evidence-id {second_purchase_evidence_id}
+@step Open the Modelo 130 draft for the first quarter.
+aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
+@capture work_unit_id result.work_unit_id
+@step Calculate the quarter: the net yield is negative, so the instalment is zero.
+aeat --format json app modelo work calculate {work_unit_id} --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@capture calculation_revision_id result.calculation_revision_id
+@expect result.casilla_values.01 == "1000"
+@expect result.casilla_values.02 == "1500"
+@expect result.casilla_values.03 == "-500.00"
+@expect result.casilla_values.04 == "0.00"
+@expect result.casilla_values.07 == "0.00"
+@expect result.casilla_values.13 == "100.00"
+@expect result.casilla_values.14 == "-100.00"
+@expect result.casilla_values.19 == "-100.00"
+@step Check the draft; a negative result passes the check like any other.
+@result aeat --format json app modelo work verify {calculation_revision_id}
+@expect result.granted_verificado_completo == true
+@expect result.completeness_status == "complete"
+@expect exit_code == 0

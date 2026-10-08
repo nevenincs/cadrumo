@@ -5,14 +5,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from ....core.period import Period, accepted_filing_period_codes, registry_period_kind
-from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+    unique_mapping_legal_refs,
+)
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "IVA refund eligibility policy"
@@ -52,56 +55,10 @@ class RefundEligibilityPolicy:
         return period.registry_token in self.final_period_tokens
 
 
-def _legal_refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"IVA refund eligibility policy {key!r} must contain unique legal references")
-    return values
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("IVA refund eligibility policy entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate IVA refund eligibility policy key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
-
-
-def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("IVA refund eligibility policy must resolve as a mapping fact")
-    return _mapping_entries(resolved)
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
-    del effective_date
-    raise RegistryValidationError("refund-eligibility policy requires an explicit authority operation or scope")
-
-
-def _selected_mapping_entries(
-    *,
-    effective_date: date,
-    authority: ValidatedRegistryAuthority | None,
-) -> Mapping[str, str]:
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        return _bundled_mapping_entries(effective_date)
-    return _resolve_entries(effective_date=effective_date, authority=selected)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def _policy(entries: Mapping[str, str]) -> RefundEligibilityPolicy:
@@ -135,17 +92,12 @@ def _policy(entries: Mapping[str, str]) -> RefundEligibilityPolicy:
                 token=raw_token,
                 cadence=cadence,
                 description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
-                legal_refs=_legal_refs(entries, f"{prefix}legal_refs"),
+                legal_refs=unique_mapping_legal_refs(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
             ),
         )
     if not definitions:
         raise RegistryValidationError("IVA refund eligibility policy must declare a final-period set")
     return RefundEligibilityPolicy(definitions=tuple(definitions))
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_policy(effective_date: date) -> RefundEligibilityPolicy:
-    return _policy(_bundled_mapping_entries(effective_date))
 
 
 def resolve_refund_eligibility_policy(
@@ -158,10 +110,7 @@ def resolve_refund_eligibility_policy(
     Core types:
     :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
     """
-    coordinate = effective_date or today_madrid()
-    if authority is None and governed_facts_in_scope() is None:
-        return _bundled_policy(coordinate)
-    return _policy(_selected_mapping_entries(effective_date=coordinate, authority=authority))
+    return _policy(_ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority))
 
 
 def resolve_refund_eligibility_policy_for_period(

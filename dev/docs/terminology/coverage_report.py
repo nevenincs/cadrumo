@@ -47,9 +47,9 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation_entry
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import UTF_8
 from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.test_runs.paths import allocate_run_directory
+from dev.test_runs.paths import allocate_run_directory, test_log_root
 
 from ._miss_rate import load_committed_relevance
 from .casilla_projection import project_casilla_search_records
@@ -76,6 +76,48 @@ __all__ = [
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _UTF_8: Final[str] = UTF_8
 _NON_SPANISH_LOCALES: Final[tuple[str, ...]] = ("en", "ca", "hu")
+
+
+def _coverage_surface_ids(
+    resolved_cards: tuple[ConceptCardRecord, ...],
+    resolved_casillas: tuple[CasillaSearchRecord, ...],
+    resolved_commands: tuple[CliSurfaceRecord, ...],
+    resolved_options: tuple[CliOptionRecord, ...],
+    resolved_legal: tuple[str, ...],
+) -> dict[CoverageKind, set[str]]:
+    """Coverage surface ids."""
+    surfaces: dict[CoverageKind, set[str]] = {
+        CoverageKind.CONCEPT: {to_search_record(card).id for card in resolved_cards if card.is_approved},
+        CoverageKind.CASILLA: {to_search_record(record).id for record in resolved_casillas},
+        CoverageKind.CLI: {to_search_record(record).id for record in (*resolved_commands, *resolved_options)},
+        CoverageKind.LEGAL: {_legal_target_record_id(legal_id) for legal_id in resolved_legal},
+    }
+    return surfaces
+
+
+def _casilla_definition_coverage(by_id: dict[str, list[SearchRecord]]) -> tuple[set[str], set[str]]:
+    """Casilla definition coverage."""
+    exact_target = {
+        record_id for record_id, records in by_id.items() if any(_has_exact_target(record) for record in records)
+    }
+    definition = {
+        record_id for record_id, records in by_id.items() if any(_has_definition(record) for record in records)
+    }
+    return exact_target, definition
+
+
+def _resolve_cli_coverage_records(
+    cli_command_records: tuple[CliSurfaceRecord, ...] | None, cli_option_records: tuple[CliOptionRecord, ...] | None
+) -> tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, ...]]:
+    """Resolve cli coverage records."""
+    if cli_command_records is None or cli_option_records is None:
+        commands, options, _ = project_cli_search_records()
+        resolved_commands = cli_command_records if cli_command_records is not None else commands
+        resolved_options = cli_option_records if cli_option_records is not None else options
+    else:
+        resolved_commands = cli_command_records
+        resolved_options = cli_option_records
+    return resolved_commands, resolved_options
 
 
 class CoverageKind(StrEnum):
@@ -275,7 +317,10 @@ def coverage_report_path() -> Path:
     report and each run's measurement remains attributable. The parent
     directory is not created here; the writer creates it.
     """
-    return allocate_run_directory(REPO_ROOT, family="audit-runs", label="terminology-coverage") / "coverage-report.json"
+    return (
+        allocate_run_directory(test_log_root(), family="audit-runs", label="terminology-coverage")
+        / "coverage-report.json"
+    )
 
 
 def legal_provision_ids(authority: ValidatedRegistryAuthority) -> tuple[str, ...]:
@@ -341,12 +386,7 @@ def compute_casilla_coverage_census(
             authored_locale.add(search_record.id)
 
     projected = set(by_id)
-    exact_target = {
-        record_id for record_id, records in by_id.items() if any(_has_exact_target(record) for record in records)
-    }
-    definition = {
-        record_id for record_id, records in by_id.items() if any(_has_definition(record) for record in records)
-    }
+    exact_target, definition = _casilla_definition_coverage(by_id)
     locale = authored_locale
     referenced = _referenced_record_ids(resolved_relevance)
     relevance_ids = projected & referenced
@@ -417,22 +457,13 @@ def compute_coverage_report(
         )[0]
     )
     resolved_legal = legal_ids if legal_ids is not None else legal_provision_ids(resolved_authority)
-    if cli_command_records is None or cli_option_records is None:
-        commands, options, _ = project_cli_search_records()
-        resolved_commands = cli_command_records if cli_command_records is not None else commands
-        resolved_options = cli_option_records if cli_option_records is not None else options
-    else:
-        resolved_commands = cli_command_records
-        resolved_options = cli_option_records
+    resolved_commands, resolved_options = _resolve_cli_coverage_records(cli_command_records, cli_option_records)
 
     referenced = _referenced_record_ids(resolved_relevance)
 
-    surfaces: dict[CoverageKind, set[str]] = {
-        CoverageKind.CONCEPT: {to_search_record(card).id for card in resolved_cards if card.is_approved},
-        CoverageKind.CASILLA: {to_search_record(record).id for record in resolved_casillas},
-        CoverageKind.CLI: {to_search_record(record).id for record in (*resolved_commands, *resolved_options)},
-        CoverageKind.LEGAL: {_legal_target_record_id(legal_id) for legal_id in resolved_legal},
-    }
+    surfaces = _coverage_surface_ids(
+        resolved_cards, resolved_casillas, resolved_commands, resolved_options, resolved_legal
+    )
 
     kinds = tuple(_kind_coverage(kind, surfaces[kind], referenced) for kind in CoverageKind)
 

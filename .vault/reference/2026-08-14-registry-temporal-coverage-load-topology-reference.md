@@ -3,22 +3,16 @@ tags:
   - '#reference'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6f9176129e3b9df2ccc4a0b8addbc42b03dfb23c99b645bfec79f55edd99f8cc'
+body_hash: 'sha256:07dd54c73b134d86b4261b1a0054349c884e02da34ff1a0032345712d3783339'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
 ---
 
 # `registry-temporal-coverage` reference: `registry load topology and authority-surface inventory`
 
-Two consecutive design reviews of the temporal-coverage work each surfaced
-registry modules the preceding analysis had not considered — first the typed
-inspection projection and the snapshot review gates, then the coverage ledger in
-`src/cadrumo/domain/calculations/registry/_coverage.py`. Neither omission was
-careless reading; both were structural. This reference measures the surface that
-made them likely, so that later work starts from an inventory rather than from
-whichever modules a search happened to surface.
+Neither omission was careless reading; both were structural. This reference measures the surface that made them likely, so that later work starts from an inventory rather than from whichever modules a search happened to surface.
 
 Every figure below was obtained mechanically at HEAD by enumeration over the
 tree, not by reading and summarising. Commands were `rg` over `src/cadrumo` and

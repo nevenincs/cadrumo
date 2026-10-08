@@ -152,24 +152,11 @@ class TestSubmittedFileObservation:
             )
 
     def test_low_numbered_identifiers_survive_submitted_file_capture(self) -> None:
-        """A low-numbered NIF and a 01-09 province survive the real Sede capture path.
+        """Keep text identifiers exact and numeric province codes canonical.
 
-        Modelo 180's declarante and perceptor NIF header slots, and the
-        perceptor's own NIF, legal-representative NIF, provincia,
-        inmueble-provincia, inmueble-codigo-municipio and
-        inmueble-codigo-postal casillas all declared ``padding =
-        "left_zero"`` even though every one of them always exactly fills
-        its slot: a NIF is nine fixed alphanumeric characters, a province
-        code is a fixed two digits from a closed 01-52 table, an INE
-        municipality code and a Spanish postal code are both fixed
-        five-digit province-prefixed identifiers. ``left_zero``'s parse
-        side (``_unpad``) strips leading "0" characters unconditionally,
-        so a genuinely low-numbered value -- a DNI issued under
-        00100000, a taxpayer in provinces 01-09 -- silently lost its
-        leading digits the moment a previously-filed declaration was
-        captured through this exact production path and persisted as an
-        :class:`ObservedCasillaValue`/:class:`ObservedHeaderFact`. This
-        test fails before the ``padding = "none"`` fix and passes after.
+        Province fields use the registry's enumerated-digits policy: wire 01
+        means numeric enum 1. NIF, municipality and postal identifiers remain
+        text, including their significant leading zeros.
         """
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_snapshot("180", filing_year=2026, period="0A", operation=_authority_operation_for_test)
@@ -254,8 +241,18 @@ class TestSubmittedFileObservation:
             observed_by_casilla = {item.casilla_id: item.value for item in observed_casillas}
             assert observed_by_casilla["perc.nif"] == "00098765Z"
             assert observed_by_casilla["perc.nif-representante-legal"] == "00087654X"
-            assert observed_by_casilla["perc.provincia"] == "01"
-            assert observed_by_casilla["perc.inmueble-provincia"] == "01"
+            assert observed_by_casilla["perc.provincia"] == "1"
+            assert observed_by_casilla["perc.inmueble-provincia"] == "1"
+            kinds = {item.casilla_id: item.value_kind for item in observed_casillas}
+            assert kinds["perc.provincia"] is CasillaValueKind.NUMERIC
+            assert kinds["perc.inmueble-provincia"] is CasillaValueKind.NUMERIC
+            assert kinds["perc.inmueble-codigo-municipio"] is CasillaValueKind.TEXT
+            assert kinds["perc.inmueble-codigo-postal"] is CasillaValueKind.TEXT
+            parsed = parse_export_payload(resolve_export_layout(snapshot).layout, body)
+            province_fields = {field.field_id: field for field in parsed.fields}
+            for field_id in ("modelo-180-perc-provincia", "modelo-180-perc-inmueble-provincia"):
+                assert province_fields[field_id].raw == "01"
+                assert province_fields[field_id].value == Decimal("1")
             assert observed_by_casilla["perc.inmueble-codigo-municipio"] == "01001"
             assert observed_by_casilla["perc.inmueble-codigo-postal"] == "01001"
 
@@ -493,7 +490,15 @@ class TestSubmittedFileObservation:
             observed_values = {item.casilla_id: item.value for item in observed}
             body_text = body.decode("utf-8")
 
-            assert len(observed) == 77
+            # The dictionary now reads attribute paths as well as element text.
+            element_values = tuple(item for item in observed if "/@" not in item.source_locator)
+            attribute_values = tuple(item for item in observed if "/@" in item.source_locator)
+            assert len(element_values) == 77
+            assert len(attribute_values) == 35
+            titular = next(item for item in attribute_values if item.casilla_id == "0001")
+            assert titular.source_locator.endswith("/TomaDatosAmpliada/@titular:1")
+            assert titular.value == "2"
+            assert titular.value_kind is CasillaValueKind.TEXT
             assert observed_values[_M100_CASILLA_0180] == "26.26"
             assert observed_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA] == "37.37"
             assert observed_values[_M100_CASILLA_0695] == "87.87"

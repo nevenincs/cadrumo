@@ -4,15 +4,13 @@ tags:
   - '#index'
   - '#quality-gate-zero-closure'
 date: '2026-08-24'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ed2554979849d041d8e5d60a6fb49d5174129183439c3710a17ed3f551de19d'
+body_hash: 'sha256:e130eb53c7ac319e3d4a194321882bf51fcb7c6fb45b5b75d7f4f8821510c841'
 related:
   - '[[2026-08-24-quality-gate-zero-closure-adr]]'
   - '[[2026-08-24-quality-gate-zero-closure-failure-cluster-topology-reference]]'
-  - '[[2026-08-24-quality-gate-zero-closure-ledger]]'
   - '[[2026-08-24-quality-gate-zero-closure-live-rag-redeclaration-audit]]'
-  - '[[2026-08-24-quality-gate-zero-closure-plan]]'
   - '[[2026-08-24-quality-gate-zero-closure-static-gate-matrix-research]]'
   - '[[2026-08-30-quality-gate-zero-closure-in-flight-plan-reconciliation-audit]]'
   - '[[2026-09-07-quality-gate-zero-closure-absence-assertion-current-measurement-audit]]'
@@ -65,14 +63,6 @@ Auto-generated index of all documents tagged with `#quality-gate-zero-closure`.
 - `2026-09-07-quality-gate-zero-closure-s119-import-linter-verdict-parser-implementation-review-audit` - quality-gate-zero-closure audit: S119 import-linter verdict parser implementation review
 - `2026-09-07-quality-gate-zero-closure-s120-s121-verdict-grammar-detector-review-audit` - quality-gate-zero-closure audit: S120 S121 verdict grammar detector review
 - `2026-09-08-quality-gate-zero-closure-dev-tooling-product-boundary-audit` - `quality-gate-zero-closure` audit: `Dev tooling product-boundary reconciliation`
-
-### exec
-
-- `2026-08-24-quality-gate-zero-closure-ledger` - `quality-gate-zero-closure` ledger
-
-### plan
-
-- `2026-08-24-quality-gate-zero-closure-plan` - `quality-gate-zero-closure` plan
 
 ### reference
 

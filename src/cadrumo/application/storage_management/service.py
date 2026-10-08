@@ -31,7 +31,8 @@ from ...core.config import load_settings
 from ...core.directory_scan import iter_directory, scan_directory
 from ...core.link_safety import is_link_like
 from ...core.logging import get_logger
-from ...core.storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tree
+from ...core.storage_environment import STORAGE_ROOT
+from ...core.storage_materialization import ensure_storage_tree
 from ...core.storage_taxonomy import (
     StorageArea,
     StorageCategory,
@@ -46,6 +47,7 @@ from ...core.storage_taxonomy_locations import (
     bucket_scoped_storage_path,
     storage_location,
     storage_path,
+    uses_external_transport,
 )
 from .errors import StorageReclaimRefusedError, StorageReclaimUnconfirmedError
 from .models import (
@@ -82,7 +84,7 @@ listing categories means a member reclassified in the taxonomy changes what
 reclaim will touch at the same moment, with no second list to forget.
 """
 
-_EXPECTED_ROOT_MODE: Final[int] = STORAGE_ROOT_MODE
+_EXPECTED_ROOT_MODE: Final[int] = STORAGE_ROOT.posix_directory_mode
 """Mode ``ensure_storage_tree`` requests on the root, read from it for the drift check.
 
 Bound to the materialiser's own constant rather than restating the value: a
@@ -222,6 +224,8 @@ def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeChec
     for category, location in STORAGE_TAXONOMY.items():
         if location.scope is not StorageScope.ROOT or location.settings_field is None:
             continue
+        if uses_external_transport(location, resolved):
+            continue
         if getattr(resolved, location.settings_field, None) is None:
             continue
         target = storage_path(category, settings=resolved)
@@ -274,7 +278,9 @@ def _reclaim_candidates(
     return tuple(
         (category, location, storage_path(category, settings=settings))
         for category, location in STORAGE_TAXONOMY.items()
-        if location.grouping.value == area.value and location.lifecycle in RECLAIMABLE_LIFECYCLES
+        if location.grouping.value == area.value
+        and location.lifecycle in RECLAIMABLE_LIFECYCLES
+        and not uses_external_transport(location, settings)
     )
 
 
@@ -516,6 +522,13 @@ def _inventory_row(
     """Build one inventory row for ``category``."""
     location = storage_location(category)
     path: Path | None = None
+
+    if uses_external_transport(location, settings):
+        # Shared transport custody is not data-root occupancy. Do not enumerate
+        # another installed channel's sockets or its persistent lock inodes.
+        return _InventoryRow(
+            grouping=location.grouping, path=None, occupancy=StorageOccupancy.UNRESOLVED, reclaimable=False
+        )
 
     if location.scope is StorageScope.ROOT:
         path = storage_path(category, settings=settings)

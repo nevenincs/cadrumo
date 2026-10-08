@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-campaign-sequencing'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:06de00da7cd7ed2154440835a86b007be3ba4683830861c795be799b749fda6e'
+body_hash: 'sha256:89cffcf60fc3557afe676a284cf9b2479feff075ae26c0cbeffc0dce995bc2aa'
 related:
   - "[[2026-08-15-registry-campaign-sequencing-export-authority-key-enforcement-audit]]"
 ---
@@ -60,8 +60,6 @@ fragment is nested one directory level deeper than today's tree ever nests
 them.
 
 ### Export authority chain: reachability census | high | The loader's non-emptiness GUARD and its fragment COLLECTOR use different glob depths — the guard can pass on a shape the collector cannot see
-
-`src/cadrumo/domain/calculations/registry/_loader.py`:
 
 - `_require_revision_section_fragments` (the guard that refuses an empty
   section directory) checks `section_dir.rglob("*.toml")` — RECURSIVE.

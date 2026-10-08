@@ -4,11 +4,11 @@
 @capture work_unit_id result.work_unit_id
 @setup aeat --format json app modelo work calculate {work_unit_id} --no-joint-return-elected
 @capture calculation_revision_id result.calculation_revision_id
-@step Verify the draft; export refuses an unverified draft.
+@step Check the draft; export refuses an unverified draft.
 @setup aeat --format json app modelo work verify {calculation_revision_id}
-@step Ask for the verified saved calculation before exporting anything.
+@step Ask for the checked saved calculation before exporting anything.
 aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
-@step Export the verified calculation; the file header carries Cadrumo's all-zero development software identity, so AEAT will not accept it for presentation.
+@step Export the checked calculation; the file header carries Cadrumo's all-zero development software identity, so AEAT will not accept it for presentation.
 aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 @expect exit_code == 0
 @expect result.software_identity_grade == "development_mock"

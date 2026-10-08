@@ -35,9 +35,10 @@ import pytest
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.binding_selector_utils import provider_member
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
-    iva_ledger_selector,
+    LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from cadrumo.domain.iva.flow import IvaFlowDirection
@@ -198,8 +199,8 @@ def test_zero_rate_aic_base_reaches_its_own_official_box_layer() -> None:
 
     assert resolved[_AIC_ZERO_BASE_BINDING] == Decimal("1739.25")
     bindings = {binding.id: binding for binding in revision.bindings}
-    assert IvaRateKind("zero") in iva_ledger_selector(bindings[_AIC_ZERO_BASE_BINDING]).rate_kinds
-    assert IvaRateKind("zero") in iva_ledger_selector(bindings[_AIC_ZERO_CUOTA_BINDING]).rate_kinds
+    assert IvaRateKind("zero") in provider_member(bindings[_AIC_ZERO_BASE_BINDING], LedgerIvaProvider).rate_kinds
+    assert IvaRateKind("zero") in provider_member(bindings[_AIC_ZERO_CUOTA_BINDING], LedgerIvaProvider).rate_kinds
 
 
 def test_mutation_removing_zero_from_m390_aic_base_selector_reds_the_gate(tmp_path: Path) -> None:

@@ -56,8 +56,8 @@ record_identity = "Tipo 2 - Registro De Inmueble"
 
 [[entries]]
 export_field_id = "m347-2025.inmueble.f005"
-kind = "casilla"
-casilla_id = "inmueble.arrendatario-nif"
+kind = "binding"
+binding = "modelo-347-inmueble-row-arrendatario-nif"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
@@ -80,8 +80,8 @@ record_identity = "Tipo 2 - Registro De Inmueble"
 
 [[entries]]
 export_field_id = "m347-2025.inmueble.f007"
-kind = "casilla"
-casilla_id = "inmueble.arrendatario-nombre"
+kind = "binding"
+binding = "modelo-347-inmueble-row-arrendatario-nombre"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
@@ -115,8 +115,8 @@ record_identity = "Tipo 2 - Registro De Inmueble"
 
 [[entries]]
 export_field_id = "m347-2025.inmueble.f010"
-kind = "casilla"
-casilla_id = "inmueble.importe-operacion"
+kind = "binding"
+binding = "modelo-347-inmueble-row-importe"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
@@ -127,8 +127,8 @@ record_identity = "Tipo 2 - Registro De Inmueble"
 
 [[entries]]
 export_field_id = "m347-2025.inmueble.f011"
-kind = "casilla"
-casilla_id = "inmueble.situacion"
+kind = "binding"
+binding = "modelo-347-inmueble-row-situacion"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
@@ -139,8 +139,8 @@ record_identity = "Tipo 2 - Registro De Inmueble"
 
 [[entries]]
 export_field_id = "m347-2025.inmueble.f012"
-kind = "casilla"
-casilla_id = "inmueble.referencia-catastral"
+kind = "binding"
+binding = "modelo-347-inmueble-row-referencia-catastral"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]
@@ -151,8 +151,8 @@ record_identity = "Tipo 2 - Registro De Inmueble"
 
 [[entries]]
 export_field_id = "m347-2025.inmueble.f013"
-kind = "casilla"
-casilla_id = "inmueble.direccion"
+kind = "binding"
+binding = "modelo-347-inmueble-row-direccion"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]

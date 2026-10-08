@@ -1,0 +1,289 @@
+"""Concrete adapter assembly for the live justificante CLI commands.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.envelope.contract.Envelope`.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable, Sequence
+from pathlib import Path
+from typing import cast
+
+from ..adapters.inbound.justificante.parser import parse_justificante_bytes
+from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+from ..adapters.outbound.aeat.sede.declarations_remote import extract_csv_from_url
+from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
+from ..adapters.outbound.aeat.sede.filed_observation_persistence import FilingReconciliationAdapter
+from ..adapters.outbound.aeat.verify.contract import (
+    VerifyBrowserSessionFactory,
+    VerifyBrowserSessionLike,
+    verify_csv,
+)
+from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ..adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ..adapters.persistence.profile.justificante import JustificanteRepository
+from ..adapters.persistence.profile.justificante_capture_snapshots import justificante_capture_snapshot_repository
+from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ..adapters.persistence.storage.envelope.contract import Envelope
+from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ..adapters.persistence.storage.secure_object_namespaces import LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE
+from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..application.auth.operator_scope_ports import OperatorScopePorts
+from ..application.auth.session_types import AeatSession
+from ..application.live.filed_data_ports import FiledEffectGuard
+from ..application.live.filed_observation_ports import FiledObservationProtocol
+from ..application.live.justificante import (
+    JustificanteCaptureSnapshot,
+    JustificanteCaptureSnapshotRepository,
+    JustificanteCaptureSnapshotService,
+    justificante_capture_snapshot_object_key,
+)
+from ..application.live.justificante_ports import (
+    CapturedJustificante,
+    JustificanteAuthenticityVerifierPort,
+    JustificanteDeclaration,
+    JustificanteLiveReadPort,
+    JustificanteRegistrationPorts,
+)
+from ..application.live.session import SessionWriteReporter, active_verified_session
+from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ..core.bucket_pointer import require_active_bucket_id
+from ..core.config import Settings
+from ..core.errors.hierarchy import InternalInvariantError
+from ..core.external_constants import UTF_8_ENCODING
+from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+from ..domain.justificante.schema import Justificante
+
+
+class _SnapshotPersistence:
+    def __init__(self, *, bucket_id: str) -> None:
+        self._bucket_id = bucket_id
+        self._objects = secure_object_repository_for_bucket(bucket_id)
+        self._delegate = justificante_capture_snapshot_repository(bucket_id, objects=self._objects)
+
+    @property
+    def bucket_id(self) -> str:
+        return self._bucket_id
+
+    def exists(self, snapshot_id: str) -> bool:
+        return self._delegate.exists(snapshot_id)
+
+    def load(self, snapshot_id: str) -> JustificanteCaptureSnapshot:
+        return self._delegate.load(snapshot_id)
+
+    def list_snapshots(self) -> Sequence[JustificanteCaptureSnapshot]:
+        return self._delegate.list_snapshots()
+
+    def resolve(self, snapshot_id: str) -> JustificanteCaptureSnapshot:
+        return self._delegate.resolve(snapshot_id)
+
+    def save(self, snapshot: object) -> None:
+        typed_snapshot = cast(JustificanteCaptureSnapshot, snapshot)
+        envelope = Envelope[JustificanteCaptureSnapshot](
+            schema_version=LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.schema_version,
+            written_at=typed_snapshot.captured_at,
+            classification=LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.sensitivity,
+            payload=typed_snapshot,
+        )
+        self._objects.save(
+            namespace=LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.namespace,
+            object_key=justificante_capture_snapshot_object_key(self._bucket_id, typed_snapshot.snapshot_id),
+            classification=LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.sensitivity,
+            schema_version=LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.schema_version,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
+        )
+
+
+class _JustificanteMetadata:
+    """Adapt the generic repository's payload parameter to the application port."""
+
+    def __init__(self, repository: JustificanteRepository) -> None:
+        self._repository = repository
+
+    def save(self, payload: Justificante) -> None:
+        self._repository.save(payload)
+
+
+class _LiveRead:
+    def __init__(
+        self,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        operator_scope_ports: OperatorScopePorts,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
+        self._certificate_secret_backend_factory = certificate_secret_backend_factory
+        self._operator_scope_ports = operator_scope_ports
+        self._operation = operation
+        self._session: AeatSession | None = None
+        self._settings: Settings | None = None
+        self._declarations: dict[str, Declaracion] = {}
+
+    async def declarations(
+        self,
+        *,
+        modelo: str,
+        year: int,
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
+    ) -> Sequence[JustificanteDeclaration]:
+        session, settings = await active_verified_session(
+            certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+            browser_session_factory=default_browser_session_factory,
+            operator_scope_ports=self._operator_scope_ports,
+            operation="live-justificante-read",
+            authority_operation=self._operation,
+            effect_guard=effect_guard,
+            on_session_write=on_session_write,
+        )
+        async with (
+            shared_playwright(session) as playwright,
+            open_declarations_register(
+                session,
+                operation=self._operation,
+                settings=settings,
+                playwright=playwright,
+            ) as register,
+        ):
+            declarations = tuple(await register.walk(modelo=modelo, ejercicio=year))
+        self._session = session
+        self._settings = settings
+        self._declarations = {item.expediente_id: item for item in declarations}
+        return tuple(
+            JustificanteDeclaration(
+                modelo=item.modelo,
+                period=item.period,
+                expediente_id=item.expediente_id,
+                estado=item.estado,
+                presented_at=item.presented_at,
+            )
+            for item in declarations
+        )
+
+    async def capture(self, *, expediente_id: str) -> CapturedJustificante:
+        session = self._session
+        settings = self._settings
+        declaration = self._declarations.get(expediente_id)
+        if session is None or settings is None or declaration is None:
+            raise InternalInvariantError("live justificante capture requires declaration discovery")
+        async with (
+            shared_playwright(session) as playwright,
+            open_declarations_register(
+                session,
+                operation=self._operation,
+                settings=settings,
+                playwright=playwright,
+            ) as register,
+        ):
+            artefact, body = await register.capture_justificante(declaration)
+        return CapturedJustificante(
+            expediente_id=declaration.expediente_id,
+            csv=extract_csv_from_url(str(artefact.source_url)),
+            pdf_bytes=body,
+            pdf_sha256=artefact.sha256,
+        )
+
+
+class _Verifier:
+    def verify(
+        self,
+        csv: str,
+        *,
+        browser: object | None = None,
+        browser_session_factory: Callable[[], object] | None = None,
+    ) -> Awaitable[bool]:
+        typed_browser: VerifyBrowserSessionLike | None
+        if browser is None:
+            typed_browser = None
+        elif isinstance(browser, VerifyBrowserSessionLike):
+            typed_browser = browser
+        else:
+            raise InternalInvariantError("justificante verifier received an incompatible browser session")
+
+        typed_factory: VerifyBrowserSessionFactory | None
+        if browser_session_factory is None:
+            typed_factory = None
+        else:
+
+            async def checked_factory() -> VerifyBrowserSessionLike:
+                result = browser_session_factory()
+                if not isinstance(result, Awaitable):
+                    raise InternalInvariantError("justificante verifier factory did not return an awaitable")
+                candidate = cast(object, await result)
+                if not isinstance(candidate, VerifyBrowserSessionLike):
+                    raise InternalInvariantError("justificante verifier factory returned an incompatible session")
+                return candidate
+
+            typed_factory = checked_factory
+        return verify_csv(csv, browser=typed_browser, browser_session_factory=typed_factory)
+
+
+def build_justificante_capture_service(bucket_id: str) -> JustificanteCaptureSnapshotService:
+    """Bind the application service to the active bucket's secure object store."""
+    return JustificanteCaptureSnapshotService(
+        bucket_id=bucket_id,
+        repository=JustificanteCaptureSnapshotRepository(persistence=_SnapshotPersistence(bucket_id=bucket_id)),
+    )
+
+
+def build_justificante_registration_ports(operation: PinnedAuthorityOperation) -> JustificanteRegistrationPorts:
+    """Bind receipt metadata, the filing catalogue and chain reconciliation to the active bucket.
+
+    Every repository shares one secure-object backend, so a reconciliation
+    commits its catalogue, observation and event writes in one unit.
+    """
+    bucket_id = require_active_bucket_id()
+    objects = secure_object_repository_for_bucket(bucket_id)
+    justificante_repository = JustificanteRepository(bucket_id=bucket_id, objects=objects)
+    filing_repository = ModeloRecordCatalogueRepository(bucket_id=bucket_id, objects=objects)
+    from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
+
+    calculation_binding = bind_calculation_revision_persistence_from_profile(
+        bucket_id=bucket_id,
+        objects=objects,
+        operation=operation,
+    )
+    return JustificanteRegistrationPorts(
+        parse_pdf=parse_justificante_bytes,
+        metadata=_JustificanteMetadata(justificante_repository),
+        filing=filing_repository,
+        filing_reconciliation=FilingReconciliationAdapter(
+            work_lifecycle_ports=WorkLifecyclePorts(
+                work_unit_repository=WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects),
+                bucket_event_repository=BucketEventHistoryRepository(objects=objects),
+            ),
+            calculation_repository=calculation_binding.calculation_repository(),
+            filing_repository=filing_repository,
+            justificante_repository=justificante_repository,
+            observation_repository=CalculationObservationRepository(bucket_id=bucket_id, objects=objects),
+        ),
+    )
+
+
+def build_justificante_live_read_port(
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
+    operation: PinnedAuthorityOperation,
+) -> JustificanteLiveReadPort:
+    """Bind the authenticated live justificante reader."""
+    return _LiveRead(certificate_secret_backend_factory, operator_scope_ports, operation)
+
+
+def build_justificante_authenticity_verifier() -> JustificanteAuthenticityVerifierPort:
+    """Build the verifier for captured justificante authenticity evidence."""
+    return _Verifier()
+
+
+def load_reconciliation_filed_observation(bucket_id: str, observation_id: str) -> FiledObservationProtocol:
+    """Resolve a filed manifest only from the operation's exact encrypted profile."""
+    from ..adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+    from ..core.config import load_settings
+
+    store = FiledDeclaracionObservationStore(
+        load_settings().cadrumo_filed_declarations_dir,
+        objects=secure_object_repository_for_bucket(bucket_id),
+    )
+    return store.load_observation(Path(observation_id))

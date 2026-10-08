@@ -17,6 +17,8 @@ from typing import TYPE_CHECKING, override
 
 import pytest
 
+from cadrumo.tests.process_results import receive_process_result
+
 from .....application.operations.capabilities import OperationRequestStoragePolicy
 from .....application.operations.interactions import (
     OperationApplyResponse,
@@ -467,21 +469,30 @@ def test_operation_observation_is_one_locked_record_under_a_real_interleaved_tra
         target=_observe_in_process,
         args=(str(tmp_path), initial.operation_id, 1, 3, observe_lock_entered, observe_results),
     )
-    with exclusive_file_lock(storage.lock_target):
-        committer.start()
-        assert commit_attempting.wait(timeout=15)
-        observer.start()
-        assert observe_lock_entered.wait(timeout=15)
-        with pytest.raises(Empty):
-            commit_results.get(timeout=0.3)
-        with pytest.raises(Empty):
-            observe_results.get(timeout=0.3)
+    try:
+        with exclusive_file_lock(storage.lock_target):
+            committer.start()
+            assert commit_attempting.wait(timeout=15)
+            observer.start()
+            assert observe_lock_entered.wait(timeout=15)
+            with pytest.raises(Empty):
+                commit_results.get(timeout=0.3)
+            with pytest.raises(Empty):
+                observe_results.get(timeout=0.3)
 
-    assert commit_results.get(timeout=15) == "committed"
-    materialization = OperationObservationMaterialization.model_validate_json(observe_results.get(timeout=15))
-    for process in (committer, observer):
-        process.join(timeout=15)
-        assert process.exitcode == 0
+        assert receive_process_result(commit_results, owners=(committer, observer)) == "committed"
+        materialization = OperationObservationMaterialization.model_validate_json(
+            receive_process_result(observe_results, owners=(committer, observer))
+        )
+        for process in (committer, observer):
+            process.join(timeout=None)
+            assert process.exitcode == 0
+    finally:
+        for child_owner in (committer, observer):
+            if child_owner.is_alive():
+                child_owner.kill()
+            if child_owner.pid is not None:
+                child_owner.join(timeout=30)
 
     observation_shape = (
         materialization.snapshot.revision,
@@ -596,7 +607,9 @@ def test_operation_journal_refuses_intent_only_tamper_during_strict_hydration(tm
         asyncio.run(repository.load(accepted.operation_id))
 
 
-@pytest.mark.parametrize("schema_version", (1, 2, 3, 4, 5))
+@pytest.mark.parametrize(
+    "schema_version", tuple(range(1, OperationPersistedSnapshot.model_fields["schema_version"].default))
+)
 def test_operation_journal_refuses_every_superseded_snapshot_schema_without_byte_mutation(
     tmp_path: Path, schema_version: int
 ) -> None:
@@ -604,7 +617,7 @@ def test_operation_journal_refuses_every_superseded_snapshot_schema_without_byte
     repository, snapshots = _create_history(tmp_path)
     path = tmp_path / "operation-journals" / f"{snapshots[-1].operation_id}.json"
     document = json.loads(path.read_text(encoding="utf-8"))
-    assert document["snapshot"]["schema_version"] == 6
+    assert document["snapshot"]["schema_version"] == 9
     document["snapshot"]["schema_version"] = schema_version
     path.write_text(json.dumps(document), encoding="utf-8")
     original_bytes = path.read_bytes()

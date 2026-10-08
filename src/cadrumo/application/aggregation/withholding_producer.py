@@ -36,6 +36,7 @@ from .withholding_observation_service import (
     WithholdingProjectionEntry,
     WithholdingProjectionIdentity,
     WithholdingProjectionRole,
+    WithholdingSourceCatalogueBaseline,
     WithholdingWindowBaseline,
     WithholdingWindowScope,
 )
@@ -132,6 +133,7 @@ class WithholdingProducer:
         command: WithholdingEvidenceCaptureCommand | None,
         *,
         cadence: WithholdingFilerCadence,
+        source_catalogue_revision_id: str | None = None,
     ) -> WithholdingEvidenceCaptureResult | None:
         """Capture evidence, or leave all persisted evidence untouched when omitted.
 
@@ -142,6 +144,18 @@ class WithholdingProducer:
         if command is None:
             return None
         _require_counterpart_source(command.source_kind)
+        source_baseline = None
+        if source_catalogue_revision_id is not None:
+            source_kind = command.source_kind
+            if (
+                source_kind is not BindingSourceKind.PAYABLE_INVOICE
+                and source_kind is not BindingSourceKind.LEDGER_TRANSACTION
+            ):
+                raise WithholdingProducerError("unsupported_source_kind")
+            source_baseline = WithholdingSourceCatalogueBaseline(
+                source_kind=source_kind,
+                revision_id=source_catalogue_revision_id,
+            )
         if cadence.filing_year != command.recognition_evidence.applicable_year:
             raise WithholdingProducerError("filer_cadence_year_mismatch")
         modelo = _modelo_for(command.recognition_evidence.income_kind, command.scheme)
@@ -227,6 +241,7 @@ class WithholdingProducer:
                 baseline=command.baseline,
                 reason=command.reason,
                 supersedes_generation_id=command.supersedes_generation_id,
+                source_catalogue_baseline=source_baseline,
             )
         )
         if mutation is None:

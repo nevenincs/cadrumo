@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#quality-gate-zero-closure'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:8e4f05644b9526210e1d3d2df327cc0230bc7f6bb5ab7f02d9eae4c06be68ea4'
 related:
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]"
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]"
-  - "[[2026-08-24-quality-gate-zero-closure-plan]]"
 ---
 
 # `quality-gate-zero-closure` audit: `Bounded mutmut measurement`

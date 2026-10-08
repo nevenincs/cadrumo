@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:245199a0dc729da362990da7b826d67814fc4b79cc866d03a99b15c28c5a5841'
+modified: '2026-10-03'
+body_hash: 'sha256:2bb603ee77aeedc1b356deaaa500abd968e8e1269afa36191c3174f8adf1371f'
 related: []
 ---
 
@@ -16,13 +16,13 @@ related: []
 
 ## S251-002 | PASS | Filter parser remains storage-free
 
-`src/aeat/application/review/_filter.py` does not read or write files, instantiate repositories, or resolve storage backends. It validates closed key catalogues and enum-bound values before the review queue or ledger query layers consume the typed spec.
+The retired module does not read or write files, instantiate repositories, or resolve storage backends. It validates closed key catalogues and enum-bound values before the review queue or ledger query layers consume the typed spec.
 
 ## S251-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/review/_errors.py src/aeat/application/review/_filter.py src/aeat/application/review/test_filter.py src/aeat/application/review/test_filter_helpers.py src/aeat/application/review/test_edit.py src/aeat/entrypoints/cli/_ledger.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/review/test_filter.py src/aeat/application/review/test_filter_helpers.py src/aeat/application/review/test_edit.py` passed with 97 tests.
-- `uv run --no-sync pytest -q src/aeat/entrypoints/cli/test_ledger_list_filter.py` passed with 9 tests and existing Click deprecation warnings.
+- the historical check passed.
+- the historical check passed with 97 tests.
+- the historical check passed with 9 tests and existing Click deprecation warnings.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-149` as `plaintext-exception` with the rendered plaintext leak fixed.

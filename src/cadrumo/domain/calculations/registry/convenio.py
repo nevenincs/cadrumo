@@ -35,6 +35,8 @@ from .schema_base import DateAxis, RegistryModel
 if TYPE_CHECKING:
     from .authority import PinnedAuthorityOperation
     from .facts.resolution import ResolvedOverrideFact
+    from .facts.schema import GovernedFact
+    from .facts.variants import FactSelector
 
 
 def _validated_override_rate(
@@ -275,7 +277,7 @@ def resolve_convenio_override(
     matching dated selector is represented by ``None``.
     """
     from .facts.resolution import OverrideFactQuery, ResolvedOverrideFact
-    from .facts.schema import FactSelector
+    from .facts.variants import FactSelector
 
     if not isinstance(tipo_renta, TipoRentaIrnr):
         raise RegistryValidationError("convenio override requires a TipoRentaIrnr value")
@@ -287,7 +289,7 @@ def resolve_convenio_override(
         FactSelector(name="country_code", value=normalized_country),
         FactSelector(name="tipo_renta", value=tipo_renta.value),
     )
-    selector_identity = frozenset((selector.name, type(selector.value), selector.value) for selector in selectors)
+    selector_identity = _selector_identity(selectors)
     query = OverrideFactQuery(
         fact_id=CONVENIO_OVERRIDE_FACT_ID,
         date_axis=DateAxis.DEVENGO_DATE,
@@ -295,18 +297,46 @@ def resolve_convenio_override(
         selectors=selectors,
     )
     fact = operation.governed_fact(CONVENIO_OVERRIDE_FACT_ID)
-    windows = fact.materialized_windows(operation.supported_filing_years().date_envelope())
-    if not any(
-        variant.date_axis is DateAxis.DEVENGO_DATE
-        and windows[variant.variant_id].contains_date(devengo_date)
-        and frozenset((selector.name, type(selector.value), selector.value) for selector in variant.selectors)
-        == selector_identity
-        for variant in fact.variants
-    ):
+    if not _has_matching_convenio_variant(fact, operation, devengo_date, selector_identity):
         return None
     resolved = operation.resolve_governed_fact(query)
     if not isinstance(resolved, ResolvedOverrideFact):
         raise RegistryValidationError(f"convenio override resolved non-override fact {resolved.fact_id!r}")
+    kind = _validated_convenio_override_kind(fact, resolved)
+    rate = _validated_override_rate(kind, resolved.payload.value, tipo_renta=tipo_renta)
+    document_id = _convenio_document_id(operation, resolved)
+    return ResolvedConvenioOverride(
+        kind=kind,
+        rate=rate,
+        country_code=normalized_country,
+        document_id=document_id,
+        fact=resolved,
+    )
+
+
+def _selector_identity(selectors: tuple[FactSelector, ...]) -> frozenset[tuple[str, type[object], object]]:
+    return frozenset((selector.name, type(selector.value), selector.value) for selector in selectors)
+
+
+def _has_matching_convenio_variant(
+    fact: GovernedFact,
+    operation: PinnedAuthorityOperation,
+    devengo_date: date,
+    selector_identity: frozenset[tuple[str, type[object], object]],
+) -> bool:
+    windows = fact.materialized_windows(operation.supported_filing_years().date_envelope())
+    return any(
+        variant.date_axis is DateAxis.DEVENGO_DATE
+        and windows[variant.variant_id].contains_date(devengo_date)
+        and _selector_identity(variant.selectors) == selector_identity
+        for variant in fact.variants
+    )
+
+
+def _validated_convenio_override_kind(
+    fact: GovernedFact,
+    resolved: ResolvedOverrideFact,
+) -> ConvenioOverrideKind:
     raw_kind = resolved.payload.override_code
     declared_override_codes = frozenset(
         code for variant in fact.variants if isinstance(code := getattr(variant.payload, "override_code", None), str)
@@ -316,12 +346,14 @@ def resolve_convenio_override(
             f"convenio override fact {resolved.fact_id!r} has undeclared kind {raw_kind!r}",
         )
     try:
-        kind = ConvenioOverrideKind(raw_kind, _registry_validated=True)
+        return ConvenioOverrideKind(raw_kind, _registry_validated=True)
     except (TypeError, ValueError) as exc:
         raise RegistryValidationError(
             f"convenio override fact {resolved.fact_id!r} has invalid kind {raw_kind!r}",
         ) from exc
-    rate = _validated_override_rate(kind, resolved.payload.value, tipo_renta=tipo_renta)
+
+
+def _convenio_document_id(operation: PinnedAuthorityOperation, resolved: ResolvedOverrideFact) -> str:
     if not resolved.legal_refs:
         raise RegistryValidationError(f"convenio override fact {resolved.fact_id!r} lacks legal provenance")
     try:
@@ -330,10 +362,4 @@ def resolve_convenio_override(
         raise RegistryValidationError(
             f"convenio override fact {resolved.fact_id!r} names unknown legal reference {resolved.legal_refs[0]!r}",
         ) from exc
-    return ResolvedConvenioOverride(
-        kind=kind,
-        rate=rate,
-        country_code=normalized_country,
-        document_id=document_id,
-        fact=resolved,
-    )
+    return document_id

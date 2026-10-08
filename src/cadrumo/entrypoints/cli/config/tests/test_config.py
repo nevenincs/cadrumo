@@ -1,26 +1,9 @@
-"""Real-behavior CLI tests for config-boundary error narrowing.
-
-Verifies two contracts:
-
-1. CadrumoError subclasses that escape a config command surface produce a
-   typed error envelope — the command_error_boundary receives the typed
-   CadrumoError and emits a structured stderr payload with a non-zero exit code.
-
-2. Unexpected (non-CadrumoError) exceptions from config command handlers are
-   wrapped in ConfigBoundaryError so the exit is typed, not a bare crash. The
-   profile-show read boundary emits its typed ``profile_record_unreadable``
-   result and exits with code 2, chaining ConfigBoundaryError rather than the
-   raw exception.
-
-The bundle-import parse-failure boundary is deliberately uncovered here.
-``config profile import`` does not resolve, so the only assertion a test could
-make against it is that click refused an unknown command — which is not the
-boundary, and passes whatever the boundary does.
-"""
+"""Real CLI error envelopes and native profile-view refusal boundaries."""
 
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -39,10 +22,11 @@ from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
-from .....core.config import override_settings
+from .....core.config import load_settings, override_settings
 from .....core.i18n.render import tr
 from ...tests.cli_runner import invoke_cached_cli
 from ..errors import ConfigBoundaryError
+from .isolated_storage_fixture import native_profile_view_server
 
 __all__ = ["_isolated_cli_backend"]
 
@@ -72,6 +56,24 @@ def _create_profile(name: str = "test-operator") -> None:
             "tax_residence.jurisdiction_scope": "common_regime",
         },
         log_in=False,
+    )
+
+
+def _runtime_view(name: str) -> Result:
+    """Authenticate one exact named profile through the verified secret frame."""
+    password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    return invoke_cached_cli(
+        (
+            "--format",
+            "json",
+            "--profile",
+            name,
+            "--profile-secrets-stdin",
+            "config",
+            "profile",
+            "view",
+        ),
+        input=json.dumps({"profile_passphrase": password}),
     )
 
 
@@ -132,22 +134,12 @@ def test_cadrumo_error_envelope_is_well_formed_in_json_mode() -> None:
 
 
 # ---------------------------------------------------------------------------
-# G2: Non-CadrumoError exceptions surface as ConfigBoundaryError (catches 1-3)
+# Native profile corruption is refused without leaking the local database error.
 # ---------------------------------------------------------------------------
 
 
 def _corrupt_bucket_db(tmp_path: Path) -> None:
-    """Overwrite the per-bucket SQLite DB file with garbage bytes.
-
-    A real on-disk corruption is the authentic trigger for a non-
-    ``CadrumoError`` failure in ``_read_profile_record`` — SQLAlchemy
-    raises ``DatabaseError`` / ``OperationalError`` when it tries to
-    open the corrupted file. This drives the catch-all branch that
-    wraps non-``CadrumoError`` exceptions into ``ConfigBoundaryError``.
-
-    Layout per ``bucket_session.py``:
-    ``<storage_root>/buckets/<bucket_id>/db/cadrumo.db``.
-    """
+    """Corrupt the real per-profile database before a native view read."""
     dispose_engine()  # flush cached connections so the rewrite is observed
     storage_root = tmp_path / "cadrumo-storage"
     db_paths = list(storage_root.glob("buckets/*/db/cadrumo.db"))
@@ -156,66 +148,24 @@ def _corrupt_bucket_db(tmp_path: Path) -> None:
         db_path.write_bytes(b"\x00" * 1024)  # SQLite header is 16 bytes; 1 KiB of NULs is enough
 
 
-def test_non_cadrumo_error_in_profile_show_read_wraps_to_config_boundary_error(tmp_path: Path) -> None:
-    """A non-CadrumoError escaping _read_profile_record is wrapped as ConfigBoundaryError.
-
-    The config_profile_view handler (catch 3) splits the except arm:
-    CadrumoError propagates verbatim; any other exception is wrapped in
-    ConfigBoundaryError before the custom "profile_record_unreadable" payload
-    is emitted.
-
-    The non-CadrumoError is triggered by a real on-disk corruption of the
-    per-bucket SQLite database (SQLAlchemy raises DatabaseError, not an
-    CadrumoError subclass), exercising the catch-all wrap into
-    ConfigBoundaryError.
-    """
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_corrupt_profile_view_refuses_without_database_or_secret_details(tmp_path: Path) -> None:
+    """The native worker refuses a corrupt encrypted record through a safe CLI envelope."""
     _create_profile("boundary-probe")
     _corrupt_bucket_db(tmp_path)
 
-    result = invoke_cached_cli(["config", "profile", "view", "boundary-probe"])
+    with native_profile_view_server(tmp_path / "cadrumo-storage", allow_unavailable_shutdown=True):
+        result = _runtime_view("boundary-probe")
 
-    assert result.exit_code == 2, result.output
-    output_text = result.output
-    # The machine token, not a word inside it. "unreadable" is a substring of
-    # "profile_record_unreadable", so accepting either accepted only the
-    # weaker one -- and the payload this test is named for went unchecked.
-    assert "profile_record_unreadable" in output_text
-
-
-def test_non_cadrumo_error_cause_chain_reaches_config_boundary_error(tmp_path: Path) -> None:
-    """ConfigBoundaryError wraps the raw exception and is chained from typer.Exit.
-
-    After catch 3 wraps a non-CadrumoError into ConfigBoundaryError, the
-    ``raise typer.Exit(code=2) from boundary`` statement chains the
-    ConfigBoundaryError as the __cause__ of the SystemExit.
-
-    Verifies the cause-chain shape when a real DB corruption (not a
-    monkeypatch attribute swap) causes the boundary to fire.
-    """
-    _create_profile("chain-probe")
-    _corrupt_bucket_db(tmp_path)
-
-    result = invoke_cached_cli(["config", "profile", "view", "chain-probe"])
-
-    assert result.exit_code == 2, result.output
-    # CliRunner captures the exception that propagated out of the callback.
-    # typer.Exit propagates from the handler; its __cause__ is ConfigBoundaryError.
-    exc = result.exception
-    if exc is not None:
-        cause = getattr(exc, "__cause__", None)
-        # Walk the cause chain up to depth 3 to find ConfigBoundaryError.
-        for _ in range(3):
-            if isinstance(cause, ConfigBoundaryError):
-                break
-            cause = getattr(cause, "__cause__", None)
-        # If CliRunner swallowed the exception, the output check is sufficient.
-        if cause is not None:
-            assert isinstance(cause, ConfigBoundaryError)
-            # Real-failure trigger raises a SQLAlchemy DatabaseError or
-            # similar; the wrapped original_exception is non-CadrumoError.
-            from .....core.errors.hierarchy import CadrumoError
-
-            assert not isinstance(cause.original_exception, CadrumoError)
+    assert result.exit_code != 0
+    document = json.loads(result.stderr)
+    assert document["command"] == "config.profile.view"
+    assert isinstance(document["error"]["code"], str)
+    combined = result.output + result.stderr
+    assert "Traceback" not in combined
+    assert "DatabaseError" not in combined
+    assert load_settings().cadrumo_dev_test_database_password.get_secret_value() not in combined
 
 
 # ---------------------------------------------------------------------------
@@ -418,12 +368,15 @@ def _record_divergence(profile_name: str) -> None:
         )
 
 
-def test_profile_show_surfaces_the_open_divergence_notice(operation: PinnedAuthorityOperation) -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_profile_show_surfaces_the_open_divergence_notice(operation: PinnedAuthorityOperation, tmp_path: Path) -> None:
     """A profile with an open cotejo divergence warns on `config profile view`."""
     _create_profile("divergence-probe")
     _record_divergence("divergence-probe")
 
-    result = invoke_cached_cli(["--format", "json", "config", "profile", "view", "divergence-probe"])
+    with native_profile_view_server(tmp_path / "cadrumo-storage"):
+        result = _runtime_view("divergence-probe")
 
     assert result.exit_code == 0, result.output
     document = json.loads(result.output)
@@ -435,11 +388,14 @@ def test_profile_show_surfaces_the_open_divergence_notice(operation: PinnedAutho
     assert "activities.description" in str(notice["context"]["axes"])
 
 
-def test_profile_show_carries_no_divergence_notice_when_clean() -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_profile_show_carries_no_divergence_notice_when_clean(tmp_path: Path) -> None:
     """A profile with no open divergence shows no censo warning."""
     _create_profile("clean-probe")
 
-    result = invoke_cached_cli(["--format", "json", "config", "profile", "view", "clean-probe"])
+    with native_profile_view_server(tmp_path / "cadrumo-storage"):
+        result = _runtime_view("clean-probe")
 
     assert result.exit_code == 0, result.output
     document = json.loads(result.output)

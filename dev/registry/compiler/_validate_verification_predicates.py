@@ -26,7 +26,7 @@ __all__ = [
     "_CASILLA_LIST_OPERATORS",
     "_advisory_when_ratio_ge_predicate_failures",
     "_casilla_equals_implies_diverges_predicate_failures",
-    "_casilla_equals_implies_nonzero_predicate_failures",
+    "_casilla_equals_implies_numeric_predicate_failures",
     "_casilla_equals_implies_profile_flag_predicate_failures",
     "_casilla_list_predicate_failures",
     "_deduccion_requires_adquisicion_before_predicate_failures",
@@ -66,6 +66,7 @@ def _casilla_list_predicate_failures(
     *,
     operator_name: str,
     casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> list[str]:
     operator = VerificationPredicateOperator(operator_name)
     parsed = _parsed_expression(expression, operator)
@@ -95,22 +96,33 @@ def _casilla_list_predicate_failures(
     for casilla_id in ids:
         if casilla_id not in casillas:
             failures.append(f"{prefix}: {owner} {operator.value} references unknown casilla {casilla_id!r}")
+    if operator is VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK:
+        for role, casilla_id in zip(("application", "stock"), ids, strict=False):
+            if casilla_id not in casillas:
+                continue
+            casilla = casilla_by_id.get(casilla_id)
+            if casilla is not None and registry_scalar_value_type(casilla.data_type) != "decimal":
+                failures.append(
+                    f"{prefix}: {owner} {operator.value} {role} casilla {casilla_id!r} must be a Decimal "
+                    f"numeric casilla (scalar family 'decimal'), not data_type {casilla.data_type!r}",
+                )
     return failures
 
 
-def _casilla_equals_implies_nonzero_predicate_failures(
+def _casilla_equals_implies_numeric_predicate_failures(
     prefix: str,
     owner: str,
     expression: str,
     casillas: set[CasillaId],
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+    *,
+    operator: VerificationPredicateOperator,
 ) -> list[str]:
-    operator = VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO
     parsed = _parsed_expression(expression, operator)
     if parsed is None:
         return [
             f"{_malformed_expression_failure(prefix, owner, expression, operator)}; expected "
-            'casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal", "consequent_casilla_id"])',
+            f'{operator.value}(["antecedent_casilla_id", "literal", "consequent_casilla_id"])',
         ]
     if len(parsed.arguments) != 3:
         return [

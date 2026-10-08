@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#bindings-interface-hardening'
 date: '2026-06-15'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:4c13041ead225163fc5ea51c72c6645d0edba0e4e02d65a622a820cc6db0ae6e'
 related:
   - "[[2026-06-14-bindings-interface-hardening-adr]]"
-  - "[[2026-06-15-bindings-interface-hardening-plan]]"
 ---
 
 # `bindings-interface-hardening` audit: `bindings interface hardening close audit and fresh-context honesty review`

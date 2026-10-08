@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#bucket-manifest-durability'
 date: '2026-07-25'
-modified: '2026-08-15'
-body_hash: 'sha256:92197ff7a42536fea323ab71645484a9b9f34b894164db34a7f2ddf3a58ccb36'
+modified: '2026-10-03'
+body_hash: 'sha256:76ef134de73466f295cb67577fb5a50b313dedf7e3ba7b2c2f25abe7db2b06d2'
 related:
   - "[[2026-07-25-code-dedup-sweep-adr]]"
   - "[[2026-07-25-compatibility-checkpoint-adr]]"
@@ -19,8 +19,7 @@ related:
 The bucket manifest is the plaintext TOML document at `<root>/buckets/<id>/manifest.toml`
 that registers a bucket and names its key schedule. It carries a `schema_version` field, is
 declared durable in the persisted-format inventory, and applies no version constraint on read
-beyond the record model's lower bound. `read_manifest` in
-`src/cadrumo/adapters/persistence/storage/bucket/_manifest_io.py` is the sole ingress for all
+beyond the record model's lower bound. `read_manifest`  is the sole ingress for all
 sixteen production consumers and gates nothing, so a manifest stamped by a newer application
 loads, its key-schedule field reaches the branch that decides whether an existing data key is
 unwrapped or a fresh one is minted, and five separate lifecycle writers preserve the foreign
@@ -39,8 +38,7 @@ is what this record closes, alongside the read gate neither predecessor addresse
 
 ## Considerations
 
-- The version is a bare local literal, not a constant. `manifest_schema_version = 2` at
-  `src/cadrumo/application/user_profile/_profile_repository.py:330` is derived from nothing;
+- The version is a bare local literal, not a constant. `manifest_schema_version = 2`  is derived from nothing;
   no module-level current-version constant for this format exists anywhere in the tree. The
   record field is `Field(ge=1)` at `.../storage/bucket/_manifest.py:91`, and the aggregate
   carrying it (`.../user_profile/_aggregate.py:68`) repeats the same open shape.
@@ -96,10 +94,9 @@ is what this record closes, alongside the read gate neither predecessor addresse
   application downgrade, two installs sharing one storage root, and a file-level restore of
   a bucket directory.
 - The declaration is five durable formats; the tier set admits three. Verified at HEAD against
-  the declaration itself rather than a commit message: `PERSISTED_FORMATS` in
-  `src/cadrumo/core/compatibility_lifecycle.py` declares `secure_object`, `bundle`, `archive`,
+  the declaration itself rather than a commit message: `PERSISTED_FORMATS`  declares `secure_object`, `bundle`, `archive`,
   `bucket_dek`, and `bucket_manifest` durable, and five further formats regenerable, while
-  `_CANONICAL_FORMAT_KEYS` in `src/cadrumo/tests/test_compatibility_lifecycle_gate.py` is the
+  `_CANONICAL_FORMAT_KEYS` is the
   three tier formats only. No manifest lineage gate exists: the tree carries four lineage
   gates and two schema-readability functions, none for this format.
 - A peer has since made that omission enforceable. Commit `998449a95f`, `feat(core): require

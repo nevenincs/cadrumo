@@ -27,12 +27,13 @@ See Also:
 
 from __future__ import annotations
 
-from contextlib import contextmanager
+from collections.abc import Callable
+from contextlib import AbstractAsyncContextManager, contextmanager, nullcontext
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
-from ...core.auth_provider import AuthProviderKind
+from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.time.clock import now
@@ -48,7 +49,9 @@ from .credentials import (
     active_auth_projection_span,
 )
 from .models import (
+    AuthCleanupIntent,
     AuthCleanupOperationKind,
+    AuthState,
 )
 from .operator_cleanup import (
     apply_auth_cleanup_intent,
@@ -111,7 +114,8 @@ from .operator_scope import (
 )
 from .operator_scope import resolve_auth_operation_scope
 from .operator_scope_ports import OperatorScopePorts
-from .protocols import BrowserSessionFactoryPort
+from .preferences import clear_profile_auth_preference, set_profile_auth_preference
+from .protocols import BrowserSessionFactoryPort, session_store
 from .sessions import (
     ensure_authenticated_aeat_session,
 )
@@ -132,10 +136,13 @@ def configure_operator_auth(
     provider: str,
     *,
     certificate_path: Path | None = None,
+    clave_movil_route: ClaveMovilRoute | None = None,
+    expected_profile_revision: int | None = None,
+    expected_profile_digest: str | None = None,
     operator_scope_ports: OperatorScopePorts,
     operation: PinnedAuthorityOperation,
 ) -> AuthConfigureResult:
-    """Configure the active auth provider in workflow state.
+    """Configure profile intent and operational auth state through one owner.
 
     The active profile is resolved through
     :func:`application.workflow.profile_health.assess_active_profile_health` before the
@@ -156,6 +163,9 @@ def configure_operator_auth(
             ``"certificate"``).
         certificate_path: Optional filesystem path to the operator's
             certificate file. Recorded in the event payload when supplied.
+        clave_movil_route: Explicit QR or app-request route, saved with the method.
+        expected_profile_revision: Optional revision of the profile being edited.
+        expected_profile_digest: Digest accompanying the optional edit revision.
         operator_scope_ports: Caller-composed profile and auth storage scope.
         operation: Caller-owned authority pin used for profile health.
 
@@ -199,8 +209,10 @@ def configure_operator_auth(
             operator_scope_ports=operator_scope_ports,
         ):
             state_repo = workflow_state_repository()
+            changed = False
 
             def mutate(current_state: WorkflowState) -> tuple[WorkflowState, tuple[BucketEvent, ...]]:
+                nonlocal changed
                 _assert_auth_recovery_not_in_progress(current_state)
                 profile_health = assess_active_profile_health(current_state, operation=operation)
                 active_bucket_id = profile_health.active_profile
@@ -223,6 +235,20 @@ def configure_operator_auth(
                         },
                         precondition_verdict=profile_health.precondition_verdict,
                     )
+                _, preference_changed = set_profile_auth_preference(
+                    profile_id=active_bucket_id,
+                    provider=AuthProviderKind(listing.id),
+                    route=clave_movil_route,
+                    profile_decode_context=operation.profile_decode_context(),
+                    expected_revision=expected_profile_revision,
+                    expected_content_digest=expected_profile_digest,
+                )
+                operational_changed = current_state.auth.provider != listing.id or (
+                    certificate_path is not None and current_state.auth.certificate_path != str(certificate_path)
+                )
+                changed = preference_changed or operational_changed
+                if not changed:
+                    return current_state, ()
                 next_state = _append_bucket_event(
                     update_auth(
                         current_state,
@@ -250,7 +276,10 @@ def configure_operator_auth(
     return _auth_configure_result(
         state=next_state,
         provider=listing.id,
-        certificate_path=certificate_path,
+        certificate_path=(
+            certificate_path or (Path(next_state.auth.certificate_path) if next_state.auth.certificate_path else None)
+        ),
+        changed=changed,
     )
 
 
@@ -616,6 +645,8 @@ async def login_operator_auth(
     reset_lock: bool = False,
     settings: Settings | None = None,
     guarded_read_context: str | None = None,
+    effect_guard: Callable[[], AbstractAsyncContextManager[None]] | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
 ) -> AuthLoginResult:
     """Acquire or verify a live AEAT session as :class:`AuthLoginResult`, and persist backend auth state.
 
@@ -644,6 +675,8 @@ async def login_operator_auth(
                 reset_lock=reset_lock,
                 settings=None,
                 guarded_read_context=guarded_read_context,
+                effect_guard=effect_guard,
+                authority_operation=authority_operation,
             )
     resolved_settings = load_settings()
     requested_kind = _provider_kind_or_none(provider)
@@ -663,21 +696,11 @@ async def login_operator_auth(
             )
         _provider_listing(provider_kind.value)
 
-        from ...core.access_gate.errors import AeatLiveReadNotEnabledError
-        from ...core.access_gate.gate import AeatAccessGate
-
-        gate = AeatAccessGate(resolved_settings)
-        # During pytest, the live-test opt-in remains the first refusal so
-        # test execution cannot accidentally reach external services.
-        # Outside pytest, auth login is an operational read surface and
-        # proceeds to provider readiness/session checks.
-        try:
-            gate.require_live_read(guarded_read_context=guarded_read_context)
-        except AeatLiveReadNotEnabledError as exc:
-            raise AuthLoginNotEnabledError(
-                translated_message="application.auth.operator.login.refused_live_tests_disabled",
-                context={"provider": provider_kind.value},
-            ) from exc
+        _require_live_auth_login(
+            provider_kind,
+            resolved_settings,
+            guarded_read_context=guarded_read_context,
+        )
 
         certificate_credentials = snapshot.certificate_credentials
 
@@ -707,30 +730,41 @@ async def login_operator_auth(
         ):
             repository = workflow_state_repository()
             _assert_auth_recovery_not_in_progress(repository.load())
-            with bundled_indexed_authority().operation() as authority_operation:
-                result = await ensure_authenticated_aeat_session(
-                    resolved_settings,
-                    certificate_secret_backend_factory=certificate_secret_backend_factory,
-                    browser_session_factory=browser_session_factory,
-                    kind=provider_kind,
-                    certificate_credentials=certificate_credentials,
-                    fresh=fresh,
-                    reset_lock=reset_lock,
-                    operation="operator-auth-login",
-                    operator_scope_ports=operator_scope_ports,
-                    profile_decode_context=authority_operation.profile_decode_context(),
+            with session_store().defer_writes() as staged:
+                operation_span = (
+                    nullcontext(authority_operation)
+                    if authority_operation is not None
+                    else bundled_indexed_authority().operation()
                 )
+                with operation_span as pinned_operation:
+                    result = await ensure_authenticated_aeat_session(
+                        resolved_settings,
+                        certificate_secret_backend_factory=certificate_secret_backend_factory,
+                        browser_session_factory=browser_session_factory,
+                        kind=provider_kind,
+                        certificate_credentials=certificate_credentials,
+                        fresh=fresh,
+                        reset_lock=reset_lock,
+                        operation="operator-auth-login",
+                        operator_scope_ports=operator_scope_ports,
+                        profile_decode_context=pinned_operation.profile_decode_context(),
+                        effect_guard=effect_guard,
+                    )
 
-            occurred_at = now()
-            repository.update_with_bucket_events(
-                lambda current: _verified_session_update(
-                    current,
-                    bucket_id=bucket_id,
-                    provider_kind=provider_kind,
-                    occurred_at=occurred_at,
-                    event_type=BucketEventType.AUTH_SESSION_VERIFIED,
-                ),
-            )
+                # Remote provider work has ended. Recheck current profile authority
+                # only while publishing its encrypted session and verified event.
+                async with effect_guard() if effect_guard is not None else nullcontext():
+                    staged.publish()
+                    occurred_at = now()
+                    repository.update_with_bucket_events(
+                        lambda current: _verified_session_update(
+                            current,
+                            bucket_id=bucket_id,
+                            provider_kind=provider_kind,
+                            occurred_at=occurred_at,
+                            event_type=BucketEventType.AUTH_SESSION_VERIFIED,
+                        ),
+                    )
 
         return AuthLoginResult(
             provider=provider_kind.value,
@@ -742,6 +776,25 @@ async def login_operator_auth(
             reset_lock_state=result.reset_lock.state.value if result.reset_lock is not None else "",
             verification_status=getattr(result.assertion, "status", "") or "",
         )
+
+
+def _require_live_auth_login(
+    provider_kind: AuthProviderKind,
+    settings: Settings,
+    *,
+    guarded_read_context: str | None,
+) -> None:
+    """Keep the pytest live-read refusal ahead of every provider readiness check."""
+    from ...core.access_gate.errors import AeatLiveReadNotEnabledError
+    from ...core.access_gate.gate import AeatAccessGate
+
+    try:
+        AeatAccessGate(settings).require_live_read(guarded_read_context=guarded_read_context)
+    except AeatLiveReadNotEnabledError as exc:
+        raise AuthLoginNotEnabledError(
+            translated_message="application.auth.operator.login.refused_live_tests_disabled",
+            context={"provider": provider_kind.value},
+        ) from exc
 
 
 def _verified_session_update(
@@ -921,12 +974,7 @@ def logout_operator_auth(
                     return state, ()
                 if current_intent.operation_id != operation_id:
                     raise InternalInvariantError("auth cleanup intent changed during a serialized logout")
-                clears_current = (
-                    state.auth.provider in intent.provider_ids
-                    and state.auth.provider == intent.provider_at_start
-                    and state.auth.configured_at == intent.configured_at_at_start
-                    and state.auth.authenticated_at == intent.authenticated_at_at_start
-                )
+                clears_current = _logout_state_matches_intent(state.auth, intent)
                 cleared_auth = state.auth.model_copy(
                     update={
                         **({"authenticated_at": None, "subject": None} if clears_current else {}),
@@ -934,32 +982,20 @@ def logout_operator_auth(
                     },
                 )
                 clears_session_state = clears_current and intent.had_session_state
-                event_provider_ids = tuple(
-                    dict.fromkeys(
-                        (
-                            *((state.auth.provider,) if clears_session_state and state.auth.provider else ()),
-                            *intent.session_provider_ids,
-                        ),
-                    ),
+                event_provider_ids = _logout_event_provider_ids(
+                    state.auth.provider,
+                    clears_session_state=clears_session_state,
+                    intent=intent,
                 )
                 updated = _append_bucket_events(
                     state.model_copy(update={"auth": cleared_auth}),
                     tuple(("auth.session.cleared", provider_id) for provider_id in event_provider_ids),
                 )
-                from ...domain.buckets.event import BucketEventType
 
-                durable_events = tuple(
-                    _BucketEventSpec(
-                        BucketEventType.AUTH_SESSION_CLEARED,
-                        provider_id,
-                        {
-                            "provider_id": provider_id,
-                            "operation": "logout",
-                            "operation_id": operation_id,
-                        },
-                        operation_started_at,
-                    )
-                    for provider_id in event_provider_ids
+                durable_events = _logout_durable_events(
+                    event_provider_ids,
+                    operation_id=operation_id,
+                    occurred_at=operation_started_at,
                 )
                 if not durable_events:
                     return updated, ()
@@ -980,6 +1016,53 @@ def logout_operator_auth(
         providers=intent.provider_ids,
         removed_sessions=len(intent.session_provider_ids),
         cleared_session_state=cleared_session_state,
+    )
+
+
+def _logout_state_matches_intent(auth: AuthState, intent: AuthCleanupIntent) -> bool:
+    """Whether cleanup may clear the currently configured and verified provider."""
+    return (
+        auth.provider in intent.provider_ids
+        and auth.provider == intent.provider_at_start
+        and auth.configured_at == intent.configured_at_at_start
+        and auth.authenticated_at == intent.authenticated_at_at_start
+    )
+
+
+def _logout_event_provider_ids(
+    current_provider: str | None,
+    *,
+    clears_session_state: bool,
+    intent: AuthCleanupIntent,
+) -> tuple[str, ...]:
+    """Order the current session first, then preserve the recorded provider order."""
+    return tuple(
+        dict.fromkeys(
+            (
+                *((current_provider,) if clears_session_state and current_provider else ()),
+                *intent.session_provider_ids,
+            ),
+        ),
+    )
+
+
+def _logout_durable_events(
+    provider_ids: tuple[str, ...],
+    *,
+    operation_id: str,
+    occurred_at: datetime,
+) -> tuple[_BucketEventSpec, ...]:
+    """Build the append-only logout evidence for each session removed."""
+    from ...domain.buckets.event import BucketEventType
+
+    return tuple(
+        _BucketEventSpec(
+            BucketEventType.AUTH_SESSION_CLEARED,
+            provider_id,
+            {"provider_id": provider_id, "operation": "logout", "operation_id": operation_id},
+            occurred_at,
+        )
+        for provider_id in provider_ids
     )
 
 
@@ -1083,6 +1166,12 @@ def reset_operator_auth(
                 intent.session_provider_ids,
                 bucket_id=bucket_id,
             )
+            with bundled_indexed_authority().operation() as authority:
+                preference_cleared = clear_profile_auth_preference(
+                    profile_id=bucket_id,
+                    providers=intent.provider_ids,
+                    profile_decode_context=authority.profile_decode_context(),
+                )
             # `auth reset` keeps its existing clearance for now. The ruling that
             # produced the held-lock refusal flagged this caller too -- the
             # profile survives here, so nothing compensates for an aborted
@@ -1146,7 +1235,7 @@ def reset_operator_auth(
         bucket_id=intent.bucket_id,
         providers=intent.provider_ids,
         removed_sessions=len(intent.session_provider_ids),
-        cleared_provider_configuration=bool(cleared_provider_ids or removed_source_names),
+        cleared_provider_configuration=bool(cleared_provider_ids or removed_source_names or preference_cleared),
         cleared_locks=len(intent.lock_provider_ids),
         removed_certificate_sources=len(removed_source_names),
         removed_certificate_secrets=len(intent.secret_source_names),

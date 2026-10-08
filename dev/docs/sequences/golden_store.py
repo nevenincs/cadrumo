@@ -58,8 +58,9 @@ from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, MASK_SENTINEL
 from dev._paths import REPO_ROOT, UTF_8
 
 from .errors import SequenceGoldenError
+from .export_evidence import normalise_ledger_export_evidence, normalise_modelo_export_evidence
 from .json_layout import format_sequence_json
-from .runner import CapturedValue, EnvelopeSource, SequenceTranscript
+from .runner import CapturedValue, EnvelopeSource, FrameExecution, SequenceTranscript
 from .schema import FrameKind, SequenceId
 
 __all__ = [
@@ -76,6 +77,7 @@ __all__ = [
     "mask_host_conditional_details",
     "masked_envelope_values",
     "normalise_document_paths",
+    "normalise_frame_envelope",
     "normalise_text_output",
     "platform_conditional_details",
     "read_golden",
@@ -255,6 +257,16 @@ class GoldenFrame(BaseModel):
 
     @model_validator(mode="after")
     def _streams_are_coherent(self) -> GoldenFrame:
+        self._validate_setup_output()
+        if (self.envelope is None) != (self.envelope_source is None):
+            raise ValueError("'envelope' and 'envelope_source' are set together or not at all")
+        if self.envelope_source == "stdout" and self.text is not None:
+            raise ValueError("stdout carried the envelope; 'text' must be None")
+        if self.envelope_source == "stderr" and self.stderr_text is not None:
+            raise ValueError("stderr carried the envelope; 'stderr_text' must be None")
+        return self
+
+    def _validate_setup_output(self) -> None:
         if self.kind is FrameKind.SETUP and (
             self.envelope is not None
             or self.envelope_source is not None
@@ -265,13 +277,6 @@ class GoldenFrame(BaseModel):
                 "a setup frame records only its argv, exit code and captures; this golden stores "
                 "setup output, so it predates the current golden layout",
             )
-        if (self.envelope is None) != (self.envelope_source is None):
-            raise ValueError("'envelope' and 'envelope_source' are set together or not at all")
-        if self.envelope_source == "stdout" and self.text is not None:
-            raise ValueError("stdout carried the envelope; 'text' must be None")
-        if self.envelope_source == "stderr" and self.stderr_text is not None:
-            raise ValueError("stderr carried the envelope; 'stderr_text' must be None")
-        return self
 
 
 class SequenceGolden(BaseModel):
@@ -435,18 +440,7 @@ def mask_host_conditional_details(document: object) -> object:
     with the stored artifact.
     """
     if isinstance(document, Mapping):
-        masked: dict[str, object] = {str(key): mask_host_conditional_details(value) for key, value in document.items()}
-        row_id = _host_conditional_row_id(document)
-        if row_id is not None:
-            if isinstance(document.get("detail"), str):
-                masked["detail"] = MASK_SENTINEL
-            facts = document.get("facts")
-            if isinstance(facts, Mapping):
-                masked["facts"] = {
-                    str(key): (MASK_SENTINEL if (row_id, str(key)) in _VOLATILE_HOST_FACT_COORDINATES else value)
-                    for key, value in facts.items()
-                }
-        return masked
+        return _mask_host_conditional_mapping(document)
     if isinstance(document, list | tuple):
         return [mask_host_conditional_details(item) for item in document]
     return document
@@ -583,6 +577,29 @@ def normalise_document_paths(
     return cast("dict[str, JsonValue]", _norm(document))
 
 
+def normalise_frame_envelope(
+    document: dict[str, JsonValue], *, frame: FrameExecution, transcript: SequenceTranscript
+) -> dict[str, JsonValue]:
+    """Apply the same verified sandbox evidence/path normalization at both tiers."""
+    evidence = normalise_ledger_export_evidence(
+        document,
+        argv=frame.argv,
+        profile_id=transcript.profile_id,
+        instant=transcript.frozen_instant,
+        workdir=transcript.workdir,
+        destination_token=SANDBOX_WORKDIR_PLACEHOLDER,
+    )
+    evidence = normalise_modelo_export_evidence(
+        evidence,
+        argv=frame.argv,
+        profile_id=transcript.profile_id,
+        instant=transcript.frozen_instant,
+        workdir=transcript.workdir,
+        destination_token=SANDBOX_WORKDIR_PLACEHOLDER,
+    )
+    return normalise_document_paths(evidence, storage_root=transcript.storage_root, workdir=transcript.workdir)
+
+
 def build_golden(transcript: SequenceTranscript) -> SequenceGolden:
     """Project an executed transcript into its committed golden expectation.
 
@@ -605,14 +622,10 @@ def build_golden(transcript: SequenceTranscript) -> SequenceGolden:
             masked_values=masked_values,
         )
 
-    def _path_normalised_envelope(envelope: dict[str, JsonValue] | None) -> dict[str, JsonValue] | None:
-        if envelope is None:
+    def _path_normalised_envelope(frame: FrameExecution) -> dict[str, JsonValue] | None:
+        if frame.envelope is None:
             return None
-        return normalise_document_paths(
-            envelope,
-            storage_root=transcript.storage_root,
-            workdir=transcript.workdir,
-        )
+        return normalise_frame_envelope(frame.envelope, frame=frame, transcript=transcript)
 
     frames: list[GoldenFrame] = []
     for frame in transcript.frames:
@@ -628,7 +641,7 @@ def build_golden(transcript: SequenceTranscript) -> SequenceGolden:
                 kind=frame.kind,
                 argv=frame.argv,
                 exit_code=frame.exit_code,
-                envelope=_path_normalised_envelope(frame.envelope),
+                envelope=_path_normalised_envelope(frame),
                 envelope_source=frame.envelope_source,
                 text=text,
                 stderr_text=stderr_text,
@@ -698,3 +711,18 @@ def read_golden(
             f"hand-edited; regenerate it with: "
             f"{refresh_invocation(sequence_id=sequence_id)}\n{exc}",
         ) from exc
+
+
+def _mask_host_conditional_mapping(document: Mapping[str, object]) -> dict[str, object]:
+    masked: dict[str, object] = {str(key): mask_host_conditional_details(value) for key, value in document.items()}
+    row_id = _host_conditional_row_id(document)
+    if row_id is not None:
+        if isinstance(document.get("detail"), str):
+            masked["detail"] = MASK_SENTINEL
+        facts = document.get("facts")
+        if isinstance(facts, Mapping):
+            masked["facts"] = {
+                str(key): (MASK_SENTINEL if (row_id, str(key)) in _VOLATILE_HOST_FACT_COORDINATES else value)
+                for key, value in facts.items()
+            }
+    return masked

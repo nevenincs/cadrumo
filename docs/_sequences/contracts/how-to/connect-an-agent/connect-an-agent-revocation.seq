@@ -1,0 +1,9 @@
+@step Revoke one key.
+@static aeat config profile automation deny key KEY_UUID
+@blocked operator-artifact KEY_UUID must name the reader's actual key from the human-authorized inventory.
+@step Revoke one grant.
+@static aeat config profile automation deny grant GRANT_UUID
+@blocked operator-artifact GRANT_UUID must name the reader's actual grant from the human-authorized inventory.
+@step Revoke all automation for this profile, even when no grants are enrolled.
+@static aeat config profile automation deny all
+@blocked credential-store Verifying removal of protected credentials requires an available OS credential store; access denial and pending physical cleanup are separate outcomes.

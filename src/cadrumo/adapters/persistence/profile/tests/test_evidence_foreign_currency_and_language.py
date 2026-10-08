@@ -23,6 +23,7 @@ prints. Nothing is recomputed from the code under test.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -32,12 +33,13 @@ from cadrumo.adapters.inbound.einvoice.parsers import parse_einvoice_document
 from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.invoices.catalogue_creation_ports import CatalogueCreationPorts
-from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.core.config import Settings
 from cadrumo.core.external_constants import DEFAULT_CURRENCY
 from cadrumo.domain.iva.classification import InvoiceKind
 
+from .....domain.currency.models import EurRateLookup
+from .....domain.currency.tests.fx_lookup import eur_rate_lookup
 from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     _EVIDENCE_CORPUS,
@@ -49,6 +51,7 @@ from ._invoice_confirmation_test_support import (
 )
 from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
 from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
@@ -93,7 +96,10 @@ class _AlwaysSilentRateProvider:
     def rate_source_id(self) -> str:
         return "test_silent"
 
-    def get_eur_rate(self, currency: str, rate_date: object) -> Decimal | None:
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        return eur_rate_lookup(self._rate(currency, rate_date), rate_date=rate_date, source=self.rate_source_id)
+
+    def _rate(self, currency: str, rate_date: date) -> Decimal | None:
         del currency, rate_date
         return None
 

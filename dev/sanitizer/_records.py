@@ -107,7 +107,7 @@ class _ReplacementBase(BaseModel):
             record (``"taxpayer name"``, ``"NIE"``, ...).
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
+    model_config = ConfigDict(frozen=True, extra="forbid", strict=True, hide_input_in_errors=True)
 
     real: SecretStr
     synthetic: _NonEmptyStr
@@ -246,7 +246,7 @@ class TokenMap(BaseModel):
         arbitrary: Replacements without shape constraints.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
+    model_config = ConfigDict(frozen=True, extra="forbid", strict=True, hide_input_in_errors=True)
 
     nif: tuple[NifReplacement, ...] = ()
     name: tuple[NameReplacement, ...] = ()

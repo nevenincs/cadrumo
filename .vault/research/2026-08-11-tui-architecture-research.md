@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:2ddb13042f7b9aede4b6ce4ee3da2c10243c30611f5f6b24861ade5d1c890c22'
+body_hash: 'sha256:ac9a074b36df9a114808f8e78e1a2e2ae3c91e3a7945255fd0ddf6cea9d74fde'
 related:
   - "[[2026-08-11-censal-sync-control-architecture-research]]"
-  - "[[2026-08-09-cli-action-envelope-hardening-adr]]"
   - "[[2026-08-08-sync-control-surface-adr]]"
   - "[[2026-06-10-cli-envelope-notice-standardisation-adr]]"
   - "[[2026-06-30-agent-harness-adr]]"
@@ -38,10 +37,6 @@ presentation disposition. Textual worker identity and a generic busy flag are
 then treated as operation state. There is no operation identity, typed request,
 phase, approval, authoritative terminal receipt, retry or recovery reference,
 resource ownership, or resumable snapshot.
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:72`
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:108`
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:729`
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:906`
 
 Credential acquisition is a second, disconnected worker harness. Its outcome
 is either a value or refusal prose, and its settlement handler recognizes only
@@ -49,11 +44,6 @@ Textual success and error. A cancelled attempt leaves `_attempt` populated and
 the controls busy. The flow TUI is a third mechanism: a synchronous application
 flow projection with review and checkpoints, but no external-operation runner.
 The codebase therefore has no one lifecycle that all TUI operations enter.
-`src/cadrumo/adapters/inbound/tui/_credential_screen.py:50`
-`src/cadrumo/adapters/inbound/tui/_credential_screen.py:83`
-`src/cadrumo/adapters/inbound/tui/_credential_screen.py:121`
-`src/cadrumo/adapters/inbound/tui/_app.py:344`
-`src/cadrumo/adapters/inbound/tui/_app.py:353`
 
 ### Cancellation cancels observation, not the running operation
 
@@ -65,10 +55,7 @@ cancellation scope or token, so cancellation cannot propagate into the inner
 async task, browser, session, or child process. A wrapper may therefore become
 cancelled while owned work continues, and the action can outlive the TUI. The
 existing seam test documents that exact limitation.
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:906`
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:200`
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:414`
-`src/cadrumo/entrypoints/cli/_config/tests/test_manager_action_seam.py:349`
+
 https://textual.textualize.io/guide/workers/
 
 ### The displayed timeout is only a countdown
@@ -78,9 +65,6 @@ The status bar pauses its countdown at zero but neither requests cancellation
 nor changes the operation's terminal condition. Local Playwright timeouts do
 not provide an aggregate deadline, heartbeat watchdog, cleanup deadline, or
 escalation policy for a TUI operation.
-`src/cadrumo/core/_operator_progress.py:10`
-`src/cadrumo/adapters/inbound/tui/_status_bar.py:129`
-`src/cadrumo/adapters/inbound/tui/_status_bar.py:157`
 
 ### The same defect covers every current manager operation
 
@@ -92,12 +76,6 @@ loop; Google export reaches from the CLI frontend into outbound Google and
 private CLI helpers. These are independent effect shapes with the same missing
 supervision boundary, so fixing only sync would leave the architecture unsafe
 for the next operation.
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:134`
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:361`
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:636`
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:1366`
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:1488`
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:1566`
 
 ### Modelo 036 census pull fits the envelope only when acquisition and apply are split
 
@@ -109,12 +87,8 @@ origin, enforces read-only landing policy, captures and parses the census page,
 and closes browser resources in `finally`. The envelope does not need to
 abstract those adapters away; it needs to supervise their sequence, resource
 scope, typed phases, and outcome.
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:198`
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:210`
+
 `src/cadrumo/application/live/__init__.py:389`
-`src/cadrumo/application/live/_session.py:27`
-`src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py:575`
-`src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py:622`
 
 One operation ID can cover preflight, session probe/acquisition, external
 Cl@ve-device wait, session verification, census navigation, landing validation,
@@ -124,7 +98,7 @@ observed rather than answered by the app; local review is
 `WAITING_FOR_INTERACTION` and consumes an exact `APPLY` or `REJECT` response.
 The current one-message Cl@ve callback reports neither the post-auth landing nor
 the later census phases.
-`src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_support.py:203`
+
 `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_page_flow.py:516`
 
 The domain proposal must retain the encrypted remote observation, local
@@ -134,10 +108,6 @@ references cannot enter generic events or logs. Apply must consume that exact
 proposal rather than recompute against an unboundedly stale baseline. The
 irreversible local commit is initially non-cancellable; an apply or cleanup
 failure must retain `UPDATED`, `PARTIAL`, or `UNKNOWN` effect truth.
-`src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py:295`
-`src/cadrumo/application/user_profile/_censo_sync.py:233`
-`src/cadrumo/application/user_profile/_censo_sync.py:380`
-`src/cadrumo/application/user_profile/_cotejo_apply.py:246`
 
 ### Previous-filing history pull fits the envelope as a recorded partial-effect operation
 
@@ -148,11 +118,6 @@ incrementally, finalizes calculation observations, writes completed filed-sync
 provenance, then separately acquires remote IVA-wallet and notification state.
 Pair and declaration failures are absorbed and processing continues; wallet and
 notification exceptions are flattened into stage-failure strings.
-`src/cadrumo/application/live/_filed_data_capture.py:1806`
-`src/cadrumo/application/live/_filed_data_capture.py:1848`
-`src/cadrumo/application/live/_filed_data_capture.py:1864`
-`src/cadrumo/application/live/_filed_data_capture.py:1909`
-`src/cadrumo/application/live/_filed_data_capture.py:1925`
 
 The operation therefore needs typed phases for scope discovery, register open,
 pair walk, declaration capture, evidence persistence, filed finalization,
@@ -162,11 +127,6 @@ failures need operation, stage, pair, or declaration scope plus retryability.
 The current manager collapses the result into prose and can render success when
 filed pairs were refused because its warning disposition considers only later
 `stage_failures`.
-`src/cadrumo/application/live/_filed_data_capture.py:258`
-`src/cadrumo/application/live/_filed_data_capture.py:803`
-`src/cadrumo/application/live/_filed_data_capture.py:871`
-`src/cadrumo/application/live/_filed_data_capture.py:887`
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:421`
 
 `SyncRunRecord` is valid completed filed-surface provenance, but it carries no
 outer operation identity, discovery/wallet/notification state, resource state,
@@ -178,8 +138,6 @@ Its effect moves from `NONE` to `UPDATED` on the first local write and to
 write boundary may be `UNKNOWN`. Its terminal result must reference the child
 filed sync record, captured evidence, wallet decision, and notification snapshot
 under one operation ID.
-`src/cadrumo/application/storage/sync_runs/_records.py:161`
-`src/cadrumo/application/storage/sync_runs/_persist.py:51`
 
 Review remains operation-specific. Refused versus genuinely empty pairs,
 recapture divergences, blocked wallet decisions, evidence notices, truncation,
@@ -205,8 +163,6 @@ browser/context/page resources, persistence, or cleanup have settled. Mounting
 subscribes; unmounting detaches. Explicit cancel sends a supervisor request and
 the modal remains capable of showing `CANCELLATION_REQUESTED` and `SETTLING`
 until authoritative settlement.
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:937`
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:1000`
 
 Close behavior is case-dependent operation policy projected by the same modal:
 detach, request cancellation and await settlement, or refuse close during an
@@ -223,12 +179,9 @@ tests and shared test helpers also import it. In the other direction,
 `_manager_actions.py` is a CLI module that owns application orchestration and
 imports TUI types, so neither package is independently replaceable and a wizard
 frontend restructuring campaign would collide with operation-harness work.
-`src/cadrumo/entrypoints/cli/_config/_manager_actions.py:49`
-`src/cadrumo/entrypoints/cli/_config/_manager_frontend.py:334`
+
 `src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py:51`
 `src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py:53`
-`src/cadrumo/application/flows/tests/test_frontend_parity.py:36`
-`src/cadrumo/tests/manager_pilot.py:30`
 
 The accepted hexagonal architecture fixes external invocation and composition
 under `cadrumo.entrypoints`, alongside the existing CLI and MCP roots. The
@@ -261,9 +214,6 @@ tool calls therefore inherit execution-on-save unless each callback invents
 its own policy. The related census research demonstrates the resulting consent
 failure, but its per-field merge request is a domain payload rather than the
 platform envelope.
-`src/cadrumo/adapters/inbound/tui/_form_screen.py:467`
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:937`
-`src/cadrumo/adapters/inbound/tui/_confirm_screen.py:43`
 
 ### Diagnostics and completion provenance cannot supervise recovery
 
@@ -273,9 +223,6 @@ objects. There is no durable operation ID or redacted diagnostic reference.
 Sync-run persistence records completion provenance, not lifecycle, so a crash
 or detached task leaves no queued, running, cancellation-requested, timed-out,
 interrupted, or orphaned state to reconcile on startup.
-`src/cadrumo/adapters/inbound/tui/_manager_screen.py:817`
-`src/cadrumo/adapters/inbound/tui/_credential_screen.py:85`
-`src/cadrumo/application/storage/sync_runs/_records.py:161`
 
 ### The CLI schema envelope is not the missing application envelope
 
@@ -288,8 +235,6 @@ separately owns transport timeouts and process-tree termination; it is not the
 application lifecycle precedent.
 `src/cadrumo/core/json_contract.py:385`
 `src/cadrumo/entrypoints/cli/_modelo_payloads.py:1`
-`src/cadrumo/entrypoints/mcp/_inprocess.py:1`
-`src/cadrumo/entrypoints/mcp/_call_runtime.py:67`
 
 The accepted action-envelope decision already places policy and stable action
 identity in application/domain code while treating CLI, MCP, TUI, locales, and
@@ -340,10 +285,6 @@ shared journal repository supplies atomic persistence while explicitly owning
 no orchestration. These can inform the generic invariants without forcing every
 ephemeral read to persist or coercing all domain workflows into one global
 state machine.
-`src/cadrumo/application/_config_reset_models.py:26`
-`src/cadrumo/application/_config_reset_models.py:193`
-`src/cadrumo/application/user_profile/_bundle_export_operation.py:92`
-`src/cadrumo/application/_journal_repository.py:1`
 
 ### Verification currently proves rendering seams, not lifecycle ownership
 
@@ -355,8 +296,6 @@ coverage emits synthetic prose. No test propagates real cancellation, enforces
 an aggregate timeout, awaits cleanup, reaps a process, reconciles an orphan,
 binds approval to an exact baseline, or executes an authenticated
 TUI-to-browser lifecycle.
-`src/cadrumo/entrypoints/cli/_config/tests/test_manager_action_seam.py:166`
-`src/cadrumo/adapters/inbound/tui/tests/test_manager_screen.py:364`
 
 ### The ADR must settle the conformance boundary
 
@@ -383,73 +322,19 @@ contained unrelated in-flight sync-run changes, which were preserved.
 
 ## Sources
 
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:72`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:108`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:729`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:817`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:906`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:937`
-- `src/cadrumo/adapters/inbound/tui/_credential_screen.py:50`
-- `src/cadrumo/adapters/inbound/tui/_credential_screen.py:83`
-- `src/cadrumo/adapters/inbound/tui/_credential_screen.py:85`
-- `src/cadrumo/adapters/inbound/tui/_credential_screen.py:121`
-- `src/cadrumo/adapters/inbound/tui/_app.py:344`
-- `src/cadrumo/adapters/inbound/tui/_app.py:353`
-- `src/cadrumo/adapters/inbound/tui/_status_bar.py:129`
-- `src/cadrumo/adapters/inbound/tui/_status_bar.py:157`
-- `src/cadrumo/adapters/inbound/tui/_form_screen.py:467`
-- `src/cadrumo/adapters/inbound/tui/_confirm_screen.py:43`
-- `src/cadrumo/core/_operator_progress.py:10`
 - `src/cadrumo/core/json_contract.py:385`
 - `src/cadrumo/entrypoints/cli/_modelo_payloads.py:1`
-- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py:134`
-- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py:200`
-- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py:361`
-- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py:414`
-- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py:636`
-- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py:1366`
-- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py:1488`
-- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py:1566`
+
 - `src/cadrumo/application/live/__init__.py:389`
-- `src/cadrumo/application/live/_session.py:27`
-- `src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py:295`
-- `src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py:575`
-- `src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py:622`
-- `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_support.py:203`
+
 - `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_page_flow.py:516`
-- `src/cadrumo/application/user_profile/_censo_sync.py:233`
-- `src/cadrumo/application/user_profile/_censo_sync.py:380`
-- `src/cadrumo/application/user_profile/_cotejo_apply.py:246`
-- `src/cadrumo/application/live/_filed_data_capture.py:258`
-- `src/cadrumo/application/live/_filed_data_capture.py:803`
-- `src/cadrumo/application/live/_filed_data_capture.py:871`
-- `src/cadrumo/application/live/_filed_data_capture.py:887`
-- `src/cadrumo/application/live/_filed_data_capture.py:1806`
-- `src/cadrumo/application/live/_filed_data_capture.py:1848`
-- `src/cadrumo/application/live/_filed_data_capture.py:1864`
-- `src/cadrumo/application/live/_filed_data_capture.py:1909`
-- `src/cadrumo/application/live/_filed_data_capture.py:1925`
-- `src/cadrumo/application/storage/sync_runs/_records.py:161`
-- `src/cadrumo/application/storage/sync_runs/_persist.py:51`
-- `src/cadrumo/adapters/inbound/tui/_manager_screen.py:1000`
-- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py:49`
-- `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py:334`
+
 - `src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py:51`
 - `src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py:53`
-- `src/cadrumo/application/flows/tests/test_frontend_parity.py:36`
-- `src/cadrumo/tests/manager_pilot.py:30`
+
 - `pyproject.toml:125`
 - `.codex/rules/aeat-architecture-boundaries.md:31`
-- `src/cadrumo/entrypoints/cli/_config/tests/test_manager_action_seam.py:166`
-- `src/cadrumo/entrypoints/cli/_config/tests/test_manager_action_seam.py:349`
-- `src/cadrumo/adapters/inbound/tui/tests/test_manager_screen.py:364`
-- `src/cadrumo/application/storage/sync_runs/_records.py:161`
-- `src/cadrumo/application/_config_reset_models.py:26`
-- `src/cadrumo/application/_config_reset_models.py:193`
-- `src/cadrumo/application/user_profile/_bundle_export_operation.py:92`
-- `src/cadrumo/application/_journal_repository.py:1`
-- `src/cadrumo/entrypoints/mcp/_inprocess.py:1`
-- `src/cadrumo/entrypoints/mcp/_call_runtime.py:67`
+
 - `.vault/adr/2026-08-09-cli-action-envelope-hardening-adr.md:27`
 - `.vault/adr/2026-06-10-cli-envelope-notice-standardisation-adr.md:19`
 - `.vault/adr/2026-06-30-agent-harness-adr.md:18`

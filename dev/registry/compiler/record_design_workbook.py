@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from dev.registry.compiler.record_design_schema import (
+    RecordDesign369RelativeClosing,
     RecordDesignAuxiliaryEnvelopeHeader,
     RecordDesignAuxiliaryEnvelopeHeaderField,
     RecordDesignAuxiliaryEnvelopeHeaderRole,
@@ -84,6 +85,7 @@ class _WorkbookFieldRow:
     length: int | None
     raw_offset: str | None
     raw_length: str | None
+    relative_offset: int | None
 
 
 def extract_sheet(worksheet: Worksheet, corrections: CorrectionIndex = EMPTY_CORRECTIONS) -> RecordDesignSheet:
@@ -230,7 +232,32 @@ def _consume_total_row(
     if label_index is None:
         return False
     row_total = positive_integer_after(values, label_index)
-    has_variable_total = any(optional_text(candidate) == "Variable" for candidate in values[label_index + 1 :])
+    has_variable_total = any(
+        (text := optional_text(candidate)) is not None and text.casefold() == "variable"
+        for candidate in values[label_index + 1 :]
+    )
+    _record_total_row(
+        sheet_name,
+        parsed_rows,
+        row_number,
+        values,
+        label_index=label_index,
+        row_total=row_total,
+        has_variable_total=has_variable_total,
+    )
+    return True
+
+
+def _record_total_row(
+    sheet_name: str,
+    parsed_rows: _WorkbookSheetRows,
+    row_number: int,
+    values: tuple[object, ...],
+    *,
+    label_index: int,
+    row_total: int | None,
+    has_variable_total: bool,
+) -> None:
     if has_variable_total:
         parsed_rows.variable_total_marker_rows.append(row_number)
     if row_total is not None and has_variable_total:
@@ -248,7 +275,17 @@ def _consume_total_row(
                 length="Variable",
             ),
         )
-    return True
+    elif all(optional_text(candidate) is None for candidate in values[label_index + 1 :]):
+        # A bare Total row is source evidence for the wrapper's terminus, but
+        # it supplies no length token. Keep that absence typed and visible.
+        parsed_rows.variable_totals.append(
+            RecordDesignVariableTotalMarker(
+                sheet=sheet_name,
+                row=row_number,
+                label="total",
+                length=None,
+            ),
+        )
 
 
 def _consume_field_row(
@@ -266,11 +303,21 @@ def _consume_field_row(
     # field is still a plain sequential ``int``, so they keep reading the
     # int-or-None form.
     row_shape = _workbook_field_row(header, values)
-    if row_shape.raw_length == "Variable":
+    if row_shape.raw_length is not None and row_shape.raw_length.casefold() == "variable":
         _consume_variable_body_row(parsed_rows, sheet_name, header, row_number, values, row_shape)
         return
     if row_shape.raw_offset == "***":
-        _consume_relative_suffix_row(parsed_rows, sheet_name, header, row_number, values, row_shape)
+        _consume_relative_suffix_row(parsed_rows, sheet_name, header, row_number, values, row_shape, offset="***")
+        return
+    if (
+        parsed_rows.variable_bodies
+        and row_shape.raw_offset is None
+        and row_shape.relative_offset is not None
+        and row_shape.length is not None
+    ):
+        _consume_relative_suffix_row(
+            parsed_rows, sheet_name, header, row_number, values, row_shape, offset=row_shape.relative_offset
+        )
         return
     if row_shape.offset is None or row_shape.length is None:
         return
@@ -296,6 +343,9 @@ def _workbook_field_row(header: WorkbookHeader, values: tuple[object, ...]) -> _
         length=int_or_none(cell_at(values, header.length_index)),
         raw_offset=optional_text(cell_at(values, header.offset_index)),
         raw_length=optional_text(cell_at(values, header.length_index)),
+        relative_offset=(
+            None if header.relative_offset_index is None else int_or_none(cell_at(values, header.relative_offset_index))
+        ),
     )
 
 
@@ -322,12 +372,16 @@ def _consume_relative_suffix_row(
     row_number: int,
     values: tuple[object, ...],
     row_shape: _WorkbookFieldRow,
+    *,
+    offset: str | int,
 ) -> None:
     """Retain a relative-suffix marker and its valid typed representation."""
     parsed_rows.relative_suffix_marker_rows.append(row_number)
     if row_shape.ordinal is not None and row_shape.length is not None:
         parsed_rows.relative_suffixes.append(
-            _relative_suffix_marker(sheet_name, header, row_number, values, row_shape.ordinal, row_shape.length),
+            _relative_suffix_marker(
+                sheet_name, header, row_number, values, row_shape.ordinal, row_shape.length, offset=offset
+            ),
         )
 
 
@@ -521,16 +575,35 @@ def solve_declared_desglose_holes(
             return [] if remaining == 0 else None
         if remaining == 0:
             return None
-        for candidate in by_offset.get(position, ()):
-            stop = position + candidate.length
-            if stop > end or any(byte in covered for byte in range(position, stop)):
-                continue
-            tail = walk(stop, remaining - 1)
-            if tail is not None:
-                return [candidate, *tail]
-        return None
+        return _try_desglose_candidates(
+            position,
+            remaining,
+            end=end,
+            covered=covered,
+            by_offset=by_offset,
+            walk=walk,
+        )
 
     return walk(parent.offset, wanted)
+
+
+def _try_desglose_candidates(
+    position: int,
+    remaining: int,
+    *,
+    end: int,
+    covered: set[int],
+    by_offset: Mapping[int, list[PdfRow]],
+    walk: Callable[[int, int], list[PdfRow] | None],
+) -> list[PdfRow] | None:
+    for candidate in by_offset.get(position, ()):
+        stop = position + candidate.length
+        if stop > end or any(byte in covered for byte in range(position, stop)):
+            continue
+        tail = walk(stop, remaining - 1)
+        if tail is not None:
+            return [candidate, *tail]
+    return None
 
 
 def tiles_exactly(parent: RecordDesignField, run: list[RecordDesignField]) -> bool:
@@ -572,13 +645,15 @@ def _relative_suffix_marker(
     values: tuple[object, ...],
     ordinal: int,
     length: int,
+    *,
+    offset: str | int,
 ) -> RecordDesignRelativeSuffixMarker:
     validation, content, description = _field_texts(sheet_name, header, row_number, values)
     return RecordDesignRelativeSuffixMarker(
         sheet=sheet_name,
         row=row_number,
         ordinal=ordinal,
-        offset="***",
+        offset=offset,
         length=length,
         type_code=required_text(cell_at(values, header.type_index), sheet_name, row_number, "type"),
         description=description,
@@ -785,7 +860,7 @@ def _require_ordered_variable_envelope(
 def _relative_closing(
     sheet_name: str,
     suffixes: list[RecordDesignRelativeSuffixMarker],
-) -> RecordDesignRelativeSuffixMarker | RecordDesignCompositeRelativeClosing:
+) -> RecordDesignRelativeSuffixMarker | RecordDesignCompositeRelativeClosing | RecordDesign369RelativeClosing:
     if len(suffixes) == 1 and suffixes[0].length == 18:
         return suffixes[0]
     if len(suffixes) != 6:
@@ -793,6 +868,15 @@ def _relative_closing(
             f"record-design sheet {sheet_name!r} has an incomplete or ambiguous relative closing",
         )
     try:
+        if tuple(part.offset for part in suffixes) == (1, 4, 7, 8, 12, 14):
+            return RecordDesign369RelativeClosing(
+                tag_prefix=suffixes[0],
+                modelo=suffixes[1],
+                discriminant=suffixes[2],
+                filing_year=suffixes[3],
+                period=suffixes[4],
+                tag_suffix=suffixes[5],
+            )
         return RecordDesignCompositeRelativeClosing(
             tag_prefix=suffixes[0],
             modelo=suffixes[1],
@@ -837,9 +921,9 @@ def _require_terminator_closes_the_record(
 
 
 def _relative_closing_parts(
-    closing: RecordDesignRelativeSuffixMarker | RecordDesignCompositeRelativeClosing,
+    closing: RecordDesignRelativeSuffixMarker | RecordDesignCompositeRelativeClosing | RecordDesign369RelativeClosing,
 ) -> tuple[RecordDesignRelativeSuffixMarker, ...]:
-    if isinstance(closing, RecordDesignCompositeRelativeClosing):
+    if isinstance(closing, (RecordDesignCompositeRelativeClosing, RecordDesign369RelativeClosing)):
         return closing.parts
     return (closing,)
 

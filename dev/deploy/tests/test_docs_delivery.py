@@ -6,18 +6,16 @@ from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
-from ..docs_static_site import (
+from ..docs_delivery_contracts import (
     _MISSING_DOCS_PATH,
     _RELEASE_ID_RE,
     CANONICAL_DOCS_BASE_URL,
     DELIVERY_ROUTES,
     MIRROR_DOCS_BASE_URL,
-    _delivery_credentials,
-    expected_redirect,
-    localized_languages,
-    public_delivery_checks,
-    release_id,
 )
+from ..docs_delivery_policy import _delivery_credentials, release_id
+from ..docs_delivery_probe import expected_redirect, public_delivery_checks
+from ..docs_site_languages import localized_languages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -31,6 +31,8 @@ bytes on disk, the real Click command tree.
 
 from __future__ import annotations
 
+import json
+import sys
 import tarfile
 from pathlib import Path
 
@@ -43,10 +45,16 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_s
 from ....tests.cli_envelope import unwrap_schema_envelope
 from .cli_runner import invoke_cached_cli
 from .privacy_helpers import assert_public_profile_id_not_leaked
+from .runtime_profile_cli_fixture import native_cli_profile_server
 
 __all__ = ["isolated_profile_storage"]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="archive export now uses native profile workers"),
+]
 
 
 def _invoke(args: list[str]) -> Result:
@@ -85,7 +93,7 @@ def _archive_export(name: str, out: Path, *, json_format: bool = True) -> Result
     args = ["config", "profile", "archive", "export", name, "--output", str(out)]
     if json_format:
         args = ["--format", "json", *args]
-    return _invoke(args)
+    return _invoke_authenticated_profile(name, args)
 
 
 def _archive_inspect(source: Path, *, json_format: bool = True) -> Result:
@@ -103,14 +111,30 @@ def _restore_from(source: Path, *, label: str, json_format: bool = True) -> Resu
     return invoke_cached_cli(args, input=f'{{"passphrase": "{_test_passphrase()}"}}')
 
 
-def _seed_transaction(csv_path: Path) -> None:
+def _seed_transaction(csv_path: Path, *, profile_name: str) -> None:
     csv_path.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
         "2026-02-10,Client SL,Factura 002,605.00,EUR,txn-archive-001\n",
         encoding="utf-8",
     )
-    r = _invoke(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
+    r = _invoke_authenticated_profile(
+        profile_name,
+        ["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"],
+    )
     assert r.exit_code == 0, r.output
+
+
+def _invoke_authenticated_profile(profile_name: str, args: list[str]) -> Result:
+    """Invoke one profile worker command with the fixture's one-use password."""
+    from ....core.config import load_settings
+
+    with native_cli_profile_server(load_settings().cadrumo_local_storage_root):
+        result = invoke_cached_cli(
+            ("--profile", profile_name, "--profile-secrets-stdin", *args),
+            input=json.dumps({"profile_passphrase": _test_passphrase()}),
+        )
+    assert _test_passphrase() not in result.output
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -134,7 +158,7 @@ def test_archive_export_restore_roundtrip(tmp_path: Path) -> None:
 
     csv_path = tmp_path / "bank.csv"
     _create_profile("profile", tax_id="12345678Z")
-    _seed_transaction(csv_path)
+    _seed_transaction(csv_path, profile_name="profile")
 
     source_bucket_id = resolve_active_bucket_id()
     assert source_bucket_id is not None

@@ -18,25 +18,25 @@ from ...core.errors.hierarchy import CadrumoError
 class PdfModeloImportError(CadrumoError):
     """Domain-level root for PDF filing import failures."""
 
-
-class PdfExtractionCoverageMixin:
-    """Shared structured-attribute ``__init__`` for PDF extraction coverage failures.
-
-    Both the justificante and declaración PDF parsers raise a coverage error
-    that carries the same four structured attributes describing which target
-    fields (field names for justificante, casilla IDs for declaración) could
-    not be extracted cleanly. Mixing this in once keeps the attribute shape
-    and constructor signature identical across both parser error hierarchies
-    instead of each declaring its own copy.
-
-    Attributes:
-        missing: Tuple of target identifiers that produced no match in the PDF text.
-        malformed: Tuple of target identifiers whose captured value could not be
-            coerced to the target type (e.g. an invalid decimal literal).
-        ambiguous: Tuple of target identifiers that matched more than one region.
-        coverage: Fraction of required targets successfully extracted
-            (``Decimal``).  ``None`` when the error is not a coverage failure.
-    """
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        missing: tuple[str, ...] = (),
+        malformed: tuple[str, ...] = (),
+        ambiguous: tuple[str, ...] = (),
+        coverage: Decimal | None = None,
+    ) -> None:
+        """Initialise the registered error and its extraction-coverage fields."""
+        super().__init__(message, context=context, translated_message=translated_message)
+        self._set_extraction_coverage(
+            missing=missing,
+            malformed=malformed,
+            ambiguous=ambiguous,
+            coverage=coverage,
+        )
 
     def _set_extraction_coverage(
         self,
@@ -57,34 +57,14 @@ class JustificanteError(PdfModeloImportError):
     """Base class for every justificante-related failure."""
 
 
-class JustificanteParseError(PdfExtractionCoverageMixin, JustificanteError):
+class JustificanteParseError(JustificanteError):
     """Raised when a PDF cannot be parsed into a :class:`Justificante`.
 
     Mirrors :class:`adapters.inbound.declaracion.errors.DeclaracionParseError`'s
-    structured-attribute shape (via the shared :class:`PdfExtractionCoverageMixin`)
+    structured-attribute shape (via the shared :class:`PdfModeloImportError`)
     so callers can assert on typed attributes rather than parsing the message
     string.
     """
-
-    def __init__(
-        self,
-        message: str | None = None,
-        *,
-        context: Mapping[str, object] | None = None,
-        translated_message: str | None = None,
-        missing: tuple[str, ...] = (),
-        malformed: tuple[str, ...] = (),
-        ambiguous: tuple[str, ...] = (),
-        coverage: Decimal | None = None,
-    ) -> None:
-        """Initialise the registered error and its extraction-coverage fields."""
-        super().__init__(message, context=context, translated_message=translated_message)
-        self._set_extraction_coverage(
-            missing=missing,
-            malformed=malformed,
-            ambiguous=ambiguous,
-            coverage=coverage,
-        )
 
 
 class JustificanteCsvNotFoundError(JustificanteParseError):

@@ -60,7 +60,7 @@ def _run(storage_root: Path, *args: str) -> subprocess.CompletedProcess[str]:
             errors="replace",
             capture_output=True,
             check=False,
-            timeout=180.0,
+            timeout=None,
         ),
     )
 

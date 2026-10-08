@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:1602b81941afe0b636293791f8889975fd0b5d88b3723e6df8227f7eab29a9d8'
-related:
-  - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
+related: []
 ---
 
 # `registry-authority-artifact-boundary` audit: `lane 3 integration review`

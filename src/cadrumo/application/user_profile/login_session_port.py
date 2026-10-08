@@ -14,14 +14,14 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, TypeGuard
+from typing import TYPE_CHECKING, Protocol
 from uuid import UUID
 
 from ...core.errors.hierarchy import InternalInvariantError
 
 if TYPE_CHECKING:
-    from ...core.profile_session import ProfileSessionRefusalReason
-    from .login_handover import ProfileLoginHandoverJournal
+    from ...core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+    from .access_contracts import ProfileAccessBinding
 
 
 class ProfileBucketSessionPort(Protocol):
@@ -109,6 +109,20 @@ class ProfilePersistedSessionPort(Protocol):
         ...
 
 
+class ProfileSignInGenerationPort(Protocol):
+    """One captured position in a profile's durable human sign-in sequence."""
+
+    @property
+    def lineage(self) -> UUID:
+        """The random lineage the position belongs to."""
+        ...
+
+    @property
+    def generation(self) -> int:
+        """The counter within that lineage."""
+        ...
+
+
 class ProfileSessionResumeOutcomePort(Protocol):
     """Fail-closed persisted-session evaluation result."""
 
@@ -120,6 +134,11 @@ class ProfileSessionResumeOutcomePort(Protocol):
     @property
     def refusal(self) -> ProfileSessionRefusalReason | None:
         """The typed reason a resume was refused, if it was."""
+        ...
+
+    @property
+    def binding(self) -> ReceiptBindingRefusal | None:
+        """The exact login or generation fence that rejected a saved sign-in."""
         ...
 
     @property
@@ -149,28 +168,6 @@ class ProfileLoginSessionPort(Protocol):
     protocols.  The boundary never copies them: live-session identity is part
     of rollback and the exact receipt instance anchors idle-deadline renewal.
     """
-
-    def load_handover_journal(self, *, storage_root: Path) -> ProfileLoginHandoverJournal | None:
-        """Load the durable profile-switch witness, if present."""
-        ...
-
-    def save_handover_journal(
-        self,
-        *,
-        storage_root: Path,
-        journal: ProfileLoginHandoverJournal,
-    ) -> None:
-        """Persist one monotonic profile-switch witness."""
-        ...
-
-    def clear_handover_journal(
-        self,
-        *,
-        storage_root: Path,
-        journal: ProfileLoginHandoverJournal,
-    ) -> None:
-        """Compare and clear the completed profile-switch witness."""
-        ...
 
     def current_session(self) -> ProfileBucketSessionPort | None:
         """Return the process-bound live session, if one exists."""
@@ -235,11 +232,29 @@ class ProfileLoginSessionPort(Protocol):
         now: datetime,
         idle_minutes: int,
         absolute_minutes: int,
-    ) -> ProfilePersistedSessionPort:
-        """Mint and return the canonical persisted acceleration receipt."""
+        login_id: str,
+        sign_in_binding: ProfileAccessBinding,
+        sign_in_generation: ProfileSignInGenerationPort,
+    ) -> ProfilePersistedSessionPort | None:
+        """Mint and return the canonical persisted acceleration receipt.
+
+        The receipt binds ``login_id``, the originating OS login, and exactly
+        ``sign_in_generation``, captured for ``sign_in_binding``'s custody
+        when its session was published. Return ``None``, having written
+        nothing, when that generation is no longer the durable current one.
+        """
         ...
 
-    def resume_acceleration_receipt(
+    def borrow_acceleration_receipt_key(
+        self,
+        *,
+        storage_root: Path,
+        profile_id: UUID,
+    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
+        """Read only the keychain proof the receipt locator names; never unwrap or delete."""
+        ...
+
+    def resume_acceleration_receipt_with_key(
         self,
         *,
         storage_root: Path,
@@ -247,27 +262,19 @@ class ProfileLoginSessionPort(Protocol):
         custody_generation: int,
         dek_epoch: str,
         now: datetime,
+        receipt_key: bytearray,
+        login_id: str,
+        sign_in_binding: ProfileAccessBinding,
     ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        """Evaluate one receipt and return its owned wipeable DEK buffer."""
+        """Verify a supplied human wrap key against ``login_id`` and the current sign-in generation.
+
+        It never reads a key from the OS store. A receipt refused for its own
+        metadata or binding is deleted by this runtime-side reader.
+        """
         ...
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
         """Revoke one profile's split-knowledge acceleration receipt."""
-        ...
-
-    def advance_acceleration_idle_deadline(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        record: ProfilePersistedSessionPort,
-        new_idle_deadline: datetime,
-    ) -> ProfilePersistedSessionPort:
-        """Advance a receipt while preserving its concrete DTO identity."""
-        ...
-
-    def is_persisted_receipt(self, record: object) -> TypeGuard[ProfilePersistedSessionPort]:
-        """Narrow a resume record to the canonical persisted receipt DTO."""
         ...
 
     def zeroise_owned_buffer(self, buffer: bytearray) -> None:
@@ -314,6 +321,7 @@ __all__ = [
     "ProfileLoginThrottleEvaluationPort",
     "ProfilePersistedSessionPort",
     "ProfileSessionResumeOutcomePort",
+    "ProfileSignInGenerationPort",
     "bind_profile_login_session_port",
     "profile_current_bucket_session",
     "profile_login_session_port",

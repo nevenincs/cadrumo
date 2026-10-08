@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#modelo-190-percepciones-count'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:01ead9c49d406a66f311c6d4d1f216ffb1f9071d797d9564aa191173dfd5ddba'
+body_hash: 'sha256:16d976c4c6d4e25627e7ce652e5fbf495c3a2b2b2c083427a590ab434c7e13b2'
 related:
   - '[[2026-06-25-modelo-190-percepciones-count-adr]]'
-  - '[[2026-06-25-modelo-190-percepciones-count-ledger]]'
-  - '[[2026-06-25-modelo-190-percepciones-count-plan]]'
   - '[[2026-06-25-modelo-190-percepciones-count-research]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#modelo-190-percepciones-coun
 ### adr
 
 - `2026-06-25-modelo-190-percepciones-count-adr` - `modelo-190-percepciones-count` adr: `Modelo 190 percepciones count: distinct-(perceptor,clave) over the withholding source` | (**status:** `accepted`)
-
-### exec
-
-- `2026-06-25-modelo-190-percepciones-count-ledger` - `modelo-190-percepciones-count` ledger
-
-### plan
-
-- `2026-06-25-modelo-190-percepciones-count-plan` - `modelo-190-percepciones-count` plan
 
 ### research
 

@@ -208,6 +208,7 @@ def test_cli_output_reveal_identifiers_unredacts_only_profile_and_bucket() -> No
         "bucket_id": _PROFILE_ID,
         "object_key": _OBJECT_KEY,
         "tax_id": _NIF,
+        "taxId": _NIF,
         "callback": _URL,
         "modelo": "130",
     }
@@ -227,6 +228,10 @@ def test_cli_output_reveal_identifiers_unredacts_only_profile_and_bucket() -> No
     assert isinstance(revealed_tax_id, str)
     assert revealed_tax_id != _NIF
     assert revealed_tax_id.startswith("sha256:")
+    revealed_camel_tax_id = revealed_structured["taxId"]
+    assert isinstance(revealed_camel_tax_id, str)
+    assert revealed_camel_tax_id != _NIF
+    assert revealed_camel_tax_id.startswith("sha256:")
     assert revealed_structured["callback"] == "https://example.test"
 
     text = redact_for_cli_output(

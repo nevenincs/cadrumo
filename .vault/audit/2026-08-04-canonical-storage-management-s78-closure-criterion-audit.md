@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-04'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:f243070975f59d4b3be40008950303965634fa66b1029b0ad9d21a69edcad13a'
-related:
-  - "[[2026-08-03-canonical-storage-management-plan]]"
+related: []
 ---
 
 # `canonical-storage-management` audit: `what closing S78 would claim, and what the evidence supports`

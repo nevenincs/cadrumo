@@ -5,10 +5,12 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from ...core.errors.hierarchy import InternalInvariantError
-from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
+
+if TYPE_CHECKING:
+    from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 
 
 class ModeloRecordCatalogueRepositoryFactory(Protocol):

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#tui-architecture'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b197f432d8cba1095c419b6eebdff9fccd3c6072bd64e0abd5c25f803759353b'
+body_hash: 'sha256:aef8bf121d30493828464e533fade4100a157f0f2cca3451b275086a108e1b2d'
 related: []
 ---
 
@@ -125,11 +125,11 @@ pass, not a same-pass substitution.
 M349's own diseño (`disenos_registro/modelo_349/files/01-349-...pdf.extracted.md:396`)
 states "consignar un único registro por cada clave de operación y periodo" — the same
 shape (operator, clave, periodo) as M184's (member, clave, subclave). `Modelo349OperadorRow`
-(`src/cadrumo/domain/modelos/_row_models.py:329`) already carries `clave_operacion` as a
+ already carries `clave_operacion` as a
 first-class field, so its row identity was built including the clave axis from the start.
 The S288 edit-contract natural key for the `operador` row kind is already the compound
 tuple `("nif_comunitario", "clave_operacion")`
-(`src/cadrumo/application/modelo/_edit_services.py:463`), proving the whole-set-replacement
+, proving the whole-set-replacement
 mechanism already supports a compound key without modification — only the tuple for the
 `miembro` row kind (currently `("nif",)`, `_edit_services.py:461`) needs to widen.
 
@@ -179,6 +179,5 @@ record's own diseño states about repetition.
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_349/files/01-349-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-pdf.pdf.extracted.md:396`
 - `src/cadrumo/_data/corpus/normatives/html/ley-35-2006.html.extracted.md:364-397,457-464,549-564`
 - `src/cadrumo/_data/corpus/normatives/html/rd-439-2007-art-30.html.extracted.md`
-- `src/cadrumo/domain/modelos/_row_models.py:329-349,598-621`
-- `src/cadrumo/application/modelo/_edit_services.py:460-476`
+
 - `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml:636-729`

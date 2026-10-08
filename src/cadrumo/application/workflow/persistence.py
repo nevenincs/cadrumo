@@ -35,7 +35,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from ...core.classification.policies import SensitivityClass
 from ...core.config import Settings, classify_storage_route, load_settings
@@ -49,8 +49,10 @@ from .events import (
     WorkflowStateResetFingerprint,
     emit_workflow_state_reset,
 )
-from .run_models import WorkflowResult
 from .state_models import WorkflowState
+
+if TYPE_CHECKING:
+    from .run_models import WorkflowResult
 
 _logger = get_logger(__name__)
 

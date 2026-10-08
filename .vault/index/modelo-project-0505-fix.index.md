@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#modelo-project-0505-fix'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0833f30e8eaa527c1d6800dfc2dc1d95f593fa7136b07830ea376d33494b3205'
+body_hash: 'sha256:ecd38ab225928c44efbc2f6e18d13cb980804ab12562c80a341ebf478103729c'
 related:
-  - '[[2026-06-04-modelo-project-0505-fix-adr]]'
   - '[[2026-06-04-modelo-project-0505-fix-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#modelo-project-0505-fix`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-modelo-project-0505-fix-adr` - `modelo-project-0505-fix` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

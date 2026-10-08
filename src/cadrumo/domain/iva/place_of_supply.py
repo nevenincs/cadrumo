@@ -48,23 +48,19 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING, TypeGuard
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.type_guards import is_object_mapping
 from ...core.validity_window import ValidityWindow, years_covered_by_every_group
 from .errors import IvaCatalogueError
 from .supply_nature import SupplyNature
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
-
-
-def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
-    """Narrow one runtime component to an object-keyed mapping before validation."""
-    return isinstance(value, Mapping)
 
 
 __all__ = [
@@ -203,7 +199,7 @@ def load_place_of_supply_table(
     from ..calculations.registry.runtime_catalogues import PublishedIvaPlaceOfSupplyRule
 
     loaded = operation.runtime_catalogue("iva_place_of_supply")
-    if not _is_object_mapping(loaded):
+    if not is_object_mapping(loaded):
         raise IvaCatalogueError("indexed authority place-of-supply component has an invalid shape")
     published_values: list[tuple[str, PublishedIvaPlaceOfSupplyRule]] = []
     for rule_id, published in loaded.items():

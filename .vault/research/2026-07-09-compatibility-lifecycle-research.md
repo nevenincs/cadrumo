@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#compatibility-lifecycle'
 date: '2026-07-09'
-modified: '2026-07-10'
-body_hash: 'sha256:bae7e1eca96c8e8dbd30bd092513438a002b56c1f66d9f01b194176cb0a71f49'
+modified: '2026-10-03'
+body_hash: 'sha256:622d704eaa747f2ce4eb15b0b968d18f1c0b005b7260cf4a49990acc5e381816'
 related: []
 ---
 
@@ -19,14 +19,14 @@ substrate and the governing rules, feeding ADR `2026-07-09-compatibility-lifecyc
 per-format forward-gating mechanism but left the pre-release → post-release posture flip
 without an owner, trigger, or enforcement:
 - Secure-object: `SECURE_OBJECT_DURABILITY_FLOOR = 1`, `register_secure_object_schema_upgrader`
-  (empty registry), chain-upgrade on read — `src/aeat/adapters/persistence/storage/_schema_lineage.py:45,50`.
+  (empty registry), chain-upgrade on read — the former source file.
 - Bundle: `BUNDLE_SCHEMA_VERSION = 3`, `BUNDLE_DURABILITY_FLOOR`, `BUNDLE_PAYLOAD_UPGRADERS`
   (empty) with the upgrade hop running BEFORE strict validation —
-  `src/aeat/application/user_profile/_bundle.py:52,57,65`.
+
 - Archive: `_ARCHIVE_SCHEMA_VERSION = _ARCHIVE_DURABILITY_FLOOR = 2`, a floor/ceiling gate with
   NO upgrade dispatch, pinned floor==current by
   `test_archive_schema_lineage.py::test_floor_is_pinned_to_current_until_a_version_aware_reader_exists`
-  — `src/aeat/application/bucket_maintenance/_service.py:103,109`.
+  — the former source file.
 
 **The floor-pin is the precedent shape.** That test binds future authors ("a version bump
 cannot land without a conscious, gate-enforced decision") while reading no old shapes and
@@ -37,7 +37,7 @@ maintaining: "a `max_supported_version` ceiling that refuses a FUTURE shape is
 forward-compatibility [kept]"; "CREATE is not migration". A regime constant + empty
 registries + test-time assertions fall in that category — policy metadata, not read-tolerance.
 
-**`Settings` is the wrong home for the regime marker.** `src/aeat/core/config.py` documents
+**`Settings` is the wrong home for the regime marker.** the former source file documents
 `Settings` as "populated from environment variables and `.env`" with `override_settings()` —
 env/machine/test-varying and monkeypatchable, unfit for a compliance regime that must be a
 property of the codebase commit and enforced in CI.

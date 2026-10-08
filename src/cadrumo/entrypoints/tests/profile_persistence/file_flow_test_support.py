@@ -1,4 +1,4 @@
-"""Shared support for modelo file-flow application tests."""
+"""Shared support for Modelo file-flow integration tests."""
 
 from __future__ import annotations
 
@@ -26,6 +26,7 @@ from cadrumo.adapters.persistence.profile.catalogue_reads import (
     InvoiceCatalogueReadAdapter,
     TransactionCatalogueReadAdapter,
 )
+from cadrumo.adapters.persistence.profile.foreign_assets import ForeignAssetRegisterRepository
 from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
 from cadrumo.adapters.persistence.profile.invoice_source_resolver import InvoiceCatalogueSourceResolverAdapter
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -57,7 +58,7 @@ from cadrumo.application.modelo.calculation_action_ports import CalculationActio
 from cadrumo.application.modelo.filing_actions import (
     file_modelo_revision,
 )
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import (
     create_work_unit,
 )
@@ -209,6 +210,10 @@ def calculation_ports_for_test(
                 bucket_id=normalized_bucket_id,
                 objects=objects,
             ),
+            foreign_asset_register_repository=ForeignAssetRegisterRepository(
+                bucket_id=normalized_bucket_id,
+                objects=objects,
+            ),
             inventory_repository=InventoryLedgerRepository(objects=objects),
             observation_repository=CalculationObservationRepository(objects=objects),
             invoice_source_ports=InvoiceSourceResolverPorts(
@@ -271,6 +276,7 @@ __all__ = [
     "Repos",
     "WorkflowGate",
     "canonical_work_unit_period",
+    "file_flow_repositories",
     "file_revision",
     "registry_required_manual_casillas",
     "seed_modelo_180_work_unit",
@@ -356,7 +362,7 @@ _Repos = tuple[
 ]
 
 
-def _repos(tmp_path: Path) -> Iterator[_Repos]:
+def file_flow_repositories(tmp_path: Path) -> Iterator[Repos]:
     """Yield the five catalogue repositories over an encrypted SQLite
     database through the shared active-profile runtime. Tuple shape:
     ``(work_unit, calculation_revision, filing_record,
@@ -531,7 +537,7 @@ def _workflow_gate(
     operation: PinnedAuthorityOperation,
 ) -> _WorkflowGate:
     profile = workflow_profile()
-    filing_ports = build_filing_action_ports(bucket_id=work_unit.bucket_id)
+    filing_ports = build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation)
     return _WorkflowGate(
         profile=profile,
         engine=build_revision_workflow_engine(
@@ -579,14 +585,21 @@ def _file_revision(
             operation=operation,
         )
         filing_ports = replace(
-            build_filing_action_ports(bucket_id=work_unit.bucket_id),
+            build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             work_unit_repository=work_unit_repository,
             calculation_repository=calculation_repository,
             filing_repository=filing_repository,
             bucket_event_repository=bucket_event_repository,
         )
+        granting_reports = tuple(
+            report
+            for report in filing_ports.verification_repository.load().reports.values()
+            if report.calculation_revision_id == calculation_revision_id and report.granted_verificado_completo
+        )
+        assert len(granting_reports) == 1, "filing test must use one actual granting verification report"
         return file_modelo_revision(
             calculation_revision_id,
+            approved_verification_report_id=granting_reports[0].verification_report_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             ports=filing_ports,
             actor=actor,
@@ -596,7 +609,7 @@ def _file_revision(
             clock=clock,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).record
 
 
 def _verify_revision(
@@ -635,7 +648,7 @@ def _verify_revision(
             bucket_event=bucket_event_repository,
             filing=filing_repository or ModeloRecordCatalogueRepository(),
         )
-        return verify_modelo_revision(
+        return verify_modelo_revision_with_preconditions(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=verification_repositories,
@@ -645,7 +658,7 @@ def _verify_revision(
             clock=clock,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
 
 def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:

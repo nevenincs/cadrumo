@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#docs-lifecycle-tutorials'
 date: '2026-07-13'
-modified: '2026-08-15'
-body_hash: 'sha256:ff720a80e4fcfc1a2e6c831f56960c5fac670dd8fdd74522c6eaa5e9f230e0a9'
+modified: '2026-10-03'
+body_hash: 'sha256:56eec76fbde947f3cbe1f654eda0fe312fe1487173714cd80781cc79b38c3e83'
 related:
   - '[[2026-06-01-docs-educational-surface-adr]]'
   - '[[2026-06-08-filing-architecture-docs-adr]]'
@@ -117,7 +117,7 @@ precedent for expanding any other page.
 
 The phase-1 survey confirmed the taxonomy on disk is a genuine Diataxis set,
 governed by two accepted ADRs, and found one real structural weakness the
-operator's ruling now resolves directly: `docs/tutorials/index.md` is a
+operator's ruling now resolves directly: the former source file is a
 single, dense, Modelo-130-only walkthrough that duplicates roughly 80% of
 `docs/how-to/quickstart.md` (same profile, same NIF, same two ledger rows,
 same Modelo 130 for 2026/1T), and the Tutorial quadrant otherwise has no

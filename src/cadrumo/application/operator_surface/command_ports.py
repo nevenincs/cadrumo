@@ -13,16 +13,15 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Literal, NotRequired, Protocol, TypedDict
+from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue
+from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.type_guards import is_object_list_or_tuple
 
 if TYPE_CHECKING:
-    from ...core.json_contract import RegisteredSchema
-    from .manifest import CommandSchemaRef
+    pass
 
 #: ``defer_build`` keeps these records out of the import cost every process
 #: pays: only the surface manifest, the reconciliation projection and the verb
@@ -52,25 +51,6 @@ class JsonType(StrEnum):
     INTEGER = "integer"
     NUMBER = "number"
     BOOLEAN = "boolean"
-
-
-class VerbParameterJsonSchema(TypedDict):
-    """JSON Schema a consumer reads for one command parameter."""
-
-    type: str
-    items: NotRequired[VerbParameterJsonSchema]
-    enum: NotRequired[list[str]]
-    description: NotRequired[str]
-    default: NotRequired[JsonValue]
-
-
-class VerbInputJsonSchema(TypedDict):
-    """Strict JSON object schema a consumer reads for one command's inputs."""
-
-    type: Literal["object"]
-    properties: dict[str, VerbParameterJsonSchema]
-    required: list[str]
-    additionalProperties: bool
 
 
 class CommandWriteRoute(StrEnum):
@@ -257,58 +237,6 @@ class CommandRegistrationMetadata:
         return dict(self.parameters_by_language)
 
 
-@dataclass(frozen=True, slots=True)
-class LiveNodeRegistrationMetadata:
-    """One live command-tree node projected by an outer graph adapter."""
-
-    path: tuple[str, ...]
-    kind: CommandNodeKind
-    loader_owner: str | None
-    handler_owner: str
-    source_sha256: str | None
-    policy: CommandPolicyMetadata | None
-
-
-@dataclass(frozen=True, slots=True)
-class CommandRegistrationProjection:
-    """Complete registration projection shared by outer consumers."""
-
-    commands: tuple[CommandRegistrationMetadata, ...]
-    nodes: tuple[LiveNodeRegistrationMetadata, ...]
-    profile_authentication_contract: ProfileAuthenticationContractMetadata
-
-
-@dataclass(frozen=True, slots=True)
-class CommandExecutionPolicy:
-    """Validated immutable execution policy returned by the command port."""
-
-    classification: CommandCapabilityClass
-    write_route: CommandWriteRouteValue
-    destructive: bool = False
-    handoff: bool = False
-    live_write: bool = False
-
-    def __post_init__(self) -> None:
-        """Reject policy flags that contradict the declared capabilities."""
-        if self.write_route != CommandWriteRoute.NONE and "local-state" not in self.classification.side_effects:
-            raise ValueError("a command write-route scope requires the local-state side effect")
-        if (
-            self.write_route != CommandWriteRoute.NONE
-            and "profile-custody" not in self.classification.expanded_capabilities
-        ):
-            raise ValueError("a command storage write-route scope requires the profile-custody capability")
-        if self.destructive and "local-state" not in self.classification.side_effects:
-            raise ValueError("a destructive command requires the local-state side effect")
-        if self.handoff and "filing" not in self.classification.expanded_capabilities:
-            raise ValueError("a filing handoff requires the filing capability")
-        if self.handoff and "local-state" not in self.classification.side_effects:
-            raise ValueError("a filing handoff requires the local-state side effect")
-        if self.live_write and "network" not in self.classification.expanded_capabilities:
-            raise ValueError("a live write requires the network capability")
-        if self.live_write and not self.classification.side_effects.intersection({"network", "browser"}):
-            raise ValueError("a live write requires a network or browser side effect")
-
-
 class RecoveryHandoffContract(BaseModel):
     """Value-free machine discovery for a two-way secret handoff."""
 
@@ -353,18 +281,6 @@ class VerbParameter(BaseModel):
     choices: tuple[str, ...] = ()
     default: bool | int | float | str | list[Any] | None = None
     help: str = ""
-
-    def property_schema(self) -> VerbParameterJsonSchema:
-        """Project this parameter into the consumer-facing JSON schema."""
-        scalar: VerbParameterJsonSchema = {"type": self.json_type.value}
-        if self.choices:
-            scalar["enum"] = list(self.choices)
-        if self.help:
-            scalar["description"] = self.help
-        schema: VerbParameterJsonSchema = {"type": "array", "items": scalar} if self.multiple else scalar
-        if self.default is not None:
-            schema["default"] = self.default
-        return schema
 
 
 class ResolvedVerbLeaf(BaseModel):
@@ -413,15 +329,6 @@ class VerbInputSchema(BaseModel):
         """Return parameters that must be supplied by a caller."""
         return tuple(parameter for parameter in self.parameters if parameter.required)
 
-    def json_schema(self) -> VerbInputJsonSchema:
-        """Project the input contract into a strict JSON object schema."""
-        return {
-            "type": "object",
-            "properties": {parameter.name: parameter.property_schema() for parameter in self.parameters},
-            "required": [parameter.name for parameter in self.parameters if parameter.required],
-            "additionalProperties": False,
-        }
-
 
 class SchemaResolutionError(CadrumoError):
     """Raised by an outer adapter when its live schema projection is incomplete."""
@@ -432,6 +339,30 @@ class SchemaResolutionError(CadrumoError):
         super().__init__("; ".join(f"{item.subject_leaf_key}: {item.reason}" for item in failures))
 
 
+def _parameter_values(parameter: VerbParameter, value: object) -> Sequence[object]:
+    """Preserve repeated list/tuple inputs while treating other values as scalar."""
+    return value if parameter.multiple and is_object_list_or_tuple(value) else (value,)
+
+
+def _option_tokens(parameter: VerbParameter, value: object, values: Sequence[object]) -> tuple[str, ...]:
+    """Encode one option, flag or repeated option without changing token order."""
+    if parameter.is_flag:
+        if value:
+            return (parameter.cli_flag,)
+        return (parameter.off_flag,) if parameter.off_flag else ()
+    if parameter.multiple:
+        return tuple(token for item in values for token in (parameter.cli_flag, str(item)))
+    return parameter.cli_flag, str(value)
+
+
+def _parameter_tokens(parameter: VerbParameter, value: object) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Return positional and option tokens for one supplied parameter."""
+    values = _parameter_values(parameter, value)
+    if parameter.kind is ParameterKind.ARGUMENT:
+        return tuple(str(item) for item in values), ()
+    return (), _option_tokens(parameter, value, values)
+
+
 def cli_argv_for(schema: VerbInputSchema, arguments: Mapping[str, object]) -> list[str]:
     """Encode named schema arguments into the canonical command argv tail."""
     positional: list[str] = []
@@ -439,74 +370,10 @@ def cli_argv_for(schema: VerbInputSchema, arguments: Mapping[str, object]) -> li
     for parameter in schema.parameters:
         if parameter.name not in arguments:
             continue
-        value = arguments[parameter.name]
-        values: Sequence[object] = value if parameter.multiple and is_object_list_or_tuple(value) else (value,)
-        if parameter.kind is ParameterKind.ARGUMENT:
-            positional.extend(str(item) for item in values)
-        elif parameter.is_flag:
-            if value:
-                options.append(parameter.cli_flag)
-            elif parameter.off_flag:
-                options.append(parameter.off_flag)
-        elif parameter.multiple:
-            options.extend(token for item in values for token in (parameter.cli_flag, str(item)))
-        else:
-            options.extend((parameter.cli_flag, str(value)))
+        parameter_positional, parameter_options = _parameter_tokens(parameter, arguments[parameter.name])
+        positional.extend(parameter_positional)
+        options.extend(parameter_options)
     return ["--format", "json", *schema.cli_path, *positional, *options]
-
-
-class CommandSchemaPort(Protocol):
-    """Application boundary for an outer command graph's schema projection."""
-
-    def command_schema_refs(self) -> tuple[CommandSchemaRef, ...]:
-        """Return every registered result-schema identity."""
-        ...
-
-    def command_schema_type(self, command: str) -> RegisteredSchema:
-        """Return the registered result schema for one command identity."""
-        ...
-
-    def command_schema_types(self) -> Mapping[str, RegisteredSchema]:
-        """Return the immutable command-to-result-schema projection."""
-        ...
-
-    def command_registration_projection(self) -> CommandRegistrationProjection:
-        """Return the complete registration metadata projection."""
-        ...
-
-    def build_verb_input_schemas(self, command_keys: tuple[str, ...]) -> Mapping[str, VerbInputSchema]:
-        """Build input schemas for the requested command identities."""
-        ...
-
-
-class CommandMetadataPort(Protocol):
-    """Application boundary for command identity and exposure metadata."""
-
-    def cli_path_for_command_key(self, command_key: str) -> tuple[str, ...]:
-        """Resolve one command identity to its canonical path."""
-        ...
-
-    def is_exposable_command(self, command_key: str) -> bool:
-        """Return whether an identity is callable on the external surface."""
-        ...
-
-    def command_search_terms(self, command_key: str) -> tuple[str, ...]:
-        """Return graph-authored semantic search terms for one command."""
-        ...
-
-    def global_flags(self) -> frozenset[str]:
-        """Return root options accepted alongside every command path."""
-        ...
-
-
-class CommandPolicyPort(Protocol):
-    """Application boundary for policy lookup by canonical command path."""
-
-    def command_execution_policy_for_cli_path(self, cli_path: tuple[str, ...]) -> CommandExecutionPolicy: ...
-
-
-class CommandSurfacePort(CommandSchemaPort, CommandMetadataPort, CommandPolicyPort, Protocol):
-    """Complete read-only command surface consumed by the retained harness."""
 
 
 def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, ...]) -> None:
@@ -518,20 +385,14 @@ def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, .
 __all__ = [
     "Capability",
     "CommandCapabilityClass",
-    "CommandExecutionPolicy",
-    "CommandMetadataPort",
     "CommandNodeKind",
     "CommandParameterDefault",
     "CommandParameterMetadata",
     "CommandPolicyMetadata",
     "CommandRegistrationMetadata",
-    "CommandRegistrationProjection",
-    "CommandSchemaPort",
-    "CommandSurfacePort",
     "CommandWriteRoute",
     "CommandWriteRouteValue",
     "JsonType",
-    "LiveNodeRegistrationMetadata",
     "MachineSecretFieldMetadata",
     "MachineSecretPayloadMetadata",
     "MachineSecretPresence",

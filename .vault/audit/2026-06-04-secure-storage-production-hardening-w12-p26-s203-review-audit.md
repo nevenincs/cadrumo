@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:5a31db8b67152321ea7dbf7c38c8a1c095531c4c42a495f6eff8b0d9aee5d20e'
+modified: '2026-10-03'
+body_hash: 'sha256:562328c8b786aecd74e834bab445a12f5c33d5e99b89da7916be5b50e9020374'
 related: []
 ---
 
@@ -60,11 +60,11 @@ introduced in the S203 slice.
 
 Validation:
 
-- `uv run --no-sync ruff check src/aeat/application/diagnostics.py src/aeat/application/test_diagnostics.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py` passed.
-- `uv run --no-sync pytest src/aeat/application/test_diagnostics.py -k "secure_object_unreadable_total or quarantine" -q` passed with 8 selected tests.
-- `uv run --no-sync pytest src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "diagnostic or auth_diagnostics or s85_runtime" -q` passed with 5 selected tests.
+- the historical check passed.
+- the historical check passed with 8 selected tests.
+- the historical check passed with 5 selected tests.
 - Prior committed S203 host validation also recorded
-  `$env:PYTHONPATH='src'; uv run --no-sync -q pytest -q src/aeat/application/test_diagnostics.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "auth_diagnostics or secure_objects or diagnostics or migrated_runtime_defaults_refuse"` passing with 115 selected tests.
+  the historical check passing with 115 selected tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: `vaultspec-code-reviewer` review returned one HIGH, one MEDIUM,

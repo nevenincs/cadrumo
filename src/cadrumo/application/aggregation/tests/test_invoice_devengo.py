@@ -29,7 +29,6 @@ from ....domain.iva.classification import InvoiceKind
 from ..invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
     invoice_devengo_in_period,
-    proxy_attributed_invoice_ids,
     resolve_invoice_devengo,
 )
 from ..source_mesh import (
@@ -145,7 +144,7 @@ def test_an_invoice_with_no_operation_date_is_attributed_on_its_issue_date() -> 
     assert invoice_devengo_in_period(invoice, period=Period.from_year_and_code(2026, "1T")) is False
 
 
-def test_proxy_attributed_ids_name_only_the_records_resting_on_a_substitute() -> None:
+def test_proxy_advisory_names_only_the_records_resting_on_a_substitute() -> None:
     """The reporting half: declared-date invoices are not named."""
     declared = _invoice(
         invoice_number="2026/DEV-DECLARED",
@@ -154,9 +153,14 @@ def test_proxy_attributed_ids_name_only_the_records_resting_on_a_substitute() ->
     )
     proxied = _invoice(invoice_number="2026/DEV-PROXY")
 
-    named = proxy_attributed_invoice_ids((declared, proxied))
-
-    assert named == (proxied.invoice_id,)
+    diagnostics = devengo_proxy_attribution_diagnostics(
+        (declared, proxied),
+        source_kind="ledger_iva_aggregation",
+        resolver_id="ledger_iva_aggregation",
+    )
+    assert len(diagnostics) == 1
+    assert proxied.invoice_number in diagnostics[0].message
+    assert declared.invoice_number not in diagnostics[0].message
 
 
 def test_a_period_built_only_on_declared_dates_raises_no_advisory() -> None:

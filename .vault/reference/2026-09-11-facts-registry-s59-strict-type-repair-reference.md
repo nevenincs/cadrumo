@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#facts-registry'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:ef5eb0fb89256b32179e9ac6585c811e5643354b074382c5e65906511fad5a70'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+related: []
 ---
 # `facts-registry` reference: `s59 strict type repair`
 

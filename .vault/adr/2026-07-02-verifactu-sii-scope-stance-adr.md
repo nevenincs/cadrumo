@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#verifactu-sii-scope-stance'
 date: '2026-07-02'
-modified: '2026-08-15'
-body_hash: 'sha256:5b05c863721326a5c617f7d9c3b753a68c1b632a3223741b44b02d301fba5f20'
+modified: '2026-10-03'
+body_hash: 'sha256:66dd6faec1d2fbb516c5936a05f01e55e1d24f8c10e1687d7475198a44501003'
 related:
   - '[[2026-07-10-verifactu-sii-scope-stance-research]]'
 ---
@@ -27,7 +27,7 @@ The ambiguity is asymmetric: `2026-05-21-sii-digital-iva-ledger-adr`
 already modelled SII as a taxpayer-profile enrolment axis that reshapes other
 obligations (Modelo 347/390 suppression, Modelo 303 monthly cadence), and that
 model is implemented in production code (`sii_enrolled` on
-`src/cadrumo/domain/deadlines/_models.py`, `src/cadrumo/domain/deadlines/_profiles.py`,
+
 the wizard catalogue, and the M303 monthly-cadence commits `d3d49b29f` /
 `2dbe9d6e8`) -- yet that ADR's own status field still reads `proposed`. VERI*FACTU
 has only a registry topic (`src/cadrumo/_data/registry/aeat/topics/verifactu.toml`)
@@ -155,8 +155,8 @@ No new implementation lands from this ADR. It is a scope ruling:
 - `2026-05-21-sii-digital-iva-ledger-adr`'s status is corrected from
   `proposed` to `accepted` in a follow-up housekeeping edit, since its model
   is already implemented and load-bearing in production
-  (`src/cadrumo/domain/deadlines/_models.py`, `_profiles.py`,
-  `src/cadrumo/application/wizard/_catalogue.py`, `src/cadrumo/core/setup_answers.py`,
+  (the former source file, `_profiles.py`,
+
   and the M303 monthly-cadence commits).
 - VERI*FACTU remains at its current state: a registry `topics/verifactu.toml`
   stub (legal-reference anchor only) and a `draft` terminology concept, with

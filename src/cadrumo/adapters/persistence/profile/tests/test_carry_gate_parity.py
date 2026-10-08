@@ -85,7 +85,7 @@ def _stored_layer(envelope: dict[str, Any]) -> dict[str, Any]:
 def _m303_compensation_header() -> tuple[ObservedHeaderFact, ...]:
     return (
         ObservedHeaderFact(
-            header_key="declaration_type",
+            header_key="filing.result_disposition",
             value="C",
             source_artefact_kind="submitted_file",
             source_locator="carry-gate-parity:declaration-type",

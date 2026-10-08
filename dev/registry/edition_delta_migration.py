@@ -41,9 +41,11 @@ An edition the materialiser cannot reproduce exactly is **blocked** and stays a
 full copy with its restatement lifted. The causes are closed: an overlapping
 predecessor; renamed fragments that would state the new rows out of
 their full-copy order, which the merge would then keep; a predecessor lineage
-the successor omits without a ``retired`` evolution; a predecessor row carrying
-no lineage; a lineage carried twice; or a stated row colliding with an
-inherited row of another lineage. Because a modelo whose editions name predecessors admits one
+the successor omits without withdrawing it, through a ``retired`` evolution or
+as the source of a structural succession; a predecessor row carrying no
+lineage; or a planned delta the loader itself refuses to materialise, such as
+a lineage carried twice or a stated row colliding with an inherited row of
+another lineage, reported with the loader's own refusal. Because a modelo whose editions name predecessors admits one
 key-less root only, a blocked edition other than the first needs an explicit
 no-predecessor declaration. That declaration is a claim about the form, so the
 tool reports the unresolved source condition and refuses application rather
@@ -132,9 +134,9 @@ Where it stops:
 - Label text is not rewritten. Locale keys are edition-scoped and the loader
   gives an inherited row its origin edition's key as a fallback.
 - Export scenarios come from ``dev.registry.edition_export_scenarios``. An
-  edition whose export surface has no scenario there is reported unchecked by
-  the gate, which blocks ``--apply``; the typed, order and locale proofs still
-  run.
+  edition whose export surface has no scenario there is reported unchecked as
+  a publication-readiness finding. It does not block a proven source-only
+  ``--apply``; the typed, order and locale proofs still run.
 
 For an authored change, ``--accepted-modelo-dir`` adds an independent retained
 casilla order comparison against an accepted source snapshot before staging or
@@ -147,1246 +149,68 @@ migration's equivalence proof covers its own rewrite of the current source.
 from __future__ import annotations
 
 import argparse
-import datetime
-import hashlib
 import json
-import re
 import sys
-from collections import Counter
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
-from enum import Enum, StrEnum
 from pathlib import Path
-from typing import Final, cast
 
-import tomlkit
-from pydantic import ValidationError
-
-from cadrumo.core.toml import parse_toml
-from cadrumo.domain.calculations.registry.cleared_families import cleared_family_names
-from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryLoadError
+from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.keyed_families import (
-    CANONICAL_FAMILY_SPECS,
     CASILLAS_FAMILY,
-    DROPPABLE_FAMILY_SPECS,
-    HELD_BACK_FAMILY_REASONS,
-    INHERITED_FAMILY_SPECS,
-    FamilyInheritanceMode,
-    family_identity_value,
-    family_source_default_fields,
-    inline_family_source_default,
 )
-from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
-from cadrumo.domain.calculations.registry.revision_order import (
-    ordered_revisions,
-    revision_windows_intersect,
-    revisions_coexist,
-)
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from dev._paths import REPO_ROOT
-from dev.registry.compiler.identifier_lineage import identifier_lineage
-from dev.test_runs.paths import allocate_run_directory
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev.test_runs.paths import allocate_run_directory, test_log_root
 
+from . import edition_delta_assessment as _edition_delta_assessment
+from . import edition_delta_drop as _edition_delta_drop
+from . import edition_delta_drop_reporting as _edition_delta_drop_reporting
+from . import edition_delta_drop_types as _edition_delta_drop_types
+from . import edition_delta_equivalence as _edition_delta_equivalence
+from . import edition_delta_errors as _edition_delta_errors
+from . import edition_delta_fields as _edition_delta_fields
+from . import edition_delta_order_restoration as _edition_delta_order_restoration
+from . import edition_delta_override_pruning as _edition_delta_override_pruning
+from . import edition_delta_planning as _edition_delta_planning
+from . import edition_delta_source as _edition_delta_source
+from . import edition_delta_source_publication as _edition_delta_source_publication
+from . import edition_delta_types as _edition_delta_types
+from . import edition_delta_workdir as _edition_delta_workdir
+from . import edition_delta_writer as _edition_delta_writer
 from .casilla_order_review import render_report as render_casilla_order_review
 from .casilla_order_review import review_casilla_order
-from .compiler.edition_materialisation import materialise_edition
-from .compiler.loader import load_modelo_declarations, load_modelo_directory
 from .edition_export_scenarios import edition_export_scenarios
-from .edition_family_delta import (
-    STATED_WHOLE_SEQUENCES,
-    collapse_keyed_families,
-    minimal_positions,
-    restates_stated_whole_sequence,
-)
+from .edition_family_delta_collapse import collapse_keyed_families
 from .edition_round_trip import (
     EditionExportScenario,
     RoundTripFinding,
-    RoundTripFindingKind,
     RoundTripReport,
-    RowKey,
     copy_registry_tree,
     edition_round_trip_report,
 )
-from .source_default_rule import edition_source_default
 
 __all__ = [
-    "AcceptanceCheckClass",
-    "BlockedCause",
-    "DropOutcome",
-    "DropPlan",
-    "EditionDrop",
-    "EditionPlan",
-    "FamilyDrop",
-    "KeptReason",
-    "LiftCounts",
-    "MigrationAssessment",
     "MigrationOutcome",
-    "MigrationPlan",
-    "MigrationRefusedError",
-    "MigrationStatus",
-    "OrderRestoration",
-    "PredecessorBasis",
-    "assess_migration_state",
-    "declared_order_restorations",
-    "drop_restatement",
     "main",
     "migrate_modelo",
     "persist_migration_report",
-    "plan_drop",
-    "plan_migration",
-    "render_drop_outcome",
     "render_outcome",
 ]
-
-_MODELOS: Final = "modelos"
-_CASILLAS: Final = "casillas"
-_MANIFEST: Final = "revision.toml"
-_ROW_SOURCE: Final = "source_refs"
-_ROW_SOURCE_ADDITIONS: Final = "additional_source_refs"
-_ROW_LEGAL: Final = "legal_refs"
-#: Row fields an edition default fills when the row does not state them.
-_EDITION_DEFAULTED_FIELDS: Final = frozenset({_ROW_SOURCE, _ROW_LEGAL})
-_LINEAGE_CLAIMS: Final = frozenset({"continuidad_origin", "continuidad_evidence"})
-_CONSTRAINTS: Final = "constraints"
-_REPORT_FAMILY: Final = "audit-runs"
-_REPORT_LABEL: Final = "report-registry-edition-migration"
-_LINEAGE: Final = "continuidad_id"
-_REFERENCE_SECTIONS: Final[Mapping[str, str]] = {
-    "formula": "formulas",
-    "binding": "bindings",
-    "alternate_bindings": "bindings",
-}
-_RETIRED: Final = "retired"
-_REVISION_SEGMENT: Final = r'(?:"[^"\n]+"|[^".\]\n]+)'
-_ROW_HEADER: Final = re.compile(rf"^\[\[revisions\.{_REVISION_SEGMENT}\.casillas\]\]\s*$")
-_CONSTRAINTS_HEADER: Final = re.compile(rf"^\[revisions\.{_REVISION_SEGMENT}\.casillas\.constraints\]\s*$")
-_TOML_ESCAPES: Final[Mapping[str, str]] = {
-    "\\": "\\\\",
-    '"': '\\"',
-    "\b": "\\b",
-    "\t": "\\t",
-    "\n": "\\n",
-    "\f": "\\f",
-    "\r": "\\r",
-}
-
-
-# The migration refusal is a registry-domain failure.  Keep the public symbol
-# as an alias rather than defining an unregistered subclass in this dev module:
-# ``CadrumoError`` subclasses must have a declared error-code entry in the
-# domain error registry, and this tool does not own that registry.
-MigrationRefusedError = RegistryError
-
-
-class PredecessorBasis(StrEnum):
-    """How an edition's predecessor declaration was decided."""
-
-    FIRST = "first"
-    ADJACENT = "adjacent"
-    DECLARED = "declared"
-    STORAGE = "storage"
-    DECLARED_ROOT = "declared_root"
-    BLOCKED = "blocked"
-    #: The edition's inheritance is left exactly as authored and only its
-    #: restatement is lifted, because the modelo is already delta-authored and
-    #: is proven against its chain rather than against a full copy.
-    LIFT_ONLY = "lift_only"
-
-
-class BlockedCause(StrEnum):
-    """Why an edition cannot be delta-authored exactly against its adjacent earlier edition."""
-
-    OVERLAPPING_PREDECESSOR = "overlapping_predecessor"
-    #: Renamed fragments would state the edition's new rows out of their full-copy order.
-    ROW_ORDER = "row_order"
-    UNRETIRED_WITHDRAWAL = "unretired_withdrawal"
-    PREDECESSOR_ROW_WITHOUT_LINEAGE = "predecessor_row_without_lineage"
-    AMBIGUOUS_LINEAGE = "ambiguous_lineage"
-    UNDECLARED_REPURPOSE = "undeclared_repurpose"
-    TRANSFORMATION_FAILED = "transformation_failed"
-
-
-class KeptReason(StrEnum):
-    """Why a row of a delta edition stays stated."""
-
-    NEW_LINEAGE = "new_lineage"
-    DIFFERS = "differs"
-    NOT_EXACT = "screen_identical_not_exact"
-
-
-type _Row = dict[str, object]
-type _Declarations = Mapping[str, Mapping[str, tuple[str, ...]]]
-
-
-@dataclass(frozen=True, slots=True)
-class LiftCounts:
-    """How many restated references an edition stops stating."""
-
-    row_source_refs: int = 0
-    constraint_source_refs: int = 0
-    row_orden_legal_refs: int = 0
-    constraint_orden_legal_refs: int = 0
-
-    def total(self) -> int:
-        """Return the number of lifted references of every kind."""
-        return (
-            self.row_source_refs
-            + self.constraint_source_refs
-            + self.row_orden_legal_refs
-            + self.constraint_orden_legal_refs
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class EditionPlan:
-    """What the migration writes for one edition, and the counts that justify it."""
-
-    revision_id: str
-    basis: PredecessorBasis
-    predecessor: str | None
-    blocked: tuple[BlockedCause, ...]
-    source_default: tuple[str, ...] | None
-    source_default_withheld: str | None
-    rows_before: int
-    stated_ids: tuple[str, ...]
-    inherited_ids: tuple[str, ...]
-    lifted: LiftCounts
-    kept: Mapping[KeptReason, int]
-    not_exact: tuple[str, ...]
-    comments_dropped: int
-    reviewed_against: str | None
-    dependencies: tuple[str, ...] = ()
-    blocked_detail: tuple[str, ...] = ()
-    casilla_overrides: tuple[_Row, ...] = ()
-    casilla_removals: tuple[_Row, ...] = ()
-    casilla_positions: tuple[_Row, ...] = ()
-    lineage_attestations: tuple[LineageAttestation, ...] = ()
-
-    @property
-    def is_delta(self) -> bool:
-        """Whether the edition is compacted against an explicit dependency."""
-        return self.predecessor is not None and self.basis in {
-            PredecessorBasis.ADJACENT,
-            PredecessorBasis.DECLARED,
-            PredecessorBasis.STORAGE,
-        }
-
-
-@dataclass(frozen=True, slots=True)
-class MigrationPlan:
-    """Every edition's plan for one modelo, in validity order."""
-
-    modelo_id: str
-    editions: tuple[EditionPlan, ...]
-    already_delta_authored: bool
-
-    def blocked_roots(self) -> tuple[str, ...]:
-        """Return blocked editions retained unchanged as readable full-copy roots."""
-        return tuple(edition.revision_id for edition in self.editions if edition.basis is PredecessorBasis.BLOCKED)
-
-    def completed(self) -> tuple[str, ...]:
-        """Return revisions whose authored representation is compacted."""
-        return tuple(edition.revision_id for edition in self.editions if edition.is_delta)
-
-    def unchanged(self) -> tuple[str, ...]:
-        """Return readable revisions retained unchanged, excluding blockers."""
-        return tuple(
-            edition.revision_id
-            for edition in self.editions
-            if not edition.is_delta and edition.basis is not PredecessorBasis.BLOCKED
-        )
-
-
-class AcceptanceCheckClass(StrEnum):
-    """Owning acceptance boundary for a migration diagnostic."""
-
-    SOURCE_RECONSTRUCTION = "source_reconstruction"
-    PUBLICATION_READINESS = "publication_readiness"
-
-
-class SourceMigrationStatus(StrEnum):
-    """Machine states for source replacement alone."""
-
-    ACCEPTED = "accepted"
-    APPLIED = "applied"
-    PARTIALLY_APPLIED = "partially_applied"
-    PARTIAL = "partial"
-    REFUSED = "refused"
-
-
-class PublicationReadinessStatus(StrEnum):
-    """Machine states for the complete publication contract."""
-
-    FAILED = "failed"
-    NOT_CHECKED = "not_checked"
-
-
-class PublicationExecutionStatus(StrEnum):
-    """Machine states for authority publication execution."""
-
-    NOT_PERFORMED = "not_performed"
-
-
-class MigrationStatus(StrEnum):
-    """Independent verdicts carried by a source-migration report."""
-
-    PASSED = "passed"
-    FAILED = "failed"
-    COMPLETE = "complete"
-    INCOMPLETE = "incomplete"
-    UNCHANGED = "unchanged"
-    APPLIED = "applied"
-    PARTIALLY_APPLIED = "partially_applied"
-    STAGED = "staged"
-    NOT_APPLIED = "not_applied"
-
-
-@dataclass(frozen=True, slots=True)
-class MigrationAssessment:
-    """Read-only physical and semantic measurements for one authored modelo tree.
-
-    A payload field is one value-bearing mapping entry, recursively. Empty
-    mappings/arrays are one explicit value. Array elements are part of their
-    owning field and are compared with order and type intact. ``id``, storage
-    selectors, baseline/predecessor references, removals, and position/order
-    declarations are structural overhead. Provenance and continuity fields are
-    payload and are deliberately absent from that structural classification.
-    """
-
-    fingerprint: str
-    input_fingerprints: tuple[Mapping[str, str], ...]
-    inputs_stable: bool
-    physical_bytes: int
-    authored_payload_fields: int
-    inherited_payload_fields: int
-    genuine_overrides: int
-    redundant_overrides: int
-    additions: int
-    removals: int
-    structural_overhead: int
-    unresolved_duplication: tuple[Mapping[str, object], ...]
-    blocked_work: tuple[Mapping[str, object], ...]
-    by_revision_family: tuple[Mapping[str, object], ...]
-
-    @property
-    def minimal(self) -> bool:
-        """Whether no eligible repeated payload or unassessed work remains."""
-        return self.inputs_stable and not self.unresolved_duplication and not self.blocked_work
-
-
-_STORAGE_REPRESENTATION_FIELDS: Final[frozenset[str]] = frozenset(
-    {
-        "predecessor",
-        "casilla_storage_baseline",
-        "casilla_overrides",
-        "casilla_removals",
-        "casilla_positions",
-        "family_storage_baseline",
-        "family_overrides",
-        "family_removals",
-        "family_positions",
-        "cleared_families",
-        "scoped_families",
-        "restated_families",
-    }
-)
-
-
-_STRUCTURAL_FIELDS: Final[frozenset[str]] = _STORAGE_REPRESENTATION_FIELDS | frozenset(
-    {
-        "id",
-        "selector",
-        "position",
-        "removed_fields",
-        "restate_provenance",
-        "restated_families",
-        "family_dispositions",
-    }
-)
-
-
-def _field_count(value: object, *, structural: bool) -> tuple[int, int]:
-    """Count payload and representation fields without coercing values."""
-    if not isinstance(value, Mapping):
-        return (0 if structural else 1, 1 if structural else 0)
-    payload = overhead = 0
-    for key, child in value.items():
-        is_structural = structural or str(key) in _STRUCTURAL_FIELDS
-        if isinstance(child, Mapping) and child:
-            child_payload, child_overhead = _field_count(child, structural=is_structural)
-        else:
-            child_payload, child_overhead = (0, 1) if is_structural else (1, 0)
-        payload += child_payload
-        overhead += child_overhead
-    return payload, overhead
-
-
-def _leaf_values(value: object, prefix: tuple[str, ...] = ()) -> dict[tuple[str, ...], object]:
-    """Return consistently counted nested values, keeping arrays as ordered values."""
-    if not isinstance(value, Mapping) or not value:
-        return {prefix: value}
-    leaves: dict[tuple[str, ...], object] = {}
-    for key, child in value.items():
-        leaves.update(_leaf_values(child, (*prefix, str(key))))
-    return leaves
-
-
-def _typed_equal(left: object, right: object) -> bool:
-    """Compare registry values without Python's bool/int or container coercions.
-
-    An enum compares by its value: authored TOML states ``"computed"`` where the
-    typed model holds ``InputKind.COMPUTED``, and the two are the same fact.
-    Sequences compare in order; tables compare by field, whatever order their
-    keys were written in.
-    """
-    if isinstance(left, Enum):
-        left = left.value
-    if isinstance(right, Enum):
-        right = right.value
-    if isinstance(left, Mapping) or isinstance(right, Mapping):
-        # A table's keys name its fields; the order they were written in is
-        # serialisation, not meaning, so only the key sets are compared.
-        return (
-            isinstance(left, Mapping)
-            and isinstance(right, Mapping)
-            and set(left) == set(right)
-            and all(_typed_equal(left[key], right[key]) for key in left)
-        )
-    if isinstance(left, list | tuple) or isinstance(right, list | tuple):
-        return (
-            isinstance(left, list | tuple)
-            and isinstance(right, list | tuple)
-            and len(left) == len(right)
-            and all(_typed_equal(a, b) for a, b in zip(left, right, strict=True))
-        )
-    return type(left) is type(right) and left == right
-
-
-def _model_value(value: object) -> object:
-    dump = getattr(value, "model_dump", None)
-    return dump(mode="python", exclude={"inherited_from"}) if callable(dump) else value
-
-
-def _stated_leaves(value: object) -> dict[tuple[str, ...], object]:
-    """A baseline member's typed leaf values, limited to the leaves its declaration states.
-
-    A value restates its baseline only where the baseline states that value
-    too. An explicit empty sequence, ``false`` or zero over a field the
-    baseline omits reads the same through the typed default, but it is a
-    statement the baseline does not make: the chain proof materialises it, so
-    dropping it as redundant would change the edition's storage. Values keep
-    their full typed form; only the leaves the baseline leaves to a default
-    are withheld from comparison.
-    """
-    full = _leaf_values(_thaw(_model_value(value)))
-    dump = getattr(value, "model_dump", None)
-    if not callable(dump):
-        return full
-    stated = _leaf_values(_thaw(dump(mode="python", exclude={"inherited_from"}, exclude_unset=True)))
-    return {path: item for path, item in full.items() if path in stated}
-
-
-def _file_fingerprints(modelo_dir: Path) -> tuple[Mapping[str, str], ...]:
-    return tuple(
-        {
-            "path": path.relative_to(modelo_dir).as_posix(),
-            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-        }
-        for path in sorted(item for item in modelo_dir.rglob("*") if item.is_file())
-    )
-
-
-def _source_fingerprint(modelo_dir: Path) -> str:
-    digest = hashlib.sha256()
-    for path in sorted(item for item in modelo_dir.rglob("*") if item.is_file()):
-        digest.update(path.relative_to(modelo_dir).as_posix().encode())
-        digest.update(b"\0")
-        digest.update(path.read_bytes())
-        digest.update(b"\0")
-    return f"sha256:{digest.hexdigest()}"
-
-
-def _remove_toml_leaf(value: object, path: Sequence[str]) -> bool:
-    """Remove one assessed redundant leaf, pruning empty nested tables."""
-    if not path or not isinstance(value, MutableMapping):
-        return False
-    key = path[0]
-    if len(path) == 1:
-        if key not in value:
-            return False
-        del value[key]
-        return True
-    child = value.get(key)
-    if not _remove_toml_leaf(child, path[1:]):
-        return False
-    if isinstance(child, Mapping) and not child:
-        del value[key]
-    return True
-
-
-def _storage_difference(
-    baseline: Mapping[str, object], target: Mapping[str, object]
-) -> tuple[dict[str, object], tuple[str, ...]]:
-    """Return the recursive field patch that turns one storage row into another."""
-    removed: list[str] = []
-
-    def visit(old: Mapping[str, object], new: Mapping[str, object], prefix: str = "") -> dict[str, object]:
-        fields: dict[str, object] = {}
-        for key in sorted(set(old) | set(new)):
-            path = f"{prefix}.{key}" if prefix else key
-            if key not in new:
-                removed.append(path)
-                continue
-            if key not in old:
-                fields[key] = new[key]
-                continue
-            old_value, new_value = old[key], new[key]
-            if isinstance(old_value, Mapping) and isinstance(new_value, Mapping):
-                nested = visit(old_value, new_value, path)
-                if nested:
-                    fields[key] = nested
-            elif old_value != new_value:
-                fields[key] = new_value
-        return fields
-
-    return visit(baseline, target), tuple(removed)
-
-
-def _existing_storage_removals(baseline: Mapping[str, object], removed_fields: Sequence[str]) -> tuple[str, ...]:
-    """Keep removals that address leaves physically present on the inherited row."""
-    existing: list[str] = []
-    for path in removed_fields:
-        value: object = baseline
-        for segment in path.split("."):
-            if not isinstance(value, Mapping) or segment not in value:
-                break
-            value = value[segment]
-        else:
-            existing.append(path)
-    return tuple(existing)
-
-
-def _apply_storage_difference(
-    baseline: Mapping[str, object], fields: Mapping[str, object], removed_fields: Sequence[str]
-) -> _Row:
-    """Apply a generated casilla patch with the canonical loader's semantics."""
-
-    def patch(old: Mapping[str, object], replacements: Mapping[str, object]) -> _Row:
-        result = dict(old)
-        for key, replacement in replacements.items():
-            if isinstance(replacement, Mapping) and isinstance(result.get(key), Mapping):
-                result[key] = patch(cast(Mapping[str, object], result[key]), replacement)
-            else:
-                result[key] = _thaw(replacement)
-        return result
-
-    result = patch(baseline, fields)
-    for path in removed_fields:
-        segments = path.split(".")
-        target = result
-        for segment in segments[:-1]:
-            child = target.get(segment)
-            if not isinstance(child, Mapping):
-                raise MigrationRefusedError(f"generated removed field {path!r} does not exist")
-            copied = dict(child)
-            target[segment] = copied
-            target = copied
-        if target.pop(segments[-1], None) is None:
-            raise MigrationRefusedError(f"generated removed field {path!r} does not exist")
-    return result
-
-
-def _prune_redundant_override_leaves(modelo_dir: Path) -> int:
-    """Delete only override leaves the independent assessor proves inherited."""
-    assessment = assess_migration_state(modelo_dir)
-    redundant = [
-        item
-        for item in assessment.unresolved_duplication
-        if item.get("reason") == "authored override equals hydrated baseline"
-    ]
-    by_revision: dict[str, list[Mapping[str, object]]] = {}
-    for item in redundant:
-        revision = item.get("revision")
-        if isinstance(revision, str):
-            by_revision.setdefault(revision, []).append(item)
-    removed = 0
-    for revision_id, findings in by_revision.items():
-        manifest_path = modelo_dir / "revisions" / revision_id / _MANIFEST
-        document = tomlkit.parse(manifest_path.read_text(encoding="utf-8"))
-        revision = document["revisions"][revision_id]
-        for family, operation_name in ((CASILLAS_FAMILY, "casilla_overrides"), (None, "family_overrides")):
-            operations = revision.get(operation_name)
-            if not isinstance(operations, list):
-                continue
-            targets: dict[tuple[str, str], set[tuple[str, ...]]] = {}
-            for finding in findings:
-                finding_family = finding.get("family")
-                if (family is not None and finding_family != family) or (
-                    family is None and finding_family == CASILLAS_FAMILY
-                ):
-                    continue
-                member = finding.get("member")
-                fields = finding.get("fields")
-                if not isinstance(finding_family, str) or not isinstance(member, str) or not isinstance(fields, list):
-                    continue
-                targets.setdefault((finding_family, member), set()).update(
-                    tuple(field.split("."))
-                    for field in fields
-                    if isinstance(field, str) and field.split(".")[-1] not in _EDITION_DEFAULTED_FIELDS
-                )
-            kept = []
-            for operation in operations:
-                selector = operation.get("selector") if isinstance(operation, Mapping) else None
-                member = selector.get("id") if isinstance(selector, Mapping) else None
-                fields = operation.get("fields") if isinstance(operation, Mapping) else None
-                # A storage override may rename the inherited casilla. The
-                # assessor reports redundant leaves under the effective
-                # successor id, while the selector necessarily carries the
-                # predecessor id.
-                effective_member = fields.get("id", member) if isinstance(fields, Mapping) else member
-                operation_family = (
-                    CASILLAS_FAMILY
-                    if family is not None
-                    else operation.get("family")
-                    if isinstance(operation, Mapping)
-                    else None
-                )
-                # Casilla override findings name the selector id; renamed family
-                # members are reported under their successor id. Accept either.
-                paths = targets.get((str(operation_family), str(effective_member)), set()) | targets.get(
-                    (str(operation_family), str(member)), set()
-                )
-                for path in paths:
-                    removed += int(_remove_toml_leaf(fields, path))
-                has_non_field_effect = any(
-                    operation.get(key)
-                    for key in (
-                        "removed_fields",
-                        "restate_provenance",
-                        "restate_identity",
-                        "replacement_id",
-                        "sequence_additions",
-                        "sequence_removals",
-                        "sequence_order",
-                    )
-                )
-                if fields or has_non_field_effect:
-                    kept.append(operation)
-            operations.clear()
-            operations.extend(kept)
-            if not operations:
-                del revision[operation_name]
-        manifest_path.write_text(tomlkit.dumps(document), encoding="utf-8", newline="\n")
-    return removed
-
-
-def technical_root(raw: Mapping[str, object]) -> bool:
-    """Whether a no-predecessor declaration records a converter limitation.
-
-    Only the structured ``cause`` answers this. A root naming one of this
-    converter's own causes is temporary and eligible for another attempt; a
-    legal or topology root such as ``official_structure_differs`` stays a root,
-    and a root stating no cause at all is not classified -- it is left alone
-    rather than guessed at.
-
-    The ``reason`` prose is deliberately not consulted. Matching cause tokens
-    and the words "migration" and "lineage" inside free text made an author's
-    wording decide whether an edition would be re-converted: a root whose prose
-    happened to explain the lineage it could not chain read as a converter
-    limitation, and one that said the same thing in other words did not. The
-    declaration's own typed field is the claim; the sentence beside it is not a
-    second, weaker spelling of it.
-    """
-    declaration = raw.get("predecessor")
-    if not isinstance(declaration, Mapping):
-        return False
-    none = declaration.get("none")
-    if not isinstance(none, Mapping):
-        return False
-    cause = none.get("cause")
-    return isinstance(cause, str) and cause in {item.value for item in BlockedCause}
-
-
-def _edition_neutral(value: object, revision_id: str | None) -> object:
-    """A casilla reference value with its edition's own key replaced, as inheritance resolves it.
-
-    An inherited row's formula and binding references are resolved to the
-    inheriting edition's declaration of the same lineage, so two editions
-    naming their own declaration of one lineage state the same reference.
-    """
-    if revision_id is None:
-        return value
-    if isinstance(value, str):
-        return identifier_lineage(value, revision_id)
-    if isinstance(value, list | tuple):
-        return [identifier_lineage(item, revision_id) if isinstance(item, str) else item for item in value]
-    return value
-
-
-def _members(
-    raw: Mapping[str, object], section: str, *, singleton: bool = False
-) -> tuple[Mapping[str, object], ...] | None:
-    value = raw.get(section)
-    if value is None:
-        return ()
-    if singleton and isinstance(value, Mapping):
-        return (cast(Mapping[str, object], value),)
-    if singleton or not isinstance(value, list | tuple) or any(not isinstance(item, Mapping) for item in value):
-        return None
-    return tuple(cast(Mapping[str, object], item) for item in value)
-
-
-def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
-    """Measure authored duplication independently of any converter deletion plan.
-
-    A family stored against a baseline is measured against it. A family with
-    none, including every family of an explicit root whatever its cause, is
-    measured against the edition before it, net of the tokens naming each
-    edition: a casilla's formula and binding references are compared by
-    lineage, because inheritance resolves them to the inheriting edition's own
-    declaration. A root is not measured against a parallel edition in force
-    beside it. A member whose per-edition sequence differs from its baseline's
-    is the edition's own statement and restates nothing, while an override
-    folding that sequence is reported, since the member belongs stated.
-    """
-    initial_fingerprints = _file_fingerprints(modelo_dir)
-    initial_fingerprint = _source_fingerprint(modelo_dir)
-    try:
-        declarations = load_modelo_declarations(modelo_dir)
-    except RegistryLoadError as exc:
-        match = re.search(r"fragment field '([^']+)'", str(exc))
-        revision_match = re.search(r"[\\/]revisions[\\/]([^\\/]+)[\\/]", str(exc))
-        final_fingerprints = _file_fingerprints(modelo_dir)
-        inputs_stable = initial_fingerprints == final_fingerprints
-        finding: dict[str, object] = {
-            "revision": revision_match.group(1) if revision_match else "*",
-            "family": match.group(1) if match else "*",
-            "reason": "authored_shape_unsupported",
-            "detail": str(exc),
-        }
-        blocked: list[Mapping[str, object]] = [finding]
-        if not inputs_stable:
-            blocked.append({"revision": "*", "family": "*", "reason": "inputs_changed_during_assessment"})
-        return MigrationAssessment(
-            fingerprint=initial_fingerprint,
-            input_fingerprints=initial_fingerprints,
-            inputs_stable=inputs_stable,
-            physical_bytes=sum(path.stat().st_size for path in modelo_dir.rglob("*") if path.is_file()),
-            authored_payload_fields=0,
-            inherited_payload_fields=0,
-            genuine_overrides=0,
-            redundant_overrides=0,
-            additions=0,
-            removals=0,
-            structural_overhead=0,
-            unresolved_duplication=(),
-            blocked_work=tuple(blocked),
-            by_revision_family=(),
-        )
-    raw_revisions = declarations.get("revisions", {})
-    if not isinstance(raw_revisions, Mapping):
-        raise MigrationRefusedError(f"{modelo_dir}: revisions are not a mapping")
-    shape_findings: list[Mapping[str, object]] = []
-    family_sections = {spec.section for spec in CANONICAL_FAMILY_SPECS}
-    operation_sections = {
-        "casilla_overrides",
-        "casilla_removals",
-        "casilla_positions",
-        "family_overrides",
-        "family_removals",
-        "family_positions",
-        "cleared_families",
-        "scoped_families",
-    }
-    for raw_revision_id, raw_revision in raw_revisions.items():
-        if not isinstance(raw_revision, Mapping):
-            shape_findings.append(
-                {"revision": str(raw_revision_id), "family": "*", "reason": "revision_shape_unsupported"}
-            )
-            continue
-        for spec in CANONICAL_FAMILY_SPECS:
-            if _members(raw_revision, spec.section, singleton=spec.singleton) is None:
-                shape_findings.append(
-                    {"revision": str(raw_revision_id), "family": spec.section, "reason": "authored_shape_unsupported"}
-                )
-        for section in operation_sections:
-            value = raw_revision.get(section)
-            if value is not None and not isinstance(value, list | tuple):
-                shape_findings.append(
-                    {"revision": str(raw_revision_id), "family": section, "reason": "operation_shape_unsupported"}
-                )
-        for section in raw_revision:
-            if section not in family_sections | operation_sections and section not in ModeloRevision.model_fields:
-                shape_findings.append(
-                    {"revision": str(raw_revision_id), "family": str(section), "reason": "scope_field_unsupported"}
-                )
-    if shape_findings:
-        final_fingerprints = _file_fingerprints(modelo_dir)
-        inputs_stable = initial_fingerprints == final_fingerprints
-        if not inputs_stable:
-            shape_findings.append({"revision": "*", "family": "*", "reason": "inputs_changed_during_assessment"})
-        return MigrationAssessment(
-            fingerprint=initial_fingerprint,
-            input_fingerprints=initial_fingerprints,
-            inputs_stable=inputs_stable,
-            physical_bytes=sum(path.stat().st_size for path in modelo_dir.rglob("*") if path.is_file()),
-            authored_payload_fields=0,
-            inherited_payload_fields=0,
-            genuine_overrides=0,
-            redundant_overrides=0,
-            additions=0,
-            removals=0,
-            structural_overhead=0,
-            unresolved_duplication=(),
-            blocked_work=tuple(shape_findings),
-            by_revision_family=(),
-        )
-    definition = load_modelo_directory(modelo_dir)
-    ordered = ordered_revisions(definition)
-    previous: str | None = None
-    totals = Counter[str]()
-    unresolved: list[Mapping[str, object]] = []
-    blocked: list[Mapping[str, object]] = []
-    rows: list[Mapping[str, object]] = []
-    for revision in ordered:
-        revision_id = str(revision.id)
-        raw = raw_revisions.get(revision_id, {})
-        if not isinstance(raw, Mapping):
-            continue
-        for spec in CANONICAL_FAMILY_SPECS:
-            identity_path = spec.storage_identity if spec.section == CASILLAS_FAMILY else spec.identity
-            declared_predecessor = raw.get("predecessor")
-            storage_baseline = raw.get(
-                "casilla_storage_baseline" if spec.section == CASILLAS_FAMILY else "family_storage_baseline"
-            )
-            baseline_id = (
-                storage_baseline
-                if isinstance(storage_baseline, str)
-                else declared_predecessor
-                if isinstance(declared_predecessor, str)
-                else None
-            )
-            explicit_root = isinstance(declared_predecessor, Mapping)
-            # A root with or without a cause is measured against the edition
-            # before it: the declaration decides legal continuity, not whether
-            # the payload it states is already stored there. A parallel variant
-            # in force alongside it is not the edition before it, so a root
-            # whose validity window meets its neighbour's is not measured.
-            stated_root = explicit_root and not technical_root(raw)
-            adjacent = (
-                previous
-                if previous is not None
-                and not (stated_root and revision_windows_intersect(definition.revisions[previous], revision))
-                else None
-            )
-            candidate_id = baseline_id or adjacent
-            net_of_edition_tokens = baseline_id is None and spec.section == CASILLAS_FAMILY
-            storage_support_missing = previous is not None and baseline_id is None and spec.inherited
-            authored = _members(raw, spec.section, singleton=spec.singleton)
-            row = Counter[str]()
-            family_dir = modelo_dir / "revisions" / revision_id / spec.section
-            row["physical_bytes"] = sum(path.stat().st_size for path in family_dir.rglob("*") if path.is_file())
-            if authored is None:
-                blocked.append(
-                    {"revision": revision_id, "family": spec.section, "reason": "authored_shape_unsupported"}
-                )
-                rows.append({"revision": revision_id, "family": spec.section, **dict(row)})
-                continue
-            for member in authored:
-                payload, overhead = _field_count(member, structural=False)
-                row["authored_payload_fields"] += payload
-                row["structural_overhead"] += overhead
-            if spec.section == CASILLAS_FAMILY:
-                for override in _members(raw, "casilla_overrides") or ():
-                    fields = override.get("fields", {})
-                    payload, overhead = _field_count(fields, structural=False)
-                    row["authored_payload_fields"] += payload
-                    row["structural_overhead"] += overhead + 1
-                row["removals"] += len(_members(raw, "casilla_removals") or ())
-                row["structural_overhead"] += 2 * len(_members(raw, "casilla_positions") or ())
-            for operation_name in ("family_overrides", "family_removals", "family_positions"):
-                operations = raw.get(operation_name, ())
-                if not isinstance(operations, list | tuple):
-                    blocked.append(
-                        {"revision": revision_id, "family": operation_name, "reason": "operation_shape_unsupported"}
-                    )
-                    continue
-                for operation in operations:
-                    if not isinstance(operation, Mapping) or operation.get("family") != spec.section:
-                        continue
-                    if operation_name == "family_overrides":
-                        payload, _ = _field_count(operation.get("fields", {}), structural=False)
-                        row["authored_payload_fields"] += payload
-                        row["removals"] += len(operation.get("removed_fields", ()))
-                    elif operation_name == "family_removals":
-                        row["removals"] += 1
-                    row["structural_overhead"] += len(
-                        _leaf_values({key: value for key, value in operation.items() if key != "fields"})
-                    )
-            if spec.section in cleared_family_names(raw.get("cleared_families", ())):
-                row["removals"] += 1
-                row["structural_overhead"] += 1
-            if spec.inheritance is FamilyInheritanceMode.PER_EDITION:
-                rows.append({"revision": revision_id, "family": spec.section, **dict(row)})
-                totals.update(row)
-                continue
-            if candidate_id is not None:
-                predecessor = definition.revisions.get(candidate_id)
-                if predecessor is None:
-                    blocked.append({"revision": revision_id, "family": spec.section, "reason": "baseline_missing"})
-                else:
-                    predecessor_value = getattr(predecessor, spec.section, None)
-                    predecessor_members = (
-                        (() if predecessor_value is None else (predecessor_value,))
-                        if spec.singleton
-                        else predecessor_value
-                    )
-                    if not isinstance(predecessor_members, list | tuple):
-                        blocked.append(
-                            {
-                                "revision": revision_id,
-                                "family": spec.section,
-                                "reason": "typed_family_shape_unsupported",
-                            }
-                        )
-                        continue
-                    inherited_by_id = {
-                        family_identity_value(item, identity_path or spec.storage_identity): item
-                        for item in predecessor_members
-                    }
-                    current_value = getattr(revision, spec.section, None)
-                    current_members = (
-                        (() if current_value is None else (current_value,)) if spec.singleton else current_value
-                    )
-                    current_by_id = (
-                        {
-                            family_identity_value(item, identity_path or spec.storage_identity): item
-                            for item in current_members
-                        }
-                        if isinstance(current_members, list | tuple)
-                        else {}
-                    )
-                    authored_ids: set[object] = set()
-                    for member in authored:
-                        identity = family_identity_value(member, identity_path or spec.storage_identity)
-                        authored_ids.add(identity)
-                        inherited = inherited_by_id.get(identity)
-                        if inherited is None:
-                            row["additions"] += 1
-                            continue
-                        # A casilla that reuses a predecessor's id under a different
-                        # continuity chain is a new member, as the planner and the
-                        # lineage minimality screen treat it; fields it happens to
-                        # share with the retired row are not inherited payload.
-                        stated_lineage = member.get(_LINEAGE)
-                        inherited_lineage = getattr(inherited, _LINEAGE, None)
-                        if (
-                            spec.section == CASILLAS_FAMILY
-                            and stated_lineage is not None
-                            and inherited_lineage is not None
-                            and str(stated_lineage) != str(inherited_lineage)
-                        ):
-                            row["additions"] += 1
-                            continue
-                        left = dict(member)
-                        if not hasattr(inherited, "model_dump") and not isinstance(inherited, Mapping):
-                            blocked.append(
-                                {
-                                    "revision": revision_id,
-                                    "family": spec.section,
-                                    "member": identity,
-                                    "reason": "typed_family_shape_unsupported",
-                                }
-                            )
-                            continue
-                        authored_leaves = {
-                            path: value
-                            for path, value in _leaf_values(left).items()
-                            if path and path[0] not in _STRUCTURAL_FIELDS and path[0] not in _LINEAGE_CLAIMS
-                        }
-                        baseline_leaves = _stated_leaves(inherited)
-                        typed_current = _model_value(current_by_id.get(identity))
-                        current_leaves = _leaf_values(typed_current) if isinstance(typed_current, Mapping) else {}
-                        same = {
-                            path
-                            for path in authored_leaves
-                            if path in current_leaves
-                            and path in baseline_leaves
-                            and _typed_equal(
-                                _edition_neutral(current_leaves[path], revision_id)
-                                if net_of_edition_tokens and path[0] in _REFERENCE_SECTIONS
-                                else current_leaves[path],
-                                _edition_neutral(baseline_leaves[path], candidate_id)
-                                if net_of_edition_tokens and path[0] in _REFERENCE_SECTIONS
-                                else baseline_leaves[path],
-                            )
-                        }
-                        stated_whole = STATED_WHOLE_SEQUENCES.get(spec.section)
-                        if stated_whole is not None and any(
-                            path[0] == stated_whole and path not in same for path in authored_leaves
-                        ):
-                            # A member whose per-edition sequence differs is the
-                            # edition's own statement: it is stated whole, so
-                            # the leaves it shares are not restatement.
-                            same = set()
-                        different = [".".join(path) for path in authored_leaves if path not in same]
-                        equal = [".".join(path) for path in authored_leaves if path in same]
-                        row["genuine_overrides"] += len(different)
-                        row["redundant_overrides"] += len(equal)
-                        if baseline_id is None:
-                            if equal:
-                                unresolved.append(
-                                    {
-                                        "revision": revision_id,
-                                        "family": spec.section,
-                                        "member": identity,
-                                        "fields": sorted(equal),
-                                        "reason": (
-                                            "explicit root restates the edition before it; reusing its storage "
-                                            "would inherit this"
-                                            if stated_root
-                                            else "technical root prevents supported inheritance"
-                                        ),
-                                    }
-                                )
-                        elif equal:
-                            reason = "authored value equals hydrated baseline"
-                            if storage_support_missing:
-                                reason = "family delta support absent; casilla baseline does not compact this family"
-                                blocked.append(
-                                    {"revision": revision_id, "family": spec.section, "reason": "delta_support_missing"}
-                                )
-                            unresolved.append(
-                                {
-                                    "revision": revision_id,
-                                    "family": spec.section,
-                                    "member": identity,
-                                    "fields": sorted(equal),
-                                    "reason": reason,
-                                }
-                            )
-                    if isinstance(current_members, list | tuple):
-                        for current_member in current_members:
-                            current_identity = family_identity_value(
-                                current_member, identity_path or spec.storage_identity
-                            )
-                            inherited_member = inherited_by_id.get(current_identity)
-                            if current_identity in authored_ids or inherited_member is None:
-                                continue
-                            current_dump = _model_value(current_member)
-                            inherited_dump = _model_value(inherited_member)
-                            if isinstance(current_dump, Mapping) and isinstance(inherited_dump, Mapping):
-                                current_leaves = _leaf_values(current_dump)
-                                inherited_leaves = _leaf_values(inherited_dump)
-                                row["inherited_payload_fields"] += sum(
-                                    1
-                                    for path, value in current_leaves.items()
-                                    if path
-                                    and path[0] not in _STRUCTURAL_FIELDS
-                                    and path in inherited_leaves
-                                    and _typed_equal(value, inherited_leaves[path])
-                                )
-                    family_overrides = raw.get("family_overrides", ())
-                    if isinstance(family_overrides, list | tuple):
-                        for override in family_overrides:
-                            if not isinstance(override, Mapping) or override.get("family") != spec.section:
-                                continue
-                            selector = override.get("selector")
-                            fields = override.get("fields", {})
-                            if not isinstance(selector, Mapping) or not isinstance(fields, Mapping):
-                                blocked.append(
-                                    {"revision": revision_id, "family": spec.section, "reason": "invalid_override"}
-                                )
-                                continue
-                            member_id = selector.get("id")
-                            current_id = override.get("replacement_id", member_id)
-                            inherited_member = inherited_by_id.get(member_id)
-                            inherited_dump = _model_value(inherited_member)
-                            current_dump = _model_value(current_by_id.get(current_id))
-                            if not isinstance(inherited_dump, Mapping) or not isinstance(current_dump, Mapping):
-                                blocked.append(
-                                    {
-                                        "revision": revision_id,
-                                        "family": spec.section,
-                                        "member": member_id,
-                                        "reason": "override_baseline_member_missing",
-                                    }
-                                )
-                                continue
-                            if restates_stated_whole_sequence(spec.section, override):
-                                unresolved.append(
-                                    {
-                                        "revision": revision_id,
-                                        "family": spec.section,
-                                        "member": member_id,
-                                        "fields": [STATED_WHOLE_SEQUENCES[spec.section]],
-                                        "reason": "per-edition sequence folded into an override; state the member",
-                                    }
-                                )
-                            inherited_leaves = _stated_leaves(inherited_member)
-                            current_leaves = _leaf_values(current_dump)
-                            for path in _leaf_values(fields):
-                                location = ".".join(path)
-                                if (
-                                    path in inherited_leaves
-                                    and path in current_leaves
-                                    and _typed_equal(current_leaves[path], inherited_leaves[path])
-                                ):
-                                    row["redundant_overrides"] += 1
-                                    unresolved.append(
-                                        {
-                                            "revision": revision_id,
-                                            "family": spec.section,
-                                            "member": member_id,
-                                            "fields": [location],
-                                            "reason": "authored override equals hydrated baseline",
-                                        }
-                                    )
-                                else:
-                                    row["genuine_overrides"] += 1
-                    if authored and not spec.inherited:
-                        blocked.append(
-                            {"revision": revision_id, "family": spec.section, "reason": "delta_support_missing"}
-                        )
-                    if spec.section == CASILLAS_FAMILY and baseline_id is not None:
-                        baseline_rows = {str(item.id): item for item in predecessor.casillas}
-                        for override in _members(raw, "casilla_overrides") or ():
-                            selector = override.get("selector", {})
-                            fields = override.get("fields", {})
-                            if not isinstance(selector, Mapping) or not isinstance(fields, Mapping):
-                                blocked.append(
-                                    {"revision": revision_id, "family": spec.section, "reason": "invalid_override"}
-                                )
-                                continue
-                            member_id = str(selector.get("id"))
-                            inherited = baseline_rows.get(member_id)
-                            if inherited is None:
-                                blocked.append(
-                                    {
-                                        "revision": revision_id,
-                                        "family": spec.section,
-                                        "member": member_id,
-                                        "reason": "override_baseline_member_missing",
-                                    }
-                                )
-                                continue
-                            baseline_leaves = _stated_leaves(inherited)
-                            for path, value in _leaf_values(fields).items():
-                                location = ".".join(path)
-                                # A lineage claim is this edition's provenance, restated
-                                # on purpose; equal to the predecessor's, it still does
-                                # not inherit, so it is never redundant payload.
-                                if path and path[0] in _LINEAGE_CLAIMS:
-                                    row["genuine_overrides"] += 1
-                                    continue
-                                # An override's source_refs or legal_refs pins the value
-                                # against this edition's own default (casilla_source_refs,
-                                # orden_aplicabilidad). Equal to the predecessor's hydrated
-                                # value, it still differs from what the row would resolve
-                                # to here without it, so it is not redundant.
-                                if path and path[-1] in _EDITION_DEFAULTED_FIELDS:
-                                    row["genuine_overrides"] += 1
-                                    continue
-                                if path in baseline_leaves and _typed_equal(value, baseline_leaves[path]):
-                                    row["redundant_overrides"] += 1
-                                    unresolved.append(
-                                        {
-                                            "revision": revision_id,
-                                            "family": spec.section,
-                                            "member": member_id,
-                                            "fields": [location],
-                                            "reason": "authored override equals hydrated baseline",
-                                        }
-                                    )
-                                else:
-                                    row["genuine_overrides"] += 1
-            rows.append({"revision": revision_id, "family": spec.section, **dict(row)})
-            totals.update(row)
-        known = {spec.section for spec in CANONICAL_FAMILY_SPECS}
-        scalar_row = Counter[str]()
-        for key, value in raw.items():
-            if key in known or key in {"casilla_overrides", "casilla_removals", "casilla_positions"}:
-                continue
-            if key not in ModeloRevision.model_fields:
-                blocked.append({"revision": revision_id, "family": key, "reason": "scope_field_unsupported"})
-                continue
-            if key in {"cleared_families", "family_overrides", "family_removals", "family_positions"}:
-                continue
-            payload, overhead = _field_count({key: value}, structural=key in _STRUCTURAL_FIELDS)
-            scalar_row["authored_payload_fields"] += payload
-            scalar_row["structural_overhead"] += overhead
-        revision_dir = modelo_dir / "revisions" / revision_id
-        family_bytes = sum(
-            value if isinstance(value := row.get("physical_bytes", 0), int) else 0
-            for row in rows
-            if row.get("revision") == revision_id and row.get("family") != "$scalars"
-        )
-        revision_bytes = sum(path.stat().st_size for path in revision_dir.rglob("*") if path.is_file())
-        rows.append(
-            {
-                "revision": revision_id,
-                "family": "$scalars",
-                "physical_bytes": revision_bytes - family_bytes,
-                **dict(scalar_row),
-            }
-        )
-        totals.update(scalar_row)
-        previous = revision_id
-    final_fingerprints = _file_fingerprints(modelo_dir)
-    inputs_stable = initial_fingerprints == final_fingerprints
-    if not inputs_stable:
-        blocked.append({"revision": "*", "family": "*", "reason": "inputs_changed_during_assessment"})
-    return MigrationAssessment(
-        fingerprint=initial_fingerprint,
-        input_fingerprints=initial_fingerprints,
-        inputs_stable=inputs_stable,
-        physical_bytes=sum(path.stat().st_size for path in modelo_dir.rglob("*") if path.is_file()),
-        authored_payload_fields=totals["authored_payload_fields"],
-        inherited_payload_fields=totals["inherited_payload_fields"],
-        genuine_overrides=totals["genuine_overrides"],
-        redundant_overrides=totals["redundant_overrides"],
-        additions=totals["additions"],
-        removals=totals["removals"],
-        structural_overhead=totals["structural_overhead"],
-        unresolved_duplication=tuple(unresolved),
-        blocked_work=tuple(dict(item) for item in {tuple(sorted(item.items())): item for item in blocked}.values()),
-        by_revision_family=tuple(rows),
-    )
-
-
-_PUBLICATION_READINESS_FINDINGS: Final = frozenset(
-    {
-        RoundTripFindingKind.EXPORT_BYTES,
-        RoundTripFindingKind.EXPORT_REFUSED,
-        RoundTripFindingKind.EXPORT_UNCHECKED,
-    }
-)
-
-
-def _finding_class(finding: RoundTripFinding) -> AcceptanceCheckClass:
-    """Classify by the diagnostic's typed identity, never its prose."""
-    if finding.kind in _PUBLICATION_READINESS_FINDINGS:
-        return AcceptanceCheckClass.PUBLICATION_READINESS
-    return AcceptanceCheckClass.SOURCE_RECONSTRUCTION
-
-
-def _is_source_finding(finding: RoundTripFinding) -> bool:
-    return _finding_class(finding) is AcceptanceCheckClass.SOURCE_RECONSTRUCTION
 
 
 @dataclass(frozen=True, slots=True)
 class MigrationOutcome:
     """The plan, the gate's verdict on the staged tree, and whether the modelo was published."""
 
-    plan: MigrationPlan
+    plan: _edition_delta_types.MigrationPlan
     staged_registry: Path | None
     report: RoundTripReport | None
     applied: bool
     changed: bool
-    before_assessment: MigrationAssessment | None = None
-    after_assessment: MigrationAssessment | None = None
+    before_assessment: _edition_delta_assessment.MigrationAssessment | None = None
+    after_assessment: _edition_delta_assessment.MigrationAssessment | None = None
     #: Positions written so complete statements keep the order they state.
-    order_restorations: tuple[OrderRestoration, ...] = ()
+    order_restorations: tuple[_edition_delta_order_restoration.OrderRestoration, ...] = ()
     #: Every ``(revision, family)`` whose member order those positions change.
     reordered_families: tuple[tuple[str, str], ...] = ()
 
@@ -1395,37 +219,45 @@ class MigrationOutcome:
         """Findings that disprove reconstruction or effective-data identity."""
         if self.report is None:
             return ()
-        return tuple(finding for finding in self.report.findings if _is_source_finding(finding))
+        return tuple(
+            finding for finding in self.report.findings if _edition_delta_assessment._is_source_finding(finding)
+        )
 
     @property
     def publication_readiness_findings(self) -> tuple[RoundTripFinding, ...]:
         """Non-source findings retained for a later authority publication."""
         if self.report is None:
             return ()
-        return tuple(finding for finding in self.report.findings if not _is_source_finding(finding))
-
-    @property
-    def source_status(self) -> SourceMigrationStatus:
-        """Return the source replacement acceptance state."""
-        if self.source_findings:
-            return SourceMigrationStatus.REFUSED
-        if self.blocked:
-            return SourceMigrationStatus.PARTIAL
-        return SourceMigrationStatus.APPLIED if self.applied else SourceMigrationStatus.ACCEPTED
-
-    @property
-    def publication_readiness_status(self) -> PublicationReadinessStatus:
-        """Return the separately observed authority-readiness state."""
-        return (
-            PublicationReadinessStatus.FAILED
-            if self.publication_readiness_findings
-            else PublicationReadinessStatus.NOT_CHECKED
+        return tuple(
+            finding for finding in self.report.findings if not _edition_delta_assessment._is_source_finding(finding)
         )
 
     @property
-    def publication_execution_status(self) -> PublicationExecutionStatus:
+    def source_status(self) -> _edition_delta_assessment.SourceMigrationStatus:
+        """Return the source replacement acceptance state."""
+        if self.source_findings:
+            return _edition_delta_assessment.SourceMigrationStatus.REFUSED
+        if self.blocked:
+            return _edition_delta_assessment.SourceMigrationStatus.PARTIAL
+        return (
+            _edition_delta_assessment.SourceMigrationStatus.APPLIED
+            if self.applied
+            else _edition_delta_assessment.SourceMigrationStatus.ACCEPTED
+        )
+
+    @property
+    def publication_readiness_status(self) -> _edition_delta_assessment.PublicationReadinessStatus:
+        """Return the separately observed authority-readiness state."""
+        return (
+            _edition_delta_assessment.PublicationReadinessStatus.FAILED
+            if self.publication_readiness_findings
+            else _edition_delta_assessment.PublicationReadinessStatus.NOT_CHECKED
+        )
+
+    @property
+    def publication_execution_status(self) -> _edition_delta_assessment.PublicationExecutionStatus:
         """Confirm that source migration did not execute publication."""
-        return PublicationExecutionStatus.NOT_PERFORMED
+        return _edition_delta_assessment.PublicationExecutionStatus.NOT_PERFORMED
 
     @property
     def completed(self) -> tuple[str, ...]:
@@ -1443,1447 +275,87 @@ class MigrationOutcome:
         return {
             edition.revision_id: edition.blocked_detail
             for edition in self.plan.editions
-            if edition.basis is PredecessorBasis.BLOCKED
+            if edition.basis is _edition_delta_types.PredecessorBasis.BLOCKED
         }
 
     @property
     def complete(self) -> bool:
         """Whether reconstruction, scope coverage, and minimality all pass."""
-        return self.equivalence_status is MigrationStatus.PASSED and self.minimality_status is MigrationStatus.PASSED
+        return (
+            self.equivalence_status is _edition_delta_assessment.MigrationStatus.PASSED
+            and self.minimality_status is _edition_delta_assessment.MigrationStatus.PASSED
+        )
 
     @property
-    def equivalence_status(self) -> MigrationStatus:
+    def equivalence_status(self) -> _edition_delta_assessment.MigrationStatus:
         """Return the candidate hydration-equivalence verdict."""
-        return MigrationStatus.FAILED if self.source_findings else MigrationStatus.PASSED
+        return (
+            _edition_delta_assessment.MigrationStatus.FAILED
+            if self.source_findings
+            else _edition_delta_assessment.MigrationStatus.PASSED
+        )
 
     @property
-    def compaction_status(self) -> MigrationStatus:
+    def compaction_status(self) -> _edition_delta_assessment.MigrationStatus:
         """Return whether physical or semantic authored storage decreased."""
         if self.before_assessment is None or self.after_assessment is None:
-            return MigrationStatus.INCOMPLETE
+            return _edition_delta_assessment.MigrationStatus.INCOMPLETE
         improved = (
             self.after_assessment.physical_bytes < self.before_assessment.physical_bytes
             or self.after_assessment.authored_payload_fields < self.before_assessment.authored_payload_fields
         )
-        return MigrationStatus.COMPLETE if improved else MigrationStatus.INCOMPLETE
+        return (
+            _edition_delta_assessment.MigrationStatus.COMPLETE
+            if improved
+            else _edition_delta_assessment.MigrationStatus.INCOMPLETE
+        )
 
     @property
-    def minimality_status(self) -> MigrationStatus:
+    def minimality_status(self) -> _edition_delta_assessment.MigrationStatus:
         """Return the independent redundant-payload and coverage verdict."""
         if self.after_assessment is None:
-            return MigrationStatus.FAILED if self.blocked else MigrationStatus.INCOMPLETE
+            return (
+                _edition_delta_assessment.MigrationStatus.FAILED
+                if self.blocked
+                else _edition_delta_assessment.MigrationStatus.INCOMPLETE
+            )
         if not self.changed and self.after_assessment.minimal:
-            return MigrationStatus.PASSED
-        return MigrationStatus.PASSED if self.after_assessment.minimal and not self.blocked else MigrationStatus.FAILED
+            return _edition_delta_assessment.MigrationStatus.PASSED
+        return (
+            _edition_delta_assessment.MigrationStatus.PASSED
+            if self.after_assessment.minimal and not self.blocked
+            else _edition_delta_assessment.MigrationStatus.FAILED
+        )
 
     @property
-    def application_status(self) -> MigrationStatus:
+    def application_status(self) -> _edition_delta_assessment.MigrationStatus:
         """Return whether the verified candidate is live, staged, or absent."""
         if self.applied:
             return (
-                MigrationStatus.APPLIED
-                if self.minimality_status is MigrationStatus.PASSED
-                else MigrationStatus.PARTIALLY_APPLIED
+                _edition_delta_assessment.MigrationStatus.APPLIED
+                if self.minimality_status is _edition_delta_assessment.MigrationStatus.PASSED
+                else _edition_delta_assessment.MigrationStatus.PARTIALLY_APPLIED
             )
-        return MigrationStatus.STAGED if self.staged_registry is not None else MigrationStatus.NOT_APPLIED
+        return (
+            _edition_delta_assessment.MigrationStatus.STAGED
+            if self.staged_registry is not None
+            else _edition_delta_assessment.MigrationStatus.NOT_APPLIED
+        )
 
 
 # ── raw tree reading ────────────────────────────────────────────────────────
 
 
-@dataclass(frozen=True, slots=True)
-class _Block:
-    """One casilla row as authored: its text, including any comment run directly above its header."""
-
-    text: str
-    row: _Row
-
-
-@dataclass(frozen=True, slots=True)
-class _Fragment:
-    path: Path
-    preamble: str
-    blocks: tuple[_Block, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class _EditionSource:
-    revision_id: str
-    manifest_text: str
-    manifest: _Row
-    #: The edition's complete raw revision table, materialised through its
-    #: predecessor chain; ``manifest`` is the table it declares itself.
-    table: Mapping[str, object]
-    fragments: tuple[_Fragment, ...]
-    rows: tuple[_Row, ...]
-    origins: tuple[str | None, ...]
-    declarations: _Declarations
-    retired: frozenset[str]
-    family_defaults: Mapping[str, tuple[str, ...]]
-
-    def stated_rows(self) -> tuple[_Row, ...]:
-        return tuple(block.row for fragment in self.fragments for block in fragment.blocks)
-
-
-def _thaw(value: object) -> object:
-    if isinstance(value, Mapping):
-        return {str(key): _thaw(item) for key, item in value.items()}
-    if isinstance(value, list | tuple):
-        return [_thaw(item) for item in value]
-    return value
-
-
-def _as_row(value: object) -> _Row:
-    thawed = _thaw(value)
-    if not isinstance(thawed, dict):
-        raise MigrationRefusedError(f"expected a table, found {type(value).__name__}")
-    return {str(key): item for key, item in thawed.items()}
-
-
-def _split_blocks(text: str, header: re.Pattern[str] = _ROW_HEADER) -> tuple[str, list[str]]:
-    """Split a fragment into its preamble and one text block per member header.
-
-    ``header`` selects the family being read. It defaults to the casilla row
-    header so every existing caller keeps its behaviour; the drop operation
-    passes the header of whichever family it is reading, because the keyed
-    families are laid out on disk exactly as casillas are.
-    """
-    lines = text.splitlines(keepends=True)
-    starts: list[int] = []
-    for index, line in enumerate(lines):
-        if header.match(line.rstrip("\r\n")):
-            start = index
-            while start > 0 and lines[start - 1].lstrip().startswith("#") and (not starts or start - 1 > starts[-1]):
-                start -= 1
-            starts.append(start)
-    if not starts:
-        return text, []
-    bounds = [*starts, len(lines)]
-    blocks = ["".join(lines[bounds[index] : bounds[index + 1]]) for index in range(len(starts))]
-    return "".join(lines[: starts[0]]), blocks
-
-
-def _block_row(block: str, section: str = _CASILLAS) -> _Row:
-    revisions = parse_toml(block).get("revisions")
-    if not isinstance(revisions, dict) or len(revisions) != 1:
-        raise MigrationRefusedError(f"{section} block does not declare exactly one revision:\n{block}")
-    (revision,) = revisions.values()
-    rows = revision.get(section) if isinstance(revision, dict) else None
-    if not isinstance(rows, list) or len(rows) != 1:
-        raise MigrationRefusedError(f"{section} block does not declare exactly one member:\n{block}")
-    return _as_row(rows[0])
-
-
-def _read_fragments(edition_dir: Path) -> tuple[_Fragment, ...]:
-    fragments: list[_Fragment] = []
-    for path in sorted((edition_dir / _CASILLAS).glob("*.toml")):
-        preamble, texts = _split_blocks(path.read_text(encoding="utf-8"))
-        fragments.append(_Fragment(path, preamble, tuple(_Block(text, _block_row(text)) for text in texts)))
-    return tuple(fragments)
-
-
-def _manifest_table(text: str, revision_id: str) -> _Row:
-    revisions = parse_toml(text).get("revisions")
-    if not isinstance(revisions, dict) or revision_id not in revisions:
-        raise MigrationRefusedError(f"revision.toml does not declare [revisions.{revision_id!r}]")
-    return _as_row(revisions[revision_id])
-
-
-def _declarations(table: Mapping[str, object], revision_id: str) -> _Declarations:
-    result: dict[str, dict[str, tuple[str, ...]]] = {}
-    for section in sorted(set(_REFERENCE_SECTIONS.values())):
-        by_lineage: dict[str, list[str]] = {}
-        raw = table.get(section, ())
-        for declaration in raw if isinstance(raw, list | tuple) else ():
-            declaration_id = declaration.get("id") if isinstance(declaration, Mapping) else None
-            if isinstance(declaration_id, str):
-                by_lineage.setdefault(identifier_lineage(declaration_id, revision_id), []).append(declaration_id)
-        result[section] = {lineage: tuple(ids) for lineage, ids in by_lineage.items()}
-    return result
-
-
-def _retired_lineages(table: Mapping[str, object], revision_id: str) -> frozenset[str]:
-    raw = table.get("casilla_continuidad_evolutions", ())
-    return frozenset(
-        str(evolution[_LINEAGE])
-        for evolution in (raw if isinstance(raw, list | tuple) else ())
-        if isinstance(evolution, Mapping)
-        and evolution.get("evolution_kind") == _RETIRED
-        and evolution.get("to_revision") == revision_id
-        and isinstance(evolution.get(_LINEAGE), str)
-    )
-
-
-def _read_edition(modelo_dir: Path, revision_id: str) -> _EditionSource:
-    edition_dir = modelo_dir / "revisions" / revision_id
-    manifest_text = (edition_dir / _MANIFEST).read_text(encoding="utf-8")
-    materialised = materialise_edition(modelo_dir, revision_id)
-    raw_rows = materialised.table.get(_CASILLAS, ())
-    rows = tuple(_as_row(row) for row in (raw_rows if isinstance(raw_rows, list | tuple) else ()))
-    origins = materialised.label_origins or tuple(None for _ in rows)
-    return _EditionSource(
-        revision_id=revision_id,
-        manifest_text=manifest_text,
-        manifest=_manifest_table(manifest_text, revision_id),
-        table=materialised.table,
-        fragments=_read_fragments(edition_dir),
-        rows=rows,
-        origins=origins,
-        declarations=_declarations(materialised.table, revision_id),
-        retired=_retired_lineages(materialised.table, revision_id),
-        family_defaults={
-            key: default
-            for section, key in _FAMILY_SOURCE_DEFAULTS
-            if (default := _family_source_default(materialised.table, section)) is not None
-        },
-    )
-
-
 # ── the loader's semantics, reproduced for a delta that is not written yet ──
-
-
-@dataclass(frozen=True, slots=True)
-class _Defaults:
-    source_refs: tuple[str, ...] | None
-    orden: tuple[str, ...]
-
-
-def _manifest_defaults(manifest: Mapping[str, object]) -> _Defaults:
-    source = manifest.get("casilla_source_refs")
-    orden = manifest.get("orden_aplicabilidad", ())
-    return _Defaults(
-        source_refs=tuple(str(item) for item in source) if isinstance(source, list) and source else None,
-        orden=tuple(str(item) for item in orden) if isinstance(orden, list) else (),
-    )
-
-
-def _defaulted(table: _Row, defaults: _Defaults) -> _Row:
-    filled = dict(table)
-    additions = filled.pop(_ROW_SOURCE_ADDITIONS, None)
-    if additions is not None:
-        if not defaults.source_refs or _ROW_SOURCE in filled or not isinstance(additions, list) or not additions:
-            raise MigrationRefusedError(f"casilla {table.get('id')!r} states additions the loader would refuse")
-        filled[_ROW_SOURCE] = list(dict.fromkeys((*defaults.source_refs, *(str(item) for item in additions))))
-    elif defaults.source_refs and _ROW_SOURCE not in filled:
-        filled[_ROW_SOURCE] = list(defaults.source_refs)
-    if defaults.orden and _ROW_LEGAL not in filled:
-        filled[_ROW_LEGAL] = list(defaults.orden)
-    return filled
-
-
-def _without_lineage_claims(row: _Row) -> _Row:
-    """The row as an inheriting edition holds it: its claims about its predecessor never travel."""
-    return {key: value for key, value in row.items() if key not in _LINEAGE_CLAIMS}
-
-
-def _effective(
-    row: _Row,
-    *,
-    origin: str | None,
-    revision_id: str,
-    defaults: _Defaults,
-    declarations: _Declarations,
-) -> _Row | None:
-    """The row the loader builds typed construction from, or ``None`` when a reference cannot resolve.
-
-    Defaults fill the row and its constraints table exactly as the loader's
-    reference-default pass does; an inherited row's formula and binding
-    references are resolved to this edition's declaration of the same lineage.
-    """
-    effective = _defaulted(row, defaults)
-    constraints = effective.get(_CONSTRAINTS)
-    if isinstance(constraints, dict):
-        effective[_CONSTRAINTS] = _defaulted(constraints, defaults)
-    if origin is None or origin == revision_id:
-        return effective
-    for name, section in _REFERENCE_SECTIONS.items():
-        value = effective.get(name)
-        if isinstance(value, str):
-            resolved = _resolve(value, origin=origin, candidates=declarations.get(section, {}))
-            if resolved is None:
-                return None
-            effective[name] = resolved
-        elif isinstance(value, list):
-            items: list[object] = []
-            for item in value:
-                resolved = (
-                    _resolve(item, origin=origin, candidates=declarations.get(section, {}))
-                    if isinstance(item, str)
-                    else item
-                )
-                if resolved is None:
-                    return None
-                items.append(resolved)
-            effective[name] = items
-    return effective
-
-
-def _resolve(reference: str, *, origin: str, candidates: Mapping[str, tuple[str, ...]]) -> str | None:
-    found = candidates.get(identifier_lineage(reference, origin), ())
-    return found[0] if len(found) == 1 else None
-
-
-def _lineage(row: Mapping[str, object]) -> str | None:
-    value = row.get(_LINEAGE)
-    return value if isinstance(value, str) else None
-
-
-def _row_id(row: Mapping[str, object]) -> str:
-    return str(row["id"])
-
-
-def _row_keys(rows: Sequence[Mapping[str, object]]) -> tuple[RowKey, ...]:
-    return tuple((_row_id(row), _lineage(row)) for row in rows)
-
-
-@dataclass(frozen=True, slots=True)
-class _Placed:
-    """One materialised row, the raw row the loader holds for it, and the edition that stated it."""
-
-    row: _Row
-    origin: str
-
-
-def _merge(
-    inherited: Sequence[_Placed],
-    stated: Sequence[_Row],
-    *,
-    revision_id: str,
-    retired: frozenset[str],
-    storage_overridden: frozenset[str] = frozenset(),
-) -> tuple[list[_Placed], BlockedCause | None]:
-    """Reproduce the loader's casilla merge; return the rows, or the cause it would refuse with."""
-    stated_by_lineage: dict[str, _Row] = {}
-    for row in stated:
-        lineage = _lineage(row)
-        if lineage is None:
-            continue
-        if lineage in stated_by_lineage or lineage in retired:
-            return [], BlockedCause.AMBIGUOUS_LINEAGE
-        stated_by_lineage[lineage] = row
-    inherited_counts = Counter(lineage for placed in inherited if (lineage := _lineage(placed.row)) is not None)
-    if any(inherited_counts[lineage] > 1 for lineage in stated_by_lineage):
-        return [], BlockedCause.AMBIGUOUS_LINEAGE
-    merged: list[_Placed] = []
-    kept_ids: dict[str, str | None] = {}
-    superseded: set[str] = set()
-    for placed in inherited:
-        lineage = _lineage(placed.row)
-        if lineage is not None and lineage in retired:
-            continue
-        if lineage is not None and lineage in stated_by_lineage:
-            merged.append(_Placed(stated_by_lineage[lineage], revision_id))
-            superseded.add(lineage)
-            continue
-        merged.append(
-            _Placed(
-                placed.row if _row_id(placed.row) in storage_overridden else _without_lineage_claims(placed.row),
-                placed.origin,
-            )
-        )
-        kept_ids[_row_id(placed.row)] = lineage
-    for row in stated:
-        lineage = _lineage(row)
-        if _row_id(row) in kept_ids:
-            return [], BlockedCause.UNDECLARED_REPURPOSE
-        if lineage is None or lineage not in superseded:
-            merged.append(_Placed(row, revision_id))
-    return merged, None
 
 
 # ── restatement lifting ─────────────────────────────────────────────────────
 
 
-@dataclass(frozen=True, slots=True)
-class _TableLift:
-    """What lifting removes from one row or constraints table, and the additions it states instead."""
-
-    removed: frozenset[str] = frozenset()
-    additions: tuple[str, ...] | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class _Lift:
-    """One row's lifted form and what the lift changes in the row and in its constraints table."""
-
-    row: _Row
-    row_lift: _TableLift
-    constraint_lift: _TableLift
-
-
-def _source_refs(table: Mapping[str, object]) -> tuple[str, ...] | None:
-    value = table.get(_ROW_SOURCE)
-    return tuple(str(item) for item in value) if isinstance(value, list) else None
-
-
-def _table_lift(
-    table: Mapping[str, object], *, source_default: tuple[str, ...] | None, orden: tuple[str, ...]
-) -> _TableLift:
-    removed: set[str] = set()
-    additions: tuple[str, ...] | None = None
-    refs = _source_refs(table)
-    if source_default is not None and refs is not None and refs[: len(source_default)] == source_default:
-        rest = refs[len(source_default) :]
-        if tuple(dict.fromkeys((*source_default, *rest))) == refs:
-            removed.add(_ROW_SOURCE)
-            additions = rest or None
-    if orden and table.get(_ROW_LEGAL) == list(orden):
-        removed.add(_ROW_LEGAL)
-    return _TableLift(frozenset(removed), additions)
-
-
-def _lifted_table(table: Mapping[str, object], lift: _TableLift) -> _Row:
-    lifted = {key: value for key, value in table.items() if key not in lift.removed}
-    if lift.additions is not None:
-        lifted[_ROW_SOURCE_ADDITIONS] = list(lift.additions)
-    return lifted
-
-
-def _lift(row: _Row, *, source_default: tuple[str, ...] | None, orden: tuple[str, ...]) -> _Lift:
-    row_lift = _table_lift(row, source_default=source_default, orden=orden)
-    lifted = _lifted_table(row, row_lift)
-    constraint_lift = _TableLift()
-    constraints = row.get(_CONSTRAINTS)
-    if isinstance(constraints, dict):
-        constraint_lift = _table_lift(constraints, source_default=source_default, orden=orden)
-        lifted[_CONSTRAINTS] = _lifted_table(constraints, constraint_lift)
-    return _Lift(lifted, row_lift, constraint_lift)
-
-
 # ── planning ────────────────────────────────────────────────────────────────
 
 
-@dataclass(frozen=True, slots=True)
-class _EditionWork:
-    """An edition's plan together with what writing it needs."""
-
-    plan: EditionPlan
-    source: _EditionSource
-    lifts: Mapping[str, _Lift]
-    root_declaration: _Row | None
-
-
-@dataclass(frozen=True, slots=True)
-class _EditionLift:
-    """One edition's materialised rows, the default they share, and each row's lifted form."""
-
-    rows: tuple[_Row, ...]
-    source_default: tuple[str, ...] | None
-    withheld: str | None
-    lifts: Mapping[str, _Lift]
-    defaults: _Defaults
-
-
-def _effective_rows(source: _EditionSource) -> tuple[_Row, ...]:
-    """The edition's materialised rows as the loader finally holds them, with its declared defaults inlined."""
-    declared = _manifest_defaults(source.manifest)
-    effective = [
-        _effective(
-            row,
-            origin=origin,
-            revision_id=source.revision_id,
-            defaults=declared,
-            declarations=source.declarations,
-        )
-        for row, origin in zip(source.rows, source.origins, strict=True)
-    ]
-    if any(row is None for row in effective):
-        raise MigrationRefusedError(f"edition {source.revision_id!r}: an inherited reference does not resolve on input")
-    return tuple(row for row in effective if row is not None)
-
-
-def _edition_lift(source: _EditionSource) -> _EditionLift:
-    """Derive the edition's shared ``source_refs`` default and lift every materialised row against it.
-
-    A default the manifest already declares is the one the loader will apply, so
-    it is kept rather than re-derived: deriving a different run would rewrite
-    rows against a default the manifest does not state. No full-copy edition
-    declares one, so this only ever binds on the chain path.
-    """
-    declared = _manifest_defaults(source.manifest)
-    rows = _effective_rows(source)
-    derived, withheld = edition_source_default(rows)
-    source_default, withheld = (declared.source_refs, None) if declared.source_refs is not None else (derived, withheld)
-    return _EditionLift(
-        rows=rows,
-        source_default=source_default,
-        withheld=withheld,
-        lifts={_row_id(row): _lift(row, source_default=source_default, orden=declared.orden) for row in rows},
-        defaults=_Defaults(source_refs=source_default, orden=declared.orden),
-    )
-
-
-def _stated_layout(source: _EditionSource, stated: frozenset[str]) -> list[tuple[str, list[_Block]]]:
-    """The fragments that remain once only ``stated`` rows are kept, ordered as the loader reads them.
-
-    Each fragment keeps its authored file name. Casilla sections are packed into
-    one ``0001-declarations.toml`` per edition, and dropping rows from it does
-    not change what the file is.
-    """
-    layout: list[tuple[str, list[_Block]]] = []
-    for fragment in source.fragments:
-        kept = [block for block in fragment.blocks if _row_id(block.row) in stated]
-        if kept:
-            layout.append((fragment.path.name, kept))
-    names = [name for name, _ in layout]
-    duplicated = sorted(name for name, count in Counter(names).items() if count > 1)
-    if duplicated:
-        raise MigrationRefusedError(f"edition {source.revision_id!r}: fragments would share the names {duplicated!r}")
-    return sorted(layout, key=lambda item: item[0])
-
-
-def plan_migration(
-    modelo_dir: Path,
-    definition: ModeloDefinition,
-) -> MigrationPlan:
-    """Decide every edition's dependencies and transformation, writing nothing."""
-    return _plan(modelo_dir, definition)[0]
-
-
-def _delta_authored(manifest: Mapping[str, object]) -> bool:
-    """Whether a manifest states an edition in delta form rather than full copy.
-
-    Only a named predecessor introduces inherited members. Reference defaults
-    compress fields within an edition; they do not turn its full member list
-    into a delta. An explicit root likewise inherits no members.
-    """
-    return isinstance(manifest.get("predecessor"), str)
-
-
-def _storage_authored(manifest: Mapping[str, object]) -> bool:
-    """Whether casillas already name either semantic or storage-only ancestry."""
-    return _delta_authored(manifest) or isinstance(manifest.get("casilla_storage_baseline"), str)
-
-
-def _plan(
-    modelo_dir: Path,
-    definition: ModeloDefinition,
-) -> tuple[MigrationPlan, tuple[_EditionWork, ...]]:
-    ordered = ordered_revisions(definition)
-    sources = {str(revision.id): _read_edition(modelo_dir, str(revision.id)) for revision in ordered}
-    already_delta_authored = any(_storage_authored(source.manifest) for source in sources.values())
-    materialised: dict[str, list[_Placed]] = {}
-    order_normalised: set[str] = set()
-    work: list[_EditionWork] = []
-    for position, revision in enumerate(ordered):
-        revision_id = str(revision.id)
-        source = sources[revision_id]
-        lift = _edition_lift(source)
-        full_rows = list(lift.rows)
-        if _storage_authored(source.manifest):
-            authored_ids = tuple(_row_id(row) for row in source.stated_rows())
-            unheld = sorted(row_id for row_id in authored_ids if row_id not in lift.lifts)
-            if unheld:
-                raise MigrationRefusedError(
-                    f"edition {revision_id!r} states casillas {unheld!r} its materialisation does not hold"
-                )
-            semantic_predecessor = source.manifest.get("predecessor")
-            storage_predecessor = source.manifest.get("casilla_storage_baseline")
-            predecessor = str(semantic_predecessor if isinstance(semantic_predecessor, str) else storage_predecessor)
-            storage_only = not isinstance(semantic_predecessor, str)
-            if predecessor not in materialised:
-                raise MigrationRefusedError(
-                    f"edition {revision_id!r} declares unavailable storage baseline {predecessor!r}"
-                )
-            drops, kept, not_exact, _overrides, attestations = _choose_existing_drops(
-                revision_id=revision_id,
-                predecessor=predecessor,
-                # A delta-authored predecessor keeps its operations verbatim, so
-                # its stored rows are what the loader patches; a full-copy one is
-                # rewritten in lifted form, which ``inherited`` already holds.
-                storage_rows=(
-                    _storage_rows(sources[predecessor]) if _storage_authored(sources[predecessor].manifest) else {}
-                ),
-                inherited=materialised[predecessor],
-                full_rows=full_rows,
-                lifts=lift.lifts,
-                source=source,
-                defaults=lift.defaults,
-                storage_only=storage_only,
-            )
-            # Existing delta operations already describe the effective rows.
-            # Re-planning may remove redundant physically stated rows, but it
-            # must not append a second set of overrides/removals/positions.
-            dropped_authored = frozenset(authored_ids) & drops
-            dropped_lineages = {
-                lineage for row_id in dropped_authored if (lineage := _lineage(lift.lifts[row_id].row)) is not None
-            }
-            authored_selector_ids = {
-                _row_id(placed.row)
-                for placed in materialised[predecessor]
-                if _row_id(placed.row) in dropped_authored or _lineage(placed.row) in dropped_lineages
-            }
-            authored_overrides = tuple(
-                override
-                for override in _overrides
-                if isinstance((selector := override.get("selector")), Mapping)
-                and str(selector.get("id")) in authored_selector_ids
-            )
-            stated_ids = tuple(row_id for row_id in authored_ids if row_id not in dropped_authored)
-            stated = frozenset(stated_ids)
-            stated_lineages = {
-                _lineage(lift.lifts[row_id].row)
-                for row_id in dropped_authored
-                if any(claim in lift.lifts[row_id].row for claim in _LINEAGE_CLAIMS)
-            }
-            plan = EditionPlan(
-                revision_id=revision_id,
-                basis=PredecessorBasis.LIFT_ONLY,
-                predecessor=predecessor,
-                blocked=(),
-                source_default=lift.source_default,
-                source_default_withheld=lift.withheld,
-                rows_before=len(lift.rows),
-                stated_ids=stated_ids,
-                inherited_ids=tuple(_row_id(row) for row in lift.rows if _row_id(row) not in stated),
-                lifted=_lift_counts(source, lift.lifts, stated),
-                kept=dict(sorted(kept.items())),
-                not_exact=tuple(not_exact),
-                comments_dropped=0,
-                reviewed_against=None,
-                dependencies=(predecessor,),
-                casilla_overrides=authored_overrides,
-                lineage_attestations=tuple(
-                    attestation for attestation in attestations if attestation.identity in stated_lineages
-                ),
-            )
-            materialised[revision_id] = [_Placed(lift.lifts[_row_id(row)].row, revision_id) for row in full_rows]
-            work.append(_EditionWork(plan=plan, source=source, lifts=lift.lifts, root_declaration=None))
-            continue
-        source_default, withheld, lifts = lift.source_default, lift.withheld, lift.lifts
-        new_defaults = lift.defaults
-
-        predecessor, basis, causes = _choose_predecessor(
-            position,
-            ordered,
-            source,
-            reconsider_technical_roots=True,
-        )
-        drops = set[str]()
-        kept: Counter[KeptReason] = Counter()
-        not_exact: list[str] = []
-        overrides: tuple[_Row, ...] = ()
-        removals: tuple[_Row, ...] = ()
-        positions: tuple[_Row, ...] = ()
-        lineage_attestations: tuple[LineageAttestation, ...] = ()
-        reconstructed_order = tuple(_row_id(row) for row in full_rows)
-        normalised = False
-        failure_details: tuple[str, ...] = ()
-        if predecessor is not None and not causes:
-            try:
-                (
-                    causes,
-                    drops,
-                    kept,
-                    not_exact,
-                    overrides,
-                    removals,
-                    positions,
-                    lineage_attestations,
-                    reconstructed_order,
-                    normalised,
-                ) = _choose_drops(
-                    definition=definition,
-                    revision_id=revision_id,
-                    predecessor=predecessor,
-                    inherited=materialised[predecessor],
-                    full_rows=full_rows,
-                    lifts=lifts,
-                    source=source,
-                    defaults=new_defaults,
-                    # The baseline supplies canonical merge placement, while
-                    # successor-local positions preserve any effective order
-                    # the authored full copy deliberately changes.
-                    normalise_order=predecessor in order_normalised,
-                    storage_only=basis is PredecessorBasis.STORAGE,
-                )
-            except MigrationRefusedError as exc:
-                causes = [BlockedCause.TRANSFORMATION_FAILED]
-                failure_details = (f"requires readable authored source {predecessor!r}; transformation failed: {exc}",)
-        stated_ids = frozenset(_row_id(row) for row in full_rows) - drops
-        if causes:
-            basis, drops, stated_ids = (
-                PredecessorBasis.BLOCKED,
-                set[str](),
-                frozenset(_row_id(row) for row in full_rows),
-            )
-            kept = Counter[KeptReason]()
-            not_exact = list[str]()
-            overrides = ()
-            removals = ()
-            positions = ()
-            lineage_attestations = ()
-            reconstructed_order = tuple(_row_id(row) for row in full_rows)
-            normalised = False
-        if basis is PredecessorBasis.BLOCKED:
-            full_by_id = {_row_id(row): row for row in full_rows}
-            materialised[revision_id] = [_Placed(full_by_id[row_id], revision_id) for row_id in reconstructed_order]
-        elif basis in {PredecessorBasis.FIRST, PredecessorBasis.DECLARED_ROOT}:
-            materialised[revision_id] = [_Placed(lifts[row_id].row, revision_id) for row_id in reconstructed_order]
-        else:
-            # `_choose_drops` has already proved that the generated operations
-            # reconstruct this full-copy edition.  Seed the next planning step
-            # from that proven target, including changed rows represented by
-            # storage overrides.  Re-merging only the physically stated rows
-            # here silently omitted those overrides, so a later successor was
-            # compared with a stale ancestor value.
-            materialised[revision_id] = [_Placed(lifts[row_id].row, revision_id) for row_id in reconstructed_order]
-        if normalised:
-            order_normalised.add(revision_id)
-        is_delta = basis in {PredecessorBasis.ADJACENT, PredecessorBasis.DECLARED, PredecessorBasis.STORAGE}
-        overridden_ids = {
-            str(fields.get("id", selector.get("id")))
-            for override in overrides
-            if isinstance((selector := override.get("selector")), Mapping)
-            and isinstance((fields := override.get("fields", {})), Mapping)
-        }
-        plan = EditionPlan(
-            revision_id=revision_id,
-            basis=basis,
-            predecessor=predecessor if is_delta else None,
-            blocked=tuple(causes),
-            source_default=source_default,
-            source_default_withheld=withheld,
-            rows_before=len(full_rows),
-            stated_ids=tuple(_row_id(row) for row in full_rows if _row_id(row) in stated_ids),
-            inherited_ids=tuple(
-                _row_id(row)
-                for row in full_rows
-                if _row_id(row) not in stated_ids and _row_id(row) not in overridden_ids
-            ),
-            lifted=_lift_counts(source, lifts, stated_ids),
-            kept=dict(sorted(kept.items())),
-            not_exact=tuple(not_exact),
-            comments_dropped=sum(
-                1
-                for fragment in source.fragments
-                for block in fragment.blocks
-                if _row_id(block.row) not in stated_ids and block.text.lstrip().startswith("#")
-            ),
-            reviewed_against=(
-                str(value) if isinstance((value := source.manifest.get("reviewed_against")), str) else None
-            ),
-            dependencies=(predecessor,) if predecessor is not None else (),
-            blocked_detail=failure_details
-            if failure_details
-            else tuple(f"requires readable authored source {predecessor!r}: {cause.value}" for cause in causes),
-            casilla_overrides=overrides,
-            casilla_removals=removals,
-            casilla_positions=positions,
-            lineage_attestations=lineage_attestations,
-        )
-        work.append(_EditionWork(plan=plan, source=source, lifts=lifts, root_declaration=None))
-    return (
-        MigrationPlan(
-            modelo_id=str(definition.id),
-            editions=tuple(item.plan for item in work),
-            already_delta_authored=already_delta_authored,
-        ),
-        tuple(work),
-    )
-
-
-def _plan_lift_in_place(
-    definition: ModeloDefinition,
-    ordered: Sequence[ModeloRevision],
-    sources: Mapping[str, _EditionSource],
-    *,
-    storage_only: bool = False,
-) -> tuple[MigrationPlan, tuple[_EditionWork, ...]]:
-    """Plan the one operation a delta-authored modelo admits: lift each edition's restatement where it stands.
-
-    Every row the edition states stays stated, in the order it states it, and no
-    predecessor, review stamp or root declaration is authored. What may change is
-    a row that restates the manifest's default, and a default the manifest does
-    not yet declare. The chain proof in :func:`migrate_modelo` then requires the
-    result to materialise to the same bytes as the edition does now.
-
-    Raises:
-        MigrationRefusedError: When an edition states a row its own
-            materialisation does not hold, which would make the lift unprovable.
-    """
-    work: list[_EditionWork] = []
-    for revision in ordered:
-        revision_id = str(revision.id)
-        source = sources[revision_id]
-        lift = _edition_lift(source)
-        stated_ids = tuple(_row_id(block.row) for fragment in source.fragments for block in fragment.blocks)
-        unheld = sorted(row_id for row_id in stated_ids if row_id not in lift.lifts)
-        if unheld:
-            raise MigrationRefusedError(
-                f"edition {revision_id!r} states casillas {unheld!r} its materialisation does not hold",
-            )
-        stated = frozenset(stated_ids)
-        declared = source.manifest.get("predecessor")
-        work.append(
-            _EditionWork(
-                plan=EditionPlan(
-                    revision_id=revision_id,
-                    basis=PredecessorBasis.STORAGE if storage_only else PredecessorBasis.LIFT_ONLY,
-                    predecessor=declared if isinstance(declared, str) else None,
-                    blocked=(),
-                    source_default=lift.source_default,
-                    source_default_withheld=lift.withheld,
-                    rows_before=len(lift.rows),
-                    stated_ids=stated_ids,
-                    inherited_ids=tuple(row_id for row in lift.rows if (row_id := _row_id(row)) not in stated),
-                    lifted=_lift_counts(source, lift.lifts, stated),
-                    kept={},
-                    not_exact=(),
-                    comments_dropped=0,
-                    reviewed_against=None,
-                ),
-                source=source,
-                lifts=lift.lifts,
-                root_declaration=None,
-            )
-        )
-    return (
-        MigrationPlan(
-            modelo_id=str(definition.id),
-            editions=tuple(item.plan for item in work),
-            already_delta_authored=True,
-        ),
-        tuple(work),
-    )
-
-
-def _lift_counts(source: _EditionSource, lifts: Mapping[str, _Lift], stated_ids: frozenset[str]) -> LiftCounts:
-    """Count only the lifted keys the edition actually authors on the rows it keeps stating."""
-    authored = {_row_id(row): row for row in source.stated_rows()}
-
-    def count(key: str, *, constraint: bool) -> int:
-        total = 0
-        for row_id in stated_ids:
-            row = authored.get(row_id, {})
-            table = row.get(_CONSTRAINTS) if constraint else row
-            keys = lifts[row_id].constraint_lift.removed if constraint else lifts[row_id].row_lift.removed
-            total += key in keys and isinstance(table, dict) and key in table
-        return total
-
-    return LiftCounts(
-        row_source_refs=count(_ROW_SOURCE, constraint=False),
-        constraint_source_refs=count(_ROW_SOURCE, constraint=True),
-        row_orden_legal_refs=count(_ROW_LEGAL, constraint=False),
-        constraint_orden_legal_refs=count(_ROW_LEGAL, constraint=True),
-    )
-
-
-def _choose_predecessor(
-    position: int,
-    ordered: Sequence[ModeloRevision],
-    source: _EditionSource,
-    *,
-    reconsider_technical_roots: bool = False,
-) -> tuple[str | None, PredecessorBasis, list[BlockedCause]]:
-    storage_baseline = source.manifest.get("casilla_storage_baseline")
-    if isinstance(storage_baseline, str):
-        return storage_baseline, PredecessorBasis.STORAGE, []
-    declared = source.manifest.get("predecessor")
-    if isinstance(declared, str):
-        return declared, PredecessorBasis.DECLARED, []
-    if isinstance(declared, dict) and not (reconsider_technical_roots and technical_root(source.manifest)):
-        return None, PredecessorBasis.DECLARED_ROOT, []
-    if position == 0:
-        return None, PredecessorBasis.FIRST, []
-    earlier, current = ordered[position - 1], ordered[position]
-    causes: list[BlockedCause] = []
-    if revisions_coexist(earlier, current):
-        causes.append(BlockedCause.OVERLAPPING_PREDECESSOR)
-    return str(earlier.id), PredecessorBasis.STORAGE, causes
-
-
-def _choose_existing_drops(
-    *,
-    revision_id: str,
-    predecessor: str,
-    storage_rows: Mapping[str, _Row],
-    inherited: Sequence[_Placed],
-    full_rows: Sequence[_Row],
-    lifts: Mapping[str, _Lift],
-    source: _EditionSource,
-    defaults: _Defaults,
-    storage_only: bool,
-) -> tuple[set[str], Counter[KeptReason], list[str], tuple[_Row, ...], tuple[LineageAttestation, ...]]:
-    """Finish physically authored casillas without replaying existing storage operations.
-
-    ``full_rows`` already includes the manifest's overrides, removals, positions
-    and attestations.  Those operations are preserved verbatim.  Only rows that
-    still exist in a casilla fragment are candidates for removal; comparing any
-    other hydrated row would append a duplicate operation and can erase an
-    existing override on the next reconstruction.
-    """
-    by_lineage: dict[str, list[_Placed]] = {}
-    by_storage_id: dict[str, list[_Placed]] = {}
-    for placed in inherited:
-        if (lineage := _lineage(placed.row)) is not None:
-            by_lineage.setdefault(lineage, []).append(placed)
-        by_storage_id.setdefault(_row_id(placed.row), []).append(placed)
-    effective_by_id = {_row_id(row): row for row in full_rows}
-    drops: set[str] = set()
-    kept: Counter[KeptReason] = Counter()
-    not_exact: list[str] = []
-    overrides: list[_Row] = []
-    attestations: list[LineageAttestation] = []
-    # Existing overrides are preserved verbatim, so a predecessor row one of them
-    # already patches cannot also be the baseline of a new override.
-    claimed = _authored_override_selectors(source.manifest)
-    for authored in source.stated_rows():
-        row_id = _row_id(authored)
-        row = effective_by_id[row_id]
-        lineage = _lineage(row)
-        lineage_candidates = by_lineage.get(lineage, []) if lineage is not None else []
-        storage_candidates = by_storage_id.get(row_id, []) if lineage is None else []
-        candidates = lineage_candidates or storage_candidates
-        if len(candidates) != 1:
-            kept[KeptReason.NEW_LINEAGE] += 1
-            continue
-        (candidate,) = candidates
-        if _row_id(candidate.row) in claimed:
-            kept[KeptReason.NEW_LINEAGE] += 1
-            continue
-        if not lineage_candidates and lineage is None and _lineage(candidate.row) is not None:
-            kept[KeptReason.NEW_LINEAGE] += 1
-            continue
-        baseline = _without_lineage_claims(candidate.row)
-        target = lifts[row_id].row
-        effective_baseline = _effective(
-            baseline,
-            origin=candidate.origin,
-            revision_id=revision_id,
-            defaults=defaults,
-            declarations=source.declarations,
-        )
-        if effective_baseline is None:
-            kept[KeptReason.NOT_EXACT] += 1
-            not_exact.append(f"{row_id}: inherited references do not resolve in the successor")
-            continue
-        pending_attestation: LineageAttestation | None = None
-        if not storage_only and lineage is not None and any(claim in target for claim in _LINEAGE_CLAIMS):
-            pending_attestation = _lineage_attestation(
-                member=row,
-                manifest=source.manifest,
-                predecessor_revision_id=predecessor,
-                revision_id=revision_id,
-            )
-            if pending_attestation is None:
-                kept[KeptReason.DIFFERS] += 1
-                continue
-            target = _without_lineage_claims(target)
-        payload_row = _without_lineage_claims(row)
-        if effective_baseline == payload_row and not (
-            storage_only and any(claim in lifts[row_id].row for claim in _LINEAGE_CLAIMS)
-        ):
-            if pending_attestation is not None:
-                attestations.append(pending_attestation)
-            drops.add(row_id)
-            continue
-        comparison_baseline = _lift(
-            effective_baseline,
-            source_default=defaults.source_refs,
-            orden=defaults.orden,
-        ).row
-        fields, removed_fields = _storage_difference(comparison_baseline, target)
-        removed_fields = _existing_storage_removals(baseline, removed_fields)
-        removed_fields = _reconcile_source_removals(
-            fields, removed_fields, storage_rows.get(_row_id(candidate.row), baseline)
-        )
-        unsupported_nested = tuple(
-            field
-            for field in removed_fields
-            if "." in field and not (field.startswith("constraints.") and field.count(".") == 1)
-        )
-        if unsupported_nested:
-            kept[KeptReason.NOT_EXACT] += 1
-            not_exact.append(
-                f"{row_id}: nested removals are not representable by CasillaFieldOverride: "
-                + ", ".join(unsupported_nested)
-            )
-            continue
-        if pending_attestation is not None:
-            attestations.append(pending_attestation)
-        override: _Row = {
-            "selector": {"revision": predecessor, "id": _row_id(candidate.row)},
-            "fields": fields,
-            "removed_fields": list(removed_fields),
-        }
-        if storage_only and any(claim in lifts[row_id].row for claim in _LINEAGE_CLAIMS):
-            override["restate_provenance"] = True
-        overrides.append(override)
-        drops.add(row_id)
-    return drops, kept, not_exact, tuple(overrides), tuple(attestations)
-
-
-def _storage_rows(source: _EditionSource) -> Mapping[str, _Row]:
-    """The edition's casilla rows as the loader stores them, by id, before lifting."""
-    raw = source.table.get(_CASILLAS, ())
-    rows: dict[str, _Row] = {}
-    if not isinstance(raw, list | tuple):
-        return rows
-    for row in raw:
-        if isinstance(row, Mapping):
-            stored = _as_row(row)
-            rows[_row_id(stored)] = stored
-    return rows
-
-
-def _reconcile_source_removals(
-    fields: Mapping[str, object], removed_fields: tuple[str, ...], raw_baseline: Mapping[str, object]
-) -> tuple[str, ...]:
-    """Keep a patched row, and its constraints table, stating exactly one of ``source_refs`` and additions.
-
-    ``source_refs`` replaces the edition default whole, ``additional_source_refs``
-    only extends it, and the loader refuses a table stating both. The patch is
-    computed against the baseline lifted to this edition's default, while the
-    loader patches the baseline as it is stored, so the stored form can hold the
-    other spelling than the one the patch assumes; the reconciliation removes it.
-
-    The two tables differ in one respect. At row level the loader itself drops
-    the stored additions when the override states ``source_refs``, so they are
-    not removed twice. The constraints table is patched as a plain nested
-    table, so there every displaced spelling needs its explicit removal.
-    """
-    reconciled: list[str] = list(removed_fields)
-    if _ROW_SOURCE in fields:
-        reconciled = [field for field in reconciled if field != _ROW_SOURCE_ADDITIONS]
-    elif _ROW_SOURCE_ADDITIONS in fields and _ROW_SOURCE in raw_baseline and _ROW_SOURCE not in reconciled:
-        reconciled.append(_ROW_SOURCE)
-    constraint_fields = fields.get(_CONSTRAINTS)
-    stored_constraints = raw_baseline.get(_CONSTRAINTS)
-    if isinstance(constraint_fields, Mapping) and isinstance(stored_constraints, Mapping):
-        for stated, displaced in ((_ROW_SOURCE, _ROW_SOURCE_ADDITIONS), (_ROW_SOURCE_ADDITIONS, _ROW_SOURCE)):
-            removal = f"{_CONSTRAINTS}.{displaced}"
-            if stated in constraint_fields and displaced in stored_constraints and removal not in reconciled:
-                reconciled.append(removal)
-    return tuple(reconciled)
-
-
-def _authored_override_selectors(manifest: Mapping[str, object]) -> frozenset[str]:
-    """Predecessor row ids the edition's authored casilla operations already claim.
-
-    An override already patches its row. A removal paired with a restated row
-    relocates that row, which a rename in place cannot express. Either way the
-    predecessor row is not free to become the baseline of a new override.
-    """
-    claimed: set[str] = set()
-    for operation_name in ("casilla_overrides", "casilla_removals"):
-        raw = manifest.get(operation_name, ())
-        if not isinstance(raw, list | tuple):
-            continue
-        claimed.update(
-            str(selector.get("id"))
-            for operation in raw
-            if isinstance(operation, Mapping) and isinstance((selector := operation.get("selector")), Mapping)
-        )
-    return frozenset(claimed)
-
-
-def _choose_drops(
-    *,
-    definition: ModeloDefinition,
-    revision_id: str,
-    predecessor: str,
-    inherited: Sequence[_Placed],
-    full_rows: Sequence[_Row],
-    lifts: Mapping[str, _Lift],
-    source: _EditionSource,
-    defaults: _Defaults,
-    normalise_order: bool = False,
-    storage_only: bool = False,
-) -> tuple[
-    list[BlockedCause],
-    set[str],
-    Counter[KeptReason],
-    list[str],
-    tuple[_Row, ...],
-    tuple[_Row, ...],
-    tuple[_Row, ...],
-    tuple[LineageAttestation, ...],
-    tuple[str, ...],
-    bool,
-]:
-    causes: list[BlockedCause] = []
-    stated_lineages = {_lineage(row) for row in full_rows}
-    if not storage_only and any(
-        (lineage := _lineage(placed.row)) is not None
-        and lineage not in stated_lineages
-        and lineage not in source.retired
-        for placed in inherited
-    ):
-        causes.append(BlockedCause.UNRETIRED_WITHDRAWAL)
-    if causes:
-        return causes, set(), Counter(), [], (), (), (), (), (), False
-    by_lineage: dict[str, list[_Placed]] = {}
-    by_storage_id: dict[str, list[_Placed]] = {}
-    for placed in inherited:
-        lineage = _lineage(placed.row)
-        if lineage is not None:
-            by_lineage.setdefault(lineage, []).append(placed)
-        by_storage_id.setdefault(_row_id(placed.row), []).append(placed)
-    drops = set[str]()
-    kept: Counter[KeptReason] = Counter()
-    not_exact: list[str] = []
-    overrides: list[_Row] = []
-    lineage_attestations: list[LineageAttestation] = []
-    matched_storage_ids: set[str] = set()
-    # A predecessor row can be patched once: a row an authored override already
-    # patches cannot also be renamed onto another successor.
-    claimed = _authored_override_selectors(source.manifest)
-    for row in full_rows:
-        row_id, lineage = _row_id(row), _lineage(row)
-        lineage_candidates = by_lineage.get(lineage, []) if lineage is not None else []
-        storage_candidates = by_storage_id.get(row_id, []) if lineage is None else []
-        candidates = lineage_candidates or storage_candidates
-        matched_by_storage_id = not lineage_candidates and lineage is None
-        if len(candidates) != 1:
-            kept[KeptReason.NEW_LINEAGE] += 1
-            continue
-        (candidate,) = candidates
-        if _row_id(candidate.row) in claimed and _row_id(candidate.row) != row_id:
-            kept[KeptReason.NEW_LINEAGE] += 1
-            continue
-        if matched_by_storage_id and _lineage(candidate.row) is not None:
-            kept[KeptReason.NEW_LINEAGE] += 1
-            continue
-        matched_storage_ids.add(_row_id(candidate.row))
-        materialised = _effective(
-            _without_lineage_claims(candidate.row),
-            origin=candidate.origin,
-            revision_id=revision_id,
-            defaults=defaults,
-            declarations=source.declarations,
-        )
-        payload_row = _without_lineage_claims(row)
-        if materialised is None:
-            kept[KeptReason.NOT_EXACT] += 1
-            not_exact.append(f"{row_id}: inherited references do not resolve in the successor")
-            continue
-        if materialised != payload_row:
-            target = lifts[row_id].row
-            pending_attestation: LineageAttestation | None = None
-            if not storage_only and lineage is not None and any(claim in target for claim in _LINEAGE_CLAIMS):
-                pending_attestation = _lineage_attestation(
-                    member=row,
-                    manifest=source.manifest,
-                    predecessor_revision_id=predecessor,
-                    revision_id=revision_id,
-                )
-                if pending_attestation is None:
-                    kept[KeptReason.DIFFERS] += 1
-                    continue
-                target = _without_lineage_claims(target)
-            baseline = _lift(
-                materialised,
-                source_default=defaults.source_refs,
-                orden=defaults.orden,
-            ).row
-            fields, removed_fields = _storage_difference(baseline, target)
-            raw_baseline = _without_lineage_claims(candidate.row)
-            removed_fields = _existing_storage_removals(raw_baseline, removed_fields)
-            removed_fields = _reconcile_source_removals(fields, removed_fields, raw_baseline)
-            unsupported_nested = tuple(
-                field
-                for field in removed_fields
-                if "." in field and not (field.startswith("constraints.") and field.count(".") == 1)
-            )
-            if unsupported_nested:
-                kept[KeptReason.NOT_EXACT] += 1
-                not_exact.append(
-                    f"{row_id}: nested removals are not representable by CasillaFieldOverride: "
-                    + ", ".join(unsupported_nested)
-                )
-                continue
-            if pending_attestation is not None:
-                lineage_attestations.append(pending_attestation)
-            override: _Row = {
-                "selector": {"revision": predecessor, "id": _row_id(candidate.row)},
-                "fields": fields,
-                "removed_fields": list(removed_fields),
-            }
-            if any(claim in target for claim in _LINEAGE_CLAIMS):
-                override["restate_provenance"] = True
-            overrides.append(override)
-            drops.add(row_id)
-            continue
-        if storage_only and any(claim in lifts[row_id].row for claim in _LINEAGE_CLAIMS):
-            target = lifts[row_id].row
-            raw_baseline = _without_lineage_claims(candidate.row)
-            fields, removed_fields = _storage_difference(raw_baseline, target)
-            removed_fields = _existing_storage_removals(raw_baseline, removed_fields)
-            overrides.append(
-                {
-                    "selector": {"revision": predecessor, "id": _row_id(candidate.row)},
-                    "fields": fields,
-                    "removed_fields": list(removed_fields),
-                    "restate_provenance": True,
-                }
-            )
-            drops.add(row_id)
-            continue
-        if any(claim in row for claim in _LINEAGE_CLAIMS):
-            attestation = _lineage_attestation(
-                member=row,
-                manifest=source.manifest,
-                predecessor_revision_id=predecessor,
-                revision_id=revision_id,
-            )
-            if attestation is None:
-                kept[KeptReason.DIFFERS] += 1
-                continue
-            lineage_attestations.append(attestation)
-        drops.add(row_id)
-    successor_ids = {_row_id(row) for row in full_rows}
-    removals: tuple[_Row, ...] = tuple(
-        {"selector": {"revision": predecessor, "id": _row_id(placed.row)}}
-        for placed in inherited
-        if (storage_only or _lineage(placed.row) is None)
-        and _row_id(placed.row) not in successor_ids
-        and _row_id(placed.row) not in matched_storage_ids
-    )
-    stated = frozenset(_row_id(row) for row in full_rows) - drops
-    layout = _stated_layout(source, stated)
-    stated_rows = [lifts[_row_id(block.row)].row for _, blocks in layout for block in blocks]
-    removed_ids: set[str] = set()
-    for removal in removals:
-        selector = removal["selector"]
-        if not isinstance(selector, dict):
-            raise MigrationRefusedError(f"edition {revision_id!r}: invalid generated removal selector")
-        removed_ids.add(str(selector["id"]))
-    overrides_by_id: dict[str, _Row] = {}
-    for override in overrides:
-        selector = override["selector"]
-        if not isinstance(selector, dict):
-            raise MigrationRefusedError(f"edition {revision_id!r}: invalid generated override selector")
-        overrides_by_id[str(selector["id"])] = override
-    storage_inherited: list[_Placed] = []
-    patched_storage_ids: set[str] = set()
-    for placed in inherited:
-        storage_id = _row_id(placed.row)
-        if storage_id in removed_ids:
-            continue
-        storage_override = overrides_by_id.get(storage_id)
-        if storage_override is None:
-            storage_inherited.append(placed)
-            continue
-        patched = _without_lineage_claims(placed.row)
-        fields = _as_row(storage_override["fields"])
-        if _ROW_SOURCE in fields:
-            patched.pop(_ROW_SOURCE_ADDITIONS, None)
-        removed_fields = storage_override["removed_fields"]
-        if not isinstance(removed_fields, list | tuple):
-            raise MigrationRefusedError(f"edition {revision_id!r}: invalid generated removed fields")
-        patched = _apply_storage_difference(patched, fields, tuple(str(field) for field in removed_fields))
-        patched_storage_ids.add(_row_id(patched))
-        storage_inherited.append(_Placed(patched, revision_id))
-    merged, refused = _merge(
-        storage_inherited,
-        stated_rows,
-        revision_id=revision_id,
-        retired=source.retired,
-        storage_overridden=frozenset(patched_storage_ids),
-    )
-    if refused is not None:
-        return [refused], set(), Counter(), [], (), (), (), (), (), False
-    expected_ids = [_row_id(row) for row in full_rows]
-    positions_list: list[_Row] = []
-    if not normalise_order:
-        for position, expected_id in enumerate(expected_ids):
-            current = next(
-                (index for index, placed in enumerate(merged) if _row_id(placed.row) == expected_id),
-                None,
-            )
-            if current is None:
-                raise MigrationRefusedError(
-                    f"edition {revision_id!r}: storage delta cannot position casilla {expected_id!r}"
-                )
-            if current == position:
-                continue
-            placed = merged.pop(current)
-            merged.insert(position, placed)
-            positions_list.append({"id": expected_id, "position": position})
-        if [_row_id(placed.row) for placed in merged] != expected_ids:
-            raise MigrationRefusedError(
-                f"edition {revision_id!r}: successor-local positions do not reconstruct casilla order"
-            )
-    positions = tuple(positions_list)
-    full_by_id = {_row_id(row): row for row in full_rows}
-    attested_lineages = {str(attestation.continuidad_id) for attestation in lineage_attestations}
-    for placed in merged:
-        row = full_by_id[_row_id(placed.row)]
-        simulated_row = dict(placed.row)
-        if (lineage := _lineage(row)) in attested_lineages:
-            for claim_field in _LINEAGE_CLAIMS:
-                if claim_field in row:
-                    simulated_row[claim_field] = row[claim_field]
-        effective = _effective(
-            simulated_row,
-            origin=placed.origin,
-            revision_id=revision_id,
-            defaults=defaults,
-            declarations=source.declarations,
-        )
-        if effective != row:
-            differing = sorted(
-                key
-                for key in set(row) | set(effective or {})
-                if effective is None or row.get(key) != effective.get(key)
-            )
-            raise MigrationRefusedError(
-                f"edition {revision_id!r}: simulated casilla {_row_id(row)!r} does not reproduce the full copy; "
-                f"differing fields: {differing!r}",
-            )
-    return (
-        [],
-        drops,
-        kept,
-        not_exact,
-        tuple(overrides),
-        removals,
-        positions,
-        tuple(lineage_attestations),
-        tuple(_row_id(placed.row) for placed in merged),
-        normalise_order,
-    )
-
-
 # ── writing ─────────────────────────────────────────────────────────────────
-
-
-def _toml_string(value: str) -> str:
-    escaped = "".join(
-        _TOML_ESCAPES.get(char, f"\\u{ord(char):04x}" if ord(char) < 0x20 or ord(char) == 0x7F else char)
-        for char in value
-    )
-    return f'"{escaped}"'
-
-
-def _toml_value(value: object) -> str:
-    if isinstance(value, str):
-        return _toml_string(value)
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    if isinstance(value, int | float):
-        return str(value)
-    if isinstance(value, list | tuple):
-        return "[" + ", ".join(_toml_value(item) for item in value) + "]"
-    if isinstance(value, Mapping):
-        return "{ " + ", ".join(f"{key} = {_toml_value(item)}" for key, item in value.items()) + " }"
-    raise MigrationRefusedError(f"cannot render {type(value).__name__} as a manifest value")
-
-
-def _scan_depth(text: str, depth: int) -> int:
-    """Return the bracket depth after ``text``, ignoring strings and comments."""
-    index, quote = 0, ""
-    while index < len(text):
-        char = text[index]
-        if quote:
-            if char == "\\" and quote == '"':
-                index += 1
-            elif char == quote:
-                quote = ""
-        elif char in "\"'":
-            quote = char
-        elif char == "#":
-            break
-        elif char in "[{":
-            depth += 1
-        elif char in "]}":
-            depth -= 1
-        index += 1
-    return depth
-
-
-def _top_level_items(inline: str) -> list[str]:
-    """Split the inside of an inline table at its top-level commas, keeping each item's text."""
-    items: list[str] = []
-    depth, quote, start, index = 0, "", 0, 0
-    while index < len(inline):
-        char = inline[index]
-        if quote:
-            if char == "\\" and quote == '"':
-                index += 1
-            elif char == quote:
-                quote = ""
-        elif char in "\"'":
-            quote = char
-        elif char in "[{":
-            depth += 1
-        elif char in "]}":
-            depth -= 1
-        elif char == "," and depth == 0:
-            items.append(inline[start:index])
-            start = index + 1
-        index += 1
-    items.append(inline[start:])
-    return [item for item in items if item.strip()]
-
-
-def _additions_assignment(additions: tuple[str, ...]) -> str:
-    return f"{_ROW_SOURCE_ADDITIONS} = {_toml_value(list(additions))}"
-
-
-def _lifted_inline(line: str, lift: _TableLift) -> str:
-    key, _, rest = line.partition("=")
-    body = rest.strip()
-    if not (body.startswith("{") and body.endswith("}")):
-        raise MigrationRefusedError(f"constraints are neither a table nor a one-line inline table: {line!r}")
-    kept: list[str] = []
-    for item in (item.strip() for item in _top_level_items(body[1:-1])):
-        name = item.partition("=")[0].strip()
-        if name == _ROW_SOURCE_ADDITIONS and _ROW_SOURCE in lift.removed:
-            if lift.additions is not None:
-                kept.append(_additions_assignment(lift.additions))
-        elif name not in lift.removed:
-            kept.append(item)
-        elif name == _ROW_SOURCE and lift.additions is not None:
-            kept.append(_additions_assignment(lift.additions))
-    return f"{key.rstrip()} = {{ {', '.join(kept)} }}\n" if kept else f"{key.rstrip()} = {{}}\n"
-
-
-def _key_of(line: str) -> str | None:
-    match = re.match(r"^([A-Za-z0-9_-]+)\s*=", line)
-    return str(match.group(1)) if match else None
-
-
-def _lifted_text(block: _Block, lift: _Lift) -> str:
-    """Remove the lifted keys from a row block's text, stating additions in their place, verified by re-parsing."""
-    if not lift.row_lift.removed and not lift.constraint_lift.removed:
-        return block.text
-    lines = block.text.splitlines(keepends=True)
-    out: list[str] = []
-    scope, index = "comment", 0
-    while index < len(lines):
-        line = lines[index]
-        stripped = line.rstrip("\r\n")
-        if _ROW_HEADER.match(stripped):
-            scope = "row"
-        elif _CONSTRAINTS_HEADER.match(stripped):
-            scope = "constraints"
-        elif stripped.startswith("["):
-            scope = "other"
-        key = _key_of(line)
-        table_lift = lift.row_lift if scope == "row" else lift.constraint_lift if scope == "constraints" else None
-        if (
-            table_lift is not None
-            and key is not None
-            and (key in table_lift.removed or (key == _ROW_SOURCE_ADDITIONS and _ROW_SOURCE in table_lift.removed))
-        ):
-            depth = _scan_depth(line.partition("=")[2], 0)
-            while depth > 0 and index + 1 < len(lines):
-                index += 1
-                depth = _scan_depth(lines[index], depth)
-            if key in {_ROW_SOURCE, _ROW_SOURCE_ADDITIONS} and table_lift.additions is not None:
-                out.append(_additions_assignment(table_lift.additions) + "\n")
-            index += 1
-            continue
-        if scope == "row" and key == _CONSTRAINTS and lift.constraint_lift.removed:
-            line = _lifted_inline(line, lift.constraint_lift)
-        out.append(line)
-        index += 1
-    text = "".join(out)
-    if _block_row(text) != lift.row:
-        raise MigrationRefusedError(f"lifting casilla {_row_id(block.row)!r} would change more than its lifted keys")
-    return text
 
 
 #: Families whose members carry ``source_refs`` and whose edition default is
@@ -2892,178 +364,6 @@ def _lifted_text(block: _Block, lift: _Lift) -> str:
 #: function, so a member it counts as liftable is a member this tool will lift.
 #: Only families whose manifest key already exists in the schema appear here;
 #: adding one is a schema change in the bindings lane, not a change here.
-_FAMILY_SOURCE_DEFAULTS: Final[tuple[tuple[str, str], ...]] = (("formulas", "formula_source_refs"),)
-
-
-def _family_members(table: Mapping[str, object], section: str) -> tuple[_Row, ...]:
-    """Return the edition's resolved members for ``section``, in declared order."""
-    raw = table.get(section, ())
-    return tuple(_as_row(member) for member in (raw if isinstance(raw, list | tuple) else ()))
-
-
-def _family_source_default(table: Mapping[str, object], section: str) -> tuple[str, ...] | None:
-    """The edition's shared leading ``source_refs`` run for ``section``, or ``None`` when none derives."""
-    members = _family_members(table, section)
-    if not members:
-        return None
-    default, _reason = edition_source_default(members)
-    return default
-
-
-def _write_manifest(path: Path, work: _EditionWork) -> None:
-    plan = work.plan
-    additions: dict[str, object] = {}
-    if plan.predecessor is not None and plan.basis is PredecessorBasis.ADJACENT:
-        additions["predecessor"] = plan.predecessor
-    if (
-        plan.predecessor is not None
-        and plan.basis is PredecessorBasis.STORAGE
-        and "casilla_storage_baseline" not in work.source.manifest
-    ):
-        additions["casilla_storage_baseline"] = plan.predecessor
-    if work.root_declaration is not None:
-        additions["predecessor"] = work.root_declaration
-    if plan.source_default is not None and "casilla_source_refs" not in work.source.manifest:
-        additions["casilla_source_refs"] = list(plan.source_default)
-    for key, default in sorted(work.source.family_defaults.items()):
-        if key not in work.source.manifest:
-            additions[key] = list(default)
-    storage_operations = bool(plan.casilla_overrides or plan.casilla_removals or plan.casilla_positions)
-    if not additions and not plan.lineage_attestations and not storage_operations:
-        return
-    text = work.source.manifest_text
-    if "predecessor" in additions and isinstance(work.source.manifest.get("predecessor"), Mapping):
-        text, removed = re.subn(r"(?m)^predecessor\s*=.*(?:\r?\n|$)", "", text, count=1)
-        if removed != 1:
-            raise MigrationRefusedError(f"{path}: cannot replace the technical predecessor root")
-    header = re.compile(
-        rf'^\[revisions\.(?:"{re.escape(plan.revision_id)}"|{re.escape(plan.revision_id)})\][ \t]*\r?\n',
-        re.MULTILINE,
-    )
-    match = header.search(text)
-    if match is None:
-        raise MigrationRefusedError(f"{path}: no [revisions.{plan.revision_id!r}] header to declare under")
-    inserted = "".join(f"{key} = {_toml_value(value)}\n" for key, value in additions.items())
-    rewritten = text[: match.end()] + inserted + text[match.end() :]
-    if _manifest_table(rewritten, plan.revision_id) != {**work.source.manifest, **additions}:
-        raise MigrationRefusedError(f"{path}: declaring {sorted(additions)!r} would change other manifest keys")
-    rewritten = _append_lineage_attestations(rewritten, plan.lineage_attestations)
-    rewritten = _append_casilla_storage_operations(rewritten, plan)
-    path.write_text(rewritten, encoding="utf-8", newline="\n")
-
-
-def _append_casilla_storage_operations(text: str, plan: EditionPlan) -> str:
-    """Append generated storage operations without reformatting authored TOML."""
-    operation_groups = (
-        ("casilla_overrides", plan.casilla_overrides),
-        ("casilla_removals", plan.casilla_removals),
-        ("casilla_positions", plan.casilla_positions),
-    )
-    for name, operations in operation_groups:
-        for operation in operations:
-            block = [f'[[revisions."{plan.revision_id}".{name}]]']
-            block.extend(f"{key} = {_toml_value(value)}" for key, value in operation.items())
-            text = text.rstrip() + "\n\n" + "\n".join(block) + "\n"
-    return text
-
-
-def _append_lineage_attestations(text: str, attestations: Sequence[LineageAttestation]) -> str:
-    """Append canonical TOML for claims that moved out of complete rows."""
-    for attestation in attestations:
-        block = [
-            f'[[revisions."{attestation.to_revision}".lineage_attestations]]',
-            f"family = {json.dumps(attestation.family, ensure_ascii=False)}",
-            f"continuidad_id = {json.dumps(attestation.identity, ensure_ascii=False)}",
-            f"from_revision = {json.dumps(str(attestation.from_revision), ensure_ascii=False)}",
-            f"to_revision = {json.dumps(str(attestation.to_revision), ensure_ascii=False)}",
-            f"origin = {json.dumps(attestation.origin.value, ensure_ascii=False)}",
-        ]
-        if attestation.evidence is not None:
-            block.append(f"evidence = {json.dumps(attestation.evidence, ensure_ascii=False)}")
-        block.extend(
-            (
-                f"legal_refs = {json.dumps(list(attestation.legal_refs), ensure_ascii=False)}",
-                f"source_refs = {json.dumps(list(attestation.source_refs), ensure_ascii=False)}",
-            )
-        )
-        text = text.rstrip() + "\n\n" + "\n".join(block) + "\n"
-    return text
-
-
-def _write_edition(edition_dir: Path, work: _EditionWork) -> None:
-    stated = frozenset(work.plan.stated_ids)
-    layout = _stated_layout(work.source, stated)
-    preambles = {
-        fragment.path.name: fragment.preamble
-        for fragment in work.source.fragments
-        if any(_row_id(block.row) in stated for block in fragment.blocks)
-    }
-    casillas = edition_dir / _CASILLAS
-    rendered = {
-        name: preambles[name] + "".join(_lifted_text(block, work.lifts[_row_id(block.row)]) for block in blocks)
-        for name, blocks in layout
-    }
-    originals = {fragment.path.name: fragment.path.read_text(encoding="utf-8") for fragment in work.source.fragments}
-    for name in originals:
-        if name not in rendered:
-            (casillas / name).unlink()
-    for name, text in rendered.items():
-        if name not in originals:
-            raise MigrationRefusedError(f"refusing to write fragment name {name!r}")
-        if originals.get(name) == text:
-            continue
-        (casillas / name).write_text(text.rstrip("\n") + "\n", encoding="utf-8", newline="\n")
-    if casillas.exists() and not any(casillas.iterdir()):
-        casillas.rmdir()
-    _write_manifest(edition_dir / _MANIFEST, work)
-
-
-def _undeclared_defaults(work: _EditionWork) -> bool:
-    """Whether writing this edition would add a manifest default it does not declare yet."""
-    plan, manifest = work.plan, work.source.manifest
-    if plan.source_default is not None and "casilla_source_refs" not in manifest:
-        return True
-    return any(key not in manifest for key in work.source.family_defaults)
-
-
-def _edition_changes(work: _EditionWork) -> bool:
-    """Whether writing this edition's plan would change any byte of it."""
-    plan = work.plan
-    if plan.basis is PredecessorBasis.BLOCKED:
-        return False
-    if plan.basis is PredecessorBasis.LIFT_ONLY:
-        # The lift is the whole operation, so the edition is at its fixed point
-        # once every declared default is on the manifest and every stated row
-        # already holds the form the lift would give it.
-        stated = {_row_id(row): row for row in work.source.stated_rows()}
-        planned = {row_id: work.lifts[row_id].row for row_id in plan.stated_ids}
-        return bool(
-            plan.casilla_overrides
-            or plan.casilla_removals
-            or plan.casilla_positions
-            or plan.lifted.total()
-            or _undeclared_defaults(work)
-            or stated != planned
-        )
-    if plan.basis is PredecessorBasis.DECLARED and isinstance(work.source.manifest.get("predecessor"), str):
-        return bool(
-            plan.casilla_overrides
-            or plan.casilla_removals
-            or plan.casilla_positions
-            or plan.lifted.total()
-            or _undeclared_defaults(work)
-        )
-    return bool(
-        plan.inherited_ids
-        or plan.casilla_overrides
-        or plan.casilla_removals
-        or plan.casilla_positions
-        or plan.lifted.total()
-        or plan.basis is PredecessorBasis.ADJACENT
-        or plan.basis is PredecessorBasis.STORAGE
-        or work.root_declaration is not None
-        or _undeclared_defaults(work)
-    )
 
 
 # ── the chain proof ─────────────────────────────────────────────────────────
@@ -3071,446 +371,17 @@ def _edition_changes(work: _EditionWork) -> bool:
 #: Manifest keys the migration may declare. They are defaults: the loader folds
 #: them into the members they fill, so the chain proof inlines their effect and
 #: compares the members rather than the declaration.
-_DECLARED_DEFAULT_KEYS: Final[frozenset[str]] = frozenset(
-    {"casilla_source_refs", *(key for _section, key in _FAMILY_SOURCE_DEFAULTS)}
-)
-
-
-def _member_identities(source: _EditionSource) -> Mapping[str, tuple[str, ...]]:
-    """The identity of every member the edition materialises, by family, in materialised order.
-
-    Every family a drop can reach is named here, not just the reference
-    families. A family absent from this mapping still cannot change unnoticed --
-    ``_chain_materialisation`` catches it -- but it reports as an unspecific byte
-    difference, which names no member and leaves the reader to find it. While
-    drops were unreachable that cost nothing; a drop operation makes every
-    droppable family reachable, so each one earns a refusal that names the
-    member it lost.
-    """
-    identities = {_CASILLAS: tuple(f"{_row_id(row)}|{_lineage(row)}" for row in source.rows)}
-    sections = set(_REFERENCE_SECTIONS.values()) | {family.section for family in _DROPPABLE_FAMILIES}
-    for section in sorted(sections - {_CASILLAS}):
-        identities[section] = tuple(str(member.get("id")) for member in _family_members(source.table, section))
-    return identities
 
 
 #: Marks a rendered date so it can never compare equal to a string that happens
 #: to read the same. TOML forbids control characters in keys and strings, so no
 #: declaration can produce a table that collides with this tag.
-_DATE_TAG: Final = "\x00date"
-
-
-def _comparable(value: object, *, revision_id: str, path: str) -> object:
-    """Render one materialised value as a JSON-comparable one, refusing any type the proof cannot compare.
-
-    The proof is byte identity, so every value must render to bytes that
-    distinguish it from every value it is not. A ``default=`` fallback breaks
-    that in both directions: two different values whose fallback renders alike
-    compare equal, and a value falling back to ``repr`` embeds an address that
-    differs between the two reads the proof compares. So the permitted set is
-    closed, and anything outside it is refused by key path and type.
-
-    The set is what the corpus holds: ``rtoml`` yields ``str``, ``int``,
-    ``float``, ``bool`` and the three ``datetime`` types, and a census of every
-    modelo TOML file finds ``str``, ``int``, ``bool``, ``date`` and ``float``
-    only. ``None`` reaches the payload from ``label_origins``. A ``datetime``
-    or ``time`` the corpus does not use today is refused rather than guessed at.
-    """
-    if value is None or isinstance(value, str | bool | int | float):
-        return value
-    if isinstance(value, Mapping):
-        return {
-            str(key): _comparable(item, revision_id=revision_id, path=f"{path}.{key}") for key, item in value.items()
-        }
-    if isinstance(value, list | tuple):
-        return [_comparable(item, revision_id=revision_id, path=f"{path}[{index}]") for index, item in enumerate(value)]
-    if type(value) is datetime.date:
-        return {_DATE_TAG: value.isoformat()}
-    raise MigrationRefusedError(
-        f"edition {revision_id!r}: the value at {path} is a {type(value).__name__}, which the chain proof cannot "
-        "compare; the proof is byte identity and refuses a type it has no exact rendering for",
-    )
-
-
-def _chain_materialisation(source: _EditionSource) -> bytes:
-    """The edition as its chain materialises it, defaults inlined, rendered as comparable bytes.
-
-    Keys are emitted in sorted order and sequences in their own, so the
-    comparison is blind to where a declaration was inserted in a manifest and
-    exact about the order of members. A keyed family with no members is the
-    same whether an edition omits it or inherits it empty, so an empty family
-    is left out on both sides rather than read as a difference.
-    """
-    effective_table = _family_defaults_inlined(source.table)
-    family_sections = {spec.section for spec in CANONICAL_FAMILY_SPECS}
-    table = {
-        key: _comparable(value, revision_id=source.revision_id, path=f"table.{key}")
-        for key, value in effective_table.items()
-        if key not in _DECLARED_DEFAULT_KEYS | _STORAGE_REPRESENTATION_FIELDS
-        and not (key in family_sections and isinstance(value, list | tuple) and not value)
-    }
-    effective_rows = [dict(row) for row in _effective_rows(source)]
-    raw_attestations = source.manifest.get("lineage_attestations", ())
-    if not isinstance(raw_attestations, list | tuple):
-        raw_attestations = ()
-    for raw_attestation in raw_attestations:
-        if not isinstance(raw_attestation, Mapping) or raw_attestation.get("family") != _CASILLAS:
-            continue
-        identity = raw_attestation.get(_LINEAGE)
-        row = next((item for item in effective_rows if item.get(_LINEAGE) == identity), None)
-        if row is None:
-            continue
-        if "origin" in raw_attestation:
-            row["continuidad_origin"] = raw_attestation["origin"]
-        if "evidence" in raw_attestation:
-            row["continuidad_evidence"] = raw_attestation["evidence"]
-    table[_CASILLAS] = [
-        _comparable(row, revision_id=source.revision_id, path=f"table.{_CASILLAS}[{index}]")
-        for index, row in enumerate(effective_rows)
-    ]
-    payload = {
-        "revision": source.revision_id,
-        "table": table,
-    }
-    return json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
-
-
-def _family_defaults_inlined(table: Mapping[str, object]) -> dict[str, object]:
-    """Inline keyed-family source defaults for representation-blind chain proof."""
-    result = dict(table)
-    for section, default_key in family_source_default_fields():
-        raw_members = table.get(section)
-        if not isinstance(raw_members, list | tuple):
-            continue
-        result[section] = [
-            inline_family_source_default(raw_member, table, default_key)
-            if isinstance(raw_member, Mapping)
-            else raw_member
-            for raw_member in raw_members
-        ]
-    return result
-
-
-def _read_staged_edition(modelo_dir: Path, revision_id: str, *, side: str) -> _EditionSource:
-    try:
-        return _read_edition(modelo_dir, revision_id)
-    except RegistryError as exc:
-        raise MigrationRefusedError(
-            f"edition {revision_id!r}: the {side} tree does not materialise: {type(exc).__name__}: {exc}",
-        ) from exc
-
-
-def _prove_chain(
-    *,
-    reference_modelo_dir: Path,
-    staged_modelo_dir: Path,
-    revision_ids: Sequence[str],
-    report: RoundTripReport,
-) -> RoundTripReport:
-    """Require the staged delta tree to materialise exactly as the tree it was planned from.
-
-    A delta-authored modelo has no full copy left to prove a change against, so
-    the proof is identity against its own chain: each staged edition must hold
-    the same members, in the same order, and materialise to the same bytes. The
-    round-trip gate's typed, row-order, locale and export-byte comparisons run
-    on top of that, less two findings this path answers itself: its demand that
-    the reference be a full copy, which on this path it can never be, and a
-    typed difference proven to be confined to a manifest default the migration
-    declared.
-
-    Raises:
-        MigrationRefusedError: On any difference in member identity or in the
-            materialised bytes of any edition.
-    """
-    for revision_id in revision_ids:
-        before = _read_staged_edition(reference_modelo_dir, revision_id, side="reference")
-        after = _read_staged_edition(staged_modelo_dir, revision_id, side="staged")
-        difference = _member_difference(_member_identities(before), _member_identities(after))
-        if difference is not None:
-            raise MigrationRefusedError(f"edition {revision_id!r}: {difference}")
-        if _chain_materialisation(before) != _chain_materialisation(after):
-            raise MigrationRefusedError(
-                f"edition {revision_id!r}: the staged tree materialises to different bytes than the tree it was "
-                "planned from, so the lift is not an identity and cannot be proven",
-            )
-    return RoundTripReport(
-        findings=tuple(
-            finding
-            for finding in report.findings
-            if finding.kind not in {RoundTripFindingKind.REFERENCE_NOT_FULL_COPY, RoundTripFindingKind.ROW_ORDER}
-        ),
-        byte_compared_revisions=report.byte_compared_revisions,
-    )
-
-
-def _member_difference(
-    reference_members: Mapping[str, tuple[str, ...]],
-    staged_members: Mapping[str, tuple[str, ...]],
-) -> str | None:
-    """Describe the first family whose members differ, or ``None`` when every family is identical.
-
-    The comparison is symmetric over both sides' families. Reading the
-    reference's families alone would leave a family the staged tree holds and
-    the reference does not uncompared by member identity, so the difference
-    would fall through to the byte comparison and be reported as an unspecific
-    change of bytes rather than as the members it actually is.
-    """
-    staged_only = [section for section in staged_members if section not in reference_members]
-    for section in [*reference_members, *staged_only]:
-        members, staged_section = reference_members.get(section, ()), staged_members.get(section, ())
-        if staged_section != members:
-            return (
-                f"lifting changed the {section} members, which a lift may never do: "
-                f"{len(members)} before, {len(staged_section)} after, first difference at "
-                f"{_first_difference(members, staged_section)}"
-            )
-    return None
-
-
-def _first_difference(before: Sequence[str], after: Sequence[str]) -> str:
-    """Describe the first position at which two member-identity sequences diverge."""
-    for index, (left, right) in enumerate(zip(before, after, strict=False)):
-        if left != right:
-            return f"position {index}: {left!r} became {right!r}"
-    shared = min(len(before), len(after))
-    trailing = list(before[shared:]) or list(after[shared:])
-    return f"position {shared}: {trailing!r} on the {'reference' if len(before) > len(after) else 'staged'} side only"
 
 
 # ── declared order ──────────────────────────────────────────────────────────
 
 
-@dataclass(frozen=True, slots=True)
-class OrderRestoration:
-    """The positions that give one edition's complete statement of a family the order it states.
-
-    ``moves`` are ``(identity, position)`` pairs in the order the loader applies
-    them, after every position the edition already declares.
-    """
-
-    revision_id: str
-    family: str
-    moves: tuple[tuple[str, int], ...]
-
-
-def _declared_positions(raw: Mapping[str, object], section: str) -> tuple[str, ...]:
-    """The identities an edition already places by an explicit position in ``section``."""
-    if section == CASILLAS_FAMILY:
-        return tuple(str(operation.get("id")) for operation in _members(raw, "casilla_positions") or ())
-    return tuple(
-        str(operation.get("id"))
-        for operation in _members(raw, "family_positions") or ()
-        if operation.get("family") == section
-    )
-
-
-def declared_order_restorations(modelo_dir: Path) -> tuple[OrderRestoration, ...]:
-    """Find every complete statement over a baseline that materialises out of the order it states.
-
-    A family's member order is part of what an edition means: casilla rows
-    follow the record design, and every inherited family keeps its order
-    through the merge and its declared positions. The merge itself defines the
-    order of a partial statement -- inherited members in their baseline's
-    order, a superseding member in the place of the one it supersedes, new
-    members after them in stated order, then positions. An edition that states
-    every member of a family it also inherits is a full copy of that family,
-    and a full copy's order is the order it states. A storage baseline added
-    beneath such a statement is a representation change, yet the merge would
-    move every member new to the baseline to the end; this names the positions
-    that keep the stated order instead, fewest moves first.
-
-    Raises:
-        MigrationRefusedError: When such a statement also declares positions
-            for the family. The positions were written against the merge order,
-            the statement disagrees with what they produce, and taking either
-            one would be a guess about which the author meant.
-    """
-    raw_revisions = load_modelo_declarations(modelo_dir).get("revisions", {})
-    if not isinstance(raw_revisions, Mapping):
-        raise MigrationRefusedError(f"{modelo_dir}: revisions are not a mapping")
-    definition = load_modelo_directory(modelo_dir)
-    restorations: list[OrderRestoration] = []
-    for revision in ordered_revisions(definition):
-        revision_id = str(revision.id)
-        raw = raw_revisions.get(revision_id)
-        if not isinstance(raw, Mapping):
-            continue
-        for spec in INHERITED_FAMILY_SPECS:
-            if spec.singleton or _family_storage_baseline(raw, spec.section) is None:
-                continue
-            identity = spec.storage_identity if spec.section == CASILLAS_FAMILY else spec.identity
-            stated_members = _members(raw, spec.section)
-            materialised_members = getattr(revision, spec.section, None)
-            if identity is None or not stated_members or not isinstance(materialised_members, list | tuple):
-                continue
-            stated = [str(family_identity_value(member, identity)) for member in stated_members]
-            materialised = [str(family_identity_value(member, identity)) for member in materialised_members]
-            complete = len(stated) > 1 and len(set(stated)) == len(stated) and Counter(stated) == Counter(materialised)
-            if not complete or materialised == stated:
-                continue
-            positioned = _declared_positions(raw, spec.section)
-            if positioned:
-                raise MigrationRefusedError(
-                    f"edition {revision_id!r} states every {spec.section} member it inherits, in an order its "
-                    f"materialisation does not keep, and also places {sorted(positioned)!r} by position; the "
-                    "statement and the positions disagree about the order, so neither is taken",
-                )
-            restorations.append(
-                OrderRestoration(
-                    revision_id=revision_id,
-                    family=spec.section,
-                    moves=minimal_positions(
-                        materialised, stated, subject=f"modelo {definition.id} edition {revision_id} {spec.section}"
-                    ),
-                )
-            )
-    return tuple(restorations)
-
-
-def _write_order_restorations(modelo_dir: Path, restorations: Sequence[OrderRestoration]) -> None:
-    """Append each restoration's positions to its edition's manifest, after the positions it declares."""
-    by_revision: dict[str, list[OrderRestoration]] = {}
-    for restoration in restorations:
-        by_revision.setdefault(restoration.revision_id, []).append(restoration)
-    for revision_id, items in by_revision.items():
-        manifest_path = modelo_dir / "revisions" / revision_id / _MANIFEST
-        document = tomlkit.parse(manifest_path.read_text(encoding="utf-8"))
-        revision = document["revisions"][revision_id]
-        for item in items:
-            key = "casilla_positions" if item.family == CASILLAS_FAMILY else "family_positions"
-            operations = revision.get(key) or tomlkit.aot()
-            for identity, position in item.moves:
-                entry = tomlkit.table()
-                if item.family != CASILLAS_FAMILY:
-                    entry["family"] = item.family
-                entry["id"] = identity
-                entry["position"] = position
-                operations.append(entry)
-            revision[key] = operations
-        manifest_path.write_text(tomlkit.dumps(document), encoding="utf-8", newline="\n")
-
-
-def _order_blind(payload: object) -> object:
-    """A rendered edition with every keyed sequence of members compared as a multiset."""
-    if not isinstance(payload, dict):
-        return payload
-    table = payload.get("table")
-    if not isinstance(table, dict):
-        return payload
-    family_sections = {spec.section for spec in INHERITED_FAMILY_SPECS}
-    return {
-        **payload,
-        "table": {
-            key: sorted(value, key=lambda member: json.dumps(member, sort_keys=True))
-            if key in family_sections and isinstance(value, list)
-            else value
-            for key, value in table.items()
-        },
-    }
-
-
-def _member_orders(source: _EditionSource) -> dict[str, tuple[str, ...]]:
-    orders: dict[str, tuple[str, ...]] = {}
-    for spec in INHERITED_FAMILY_SPECS:
-        identity = spec.storage_identity if spec.section == CASILLAS_FAMILY else spec.identity
-        members = source.table.get(spec.section)
-        if identity is None or spec.singleton or not isinstance(members, list | tuple):
-            continue
-        orders[spec.section] = tuple(str(family_identity_value(member, identity)) for member in members)
-    return orders
-
-
-def _prove_order_restoration(
-    *, reference_modelo_dir: Path, declared_modelo_dir: Path, restorations: Sequence[OrderRestoration]
-) -> tuple[tuple[str, str], ...]:
-    """Require restoring declared order to change member order only, and return every family it reorders.
-
-    The declared tree must hold every edition's members unchanged as a
-    multiset, every restored family must now materialise in its stated order,
-    and no complete statement may be left out of order. An edition inheriting
-    a restored family takes its baseline's order through the merge, so the
-    families reordered can include ones no restoration names; each is
-    returned, never hidden.
-
-    Raises:
-        MigrationRefusedError: When any member's content differs, a restored
-            family is still out of its stated order, or another complete
-            statement is left out of order.
-    """
-    remaining = declared_order_restorations(declared_modelo_dir)
-    if remaining:
-        raise MigrationRefusedError(
-            f"restoring declared order left {[(item.revision_id, item.family) for item in remaining]!r} out of the "
-            "order their statements give",
-        )
-    reordered: list[tuple[str, str]] = []
-    revision_ids = sorted(path.name for path in (reference_modelo_dir / "revisions").iterdir() if path.is_dir())
-    for revision_id in revision_ids:
-        before = _read_staged_edition(reference_modelo_dir, revision_id, side="reference")
-        after = _read_staged_edition(declared_modelo_dir, revision_id, side="declared-order")
-        if _order_blind(json.loads(_chain_materialisation(before))) != _order_blind(
-            json.loads(_chain_materialisation(after))
-        ):
-            raise MigrationRefusedError(
-                f"edition {revision_id!r}: restoring declared order changed more than the order of its members",
-            )
-        before_orders, after_orders = _member_orders(before), _member_orders(after)
-        reordered.extend(
-            (revision_id, section)
-            for section in sorted(before_orders.keys() | after_orders.keys())
-            if before_orders.get(section) != after_orders.get(section)
-        )
-    missing = sorted({(item.revision_id, item.family) for item in restorations} - set(reordered))
-    if missing:
-        raise MigrationRefusedError(f"restoring declared order did not reorder {missing!r}")
-    return tuple(reordered)
-
-
-def _stage_declared_order(
-    *, registry_root: Path, modelo_id: str, work_dir: Path, reference: Path, restorations: Sequence[OrderRestoration]
-) -> tuple[Path, tuple[tuple[str, str], ...]]:
-    """Stage the registry the proof compares against: the live tree in the order its declarations give.
-
-    Without a restoration this is the reference itself. With one, the live
-    tree is copied, the restoring positions are written and proven to change
-    member order only, and that copy becomes both what the migration plans
-    from and what its staged result must equal, so an apply keeps the declared
-    order rather than the order the merge would impose.
-    """
-    if not restorations:
-        return reference, ()
-    declared = copy_registry_tree(
-        registry_root,
-        _scratch_path(work_dir, "declared", "registry", "aeat"),
-        modelo_id=modelo_id,
-    )
-    _write_order_restorations(declared / _MODELOS / modelo_id, restorations)
-    reordered = _prove_order_restoration(
-        reference_modelo_dir=reference / _MODELOS / modelo_id,
-        declared_modelo_dir=declared / _MODELOS / modelo_id,
-        restorations=restorations,
-    )
-    return declared, reordered
-
-
 # ── dropping restatement ────────────────────────────────────────────────────
-
-
-@dataclass(frozen=True, slots=True)
-class _DroppableFamily:
-    """One family whose restated members a successor edition may stop declaring.
-
-    ``section`` is the table key and the fragment directory, ``identity`` the
-    field naming the same member across editions, and ``identity_fields`` the
-    fields that carry what the member IS rather than what it declares. A stated
-    member whose identity field differs from the inherited one is a divergence,
-    never a restatement: dropping it would silently change the member the
-    edition holds, so it is always kept.
-    """
-
-    section: str
-    identity: str
-    identity_fields: tuple[str, ...] = ()
 
 
 #: The families a drop may touch, and the reason each one is safe.  Membership
@@ -3525,675 +396,154 @@ class _DroppableFamily:
 #: The chain proof still authorises every write: a policy error produces a
 #: materialisation difference and refuses the modelo rather than silently
 #: losing a member.
-_DROPPABLE_FAMILIES: Final[tuple[_DroppableFamily, ...]] = tuple(
-    _DroppableFamily(
-        section=spec.section,
-        identity=spec.identity,
-        identity_fields=spec.identity_fields,
-    )
-    for spec in DROPPABLE_FAMILY_SPECS
-    if spec.identity is not None
-)
 
 #: Families deliberately held back, and what holds each one back. Naming them
 #: here keeps the refusal a decision on the record rather than an omission, and
 #: gives ``--family`` something honest to refuse against.
-_HELD_BACK_FAMILIES: Final[Mapping[str, str]] = HELD_BACK_FAMILY_REASONS
 
 #: Manifest scalars that are load-bearing per-edition defaults. This loader has
 #: NO manifest-scalar inheritance: an omitted default is absent, not inherited,
 #: so stripping one would silently change every member it fills. The drop never
 #: touches the manifest at all; the constant records why.
-_NEVER_STRIPPED_SCALARS: Final[frozenset[str]] = frozenset({"orden_aplicabilidad", "casilla_source_refs"})
-
-
-@dataclass(frozen=True, slots=True)
-class _MemberFragment:
-    """One family fragment file, split into its preamble and its member blocks."""
-
-    path: Path
-    preamble: str
-    blocks: tuple[_Block, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class FamilyDrop:
-    """What one family of one edition would lose, and what it keeps and why."""
-
-    section: str
-    dropped: tuple[str, ...]
-    kept_new: tuple[str, ...]
-    kept_differs: tuple[str, ...]
-    kept_pinned: tuple[str, ...]
-    lineage_attestations: tuple[LineageAttestation, ...] = ()
-    kept_no_identity: int = 0
-
-    @property
-    def stated(self) -> int:
-        """How many members the edition states in this family."""
-        return (
-            len(self.dropped)
-            + len(self.kept_new)
-            + len(self.kept_differs)
-            + len(self.kept_pinned)
-            + self.kept_no_identity
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class EditionDrop:
-    """What one edition would lose across every family the drop accepts."""
-
-    revision_id: str
-    predecessor: str | None
-    skipped: str | None
-    families: tuple[FamilyDrop, ...]
-
-    @property
-    def dropped(self) -> int:
-        """How many members this edition would stop stating."""
-        return sum(len(family.dropped) for family in self.families)
-
-
-@dataclass(frozen=True, slots=True)
-class DropPlan:
-    """What a whole modelo would lose, decided without writing anything."""
-
-    modelo_id: str
-    editions: tuple[EditionDrop, ...]
-
-    @property
-    def dropped(self) -> int:
-        """How many members the whole modelo would stop stating."""
-        return sum(edition.dropped for edition in self.editions)
-
-
-def _family_header(section: str) -> re.Pattern[str]:
-    return re.compile(rf"^\[\[revisions\.{_REVISION_SEGMENT}\.{re.escape(section)}\]\]\s*$")
-
-
-def _read_family_fragments(edition_dir: Path, section: str) -> tuple[_MemberFragment, ...]:
-    """Read one family's fragment directory, which is laid out exactly as ``casillas`` is."""
-    header = _family_header(section)
-    fragments: list[_MemberFragment] = []
-    for path in sorted((edition_dir / section).glob("*.toml")):
-        preamble, texts = _split_blocks(path.read_text(encoding="utf-8"), header)
-        blocks = tuple(_Block(text, _block_row(text, section)) for text in texts)
-        fragments.append(_MemberFragment(path, preamble, blocks))
-    return tuple(fragments)
-
-
-def _identity_of(member: Mapping[str, object], family: _DroppableFamily) -> str | None:
-    value = member.get(family.identity)
-    return value if isinstance(value, str) else None
-
-
-def _materialised_members(table: Mapping[str, object], section: str) -> tuple[_Row, ...]:
-    raw = table.get(section, ())
-    return tuple(_as_row(member) for member in (raw if isinstance(raw, list | tuple) else ()))
-
-
-def _declared_predecessor(manifest: Mapping[str, object]) -> str | None:
-    """The predecessor this edition names, or ``None`` for a root or an undeclared edition.
-
-    A ``predecessor`` table rather than a string is the explicit no-predecessor
-    root declaration. It inherits nothing, so it has no restatement to drop.
-    """
-    declared = manifest.get("predecessor")
-    return declared if isinstance(declared, str) else None
-
-
-def _family_storage_baseline(manifest: Mapping[str, object], section: str) -> str | None:
-    """The edition a family's stated members inherit from, or ``None`` when the family inherits nothing.
-
-    A storage baseline names the payload ancestry a family is stored against,
-    independently of the edition's legal ``predecessor``; an explicit
-    no-predecessor root can still store a family against an earlier edition's
-    payload. Without a baseline the family inherits from the named predecessor.
-    """
-    key = "casilla_storage_baseline" if section == CASILLAS_FAMILY else "family_storage_baseline"
-    baseline = manifest.get(key)
-    if isinstance(baseline, str):
-        return baseline
-    return _declared_predecessor(manifest)
-
-
-def _lineage_attestation(
-    *,
-    member: Mapping[str, object],
-    manifest: Mapping[str, object],
-    predecessor_revision_id: str,
-    revision_id: str,
-) -> LineageAttestation | None:
-    """Build the canonical carrier for one row-authored continuity claim.
-
-    ``None`` means the claim cannot be represented without inventing missing
-    grounding.  Callers keep that row stated in that case.
-    """
-    identity = member.get(_LINEAGE)
-    if not isinstance(identity, str):
-        return None
-    source_refs = member.get(_ROW_SOURCE)
-    if not isinstance(source_refs, list | tuple) or not source_refs:
-        default_refs = manifest.get("casilla_source_refs")
-        additions = member.get(_ROW_SOURCE_ADDITIONS)
-        source_refs = tuple(default_refs if isinstance(default_refs, list | tuple) else ()) + tuple(
-            additions if isinstance(additions, list | tuple) else ()
-        )
-    legal_refs = member.get(_ROW_LEGAL)
-    if not isinstance(legal_refs, list | tuple) or not legal_refs:
-        legal_refs = manifest.get("orden_aplicabilidad")
-    raw_attestation = {
-        "family": _CASILLAS,
-        "continuidad_id": identity,
-        "from_revision": predecessor_revision_id,
-        "to_revision": revision_id,
-        "origin": member.get("continuidad_origin"),
-        "evidence": member.get("continuidad_evidence"),
-        "legal_refs": tuple(legal_refs) if isinstance(legal_refs, list | tuple) else legal_refs,
-        "source_refs": tuple(source_refs) if isinstance(source_refs, list | tuple) else source_refs,
-    }
-    try:
-        return LineageAttestation.model_validate(raw_attestation)
-    except ValidationError:
-        return None
-
-
-def _plan_family_drop(
-    *,
-    family: _DroppableFamily,
-    revision_id: str,
-    predecessor_revision_id: str,
-    manifest: Mapping[str, object],
-    stated: Sequence[_Block],
-    inherited: Sequence[_Row],
-) -> FamilyDrop:
-    """Decide which of one family's stated members restate exactly what the edition would inherit.
-
-    The equality is exact over the member's whole table, with nothing set aside.
-    A census counts a member restated with ``source_refs`` and ``legal_refs``
-    held apart, because it is measuring what the union could eventually absorb;
-    that is a larger population than this one. References are part of what
-    materialises, so a member whose references differ is not a restatement here
-    however alike the rest of it reads.
-
-    Raises:
-        MigrationRefusedError: When a stated member carries no identity, or the
-            edition states two members under one identity, either of which would
-            make the member that supersedes the inherited one a guess.
-    """
-    by_identity: dict[str, list[_Row]] = {}
-    for member in inherited:
-        identity = _identity_of(member, family)
-        if identity is not None:
-            by_identity.setdefault(identity, []).append(member)
-    dropped: list[str] = []
-    kept_new: list[str] = []
-    kept_differs: list[str] = []
-    kept_pinned: list[str] = []
-    lineage_attestations: list[LineageAttestation] = []
-    kept_no_identity = 0
-    seen: set[str] = set()
-    for block in stated:
-        member = block.row
-        identity = _identity_of(member, family)
-        if identity is None:
-            # A casilla row without a lineage is ordinary and widespread, and
-            # the casilla merge does not refuse it; it simply cannot be matched
-            # to an inherited row, so it is kept and counted. A keyed-family
-            # member without its identity is the case the loader itself
-            # refuses, and refusing here keeps the two answers the same.
-            if family.section == _CASILLAS:
-                kept_no_identity += 1
-                continue
-            raise MigrationRefusedError(
-                f"edition {revision_id!r}: states a {family.section} member carrying no {family.identity!r}, so it "
-                "cannot be matched to an inherited member",
-            )
-        if identity in seen:
-            raise MigrationRefusedError(
-                f"edition {revision_id!r}: states more than one {family.section} member under {family.identity} "
-                f"{identity!r}, so neither can be said to restate the inherited member",
-            )
-        seen.add(identity)
-        candidates = by_identity.get(identity, [])
-        if len(candidates) != 1:
-            kept_new.append(identity)
-            continue
-        (candidate,) = candidates
-        if any(
-            family_identity_value(member, field) != family_identity_value(candidate, field)
-            for field in family.identity_fields
-        ):
-            kept_differs.append(identity)
-            continue
-        left_member = _without_lineage_claims(member) if family.section == _CASILLAS else member
-        right_member = _without_lineage_claims(candidate) if family.section == _CASILLAS else candidate
-        left = _comparable(left_member, revision_id=revision_id, path=f"{family.section}.{identity}")
-        right = _comparable(right_member, revision_id=revision_id, path=f"{family.section}.{identity}")
-        if left == right:
-            if family.section == _CASILLAS and any(claim in member for claim in _LINEAGE_CLAIMS):
-                attestation = _lineage_attestation(
-                    member=member,
-                    manifest=manifest,
-                    predecessor_revision_id=predecessor_revision_id,
-                    revision_id=revision_id,
-                )
-                if attestation is None:
-                    kept_pinned.append(identity)
-                    continue
-                lineage_attestations.append(attestation)
-            dropped.append(identity)
-        else:
-            kept_differs.append(identity)
-    return FamilyDrop(
-        section=family.section,
-        dropped=tuple(dropped),
-        kept_new=tuple(kept_new),
-        kept_differs=tuple(kept_differs),
-        kept_pinned=tuple(kept_pinned),
-        lineage_attestations=tuple(lineage_attestations),
-        kept_no_identity=kept_no_identity,
-    )
-
-
-def _plan_edition_drop(
-    modelo_dir: Path,
-    revision_id: str,
-    *,
-    families: Sequence[_DroppableFamily],
-) -> EditionDrop:
-    """Decide what one edition would stop stating, reading the tree and writing nothing."""
-    edition_dir = modelo_dir / "revisions" / revision_id
-    source = _read_edition(modelo_dir, revision_id)
-    predecessor = _declared_predecessor(source.manifest)
-    baselines = {family.section: _family_storage_baseline(source.manifest, family.section) for family in families}
-    if not any(baselines.values()):
-        return EditionDrop(
-            revision_id=revision_id,
-            predecessor=None,
-            skipped="root edition: inherits nothing, so it states no restatement",
-            families=(),
-        )
-    inherited_tables: dict[str, Mapping[str, object]] = {}
-    drops: list[FamilyDrop] = []
-    for family in families:
-        baseline = baselines[family.section]
-        if baseline is None:
-            continue
-        stated = [
-            block for fragment in _read_family_fragments(edition_dir, family.section) for block in fragment.blocks
-        ]
-        if not stated:
-            continue
-        if baseline not in inherited_tables:
-            inherited_tables[baseline] = _read_edition(modelo_dir, baseline).table
-        drop = _plan_family_drop(
-            family=family,
-            revision_id=revision_id,
-            predecessor_revision_id=baseline,
-            manifest=source.manifest,
-            stated=stated,
-            inherited=_materialised_members(inherited_tables[baseline], family.section),
-        )
-        if drop.stated:
-            drops.append(drop)
-    return EditionDrop(revision_id=revision_id, predecessor=predecessor, skipped=None, families=tuple(drops))
-
-
-def plan_drop(
-    modelo_dir: Path,
-    definition: ModeloDefinition,
-    *,
-    families: Sequence[_DroppableFamily] = _DROPPABLE_FAMILIES,
-) -> DropPlan:
-    """Decide every edition's droppable restatement for one modelo, writing nothing."""
-    return DropPlan(
-        modelo_id=str(definition.id),
-        editions=tuple(
-            _plan_edition_drop(modelo_dir, str(revision.id), families=families)
-            for revision in ordered_revisions(definition)
-        ),
-    )
-
-
-def _rewrite_family_fragment(fragment: _MemberFragment, family: _DroppableFamily, dropped: frozenset[str]) -> None:
-    """Remove the dropped members from one fragment, deleting a fragment left holding nothing."""
-    kept = [block for block in fragment.blocks if _identity_of(block.row, family) not in dropped]
-    if len(kept) == len(fragment.blocks):
-        return
-    if kept:
-        text = fragment.preamble + "".join(block.text for block in kept)
-        fragment.path.write_text(text.rstrip("\n") + "\n", encoding="utf-8", newline="\n")
-        return
-    if fragment.preamble.strip() and not all(
-        not line.strip() or line.lstrip().startswith("#") for line in fragment.preamble.splitlines()
-    ):
-        raise MigrationRefusedError(
-            f"{fragment.path}: every member would be dropped but the fragment carries declarations outside them, "
-            "which this tool does not rewrite",
-        )
-    fragment.path.unlink()
-
-
-def _write_drop(modelo_dir: Path, edition: EditionDrop, families: Mapping[str, _DroppableFamily]) -> None:
-    """Apply one edition's planned drops to a staged tree."""
-    edition_dir = modelo_dir / "revisions" / edition.revision_id
-    attestations = tuple(attestation for drop in edition.families for attestation in drop.lineage_attestations)
-    if attestations:
-        manifest_path = edition_dir / _MANIFEST
-        text = manifest_path.read_text(encoding="utf-8")
-        manifest_path.write_text(_append_lineage_attestations(text, attestations), encoding="utf-8", newline="\n")
-    for drop in edition.families:
-        if not drop.dropped:
-            continue
-        family = families[drop.section]
-        dropped = frozenset(drop.dropped)
-        for fragment in _read_family_fragments(edition_dir, drop.section):
-            _rewrite_family_fragment(fragment, family, dropped)
-        section_dir = edition_dir / drop.section
-        if section_dir.is_dir() and not any(section_dir.iterdir()):
-            section_dir.rmdir()
-
-
-def stage_declaration_drop(modelo_dir: Path, edition: EditionDrop) -> None:
-    """Write a planned drop to a caller-owned staging tree, retaining row commentary.
-
-    This does not publish source or attest authority. The caller must compare
-    complete materialised definitions before accepting the staged representation.
-    """
-    from .source_tree_installation import toml_comments
-
-    families = {family.section: family for family in _DROPPABLE_FAMILIES}
-    comments: list[str] = []
-    for drop in edition.families:
-        family = families[drop.section]
-        for fragment in _read_family_fragments(modelo_dir / "revisions" / edition.revision_id, drop.section):
-            for block in fragment.blocks:
-                identity = _identity_of(block.row, family)
-                if identity in drop.dropped:
-                    comments.extend(
-                        f"# Original {drop.section} {identity} commentary: {comment}"
-                        for comment in toml_comments(block.text)
-                    )
-            if fragment.blocks and all(_identity_of(block.row, family) in drop.dropped for block in fragment.blocks):
-                comments.extend(
-                    f"# Original {drop.section} fragment {fragment.path.name}: {comment}"
-                    for comment in toml_comments(fragment.preamble)
-                )
-    _write_drop(modelo_dir, edition, families)
-    if comments:
-        manifest = modelo_dir / "revisions" / edition.revision_id / _MANIFEST
-        text = manifest.read_text(encoding="utf-8")
-        manifest.write_text(text.rstrip() + "\n\n" + "\n".join(comments) + "\n", encoding="utf-8", newline="\n")
-
-
-def _assert_proof_inputs_unchanged(*, live_root: Path, captured_root: Path, modelo_id: str) -> None:
-    """Refuse apply when any dependency captured by the proof has changed."""
-    from .source_tree_installation import fingerprint
-
-    captured_modelos = captured_root / _MODELOS
-    for captured_modelo in captured_modelos.iterdir():
-        if not captured_modelo.is_dir() or captured_modelo.name == modelo_id:
-            continue
-        live_modelo = live_root / _MODELOS / captured_modelo.name
-        if not live_modelo.is_dir() or fingerprint(live_modelo) != fingerprint(captured_modelo):
-            raise MigrationRefusedError(
-                f"dependency modelo {captured_modelo.name!r} changed after the source proof; apply refused"
-            )
-
-
-def _apply_proven_modelo(*, target: Path, staged: Path, original: Path) -> None:
-    """Install one proven source tree with the shared recoverable publisher."""
-    from .source_tree_installation import fingerprint, install_proven_tree
-
-    install_proven_tree(target, staged, original, fingerprint(original))
-
-
-def _validate_staged_modelo(*, staged_root: Path, modelo_id: str) -> None:
-    """Hydrate the complete staged modelo immediately before live replacement."""
-    _load(staged_root, modelo_id)
-
-
-@dataclass(frozen=True, slots=True)
-class DropOutcome:
-    """The result of planning, staging and proving one modelo's drop."""
-
-    plan: DropPlan
-    staged_registry: Path | None
-    report: RoundTripReport | None
-    applied: bool
-    changed: bool
-    #: Positions written so complete statements keep the order they state.
-    order_restorations: tuple[OrderRestoration, ...] = ()
-    #: Every ``(revision, family)`` whose member order those positions change.
-    reordered_families: tuple[tuple[str, str], ...] = ()
-
-    @property
-    def source_findings(self) -> tuple[RoundTripFinding, ...]:
-        """Return reconstruction and effective-data failures."""
-        return () if self.report is None else tuple(f for f in self.report.findings if _is_source_finding(f))
-
-    @property
-    def publication_readiness_findings(self) -> tuple[RoundTripFinding, ...]:
-        """Return findings owned by later authority publication."""
-        return () if self.report is None else tuple(f for f in self.report.findings if not _is_source_finding(f))
-
-    @property
-    def source_status(self) -> SourceMigrationStatus:
-        """Return the source replacement acceptance state."""
-        if self.source_findings:
-            return SourceMigrationStatus.REFUSED
-        return SourceMigrationStatus.APPLIED if self.applied else SourceMigrationStatus.ACCEPTED
-
-    @property
-    def publication_readiness_status(self) -> PublicationReadinessStatus:
-        """Return the separately observed authority-readiness state."""
-        if self.publication_readiness_findings:
-            return PublicationReadinessStatus.FAILED
-        return PublicationReadinessStatus.NOT_CHECKED
-
-    @property
-    def publication_execution_status(self) -> PublicationExecutionStatus:
-        """Confirm that source migration did not execute publication."""
-        return PublicationExecutionStatus.NOT_PERFORMED
-
-
-def drop_restatement(
-    *,
-    registry_root: Path,
-    modelo_id: str,
-    work_dir: Path,
-    sections: Sequence[str] | None = None,
-    export_scenarios: Mapping[str, EditionExportScenario] | None = None,
-    apply: bool = False,
-) -> DropOutcome:
-    """Plan, stage and prove one modelo's restatement drop; publish it only when the gate reports nothing.
-
-    The proof is the chain proof, unchanged and unweakened. A dropped member is
-    a member the edition materialises identically without stating it, so a
-    correct drop leaves every edition's member identity, member order and
-    materialised bytes exactly as they were. That is why the existing guard is
-    the right authority for this operation rather than an obstacle to it: it
-    passes precisely when the drop was a restatement, and refuses the moment it
-    was not.
-
-    Raises:
-        MigrationRefusedError: When a family is not one the drop accepts, or the
-            staged tree does not materialise identically to the tree it was
-            planned from.
-    """
-    registry_root, work_dir = _resolve_work_directory(registry_root, work_dir)
-    modelo_dir = registry_root / _MODELOS / modelo_id
-    if not modelo_dir.is_dir() or not _inside(modelo_dir, registry_root):
-        raise MigrationRefusedError(f"{registry_root} holds no modelo {modelo_id!r}")
-    families = _selected_families(sections)
-    definition = _load(registry_root, modelo_id)
-    restorations = declared_order_restorations(modelo_dir)
-    plan = plan_drop(modelo_dir, definition, families=families)
-    if not plan.dropped and not restorations:
-        return DropOutcome(plan=plan, staged_registry=None, report=None, applied=False, changed=False)
-    reference = copy_registry_tree(
-        registry_root,
-        _scratch_path(work_dir, "reference", "registry", "aeat"),
-        modelo_id=modelo_id,
-    )
-    declared, reordered = _stage_declared_order(
-        registry_root=registry_root,
-        modelo_id=modelo_id,
-        work_dir=work_dir,
-        reference=reference,
-        restorations=restorations,
-    )
-    if restorations:
-        declared_modelo = declared / _MODELOS / modelo_id
-        plan = plan_drop(declared_modelo, _load(declared, modelo_id), families=families)
-    staged = copy_registry_tree(
-        declared,
-        _scratch_path(work_dir, "dropped", "registry", "aeat"),
-        modelo_id=modelo_id,
-    )
-    by_section = {family.section: family for family in families}
-    for edition in plan.editions:
-        _write_drop(_scratch_path(work_dir, "dropped", "registry", "aeat", _MODELOS, modelo_id), edition, by_section)
-    report = edition_round_trip_report(
-        live_registry_root=staged,
-        reference_registry_root=declared,
-        modelo_id=modelo_id,
-        export_scenarios=export_scenarios or {},
-    )
-    report = _prove_chain(
-        reference_modelo_dir=declared / _MODELOS / modelo_id,
-        staged_modelo_dir=staged / _MODELOS / modelo_id,
-        revision_ids=tuple(edition.revision_id for edition in plan.editions),
-        report=report,
-    )
-    applied = False
-    if apply and not any(_is_source_finding(finding) for finding in report.findings):
-        _validate_staged_modelo(staged_root=staged, modelo_id=modelo_id)
-        _assert_proof_inputs_unchanged(live_root=registry_root, captured_root=reference, modelo_id=modelo_id)
-        _apply_proven_modelo(
-            target=modelo_dir.resolve(),
-            staged=staged / _MODELOS / modelo_id,
-            original=reference / _MODELOS / modelo_id,
-        )
-        applied = True
-    return DropOutcome(
-        plan=plan,
-        staged_registry=staged,
-        report=report,
-        applied=applied,
-        changed=True,
-        order_restorations=restorations,
-        reordered_families=reordered,
-    )
-
-
-def _selected_families(sections: Sequence[str] | None) -> tuple[_DroppableFamily, ...]:
-    """Resolve ``--family`` names against the accepted set, refusing a held-back family by name and reason."""
-    if sections is None:
-        return _DROPPABLE_FAMILIES
-    accepted = {family.section: family for family in _DROPPABLE_FAMILIES}
-    selected: list[_DroppableFamily] = []
-    for section in sections:
-        if section in accepted:
-            selected.append(accepted[section])
-            continue
-        if section in _HELD_BACK_FAMILIES:
-            raise MigrationRefusedError(
-                f"family {section!r} is held back from dropping: {_HELD_BACK_FAMILIES[section]}",
-            )
-        raise MigrationRefusedError(
-            f"family {section!r} is not a family this tool drops; it accepts "
-            f"{', '.join(sorted(accepted))} and holds back {', '.join(sorted(_HELD_BACK_FAMILIES))}",
-        )
-    return tuple(selected)
-
-
-def render_drop_outcome(outcome: DropOutcome) -> str:
-    """Return one greppable line per edition family, one per gate finding, and a closing summary."""
-    lines: list[str] = []
-    for edition in outcome.plan.editions:
-        if edition.skipped is not None:
-            lines.append(
-                f"edition modelo={outcome.plan.modelo_id} revision={edition.revision_id} skipped={edition.skipped}"
-            )
-            continue
-        for family in edition.families:
-            lines.append(
-                f"edition modelo={outcome.plan.modelo_id} revision={edition.revision_id} "
-                f"predecessor={edition.predecessor} family={family.section} stated={family.stated} "
-                f"dropped={len(family.dropped)} kept_new={len(family.kept_new)} "
-                f"kept_differs={len(family.kept_differs)} kept_pinned={len(family.kept_pinned)} "
-                f"kept_no_identity={family.kept_no_identity}"
-            )
-    lines.extend(_order_lines(outcome.plan.modelo_id, outcome.order_restorations, outcome.reordered_families))
-    for finding in outcome.report.findings if outcome.report is not None else ():
-        lines.append(f"finding kind={finding.kind} {finding}")
-    lines.append(
-        f"summary modelo={outcome.plan.modelo_id} dropped={outcome.plan.dropped} "
-        f"changed={outcome.changed} applied={outcome.applied} "
-        f"findings={len(outcome.report.findings) if outcome.report is not None else 0} "
-        f"source_status={outcome.source_status} "
-        f"publication_readiness_status={outcome.publication_readiness_status} "
-        f"publication_execution_status={outcome.publication_execution_status}"
-    )
-    return "\n".join(lines) + "\n"
 
 
 # ── the migration ───────────────────────────────────────────────────────────
 
 
-def _load(registry_root: Path, modelo_id: str) -> ModeloDefinition:
-    """Load the modelo being migrated without validating unrelated registry state.
-
-    ``load_modelo_directory`` performs the canonical typed load, including
-    predecessor materialisation and the modelo-local structural checks.  The
-    migration's round-trip gate subsequently validates the staged authority
-    when an export scenario needs filing behaviour.  Compiling the complete
-    registry here made an unrelated governed-fact error prevent the tool from
-    planning any modelo at all.
-    """
-    return load_modelo_directory(registry_root / _MODELOS / modelo_id)
-
-
-def _inside(path: Path, root: Path) -> bool:
-    return path.resolve().is_relative_to(root.resolve())
+@dataclass
+class _MigrationPreparation:
+    registry_root: Path
+    work_dir: Path
+    modelo_id: str
+    modelo_dir: Path
+    definition: ModeloDefinition
+    before: _edition_delta_assessment.MigrationAssessment
+    restorations: tuple[_edition_delta_order_restoration.OrderRestoration, ...]
+    plan: _edition_delta_types.MigrationPlan
+    works: tuple[_edition_delta_source._EditionWork, ...]
+    family_changes: bool
 
 
-def _resolve_work_directory(registry_root: Path, work_dir: Path) -> tuple[Path, Path]:
-    """Resolve and validate source and scratch roots before any tree read or write.
+@dataclass(frozen=True)
+class _StagedMigration:
+    reference: Path
+    declared: Path
+    reordered: tuple[tuple[str, str], ...]
+    staged: Path
+    plan: _edition_delta_types.MigrationPlan
+    report: RoundTripReport
 
-    Migration scratch is deliberately kept away from both the registry it is
-    about to copy and the repository's production ``src`` tree. Resolving
-    first also closes symlink and ``..`` spellings of those forbidden
-    locations. The directory must not exist: the migration owns its complete
-    contents and cannot safely merge into a caller's existing tree.
-    """
-    resolved_registry_root = registry_root.resolve()
-    resolved_work_dir = work_dir.resolve()
-    production_src_root = (REPO_ROOT / "src").resolve()
-    if _inside(resolved_work_dir, resolved_registry_root):
-        raise MigrationRefusedError(
-            f"work directory {resolved_work_dir} is inside registry root {resolved_registry_root}; "
-            "choose a separate scratch directory",
+
+def _prepare_migration(registry_root: Path, modelo_id: str, work_dir: Path) -> _MigrationPreparation:
+    registry_root, work_dir = _edition_delta_workdir._resolve_work_directory(registry_root, work_dir)
+    modelo_dir = registry_root / _edition_delta_fields._MODELOS / modelo_id
+    if not modelo_dir.is_dir() or not _edition_delta_workdir._inside(modelo_dir, registry_root):
+        raise _edition_delta_errors.MigrationRefusedError(f"{registry_root} holds no modelo {modelo_id!r}")
+    definition = _edition_delta_workdir._load(registry_root, modelo_id)
+    before = _edition_delta_assessment.assess_migration_state(modelo_dir)
+    restorations = _edition_delta_order_restoration.declared_order_restorations(modelo_dir)
+    plan, works = _edition_delta_planning._plan(modelo_dir, definition)
+    family_changes = any(finding.get("family") != CASILLAS_FAMILY for finding in before.unresolved_duplication)
+    return _MigrationPreparation(
+        registry_root, work_dir, modelo_id, modelo_dir, definition, before, restorations, plan, works, family_changes
+    )
+
+
+def _needs_staging(preparation: _MigrationPreparation) -> bool:
+    return bool(
+        _casilla_changes(preparation.plan, preparation.before) or preparation.family_changes or preparation.restorations
+    )
+
+
+def _write_migration_works(
+    preparation: _MigrationPreparation,
+    staged: Path,
+    plan: _edition_delta_types.MigrationPlan,
+    works: Sequence[_edition_delta_source._EditionWork],
+) -> None:
+    casilla_changes = _casilla_changes(plan, preparation.before)
+    for work in works:
+        if casilla_changes and _edition_delta_writer._edition_changes(work):
+            _edition_delta_writer._write_edition(
+                staged / _edition_delta_fields._MODELOS / preparation.modelo_id / "revisions" / work.plan.revision_id,
+                work,
+            )
+
+
+def _stage_migration(
+    preparation: _MigrationPreparation,
+    export_scenarios: Mapping[str, EditionExportScenario] | None,
+) -> _StagedMigration:
+    reference = copy_registry_tree(
+        preparation.registry_root,
+        _edition_delta_workdir._scratch_path(preparation.work_dir, "reference", "registry", "aeat"),
+        modelo_id=preparation.modelo_id,
+    )
+    declared, reordered = _edition_delta_order_restoration._stage_declared_order(
+        registry_root=preparation.registry_root,
+        modelo_id=preparation.modelo_id,
+        work_dir=preparation.work_dir,
+        reference=reference,
+        restorations=preparation.restorations,
+    )
+    plan, works = preparation.plan, preparation.works
+    if preparation.restorations:
+        declared_modelo = declared / _edition_delta_fields._MODELOS / preparation.modelo_id
+        plan, works = _edition_delta_planning._plan(
+            declared_modelo, _edition_delta_workdir._load(declared, preparation.modelo_id)
         )
-    if _inside(resolved_work_dir, production_src_root):
-        raise MigrationRefusedError(
-            f"work directory {resolved_work_dir} is inside production source tree {production_src_root}; "
-            "choose a separate scratch directory",
+    staged = copy_registry_tree(
+        declared,
+        _edition_delta_workdir._scratch_path(preparation.work_dir, "migrated", "registry", "aeat"),
+        modelo_id=preparation.modelo_id,
+    )
+    _write_migration_works(preparation, staged, plan, works)
+    staged_modelo = staged / _edition_delta_fields._MODELOS / preparation.modelo_id
+    collapse_keyed_families(declared / _edition_delta_fields._MODELOS / preparation.modelo_id, staged_modelo)
+    _edition_delta_override_pruning.prune_redundant_override_leaves(staged_modelo)
+    report = edition_round_trip_report(
+        live_registry_root=staged,
+        reference_registry_root=declared,
+        modelo_id=preparation.modelo_id,
+        export_scenarios=export_scenarios or {},
+    )
+    if plan.already_delta_authored:
+        report = _edition_delta_equivalence._prove_chain(
+            reference_modelo_dir=declared / _edition_delta_fields._MODELOS / preparation.modelo_id,
+            staged_modelo_dir=staged_modelo,
+            revision_ids=tuple(edition.revision_id for edition in plan.editions),
+            report=report,
         )
-    if resolved_work_dir.exists() or work_dir.is_symlink():
-        raise MigrationRefusedError(f"work directory {resolved_work_dir} already exists")
-    return resolved_registry_root, resolved_work_dir
+    return _StagedMigration(reference, declared, reordered, staged, plan, report)
 
 
-def _scratch_path(work_dir: Path, *parts: str) -> Path:
-    """Return a scratch child and refuse path components that escape ``work_dir``."""
-    candidate = work_dir.joinpath(*parts).resolve()
-    if not _inside(candidate, work_dir):
-        raise MigrationRefusedError(f"scratch path {candidate} escapes work directory {work_dir}")
-    return candidate
+def _publish_clean_migration(preparation: _MigrationPreparation, staged: _StagedMigration, apply: bool) -> bool:
+    has_source_findings = any(
+        _edition_delta_assessment._is_source_finding(finding) for finding in staged.report.findings
+    )
+    if not apply or has_source_findings:
+        return False
+    _edition_delta_source_publication._assert_proof_inputs_unchanged(
+        live_root=preparation.registry_root, captured_root=staged.reference, modelo_id=preparation.modelo_id
+    )
+    _edition_delta_source_publication._apply_proven_modelo(
+        target=preparation.modelo_dir.resolve(),
+        staged=staged.staged / _edition_delta_fields._MODELOS / preparation.modelo_id,
+        original=staged.reference / _edition_delta_fields._MODELOS / preparation.modelo_id,
+    )
+    return True
+
+
+def _unchanged_migration(preparation: _MigrationPreparation) -> MigrationOutcome:
+    return MigrationOutcome(
+        plan=preparation.plan,
+        staged_registry=None,
+        report=None,
+        applied=False,
+        changed=False,
+        before_assessment=preparation.before,
+        after_assessment=preparation.before,
+    )
 
 
 def migrate_modelo(
@@ -4222,104 +572,31 @@ def migrate_modelo(
         MigrationRefusedError: When the migration cannot be planned or written,
             or a lift in place does not materialise identically.
     """
-    registry_root, work_dir = _resolve_work_directory(registry_root, work_dir)
-    modelo_dir = registry_root / _MODELOS / modelo_id
-    if not modelo_dir.is_dir() or not _inside(modelo_dir, registry_root):
-        raise MigrationRefusedError(f"{registry_root} holds no modelo {modelo_id!r}")
-    definition = _load(registry_root, modelo_id)
-    before_assessment = assess_migration_state(modelo_dir)
-    restorations = declared_order_restorations(modelo_dir)
-    plan, works = _plan(modelo_dir, definition)
-    family_changes = any(
-        finding.get("family") != CASILLAS_FAMILY for finding in before_assessment.unresolved_duplication
+    preparation = _prepare_migration(registry_root, modelo_id, work_dir)
+    if not _needs_staging(preparation):
+        return _unchanged_migration(preparation)
+    staged = _stage_migration(preparation, export_scenarios)
+    applied = _publish_clean_migration(preparation, staged, apply)
+    assessed_dir = preparation.modelo_dir if applied else staged.staged / _edition_delta_fields._MODELOS / modelo_id
+    changed = (
+        preparation.before.fingerprint != _edition_delta_assessment.assess_migration_state(assessed_dir).fingerprint
     )
-    if not _casilla_changes(plan, before_assessment) and not family_changes and not restorations:
-        return MigrationOutcome(
-            plan=plan,
-            staged_registry=None,
-            report=None,
-            applied=False,
-            changed=False,
-            before_assessment=before_assessment,
-            after_assessment=before_assessment,
-        )
-    reference = copy_registry_tree(
-        registry_root,
-        _scratch_path(work_dir, "reference", "registry", "aeat"),
-        modelo_id=modelo_id,
-    )
-    declared, reordered = _stage_declared_order(
-        registry_root=registry_root,
-        modelo_id=modelo_id,
-        work_dir=work_dir,
-        reference=reference,
-        restorations=restorations,
-    )
-    if restorations:
-        plan, works = _plan(declared / _MODELOS / modelo_id, _load(declared, modelo_id))
-    casilla_changes = _casilla_changes(plan, before_assessment)
-    staged = copy_registry_tree(
-        declared,
-        _scratch_path(work_dir, "migrated", "registry", "aeat"),
-        modelo_id=modelo_id,
-    )
-    for work in works:
-        if not casilla_changes or not _edition_changes(work):
-            continue
-        _write_edition(
-            _scratch_path(
-                work_dir,
-                "migrated",
-                "registry",
-                "aeat",
-                _MODELOS,
-                modelo_id,
-                "revisions",
-                work.plan.revision_id,
-            ),
-            work,
-        )
-    staged_modelo = staged / _MODELOS / modelo_id
-    collapse_keyed_families(declared / _MODELOS / modelo_id, staged_modelo)
-    _prune_redundant_override_leaves(staged_modelo)
-    report = edition_round_trip_report(
-        live_registry_root=staged,
-        reference_registry_root=declared,
-        modelo_id=modelo_id,
-        export_scenarios=export_scenarios or {},
-    )
-    if plan.already_delta_authored:
-        report = _prove_chain(
-            reference_modelo_dir=declared / _MODELOS / modelo_id,
-            staged_modelo_dir=staged_modelo,
-            revision_ids=tuple(edition.revision_id for edition in plan.editions),
-            report=report,
-        )
-    applied = False
-    if apply and not any(_is_source_finding(finding) for finding in report.findings):
-        _assert_proof_inputs_unchanged(live_root=registry_root, captured_root=reference, modelo_id=modelo_id)
-        _apply_proven_modelo(
-            target=modelo_dir.resolve(),
-            staged=staged / _MODELOS / modelo_id,
-            original=reference / _MODELOS / modelo_id,
-        )
-        applied = True
-    assessed_dir = modelo_dir if applied else staged_modelo
-    changed = before_assessment.fingerprint != assess_migration_state(assessed_dir).fingerprint
     return MigrationOutcome(
-        plan=plan,
-        staged_registry=staged,
-        report=report,
+        plan=staged.plan,
+        staged_registry=staged.staged,
+        report=staged.report,
         applied=applied,
         changed=changed,
-        before_assessment=before_assessment,
-        after_assessment=assess_migration_state(assessed_dir),
-        order_restorations=restorations,
-        reordered_families=reordered,
+        before_assessment=preparation.before,
+        after_assessment=_edition_delta_assessment.assess_migration_state(assessed_dir),
+        order_restorations=preparation.restorations,
+        reordered_families=staged.reordered,
     )
 
 
-def _casilla_changes(plan: MigrationPlan, assessment: MigrationAssessment) -> bool:
+def _casilla_changes(
+    plan: _edition_delta_types.MigrationPlan, assessment: _edition_delta_assessment.MigrationAssessment
+) -> bool:
     """Whether the casilla pass has anything to write: a lift, or restated casilla payload."""
     return any(edition.lifted.total() for edition in plan.editions) or any(
         finding.get("family") == CASILLAS_FAMILY for finding in assessment.unresolved_duplication
@@ -4329,20 +606,23 @@ def _casilla_changes(plan: MigrationPlan, assessment: MigrationAssessment) -> bo
 # ── reporting ───────────────────────────────────────────────────────────────
 
 
-def render_outcome(outcome: MigrationOutcome) -> str:
-    """Return one greppable line per edition, one per gate finding, and a closing summary."""
+def _measurement_line(
+    before: _edition_delta_assessment.MigrationAssessment,
+    after: _edition_delta_assessment.MigrationAssessment,
+) -> str:
+    return (
+        f"measurement before_fingerprint={before.fingerprint} after_fingerprint={after.fingerprint} "
+        f"physical_bytes={before.physical_bytes}->{after.physical_bytes} "
+        f"authored_payload_fields={before.authored_payload_fields}->{after.authored_payload_fields} "
+        f"inherited_payload_fields={before.inherited_payload_fields}->{after.inherited_payload_fields} "
+        f"genuine_overrides={after.genuine_overrides} redundant_overrides={after.redundant_overrides} "
+        f"additions={after.additions} removals={after.removals} structural_overhead={after.structural_overhead} "
+        f"unresolved_duplication={len(after.unresolved_duplication)} blocked_work={len(after.blocked_work)}"
+    )
+
+
+def _edition_lines(outcome: MigrationOutcome) -> list[str]:
     lines: list[str] = []
-    if outcome.before_assessment is not None and outcome.after_assessment is not None:
-        before, after = outcome.before_assessment, outcome.after_assessment
-        lines.append(
-            f"measurement before_fingerprint={before.fingerprint} after_fingerprint={after.fingerprint} "
-            f"physical_bytes={before.physical_bytes}->{after.physical_bytes} "
-            f"authored_payload_fields={before.authored_payload_fields}->{after.authored_payload_fields} "
-            f"inherited_payload_fields={before.inherited_payload_fields}->{after.inherited_payload_fields} "
-            f"genuine_overrides={after.genuine_overrides} redundant_overrides={after.redundant_overrides} "
-            f"additions={after.additions} removals={after.removals} structural_overhead={after.structural_overhead} "
-            f"unresolved_duplication={len(after.unresolved_duplication)} blocked_work={len(after.blocked_work)}"
-        )
     for edition in outcome.plan.editions:
         kept = " ".join(f"{reason}={count}" for reason, count in edition.kept.items())
         lines.append(
@@ -4358,64 +638,74 @@ def render_outcome(outcome: MigrationOutcome) -> str:
             f"reviewed_against={edition.reviewed_against} comments_dropped={edition.comments_dropped} {kept}".rstrip()
         )
         lines.extend(f"not_exact revision={edition.revision_id} {detail}" for detail in edition.not_exact)
-    lines.extend(_order_lines(outcome.plan.modelo_id, outcome.order_restorations, outcome.reordered_families))
+    return lines
+
+
+def _report_summary_line(outcome: MigrationOutcome) -> str:
+    report = outcome.report
+    if report is None:
+        raise RuntimeError("a gate summary requires a report")
+    compared = ",".join(report.byte_compared_revisions) or "-"
+    return (
+        f"summary changed={outcome.changed} gate_findings={len(report.findings)} "
+        f"byte_compared={compared} applied={outcome.applied} complete={outcome.complete} "
+        f"equivalence_status={outcome.equivalence_status} compaction_status={outcome.compaction_status} "
+        f"minimality_status={outcome.minimality_status} application_status={outcome.application_status} "
+        f"source_status={outcome.source_status} "
+        f"publication_readiness_status={outcome.publication_readiness_status} "
+        f"publication_execution_status={outcome.publication_execution_status} "
+        f"completed={','.join(outcome.completed) or '-'} unchanged={','.join(outcome.unchanged) or '-'} "
+        f"blocked={','.join(outcome.blocked) or '-'} staged={outcome.staged_registry}"
+    )
+
+
+def _unchanged_summary_line(outcome: MigrationOutcome) -> str:
+    return (
+        f"summary changed={outcome.changed} applied={outcome.applied} complete={outcome.complete} "
+        f"equivalence_status={outcome.equivalence_status} compaction_status={outcome.compaction_status} "
+        f"minimality_status={outcome.minimality_status} application_status={outcome.application_status} "
+        f"source_status={outcome.source_status} "
+        f"publication_readiness_status={outcome.publication_readiness_status} "
+        f"publication_execution_status={outcome.publication_execution_status} "
+        f"completed={','.join(outcome.completed) or '-'} unchanged={','.join(outcome.unchanged) or '-'} "
+        f"blocked={','.join(outcome.blocked) or '-'}"
+    )
+
+
+def render_outcome(outcome: MigrationOutcome) -> str:
+    """Return one greppable line per edition, one per gate finding, and a closing summary."""
+    lines: list[str] = []
+    if outcome.before_assessment is not None and outcome.after_assessment is not None:
+        lines.append(_measurement_line(outcome.before_assessment, outcome.after_assessment))
+    lines.extend(_edition_lines(outcome))
+    lines.extend(
+        _edition_delta_order_restoration._order_lines(
+            outcome.plan.modelo_id, outcome.order_restorations, outcome.reordered_families
+        )
+    )
     if outcome.report is not None:
         lines.extend(
             f"gate kind={finding.kind} revision={finding.revision_id} detail={finding.detail!r}"
             for finding in outcome.report.findings
         )
-        compared = ",".join(outcome.report.byte_compared_revisions) or "-"
-        lines.append(
-            f"summary changed={outcome.changed} gate_findings={len(outcome.report.findings)} "
-            f"byte_compared={compared} applied={outcome.applied} complete={outcome.complete} "
-            f"equivalence_status={outcome.equivalence_status} compaction_status={outcome.compaction_status} "
-            f"minimality_status={outcome.minimality_status} application_status={outcome.application_status} "
-            f"source_status={outcome.source_status} "
-            f"publication_readiness_status={outcome.publication_readiness_status} "
-            f"publication_execution_status={outcome.publication_execution_status} "
-            f"completed={','.join(outcome.completed) or '-'} unchanged={','.join(outcome.unchanged) or '-'} "
-            f"blocked={','.join(outcome.blocked) or '-'} staged={outcome.staged_registry}"
-        )
+        lines.append(_report_summary_line(outcome))
     else:
-        lines.append(
-            f"summary changed={outcome.changed} applied={outcome.applied} complete={outcome.complete} "
-            f"equivalence_status={outcome.equivalence_status} compaction_status={outcome.compaction_status} "
-            f"minimality_status={outcome.minimality_status} application_status={outcome.application_status} "
-            f"source_status={outcome.source_status} "
-            f"publication_readiness_status={outcome.publication_readiness_status} "
-            f"publication_execution_status={outcome.publication_execution_status} "
-            f"completed={','.join(outcome.completed) or '-'} unchanged={','.join(outcome.unchanged) or '-'} "
-            f"blocked={','.join(outcome.blocked) or '-'}"
-        )
+        lines.append(_unchanged_summary_line(outcome))
     return "\n".join(lines) + "\n"
 
 
-def _order_lines(
-    modelo_id: str, restorations: Sequence[OrderRestoration], reordered: Sequence[tuple[str, str]]
-) -> list[str]:
-    """One line per restored family and per family whose order follows a restored baseline."""
-    restored = {(item.revision_id, item.family) for item in restorations}
-    lines = [
-        f"order modelo={modelo_id} revision={item.revision_id} family={item.family} restored=stated_order "
-        f"positions={json.dumps([{'id': identity, 'position': position} for identity, position in item.moves])}"
-        for item in restorations
-    ]
-    lines.extend(
-        f"order modelo={modelo_id} revision={revision_id} family={family} restored=follows_baseline"
-        for revision_id, family in reordered
-        if (revision_id, family) not in restored
-    )
-    return lines
-
-
-def _render(outcome: MigrationOutcome | DropOutcome) -> str:
+def _render(outcome: MigrationOutcome | _edition_delta_drop_types.DropOutcome) -> str:
     """Render whichever outcome the invoked operation produced."""
-    return render_drop_outcome(outcome) if isinstance(outcome, DropOutcome) else render_outcome(outcome)
+    return (
+        _edition_delta_drop_reporting.render_drop_outcome(outcome)
+        if isinstance(outcome, _edition_delta_drop_types.DropOutcome)
+        else render_outcome(outcome)
+    )
 
 
 def persist_migration_report(
     repository: Path,
-    outcome: MigrationOutcome | DropOutcome,
+    outcome: MigrationOutcome | _edition_delta_drop_types.DropOutcome,
     command: Sequence[str],
 ) -> Path:
     """Persist one rendered migration outcome under the canonical audit log hierarchy.
@@ -4427,7 +717,9 @@ def persist_migration_report(
     same rendered text and command for mechanical consumers. Neither path is
     derived from the caller's scratch directory.
     """
-    run_dir = allocate_run_directory(repository.resolve(), family=_REPORT_FAMILY, label=_REPORT_LABEL)
+    run_dir = allocate_run_directory(
+        repository.resolve(), family=_edition_delta_fields._REPORT_FAMILY, label=_edition_delta_fields._REPORT_LABEL
+    )
     run_dir.mkdir(parents=True, exist_ok=False)
     rendered = _render(outcome)
     report_path = run_dir / "report.md"
@@ -4474,8 +766,7 @@ def persist_migration_report(
     return report_path
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    """Run the migration; exit 0 when the staged tree round-trips clean or nothing changes, 1 otherwise."""
+def _argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("--registry-root", type=Path, required=True, help="registry root holding modelos/")
     parser.add_argument("--modelo", required=True, help="modelo id, for example 303")
@@ -4504,62 +795,88 @@ def main(argv: Sequence[str] | None = None) -> int:
         metavar="OLD=NEW",
         help="explicit one-to-one identity rename for --accepted-modelo-dir; repeatable",
     )
-    arguments = parser.parse_args(argv)
+    return parser
+
+
+def _validate_cli_scope(parser: argparse.ArgumentParser, arguments: argparse.Namespace) -> None:
     if arguments.family and not arguments.drop_restatement:
         parser.error("--family only applies to --drop-restatement")
     if arguments.rename_casilla and arguments.accepted_modelo_dir is None:
         parser.error("--rename-casilla requires --accepted-modelo-dir")
-    if arguments.accepted_modelo_dir is not None:
-        try:
-            renames: list[tuple[str, str]] = []
-            for value in arguments.rename_casilla:
-                old, separator, new = value.partition("=")
-                if not separator or not old or not new or "=" in new:
-                    raise ValueError(f"invalid casilla rename {value!r}; expected OLD=NEW")
-                renames.append((old, new))
-            order_review = review_casilla_order(
-                arguments.accepted_modelo_dir,
-                arguments.registry_root / _MODELOS / arguments.modelo,
-                renames=renames,
-            )
-        except (RegistryError, ValueError) as exc:
-            sys.stderr.write(f"accepted-source order review refused: {exc}\n")
-            return 1
-        sys.stdout.write(render_casilla_order_review(order_review) + "\n")
-        if not order_review.passed:
-            sys.stderr.write(f"accepted-source order review refused: {order_review.status}\n")
-            return 1
+
+
+def _rename_pairs(values: Sequence[str]) -> list[tuple[str, str]]:
+    renames: list[tuple[str, str]] = []
+    for value in values:
+        old, separator, new = value.partition("=")
+        if not separator or not old or not new or "=" in new:
+            raise ValueError(f"invalid casilla rename {value!r}; expected OLD=NEW")
+        renames.append((old, new))
+    return renames
+
+
+def _review_accepted_source(arguments: argparse.Namespace) -> bool:
+    if arguments.accepted_modelo_dir is None:
+        return True
     try:
-        outcome = (
-            drop_restatement(
-                registry_root=arguments.registry_root,
-                modelo_id=arguments.modelo,
-                work_dir=arguments.work_dir,
-                sections=arguments.family,
-                export_scenarios=edition_export_scenarios(arguments.modelo, registry_root=arguments.registry_root),
-                apply=arguments.apply,
-            )
-            if arguments.drop_restatement
-            else migrate_modelo(
-                registry_root=arguments.registry_root,
-                modelo_id=arguments.modelo,
-                work_dir=arguments.work_dir,
-                export_scenarios=edition_export_scenarios(arguments.modelo, registry_root=arguments.registry_root),
-                apply=arguments.apply,
-            )
+        order_review = review_casilla_order(
+            arguments.accepted_modelo_dir,
+            arguments.registry_root / _edition_delta_fields._MODELOS / arguments.modelo,
+            renames=_rename_pairs(arguments.rename_casilla),
         )
-    except MigrationRefusedError as exc:
+    except (RegistryError, ValueError) as exc:
+        sys.stderr.write(f"accepted-source order review refused: {exc}\n")
+        return False
+    sys.stdout.write(render_casilla_order_review(order_review) + "\n")
+    if order_review.passed:
+        return True
+    sys.stderr.write(f"accepted-source order review refused: {order_review.status}\n")
+    return False
+
+
+def _execute_cli_operation(arguments: argparse.Namespace) -> MigrationOutcome | _edition_delta_drop_types.DropOutcome:
+    export_scenarios = edition_export_scenarios(arguments.modelo, registry_root=arguments.registry_root)
+    if arguments.drop_restatement:
+        return _edition_delta_drop.drop_restatement(
+            registry_root=arguments.registry_root,
+            modelo_id=arguments.modelo,
+            work_dir=arguments.work_dir,
+            sections=arguments.family,
+            export_scenarios=export_scenarios,
+            apply=arguments.apply,
+        )
+    return migrate_modelo(
+        registry_root=arguments.registry_root,
+        modelo_id=arguments.modelo,
+        work_dir=arguments.work_dir,
+        export_scenarios=export_scenarios,
+        apply=arguments.apply,
+    )
+
+
+def _cli_exit_code(outcome: MigrationOutcome | _edition_delta_drop_types.DropOutcome) -> int:
+    if outcome.source_findings:
+        return 1
+    return int(isinstance(outcome, MigrationOutcome) and not outcome.complete)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Run the migration; exit 0 when the staged tree round-trips clean or nothing changes, 1 otherwise."""
+    parser = _argument_parser()
+    arguments = parser.parse_args(argv)
+    _validate_cli_scope(parser, arguments)
+    if not _review_accepted_source(arguments):
+        return 1
+    try:
+        outcome = _execute_cli_operation(arguments)
+    except _edition_delta_errors.MigrationRefusedError as exc:
         sys.stderr.write(f"refused: {exc}\n")
         return 1
     command = tuple(sys.argv) if argv is None else (sys.argv[0], *argv)
-    report_path = persist_migration_report(REPO_ROOT, outcome, command)
+    report_path = persist_migration_report(test_log_root(), outcome, command)
     sys.stdout.write(_render(outcome))
     sys.stdout.write(f"report persisted to {report_path}\n")
-    if outcome.source_findings:
-        return 1
-    if isinstance(outcome, MigrationOutcome) and not outcome.complete:
-        return 1
-    return 0
+    return _cli_exit_code(outcome)
 
 
 if __name__ == "__main__":

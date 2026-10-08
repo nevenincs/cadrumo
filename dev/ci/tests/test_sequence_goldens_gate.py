@@ -111,21 +111,21 @@ def test_an_engine_refusal_fails_without_recording(verdict_root: Path, capsys: p
     assert not any(verdict_root.rglob("*.json"))
 
 
-def test_cli_reads_the_changes_since_the_base(verdict_root: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    requested: list[str] = []
-
-    def source(base: str) -> tuple[str, ...]:
-        requested.append(base)
-        return ("README.md",)
-
-    assert main(["--base", "origin/main", "--jobs", "4"], changed_files_source=source) == 0
-
-    assert requested == ["origin/main"]
+def test_cli_reads_an_explicit_change_manifest(verdict_root: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    verdict_root.mkdir()
+    manifest = verdict_root / "changed.txt"
+    manifest.write_text("README.md\n", encoding="utf-8")
+    assert main(["--changed-files", str(manifest), "--jobs", "4"]) == 0
     assert "not selected" in capsys.readouterr().out
 
 
 def test_cli_refuses_a_non_positive_width() -> None:
     with pytest.raises(SystemExit) as exit_info:
-        main(["--base", "origin/main", "--jobs", "0"], changed_files_source=lambda _base: ())
-
+        main(["--jobs", "0"])
     assert exit_info.value.code == 2
+
+
+def test_missing_change_metadata_runs_the_goldens_gate(verdict_root: Path) -> None:
+    check = _Recorder()
+    assert run_sequence_goldens_gate(None, input_key=lambda: "e" * 64, check=check) == 0
+    assert check.jobs == [DEFAULT_JOBS]

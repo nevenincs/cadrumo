@@ -12,6 +12,47 @@ modelo:
           Regularización del derecho a la deducción por contribuyentes no obligados
           a presentar declaración.
         title: IRPF regularización de la deducción por familia numerosa / discapacidad
+      form:
+        context:
+          complementaria-justificante:
+            heading: Número de justificante
+          complementaria-marca:
+            heading: Autoliquidación complementaria
+          contribuyente-apellidos:
+            heading: Apellidos
+          contribuyente-nif:
+            heading: NIF
+          contribuyente-nombre:
+            heading: Nombre
+          ingreso-iban:
+            heading: Número de cuenta (IBAN)
+        page:
+          pag-1:
+            heading: Regularización de deducciones · diseño de 2018
+        section:
+          ascendiente-dos-hijos:
+            heading: Ascendiente con dos hijos sin derecho a anualidades por alimentos
+          ascendientes:
+            heading: Ascendientes con discapacidad a cargo
+          complementaria:
+            heading: 5. Autoliquidación complementaria
+          contribuyente:
+            heading: 1. Contribuyente no obligado a presentar declaración
+          conyuge:
+            heading: Cónyuge no separado con discapacidad
+          descendientes:
+            heading: 2. Regularización por percepción indebida del abono anticipado
+              de las deducciones · Descendientes con discapacidad a cargo
+          ejercicio:
+            heading: Ejercicio
+          familia-numerosa:
+            heading: Familia numerosa
+          ingreso:
+            heading: 4. Ingreso
+          liquidacion:
+            heading: 3. Liquidación
+          representante:
+            heading: 6. Representante
       revision:
         2017-y-siguientes:
           casilla:

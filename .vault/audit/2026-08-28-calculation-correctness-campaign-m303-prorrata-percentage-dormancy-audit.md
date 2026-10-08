@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8d216221b1ac2a2c0eebf8771413d0f0586537ec9ef045f8673d6163b91c7343'
+body_hash: 'sha256:19ddeaead86c39a788e5b78234a358a030914717ebb693f5d30c99cbd685a5fb'
 related:
   - "[[2026-08-28-calculation-correctness-campaign-rounding-discipline-sweep-audit]]"
 ---
@@ -13,13 +13,6 @@ related:
 # `calculation-correctness-campaign` audit: `The M303 prorrata percentage is a declared-dormant computation; the tax effect runs through box 44`
 
 ## Scope
-
-## Findings
-
-## Recommendations
-
-## What was checked
-
 Every `divide` node in the registry: 37 across all modelos. Division by zero
 raises `RegistryValidationError` with a translated message, so the failure is
 loud, never a silent wrong quotient.
@@ -39,8 +32,7 @@ if_then_else(
 That is a probe limitation, not a defect: a guard need not sit on the denominator.
 Recording it so the next reader does not re-flag the same six rows.
 
-## The prorrata chain is coherent, and the direction is watched
-
+## Findings
 The `else` branch defaults the percentage to **100**, full deduction. For the
 majority of filers, who apply no prorrata, 100 is the neutral and correct value.
 The exposure would be a prorrata filer leaving the two optional manual volume
@@ -59,23 +51,7 @@ por prorrata, is manual, exported at `m303-2025.dp30301.f077`, and consumed by
 `modelo-303-iva-cuota-deducible-total`. Prorrata restricts deduction through the
 operator-entered regularisation, which mirrors how the official form works.
 
-## The percentage itself is dormant, and says so
-
-`iva.prorrata-porcentaje` is `computed`, and:
-
-- consumed by **no formula in any of the six M303 revisions**;
-- carries **no `export_refs`**, with `export_exemption_reason =
-  "record_block_not_modelled"`;
-- is present in the completeness manifest.
-
-So it is computed and reaches nothing. That is a dormant computation of the same
-family as the recorded RIC 80 % finding -- with one important difference: this one
-is **declared**. The exemption reason states plainly that the export record block
-is not modelled. It is a known gap wearing a label, not a silent one, and it
-should be read as such.
-
-## Correction to this campaign's own previous commit
-
+## Recommendations
 The `integer-ceiling` precondition gate shipped in the preceding commit guards
 exactly this casilla. Its message argued that a violation would round a negative
 result toward zero and "shorten what the taxpayer gets back".
@@ -92,3 +68,17 @@ its actual reach is the kind of claim that later gets quoted as proof of
 something it never established.
 
 No production code, registry data or test was changed by this audit.
+## The percentage itself is dormant, and says so
+
+`iva.prorrata-porcentaje` is `computed`, and:
+
+- consumed by **no formula in any of the six M303 revisions**;
+- carries **no `export_refs`**, with `export_exemption_reason =
+  "record_block_not_modelled"`;
+- is present in the completeness manifest.
+
+So it is computed and reaches nothing. That is a dormant computation of the same
+family as the recorded RIC 80 % finding -- with one important difference: this one
+is **declared**. The exemption reason states plainly that the export record block
+is not modelled. It is a known gap wearing a label, not a silent one, and it
+should be read as such.

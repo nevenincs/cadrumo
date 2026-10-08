@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#user-profile-lazy-import'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:834acde7c24eacd802381a3c9d7d33a25b36bcea656f9686c1a7df17de7cc25f'
+modified: '2026-10-03'
+body_hash: 'sha256:608ddcf0a6f65b21bf68c9d8a1d20df78179d74d71b886ff0a3fb5a5f548cb7f'
 related:
   - '[[2026-06-03-user-profile-lazy-import-research]]'
   - '[[2026-06-03-bare-invocation-bucket-session-gate-adr]]'
@@ -14,7 +14,7 @@ related:
 
 ## Problem Statement
 
-The CLI's lazy-loading discipline gate at `src/cadrumo/entrypoints/cli/test_lazy_command_tree.py` now reds five tests: `test_version_cold_start_completes_under_budget`, `test_importing_cli_package_does_not_import_registry`, and three parameterised instances of `test_state_free_surface_does_not_import_registry`. A runtime probe shows that importing `cadrumo.application.user_profile` transitively loads 69 `cadrumo.domain.calculations.registry` submodules — every state-free CLI surface (`aeat`, `aeat --help`, `aeat --version`) now pays the full registry cost.
+The CLI's lazy-loading discipline gate now reds five tests: `test_version_cold_start_completes_under_budget`, `test_importing_cli_package_does_not_import_registry`, and three parameterised instances of `test_state_free_surface_does_not_import_registry`. A runtime probe shows that importing `cadrumo.application.user_profile` transitively loads 69 `cadrumo.domain.calculations.registry` submodules — every state-free CLI surface (`aeat`, `aeat --help`, `aeat --version`) now pays the full registry cost.
 
 The root cause is structural rather than incidental. `cadrumo.application.user_profile/__init__.py` declares Pydantic command and result models at module scope whose field types come from `cadrumo.domain.user_profile` (`UserProfileFact`, `UserProfileFactValue`, `UserProfileRecord`, `UserProfileStatus`). The domain package eagerly pulls the registry through its `_registry_contract` module to validate user-profile selectors against the registry binding set. Pydantic v2 resolves field types at class-creation time, so the top-level domain import in the application boundary cannot simply be `__getattr__`-deferred.
 
@@ -58,7 +58,7 @@ The package consumes lazy-by-default: every consumer that touches a name through
 
 The implementation is a single atomic relocation:
 
-- Create `src/cadrumo/application/user_profile/_commands.py` carrying the Pydantic command and result classes. The new module imports `UserProfileFact`, `UserProfileFactValue`, `UserProfileRecord`, `UserProfileStatus` from `cadrumo.domain.user_profile` and `ProfileId`, `BaseSeverity`, `PROVENANCE_SOURCE_MANUAL_CLI`, `STRICT_FROZEN_CONFIG` from the core layer. The hash-constraint kwargs constant `_PROFILE_SNAPSHOT_HASH_KWARGS` moves with the models that use it.
+- Create the former source file carrying the Pydantic command and result classes. The new module imports `UserProfileFact`, `UserProfileFactValue`, `UserProfileRecord`, `UserProfileStatus` from `cadrumo.domain.user_profile` and `ProfileId`, `BaseSeverity`, `PROVENANCE_SOURCE_MANUAL_CLI`, `STRICT_FROZEN_CONFIG` from the core layer. The hash-constraint kwargs constant `_PROFILE_SNAPSHOT_HASH_KWARGS` moves with the models that use it.
 - Strip the top-level domain import and the Pydantic model declarations from `src/cadrumo/application/user_profile/__init__.py`. Keep the module docstring, the `_register_language_resolver()` call, the `__getattr__` block, and the `__all__` list.
 - Extend the `__getattr__` block to resolve the relocated command and result classes (one new branch per class group) and to resolve the four domain records (one new branch that imports them from `cadrumo.domain.user_profile` on demand).
 - The `__all__` list does not change; the public surface is unchanged.
@@ -66,7 +66,7 @@ The implementation is a single atomic relocation:
 
 ## Regression gate
 
-The existing `src/cadrumo/entrypoints/cli/test_lazy_command_tree.py` test module is the enforcement gate. The fix is green when all five currently red tests pass and `test_dispatching_a_subcommand_loads_its_module` continues to pass (proving subcommand dispatch still wires through `__getattr__` correctly).
+The existing the former source file test module is the enforcement gate. The fix is green when all five currently red tests pass and `test_dispatching_a_subcommand_loads_its_module` continues to pass (proving subcommand dispatch still wires through `__getattr__` correctly).
 
 A new dedicated regression test lands alongside the relocation: an in-process or subprocess probe that asserts `import cadrumo.application.user_profile` does not place any `cadrumo.domain.calculations.registry*` module in `sys.modules`. This catches the same regression class at the producer boundary, not only at the CLI consumer surface — a future eager-import on `cadrumo.application.user_profile` would red here before it reds the cli-level gate.
 
@@ -95,8 +95,7 @@ The relocation respects `aeat-architecture-boundaries` symbol-relocation atomici
 
 ## Findings — execution-time scope expansion (2026-06-04)
 
-Authoring the producer-side probe at
-`src/cadrumo/application/user_profile/test_lazy_boundary.py` confirmed the
+Authoring the producer-side probe  confirmed the
 ADR's central premise: after relocating the Pydantic command and
 result models into `_commands.py` and routing the four domain records
 through PEP 562 `__getattr__`, importing
@@ -105,8 +104,7 @@ through PEP 562 `__getattr__`, importing
 from 69 against the unfixed boundary). The boundary itself is now
 lazy by default and the producer-side probe is green.
 
-However, the CLI-side gate at
-`src/cadrumo/entrypoints/cli/test_lazy_command_tree.py` remains red for
+However, the CLI-side gate  remains red for
 all five originally-named tests. The leak vector is orthogonal to the
 application boundary:
 
@@ -114,7 +112,7 @@ application boundary:
   `decorate_typer_app` from `cadrumo.entrypoints.cli._errors` at module
   scope (it must run before the typer app object is decorated, so it
   cannot move into a lazy block).
-- `src/cadrumo/entrypoints/cli/_errors.py` line 55 imports
+- the former source file line 55 imports
   `StoredProfileDriftError` from `cadrumo.domain.user_profile`.
 - The domain package's `__init__.py` eagerly imports `_registry_contract`
   at module scope. This is the same import path the ADR describes as

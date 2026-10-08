@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#issue-620-external-pdf-signal'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:f2467423d19f43699a2031b7a5242cbb5d2f8326ecede532ff7920945c515626'
+body_hash: 'sha256:7de7f4744e797c9f4ed0683cd5951bdbbf94ecea014cd80f44250e939eb081ba'
 related:
   - "[[2026-07-26-declaracion-real-render-verification-adr]]"
   - "[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]"
@@ -24,7 +24,7 @@ FiscalBot describes itself as private and unofficial while offering plain and fi
 
 ### Physical inspection yields falsifiable facts even when authorship is unknown
 
-SHA-256, byte length, PDF version, page geometry, encryption, AcroForm shape, extracted tokens and identity-pattern scans are reproducible properties of the downloaded bytes. The declaration parser's blank-box guard operates on those token and geometry properties in `src/cadrumo/adapters/inbound/declaracion/_parser.py:580`; an external blank layout can therefore catch a fabricated box-number value without being regulatory authority.
+SHA-256, byte length, PDF version, page geometry, encryption, AcroForm shape, extracted tokens and identity-pattern scans are reproducible properties of the downloaded bytes. The declaration parser's blank-box guard operates on those token and geometry properties ; an external blank layout can therefore catch a fabricated box-number value without being regulatory authority.
 
 ### Metadata is inconsistent across the candidate set
 
@@ -41,6 +41,6 @@ Redistribution rights were not established by the source pages. The implementing
 ## Sources
 
 - https://fiscalbot.es/modelos-tributarios/
-- `src/cadrumo/adapters/inbound/declaracion/_parser.py:580`
+
 - `src/cadrumo/tests/fixtures/__init__.py:38`
 - `src/cadrumo/adapters/inbound/declaracion/tests/test_parser_blank_box_never_yields_box_number.py:1`

@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#canonical-release-pipeline'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:24d91b46528854a44ae125850bf0b890082205428d0b16db948118c321cf9bf1'
+body_hash: 'sha256:04c62d4301328c9b578d42c76ca692bda378507779e5ddaa96d50a2a08ce3ddd'
 related:
   - '[[2026-07-27-canonical-release-pipeline-adr]]'
   - '[[2026-07-27-canonical-release-pipeline-campaign-close-honesty-review-audit]]'
-  - '[[2026-07-27-canonical-release-pipeline-ledger]]'
-  - '[[2026-07-27-canonical-release-pipeline-plan]]'
   - '[[2026-07-27-canonical-release-pipeline-research]]'
 ---
 
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#canonical-release-pipeline`.
 ### audit
 
 - `2026-07-27-canonical-release-pipeline-campaign-close-honesty-review-audit` - `canonical-release-pipeline` audit: `campaign close honesty review`
-
-### exec
-
-- `2026-07-27-canonical-release-pipeline-ledger` - `canonical-release-pipeline` ledger
-
-### plan
-
-- `2026-07-27-canonical-release-pipeline-plan` - `canonical-release-pipeline` plan
 
 ### research
 

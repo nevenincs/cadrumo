@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:78fb3236cad7f94637a763dbc0f4949a91af93193f69bbeed5a7ae64483eed67'
+modified: '2026-10-03'
+body_hash: 'sha256:ffd7a4ec370c2d0e006f3ad3f175ae2024537bf2fa3ce0accbb805711036b398'
 related: []
 ---
 
@@ -32,8 +32,8 @@ after reloading through the bucket-bound repository query.
 
 ## S216-004 | PASS | Validation
 
-- `uv run --no-sync -q ruff check src/aeat/application/invoices/_queries.py src/aeat/application/invoices/test_queries.py` passed.
-- `uv run --no-sync -q pytest -q src/aeat/application/invoices/test_queries.py` passed with 4 tests.
+- the historical check passed.
+- the historical check passed with 4 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low storage-routing findings

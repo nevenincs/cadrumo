@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:d24a078f16a53d16453c47ec5b1eb15e5b24dd8666866581ff15bb8100dccc2b'
+modified: '2026-10-03'
+body_hash: 'sha256:06b433c451d2043c8a30b5aa88b04fcf15f14c1f961545c6fc6a3dde896b7fa5'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S167-001 | PASS | Plaintext envelope path is bounded and typed
 
-`src/aeat/adapters/persistence/storage/envelope/_envelope.py` persists plaintext JSON only through `save_envelope`, which is the substrate-level `plaintext-exception` path for explicitly classified file-backed records and migrations. Loads enforce strict pydantic payload validation, expected sensitivity classification, maximum supported schema version, and monotonic migrator chains.
+The retired module persists plaintext JSON only through `save_envelope`, which is the substrate-level `plaintext-exception` path for explicitly classified file-backed records and migrations. Loads enforce strict pydantic payload validation, expected sensitivity classification, maximum supported schema version, and monotonic migrator chains.
 
 Read, parse, and write failures are wrapped in localized `StorageValidationError` without including filesystem paths. Atomic writes use temporary files in the target directory, `os.replace`, file fsync, and parent-directory fsync; failed cleanup attempts are logged at debug level.
 
@@ -32,8 +32,8 @@ The tests exercise real filesystem writes, parent-file write failures, missing-f
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/envelope/test_envelope.py src/aeat/adapters/persistence/storage/envelope/test_envelope_ciphertext.py` passed.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/envelope/_envelope.py src/aeat/adapters/persistence/storage/envelope/test_envelope.py src/aeat/adapters/persistence/storage/envelope/test_envelope_ciphertext.py` passed.
+- the historical check passed.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` passed with the known `PLAN022` ordering warning.
 - Touched-surface hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, direct encoding literals, pragma/noqa/type-ignore directives, local secure-object marker construction, direct settings construction, or direct environment access.

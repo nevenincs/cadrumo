@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-08-15'
-body_hash: 'sha256:e3abd852b000f76d47dcbf0d37d8d6713b6e34fed1a02fbf6fab9d4fde72f2f8'
+modified: '2026-10-03'
+body_hash: 'sha256:cf1a99b78623135e2280a78cee01ed7021efb567493f2b343de9f9b790fa8380'
 related:
   - '[[2026-06-10-aeat-cli-userdocs-hardening-audit]]'
-  - '[[2026-06-04-aeat-cli-userdocs-hardening-plan]]'
   - '[[2026-06-02-ledger-operator-hardening-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
@@ -59,7 +58,6 @@ for what an operator calls a profile, and "work unit" for a filing workspace.
 
 **Code evidence.** `switch`, `use`, `view`, and the `get`/`set`/`unset` triple
 are enumerated as retired in `_RETIRED_VERBS` at
-`src/aeat/entrypoints/cli/tests/test_config_profile_surface_inventory.py:41-49`;
 the live surface confirms `switch` resolves to no command. Session-unlock
 semantics live underneath the verb that replaced it.
 
@@ -93,10 +91,10 @@ was disproven and removed (commit `68c1c1cfe`). The operator is left with a
 silent dead end: the trapdoor only opens downward.
 
 **Code evidence.** The lifecycle transition in
-`src/aeat/application/ledger/_actions_lifecycle.py:402-421` only moves a row
+The retired module only moves a row
 *into* `ARCHIVED`/`STASHED` (it explicitly refuses `archived -> stashed` and
 routes `SPLIT` elsewhere); no branch targets `ACTIVE`. Edit is barred for
-non-active rows at `src/aeat/application/ledger/_actions_manual.py:449-451`
+non-active rows at the retired module
 ("only active ledger transactions can be edited; archived, stashed, and
 split-parent rows are immutable"). The full `aeat app ledger --help` inventory
 carries no restore verb.
@@ -129,7 +127,7 @@ handle the CLI taught. The identity churn is invisible until the operator
 reuses the old handle.
 
 **Code evidence.** The transaction-ID derivation in
-`src/aeat/domain/transactions/_models.py:96-100` keys on the provider identifier
+The retired module keys on the provider identifier
 and verbatim narrative and "therefore changes when a transaction is edited or
 re-exported in a different file format." (A separate movement fingerprint exists
 for import dedup, but it is not the operator-facing handle.)
@@ -160,10 +158,10 @@ quarter is `1T` in one place and `2026Q1` in another, with no conversion offered
 and no cross-acceptance. The userdocs guides had to teach both.
 
 **Code evidence.** The ledger period normaliser
-`src/aeat/entrypoints/cli/_common.py:190-207` (`_PERIOD_RE` /
+The retired module (`_PERIOD_RE` /
 `_canonical_period`) accepts only the `YYYY[Qn|-MM]` shapes and emits `2026Q1` /
 `2026-03` / `2026`. The modelo-side token grammar and its validation messages
-live separately in `src/aeat/locales/en.yml:~1628` and accept the AEAT
+live separately in the retired data file and accept the AEAT
 `0A / 1T-4T / 01-12` set.
 
 **Prior-decision reconciliation.**
@@ -201,19 +199,19 @@ handler rejects.
 `aeat app modelo work verification-report list` command, corrected in commit
 `7c3a19c89`.
 (b) Evidence-id help promises "(or unambiguous prefix)"
-(`src/aeat/locales/en.yml:1058`) while the lookup matches by exact equality at
-`src/aeat/application/ledger/_evidence.py:352` (`record.evidence_id ==
+ while the lookup matches by exact equality at
+The retired module (`record.evidence_id ==
 evidence_id`).
 (c) The `doclink` `--source` Typer option is typed as the full five-member
 `AttachmentSource` enum (`LOCAL_FILE / GMAIL / GOOGLE_DRIVE / URL / INLINE`,
-`src/aeat/domain/attachments/_enums.py:54-58`), so click advertises all five,
+The retired module), so click advertises all five,
 but the handler accepts only `gmail / google_drive / url` and refuses the rest
-(`src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py:213-226`).
+.
 (d) `work verify --select` offers `latest-verified` and `filed`
 (`ModeloCalculationRevisionSelector`,
-`src/aeat/application/modelo/_selectors.py:50-54`) though `verify_modelo_revision`
+The retired module) though `verify_modelo_revision`
 refuses any state but `BORRADOR`
-(`src/aeat/application/modelo/_verification_actions.py:728`), making
+, making
 `--select latest-verified` an advertised-but-impossible combination.
 (e) `integrity registry` help said "profile registry", corrected in commit
 `0fd9a9119`.
@@ -247,7 +245,7 @@ changes help-text language. An operator who discovers the flag and trusts it is
 quietly betrayed.
 
 **Code evidence.** The root `--language` option is declared `is_eager=True` at
-`src/aeat/entrypoints/cli/__init__.py:78-88`, so it is applied after the
+The retired module, so it is applied after the
 import-time `tr(...)` calls have already rendered every help string. The
 environment variable wins because it is read before import; the flag arrives too
 late to affect the strings it claims to control.
@@ -278,10 +276,10 @@ surface, no guided manual-value entry.
 
 **Code evidence.** The M036 group registers exactly three commands —
 `alta`, `modificacion`, `baja` —
-(`src/aeat/entrypoints/cli/_modelo_m036_cli.py:90,136,164`), and the lifecycle
+, and the lifecycle
 module exposes only `record_m036_declaration` plus its id-derivation helper with
 no read-back / list / mutate public surface
-(`src/aeat/application/modelo/_m036_lifecycle.py`, sole writer
+(the retired module, sole writer
 `record_m036_declaration`). The plan already carries the sibling gaps as backlog
 steps `W05.P09.S52` (filing history) and `W05.P10.S32` (guided manual entry).
 
@@ -308,7 +306,7 @@ revision id, and paste it back — friction the choose-modelo guide had to teach
 explicitly (commit `948621a9c`).
 
 **Code evidence.** The preflight command in
-`src/aeat/entrypoints/cli/_config/__init__.py` declares `revision_id`,
+The retired module declared `revision_id`,
 `modelo`, `filing_year`, and `period` as required `typer.Option(...)` values
 (no default), so `--revision-id` is mandatory to answer the readiness question.
 

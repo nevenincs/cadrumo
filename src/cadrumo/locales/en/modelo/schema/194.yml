@@ -1,26 +1,123 @@
 modelo:
   schema:
     '194':
+      binding:
+        modelo-194-perceptor-row-base:
+          label: Withholding tax base
+        modelo-194-perceptor-row-ceuta-melilla:
+          label: Applicable territorial deduction
+        modelo-194-perceptor-row-clave-codigo:
+          label: Issuer identification type
+        modelo-194-perceptor-row-codigo-cuenta:
+          label: Securities account
+        modelo-194-perceptor-row-codigo-emisor:
+          label: Issuer identification
+        modelo-194-perceptor-row-ejercicio-devengo:
+          label: Previous accrual year
+        modelo-194-perceptor-row-nif:
+          label: Recipient tax ID
+        modelo-194-perceptor-row-nif-representante:
+          label: Legal representative tax ID
+        modelo-194-perceptor-row-nombre:
+          label: Name or business name
+        modelo-194-perceptor-row-origen:
+          label: Transaction origin
+        modelo-194-perceptor-row-pendiente:
+          label: Payment pending
+        modelo-194-perceptor-row-porcentaje:
+          label: Withholding rate
+        modelo-194-perceptor-row-provincia:
+          label: Province code
+        modelo-194-perceptor-row-retenciones:
+          label: Withholding and payments on account
+        modelo-194-perceptor-row-tipo-codigo:
+          label: Securities account identification type
+        modelo-194-perceptor-row-valor-adquisicion:
+          label: Acquisition or subscription value
+        modelo-194-perceptor-row-valor-transmision:
+          label: Disposal or redemption value
+        modelo-194-perceptor-row-vinculacion:
+          label: Income from a related entity
+        modelo-194-resumen-base-negativa:
+          label: Total negative bases, retaining their sign
+        modelo-194-resumen-base-positiva:
+          label: Total positive bases
+        modelo-194-resumen-perceptores-no-positivos:
+          label: Records with a negative or zero base
+        modelo-194-resumen-perceptores-positivos:
+          label: Records with a positive base
+        modelo-194-resumen-retenciones-total:
+          label: Total withholding and payments on account
       casilla:
         continuidad:
+          activo-financiero-entidad-vinculada:
+            label: Income from a related entity
+          activo-financiero-origen-operacion:
+            label: Transaction origin
+          activo-financiero-valor-adquisicion:
+            label: Acquisition or subscription value
+          activo-financiero-valor-transmision:
+            label: Disposal or redemption value
+          capital-ajeno-perceptor-base-retenciones:
+            label: Withholding and payment-on-account base
+          capital-ajeno-perceptor-deduccion-territorial:
+            label: Applicable territorial deduction
+          capital-ajeno-perceptor-porcentaje-retencion:
+            label: Withholding rate
+          capital-ajeno-perceptor-retenciones:
+            label: Withholdings and payments on account
           capital-ajeno-resumen-base-negativa:
-            help: Sum of the withholding bases in recipient records with a negative
-              base.
-            label: Negative base for withholdings and payments on account
+            help: Sum of negative bases shown as a positive amount, without offsetting
+              positive bases.
+            label: Negative withholding and payment-on-account base
           capital-ajeno-resumen-base-positiva:
             help: Sum of the withholding bases in recipient records with a positive
               base.
-            label: Base for withholdings and payments on account
+            label: Withholding and payment-on-account base
           capital-ajeno-resumen-perceptores-base-negativa:
-            help: Number of recipients (records) whose withholding base is negative.
-            label: Total number of recipients with a negative base
+            help: Count each declared transaction, including multiple transactions
+              for one recipient. Includes negative and zero bases.
+            label: Number of records with a negative or zero base
           capital-ajeno-resumen-perceptores-base-positiva:
-            help: Number of recipients (records) whose withholding base is positive.
-            label: Total number of recipients with a positive base
+            help: Number of recipients (records) whose withholding and payment-on-account
+              base is positive.
+            label: Total recipients with a positive base
           capital-ajeno-resumen-retenciones:
             help: Sum of the withholdings and payments on account applied to the declared
               income.
             label: Withholdings and payments on account
+          cuenta-valores-identificacion:
+            label: Securities account
+          cuenta-valores-tipo-identificacion:
+            label: Securities account identification type
+          declaracion-anterior-numero:
+            label: Previous return reference number
+          declaracion-complementaria:
+            label: Supplementary return
+          declaracion-numero-identificativo:
+            label: Return reference number
+          declaracion-sustitutiva:
+            label: Replacement return
+          declarante-contacto-nombre:
+            label: Contact surname and first name
+          declarante-contacto-telefono:
+            label: Contact telephone number
+          emisor-clave-identificacion:
+            label: Issuer identification type
+          emisor-identificacion:
+            label: Issuer identification
+          perceptor-identificacion-fiscal:
+            label: Recipient's NIF
+          perceptor-nombre:
+            label: Surname and given name or company name
+          perceptor-provincia:
+            label: Province code
+          perceptor-representante-identificacion-fiscal:
+            label: Legal representative's NIF
+          rendimiento-ejercicio-devengo:
+            label: Earlier accrual tax year
+          rendimiento-pendiente-abono:
+            label: Payment pending
       construct:
         modelo-194-calculation-construct:
           field:
@@ -33,6 +130,88 @@ modelo:
           raising and use of third-party capital. Annual summary.
         title: Withholdings on income from movable capital and asset transfers - annual
           summary
+      form:
+        column:
+          base:
+            heading: Withholding tax base
+          perc-base:
+            heading: Withholding tax base
+          perc-ceuta-melilla:
+            heading: Applicable territorial deduction
+          perc-clave-codigo:
+            heading: Issuer identification type
+          perc-codigo-cuenta:
+            heading: Securities account
+          perc-codigo-emisor:
+            heading: Issuer identification
+          perc-ejercicio-devengo:
+            heading: Previous accrual year
+          perc-nif:
+            heading: Recipient tax ID
+          perc-nif-representante:
+            heading: Legal representative tax ID
+          perc-nombre:
+            heading: Name or business name
+          perc-origen:
+            heading: Transaction origin
+          perc-pendiente:
+            heading: Payment pending
+          perc-porcentaje:
+            heading: Withholding rate
+          perc-provincia:
+            heading: Province code
+          perc-retenciones:
+            heading: Withholding and payments on account
+          perc-tipo-codigo:
+            heading: Securities account identification type
+          perc-valor-adquisicion:
+            heading: Acquisition or subscription value
+          perc-valor-transmision:
+            heading: Disposal or redemption value
+          perc-vinculacion:
+            heading: Income from a related entity
+          perceptores:
+            heading: Number of recipients
+          retenciones:
+            heading: Withholding and payments on account
+        context:
+          ejercicio:
+            heading: Tax year
+          nif:
+            heading: Declarant tax ID
+          nombre:
+            heading: Name or business name
+        page:
+          importes:
+            heading: Amounts and withholding
+          perceptores:
+            heading: Recipient details
+          resumen:
+            heading: Summary sheet · partial implementation
+        row:
+          negativa:
+            heading: Negative or zero tax base
+          positiva:
+            heading: Positive base
+        section:
+          contacto:
+            heading: Contact person
+          cuenta:
+            heading: Securities account and accrual
+          declaracion:
+            heading: Return identification and type
+          emisor:
+            heading: Transaction and issuer
+          identificacion:
+            heading: Declarant identification
+          perceptores:
+            heading: Recipient identification
+          resumen:
+            heading: Summary of reported data
+          retenciones:
+            heading: Tax base and withholding
+          valores:
+            heading: Acquisition and disposal
       revision:
         '2019':
           field:

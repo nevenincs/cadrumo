@@ -24,7 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from dev._paths import UTF_8
 
-from .term_relevance_mapping import SweepResult
+from .term_relevance_mapping import SweepResult, TermRelevanceMapping
 
 __all__ = [
     "TOP_RESULTS_BOUND",
@@ -186,28 +186,7 @@ def evaluate_held_out_miss_rate(
 
     rows: list[MissRateRow] = []
     for case in resolved_cases.cases:
-        if case.kind is HeldOutCaseKind.OUT_OF_SAMPLE:
-            rows.append(_evaluate_out_of_sample(case, resolved_relevance))
-            continue
-        mapping = by_case_key.get((case.concept_id, _normalise_query(case.query)))
-        if mapping is None:
-            rows.append(_row_for(case, hit=False, reason=MissReason.QUERY_NOT_COMPILED, target_count=0))
-            continue
-        if not mapping.targets:
-            rows.append(_row_for(case, hit=False, reason=MissReason.NO_TARGETS, target_count=0))
-            continue
-        top_targets = mapping.targets[:TOP_RESULTS_BOUND]
-        target_ids = {target.record_id for target in top_targets}
-        matched = next((record_id for record_id in case.expected_record_ids if record_id in target_ids), None)
-        rows.append(
-            _row_for(
-                case,
-                hit=matched is not None,
-                reason=MissReason.HIT if matched is not None else MissReason.TARGET_MISMATCH,
-                matched_record_id=matched,
-                target_count=len(top_targets),
-            ),
-        )
+        _append_miss_rate_case(case, resolved_relevance, by_case_key, rows)
 
     hits = sum(1 for row in rows if row.hit)
     misses = len(rows) - hits
@@ -272,3 +251,34 @@ def _row_for(
 
 def _normalise_query(value: str) -> str:
     return " ".join(value.strip().casefold().split())
+
+
+def _append_miss_rate_case(
+    case: HeldOutQueryCase,
+    resolved_relevance: SweepResult,
+    by_case_key: dict[tuple[str, str], TermRelevanceMapping],
+    rows: list[MissRateRow],
+) -> None:
+    """Append miss rate case."""
+    if case.kind is HeldOutCaseKind.OUT_OF_SAMPLE:
+        rows.append(_evaluate_out_of_sample(case, resolved_relevance))
+        return
+    mapping = by_case_key.get((case.concept_id, _normalise_query(case.query)))
+    if mapping is None:
+        rows.append(_row_for(case, hit=False, reason=MissReason.QUERY_NOT_COMPILED, target_count=0))
+        return
+    if not mapping.targets:
+        rows.append(_row_for(case, hit=False, reason=MissReason.NO_TARGETS, target_count=0))
+        return
+    top_targets = mapping.targets[:TOP_RESULTS_BOUND]
+    target_ids = {target.record_id for target in top_targets}
+    matched = next((record_id for record_id in case.expected_record_ids if record_id in target_ids), None)
+    rows.append(
+        _row_for(
+            case,
+            hit=matched is not None,
+            reason=MissReason.HIT if matched is not None else MissReason.TARGET_MISMATCH,
+            matched_record_id=matched,
+            target_count=len(top_targets),
+        ),
+    )

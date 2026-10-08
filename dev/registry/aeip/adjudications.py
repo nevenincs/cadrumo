@@ -1,6 +1,6 @@
 """Operator adjudications for the anexo-A AEIP continuity chains.
 
-The planner in :mod:`dev.registry.aeip.manager` derives chain ids mechanically
+The planner in :mod:`dev.registry.aeip.planning` derives chain ids mechanically
 from the programme titles AEAT publishes, but a handful of shapes cannot be
 settled by reading text: a programme re-designated under a fresh window after a
 gap, two title spellings that may be one relabelled programme or two successive

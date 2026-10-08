@@ -7,13 +7,12 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping
 from datetime import datetime
 from typing import ClassVar, override
 
 from pydantic import BaseModel, Field
 
-from ....application.aggregation.observation_window import replace_observation_window
 from ....application.aggregation.retencion_observations_repository import (
     RetencionObservationPersistenceError,
     RetencionObservationRepository,
@@ -28,7 +27,7 @@ from ....core.period import Period
 from ....core.time.clock import now
 from ....core.time.utc import UtcInstant
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
-from ..storage.errors import StorageError
+from ..storage.errors import STORAGE_OPERATION_FAILURES
 from ..storage.path_safety import safe_repository_id
 from ..storage.secure_object_namespaces import RETENCION_OBSERVATIONS_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
@@ -40,7 +39,7 @@ def _translate_storage_failure[ResultT](operation: str, action: Callable[[], Res
         return action()
     except RetencionObservationPersistenceError:
         raise
-    except (StorageError, OSError, TypeError, KeyError) as exc:
+    except (*STORAGE_OPERATION_FAILURES, TypeError, KeyError) as exc:
         raise RetencionObservationPersistenceError(operation) from exc
 
 
@@ -73,13 +72,6 @@ class RetencionObservationRepositoryAdapter(
     def __init__(self, *, objects: SecureObjectRepository) -> None:
         """Bind an already-composed secure-object store."""
         super().__init__(objects=objects)
-
-    def validate_observation_window_modelo(self, modelo: str) -> str:
-        """Bind application window-key validation to persistence storage safety."""
-        return _translate_storage_failure(
-            "retencion_validate_observation_window_modelo",
-            lambda: safe_repository_id(modelo, context="modelo"),
-        )
 
     @override
     def extract_identifier(self, payload: _RetencionObservationEnvelopePayload) -> str:
@@ -114,61 +106,6 @@ class RetencionObservationRepositoryAdapter(
             source_kind=source_kind,
             source_metadata=dict(source_metadata or {}),
             projection_identity=projection_identity,
-        )
-
-    def save_observation(
-        self,
-        *,
-        modelo: str,
-        filing_year: int,
-        period: Period,
-        observation: RetencionObservation,
-        source_kind: AggregationCaptureKind,
-        captured_at: datetime | None = None,
-        source_metadata: Mapping[str, str] | None = None,
-    ) -> None:
-        """Persist one per-perceptor retención observation."""
-        _translate_storage_failure(
-            "retencion_save_observation",
-            lambda: self.save(
-                self.build_observation_payload(
-                    modelo=modelo,
-                    filing_year=filing_year,
-                    period=period,
-                    observation=observation,
-                    source_kind=source_kind,
-                    captured_at=captured_at,
-                    source_metadata=source_metadata,
-                )
-            ),
-        )
-
-    @override
-    def replace_observations(
-        self,
-        *,
-        modelo: str,
-        filing_year: int,
-        period: Period,
-        observations: Sequence[RetencionObservation],
-        source_kind: AggregationCaptureKind,
-        captured_at: datetime | None = None,
-        source_metadata: Mapping[str, str] | None = None,
-    ) -> None:
-        """Atomically replace the complete per-perceptor observation window."""
-        _translate_storage_failure(
-            "retencion_replace_observations",
-            lambda: replace_observation_window(
-                self,
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                observations=observations,
-                source_kind=source_kind,
-                build_payload=self.build_observation_payload,
-                captured_at=captured_at,
-                source_metadata=source_metadata,
-            ),
         )
 
     @override

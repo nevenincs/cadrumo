@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-dated-validity'
 date: '2026-08-27'
-modified: '2026-08-28'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ef291ee70e3ae146c754f28772f43d194a4c873164c4fbf1b6ff3ba861b793c'
+body_hash: 'sha256:4520e90d34dd61fbc0ba855b6f590a260a315c3dee0627251705638a9c00c7de'
 related: []
 ---
 
@@ -134,7 +134,7 @@ That is a CALENDAR-relative rule. The implementation converts it to a day count:
     """``2 anos anteriores`` interpreted as 730 calendar days (2 * 365)."""
 
 and `_qualifies_for_tier_60_rehab` in
-`src/cadrumo/domain/fincas/_tier_resolver.py:390` decides with
+The retired module decides with
 `0 <= delta_days <= rehab_lookback_days`.
 
 Two calendar years are 731 days whenever the span contains a 29 February, so the
@@ -330,7 +330,7 @@ empresario's numerator is normally zero. Low is not none, and the gate is absent
 either way.
 
 **The remedy already exists in this codebase, unused by this consumer.**
-`src/cadrumo/domain/transactions/_volumen_ingresos.py` exists precisely to
+The retired module existed precisely to
 distinguish `SUBVENCION_CORRIENTE` from `SUBVENCION_CAPITAL`, and the profile
 schema carries `taxpayer_type` and `iae_epigraph`. So this is not blocked on a
 model that does not exist; it is one sibling calculation applying a distinction

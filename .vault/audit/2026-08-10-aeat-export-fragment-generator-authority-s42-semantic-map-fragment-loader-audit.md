@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c6db4fdd214522ac221929b1e582e55b122e29745abd2b89ac5f1cf38e6e5b97'
+body_hash: 'sha256:24f203a6d381520e8d978d331a8ac7cd5c3fc3579a1cdcb593d16c990a8eddf4'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-semantic-map-fragment-loader-reference]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `s42 semantic map fragment loader`
@@ -17,7 +16,7 @@ related:
 
 Verdict: **PASS. No open critical, high, medium, or low findings remain.**
 
-This independent review covered approved plan step `W04.P07.S42`, the accepted generator-authority ADR, the semantic-map fragment-loader reference, and the complete implementation in `dev/registry/_semantic_map_loader.py`, public facade in `dev/registry/__init__.py`, and real-filesystem tests in `dev/registry/tests/test_semantic_map_loader.py`. Canonical-home comparison included `_semantic_map.py`, `_semantic_map_validation.py`, `_semantic_map_join.py`, provenance anchor ordering, and the core TOML boundary.
+This independent review covered approved plan step `W04.P07.S42`, the accepted generator-authority ADR, the semantic-map fragment-loader reference, and the complete implementation in the retired module, public facade in `dev/registry/__init__.py`, and real-filesystem tests in the retired test. Canonical-home comparison included `_semantic_map.py`, `_semantic_map_validation.py`, `_semantic_map_join.py`, provenance anchor ordering, and the core TOML boundary.
 
 The final implementation reuses public `cadrumo.core.read_toml` and `freeze_toml`, hydrates the existing strict frozen semantic-map schema, refuses non-directories, linked directories and members, non-TOML siblings, malformed TOML, empty fragments and aggregates, filename-to-fragment-id drift, duplicate fragment identifiers, modelo/design conflicts, and every record-anchor, record-id, field-anchor, and field-id collision. Compilation inspects fragments in lexical filename order and canonicalizes compiled records and entries by the established semantic keys. The facade exposes one loader without a compatibility alias. No legacy, generated export, parser intermediate, render profile, neighbouring map, or production registry loader is consulted.
 

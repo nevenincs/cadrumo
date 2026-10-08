@@ -283,12 +283,12 @@ def _published_candidate(directory: Path) -> Path:
 def test_profile_component_load_is_generation_pinned_and_lazy(tmp_path: Path) -> None:
     reader = SQLiteAuthorityReader(_published_candidate(tmp_path), max_connections=2)
     try:
-        assert reader.telemetry().entries == 0
+        assert reader.stats().entries == 0
         with reader.lease() as pin:
             profile = reader.load(ProfileSchemaComponentQuery(), pin=pin)
         assert isinstance(profile, ProfileSchemaDefinition)
         assert profile.id == "cadrumo.user_profile"
-        assert reader.telemetry().entries == 1
+        assert reader.stats().entries == 1
         assert reader.active_leases == 0
     finally:
         reader.close()
@@ -340,7 +340,7 @@ def test_a_database_changed_under_the_reader_is_refused_at_its_next_database_tou
             with pytest.raises(AuthorityStoreCorruptionError, match="changed after admission"):
                 reader.load(ModeloDirectoryComponentQuery("130"), pin=pin)
 
-        assert reader.telemetry().entries == 0
+        assert reader.stats().entries == 0
         with pytest.raises(AuthorityStoreCorruptionError, match="changed after admission"), reader.lease():
             pass
     finally:
@@ -431,10 +431,10 @@ def test_digest_consistent_unused_component_refuses_only_when_requested(tmp_path
 
     reader = SQLiteAuthorityReader(descriptor_path)
     try:
-        assert reader.telemetry().entries == 0
+        assert reader.stats().entries == 0
         with reader.lease() as pin, pytest.raises(AuthorityComponentCodecError, match="failed typed decoding"):
             reader.load(ProfileSchemaComponentQuery(), pin=pin)
-        assert reader.telemetry().entries == 0
+        assert reader.stats().entries == 0
     finally:
         reader.close()
 
@@ -571,13 +571,15 @@ def test_candidate_preparation_does_not_hold_the_destination_lock(
 ) -> None:
     """A barrier-held validation leaves the publication lock available to another publisher."""
     preparation_started = Event()
+    preparation_ready = Event()
     finish_preparation = Event()
     prepared_candidate = SimpleNamespace(descriptor_path=tmp_path / "staged" / "authority.current.json")
     published_descriptor = object()
 
     def prepare_candidate(**_kwargs: object) -> object:
         preparation_started.set()
-        assert finish_preparation.wait(timeout=5)
+        preparation_ready.set()
+        assert finish_preparation.wait()
         return prepared_candidate
 
     monkeypatch.setattr(authority_publication, "prepare_authority_candidate", prepare_candidate)
@@ -603,10 +605,17 @@ def test_candidate_preparation_does_not_hold_the_destination_lock(
             profile_schema_path=tmp_path / "schema.toml",
             destination=destination,
         )
-        assert preparation_started.wait(timeout=5)
-        with exclusive_file_lock(descriptor_path, timeout=0, retry_backoff=0.01):
+        publication.add_done_callback(lambda _completed: preparation_ready.set())
+        try:
+            assert preparation_ready.wait()
+            if publication.done():
+                publication.result()
+            assert preparation_started.is_set(), "publication settled without candidate preparation"
+            with exclusive_file_lock(descriptor_path, timeout=0, retry_backoff=0.01):
+                finish_preparation.set()
+        finally:
             finish_preparation.set()
-        assert publication.result(timeout=5) is published_descriptor
+        assert publication.result() is published_descriptor
 
 
 def test_receipt_drift_after_preparation_refuses_before_installation(

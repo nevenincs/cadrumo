@@ -30,15 +30,27 @@ class ActivityAssetHistory(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_history(self) -> Self:
+        revisions_by_id = self._index_revisions_and_validate_chains()
+        self._validate_claim_identities()
+        self._validate_claim_references(revisions_by_id)
+        self._validate_claim_replay()
+        return self
+
+    def _index_revisions_and_validate_chains(self) -> dict[str, ActivityAssetRevision]:
         revisions_by_id = {revision.revision_id: revision for revision in self.revisions}
         if len(revisions_by_id) != len(self.revisions):
             raise ValueError("activity asset history contains duplicate revision identities")
         asset_ids = {revision.asset_id for revision in self.revisions}
         for asset_id in asset_ids:
             self._validate_asset_revision_chain(asset_id)
+        return revisions_by_id
+
+    def _validate_claim_identities(self) -> None:
         claim_ids = {claim.claim_id for claim in self.claims}
         if len(claim_ids) != len(self.claims):
             raise ValueError("activity asset history contains duplicate claim identities")
+
+    def _validate_claim_references(self, revisions_by_id: dict[str, ActivityAssetRevision]) -> None:
         for claim in self.claims:
             revision = revisions_by_id.get(claim.asset_revision_id)
             if revision is None:
@@ -47,10 +59,11 @@ class ActivityAssetHistory(BaseModel):
                 raise ValueError("activity asset claim identity does not match its revision")
             if revision.asset_kind is not claim.asset_kind:
                 raise ValueError("activity asset claim kind does not match its revision")
+
+    def _validate_claim_replay(self) -> None:
         replayed_claims: tuple[AmortizationClaim, ...] = ()
         for claim in self.claims:
             replayed_claims = record_claim(replayed_claims, claim).claims
-        return self
 
     def _validate_asset_revision_chain(self, asset_id: str) -> None:
         chain = tuple(revision for revision in self.revisions if revision.asset_id == asset_id)
@@ -62,9 +75,28 @@ class ActivityAssetHistory(BaseModel):
                 raise ValueError("asset revision supersession must point to the prior revision of the same asset")
 
     def append_revision(self, revision: ActivityAssetRevision) -> ActivityAssetHistory:
-        """Append an exact revision once, preserving each asset's correction chain."""
+        """Append only a creation or the exact successor of the current revision.
+
+        The encrypted repository invokes this against the value read inside its
+        compare-and-swap mutation.  Checking the latest revision here therefore
+        closes the pre-read/write race for corrections made by concurrent
+        callers.
+        """
         if any(existing.revision_id == revision.revision_id for existing in self.revisions):
             return self
+        latest = max(
+            (item for item in self.revisions if item.asset_id == revision.asset_id),
+            key=lambda item: item.revision_number,
+            default=None,
+        )
+        if latest is None:
+            if revision.revision_number != 1 or revision.supersedes_revision_id is not None:
+                raise ActividadAssetValidationError("asset creation requires revision number one")
+        elif (
+            revision.revision_number != latest.revision_number + 1
+            or revision.supersedes_revision_id != latest.revision_id
+        ):
+            raise ActividadAssetClaimConflictError("asset correction must supersede the current revision")
         return ActivityAssetHistory(revisions=(*self.revisions, revision), claims=self.claims)
 
     def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:

@@ -168,6 +168,37 @@ def partition_cross_period_requirements_by_activity_start(
     return _RequirementPartition(tuple(in_scope), tuple(suppressed))
 
 
+def _revision_dependency_inventory_items(
+    operation: PinnedAuthorityOperation, *, modelo_id: str, revision_id: str, filing_year: int, periods: Iterable[str]
+) -> tuple[CrossPeriodDependencyInventoryItem, ...]:
+    """Resolve filing-period snapshots in their declared order and retain dependencies."""
+    items: list[CrossPeriodDependencyInventoryItem] = []
+    for period in periods:
+        # A symbolic or administrative selector covers filings without
+        # naming one, so it has no single filing snapshot to inspect.
+        if not is_filing_period_token(str(period)):
+            continue
+        snapshot = operation.snapshot(
+            modelo_id,
+            filing_year=filing_year,
+            period=str(period),
+            revision_id=revision_id,
+        )
+        dependencies = cross_period_dependency_requirements(snapshot)
+        if not dependencies:
+            continue
+        items.append(
+            CrossPeriodDependencyInventoryItem(
+                target_modelo=str(snapshot.modelo.id),
+                target_revision_id=str(snapshot.revision.id),
+                target_filing_year=snapshot.filing_year,
+                target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
+                dependencies=dependencies,
+            ),
+        )
+    return tuple(items)
+
+
 def cross_period_dependency_inventory(
     operation: PinnedAuthorityOperation,
     *,
@@ -200,29 +231,15 @@ def cross_period_dependency_inventory(
             revision_payload = operation.revision(modelo_id, str(revision.id))
             if revision_payload.effective_authority_grade is not RegistryAuthorityGrade.FILING:
                 continue
-            for period in revision.period_selector.periods_for_year(filing_year):
-                # A symbolic or administrative selector covers filings without
-                # naming one, so it has no single filing snapshot to inspect.
-                if not is_filing_period_token(str(period)):
-                    continue
-                snapshot = operation.snapshot(
-                    modelo_id,
-                    filing_year=filing_year,
-                    period=str(period),
+            items.extend(
+                _revision_dependency_inventory_items(
+                    operation,
+                    modelo_id=modelo_id,
                     revision_id=str(revision.id),
+                    filing_year=filing_year,
+                    periods=revision.period_selector.periods_for_year(filing_year),
                 )
-                dependencies = cross_period_dependency_requirements(snapshot)
-                if not dependencies:
-                    continue
-                items.append(
-                    CrossPeriodDependencyInventoryItem(
-                        target_modelo=str(snapshot.modelo.id),
-                        target_revision_id=str(snapshot.revision.id),
-                        target_filing_year=snapshot.filing_year,
-                        target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
-                        dependencies=dependencies,
-                    ),
-                )
+            )
     return CrossPeriodDependencyInventory(
         filing_year=filing_year,
         items=tuple(
@@ -425,13 +442,20 @@ def _load_clean_state_repositories(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     justificante_repository: JustificanteRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogue | None,
+    filing_catalogue: ModeloRecordCatalogue | None,
+    verification_catalogue: VerificationReportCatalogue | None,
 ) -> _CleanStateRepositories:
     """Load all persistence inputs once for a clean-state evaluation."""
     return _CleanStateRepositories(
-        filing_catalogue=filing_repository.load(),
-        calculation_catalogue=calculation_repository.load(),
+        filing_catalogue=filing_repository.load() if filing_catalogue is None else filing_catalogue,
+        calculation_catalogue=(
+            calculation_repository.load(operation=operation) if calculation_catalogue is None else calculation_catalogue
+        ),
         verification_catalogue=require_verification_report_coordinates_current(
-            verification_repository.load(),
+            verification_repository.load(operation=operation)
+            if verification_catalogue is None
+            else verification_catalogue,
             operation=operation,
         ),
         justificante_repository=justificante_repository,
@@ -646,6 +670,9 @@ def evaluate_cross_period_clean_state(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     justificante_repository: JustificanteRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
+    filing_catalogue: ModeloRecordCatalogue | None = None,
+    verification_catalogue: VerificationReportCatalogue | None = None,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
     activity_start_date: date | None = None,
@@ -663,6 +690,10 @@ def evaluate_cross_period_clean_state(
     The supplied :class:`RegistrySnapshot` is
     the authority for target revision, filing period, and dependency
     requirements.
+
+    The optional catalogues may reuse the caller's freshly validated catalogues
+    within the same synchronous invocation and pinned operation. Omission loads
+    it here. This does not replace an independent persistence/currentness read.
 
     ``activity_start_date`` is the operator-declared activity-start date carried on
     the profile (the same field the deadline engine consumes for pre-start
@@ -710,6 +741,9 @@ def evaluate_cross_period_clean_state(
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
         justificante_repository=justificante_repository,
+        calculation_catalogue=calculation_catalogue,
+        filing_catalogue=filing_catalogue,
+        verification_catalogue=verification_catalogue,
     )
     expected_member_sets_by_key = _expected_member_sets_by_key(expected_member_sets)
     scope = _clean_state_requirement_scope(

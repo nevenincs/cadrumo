@@ -47,12 +47,14 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from dev.first_party_source import PRODUCT_PACKAGE, is_production_source
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 #: Scope is the shipped product tree, matching the sibling duplication runner: the
 #: duplication that matters is duplicate AUTHORITY in shipped code. ``dev/`` is
 #: scannable on demand by passing a different root, not by widening the default.
-_PRODUCT_SOURCE_ROOT = _REPO_ROOT / "src" / "cadrumo"
+_PRODUCT_SOURCE_ROOT = _REPO_ROOT / PRODUCT_PACKAGE
 
 #: Literals too common to carry meaning. Excluded by VALUE rather than by frequency
 #: so the exclusion is auditable: a frequency cut-off would silently drop a genuinely
@@ -105,9 +107,9 @@ class Module:
 
 
 def _iter_source_files(root: Path) -> Iterator[Path]:
-    """Yield every production module, excluding test packages."""
+    """Yield every production module under ``root``."""
     for path in sorted(root.rglob("*.py")):
-        if "tests" in path.parts or path.name == "conftest.py":
+        if not is_production_source(path, root=root):
             continue
         yield path
 
@@ -172,18 +174,7 @@ def _populate(modules: Sequence[Module], enum_names: frozenset[str]) -> None:
     """Fill each module's referenced-meaning sets in a single AST pass."""
     for module in modules:
         for node in ast.walk(module.tree):
-            if (
-                isinstance(node, ast.Attribute)
-                and isinstance(node.value, ast.Name)
-                and node.value.id in enum_names
-                and node.attr.isupper()
-            ):
-                module.enum_members.setdefault(node.value.id, set()).add(node.attr)
-            elif isinstance(node, ast.Constant) and isinstance(node.value, int | float | str):
-                if node.value not in _TRIVIAL_LITERALS and not isinstance(node.value, bool):
-                    module.literals.add(node.value)
-            elif isinstance(node, ast.ImportFrom) and node.module:
-                module.first_party_imports.add(f"{'.' * (node.level or 0)}{node.module}")
+            _populate_reference_node(node, module, enum_names)
 
 
 def detect_enum_subset(modules: Sequence[Module]) -> list[Candidate]:
@@ -237,10 +228,7 @@ def detect_scarce_literal(modules: Sequence[Module]) -> list[Candidate]:
     }
     shared: dict[tuple[str, str], set[object]] = collections.defaultdict(set)
     for literal, sites in scarce.items():
-        for left in sorted(sites):
-            for right in sorted(sites):
-                if left < right:
-                    shared[(left, right)].add(literal)
+        _accumulate_scarce_literal_pairs(literal, sites, shared)
     return [
         Candidate(
             detector="scarce_literal",
@@ -267,9 +255,8 @@ def _call_fingerprint(node: ast.FunctionDef | ast.AsyncFunctionDef) -> frozenset
             name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
             if name:
                 marks.add(f"call:{name}/{len(inner.args)}")
-        elif isinstance(inner, ast.Constant) and isinstance(inner.value, int | float | str):
-            if inner.value not in _TRIVIAL_LITERALS and not isinstance(inner.value, bool):
-                marks.add(f"lit:{inner.value!r}")
+        elif isinstance(inner, ast.Constant) and _meaningful_literal(inner):
+            marks.add(f"lit:{inner.value!r}")
         elif isinstance(inner, ast.Compare):
             marks.update(f"cmp:{type(op).__name__}" for op in inner.ops)
     return frozenset(marks)
@@ -313,17 +300,7 @@ def _normalised_expression(node: ast.AST) -> str | None:
     """
     marks: list[str] = []
     for inner in ast.walk(node):
-        if isinstance(inner, ast.Attribute) and inner.attr.isupper():
-            marks.append(f"member:{inner.attr}")
-        elif isinstance(inner, ast.Constant) and isinstance(inner.value, int | float | str):
-            if inner.value not in _TRIVIAL_LITERALS and not isinstance(inner.value, bool):
-                marks.append(f"lit:{inner.value!r}")
-        elif isinstance(inner, ast.Compare):
-            marks.extend(f"cmp:{type(op).__name__}" for op in inner.ops)
-        elif isinstance(inner, ast.IfExp):
-            marks.append("ternary")
-        elif isinstance(inner, ast.BoolOp):
-            marks.append(f"bool:{type(inner.op).__name__}")
+        _append_expression_mark(inner, marks)
     members = [mark for mark in marks if mark.startswith("member:")]
     if len(members) < 2:
         return None
@@ -375,13 +352,7 @@ def detect_field_set(modules: Sequence[Module]) -> list[Candidate]:
         for node in ast.walk(module.tree):
             if not isinstance(node, ast.ClassDef):
                 continue
-            fields = tuple(
-                sorted(
-                    inner.target.id
-                    for inner in node.body
-                    if isinstance(inner, ast.AnnAssign) and isinstance(inner.target, ast.Name)
-                ),
-            )
+            fields = _declared_field_names(node)
             if len(fields) >= _MIN_FIELD_SET:
                 by_fields[fields].append(f"{module.relative}:{node.lineno} {node.name}")
     return [
@@ -407,26 +378,7 @@ def detect_import_overlap(modules: Sequence[Module]) -> list[Candidate]:
     considered = [module for module in modules if len(module.first_party_imports) >= _MIN_IMPORT_SET]
     for index, left in enumerate(considered):
         for right in considered[index + 1 :]:
-            union = left.first_party_imports | right.first_party_imports
-            if not union:
-                continue
-            overlap = len(left.first_party_imports & right.first_party_imports) / len(union)
-            if overlap < _IMPORT_JACCARD_FLOOR:
-                continue
-            left_stem = Path(left.relative).stem
-            right_stem = Path(right.relative).stem
-            if any(right_stem in imported for imported in left.first_party_imports) or any(
-                left_stem in imported for imported in right.first_party_imports
-            ):
-                continue
-            candidates.append(
-                Candidate(
-                    detector="import_overlap",
-                    fingerprint=f"jaccard={overlap:.2f}",
-                    sites=(left.relative, right.relative),
-                    weight=int(overlap * 100),
-                ),
-            )
+            _append_import_overlap(left, right, candidates)
     return candidates
 
 
@@ -439,12 +391,7 @@ def detect_package_overlap(modules: Sequence[Module]) -> list[Candidate]:
     """
     by_package: dict[str, set[frozenset[str]]] = collections.defaultdict(set)
     for module in modules:
-        package = str(Path(module.relative).parent)
-        for node in ast.walk(module.tree):
-            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
-                fingerprint = _call_fingerprint(node)
-                if len(fingerprint) >= _MIN_CALL_FINGERPRINT:
-                    by_package[package].add(fingerprint)
+        _accumulate_package_fingerprints(module, by_package)
     packages = [(name, prints) for name, prints in by_package.items() if len(prints) >= 4]
     candidates: list[Candidate] = []
     for index, (left_name, left_prints) in enumerate(packages):
@@ -521,6 +468,100 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         sys.stdout.write(_render(candidates, args.limit) + "\n")
     return 0
+
+
+def _meaningful_literal(node: ast.Constant) -> bool:
+    """Use the existing scalar literal population, excluding trivial values and bool."""
+    return (
+        isinstance(node.value, int | float | str)
+        and node.value not in _TRIVIAL_LITERALS
+        and not isinstance(node.value, bool)
+    )
+
+
+def _declared_field_names(node: ast.ClassDef) -> tuple[str, ...]:
+    """Fingerprint exactly the annotated bare-name fields in the class body."""
+    fields = tuple(
+        sorted(
+            inner.target.id
+            for inner in node.body
+            if isinstance(inner, ast.AnnAssign) and isinstance(inner.target, ast.Name)
+        ),
+    )
+    return fields
+
+
+def _populate_reference_node(node: ast.AST, module: Module, enum_names: frozenset[str]) -> None:
+    """Populate reference node."""
+    if (
+        isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and node.value.id in enum_names
+        and node.attr.isupper()
+    ):
+        module.enum_members.setdefault(node.value.id, set()).add(node.attr)
+    elif isinstance(node, ast.Constant) and _meaningful_literal(node):
+        module.literals.add(node.value)
+    elif isinstance(node, ast.ImportFrom) and node.module:
+        module.first_party_imports.add(f"{'.' * (node.level or 0)}{node.module}")
+
+
+def _accumulate_scarce_literal_pairs(
+    literal: object, sites: set[str], shared: dict[tuple[str, str], set[object]]
+) -> None:
+    """Accumulate scarce literal pairs."""
+    for left in sorted(sites):
+        for right in sorted(sites):
+            if left < right:
+                shared[(left, right)].add(literal)
+
+
+def _append_import_overlap(left: Module, right: Module, candidates: list[Candidate]) -> None:
+    """Append import overlap."""
+    union = left.first_party_imports | right.first_party_imports
+    if not union:
+        return
+    overlap = len(left.first_party_imports & right.first_party_imports) / len(union)
+    if overlap < _IMPORT_JACCARD_FLOOR:
+        return
+    left_stem = Path(left.relative).stem
+    right_stem = Path(right.relative).stem
+    if any(right_stem in imported for imported in left.first_party_imports) or any(
+        left_stem in imported for imported in right.first_party_imports
+    ):
+        return
+    candidates.append(
+        Candidate(
+            detector="import_overlap",
+            fingerprint=f"jaccard={overlap:.2f}",
+            sites=(left.relative, right.relative),
+            weight=int(overlap * 100),
+        ),
+    )
+
+
+def _accumulate_package_fingerprints(module: Module, by_package: dict[str, set[frozenset[str]]]) -> None:
+    """Accumulate package fingerprints."""
+    package = str(Path(module.relative).parent)
+    for node in ast.walk(module.tree):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            fingerprint = _call_fingerprint(node)
+            if len(fingerprint) >= _MIN_CALL_FINGERPRINT:
+                by_package[package].add(fingerprint)
+
+
+def _append_expression_mark(inner: ast.AST, marks: list[str]) -> None:
+    """Append expression mark."""
+    if isinstance(inner, ast.Attribute) and inner.attr.isupper():
+        marks.append(f"member:{inner.attr}")
+    elif isinstance(inner, ast.Constant) and _meaningful_literal(inner):
+        marks.append(f"lit:{inner.value!r}")
+    elif isinstance(inner, ast.Compare):
+        marks.extend(f"cmp:{type(op).__name__}" for op in inner.ops)
+    elif isinstance(inner, ast.IfExp):
+        marks.append("ternary")
+    elif isinstance(inner, ast.BoolOp):
+        marks.append(f"bool:{type(inner.op).__name__}")
 
 
 if __name__ == "__main__":

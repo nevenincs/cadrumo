@@ -355,6 +355,32 @@ modelo:
         official_name: Modelo 222. Impost sobre Societats. Règim de consolidació fiscal.
           Pagament fraccionat.
         title: IS pagament fraccionat règim de consolidació fiscal (grups)
+      form:
+        authored2025:
+          ajustes-grupo:
+            heading: Ajustos de la base imposable del grup · DA 19a LIS
+          consolidacion:
+            heading: Diferiment de resultats i altres correccions de consolidació
+          dominante:
+            heading: Identificació de l’entitat dominant
+          dominante-id:
+            heading: Número d’identificació de la dominant
+          dominante-nombre:
+            heading: Raó social de la dominant
+          dominante-pais:
+            heading: País o territori foral de la dominant
+          grupo:
+            heading: Número del grup fiscal
+          identificacion:
+            heading: Entitat representant o dominant
+          inicio:
+            heading: Inici del període impositiu
+          nrs-variacion:
+            heading: Número de referència de la variació del grup
+          phone:
+            heading: Telèfon
+          variacion:
+            heading: Comunicació de variació en la composició del grup
       revision:
         '2022':
           field:

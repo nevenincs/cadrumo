@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:7f9f439b152fd32847fc35a2adaebcddadffd4084fdc8a123f95825fcc13aada'
 related:
-  - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
   - "[[2026-08-08-minimo-descendientes-eligibility-guarderia-cotizaciones-ceiling-adr]]"
 ---
 

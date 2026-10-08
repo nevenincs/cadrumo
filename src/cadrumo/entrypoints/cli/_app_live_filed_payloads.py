@@ -7,6 +7,7 @@ Core types:
 from __future__ import annotations
 
 from ...application.live.capture_mode import LiveCaptureMode, LiveCaptureModeValue
+from ...application.live.remote_state_models import FiledCapturePairOutcome
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.json_contract import OutputSchema
 from ...core.period import Period
@@ -116,23 +117,27 @@ class FiledDiscoverResult(OutputSchema):
 
 
 class FiledHistoryPairOutcomePayload(OutputSchema):
-    """What one walked ``(modelo, ejercicio)`` pair actually produced.
+    """What one discovered ``(modelo, ejercicio)`` pair actually produced.
 
     ``failure_message`` being set is a DIFFERENT fact from ``row_count`` being
     zero, and the two are carried separately on purpose. A truncated register
     page is refused by the walker and absorbed into a failure row, so folding it
     into "zero rows" would render a parse refusal as "no filings found" — the
     silent under-report this whole cluster exists to remove. Read
-    :attr:`refused` before reading :attr:`row_count`.
+    :attr:`walk_completed` before interpreting a zero :attr:`row_count`;
+    a later capture failure does not erase rows from a completed walk.
 
     Attributes:
         modelo: Modelo code.
         ejercicio: Filing year.
         signals: The discovery signal(s) that nominated this pair.
-        row_count: Register rows the walk returned. Meaningful only when the
-            pair did not refuse.
-        captured_count: Declaraciones actually captured from those rows.
-        refused: Whether the pair produced a failure row instead of an answer.
+        walk_attempted: Whether the register walk started for this planned pair.
+        walk_completed: Whether the walk returned its register rows.
+        row_count: Register rows the completed walk returned, even if later
+            capture or finalization failed.
+        reached_count: Observations successfully absorbed by the capture loop.
+        captured_count: Declaraciones actually persisted from those rows.
+        refused: Whether the pair produced a walk, capture or finalization failure.
         failure_type: Exception type of the refusal, when refused.
         failure_message: Bounded refusal text, when refused.
     """
@@ -140,8 +145,11 @@ class FiledHistoryPairOutcomePayload(OutputSchema):
     modelo: str
     ejercicio: int
     signals: list[str]
-    row_count: int = 0
-    captured_count: int = 0
+    walk_attempted: bool
+    walk_completed: bool
+    row_count: int
+    reached_count: int
+    captured_count: int
     refused: bool = False
     failure_type: str | None = None
     failure_message: str | None = None
@@ -161,7 +169,7 @@ class FiledHistoryOnboardingResult(OutputSchema):
 
     Attributes:
         pairs: Per-pair outcomes, each tagged with the signal(s) behind it.
-        pair_count: Pairs walked.
+        pair_count: Discovered/planned pairs; individual walk flags report execution.
         profile_expected_count: Pairs the taxpayer's declared facts expected.
         register_options_only_count: Pairs offered only by the unconfirmed list.
         refused_count: Pairs that produced a failure row rather than an answer.
@@ -220,11 +228,14 @@ class FiledCaptureResult(OutputSchema):
     modelo: str | None = None
     year: int | None = None
     modelos: list[str] = []
+    pair_outcomes: list[FiledCapturePairOutcome] = []
     year_from: int | None = None
     year_to: int | None = None
     captured_count: int
+    reached_count: int
     failed_count: int = 0
     dry_run: bool = False
+    sync_run_ref: str | None = None
     observation_paths: list[str]
     artefact_refs: list[str]
     justificante_metadata_count: int = 0
@@ -254,6 +265,7 @@ class FiledCaptureSourcesResult(OutputSchema):
     target_year: int
     target_period: Period
     captured_count: int
+    reached_count: int
     observation_paths: list[str]
     artefact_refs: list[str]
     justificante_metadata_count: int = 0
@@ -265,6 +277,7 @@ class FiledCaptureSourcesResult(OutputSchema):
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: list[str]
+    reconciliations: list[FilingReconciliationPayload] = []
 
 
 __all__ = [

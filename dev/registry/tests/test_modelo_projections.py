@@ -10,8 +10,9 @@ import pytest
 
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.payloads import ScalarFactPayload
 from cadrumo.domain.calculations.registry.facts.resolution import ScalarFactQuery
-from cadrumo.domain.calculations.registry.facts.schema import FactSelector, ScalarFactPayload
+from cadrumo.domain.calculations.registry.facts.variants import FactSelector
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition

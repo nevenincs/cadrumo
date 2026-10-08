@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:c41dc6f7fd7c9a2d2c44816b01d2268b97c7e1b26417a653922da8bc94f956bf'
+modified: '2026-10-03'
+body_hash: 'sha256:48bc4d3955f470817e35a653463b4d352dbdd068efbf846e5c8f81443c42c556'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S173-001 | PASS | Bucket session remains instance-scoped custody
 
-`src/aeat/adapters/persistence/storage/master_key/_bucket_session.py` keeps KEK and DEK material in per-instance `bytearray` buffers. It does not reintroduce provider `ClassVar` state or module-global key caches. `close()` zeroises both buffers before sealing the session and is idempotent.
+The retired module keeps KEK and DEK material in per-instance `bytearray` buffers. It does not reintroduce provider `ClassVar` state or module-global key caches. `close()` zeroises both buffers before sealing the session and is idempotent.
 
 The `kek` and `dek` properties still materialise immutable `bytes` copies; this is documented as a Python-language limitation rather than claimed as guaranteed deep zeroisation.
 
@@ -32,8 +32,8 @@ The new regression test opens a real `BucketSession`, enters a real `override_se
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/master_key/test_adverse_sessions.py src/aeat/adapters/persistence/storage/master_key/test_master_key.py src/aeat/adapters/persistence/storage/test_runtime.py` passed with 94 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/master_key/_bucket_session.py src/aeat/adapters/persistence/storage/master_key/test_adverse_sessions.py src/aeat/adapters/persistence/storage/master_key/test_master_key.py src/aeat/adapters/persistence/storage/test_runtime.py` passed.
+- the historical check passed with 94 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - Touched-surface hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, direct encoding literals, direct settings construction, direct environment access, or local secure-object marker construction.
 

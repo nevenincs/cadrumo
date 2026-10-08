@@ -27,6 +27,7 @@ from __future__ import annotations
 import ast
 import sys
 import unicodedata
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import override
@@ -70,30 +71,7 @@ def _annotation_subtrees(tree: ast.Module) -> set[int]:
         exempt.update(id(sub) for sub in ast.walk(node))
 
     for node in ast.walk(tree):
-        if isinstance(node, ast.AnnAssign):
-            mark(node.annotation)
-        elif isinstance(node, ast.TypeAlias):
-            # PEP 695 `type X = ...` defers its value the same way an annotation
-            # is deferred, so a guard-only name on the right-hand side is
-            # correct rather than a latent NameError.
-            mark(node.value)
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef | ast.TypeAlias):
-            # PEP 695 type-parameter bounds and defaults defer the same way.
-            for parameter in getattr(node, "type_params", ()):
-                mark(getattr(parameter, "bound", None))
-                mark(getattr(parameter, "default_value", None))
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
-            mark(node.returns)
-            arguments = node.args
-            for slot in (
-                *arguments.posonlyargs,
-                *arguments.args,
-                *arguments.kwonlyargs,
-                arguments.vararg,
-                arguments.kwarg,
-            ):
-                if slot is not None:
-                    mark(slot.annotation)
+        _mark_node_annotations(node, mark)
     return exempt
 
 
@@ -106,18 +84,7 @@ def _runtime_bound_names(tree: ast.Module, guarded: set[int]) -> set[str]:
     """
     bound: set[str] = set()
     for node in ast.walk(tree):
-        if id(node) in guarded:
-            continue
-        if isinstance(node, ast.ImportFrom):
-            bound.update(alias.asname or alias.name for alias in node.names)
-        elif isinstance(node, ast.Import):
-            bound.update(alias.asname or alias.name.split(".", 1)[0] for alias in node.names)
-        elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
-            bound.add(node.name)
-        elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
-            bound.add(node.id)
-        elif isinstance(node, ast.alias):  # pragma: no cover - covered via parents above
-            continue
+        _collect_runtime_binding(node, guarded, bound)
     return bound
 
 
@@ -133,6 +100,122 @@ def scan_type_only_runtime_uses(path: Path, *, source: str | None = None) -> lis
     half-written file must not cost the thousands that parsed. Measured over
     the shipped tree: 5844 modules, none unparsable and none undecodable.
     """
+    text = _read_runtime_use_source(path, source)
+    if text is None:
+        return []
+    tree = _parse_runtime_use_source(path, text)
+    if tree is None:
+        return []
+
+    # The guard is an identifier, and Python folds identifiers to NFKC, so a
+    # module whose folded text never spells it holds no guarded node to walk for.
+    folded = text if text.isascii() else unicodedata.normalize("NFKC", text)
+    if TYPE_CHECKING_GUARD_NAME not in folded:
+        return []
+    guarded = type_checking_guarded_nodes(tree)
+    if not guarded:
+        return []
+
+    type_only: dict[str, int] = {}
+    for node in ast.walk(tree):
+        _collect_type_only_binding(node, guarded, type_only)
+
+    runtime_bound = _runtime_bound_names(tree, guarded)
+    candidates = {name: lineno for name, lineno in type_only.items() if name not in runtime_bound}
+    return _find_runtime_uses(tree, guarded, candidates, path)
+
+
+def scan_paths_for_type_only_runtime_uses(paths: tuple[Path, ...]) -> list[TypeOnlyRuntimeUse]:
+    """Scan many modules, reported in a stable order."""
+    found: list[TypeOnlyRuntimeUse] = []
+    for path in sorted(paths):
+        found.extend(scan_type_only_runtime_uses(path))
+    return found
+
+
+def _mark_node_annotations(node: ast.AST, mark: Callable[[ast.AST | None], None]) -> None:
+    """Mark node annotations."""
+    if isinstance(node, ast.AnnAssign):
+        mark(node.annotation)
+    elif isinstance(node, ast.TypeAlias):
+        # PEP 695 `type X = ...` defers its value the same way an annotation
+        # is deferred, so a guard-only name on the right-hand side is
+        # correct rather than a latent NameError.
+        mark(node.value)
+    if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef | ast.TypeAlias):
+        # PEP 695 type-parameter bounds and defaults defer the same way.
+        for parameter in getattr(node, "type_params", ()):
+            mark(getattr(parameter, "bound", None))
+            mark(getattr(parameter, "default_value", None))
+    if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+        mark(node.returns)
+        arguments = node.args
+        for slot in (
+            *arguments.posonlyargs,
+            *arguments.args,
+            *arguments.kwonlyargs,
+            arguments.vararg,
+            arguments.kwarg,
+        ):
+            if slot is not None:
+                mark(slot.annotation)
+
+
+def _collect_runtime_binding(node: ast.AST, guarded: set[int], bound: set[str]) -> None:
+    """Collect runtime binding."""
+    if id(node) in guarded:
+        return
+    if isinstance(node, ast.ImportFrom):
+        _collect_runtime_from_binding(node, bound)
+    elif isinstance(node, ast.Import):
+        _collect_runtime_import_binding(node, bound)
+    elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+        bound.add(node.name)
+    elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+        bound.add(node.id)
+    elif isinstance(node, ast.alias):  # pragma: no cover - covered via parents above
+        return
+
+
+def _collect_type_only_binding(node: ast.AST, guarded: set[int], type_only: dict[str, int]) -> None:
+    """Collect type only binding."""
+    if id(node) not in guarded:
+        return
+    if isinstance(node, ast.ImportFrom):
+        for alias in node.names:
+            type_only.setdefault(alias.asname or alias.name, node.lineno)
+    elif isinstance(node, ast.Import):
+        for alias in node.names:
+            type_only.setdefault(alias.asname or alias.name.split(".", 1)[0], node.lineno)
+
+
+def _collect_runtime_use(
+    node: ast.AST,
+    exempt: set[int],
+    guarded: set[int],
+    candidates: dict[str, int],
+    path: Path,
+    found: list[TypeOnlyRuntimeUse],
+) -> None:
+    """Collect runtime use."""
+    if not (isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)):
+        return
+    if id(node) in exempt or id(node) in guarded:
+        return
+    bound_lineno = candidates.get(node.id)
+    if bound_lineno is not None:
+        found.append(
+            TypeOnlyRuntimeUse(
+                path=path,
+                name=node.id,
+                bound_lineno=bound_lineno,
+                used_lineno=node.lineno,
+            )
+        )
+
+
+def _read_runtime_use_source(path: Path, source: str | None) -> str | None:
+    """Read runtime use source."""
     if source is not None:
         text = source
     else:
@@ -148,7 +231,7 @@ def scan_type_only_runtime_uses(path: Path, *, source: str | None = None) -> lis
                 f"type-only runtime-use scan: {path} could not be read and was not scanned, so a "
                 f"guard-only name evaluated at runtime in it goes unreported: {error}" + chr(10)
             )
-            return []
+            return None
         except UnicodeDecodeError as error:
             # Read strictly. With errors='ignore' an undecodable byte was dropped
             # and the scan then analysed text that is not what the file contains -
@@ -156,7 +239,22 @@ def scan_type_only_runtime_uses(path: Path, *, source: str | None = None) -> lis
             sys.stderr.write(
                 f"type-only runtime-use scan: {path} is not valid UTF-8 and was not scanned: {error}" + chr(10)
             )
-            return []
+            return None
+    return text
+
+
+def _collect_runtime_from_binding(node: ast.ImportFrom, bound: set[str]) -> None:
+    """Collect runtime from binding."""
+    bound.update(alias.asname or alias.name for alias in node.names)
+
+
+def _collect_runtime_import_binding(node: ast.Import, bound: set[str]) -> None:
+    """Collect runtime import binding."""
+    bound.update(alias.asname or alias.name.split(".", 1)[0] for alias in node.names)
+
+
+def _parse_runtime_use_source(path: Path, text: str) -> ast.Module | None:
+    """Parse runtime use source."""
     try:
         tree = ast.parse(text)
     except SyntaxError as error:
@@ -164,56 +262,19 @@ def scan_type_only_runtime_uses(path: Path, *, source: str | None = None) -> lis
             f"type-only runtime-use scan: {path} does not parse and was not scanned, so a "
             f"guard-only name evaluated at runtime in it goes unreported: {error}" + chr(10)
         )
-        return []
+        return None
+    return tree
 
-    # The guard is an identifier, and Python folds identifiers to NFKC, so a
-    # module whose folded text never spells it holds no guarded node to walk for.
-    folded = text if text.isascii() else unicodedata.normalize("NFKC", text)
-    if TYPE_CHECKING_GUARD_NAME not in folded:
-        return []
-    guarded = type_checking_guarded_nodes(tree)
-    if not guarded:
-        return []
 
-    type_only: dict[str, int] = {}
-    for node in ast.walk(tree):
-        if id(node) not in guarded:
-            continue
-        if isinstance(node, ast.ImportFrom):
-            for alias in node.names:
-                type_only.setdefault(alias.asname or alias.name, node.lineno)
-        elif isinstance(node, ast.Import):
-            for alias in node.names:
-                type_only.setdefault(alias.asname or alias.name.split(".", 1)[0], node.lineno)
-
-    runtime_bound = _runtime_bound_names(tree, guarded)
-    candidates = {name: lineno for name, lineno in type_only.items() if name not in runtime_bound}
+def _find_runtime_uses(
+    tree: ast.Module, guarded: set[int], candidates: dict[str, int], path: Path
+) -> list[TypeOnlyRuntimeUse]:
+    """Find runtime uses."""
     if not candidates:
         return []
 
     exempt = _annotation_subtrees(tree)
     found: list[TypeOnlyRuntimeUse] = []
     for node in ast.walk(tree):
-        if not (isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)):
-            continue
-        if id(node) in exempt or id(node) in guarded:
-            continue
-        bound_lineno = candidates.get(node.id)
-        if bound_lineno is not None:
-            found.append(
-                TypeOnlyRuntimeUse(
-                    path=path,
-                    name=node.id,
-                    bound_lineno=bound_lineno,
-                    used_lineno=node.lineno,
-                )
-            )
-    return found
-
-
-def scan_paths_for_type_only_runtime_uses(paths: tuple[Path, ...]) -> list[TypeOnlyRuntimeUse]:
-    """Scan many modules, reported in a stable order."""
-    found: list[TypeOnlyRuntimeUse] = []
-    for path in sorted(paths):
-        found.extend(scan_type_only_runtime_uses(path))
+        _collect_runtime_use(node, exempt, guarded, candidates, path, found)
     return found

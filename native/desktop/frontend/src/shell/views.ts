@@ -1,0 +1,122 @@
+// Read-only views of the signed-in profile that a host may offer the shell.
+// The calendar mirrors what the product's own command reports, field for
+// field, for the fields the shell shows: nothing in it is computed or
+// renamed, so a state the product keeps apart stays apart on screen. The
+// notifications are counts only, taken by the host, so that no row of them
+// reaches the window.
+
+/** What the person still has to do about an obligation. */
+export type CalendarUserState = "due" | "late" | "filed" | "unknown";
+
+/** The local filing work. Never a statement about the tax agency. */
+export type LocalFilingState =
+  "not_ready_to_file" | "ready_to_file" | "external_baseline_imported";
+
+/** What has been observed of the tax agency's side, from evidence already
+ * captured. `not_observed` is not "not submitted". */
+export type AeatSubmissionState =
+  "not_observed" | "submitted_observed" | "accepted" | "justificante_verified";
+
+/** One obligation of the calendar: a Modelo and its period. */
+export type CalendarEntry = {
+  modelo: string;
+  period: string;
+  /** The day the filing window opens, as an ISO date. The product's calendar
+   * command does not report it in its list today, though the product knows
+   * it; null where a host has no source for it. The window is then not
+   * drawn, only its close: an opening is never guessed. */
+  opens_on: string | null;
+  /** The legal closing date, as an ISO date. */
+  closes_on: string;
+  /** The closing date after weekends and holidays; the one that binds. */
+  adjusted_closes_on: string;
+  /** Why the two differ; `none` when they do not. */
+  shift_reason: string;
+  /** The last day a direct debit can be ordered, where one applies. */
+  payment_cutoff_on: string | null;
+  /** The day the states below were worked out for. */
+  evaluated_on: string;
+  /** Days past the binding date; set only for a late obligation. */
+  days_overdue: number | null;
+  user_state: CalendarUserState;
+  local_filing_state: LocalFilingState;
+  aeat_submission_state: AeatSubmissionState;
+  justificante_verified: boolean;
+};
+
+/** Something observed beside the legal calendar: a filing that was made, or
+ * a message from the agency. It is a record of what was seen and when, and
+ * never by itself a statement that an obligation is met. */
+export type CalendarEvent = {
+  event_type: "filing" | "message";
+  /** The day it happened, as an ISO date. */
+  event_date: string;
+  /** Where the observation comes from. */
+  source: string;
+  /** The product's own sentence for it, in the output language. */
+  summary: string;
+  reference_id: string;
+  status: string | null;
+  aeat_submission_state: AeatSubmissionState | null;
+  aeat_submitted_at: string | null;
+  justificante_verified: boolean | null;
+};
+
+/** A profile detail the calendar had to assume, with the product's own
+ * sentence about it in the output language. */
+export type CalendarWarning = {
+  code: string;
+  message: string;
+  affected_modelos: string[];
+};
+
+/** Every Modelo the calendar considered, in exactly one disposition. */
+export type CalendarCoverage = {
+  surfaced: string[];
+  confidently_excluded: string[];
+  /** Obligations that could not be positively scoped: not known to be absent. */
+  advised: {
+    modelo: string;
+    reason:
+      | "applicable_window_missing"
+      | "applicability_undetermined"
+      | "registry_unmodeled";
+  }[];
+  out_of_scope: string[];
+};
+
+/** The filing calendar of one profile over a range of dates, from local
+ * records only. Reading it never asks the tax agency anything. */
+export type FilingCalendar = {
+  range: { from_date: string; to_date: string };
+  entries: CalendarEntry[];
+  /** What was observed in the range: the profile's own filing history and
+   * the agency's messages, as the product recorded them. */
+  events: CalendarEvent[];
+  warnings: CalendarWarning[];
+  /** When the product worked this out. */
+  generated_at: string | null;
+  coverage: CalendarCoverage;
+};
+
+/** What the last capture of the tax agency's notifications held, as counts.
+ * The rows carry names and tax numbers, and the window has no use for them:
+ * the host counts and passes on only this. */
+export type NotificationsSummary = {
+  /** When the notifications were last captured from the agency; null when
+   * they never were, which is not "no notifications". */
+  captured_at: string | null;
+  /** Rows in that capture. */
+  row_count: number;
+  /** Rows the agency had not marked as read when they were captured. */
+  unread: number;
+};
+
+/** The views a host offers. A host without them offers none: the shell then
+ * shows no way into them, rather than a way into something that cannot load. */
+export interface ProfileViews {
+  /** Counts from the last capture. Refused when nobody is signed in. */
+  notifications(): Promise<NotificationsSummary>;
+  /** Dates are inclusive ISO dates. Refused when nobody is signed in. */
+  filingCalendar(range: { from: string; to: string }): Promise<FilingCalendar>;
+}

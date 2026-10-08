@@ -92,29 +92,46 @@ def test_novel_source_binding_raises_not_silent_zero() -> None:
     assert "synthetic_unrouted_source_qqq" in novel_kinds
 
 
-def test_row_producing_binding_uses_its_detail_row_channel() -> None:
-    """An unknown row source does not need a scalar source-mesh resolver."""
-    revision = published_snapshot("232", filing_year=2025, period="0A").revision
+def test_row_producing_binding_with_an_unrouted_source_is_refused() -> None:
+    """Row shape earns no exemption: an unrouted row source refuses like a scalar one.
+
+    The stand-in carries a committed row binding's own aggregation, so the
+    unrouted source kind is the only thing separating it from a binding the
+    gate accepts. ``source`` is projected from the closed provider union, so
+    an unrouted kind only exists on a stand-in.
+    """
+    revision = published_snapshot("349", filing_year=2025, period="4T").revision
     row_binding = next(
         binding
         for binding in revision.bindings
         if getattr(binding.aggregation, "op", None) is BindingAggregationOp.ROWS
     )
-    synthetic = row_binding.model_copy(update={"source": "synthetic_row_source_qqq"})
+    assert_no_novel_source_kinds(revision)
+
+    synthetic = SimpleNamespace(
+        id="synthetic-row-source-binding",
+        source="synthetic_row_source_qqq",
+        aggregation=row_binding.aggregation,
+    )
     patched = revision.model_copy(update={"bindings": (*revision.bindings, synthetic)})
 
-    assert_no_novel_source_kinds(patched)
+    with pytest.raises(ModeloAggregationBindingError) as exc_info:
+        assert_no_novel_source_kinds(patched)
+
+    context = exc_info.value.context
+    assert context is not None
+    assert context["novel_source_kinds"] == ["synthetic_row_source_qqq"]
 
 
 def _deferred_binding() -> BindingDefinition:
-    grouping = ROW_SET_GROUPING_FOR_BINDING_SOURCE[BindingSourceKind.RELATED_PARTY_OPERATION]
+    grouping = ROW_SET_GROUPING_FOR_BINDING_SOURCE[BindingSourceKind.GASTO193_CONTRIBUTOR]
     return BindingDefinition.model_validate(
         {
-            "id": "synthetic-deferred-related-party-rows",
-            "provider": {"kind": "related_party_operation", "fact": "row_field", "row_field": "counterparty_tax_id"},
-            "value": {"data_type": "money", "channel": "row_set", "row_grouping": grouping},
+            "id": "synthetic-deferred-gasto193-rows",
+            "provider": {"kind": "gasto193_contributor", "fact": "row_field", "row_field": "contributor_tax_id"},
+            "value": {"data_type": "text", "channel": "row_set", "row_grouping": grouping},
             "aggregation": {"op": "rows"},
-            "legal_refs": ("ley-27-2014:art-18",),
+            "legal_refs": ("ley-35-2006:art-25",),
             "source_refs": ("aeat-manual",),
         },
     )
@@ -139,5 +156,5 @@ def test_deferred_source_binding_surfaces_as_deferred_diagnostic() -> None:
     diagnostics = collect_unhandled_source_diagnostics(patched, handled_sources=frozenset())
 
     assert [d.reason for d in diagnostics] == ["deferred_binding_source"]
-    assert diagnostics[0].binding_id == "synthetic-deferred-related-party-rows"
-    assert diagnostics[0].source_kind == "related_party_operation"
+    assert diagnostics[0].binding_id == "synthetic-deferred-gasto193-rows"
+    assert diagnostics[0].source_kind == "gasto193_contributor"

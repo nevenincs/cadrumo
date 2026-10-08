@@ -118,7 +118,6 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
             # C03 (rendimiento neto) is bound, not computed; supply the
             # actividad-economica cumulative binding value so the bound
             # casilla resolves.
-            "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("6000"),
         },
     )
 

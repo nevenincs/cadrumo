@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:e70fcedaedd8d659e828e2cf6812ac65ab4ac8d9bdd8929f757491a3346545c2'
+body_hash: 'sha256:beb9a4a773851e34bb982c80d2f7961dd79d35270e52c89816098b80a4b00a83'
 related:
   - "[[2026-08-31-aeat-export-fragment-generator-authority-source-defect-adjudication-adr]]"
 ---
@@ -24,7 +24,7 @@ Two independent passes were run, because a single pass could not separate a defe
 
 The first pass bypassed project code entirely: the workbook was opened as a zip archive and `xl/sharedStrings.xml` read directly. It contains, verbatim, `</T39001000>`, `</T39002000>`, `</T39003000>`, `</T39004000>`, `</T39005000>`, `</T39006000>`, `</T3900700>` and `</T39008000>`. The eleven-character string is present in the AEAT file itself, so no parser is implicated.
 
-The second pass used the production reader rather than a hand-rolled one. Each cell was loaded through `load_record_design_intermediate` in `dev/registry/pipeline/_record_design_ir.py` and then put through the exact extraction path the export-tree gate applies in `dev/registry/pipeline/_export_tree.py` -- `_split_official_note_references`, the `_OFFICIAL_QUOTE_FOLD` translation and `_OFFICIAL_LITERAL_RE` -- and the extracted literal compared against the `length` the same field declares.
+The second pass used the production reader rather than a hand-rolled one.
 
 An earlier hand-written version of this check compared the raw cell text against the slot width and reported all eight pages as broken. That reading was an artifact: `content` carries the whole cell, `Constante "</T39001000>"` wrapper included, which the production regex strips. The measurement below is the one taken with the production parser.
 
@@ -53,6 +53,6 @@ The defective reading is additionally unusable, not merely disfavoured. Adopting
 
 The refusal surfaces as `RegistryValidationError: literal field 'modelo-390-page-07-close' value does not agree byte-for-byte with the exact official constant content`, raised in `dev/registry/pipeline/_export_tree.py`.
 
-That module has no anomaly or exception hook of any kind. The similarly-named `anomaly_exceptions` parameter belongs to a different validator, `validate_semantic_map` in `dev/registry/pipeline/_semantic_map_validation.py`, whose own docstring records that such entries are documentary and that validation "never consults them to waive source, reference, or bijection validation". It cannot resolve this refusal and was never intended to.
+That module has no anomaly or exception hook of any kind. It cannot resolve this refusal and was never intended to.
 
 The semantic map itself is not implicated: `validate_semantic_map` passes all 537 entries, because the map is internally consistent with the committed layout. Only the byte comparison against the pinned design can reach an error in the source document, which is what it did here.

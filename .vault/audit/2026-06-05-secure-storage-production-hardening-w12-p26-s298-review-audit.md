@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:2d83a005fe22bacbaad37db4bf97c351669fb2e72eefbf843aff773ba56e8484'
+modified: '2026-10-03'
+body_hash: 'sha256:6a8a43bffe955e92f6833d9d5b1dc5844080f1a5713b262e958fef7617027185'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S298-001 | FIXED | i18n fallback paths swallowed root-cause detail unevenly
 
-`src/aeat/core/i18n/_render.py` had several fallback branches that returned a safe
+The retired module had several fallback branches that returned a safe
 default but did not consistently leave enough debug context. Locale-load failures now
 log with `exc_info=True`, settings-load fallback logs the exception type and traceback,
 and interpolation format failures log the translation key and exception type before
@@ -42,7 +42,7 @@ test-only locale catalogue entries.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/core/i18n/_render.py src/aeat/core/i18n/test_render_override.py`
-- `uv run --no-sync pytest -q src/aeat/core/i18n/test_render_override.py src/aeat/core/i18n/test_placeholder_parity.py src/aeat/core/errors/test_registry.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "core i18n render output_language profile resolver interpolation exception logging secure storage" --type code --port 8766 --max-results 8`

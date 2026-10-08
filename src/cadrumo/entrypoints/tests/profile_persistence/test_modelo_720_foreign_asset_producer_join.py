@@ -46,7 +46,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -69,6 +69,8 @@ from .verification_repository_support import (
 __all__ = ["register_wizard_catalogue"]
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.foreign_assets import ForeignAssetRegisterRepository
+from ....adapters.persistence.profile.tests.foreign_asset_authoring import declare_foreign_asset, register_asset
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.foreign_assets import ForeignAssetIngestObservation
@@ -76,10 +78,11 @@ from ....application.calculations.foreign_asset_redeclaration import modelo_720_
 from ....application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.aggregation import BindingSourceKind, ForeignAssetClass
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.foreign_asset_obligation import M720AssetClassCode
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -88,6 +91,14 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.foreign_assets.register import (
+    ForeignAssetDeclarationEntry,
+    ForeignAssetRegisterEntry,
+    M720AssetIdentifier,
+    M720DeclarantCondition,
+    M720IdentifierScheme,
+)
+from ....domain.foreign_assets.valuation import M720ValuationEvent
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.verification_report import VerificationReport
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -116,6 +127,9 @@ _INMUEBLES_N = Decimal("0.00")
 _CUENTAS_N1 = Decimal("85000.00")
 _VALORES_N1 = Decimal("65000.00")
 
+_CUENTAS_ASSET_REF = "m720a_" + "a1" * 16
+_VALORES_ASSET_REF = "m720a_" + "b2" * 16
+
 #: The two ``row_field`` selectors the evidence projection joins on. Named here
 #: independently of the production constants so a rename on one side is a
 #: divergence this module can see rather than one it silently follows.
@@ -126,7 +140,7 @@ _ADVISORY_LOCALE_KEY = "application.modelo.findings.foreign_asset_redeclaration"
 
 
 @contextmanager
-def _secure_backend(tmp_path: Path) -> Generator[None]:
+def _secure_backend(tmp_path: Path, *, register_assets: bool) -> Generator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         seed_test_profile_record(
             _create_profile_record_for_test(
@@ -166,7 +180,46 @@ def _secure_backend(tmp_path: Path) -> Generator[None]:
                 context=_profile_creation_context_for_test(),
             ),
         )
+        if register_assets:
+            _register_and_declare_the_assets()
         yield
+
+
+def _register_and_declare_the_assets() -> None:
+    """Register both assets once and declare the taxpayer their sole holder (condition 1, 100%)."""
+    register = ForeignAssetRegisterRepository(bucket_id=_BUCKET_ID)
+    for asset_ref, asset_class, country, identifier in (
+        (
+            _CUENTAS_ASSET_REF,
+            M720AssetClassCode.CUENTA,
+            "LU",
+            M720AssetIdentifier(scheme=M720IdentifierScheme.IBAN, value="LU280019400644750000"),
+        ),
+        (
+            _VALORES_ASSET_REF,
+            M720AssetClassCode.VALOR,
+            "DE",
+            M720AssetIdentifier(scheme=M720IdentifierScheme.ISIN, value="DE0007164600"),
+        ),
+    ):
+        register_asset(
+            register,
+            ForeignAssetRegisterEntry(
+                asset_ref=asset_ref,
+                asset_class=asset_class,
+                subclave=1,
+                country_code=country,
+                identifier=identifier,
+                description="synthetic foreign asset",
+                held_since=date(2015, 1, 1),
+            ),
+        )
+        declare_foreign_asset(
+            register,
+            ForeignAssetDeclarationEntry(
+                asset_ref=asset_ref, condition=M720DeclarantCondition.TITULAR, participation_pct=Decimal("100.00")
+            ),
+        )
 
 
 def _resident_profile() -> TaxpayerProfile:
@@ -188,24 +241,28 @@ def _foreign_asset_observations() -> tuple[ForeignAssetIngestObservation, ...]:
         ForeignAssetIngestObservation(
             source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
             source_object_id="evidence-cuentas-lu-0001",
+            asset_ref=_CUENTAS_ASSET_REF,
             asset_class=ForeignAssetClass.ACCOUNT,
             asset_external_id="LU280019400644750000",
             country="LU",
             issuer_or_institution="Banque Internationale a Luxembourg",
-            valuation_eur=_CUENTAS_N1,
+            valuation_amount=_CUENTAS_N1,
+            currency_code="EUR",
+            valuation_event=M720ValuationEvent.YEAR_END,
             acquisition_date="2019-04-01",
-            held_at_year_end=True,
         ),
         ForeignAssetIngestObservation(
             source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
             source_object_id="evidence-valores-de-0001",
+            asset_ref=_VALORES_ASSET_REF,
             asset_class=ForeignAssetClass.SECURITY,
             asset_external_id="DE0007164600",
             country="DE",
             issuer_or_institution="SAP SE",
-            valuation_eur=_VALORES_N1,
+            valuation_amount=_VALORES_N1,
+            currency_code="EUR",
+            valuation_event=M720ValuationEvent.YEAR_END,
             acquisition_date="2020-09-15",
-            held_at_year_end=True,
         ),
     )
 
@@ -236,7 +293,9 @@ def _calculate_through_the_mesh(
     The foreign-asset rows are _produced by the enrolled resolver from
     *observations*; nothing in this helper hand-writes ``row_binding_values``.
     """
-    with _secure_backend(tmp_path):
+    # With no holdings supplied nothing is registered either: a registered asset
+    # held in the year would rightly refuse the calculation without its valuation.
+    with _secure_backend(tmp_path, register_assets=bool(observations)):
         observation_repository = CalculationObservationRepository()
         observation_repository.save(
             observation_repository.prepare_observation_envelope(
@@ -300,7 +359,7 @@ def _calculate_through_the_mesh(
                 clock=_CLOCK_N_PLUS_1,
             ).revision
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
@@ -309,7 +368,7 @@ def _calculate_through_the_mesh(
                 clock=_CLOCK_N_PLUS_1,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         return revision, snapshot.revision, report
 
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -25,12 +24,16 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_slot
-from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.modelos.calculation_revision import CalculationRevision
+from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.tests.modelo_349_invoice_facts import (
+    M349_EXPECTED_IMPORTE,
+    M349_EXPECTED_OPERADORES,
+    M349_INVOICES,
+    intra_community_invoice,
+)
 from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
     _T0,
     _T1,
@@ -38,9 +41,9 @@ from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_suppor
     _seed_ready_profile,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.hex_entrypoint]
 
-# Chain 3 — M349 invoices (collectible_invoice): PROVEN LIVE
+# Chain 3 — M349 invoices (m349_intracommunity_operation): PROVEN LIVE
 # ---------------------------------------------------------------------------
 
 _M349_BUCKET = "34900000-0000-4000-8000-000000000013"
@@ -50,19 +53,6 @@ _M349_IMPORTE_CASILLA: CasillaId = validated_casilla_id("decl.importe-operacione
 _M349_IMPORTE_BINDING = "iva-349-declarante-importe-operaciones"
 _M349_OPERADORES_CASILLA: CasillaId = validated_casilla_id("decl.numero-operadores")
 
-# Three DISTINCT non-equal ISSUED intra-community supply bases (clave E) to three
-# distinct EU operators, all issued inside 1T (Jan-Mar). decl.importe-operaciones
-# (base_sum) must fold the three bases; decl.numero-operadores (count_distinct)
-# must count the three distinct operators.
-_M349_INVOICES: tuple[tuple[str, str, str, date, Decimal], ...] = (
-    # (invoice_number, counterparty_country, counterparty_tax_id, issued_at, base_total)
-    ("F-2026-001", "DE", "DE123456789", date(2026, 1, 15), Decimal("1000.00")),
-    ("F-2026-002", "FR", "FR12345678901", date(2026, 2, 10), Decimal("2500.50")),
-    ("F-2026-003", "IT", "IT12345678901", date(2026, 3, 5), Decimal("740.25")),
-)
-_M349_EXPECTED_IMPORTE = Decimal("1000.00") + Decimal("2500.50") + Decimal("740.25")  # 4240.75
-_M349_EXPECTED_OPERADORES = Decimal("3")
-
 
 @pytest.fixture
 def m349_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
@@ -71,54 +61,10 @@ def m349_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
         yield profile.repository
 
 
-def _intra_community_invoice(
-    *,
-    invoice_number: str,
-    counterparty_country: str,
-    counterparty_tax_id: str,
-    issued_at: date,
-    base_total: Decimal,
-) -> Invoice:
-    """Build one ISSUED INTRA_COMMUNITY_SUPPLY invoice (clave E) with a zero-rate line."""
-    invoice_id = derive_invoice_id(
-        kind=InvoiceKind.ISSUED,
-        invoice_number=invoice_number,
-        issued_at=issued_at,
-        counterparty_tax_id=counterparty_tax_id,
-        currency="EUR",
-        grand_total=base_total,
-    )
-    return Invoice(
-        invoice_id=invoice_id,
-        bucket_id=_M349_BUCKET,
-        kind=InvoiceKind.ISSUED,
-        invoice_number=invoice_number,
-        issued_at=issued_at,
-        counterparty_name="EU Customer GmbH",
-        counterparty_tax_id=counterparty_tax_id,
-        counterparty_country=counterparty_country,
-        base_total=base_total,
-        iva_total=Decimal("0"),
-        grand_total=base_total,
-        currency="EUR",
-        lines=(
-            InvoiceLine(
-                description="Intra-community supply",
-                quantity=Decimal("1"),
-                unit_price=base_total,
-                subtotal=base_total,
-                iva_rate=resolve_iva_rate_slot(Decimal("0"), date.today()),
-                iva_amount=Decimal("0"),
-            ),
-        ),
-        payment_status=PaymentStatus.PENDING,
-        iva_category=IvaCategory("intra_community_supply"),
-    )
-
-
-def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
+@pytest.fixture
+def m349_calculated(
     m349_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
-) -> None:
+) -> tuple[WorkUnit, CalculationRevision]:
     """E2E: real seeded intra-community invoices fold into M349 on the live path.
 
     Seeds three DISTINCT ISSUED INTRA_COMMUNITY_SUPPLY invoices (clave E) in 1T,
@@ -134,14 +80,15 @@ def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
     invoice_repo = InvoiceCatalogueRepository(objects=m349_objects)
 
     invoices = tuple(
-        _intra_community_invoice(
+        intra_community_invoice(
+            bucket_id=_M349_BUCKET,
             invoice_number=number,
             counterparty_country=country,
             counterparty_tax_id=tax_id,
             issued_at=issued_at,
             base_total=base_total,
         )
-        for number, country, tax_id, issued_at, base_total in _M349_INVOICES
+        for number, country, tax_id, issued_at, base_total in M349_INVOICES
     )
     invoice_repo.save(build_invoice_catalogue(invoices))
 
@@ -150,8 +97,10 @@ def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
     revision = _revision("349", _M349_REVISION)
     importe_casilla = next(c for c in revision.casillas if c.id == _M349_IMPORTE_CASILLA)
     assert importe_casilla.binding == _M349_IMPORTE_BINDING
-    assert any(str(b.source) == "collectible_invoice" and b.id == _M349_IMPORTE_BINDING for b in revision.bindings)
-    assert len({base for *_, base in _M349_INVOICES}) == 3
+    assert any(
+        str(b.source) == "m349_intracommunity_operation" and b.id == _M349_IMPORTE_BINDING for b in revision.bindings
+    )
+    assert len({base for *_, base in M349_INVOICES}) == 3
 
     work_unit = create_work_unit(
         bucket_id=_M349_BUCKET,
@@ -174,19 +123,27 @@ def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
 
     assert isinstance(result, BucketAggregationCalculationResult)
     folded_importe = Decimal(result.revision.casilla_values[_M349_IMPORTE_CASILLA])
-    assert folded_importe == _M349_EXPECTED_IMPORTE, (
+    assert folded_importe == M349_EXPECTED_IMPORTE, (
         f"M349 {_M349_IMPORTE_CASILLA} must fold the three seeded invoice bases "
-        f"(sum {_M349_EXPECTED_IMPORTE}); got {folded_importe}"
+        f"(sum {M349_EXPECTED_IMPORTE}); got {folded_importe}"
     )
     folded_operadores = Decimal(result.revision.casilla_values[_M349_OPERADORES_CASILLA])
-    assert folded_operadores == _M349_EXPECTED_OPERADORES, (
+    assert folded_operadores == M349_EXPECTED_OPERADORES, (
         f"M349 {_M349_OPERADORES_CASILLA} must count the three distinct operators; got {folded_operadores}"
     )
     # The invoice source is CLAIMED (resolver enrolled): no unhandled advisory.
     assert not any(
-        diag.source_kind in {"collectible_invoice", "payable_invoice"} and diag.reason == "unhandled_binding_source"
+        diag.source_kind in {"collectible_invoice", "payable_invoice", "m349_intracommunity_operation"}
+        and diag.reason in {"unhandled_binding_source", "terminal_origin_mismatch"}
         for diag in result.source_diagnostics
     )
+    return work_unit, result.revision
 
 
-# ---------------------------------------------------------------------------
+@pytest.mark.unit
+def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
+    m349_calculated: tuple[WorkUnit, CalculationRevision],
+) -> None:
+    _, revision = m349_calculated
+    assert revision.casilla_values[_M349_IMPORTE_CASILLA] == M349_EXPECTED_IMPORTE
+    assert len(revision.detail_rows) == 3

@@ -6,25 +6,58 @@ import asyncio
 import json
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from textual.css.query import NoMatches
 
 from dev.acceptance.income_tax.installed_tui_child import InstalledTuiChildError
+from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 
 from ..installed_provenance import (
+    _cli_readback,
     _parse_child_receipt,
-    _tui_login_session_mode,
     _wait_with_deadline,
     assert_detail_provenance,
     assert_json_provenance,
     assert_track_text_provenance,
     main,
 )
-from ..installed_tui_journey import LedgerInstalledTuiError
+from ..installed_tui_contracts import LedgerInstalledTuiError
+from ..provenance_fixtures import provenance_cases
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+@pytest.mark.parametrize("refused", [False, True])
+def test_cli_readback_uses_fresh_stdin_proof_and_preserves_provenance(refused: bool) -> None:
+    case = next(case for case in provenance_cases() if case.record == "invoice" and case.import_frontend == "tui")
+    calls: list[tuple[str, bool]] = []
+
+    class ReadbackCli:
+        def run(self, _arguments: Sequence[str], *, command: str, authenticated: bool) -> dict[str, Any]:
+            calls.append((command, authenticated))
+            assert authenticated
+            if refused:
+                raise InstalledCliError("synthetic fresh-proof refusal")
+            if command == "ledger.list":
+                result = {"rows": []}
+            elif command == "ledger.invoice.list":
+                result = {"rows": [{"invoice_number": case.target_key, "invoice_id": "synthetic-invoice"}]}
+            else:
+                assert command == "ledger.invoice.view"
+                result = {"source_filename": case.filename, "source_row_index": case.locator, "kind": case.invoice_kind}
+            return {"status": "success", "result": result}
+
+    cli = cast("InstalledCli", ReadbackCli())
+    if refused:
+        with pytest.raises(LedgerInstalledTuiError, match="fresh-proof refusal"):
+            _cli_readback(cli, [case])
+        assert calls == [("ledger.list", True)]
+    else:
+        assert _cli_readback(cli, [case]) == {case.case_id: ["cli_invoice_view_json"]}
+        assert calls == [("ledger.list", True), ("ledger.invoice.list", True), ("ledger.invoice.view", True)]
+
 
 _FILE = "ledger-provenance-statement.csv"
 
@@ -181,7 +214,7 @@ class _SlowRootPilot:
 def test_admission_wait_outlasts_a_slow_root_open() -> None:
     pilot = _SlowRootPilot(surface="#home-agenda", ready_after=400)
 
-    found = asyncio.run(_wait_with_deadline(pilot, ("#field-passphrase", "#home-agenda"), seconds=600.0))
+    found = asyncio.run(_wait_with_deadline(pilot, ("#runtime-login-credential", "#home-agenda"), seconds=600.0))
 
     assert found == "#home-agenda"
     assert pilot.pauses == 400
@@ -191,38 +224,4 @@ def test_admission_wait_still_fails_when_the_surface_never_mounts() -> None:
     pilot = _SlowRootPilot(surface="#home-agenda", ready_after=10**9)
 
     with pytest.raises(InstalledTuiChildError, match="did not expose one of"):
-        asyncio.run(_wait_with_deadline(pilot, ("#field-passphrase", "#home-agenda"), seconds=0.0))
-
-
-class _ProbeCli:
-    """Pure-logic double returning one public envelope to the session probe."""
-
-    def __init__(self, document: dict[str, object]) -> None:
-        self.document = document
-        self.calls: list[dict[str, object]] = []
-
-    def run(
-        self, arguments: Sequence[str], /, *, command: str, authenticated: bool, allow_error: bool
-    ) -> dict[str, Any]:
-        self.calls.append({"arguments": arguments, "command": command, "authenticated": authenticated})
-        return self.document
-
-
-def test_the_session_probe_resumes_when_the_tui_login_persisted_its_session() -> None:
-    cli = _ProbeCli({"status": "success", "result": {"rows": []}})
-
-    assert _tui_login_session_mode(cli) == "resumed_tui_session"
-    assert cli.calls[0]["authenticated"] is False
-
-
-def test_the_session_probe_authenticates_when_the_host_had_no_usable_keychain() -> None:
-    cli = _ProbeCli({"status": "error", "error": {"code": "AUTH_STORAGE_KEYRING_UNAVAILABLE"}})
-
-    assert _tui_login_session_mode(cli) == "stdin_secret"
-
-
-def test_the_session_probe_refuses_any_other_error() -> None:
-    cli = _ProbeCli({"status": "error", "error": {"code": "REFUSED_CLI_BOUNDARY"}})
-
-    with pytest.raises(LedgerInstalledTuiError, match="unexpected code: REFUSED_CLI_BOUNDARY"):
-        _tui_login_session_mode(cli)
+        asyncio.run(_wait_with_deadline(pilot, ("#runtime-login-credential", "#home-agenda"), seconds=0.0))

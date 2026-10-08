@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:5d15f5613508f168dc517f029499bb9b6cb7477094d9bf46e285d00750dcbd09'
+modified: '2026-10-03'
+body_hash: 'sha256:cd83af792331fd3fa660e0a913f738c4ad83cce86bcb47736fa4499174fad53f'
 related: []
 ---
 
@@ -28,8 +28,8 @@ The active-profile label resolver logged the raw bucket id in the message templa
 
 ## S255-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/state_projection.py src/aeat/application/test_state_projection.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/test_state_projection.py` passed with 15 tests.
+- the historical check passed.
+- the historical check passed with 15 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-153` as `remote-mirror` with projection diagnostics hardened.

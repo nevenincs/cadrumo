@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d266cf27c9f956d7e2e23b86524c9b6a2dd56e5ce8b8d9f5fc5f9fbb7265b7cd'
+body_hash: 'sha256:09c9ebf62eb64c2c2d7c13aad5d66fef32965dc8708ad9f1ec626593a361508a'
 related: []
 ---
 
@@ -21,6 +21,24 @@ author in `test_statutory_cap_schedule.py`, whose docstring says of a flat
 constant that under-stated an allowance: "Nothing in this repository watches
 over-payment: it produces a valid return, no refusal, and no signal. A gate that
 only watches under-declaration would never have found it."
+
+## Scope
+
+Reassess the calculation-correctness campaign findings against current code and separate resolved findings from open correctness, citation, and evidence-gate work.
+
+## Findings
+
+The campaign's original Madrid conclusion is resolved at HEAD, but material citation and completeness issues remain; several earlier conclusions were corrected after rechecking the live path and evidence.
+
+## Recommendations
+The highest-leverage change is generalising the Modelo 100 orphan-parameter gate
+and its `_PRE_STAGED_PARAMETERS` discipline to the other modelos: a parameter may
+sit unconsumed provided it is *declared* as such, and the declaration is the gate
+future work must clear. That converts the ten ungated parameters from unnoticed to
+either consumed or explicitly deferred.
+
+The second is deciding the verification-power ratchet, since coverage can
+currently fall without any gate noticing.
 
 ## The asymmetry, stated once
 
@@ -327,17 +345,6 @@ Recorded because the corrections are the most transferable part.
 - **A failure count reported from a fragment**: "two" when the log held 61.
 - **Reachability inferred from a stem grep** that matched a `semantic_role`
   string rather than a parameter id.
-
-## For an owner
-
-The highest-leverage change is generalising the Modelo 100 orphan-parameter gate
-and its `_PRE_STAGED_PARAMETERS` discipline to the other modelos: a parameter may
-sit unconsumed provided it is *declared* as such, and the declaration is the gate
-future work must clear. That converts the ten ungated parameters from unnoticed to
-either consumed or explicitly deferred.
-
-The second is deciding the verification-power ratchet, since coverage can
-currently fall without any gate noticing.
 
 ## Re-verification of the Madrid finding at HEAD, and a correction to how it was read
 

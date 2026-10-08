@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#github-actions'
 date: '2026-09-17'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:5f5cd634e6de85dca2e6c5ed81ceffe041167cf7f66ea61fb6b747bf1c4d0dd3'
-related:
-  - "[[2026-09-17-github-actions-plan]]"
+related: []
 ---
 
 # `github-actions` audit: `github-actions phase-close review`

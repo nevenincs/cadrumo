@@ -89,7 +89,6 @@ _CASH = _TOTAL - _RETENCION
 
 _INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
-_TAXABLE_BASE_BINDING = "modelo-130-actividad-economica-ingresos-taxable-base-cumulative"
 
 _FILING_YEAR = 2026
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "1T")
@@ -200,7 +199,6 @@ def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None
 
     assert resolved[_INGRESOS_BINDING] == _BASE
     assert resolved[_INGRESOS_BINDING] != _CASH, "casilla 01 is pre-retencion, not what the bank credited"
-    assert resolved[_TAXABLE_BASE_BINDING] == _BASE
 
 
 def test_the_exempt_invoice_recovers_its_retencion_at_the_statutory_figure() -> None:
@@ -291,7 +289,6 @@ def test_the_unrecorded_invoice_under_declares_by_exactly_the_withheld_amount() 
     assert resolved[_INGRESOS_BINDING] == _CASH
     assert _BASE - resolved[_INGRESOS_BINDING] == _RETENCION
     assert resolved[_RETENCIONES_BINDING] == Decimal("0")
-    assert resolved[_TAXABLE_BASE_BINDING] == Decimal("0")
     assert partition.unresolved_observations == (observation,)
     assert partition.inferred_total == Decimal("0"), (
         "nothing was reconstructed here, so there is no excluded amount to report"
@@ -299,7 +296,7 @@ def test_the_unrecorded_invoice_under_declares_by_exactly_the_withheld_amount() 
 
 
 def test_the_under_declaration_is_surfaced_rather_than_silently_folded() -> None:
-    """The under-declaring row fires the advisory, naming both facts.
+    """The under-declaring row fires the advisory, naming the disturbed fact.
 
     This is the only thing standing between the exempt freelancer and a
     silently short return: the fallback is kept deliberately (dropping the row
@@ -313,4 +310,4 @@ def test_the_under_declaration_is_surfaced_rather_than_silently_folded() -> None
 
     assert len(screened.observations) == 1
     assert screened.observations[0].target_casilla_id == M130_INGRESOS_CASILLA
-    assert screened.facts == frozenset({"ingresos_integros_sum", "taxable_base_sum"})
+    assert screened.facts == frozenset({"ingresos_integros_sum"})

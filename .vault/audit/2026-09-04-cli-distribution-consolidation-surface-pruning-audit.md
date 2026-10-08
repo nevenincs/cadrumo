@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#cli-distribution-consolidation'
 date: '2026-09-04'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f8a0189528c0c59309fda3f7f433da0a8d21f9355416418f9676eb66170bfb32'
-related:
-  - "[[2026-09-02-cli-distribution-consolidation-plan]]"
+body_hash: 'sha256:fe6030cd64a908b42f74905ebc78b720a172585a46c38988a9dfaae74b7a7784'
+related: []
 ---
 
 # `cli-distribution-consolidation` audit: `surface pruning`
@@ -21,10 +20,7 @@ assumes. Re-derived from the live tree rather than from the plan row.
 
 ### surface-pruning | medium | The resolver's caller is gone; the hazard it guards is not
 
-The premise holds as far as it goes. `dev/packaging/smoke_docker.py`, the
-install proof that once called the resolver, no longer exists, and
-`linux_base_image` now has no production caller anywhere in the tree. Read as a
-reachability question, the module is dead.
+Read as a reachability question, the module is dead.
 
 Read as a control, it is not. Its only importer is the singularity gate, which
 walks every Python, YAML and workflow surface and uses the abstract syntax tree

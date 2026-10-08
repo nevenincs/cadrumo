@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:f7aeac1d0bb5e2998cf99fbc59ac51e4edb165c907850ac077d63c10a47a73cd'
+modified: '2026-10-03'
+body_hash: 'sha256:238747f4692067662c54651b76c7087a7bf3dea3ab7eb2ccdaa6144252420613'
 related: []
 ---
 
@@ -32,8 +32,8 @@ Repeat provisioning still refuses the existing bucket. Tests verify the typed co
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/bucket/test_layout.py src/aeat/adapters/persistence/storage/bucket/test_bucket_errors.py src/aeat/adapters/persistence/storage/bucket/test_cluster_envelopes.py` passed with 39 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/bucket/_layout.py src/aeat/adapters/persistence/storage/bucket/test_layout.py src/aeat/adapters/persistence/storage/bucket/test_bucket_errors.py src/aeat/adapters/persistence/storage/bucket/test_cluster_envelopes.py` passed.
+- The historical check passed with 39 tests.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` reported `ca.yml`, `en.yml`, `es.yml`, and `hu.yml` ok.
 - Touched-file hygiene scan found no broad exception catches, suppressions, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, raw encoding literals, direct settings construction, or direct environment access.
 - Plan state was reconciled after the CLI checked S159 but left `AFR-057` pending; the repaired state is `AFR-057`/`S159` closed and `AFR-058` through `AFR-060` / `S160` through `S162` pending.

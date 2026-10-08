@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-enum-canonicalization'
 date: '2026-09-02'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:39503247fce3f7a2313fa03b4408d73f72f5ce626ff4537f77c433693460a26d'
+body_hash: 'sha256:cc190927025bc5797cb2aa55bfb2990233cf08d894f7ed94817b77ab9eec8065'
 related: []
 ---
 
@@ -1724,12 +1724,7 @@ this session had, from the other end.
 `__all__` and no forwarding imports. Between them the twenty-eight-name list is no longer
 hand-written at two sites, which is what the measure was reporting.
 
-The package is mid-landing, not finished: `tests/test_workspace.py` still does
-`from .. import (...)` and `from .. import __all__ as public_contract_names`, so the
-module now errors at collection with `ImportError: cannot import name
-'AeatSyncAeatObservationState'`. That is the author's own in-flight state -- the rename
-has not yet carried its test -- and it is theirs to complete, not this session's to
-patch. Recorded so a later reader does not mistake it for a campaign regression.
+That is the author's own in-flight state -- the rename has not yet carried its test -- and it is theirs to complete, not this session's to patch. Recorded so a later reader does not mistake it for a campaign regression.
 
 Finding 79's request for an operator decision is withdrawn. The derived-`__all__` form is
 worth a second look on its own merits, since a `globals()` comprehension hides the export

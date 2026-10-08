@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#settings-route-derivation-cost'
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:ecd37413aa3f3ed4da4ecb8d88ec049a4f357d37fc683d1e56b2f29b1cfccfdd'
+modified: '2026-10-03'
+body_hash: 'sha256:c43f0899e9ca09e87fce5af5bc685f204ff5b122518aa9089dd49826cbd04402'
 related:
   - "[[2026-07-05-ledger-latency-budget-adr]]"
 ---
@@ -13,7 +13,7 @@ related:
 
 Every repository handle in the application re-derives a whole `Settings` instance. Acquiring a
 bucket-scoped repository calls `settings_for_bucket_route`
-(`src/cadrumo/core/_config_storage_route.py:76`), which dumps the source settings to a dict and
+, which dumps the source settings to a dict and
 re-validates the entire model, re-running every field validator and the after-validator that
 touches disk. The question this research grounds: how large is that cost really, and what would a
 cached derivation have to preserve to stay correct?
@@ -34,7 +34,7 @@ guarantees". What that scope must be is the open question for the ADR.
 
 `cadrumo_database_url` is a derived field, not an input. `settings_for_bucket_route` drops it,
 sets `cadrumo_active_profile` to the target bucket, and re-validates so the model's own validators
-recompute the URL (`src/cadrumo/core/_config_storage_route.py:100-103`). It then restores
+recompute the URL . It then restores
 `__pydantic_fields_set__` so the derived instance still reports which fields the operator set
 explicitly, which route classification depends on.
 
@@ -155,13 +155,12 @@ production caller, the `settings_for_active_profile_bucket` facade
 (`src/cadrumo/core/config.py:1350`), which in turn is reached from
 `src/cadrumo/adapters/persistence/storage/runtime.py:405`,
 `src/cadrumo/application/storage_write_policy.py:316`, and
-`src/cadrumo/domain/usage_ratios/_service.py:72`.
 
 ### Recorded trap: the full-scan catalogue read is not on the Modelo 130 path
 
 `TransactionCatalogueRepository.load()` is not called during a Modelo 130 calculate. The M130
 cumulative window reads through `partition_by_date_range`
-(`src/cadrumo/application/aggregation/_renta_income_ledger.py:204`); the `load()` at
+; the `load()` at
 `:303` belongs to the Modelo 100 annual branch.
 
 This is recorded because it has already cost real effort twice. Issue #607 names its lever as
@@ -216,7 +215,7 @@ why the structural and per-call figures were gathered instead.
 
 ## Sources
 
-`src/cadrumo/core/_config_storage_route.py:76`, `:100-103` — the derivation under examination.
+the former source file, `:100-103` — the derivation under examination.
 
 `src/cadrumo/core/config.py:1094`, `:1102` — `refuse_former_product_database` inside the
 URL-deriving after-validator.
@@ -230,18 +229,18 @@ uncached `load_settings`, and the `override_settings` comment rejecting `model_c
 
 `src/cadrumo/adapters/persistence/storage/runtime.py:405`,
 `src/cadrumo/application/storage_write_policy.py:316`,
-`src/cadrumo/domain/usage_ratios/_service.py:72` — the production caller set.
+the former source file — the production caller set.
 
 `src/cadrumo/application/modelo/_transaction_catalogue_cache.py` — calculation-scoped read-through
 memoisation prior art.
 
-`src/cadrumo/application/aggregation/_renta_income_ledger.py:204`, `:303` — the M130 partition read
+the former source file, `:303` — the M130 partition read
 and the M100 annual `load()`.
 
 `src/cadrumo/adapters/persistence/profile/transactions.py:151`, `:285` — single JSON decode and the
 guard that consumes it.
 
-`src/cadrumo/application/aggregation/tests/test_ledger_scale_benchmark.py` — the harness whose
+the former source file — the harness whose
 `override_settings` isolation causes the production under-measurement.
 
 Call counts, per-call microbenchmarks (n=200), and the profiled-versus-unprofiled ratio were

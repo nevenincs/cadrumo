@@ -3,10 +3,11 @@ tags:
   - '#adr'
   - '#ledger-evidence-enforcement'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:cf0605fb57325b9cb80b857f01e7578ef320cf7660c9911d95f2cba012098543'
+modified: '2026-10-04'
+body_hash: 'sha256:5937d315e854735cacc6a9952c9a43c8c70ece09029fc0a44367fc390e013e1b'
 related:
   - "[[2026-06-10-ledger-evidence-enforcement-research]]"
+  - '[[2026-10-04-google-app-identity-adr]]'
 ---
 
 # `ledger-evidence-enforcement` adr: `Require encrypted evidence bytes; advisory evidence gate` | (**status:** `accepted`)
@@ -18,7 +19,7 @@ campaign. Two structural problems remain after the campaign's discovery pass
 (recorded in the sibling research):
 
 1. **A byte-custody leak.** `add_link_attachment`
-   (`src/cadrumo/domain/attachments/_service.py`), reachable through
+, reachable through
    `aeat app ledger doclink`, records a Gmail/Drive/URL *reference* as the
    stored payload (`mime_type = "text/uri-list"`) and never fetches the remote
    document. The resulting attachment manifest looks like evidence — it carries
@@ -44,7 +45,7 @@ re-framing, and the test obligations.
   a **locked campaign decision**; this ADR does not relitigate it, it specifies
   how to satisfy it for the doclink path.
 - The fetch-and-refuse machinery already exists. `resolve_document_link`
-  (`src/cadrumo/adapters/outbound/google/_document_link_resolver.py`) fetches Drive
+   fetches Drive
   bytes within the granted `drive.file` scope and raises a typed, scope-named
   `OutboundStoragePermissionError` for Gmail links, out-of-scope Drive files,
   and arbitrary URLs. The byte-bearing `add_attachment` path already
@@ -64,15 +65,10 @@ re-framing, and the test obligations.
 
 ## Constraints
 
-- **Google credentials and scope.** The fetch path depends on the operator
-  having connected Google with the `drive.file` scope. A Drive link to a file
-  the app did not create / the operator did not pick is unreachable under that
-  scope by design, and Gmail/URL links are unreachable entirely. Under the
-  decision below these become **refusals**, so the doclink verb's success
-  surface narrows to "Drive files reachable under `drive.file`". This is an
-  accepted, deliberate consequence — a scope upgrade to `drive.readonly` /
-  `gmail.readonly` is a separate Google-app-verification security decision and
-  is out of scope here.
+- **Google credentials and scope.** Remote link acquisition is withdrawn by
+  `2026-10-04-google-app-identity-adr`, which also settles the scope question
+  this record deferred: no `drive.readonly` or `gmail.readonly` upgrade.
+  Evidence bytes enter through local import only.
 - **Parent feature stability.** `resolve_document_link` and the `AttachmentStore`
   secure substrate are landed and stable. The verify-path advisory builds on the
   landed `verify_modelo_revision` findings aggregation and the landed
@@ -84,6 +80,10 @@ re-framing, and the test obligations.
 ## Implementation
 
 ### Decision 1 — Replace link-only recording with fetch-and-encrypt-or-refuse
+
+The repurposed remote verb is withdrawn by
+`2026-10-04-google-app-identity-adr`. The invariant is unchanged: an evidence
+record carries encrypted document bytes, and no link-only record exists.
 
 `add_link_attachment` is **removed**. The `aeat app ledger doclink` verb is
 repurposed: when given a Gmail/Drive/URL reference it calls
@@ -104,8 +104,8 @@ back to storing a link. A record that cannot obtain bytes is rejected. The
 today it succeeds only for Drive files reachable under `drive.file`.
 
 Affected symbols: delete `add_link_attachment`
-(`src/cadrumo/domain/attachments/_service.py`); rewire `ledger_doclink`
-(`src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py`) to the resolve →
+; rewire `ledger_doclink`
+ to the resolve →
 `add_attachment` → `attach_manual_transaction_evidence` sequence. Namespaces are
 unchanged: bytes ride `ATTACHMENT_BLOB_NAMESPACE`, manifests ride
 `ATTACHMENT_MANIFEST_NAMESPACE`.

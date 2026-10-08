@@ -360,6 +360,32 @@ modelo:
         official_name: Modelo 222. Corporate Income Tax. Tax consolidation regime.
           Instalment payment.
         title: IS instalment payment under the tax consolidation regime (groups)
+      form:
+        authored2025:
+          ajustes-grupo:
+            heading: Group tax-base adjustments · Additional Provision 19 LIS
+          consolidacion:
+            heading: Deferred results and other consolidation adjustments
+          dominante:
+            heading: Parent entity identification
+          dominante-id:
+            heading: Parent identification number
+          dominante-nombre:
+            heading: Parent legal name
+          dominante-pais:
+            heading: Parent country or foral territory
+          grupo:
+            heading: Tax group number
+          identificacion:
+            heading: Representative or parent entity
+          inicio:
+            heading: Tax period start
+          nrs-variacion:
+            heading: Group membership change reference number
+          phone:
+            heading: Telephone
+          variacion:
+            heading: Notice of changes to group membership
       revision:
         '2022':
           field:

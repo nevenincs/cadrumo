@@ -1,0 +1,469 @@
+[[revisions.2025-y-siguientes.export_layouts]]
+id = 'modelo-190-fichero-boe'
+
+[[revisions.2025-y-siguientes.export_layouts.records]]
+id = 'modelo-190-perceptor'
+record_type = 'perceptor'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = false
+repeat = 'binding_rows'
+binding_record = 'perceptor'
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-signo-incapacidad-especie'
+offset = 282
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-incapacidad-especie-valoracion'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'signed-component-sign'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-incapacidad-especie-valoracion'
+offset = 283
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-incapacidad-especie-valoracion'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'signed-component-magnitude'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-incapacidad-especie-ingresos-a-cuenta'
+offset = 296
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-incapacidad-especie-ingresos-a-cuenta'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-incapacidad-especie-repercutidos'
+offset = 309
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-incapacidad-especie-repercutidos'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-complemento-ayuda-infancia'
+offset = 322
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-complemento-ayuda-infancia'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-estatal'
+offset = 323
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-estatal'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-navarra'
+offset = 336
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-navarra'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-araba'
+offset = 349
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-araba'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-gipuzkoa'
+offset = 362
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-gipuzkoa'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-forales-bizkaia'
+offset = 375
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retenciones-forales-bizkaia'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-excesos-acciones-emergentes'
+offset = 388
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-excesos-acciones-emergentes'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-42.3.f',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-rendimientos-fondos-emprendimiento'
+offset = 389
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-rendimientos-fondos-emprendimiento'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-prestacion-jubilacion'
+offset = 390
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-prestacion-jubilacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'selected-1-unselected-0'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-17',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-prestacion-viudedad'
+offset = 391
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-prestacion-viudedad'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'selected-1-unselected-0'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-17',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-prestacion-incapacidad'
+offset = 392
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-prestacion-incapacidad'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'selected-1-unselected-0'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-17',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-prestacion-no-contributiva'
+offset = 393
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-prestacion-no-contributiva'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'selected-1-unselected-0'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-17',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-prestacion-resto'
+offset = 394
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-prestacion-resto'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'selected-1-unselected-0'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-17',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-blancos-395'
+offset = 395
+length = 106
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]
+accrual_year = 'perc.ejercicio-devengo'
+anualidades_alimentos = 'perc.anualidades-alimentos'
+ascendants_75_plus_total = 'perc.ascendientes-75-mas-total'
+ascendants_75_plus_whole = 'perc.ascendientes-75-mas-entero'
+ascendants_disabled_33_65_total = 'perc.ascendientes-discapacidad-33-65-total'
+ascendants_disabled_33_65_whole = 'perc.ascendientes-discapacidad-33-65-entero'
+ascendants_disabled_65_plus_total = 'perc.ascendientes-discapacidad-65-total'
+ascendants_disabled_65_plus_whole = 'perc.ascendientes-discapacidad-65-entero'
+ascendants_disabled_mobility_total = 'perc.ascendientes-discapacidad-movilidad-total'
+ascendants_disabled_mobility_whole = 'perc.ascendientes-discapacidad-movilidad-entero'
+ascendants_under_75_total = 'perc.ascendientes-menores-75-total'
+ascendants_under_75_whole = 'perc.ascendientes-menores-75-entero'
+clave = 'perc.clave'
+complemento_infancia_clave = 'perc.complemento-ayuda-infancia'
+contract_relation_clave = 'perc.contrato-relacion'
+descendants_disabled_33_65_total = 'perc.descendientes-discapacidad-33-65-total'
+descendants_disabled_33_65_whole = 'perc.descendientes-discapacidad-33-65-entero'
+descendants_disabled_65_plus_total = 'perc.descendientes-discapacidad-65-total'
+descendants_disabled_65_plus_whole = 'perc.descendientes-discapacidad-65-entero'
+descendants_disabled_mobility_total = 'perc.descendientes-discapacidad-movilidad-total'
+descendants_disabled_mobility_whole = 'perc.descendientes-discapacidad-movilidad-entero'
+descendants_rest_total = 'perc.descendientes-resto-total'
+descendants_rest_whole = 'perc.descendientes-resto-entero'
+descendants_under_3_total = 'perc.descendientes-menores-3-total'
+descendants_under_3_whole = 'perc.descendientes-menores-3-entero'
+disability_clave = 'perc.discapacidad'
+emerging_stock_excess_clave = 'perc.excesos-acciones-emergentes'
+first_child_compute = 'perc.computo-hijo-1'
+foral_retention_araba = 'perc.retenciones-forales-araba'
+foral_retention_bizkaia = 'perc.retenciones-forales-bizkaia'
+foral_retention_estatal = 'perc.retenciones-forales-estatal'
+foral_retention_gipuzkoa = 'perc.retenciones-forales-gipuzkoa'
+foral_retention_navarra = 'perc.retenciones-forales-navarra'
+gastos_deducibles = 'perc.gastos-deducibles'
+geographic_mobility_clave = 'perc.movilidad-geografica'
+housing_loan_communication_clave = 'perc.prestamos-vivienda-clave'
+incapacity_cash_perception = 'perc.incapacidad-dineraria-percepcion'
+incapacity_cash_withholding = 'perc.incapacidad-dineraria-retenciones'
+incapacity_kind_ingreso_a_cuenta = 'perc.incapacidad-especie-ingresos-a-cuenta'
+incapacity_kind_repercutido = 'perc.incapacidad-especie-repercutidos'
+incapacity_kind_value = 'perc.incapacidad-especie-valoracion'
+ingreso_a_cuenta = 'perc.ingresos-a-cuenta'
+ingreso_a_cuenta_repercutido = 'perc.ingresos-a-cuenta-repercutidos'
+pension_compensatoria = 'perc.pension-compensatoria'
+pension_prestacion_incapacidad = 'perc.prestacion-incapacidad'
+pension_prestacion_jubilacion = 'perc.prestacion-jubilacion'
+pension_prestacion_no_contributiva = 'perc.prestacion-no-contributiva'
+pension_prestacion_resto = 'perc.prestacion-resto'
+pension_prestacion_viudedad = 'perc.prestacion-viudedad'
+perceptor_birth_year = 'perc.ano-nacimiento'
+perceptor_legal_name = 'perc.nombre'
+perceptor_situacion_familiar = 'perc.situacion-familiar'
+perceptor_tax_id = 'perc.nif'
+percibido_dinerario = 'perc.percepcion-dineraria'
+percibido_especie = 'perc.percepcion-especie'
+province_code = 'perc.provincia'
+reducciones_aplicables = 'perc.reducciones-aplicables'
+representative_tax_id = 'perc.nif-representante-legal'
+retencion_practicada = 'perc.retenciones-practicadas'
+second_child_compute = 'perc.computo-hijo-2'
+spouse_or_unit_titular_tax_id = 'perc.nif-conyuge-titular-unidad'
+startup_fund_rendimientos_clave = 'perc.rendimientos-fondos-emprendimiento'
+subclave = 'perc.subclave'
+territorial_deduction_clave = 'perc.ceuta-melilla'
+third_child_compute = 'perc.computo-hijo-3'
+unit_convivencia_titular_clave = 'perc.titular-unidad-convivencia'

@@ -3,12 +3,12 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b6357d4e505b32c2ef100e15e064f3516c70679c4245be321a3706778231c007'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:116d8a34928752b6810bb2c5301172112d328cfa10c2c4b5c514f95f1d37d368'
+related: []
 ---
+
 # `registry-completeness-closure` reference: `Modelo 185 historical design and filing boundary`
 
 ## Summary
@@ -131,6 +131,4 @@ landed and reviewed:
 - `src/cadrumo/_data/registry/aeat/legal/modelo-185.toml`
 - `src/cadrumo/_data/registry/aeat/modelos/185/revisions/2003-2025/`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_185/`
-- `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
-- `dev/registry/tests/test_generated_export_trees.py`
 - `2026-08-10-aeat-export-fragment-generator-authority-plan`

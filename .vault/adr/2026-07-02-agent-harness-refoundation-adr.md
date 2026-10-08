@@ -1,17 +1,21 @@
 ---
 tags:
-  - '#adr'
-  - '#agent-harness-refoundation'
+  - "#adr"
+  - "#agent-harness-refoundation"
 date: '2026-07-02'
-modified: '2026-08-01'
-body_hash: 'sha256:53459b847dea3900efd61fb641aa64fd7bf0f960f3c1d573b13c1ea9318f5c33'
 related:
   - "[[2026-07-02-agent-harness-refoundation-research]]"
   - "[[2026-07-03-claude-ecosystem-packaging-adr]]"
   - "[[2026-07-08-mcp-progressive-discovery-adr]]"
   - "[[2026-07-08-mcp-protocol-hardening-adr]]"
+  - "[[2026-09-26-mcp-purpose-authentication-adr]]"
+  - '[[2026-07-31-semantic-search-precompile-boundary-adr]]'
+supersedes:
+  - '2026-06-30-agent-harness-adr'
+  - '2026-07-01-agent-harness-adr'
+modified: '2026-10-05'
+body_hash: 'sha256:a75d65e7f26ab5294eec0abc219a16bbea373ea9c967df42f20810c99e4ee8b8'
 ---
-
 # `agent-harness-refoundation` adr: `black-box tool universe, situation-keyed skills, and the MCP operating console` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -19,7 +23,7 @@ related:
 Two earlier harness drafts settled the four-layer shape, MCP end-state, rules,
 personas, and skills under a universe definition that the 2026-07-02 operator
 directive corrected. Their durable decisions are consolidated below; the
-predecessor ADR files are deleted so maintainers have one harness authority.
+predecessor ADRs are retained as superseded history; this ADR is the current harness authority.
 The drafts also left the harness unfinished in two defining ways: no live
 language model had driven the CLI through it, and there was no accepted way to
 measure or operate it.
@@ -173,7 +177,7 @@ storage-root promises. The original ruling follows for the decision trail.
 
 *External SaaS trajectory eval:* rejected — it ships trajectories (and the figures in them) off-host, against the on-host posture.
 
-**Chosen — a self-hosted live subagent-persona harness** (operator directive, 2026-07-02). Capabilities are measured by **live subagent personas**: spawned language-model subagents playing the harness personas, operating the console end-to-end against golden scenarios. The substrate (a) starts the real `cadrumo-mcp` server, (b) connects a real MCP client session driven by a subagent persona, (c) captures the full trajectory (tools selected, arguments, elicitation responses, narration), and (d) scores it against the existing golden-scenario models plus the faithfulness and confirmation checks **now applied to observed calls**, not caller-injected verdicts. Hard invariants: **zero live-submit attempts and zero faithfulness violations at the handoff boundary**. Session telemetry — per-call trajectory records with session ids — is persisted locally. A data flywheel promotes live failures into new golden scenarios. A real-client handshake conformance test (`initialize` / tools-list / call round-trip) is the floor beneath the live harness.
+**Chosen — a self-hosted live subagent-persona harness** (operator directive, 2026-07-02). Capabilities are measured by **live subagent personas**: spawned language-model subagents playing the harness personas, operating the console end-to-end against golden scenarios. The substrate (a) starts the real `cadrumo-mcp` server, (b) connects a real MCP client session driven by a subagent persona, (c) captures the full trajectory (tools selected, arguments, elicitation responses, narration), and (d) scores it against the existing golden-scenario models plus the faithfulness and confirmation checks **now applied to observed calls**, not caller-injected verdicts. Hard invariants: **zero live-submit attempts and zero faithfulness violations at the handoff boundary**. A data flywheel promotes live failures into new golden scenarios. A real-client handshake conformance test (`initialize` / tools-list / call round-trip) is the floor beneath the live harness.
 
 ### R8 — Distribution
 
@@ -214,7 +218,7 @@ A high-level layering; no code accompanies this ADR. Notably, **the CLI surface 
 - **Operating-layer channels.** Add the `harness.load` floor tool; the `cadrumo://skill|rule|persona/{name}` resource templates; the guided-workflow prompts embedding skill plus grounding; and the optional `.claude/skills` materialisation, all fed from the single `src/cadrumo/_data/agent/` source.
 - **Skill metadata and situation skills.** Lift each skill's selection predicate into the structured `applies_when` frontmatter field; author the six WHEN-layer skills, `regularizar-atrasos` first over the already-built backlog/recargo surface.
 - **Gate wiring.** Wire the CONFIRM tier to elicitation with the degradation matrix; wire faithfulness into the serving path with the handoff hard block; add the per-verb handoff deny rules over the family-granular persona scope.
-- **Live eval and telemetry.** Build the live subagent-persona harness (real server, real client session, trajectory capture, scoring on observed calls), the local per-call telemetry records, the real-client handshake conformance floor, and the flywheel that promotes live failures to golden scenarios.
+- **Live eval.** Build the live subagent-persona harness (real server, real client session, trajectory capture, scoring on observed calls), the real-client handshake conformance floor, and the flywheel that promotes live failures to golden scenarios.
 - **Packaging.** Assemble and sign the `.mcpb` Desktop Extension behind the `cadrumo[agent]` extra, `stdio` transport.
 
 ## Rationale
@@ -241,4 +245,12 @@ model harness must control non-determinism, cost, and latency, and the R9
 scrubbing boundary needs its own conformance gate so raw evidence bytes cannot
 enter model context.
 
-**Pathways opened.** The manifest-derived toolset surface and the on-host grounding index feed documentation generation, future personas, and additional situation skills without re-deriving the catalogue. The live harness plus the telemetry flywheel become the standing assurance loop — every rule, skill, prompt, and tool-description change is re-measured against a real model, and every live failure becomes a golden regression — turning the harness from a shipped artifact into a continuously-verified operating system for the black-box tool universe.
+**Pathways opened.** The manifest-derived toolset surface and the on-host grounding index feed documentation generation, future personas, and additional situation skills without re-deriving the catalogue. The live harness plus the flywheel become the standing assurance loop — every rule, skill, prompt, and tool-description change is re-measured against a real model, and every live failure becomes a golden regression — turning the harness from a shipped artifact into a continuously-verified operating system for the black-box tool universe.
+
+## Amendment 2026-09-26: shared application execution beneath all entrypoints
+
+Accepted under the operator's instruction to continue the presented mcp-purpose-authentication plan. 2026-09-26-mcp-purpose-authentication-adr replaces the CLI-subprocess-only parts of R1, Q1, the CLI-as-contract consideration and their dependent implementation prose. The application operation/action authorities supply typed contracts and policy; CLI JSON, TUI and MCP are projections over the shared local runtime.
+
+The agent still sees a confined deterministic tool universe, with no arbitrary code, SQL or shell capability. MCP may call the public application operation boundary without going through command functions or an aeat subprocess. Catalogue-derived discovery, operating-layer content, provenance, human approval where required and the applicable never-live-submit/data-disclosure rules survive.
+
+Persona/tool filtering can narrow presentation but cannot grant authority. Runtime credential, profile, scope and disclosure checks remain mandatory on every path. Client confirmation hints and an LLM's claimed approval never replace application authorization. API-key enrollment and secret collection use trusted local CLI/TUI channels governed by 2026-09-26-mcp-purpose-authentication-profile-access-adr; this does not reopen unrelated skill taxonomy or distribution decisions.

@@ -1,0 +1,79 @@
+[[revisions.2016-2018.casillas]]
+id = "decl.devolucion-iban"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-308-2011-july page1 field45 uses Codigo Cuenta Cliente (20digits). AEAT aeat-dr-308-2016 M30801 fields51/52 instead declare IBAN and SWIFT-BIC. These are new fields relative to the cited2011 record design, not the same bank identifier renamed; this statement does not date the wider legal introduction of IBAN."
+number = "932-965"
+section = ["declarante", "liquidacion"]
+data_type = "iban"
+semantic_role = "devolucion_iban"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+continuidad_id = "devolucion-iban"
+
+[[revisions.2016-2018.casillas]]
+id = "decl.devolucion-bic"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT aeat-dr-308-2011-july page1 field45 uses Codigo Cuenta Cliente (20digits). AEAT aeat-dr-308-2016 M30801 fields51/52 instead declare IBAN and SWIFT-BIC. These are new fields relative to the cited2011 record design, not the same bank identifier renamed; this statement does not date the wider legal introduction of IBAN."
+number = "966-976"
+section = ["declarante", "liquidacion"]
+data_type = "bic"
+semantic_role = "devolucion_bic"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+continuidad_id = "devolucion-bic"
+
+[[revisions.2016-2018.casillas]]
+id = "decl.nombre"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "The AEAT2016 M30801 record and BOE-A-2011-7479 Annex I declare this refund-form concept. The canonical 2011-julio-2015 registry payload contains only year and period; this is an older declaration gap, not a claim that the concept was newly introduced in2016."
+number = "83-102"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "declarante_nombre"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+continuidad_id = "declarante-nombre"
+
+[[revisions.2016-2018.casillas]]
+id = "decl.tipo-tributacion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "The AEAT2016 M30801 record and BOE-A-2011-7479 Annex I declare this refund-form concept. The canonical 2011-julio-2015 registry payload contains only year and period; this is an older declaration gap, not a claim that the concept was newly introduced in2016."
+number = "109"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "tipo_tributacion_sujeto_pasivo"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+continuidad_id = "tipo-tributacion-sujeto-pasivo"
+
+[revisions.2016-2018.casillas.constraints]
+enum = ["1", "2", "3", "4"]
+
+[[revisions.2016-2018.casillas]]
+id = "decl.mtn-adquirente-apellidos"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "The AEAT2016 M30801 record and BOE-A-2011-7479 Annex I declare this refund-form concept. The canonical 2011-julio-2015 registry payload contains only year and period; this is an older declaration gap, not a claim that the concept was newly introduced in2016."
+number = "119-178"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "mtn_adquirente_apellidos"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+continuidad_id = "mtn-adquirente-apellidos"
+
+[[revisions.2016-2018.casillas]]
+id = "decl.mtn-adquirente-nombre"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "The AEAT2016 M30801 record and BOE-A-2011-7479 Annex I declare this refund-form concept. The canonical 2011-julio-2015 registry payload contains only year and period; this is an older declaration gap, not a claim that the concept was newly introduced in2016."
+number = "179-198"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "mtn_adquirente_nombre"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+continuidad_id = "mtn-adquirente-nombre"
+
+[[revisions.2016-2018.casillas]]
+id = "papel-apellidos"
+continuidad_id = "papel-declarante-apellidos"
+number = "23-82"
+section = ["identificacion"]
+data_type = "name"
+semantic_role = "papel_declarante_apellidos"
+input_kind = "informational"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT2011 record fields4/5 and BOE-A-2011-7479 Annex I identify the taxpayer; AEAT2016 M30801 fields7/8 carry NIF and full surnames/legalname. Historical registry payload declared neither. These are paper-preview inputs, not a new filing producer or authorization claim."

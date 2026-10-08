@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from ..errors.hierarchy import CadrumoError
+from .nif_iva import normalise_nif_iva
 
 TAX_ID_FORMAT_CONTEXT = "spanish_tax_id_format"
 
@@ -43,52 +44,99 @@ class SpanishTaxIdFormat:
 
     def __post_init__(self) -> None:
         """Reject incomplete or internally inconsistent declarations."""
-        if self.width < 3 or self.country_prefixed_width != self.width + self.country_prefix_strip_width:
-            raise ValueError("Spanish tax-ID format has invalid widths")
-        if self.country_prefix_strip_width <= 0 or len(self.country_prefix) != self.country_prefix_strip_width:
-            raise ValueError("Spanish tax-ID format has an invalid country prefix")
-        if not self.country_prefix.isascii() or not self.country_prefix.isalpha() or not self.country_prefix.isupper():
-            raise ValueError("Spanish tax-ID format country prefix must contain uppercase ASCII letters")
-        if not all((self.prefixed_nif_leaders, self.nie_leaders, self.cif_leaders)):
-            raise ValueError("Spanish tax-ID format leader sets must not be empty")
-        if (
-            len(self.nif_letters) != 23
-            or not self.nif_letters.isascii()
-            or not self.nif_letters.isalpha()
-            or not self.nif_letters.isupper()
-            or len(set(self.nif_letters)) != len(self.nif_letters)
-        ):
-            raise ValueError(
-                "Spanish tax-ID format NIF check-letter table must contain 23 unique uppercase ASCII letters"
-            )
-        if (
-            len(self.cif_letter_table) != 10
-            or not self.cif_letter_table.isascii()
-            or not self.cif_letter_table.isalpha()
-            or not self.cif_letter_table.isupper()
-            or len(set(self.cif_letter_table)) != len(self.cif_letter_table)
-        ):
-            raise ValueError(
-                "Spanish tax-ID format CIF check-letter table must contain ten unique uppercase ASCII letters"
-            )
-        substitutions = dict(self.nie_prefix_substitutions)
-        if len(substitutions) != len(self.nie_prefix_substitutions) or set(substitutions) != set(self.nie_leaders):
-            raise ValueError("Spanish tax-ID format NIE substitutions must cover every NIE leader exactly once")
-        if not all(len(value) == 1 and value.isascii() and value.isdigit() for value in substitutions.values()):
-            raise ValueError(
-                "Spanish tax-ID format NIE substitutions must be single decimal digits using ASCII characters"
-            )
-        if set(self.cif_digit_only_kinds) & set(self.cif_letter_only_kinds):
-            raise ValueError("Spanish tax-ID format CIF control partitions must not overlap")
-        leaders = self.prefixed_nif_leaders + self.nie_leaders + self.cif_leaders
-        if not leaders.isascii() or not leaders.isalpha() or not leaders.isupper() or len(set(leaders)) != len(leaders):
-            raise ValueError("Spanish tax-ID format leaders must be unique uppercase ASCII letters")
-        if not set(self.cif_digit_only_kinds + self.cif_letter_only_kinds).issubset(set(self.cif_leaders)):
-            raise ValueError("Spanish tax-ID format CIF control partitions must name CIF leaders")
-        if len(set(self.cif_digit_only_kinds)) != len(self.cif_digit_only_kinds) or len(
-            set(self.cif_letter_only_kinds)
-        ) != len(self.cif_letter_only_kinds):
-            raise ValueError("Spanish tax-ID format CIF control partitions must not repeat leaders")
+        _validate_width_declarations(self)
+        _validate_country_prefix(self)
+        _validate_required_leader_sets(self)
+        _validate_nif_check_letters(self)
+        _validate_cif_check_letters(self)
+        _validate_nie_substitutions(self)
+        _validate_cif_partition_overlap(self)
+        _validate_leader_uniqueness(self)
+        _validate_cif_partition_membership(self)
+        _validate_cif_partition_uniqueness(self)
+
+
+def _validate_width_declarations(tax_id_format: SpanishTaxIdFormat) -> None:
+    if (
+        tax_id_format.width < 3
+        or tax_id_format.country_prefixed_width != tax_id_format.width + tax_id_format.country_prefix_strip_width
+    ):
+        raise ValueError("Spanish tax-ID format has invalid widths")
+    if (
+        tax_id_format.country_prefix_strip_width <= 0
+        or len(tax_id_format.country_prefix) != tax_id_format.country_prefix_strip_width
+    ):
+        raise ValueError("Spanish tax-ID format has an invalid country prefix")
+
+
+def _validate_country_prefix(tax_id_format: SpanishTaxIdFormat) -> None:
+    prefix = tax_id_format.country_prefix
+    if not prefix.isascii() or not prefix.isalpha() or not prefix.isupper():
+        raise ValueError("Spanish tax-ID format country prefix must contain uppercase ASCII letters")
+
+
+def _validate_required_leader_sets(tax_id_format: SpanishTaxIdFormat) -> None:
+    leaders = (tax_id_format.prefixed_nif_leaders, tax_id_format.nie_leaders, tax_id_format.cif_leaders)
+    if not all(leaders):
+        raise ValueError("Spanish tax-ID format leader sets must not be empty")
+
+
+def _validate_nif_check_letters(tax_id_format: SpanishTaxIdFormat) -> None:
+    letters = tax_id_format.nif_letters
+    if (
+        len(letters) != 23
+        or not letters.isascii()
+        or not letters.isalpha()
+        or not letters.isupper()
+        or len(set(letters)) != len(letters)
+    ):
+        raise ValueError("Spanish tax-ID format NIF check-letter table must contain 23 unique uppercase ASCII letters")
+
+
+def _validate_cif_check_letters(tax_id_format: SpanishTaxIdFormat) -> None:
+    letters = tax_id_format.cif_letter_table
+    if (
+        len(letters) != 10
+        or not letters.isascii()
+        or not letters.isalpha()
+        or not letters.isupper()
+        or len(set(letters)) != len(letters)
+    ):
+        raise ValueError("Spanish tax-ID format CIF check-letter table must contain ten unique uppercase ASCII letters")
+
+
+def _validate_nie_substitutions(tax_id_format: SpanishTaxIdFormat) -> None:
+    substitutions = dict(tax_id_format.nie_prefix_substitutions)
+    if len(substitutions) != len(tax_id_format.nie_prefix_substitutions) or set(substitutions) != set(
+        tax_id_format.nie_leaders
+    ):
+        raise ValueError("Spanish tax-ID format NIE substitutions must cover every NIE leader exactly once")
+    if not all(len(value) == 1 and value.isascii() and value.isdigit() for value in substitutions.values()):
+        raise ValueError("Spanish tax-ID format NIE substitutions must be single decimal digits using ASCII characters")
+
+
+def _validate_cif_partition_overlap(tax_id_format: SpanishTaxIdFormat) -> None:
+    if set(tax_id_format.cif_digit_only_kinds) & set(tax_id_format.cif_letter_only_kinds):
+        raise ValueError("Spanish tax-ID format CIF control partitions must not overlap")
+
+
+def _validate_leader_uniqueness(tax_id_format: SpanishTaxIdFormat) -> None:
+    leaders = tax_id_format.prefixed_nif_leaders + tax_id_format.nie_leaders + tax_id_format.cif_leaders
+    if not leaders.isascii() or not leaders.isalpha() or not leaders.isupper() or len(set(leaders)) != len(leaders):
+        raise ValueError("Spanish tax-ID format leaders must be unique uppercase ASCII letters")
+
+
+def _validate_cif_partition_membership(tax_id_format: SpanishTaxIdFormat) -> None:
+    partitions = tax_id_format.cif_digit_only_kinds + tax_id_format.cif_letter_only_kinds
+    if not set(partitions).issubset(set(tax_id_format.cif_leaders)):
+        raise ValueError("Spanish tax-ID format CIF control partitions must name CIF leaders")
+
+
+def _validate_cif_partition_uniqueness(tax_id_format: SpanishTaxIdFormat) -> None:
+    digit_kinds = tax_id_format.cif_digit_only_kinds
+    letter_kinds = tax_id_format.cif_letter_only_kinds
+    if len(set(digit_kinds)) != len(digit_kinds) or len(set(letter_kinds)) != len(letter_kinds):
+        raise ValueError("Spanish tax-ID format CIF control partitions must not repeat leaders")
 
 
 def _nif_pattern(tax_id_format: SpanishTaxIdFormat) -> re.Pattern[str]:
@@ -139,7 +187,7 @@ def is_identity_structurally_shaped(candidate: object) -> bool:
     """
     if not isinstance(candidate, str):
         return False
-    normalised = candidate.strip().upper().replace("-", "").replace(" ", "").replace(".", "")
+    normalised = normalise_nif_iva(candidate)
     if not normalised.isascii() or not normalised.isalnum():
         return False
     return bool(re.fullmatch(r"[0-9]+[A-Z]", normalised) or re.fullmatch(r"[A-Z][0-9]+[A-Z0-9]", normalised))
@@ -160,20 +208,7 @@ class IdentityError(CadrumoError):
 
 
 def nif_check_letter(number: int, tax_id_format: SpanishTaxIdFormat) -> str:
-    """Return the AEAT NIF / NIE check letter for a numeric body.
-
-    Resolves the governed check-letter table without retaining a local
-    catalogue. This is the single source of the check-letter computation for
-    the whole :mod:`cadrumo.core.identity` package; the sibling
-    :mod:`cadrumo.core.identity.tax_id` consumes it rather than re-declaring
-    the modulo expression, and every enum-returning validator in this module
-    computes its expected letter through it.
-    """
-    return _nif_check_letter(number, tax_id_format)
-
-
-def _nif_check_letter(number: int, tax_id_format: SpanishTaxIdFormat) -> str:
-    """Return one registry-declared NIF/NIE check letter, failing closed."""
+    """Compute a NIF/NIE check letter from the caller's governed format."""
     return tax_id_format.nif_letters[number % len(tax_id_format.nif_letters)]
 
 
@@ -220,7 +255,7 @@ def _validate_nif(candidate: str, tax_id_format: SpanishTaxIdFormat) -> Identity
             context={"candidate": candidate},
         )
     digits, letter = match.group(1), match.group(2)
-    expected = _nif_check_letter(int(digits), tax_id_format)
+    expected = nif_check_letter(int(digits), tax_id_format)
     if letter != expected:
         raise IdentityError(
             f"NIF checksum mismatch for {digits}: expected check letter {expected!r}, got {letter!r}",
@@ -240,7 +275,7 @@ def _validate_prefixed_nif(candidate: str, tax_id_format: SpanishTaxIdFormat) ->
             context={"candidate": candidate},
         )
     prefix, digits, letter = match.group(1), match.group(2), match.group(3)
-    expected = _nif_check_letter(int(digits), tax_id_format)
+    expected = nif_check_letter(int(digits), tax_id_format)
     if letter != expected:
         raise IdentityError(
             f"NIF checksum mismatch for {prefix + digits}: expected check letter {expected!r}, got {letter!r}",
@@ -261,7 +296,7 @@ def _validate_nie(candidate: str, tax_id_format: SpanishTaxIdFormat) -> Identity
         )
     prefix, digits, letter = match.group(1), match.group(2), match.group(3)
     numeric_str = dict(tax_id_format.nie_prefix_substitutions)[prefix] + digits
-    expected = _nif_check_letter(int(numeric_str), tax_id_format)
+    expected = nif_check_letter(int(numeric_str), tax_id_format)
     if letter != expected:
         raise IdentityError(
             f"NIE checksum mismatch for {prefix + digits}: expected check letter {expected!r}, got {letter!r}",
@@ -342,7 +377,9 @@ def validate_identity(candidate: object, tax_id_format: SpanishTaxIdFormat) -> I
 
     Args:
         candidate: A free-form candidate value. Strings tolerate surrounding
-            whitespace, dashes, spaces, and casing; non-string values are
+            whitespace, dashes, dots, spaces, and casing (the separator-stripped
+            form :func:`~core.identity.nif_iva.normalise_nif_iva` owns, which the
+            shape predicate above shares); non-string values are
             rejected with a typed :class:`IdentityError`.
         tax_id_format: Complete authority-supplied format declarations.
 
@@ -359,7 +396,7 @@ def validate_identity(candidate: object, tax_id_format: SpanishTaxIdFormat) -> I
             translated_message="errors.identity.validate_expects_str",
             context={"got_type": type(candidate).__name__},
         )
-    normalised = candidate.strip().upper().replace("-", "").replace(" ", "")
+    normalised = normalise_nif_iva(candidate)
     if not normalised:
         raise IdentityError(
             "tax identifier is empty",

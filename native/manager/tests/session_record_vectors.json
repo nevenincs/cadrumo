@@ -1,0 +1,66 @@
+{
+  "start_claim_location": ".runtime/manager-start.lock",
+  "quit_marker_location": ".runtime/manager-quit.json",
+  "quit_marker_maximum_bytes": 4096,
+  "quit_markers": {
+    "canonical": [
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-1004336348-1177238915-682003330-1001\"}",
+      "{\"schema_version\":1,\"session\":\"c2\",\"set_at_ms\":9007199254740991,\"user\":\"1000\"}",
+      "{\"schema_version\":1,\"session\":\"unnamed\",\"set_at_ms\":1,\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"set_at_ms\":1,\"user\":\"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}"
+    ],
+    "equivalent": [
+      {
+        "raw": "{ \"user\": \"1000\", \"set_at_ms\": 9007199254740991, \"session\": \"c2\", \"schema_version\": 1 }\n",
+        "canonical": "{\"schema_version\":1,\"session\":\"c2\",\"set_at_ms\":9007199254740991,\"user\":\"1000\"}"
+      },
+      {
+        "raw": "\r\n\t{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-1004336348-1177238915-682003330-1001\"} ",
+        "canonical": "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-1004336348-1177238915-682003330-1001\"}"
+      },
+      {
+        "raw": "{\"schema_version\":1,\"session\":\"\\u0031\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-1004336348-1177238915-682003330-1001\"}",
+        "canonical": "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1790000000000,\"user\":\"S-1-5-21-1004336348-1177238915-682003330-1001\"}"
+      }
+    ],
+    "refused": [
+      "{\"schema_version\":1,\"session\":\"1\",\"session\":\"2\",\"set_at_ms\":1,\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1,\"user\":\"0\",\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":NaN,\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":Infinity,\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":-Infinity,\"user\":\"0\"}",
+      "[]",
+      "null",
+      "\"marker\"",
+      "",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1,\"user\":\"0\"} {}",
+      "{\"schema_version\":1,\"session\":\"1\",",
+      "{'schema_version':1,'session':'1','set_at_ms':1,'user':'0'}"
+    ],
+    "refused_by_manager": [
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1}",
+      "{\"schema_version\":1,\"session\":\"1\",\"user\":\"0\"}",
+      "{\"session\":\"1\",\"set_at_ms\":1,\"user\":\"0\"}",
+      "{\"extra\":true,\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1,\"user\":\"0\"}",
+      "{\"schema_version\":2,\"session\":\"1\",\"set_at_ms\":1,\"user\":\"0\"}",
+      "{\"schema_version\":\"1\",\"session\":\"1\",\"set_at_ms\":1,\"user\":\"0\"}",
+      "{\"schema_version\":true,\"session\":\"1\",\"set_at_ms\":1,\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":0,\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":-1,\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1.0,\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1e3,\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":\"1\",\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":9007199254740992,\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1,\"user\":\"\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1,\"user\":\"a b\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1,\"user\":\"S-1-5.21\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1,\"user\":\"usu\u00e1rio\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1,\"user\":null}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1,\"user\":{\"sid\":\"0\"}}",
+      "{\"schema_version\":1,\"session\":[\"1\"],\"set_at_ms\":1,\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"\",\"set_at_ms\":1,\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"set_at_ms\":1,\"user\":\"0\"}",
+      "{\"schema_version\":1,\"session\":\"1\",\"set_at_ms\":1,\"user\":\"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}"
+    ]
+  }
+}

@@ -130,7 +130,7 @@ def test_installed_inventory_is_read_from_the_tags_endpoint(store: tuple[str, Qu
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
         installed = read_installed_models()
     assert installed == (InstalledModel(name=VISION, size_bytes=4 * GIB),)
-    assert events.get(timeout=5) == {"method": "GET", "path": "/api/tags"}
+    assert events.get_nowait() == {"method": "GET", "path": "/api/tags"}
 
 
 def test_an_unreachable_runtime_reads_as_unmeasured_not_as_empty() -> None:
@@ -195,7 +195,7 @@ def test_removal_of_a_model_that_is_not_installed_frees_nothing_and_deletes_noth
     assert outcome.removed is False
     assert outcome.was_installed is False
     assert outcome.freed_bytes == 0
-    assert events.get(timeout=5)["method"] == "GET"
+    assert events.get_nowait()["method"] == "GET"
     assert events.empty(), "nothing beyond the inventory read may be sent"
 
 

@@ -32,7 +32,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "config.auth.logout",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "cleared_session_state": false,
@@ -42,7 +50,7 @@
           "removed_sessions": 0
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

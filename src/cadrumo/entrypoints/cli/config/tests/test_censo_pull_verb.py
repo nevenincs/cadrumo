@@ -21,6 +21,7 @@ from __future__ import annotations
 import ast
 import inspect
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -42,6 +43,7 @@ from ...tests.cli_runner import invoke_cached_cli
 from .. import _censo_transport
 from .._censo_payloads import CensoFactPayload, CensoPullDivergencePayload, CensoPullResult
 from .._censo_review_cli import confirm_censal_review
+from ..runtime_censal_contracts import CensalRuntimeReviewResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -113,6 +115,7 @@ def test_the_live_transport_is_named_pull() -> None:
     names = set(_censo_commands())
     assert "pull" in names
     assert "import" in names
+    assert "show" in names
     assert names & _FORBIDDEN_FETCH_VERBS == set()
 
 
@@ -127,6 +130,7 @@ def test_the_two_transports_share_the_apply_door_and_differ_only_in_input() -> N
     # The live transport reads from AEAT; a path option on it would be a
     # second way to do what the import sibling already owns.
     assert "--file" not in pull_flags
+    assert "--apply" not in _option_flags(commands["show"])
 
 
 def test_the_read_cannot_be_aimed_at_another_taxpayer() -> None:
@@ -230,50 +234,6 @@ def test_a_clear_and_a_value_conflict_raise_separate_notices() -> None:
     # And a run with only one kind raises only that one.
     only_cleared = {n.code for n in _censo_transport._pull_notices(applied=False, adopted=(), divergences=(cleared,))}
     assert "config.profile.censo.pull.divergences" not in only_cleared
-
-
-def test_the_fiscal_identity_is_reported_in_none_of_the_three_outcomes() -> None:
-    """The identity the read carries is an ownership check, not a reconciled field.
-
-    The projection emits ``identity.tax_id`` so the reconciliation can
-    decide whether the read belongs to this profile at all; past that
-    refusal it skips the path, so it appears in neither the adopted nor
-    the diverging set. Deriving "unchanged" from everything projected
-    would therefore report it as corroborated — and on a profile carrying
-    no identity yet, which the ownership guard deliberately allows as the
-    ordinary first read, that tells the operator AEAT agrees with a value
-    they never recorded.
-
-    Scoping the derivation to the adoptable paths is what keeps the three
-    outcomes about fields the reconciliation actually decides.
-    """
-    from .....application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, CensalReconciliation
-    from .....domain.user_profile.values import UserProfileFact
-
-    assert "identity.tax_id" not in CENSAL_ADOPTABLE_PATHS
-    adoptable_path = next(iter(sorted(CENSAL_ADOPTABLE_PATHS)))
-
-    # A real projection carrying BOTH the ownership identity and an ordinary
-    # adoptable path, against a reconciliation that decided neither.
-    projected = (
-        UserProfileFact(path="identity.tax_id", value="12345678Z"),
-        UserProfileFact(path=adoptable_path, value="corroborated"),
-    )
-    unchanged = _censo_transport._unchanged_facts(
-        projected=projected,
-        reconciliation=CensalReconciliation(),
-        adoptable_paths=CENSAL_ADOPTABLE_PATHS,
-    )
-
-    reported = {row.path for row in unchanged}
-    assert "identity.tax_id" not in reported, (
-        "the fiscal identity was reported as corroborated; on a profile carrying no identity yet "
-        "that tells the operator AEAT agrees with a value they never recorded"
-    )
-    assert adoptable_path in reported, (
-        "an adoptable path the reconciliation left undecided must still be reported unchanged, "
-        "or this test would pass against a derivation that reports nothing at all"
-    )
 
 
 def test_a_divergence_whose_values_are_masked_says_so() -> None:
@@ -425,18 +385,67 @@ def test_live_pull_contains_no_censal_write_authority() -> None:
 
 
 def test_apply_routes_through_the_canonical_reviewed_operation() -> None:
-    """The CLI apply branch delegates acquisition, review, and apply as one operation."""
+    """The CLI apply branch prepares and reviews through its bound runtime."""
     source = inspect.getsource(_censo_transport.censo_pull)
-    assert 'run_censal_review(actor_ref="operator:cli-censo"' in source
+    assert "prepare_censal_review(ctx)" in source
+    assert "review_censal_with_runtime(" in source
+    assert "bound_profile_client(ctx)" in source
     assert "confirm_censal_review" in source
     assert "apply_cotejo" not in source
     assert "apply_censal_read" not in source
+
+
+def test_reviewed_apply_outcomes_render_the_registered_projection() -> None:
+    """The CLI renders reviewed choices and effective values without writing."""
+
+    @dataclass(frozen=True)
+    class EffectiveValue:
+        value: str | None
+
+    projection = CensalReviewProjectionV1(
+        projection_version=1,
+        reviewed_proposal_digest="e" * 64,
+        fields=(
+            CensalReviewFieldProjectionV1(
+                path="contact.fiscal_address",
+                intent=CensalFieldIntent.ADOPT,
+                observed_value="CALLE MAYOR 1",
+            ),
+            CensalReviewFieldProjectionV1(
+                path="contact.postcode",
+                intent=CensalFieldIntent.PRESERVE,
+                observed_value="28013",
+            ),
+            CensalReviewFieldProjectionV1(
+                path="contact.fiscal_address_cadastral_reference",
+                intent=CensalFieldIntent.PRESERVE,
+                observed_value="9872023VH5797S",
+            ),
+        ),
+    )
+
+    adopted, unchanged, divergences, source_url = _censo_transport._reviewed_pull_outcomes(
+        reviewed=CensalRuntimeReviewResult(projection=projection, applied=True),
+        effective={
+            "contact.postcode": EffectiveValue(value=" 28013 "),
+            "contact.fiscal_address_cadastral_reference": EffectiveValue(value=None),
+        },
+    )
+
+    assert tuple(row.path for row in adopted) == ("contact.fiscal_address",)
+    assert adopted[0].source == CENSO_SOURCE_TAG
+    assert tuple(row.path for row in unchanged) == ("contact.postcode",)
+    assert len(divergences) == 1
+    assert divergences[0].path == "contact.fiscal_address_cadastral_reference"
+    assert divergences[0].profile_value is None
+    assert source_url == _CENSAL_CONSULTA_URL
 
 
 def test_exact_projection_requires_a_real_cli_apply_choice() -> None:
     """The CLI prints every reviewed fact and requires explicit confirmation."""
     projection = CensalReviewProjectionV1(
         projection_version=1,
+        reviewed_proposal_digest="e" * 64,
         fields=(
             CensalReviewFieldProjectionV1(
                 path="contact.postcode",

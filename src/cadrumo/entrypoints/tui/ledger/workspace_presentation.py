@@ -11,9 +11,10 @@ from textual.widgets import DataTable, Static
 
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ....core.i18n.render import tr
 from ....core.identity.transaction_ids import TransactionId
 from ..components.widgets import ContentDataTable, ContentScroll
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
+from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .models import LedgerFlowState
 
 #: The legal moves of a confirmed Ledger flow, as a state a caller can read.
@@ -105,7 +106,7 @@ class LedgerConfirmationFlowScreen(LedgerWorkspaceScreen):
     def action_back(self) -> None:
         """Refuse abandonment after submission; otherwise unwind confirmation."""
         if self.flow_state is LedgerFlowState.SUBMITTING:
-            self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.flow.in_flight_refusal"))
+            self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.flow.in_flight_refusal"))
             return
         if self.flow_state is LedgerFlowState.CONFIRMING:
             self._cancel_flow()

@@ -10636,18 +10636,6 @@ selector = {revision = "2024", id = "renta-profile-cotizaciones-ss-madre"}
 
 [[revisions."2025".family_removals]]
 family = "bindings"
-selector = {revision = "2024", id = "renta-profile-descendientes-count"}
-
-[[revisions."2025".family_removals]]
-family = "bindings"
-selector = {revision = "2024", id = "renta-profile-descendientes-guarderia"}
-
-[[revisions."2025".family_removals]]
-family = "bindings"
-selector = {revision = "2024", id = "renta-profile-guarderia-gastos-reales"}
-
-[[revisions."2025".family_removals]]
-family = "bindings"
 selector = {revision = "2024", id = "renta-profile-incremento-guarderia"}
 
 [[revisions."2025".family_removals]]

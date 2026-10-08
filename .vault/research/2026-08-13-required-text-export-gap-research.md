@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#required-text-export-gap'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:762ddb3f7356d158f57a57324d0b0abbeb49c46c6d54f867de1cb7409963346c'
+body_hash: 'sha256:da2a59be7f2e2e0fb7b666c139e0c71b6fef2f43fa23e9f934747dfbc0c46349'
 related: []
 ---
 
@@ -55,7 +55,7 @@ format, not fixed-width — out of this codec's scope entirely, per
 `xml_dictionary` export legitimately omits an absent optional element.
 
 `literal`-kind fields need no fix — `render_fixed_width_export_field`
-(`src/cadrumo/domain/calculations/registry/_fixed_width_codec.py:187-188`)
+
 substitutes `field.literal` before any absence check runs, so a literal
 field's own `required = true` is a documentation marker, never a load-bearing
 runtime guard. The genuinely at-risk population is the 20/12 `casilla`-kind
@@ -154,7 +154,7 @@ document distinguishes the two cases in the same column; our registry's
 matches AEAT's `obligatorio` classification exactly, confirmed at the
 casilla-schema layer too — `perceptor.nif`'s own `CasillaDefinition`
 declares `required = true`
-(`src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/casillas/ccomunicacion.pagina-complementaria__cacuse-recibo.tipo-firma.toml`,
+
 stanza `id = "perceptor.nif"`). Field 7 (`año de nacimiento`) is `Num`
 (numeric) and is ALREADY covered by the existing numeric refusal fix, since
 its casilla type differs from the four text fields beside it.
@@ -193,7 +193,7 @@ before any fix lands, not assumed from these two.
 
 ### The completeness gate does not cover this population, and the gap is scope, not ordering
 
-`export_draft` (`src/cadrumo/application/filing/_export.py:546-663`) calls
+`export_draft`  calls
 `_render_export_layout` (the codec entry point) at line 611, BEFORE
 `assert_export_mirrors_manifest` at line 633-642 — so even if the manifest
 covered this population, reordering would not be the fix; the render call
@@ -202,17 +202,16 @@ happens first regardless.
 More fundamentally, `assert_export_mirrors_manifest`'s required set is
 "every casilla that is a calculation RESULT (declares a formula) OR is
 schema-required, that the completeness manifest LISTS"
-(`src/cadrumo/application/filing/_export_parity.py:14-17`) — an AND across
+ — an AND across
 three conditions, and the manifest's own scope is documented as the
 modelo's "calculation closure": formula targets, formula-referenced
 casillas, formula/binding endpoints, verification-expectation operands,
 explicitly excluding "pure accounting-statement data-entry fields that feed
 no calculation" (`CasillaCompletenessManifestEntry` docstring,
-`src/cadrumo/domain/calculations/registry/_schema_surfaces.py:460-473`).
 
 Confirmed empirically, not just from the docstring: Modelo 180's actual
 completeness manifest
-(`src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/completeness_manifest/0001-completeness_manifest.toml`)
+
 lists exactly three casillas — `decl.total-perceptores`, `decl.base-total`,
 `decl.retenciones-total` — the declarante-level summary figures, and NONE
 of the eight per-perceptor identity fields. Modelo 145 has no
@@ -232,7 +231,7 @@ ordering gap would not close this one.
 
 The two `header`-kind sources (`presenter.tax_id`, `filing.result_disposition`)
 resolve through `_filing_producer_values`
-(`src/cadrumo/application/filing/_export.py:362-372`) as
+ as
 `str(snapshot.presenter.tax_id)` and
 `snapshot.elections.result_disposition.value` — a `str()` coercion of a
 presumably-non-optional attribute and a `StrEnum.value` access, neither of
@@ -288,16 +287,8 @@ was written before this research and was not re-verified against a
 
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/_fixed_width_codec.py:180-196,387-394,426-461`
 - `src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py:421` (the numeric precedent this research mirrors)
-- `src/cadrumo/domain/calculations/_export_field_kind.py:16-43`
-- `src/cadrumo/application/filing/_export.py:362-372,546-663`
-- `src/cadrumo/application/filing/_export_parity.py:14-17`
-- `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:460-473,811-834`
-- `src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/export_layouts/0001-export_layouts.toml`
-- `src/cadrumo/_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/casillas/ccomunicacion.pagina-complementaria__cacuse-recibo.tipo-firma.toml`
-- `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/export_layouts/0001-0002-modelo-180-perceptor.toml`
-- `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/completeness_manifest/0001-completeness_manifest.toml`
+
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_145/files/dr145v20.pdf.extracted.md:7-14`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-251-kb-pdf.pdf.extracted.md:181-182,215-253,272,306,547-548`
 - `src/cadrumo/_data/corpus/normatives/html/orden-hap-1732-2014.html.extracted.md:40,149-150,588-589,809-810,833,923-924,1275-1276` (BOE-published Order text, cross-checked against the AEAT PDF extract above per the numeric-value distrust discipline)

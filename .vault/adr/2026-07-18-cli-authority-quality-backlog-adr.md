@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#cli-authority-quality-backlog'
 date: '2026-07-18'
-modified: '2026-07-18'
-body_hash: 'sha256:6b8da08c2ad01270b3347659b904d4c18bc2975df4fd7e774c2e3aef781f7133'
+modified: '2026-10-05'
+body_hash: 'sha256:70acaeec9ca470ab8cf43dce64d4c8081b5f0d1e277f2123f1912c0351cda16a'
 related:
   - "[[2026-07-18-cli-authority-quality-backlog-research]]"
 ---
@@ -32,7 +32,7 @@ layering question (may an `adapters.outbound` module import a namespace def from
 The grounding research resolved the layering question decisively: the edge is
 intra-layer (both are `cadrumo.adapters`), no `.importlinter` contract forbids it,
 and it is the established production pattern for every other secure-object
-namespace (the LLM usage/cache/telemetry stores, the AEAT session store, the sede
+namespace (the LLM usage/cache stores, the AEAT session store, the sede
 observation store). The file carrying the raw literals already imports the
 secure-object repository from `persistence.storage`, so no new coupling is
 introduced and there is no circular-import risk. A secure-storage namespace is

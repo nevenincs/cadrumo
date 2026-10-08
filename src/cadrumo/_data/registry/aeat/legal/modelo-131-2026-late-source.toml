@@ -1,0 +1,21 @@
+# AEAT update 28/09/2026; document descriptions expressly extend La Palma to quarters 3T and 4T.
+# BOE-A-2026-18828 article 1 and current AEAT instructions corroborate the filing frame.
+# This source enrollment preserves the March capture and makes no revision-selection or authority-grade claim.
+[sources.aeat-dr-131-2026-late]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2026-late"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_131/files/09-131-ejercicio-2026-actualizado-28-09-26.xlsx"
+sha256 = "b394370ae16d303a3ed7e192ca34ba1ff49dbbbea49e4d2bbe220085cc53600f"
+bytes = 183581
+retrieved_at = 2026-10-02
+published_at = 2026-09-28
+applies_from = 2026-07-01
+applies_to = 2026-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_26/DR131_2026.xlsx"
+review_status = "agent_reviewed"
+
+[sources.aeat-dr-131-2026-late.period_selector]
+years = [2026]
+periods = ["3T", "4T"]

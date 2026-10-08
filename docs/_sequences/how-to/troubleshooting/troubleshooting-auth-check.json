@@ -13,7 +13,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Authentication is not configured yet.\nprovider\t\nconfigured\tFalse\nauthenticated\tFalse\navailable\tFalse\nactive_profile\tdocs-sequence-sandbox\nactive_profile_status\tready\nactive_profile_registered\tTrue\nactive_profile_record_present\tTrue\nbackend_configured\tFalse\nbackend_available\tFalse\ncertificate_path\t\nhealth_severity\t\nhealth_summary\t\n"
+      "text": "Authentication is not configured yet.\nprovider\t\nconfigured\tFalse\nauthenticated\tFalse\navailable\tFalse\nactive_profile\tdocs-sequence-sandbox\nactive_profile_status\tready\nactive_profile_registered\tTrue\nactive_profile_record_present\tTrue\nbackend_configured\tFalse\nbackend_available\tFalse\ncertificate_path\t\nhealth_severity\t\nhealth_summary\t\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -28,7 +28,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "config.auth.test",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "active_profile": "docs-sequence-sandbox",
           "active_profile_precondition_action": null,
@@ -51,7 +59,7 @@
           "provider": ""
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -34,7 +34,7 @@ from cadrumo.application.modelo.filing_chain_reconciliation import (
     FilingReconciliationPorts,
     reconcile_aeat_register_entry,
 )
-from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle import create_work_unit, discard_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -175,6 +175,7 @@ def _reconcile(profile: _Profile, operation: PinnedAuthorityOperation, entry: Ae
 
 def _seed_local_filing(
     profile: _Profile,
+    operation: PinnedAuthorityOperation,
     work_unit: WorkUnit,
     values: Mapping[CasillaId, Decimal],
     *,
@@ -195,6 +196,7 @@ def _seed_local_filing(
         now=at,
         work_unit_repository=profile.work_units,
         calculation_repository=profile.revisions,
+        operation=operation,
         justificante_repository=profile.ports.justificante_repository,
     )
     profile.revisions.save(draft.revisions)
@@ -257,6 +259,126 @@ def _reconciled_events(profile: _Profile):
 
 def _codes(result) -> set[FilingReconciliationNoticeCode]:
     return {notice.code for notice in result.notices}
+
+
+@pytest.mark.parametrize("wrong_scope", ["profile", "modelo", "period"])
+def test_register_entry_refuses_a_different_target_before_writes(
+    profile: _Profile, operation: PinnedAuthorityOperation, wrong_scope: str
+) -> None:
+    work_unit = _work_unit(profile, operation)
+    entry = replace(_entry("EXP-SCOPE", values={_C01: Decimal("1500")}), target_work_unit_id=work_unit.work_unit_id)
+    if wrong_scope == "profile":
+        entry = replace(entry, bucket_id="23000000-0000-4000-8000-0000000000c1")
+    elif wrong_scope == "modelo":
+        entry = replace(entry, modelo="111")
+    else:
+        entry = replace(entry, period=Period.from_year_and_code(2026, "2T"))
+    filings_before = profile.filings.load()
+    revisions_before = profile.revisions.load(operation=operation)
+    events_before = profile.events.load()
+
+    with pytest.raises(ExternalModeloImportError):
+        _reconcile(profile, operation, entry, at=_T1)
+
+    assert profile.filings.load() == filings_before
+    assert profile.revisions.load(operation=operation) == revisions_before
+    assert profile.events.load() == events_before
+    assert profile.observations.load_observation("130", _PERIOD) is None
+
+
+def test_missing_pending_calculation_cannot_be_treated_as_disagreement(
+    profile: _Profile, operation: PinnedAuthorityOperation
+) -> None:
+    work_unit = _work_unit(profile, operation)
+    _seed_local_filing(profile, operation, work_unit, {_C01: Decimal("1500")}, at=_T1)
+    revisions = profile.revisions.load(operation=operation)
+    profile.revisions.save(revisions.model_copy(update={"revisions": {}}))
+    filings_before = profile.filings.load()
+    events_before = profile.events.load()
+    layers_before = profile.observations.load_observation_layers("130", _PERIOD)
+
+    with pytest.raises(ExternalModeloImportError):
+        _reconcile(profile, operation, _entry("EXP-MISSING", values={_C01: Decimal("1600")}), at=_T2)
+
+    assert profile.filings.load() == filings_before
+    assert profile.events.load() == events_before
+    assert profile.observations.load_observation_layers("130", _PERIOD) == layers_before
+
+
+@pytest.mark.parametrize("change", ["casillas", "kind", "empty"])
+def test_repeated_register_checks_new_evidence_without_rewriting_history(
+    profile: _Profile, operation: PinnedAuthorityOperation, change: str
+) -> None:
+    _work_unit(profile, operation)
+    entry = _entry("EXP-REPLAY", values={_C01: Decimal("1500")})
+    first = _reconcile(profile, operation, entry, at=_T1)
+    if change == "casillas":
+        entry = replace(entry, casilla_values={_C01: Decimal("1600")})
+    elif change == "kind":
+        entry = replace(entry, declared_kind=FilingDeclarationKind.COMPLEMENTARIA)
+    else:
+        entry = replace(entry, casilla_values=None)
+    filings_before = profile.filings.load()
+    events_before = profile.events.load()
+    result = _reconcile(profile, operation, entry, at=_T2)
+    assert result.outcome is FilingReconciliationOutcome.UNVERIFIABLE
+    assert result.filing_record_id == first.filing_record_id
+    assert result.differing_casilla_ids == ((_C01,) if change == "casillas" else ())
+    assert profile.filings.load() == filings_before
+    assert profile.events.load() == events_before
+
+
+def test_sparse_replay_of_discarded_work_remains_readable(
+    profile: _Profile, operation: PinnedAuthorityOperation
+) -> None:
+    work = _work_unit(profile, operation)
+    entry = _entry("EXP-HISTORY", values={_C01: Decimal("1500"), _C02: Decimal("300")})
+    _reconcile(profile, operation, entry, at=_T1)
+    discard_work_unit(work.work_unit_id, actor="test", ports=profile.ports.work_lifecycle, clock=_T2)
+    events_before = profile.events.load()
+    result = _reconcile(
+        profile,
+        operation,
+        replace(entry, casilla_values={_C01: Decimal("1500")}, target_work_unit_id=work.work_unit_id),
+        at=_T3,
+    )
+    assert result.outcome is FilingReconciliationOutcome.ALREADY_RECORDED
+    assert result.evidence_basis == "casillas"
+    assert profile.events.load() == events_before
+
+
+@pytest.mark.parametrize("conflict", ["casillas", "csv", "expediente"])
+def test_receipt_confirmation_does_not_hide_later_evidence_conflict(
+    profile: _Profile, operation: PinnedAuthorityOperation, conflict: str
+) -> None:
+    work = _work_unit(profile, operation, modelo="111")
+    pending = _seed_local_filing(profile, operation, work, {_M111_RESULT: Decimal("40.00")}, at=_T1)
+    receipt = _justificante("M111REPLAY00001", modelo="111", total_a_ingresar=Decimal("40.00"))
+    entry = _entry("EXP-RECEIPT", modelo="111", justificante=receipt)
+    assert _reconcile(profile, operation, entry, at=_T2).outcome is FilingReconciliationOutcome.CONFIRMED
+    incoming = replace(entry, justificante=None, casilla_values={_M111_RESULT: Decimal("41.00")})
+    if conflict != "casillas":
+        incoming = replace(
+            incoming,
+            register=AeatRegisterRef(
+                expediente_id="EXP-OTHER" if conflict == "expediente" else entry.register.expediente_id,
+                csv="M111OTHER000001" if conflict == "csv" else entry.register.csv,
+                presented_at=_T1,
+            ),
+        )
+    filings_before = profile.filings.load()
+    events_before = profile.events.load()
+    if conflict == "casillas":
+        result = _reconcile(profile, operation, incoming, at=_T3)
+        assert result.outcome is FilingReconciliationOutcome.UNVERIFIABLE
+        assert result.filing_record_id == pending.filing_record_id
+        assert result.differing_casilla_ids == (_M111_RESULT,)
+        assert result.evidence_basis == "casillas"
+    else:
+        with pytest.raises(ExternalModeloImportError):
+            _reconcile(profile, operation, incoming, at=_T3)
+    assert profile.filings.load() == filings_before
+    assert profile.events.load() == events_before
 
 
 def test_first_register_entry_is_appended_as_confirmed_original(
@@ -353,7 +475,7 @@ def test_undeclared_kind_after_confirmed_entry_is_unverifiable(
 
 def test_matching_casillas_confirm_the_pending_entry(profile: _Profile, operation: PinnedAuthorityOperation) -> None:
     work_unit = _work_unit(profile, operation)
-    pending = _seed_local_filing(profile, work_unit, {_C01: Decimal("1500"), _C02: Decimal("300")}, at=_T1)
+    pending = _seed_local_filing(profile, operation, work_unit, {_C01: Decimal("1500"), _C02: Decimal("300")}, at=_T1)
 
     result = _reconcile(
         profile,
@@ -387,7 +509,7 @@ def test_a_register_entry_older_than_the_pending_entry_never_supersedes_it_in_th
     profile: _Profile, operation: PinnedAuthorityOperation
 ) -> None:
     work_unit = _work_unit(profile, operation)
-    pending = _seed_local_filing(profile, work_unit, {_C01: Decimal("1500")}, at=_T3)
+    pending = _seed_local_filing(profile, operation, work_unit, {_C01: Decimal("1500")}, at=_T3)
 
     result = _reconcile(profile, operation, _entry("EXP-1", values={_C01: Decimal("1700")}), at=_T1)
 
@@ -405,6 +527,7 @@ def test_different_casillas_contradict_the_pending_correction(
     baseline = profile.filings.load().records[confirmed.filing_record_id]
     pending = _seed_local_filing(
         profile,
+        operation,
         work_unit,
         {_C01: Decimal("1600")},
         at=_T2,
@@ -453,7 +576,7 @@ def test_entry_without_content_leaves_the_pending_entry_unstamped(
     profile: _Profile, operation: PinnedAuthorityOperation
 ) -> None:
     work_unit = _work_unit(profile, operation)
-    pending = _seed_local_filing(profile, work_unit, {_C01: Decimal("1500")}, at=_T1)
+    pending = _seed_local_filing(profile, operation, work_unit, {_C01: Decimal("1500")}, at=_T1)
     catalogue_before = profile.filings.load()
 
     result = _reconcile(profile, operation, _entry("EXP-1"), at=_T2)
@@ -473,7 +596,7 @@ def test_receipt_without_a_declared_total_map_is_unverifiable(
     profile: _Profile, operation: PinnedAuthorityOperation
 ) -> None:
     work_unit = _work_unit(profile, operation)
-    _seed_local_filing(profile, work_unit, {_C01: Decimal("1500")}, at=_T1)
+    _seed_local_filing(profile, operation, work_unit, {_C01: Decimal("1500")}, at=_T1)
     receipt = _justificante("M130RECEIPT0001", modelo="130", total_a_ingresar=Decimal("1500"))
 
     result = _reconcile(
@@ -494,7 +617,7 @@ def test_matching_receipt_total_confirms_with_weaker_evidence(
     profile: _Profile, operation: PinnedAuthorityOperation
 ) -> None:
     work_unit = _work_unit(profile, operation, modelo="111")
-    pending = _seed_local_filing(profile, work_unit, {_M111_RESULT: Decimal("40.00")}, at=_T1)
+    pending = _seed_local_filing(profile, operation, work_unit, {_M111_RESULT: Decimal("40.00")}, at=_T1)
     receipt = _justificante("M111RECEIPT0001", modelo="111", total_a_ingresar=Decimal("40.00"))
 
     result = _reconcile(
@@ -522,7 +645,7 @@ def test_disagreeing_receipt_total_without_casillas_is_unverifiable(
     profile: _Profile, operation: PinnedAuthorityOperation
 ) -> None:
     work_unit = _work_unit(profile, operation, modelo="111")
-    pending = _seed_local_filing(profile, work_unit, {_M111_RESULT: Decimal("40.00")}, at=_T1)
+    pending = _seed_local_filing(profile, operation, work_unit, {_M111_RESULT: Decimal("40.00")}, at=_T1)
     receipt = _justificante("M111RECEIPT0002", modelo="111", total_a_ingresar=Decimal("41.00"))
 
     result = _reconcile(

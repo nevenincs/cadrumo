@@ -16,7 +16,6 @@ import argparse
 import asyncio
 import hashlib
 import json
-import os
 import subprocess
 import sys
 from collections.abc import Awaitable, Callable, Sequence
@@ -24,7 +23,27 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Final, cast, overload
 
+from cadrumo.core.hashing import sha256_file
+from dev.first_party_source import PRODUCT_PACKAGE
 from dev.packaging.installed_wheel_binding import environment_interpreter
+from dev.product_environment import clean_product_env
+
+
+def _read_installed_child_receipt(receipt: Path, child_module: str) -> tuple[bytes, str]:
+    """Read installed child receipt."""
+    if not receipt.is_file():
+        raise InstalledTuiChildError(
+            f"installed TUI child {child_module} exited without a durable receipt",
+        )
+    receipt_bytes = receipt.read_bytes()
+    try:
+        receipt_document = json.loads(receipt_bytes)
+    except json.JSONDecodeError as exc:
+        raise InstalledTuiChildError(f"installed TUI child {child_module} wrote non-JSON receipt") from exc
+    status = receipt_document.get("status") if isinstance(receipt_document, dict) else None
+    if not isinstance(status, str) or not status:
+        raise InstalledTuiChildError(f"installed TUI child {child_module} receipt has no status")
+    return receipt_bytes, status
 
 
 class InstalledTuiChildError(RuntimeError):
@@ -90,7 +109,7 @@ def is_installed_product_origin(*, product_init: Path, workspace_root: Path) -> 
     imports from ``<checkout>/src/cadrumo``.
     """
     resolved_product = product_init.resolve()
-    source_package = (workspace_root.resolve() / "src" / "cadrumo").resolve()
+    source_package = (workspace_root.resolve() / PRODUCT_PACKAGE).resolve()
     return not resolved_product.is_relative_to(source_package)
 
 
@@ -114,7 +133,7 @@ def installed_product_evidence(*, workspace_root: Path) -> InstalledProductEvide
     product_init = assert_installed_product_origin(workspace_root=workspace_root)
     return InstalledProductEvidence(
         product_origin="site-packages",
-        product_init_sha256=hashlib.sha256(product_init.read_bytes()).hexdigest(),
+        product_init_sha256=sha256_file(product_init),
     )
 
 
@@ -123,31 +142,31 @@ def installed_product_evidence(*, workspace_root: Path) -> InstalledProductEvide
 SETUP_WALK_SURFACE: Final = "#manager-banner"
 
 
-async def _wait_for_selector(pilot: Any, selector: str, *, polls: int = 80) -> None:
+async def wait_for_public_selector(pilot: Any, selector: str, *, polls: int = 80) -> None:
     """Wait for a visible public control without reaching into app routing."""
     from textual.css.query import NoMatches
 
     for _ in range(polls):
         try:
-            _query_public_selector(pilot, selector)
+            query_public_selector(pilot, selector)
         except NoMatches:
             await pilot.pause()
         else:
             return
     raise InstalledTuiChildError(
         f"installed TUI did not expose {selector}",
-        diagnostic=_public_surface_diagnostic(pilot),
+        diagnostic=public_surface_diagnostic(pilot),
     )
 
 
-async def _wait_for_any_selector(pilot: Any, selectors: tuple[str, ...], *, polls: int = 80) -> str:
+async def wait_for_any_public_selector(pilot: Any, selectors: tuple[str, ...], *, polls: int = 80) -> str:
     """Wait for one public surface in an admitted installed-session branch."""
     from textual.css.query import NoMatches
 
     for _ in range(polls):
         for selector in selectors:
             try:
-                _query_public_selector(pilot, selector)
+                query_public_selector(pilot, selector)
             except NoMatches:
                 continue
             else:
@@ -156,11 +175,11 @@ async def _wait_for_any_selector(pilot: Any, selectors: tuple[str, ...], *, poll
     expected = ", ".join(selectors)
     raise InstalledTuiChildError(
         f"installed TUI did not expose one of: {expected}",
-        diagnostic=_public_surface_diagnostic(pilot),
+        diagnostic=public_surface_diagnostic(pilot),
     )
 
 
-def _public_surface_diagnostic(pilot: Any) -> dict[str, object]:
+def public_surface_diagnostic(pilot: Any) -> dict[str, object]:
     """Return a value-free description of the mounted public TUI surface."""
     screen = pilot.app.screen
     widget_ids = sorted(
@@ -171,22 +190,82 @@ def _public_surface_diagnostic(pilot: Any) -> dict[str, object]:
             if isinstance(widget_id := getattr(widget, "id", None), str)
         }
     )
-    return {
+    diagnostic: dict[str, object] = {
         "current_screen_class": type(screen).__name__,
         "current_screen_id": screen.id,
         "mounted_widget_ids": widget_ids,
     }
+    diagnostic.update(_public_root_diagnostic(pilot))
+    return diagnostic
+
+
+_ROOT_REFUSAL_CODES = frozenset(
+    {
+        "workbench.home.refresh_unavailable",
+        "workbench.search.unavailable",
+        "workbench.search.refresh_unavailable",
+        "workbench.destinations.refresh_unavailable",
+    }
+)
+_ACCOUNT_POSTURES = frozenset({"no_profile", "locked", "active", "expired"})
+_ROOT_DIAGNOSTIC_FLAGS = (
+    "root_updating_visible",
+    "root_account_refusal_shown",
+    "root_navigation_refusal_shown",
+    "account_session_present",
+    "account_session_has_expiry",
+    "account_session_expired",
+)
+
+
+def _public_root_diagnostic(pilot: Any) -> dict[str, object]:
+    """Distinguish a pending Home read from its public, value-free refusal."""
+    from textual.css.query import NoMatches
+    from textual.widgets import Static
+
+    from cadrumo.application.overview.home import HomeAccountSession
+    from cadrumo.core.i18n.render import tr
+    from cadrumo.core.time.clock import now
+
+    diagnostic: dict[str, object] = {}
+    if not any(hasattr(pilot.app, field) for field in ("home_refresh_refusal_code", "workbench_search_refusal_code")):
+        return diagnostic
+    for field in ("home_refresh_refusal_code", "workbench_search_refusal_code"):
+        if hasattr(pilot.app, field):
+            code = getattr(pilot.app, field)
+            if code is None or (isinstance(code, str) and code in _ROOT_REFUSAL_CODES):
+                diagnostic[field] = code
+    controls = (
+        ("#root-updating", "root_updating_visible", None),
+        ("#root-account-refusal", "root_account_refusal_shown", "tui.root.account.unavailable"),
+        ("#root-navigation-refusal", "root_navigation_refusal_shown", "tui.root.navigation.unavailable"),
+    )
+    for selector, field, translation in controls:
+        try:
+            control = pilot.app.query_one(selector, Static)
+        except (AttributeError, NoMatches):
+            continue
+        diagnostic[field] = control.display if translation is None else str(control.render()).strip() == tr(translation)
+    if hasattr(pilot.app, "account_session"):
+        session = pilot.app.account_session
+        diagnostic["account_session_present"] = session is not None
+        if isinstance(session, HomeAccountSession):
+            diagnostic["account_session_posture"] = session.posture.value
+            diagnostic["account_session_has_expiry"] = session.expires_at is not None
+            if session.expires_at is not None and session.expires_at.tzinfo is not None:
+                diagnostic["account_session_expired"] = session.expires_at <= now()
+    return diagnostic
 
 
 @overload
-def _query_public_selector[TWidget](pilot: Any, selector: str, expected_type: type[TWidget]) -> TWidget: ...
+def query_public_selector[TWidget](pilot: Any, selector: str, expected_type: type[TWidget]) -> TWidget: ...
 
 
 @overload
-def _query_public_selector(pilot: Any, selector: str, expected_type: None = None) -> object: ...
+def query_public_selector(pilot: Any, selector: str, expected_type: None = None) -> object: ...
 
 
-def _query_public_selector(pilot: Any, selector: str, expected_type: type[Any] | None = None) -> Any:
+def query_public_selector(pilot: Any, selector: str, expected_type: type[Any] | None = None) -> Any:
     """Resolve a public selector from the root, then the pushed public screen."""
     from textual.css.query import NoMatches
 
@@ -204,13 +283,9 @@ def _query_public_selector(pilot: Any, selector: str, expected_type: type[Any] |
 # These public aliases are the only driver primitives shared with subsequent
 # financial and continuation children.  They intentionally expose controls and
 # rendered screen identity, never a workbench service or persisted payload.
-wait_for_public_selector = _wait_for_selector
-wait_for_any_public_selector = _wait_for_any_selector
-public_surface_diagnostic = _public_surface_diagnostic
-query_public_selector = _query_public_selector
 
 
-async def _register_via_production_screen(*, profile_label: str, passphrase: str) -> None:
+async def register_profile_through_installed_tui(*, profile_label: str, passphrase: str) -> None:
     """Create and unlock one profile through the actual installed screen.
 
     The callbacks are the same production callbacks that
@@ -240,40 +315,103 @@ async def _register_via_production_screen(*, profile_label: str, passphrase: str
         screen.query_one("#field-confirm", Input).value = passphrase
         await pilot.click("#btn-create")
         await pilot.app.workers.wait_for_complete()
-        await _wait_for_selector(pilot, "#btn-skip-recovery")
+        await wait_for_public_selector(pilot, "#btn-skip-recovery")
         await pilot.click("#btn-skip-recovery")
         await pilot.pause()
     if screen.outcome is None:
         raise InstalledTuiChildError("registration screen closed without an admitted profile")
 
 
-register_profile_through_installed_tui = _register_via_production_screen
+async def _submit_visible_runtime_login(
+    pilot: Any, passphrase: str, wait_for: Callable[[Callable[[], bool]], Awaitable[None]]
+) -> None:
+    """Submit only the selected public profile and require its exact password handoff."""
+    from textual.widgets import Input, Select
 
-
-async def admit_installed_session(*, pilot: Any, passphrase: str, polls: int = 180) -> None:
-    """Unlock an installed session through its visible admission surface.
-
-    A newly registered profile can reach either the Login screen or an already
-    admitted Home screen depending on the surrounding production composition.
-    Both branches remain ordinary public TUI interactions.
-
-    While a profile is not set up yet, the session's first Home hands straight
-    on to the Profile setup walk, once. The journeys start from Home, so the
-    walk is left the way an operator leaves it, through its Escape binding,
-    which returns to Home.
-    """
-    from textual.widgets import Input
-
-    initial_surface = await wait_for_any_public_selector(
-        pilot,
-        ("#field-passphrase", "#home-agenda", SETUP_WALK_SURFACE),
-        polls=polls,
+    from cadrumo.entrypoints.tui.secret.runtime_login_contracts import (
+        RuntimeLoginHandoff,
+        RuntimeLoginMethod,
     )
-    if initial_surface == "#field-passphrase":
-        query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
-        await pilot.click("#btn-unlock")
-    await wait_for_any_public_selector(pilot, ("#home-agenda", SETUP_WALK_SURFACE), polls=polls)
-    await leave_the_setup_walk_if_handed_off(pilot=pilot, polls=polls)
+
+    profile = query_public_selector(pilot, "#runtime-login-profile", Select).value
+    if not isinstance(profile, str):
+        raise InstalledTuiChildError("installed runtime login has no selected profile")
+    query_public_selector(pilot, "#runtime-login-method", Select).value = RuntimeLoginMethod.PASSWORD
+    await pilot.pause()
+    credential = query_public_selector(pilot, "#runtime-login-credential", Input)
+    credential.value = passphrase
+    credential.focus()
+    await pilot.pause()
+    await pilot.press("enter")
+
+    def received_handoff() -> bool:
+        handoff = getattr(pilot.app, "handoff", None)
+        if handoff is None:
+            return False
+        if (
+            not isinstance(handoff, RuntimeLoginHandoff)
+            or str(handoff.profile_id) != profile
+            or handoff.method is not RuntimeLoginMethod.PASSWORD
+        ):
+            raise InstalledTuiChildError("installed runtime login returned a mismatched handoff")
+        return True
+
+    await wait_for(received_handoff)
+
+
+async def admit_installed_session(
+    *, pilot: Any, passphrase: str, polls: int = 180, deadline: float | None = None
+) -> bool:
+    """Drive runtime login, or return True once the separate root reaches Home.
+
+    The installed launcher invokes its autopilot in two separately owned Apps.
+    A verified login handoff returns False so the login App can finish; only
+    the later admitted root invocation may run the journey's private workflow.
+    A supplied absolute loop deadline preserves a caller's existing time bound.
+    """
+    from textual.css.query import NoMatches
+
+    loop = asyncio.get_running_loop()
+
+    async def wait_for(predicate: Callable[[], bool]) -> None:
+        remaining = polls
+        while deadline is not None or remaining > 0:
+            if predicate():
+                return
+            if deadline is not None and loop.time() >= deadline:
+                break
+            remaining -= 1
+            await pilot.pause(0.2 if deadline is not None else None)
+        raise InstalledTuiChildError(
+            "installed runtime admission did not settle",
+            diagnostic=public_surface_diagnostic(pilot),
+        )
+
+    surface: str | None = None
+
+    def locate_surface() -> bool:
+        nonlocal surface
+        for selector in ("#runtime-login-credential", "#home-agenda", SETUP_WALK_SURFACE):
+            try:
+                query_public_selector(pilot, selector)
+            except NoMatches:
+                continue
+            surface = selector
+            return True
+        return False
+
+    try:
+        async with asyncio.timeout_at(deadline):
+            await wait_for(locate_surface)
+            if surface == "#runtime-login-credential":
+                await _submit_visible_runtime_login(pilot, passphrase, wait_for)
+                return False
+            await leave_the_setup_walk_if_handed_off(pilot=pilot, polls=polls)
+            return True
+    except TimeoutError as error:
+        raise InstalledTuiChildError(
+            "installed runtime admission did not settle", diagnostic=public_surface_diagnostic(pilot)
+        ) from error
 
 
 async def leave_the_setup_walk_if_handed_off(*, pilot: Any, polls: int = 180) -> None:
@@ -302,60 +440,10 @@ def admitted_session_autopilot(
     """Build a launcher callback that admits, then delegates real TUI work."""
 
     async def drive(pilot: Any) -> None:
-        await admit_installed_session(pilot=pilot, passphrase=passphrase, polls=polls)
-        await drive_after_home(pilot)
+        if await admit_installed_session(pilot=pilot, passphrase=passphrase, polls=polls):
+            await drive_after_home(pilot)
 
     return drive
-
-
-async def login_existing_profile_through_installed_tui(*, passphrase: str) -> None:
-    """Admit a profile that already exists through its installed public Login screen.
-
-    A fresh child has no active session, and the production launcher keeps
-    credential screens out of a headless run.  This prelude drives the same
-    visible Login controls first; it never reads or writes the secure store.
-    """
-    from textual.widgets import Input
-
-    from cadrumo.application.user_profile.login_interaction import (
-        ProfileLoginInventoryState,
-        attempt_profile_login,
-        observe_profile_login_inventory,
-    )
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-    from cadrumo.entrypoints.tui.secret.login import LoginScreen
-
-    inventory = observe_profile_login_inventory()
-    if inventory.state is not ProfileLoginInventoryState.RECOGNIZED:
-        raise InstalledTuiChildError("installed Login screen did not recognize the existing profile")
-    with bundled_indexed_authority().operation() as operation:
-        screen = LoginScreen(
-            choices=inventory.choices,
-            authenticate=lambda profile_id, secret: attempt_profile_login(
-                profile_id,
-                secret,
-                profile_decode_context=operation.profile_decode_context(),
-            ),
-            preselected=inventory.preselected_profile_id,
-        )
-        async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
-            await wait_for_public_selector(pilot, "#field-passphrase")
-            query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
-            await pilot.click("#btn-unlock")
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
-    if screen.outcome is None:
-        raise InstalledTuiChildError("installed Login screen did not admit the existing profile")
-
-
-def admit_existing_profile_for_headless_launcher(*, passphrase: str) -> None:
-    """Run the Login prelude inside the product compositions a fresh child needs."""
-    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-    from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
-
-    with live_exchange_rate_composition(), profile_adapter_composition():
-        asyncio.run(login_existing_profile_through_installed_tui(passphrase=passphrase))
 
 
 def run_admitted_installed_launcher(
@@ -484,7 +572,8 @@ def _profile_route_autopilot(*, observed: list[str], passphrase: str):
     """
 
     async def drive(pilot: Any) -> None:
-        await admit_installed_session(pilot=pilot, passphrase=passphrase)
+        if not await admit_installed_session(pilot=pilot, passphrase=passphrase):
+            return
         await pilot.press("f4")
         await wait_for_public_selector(pilot, "#manager-status", polls=180)
         observed.append("workbench.profile")
@@ -505,7 +594,7 @@ def run_bootstrap(*, workspace_root: Path, profile_label: str, passphrase: str) 
     from cadrumo.entrypoints.tui.launcher import main
 
     with live_exchange_rate_composition(), profile_adapter_composition():
-        asyncio.run(_register_via_production_screen(profile_label=profile_label, passphrase=passphrase))
+        asyncio.run(register_profile_through_installed_tui(profile_label=profile_label, passphrase=passphrase))
 
     observed: list[str] = []
     exit_code = main(headless=True, auto_pilot=_profile_route_autopilot(observed=observed, passphrase=passphrase))
@@ -524,7 +613,7 @@ def run_bootstrap(*, workspace_root: Path, profile_label: str, passphrase: str) 
     )
 
 
-def _read_passphrase_from_stdin() -> str:
+def read_passphrase_from_stdin() -> str:
     """Read exactly the credential transport contract without echoing it."""
     try:
         payload = json.load(sys.stdin)
@@ -536,9 +625,6 @@ def _read_passphrase_from_stdin() -> str:
     if not isinstance(passphrase, str) or not passphrase:
         raise InstalledTuiChildError("credential stdin has no profile_passphrase")
     return passphrase
-
-
-read_passphrase_from_stdin = _read_passphrase_from_stdin
 
 
 def write_installed_tui_failure_receipt(
@@ -594,6 +680,17 @@ def _sanitized_public_diagnostic(diagnostic: dict[str, object]) -> dict[str, obj
     widget_ids = diagnostic.get("mounted_widget_ids")
     if isinstance(widget_ids, list) and all(isinstance(item, str) for item in widget_ids):
         sanitized["mounted_widget_ids"] = sorted(set(widget_ids))
+    for field in ("home_refresh_refusal_code", "workbench_search_refusal_code"):
+        if field in diagnostic:
+            code = diagnostic[field]
+            if code is None or (isinstance(code, str) and code in _ROOT_REFUSAL_CODES):
+                sanitized[field] = code
+    for field in _ROOT_DIAGNOSTIC_FLAGS:
+        if isinstance(value := diagnostic.get(field), bool):
+            sanitized[field] = value
+    posture = diagnostic.get("account_session_posture")
+    if isinstance(posture, str) and posture in _ACCOUNT_POSTURES:
+        sanitized["account_session_posture"] = posture
     return sanitized
 
 
@@ -607,6 +704,7 @@ def run_installed_tui_child_process(
     receipt_path: Path,
     passphrase: str,
     authority_root: Path | None = None,
+    runtime_socket_dir: Path | None = None,
     timeout_seconds: int = 240,
 ) -> InstalledTuiChildProcessEvidence:
     """Run a development child against an installed product interpreter.
@@ -624,9 +722,7 @@ def run_installed_tui_child_process(
         raise InstalledTuiChildError("installed TUI child receipt path must be fresh")
     if not child_module:
         raise InstalledTuiChildError("installed TUI child module and arguments must be strings")
-    environment = {
-        key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_") and key != "PYTHONPATH"
-    }
+    environment = clean_product_env()
     environment.update(
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(store),
@@ -636,6 +732,9 @@ def run_installed_tui_child_process(
     )
     if authority_root is not None:
         environment["CADRUMO_AUTHORITY_ROOT"] = str(authority_root.resolve(strict=True))
+    if runtime_socket_dir is not None:
+        environment["CADRUMO_STORAGE_ROOT"] = str(store)
+        environment["CADRUMO_RUNTIME_SOCKET_DIR"] = str(runtime_socket_dir.resolve(strict=True))
     completed = subprocess.run(  # noqa: S603 - executable is an explicit acceptance input
         [str(executable), "-m", child_module, *child_args],
         check=False,
@@ -647,18 +746,7 @@ def run_installed_tui_child_process(
         timeout=timeout_seconds,
         encoding="utf-8",
     )
-    if not receipt.is_file():
-        raise InstalledTuiChildError(
-            f"installed TUI child {child_module} exited without a durable receipt",
-        )
-    receipt_bytes = receipt.read_bytes()
-    try:
-        receipt_document = json.loads(receipt_bytes)
-    except json.JSONDecodeError as exc:
-        raise InstalledTuiChildError(f"installed TUI child {child_module} wrote non-JSON receipt") from exc
-    status = receipt_document.get("status") if isinstance(receipt_document, dict) else None
-    if not isinstance(status, str) or not status:
-        raise InstalledTuiChildError(f"installed TUI child {child_module} receipt has no status")
+    receipt_bytes, status = _read_installed_child_receipt(receipt, child_module)
     return InstalledTuiChildProcessEvidence(
         child_module=child_module,
         returncode=completed.returncode,
@@ -685,7 +773,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         evidence = run_bootstrap(
             workspace_root=args.workspace_root,
             profile_label=args.profile_label,
-            passphrase=_read_passphrase_from_stdin(),
+            passphrase=read_passphrase_from_stdin(),
         )
     except InstalledTuiChildError as exc:
         # The caller records this stable class message; no raw screen state,

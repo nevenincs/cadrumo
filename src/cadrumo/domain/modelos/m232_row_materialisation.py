@@ -110,13 +110,32 @@ def m232_related_party_row_casilla_values(
         required_mapping_entry(entries, "revision", subject=_SUBJECT),
     )
     declared = {str(casilla.id) for casilla in revision.casillas}
+    return _materialise_declared_rows(
+        rows,
+        slot_ids=slot_ids,
+        field_ids=field_ids,
+        template=template,
+        declared=declared,
+        revision_id=revision.id,
+    )
+
+
+def _materialise_declared_rows(
+    rows: tuple[Modelo232VinculadaRow, ...],
+    *,
+    slot_ids: tuple[str, ...],
+    field_ids: tuple[str, ...],
+    template: str,
+    declared: set[str],
+    revision_id: str,
+) -> dict[CasillaId, str | Decimal]:
     values: dict[CasillaId, str | Decimal] = {}
     for slot_id, row in zip(slot_ids, rows, strict=False):
         for field_id in field_ids:
             casilla_id = template.format(slot=slot_id, field=field_id)
             if casilla_id not in declared:
                 raise RegistryValidationError(
-                    f"{_SUBJECT} names casilla {casilla_id!r}, which revision {revision.id} does not declare",
+                    f"{_SUBJECT} names casilla {casilla_id!r}, which revision {revision_id} does not declare",
                 )
             values[casilla_id] = _ROW_FIELD_READERS[field_id](row)
     return values

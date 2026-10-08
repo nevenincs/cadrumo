@@ -2,12 +2,48 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+from typing import Protocol
+
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from .models import ManualLedgerTransactionResult
 
 
-def stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> list[Notice]:
+class StaleFinalizedRevisionFacts(Protocol):
+    """The facts of one finalized revision that will not receive changed evidence."""
+
+    @property
+    def work_unit_id(self) -> str:
+        """Return the work unit that owns the finalized revision."""
+        ...
+
+    @property
+    def calculation_revision_id(self) -> str:
+        """Return the finalized calculation revision."""
+        ...
+
+    @property
+    def revision_state(self) -> str:
+        """Return the finalized revision's lifecycle state."""
+        ...
+
+    @property
+    def modelo(self) -> str:
+        """Return the revision's modelo."""
+        ...
+
+    @property
+    def filing_year(self) -> int:
+        """Return the revision's filing year."""
+        ...
+
+    @property
+    def period(self) -> str:
+        """Return the revision's period token."""
+        ...
+
+
+def stale_finalized_revision_notices(stale_revisions: Iterable[StaleFinalizedRevisionFacts]) -> list[Notice]:
     """Warn that each finalized revision citing this row will not pick the evidence up.
 
     A revision bundles its ledger evidence when it is verified, and that bundle
@@ -47,8 +83,8 @@ def stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> l
                 "actionability": "finalized_revision_has_no_safe_recovery_action",
             },
         )
-        for blocker in result.stale_finalized_revisions
+        for blocker in stale_revisions
     ]
 
 
-__all__ = ["stale_finalized_revision_notices"]
+__all__ = ["StaleFinalizedRevisionFacts", "stale_finalized_revision_notices"]

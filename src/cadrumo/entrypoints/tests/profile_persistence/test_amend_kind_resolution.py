@@ -147,13 +147,13 @@ def repos(tmp_path: Path) -> Generator[_Repos]:
         )
 
 
-def _correction_disposition(result: Decimal) -> ResultDisposition:
+def _correction_disposition(result: Decimal, period: Period) -> ResultDisposition:
     """Derive the corrected return's disposition from its final result, as the filing boundary does.
 
     The baseline here is seeded without a recorded observation, so an
     amendment has no period disposition to carry forward and must state its own.
     """
-    disposition = derive_result_disposition(Modelo("303").value, {_M303_RESULT_CASILLA: result})
+    disposition = derive_result_disposition(Modelo("303").value, {_M303_RESULT_CASILLA: result}, period=period)
     assert disposition is not None
     return disposition
 
@@ -329,7 +329,7 @@ def test_complementaria_permitted_for_pre_boundary_liability_increase(
             overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             reason="under-reported cuota discovered in audit",
-            result_disposition=_correction_disposition(Decimal("150.00")),
+            result_disposition=_correction_disposition(Decimal("150.00"), Period.from_year_and_code(2024, "2T")),
             actor="operator-A",
             clock=_T4,
         )
@@ -422,7 +422,7 @@ def test_rectificativa_kind_permits_liability_decrease_post_boundary(
             amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
             m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
             reason="lawful rectificativa lowering the declared result",
-            result_disposition=_correction_disposition(Decimal("40.00")),
+            result_disposition=_correction_disposition(Decimal("40.00"), Period.from_year_and_code(2024, "3T")),
             actor="operator-A",
             clock=_T4,
         )
@@ -446,7 +446,7 @@ def test_sustitutiva_kind_permitted_at_every_period(repos: _Repos, *, operation:
             overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
             amendment_kind=CalculationRevisionAmendmentKind.SUSTITUTIVA,
             reason="material restatement, sustitutiva always permitted",
-            result_disposition=_correction_disposition(Decimal("40.00")),
+            result_disposition=_correction_disposition(Decimal("40.00"), Period.from_year_and_code(2024, "2T")),
             actor="operator-A",
             clock=_T4,
         )

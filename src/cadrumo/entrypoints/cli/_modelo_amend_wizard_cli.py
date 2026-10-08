@@ -11,9 +11,8 @@ amendment kind and a free-text reason, then calls the exact same
 ``work amend`` uses. The wizard is a guided front end over that one write
 path, not a second one (``aeat-architecture-boundaries``).
 
-The baseline casilla values the wizard displays are read from the filing
-record's :class:`~CalculationRevision`, so the operator
-edits the exact attested figures rather than a re-computed draft.
+The runtime worker supplies the filing record, its persisted calculation
+snapshot, and the matching registry casilla rows under one authority capture.
 
 Once the amendment is filed, the wizard points the operator at the existing
 ``aeat app modelo export`` verb for the fichero-BOE artefact; it never writes
@@ -37,15 +36,17 @@ is projected into a :class:`FlowDefinition` page whose copy slots are
 schema-field references resolved by this module's registered copy source
 against the per-run registry-derived table. The definition carries
 references only; the registry stays the copy authority.
+
+Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
-from uuid import uuid4
+from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
 
 import typer
 from pydantic import BaseModel
@@ -55,53 +56,42 @@ from ...application.flows.definition import CopyRef, FlowChoice, FlowCondition, 
 from ...application.flows.engine import FlowState
 from ...application.flows.line_frontend import LineFlowFrontend
 from ...application.modelo.action_errors import (
-    AmendmentComplementariaLiabilityDecreaseError,
     AmendmentEvidenceMissingError,
-    AmendmentKindNotPermittedError,
-    AmendmentM303RectificativaMotiveError,
-    AmendmentOverrideCasillaError,
-    AmendmentTargetStateError,
-    AmendmentVerificationRefusedError,
-    CalculationRevisionNotFoundError,
-    CalculationRevisionStateError,
     ModeloRecordNotFoundError,
-    WorkUnitNotFoundError,
     amendment_evidence_missing_precondition,
 )
-from ...application.modelo.amendment_actions import amend_modelo_revision
-from ...application.modelo.filing_actions import get_filing_record
-from ...application.modelo.registry_discovery import registry_casillas_for_registry_scope
+from ...application.modelo.amendment_context_operation import (
+    ModeloWorkAmendmentContextProjection,
+    ModeloWorkAmendmentContextRequest,
+)
+from ...application.modelo.amendment_projection import ModeloWorkAmendPublicResultV2
+from ...application.modelo.work_amend_contracts import (
+    ModeloWorkAmendBaseline,
+    ModeloWorkAmendOverride,
+    ModeloWorkAmendRequest,
+)
+from ...application.operations.public_scalar import PublicDecimal
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ...core.i18n.render import tr
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
-from ...domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
-from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
 from ...domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
-    m303_rectificativa_motive_is_applicable,
 )
 from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
-from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
-from ._modelo_cli_support import bad_parameter_from_error, load_modelo_calculation_revision, resolve_default_actor
+from ._modelo_cli_support import bad_parameter_from_error, resolve_actor_option
 from ._modelo_rendering import filing_record_lines
-from ._modelo_work_wizard_cli import resolve_modelo_work_unit_for_wizard
-from .common import activate_subcommand_output_language, emit_envelope
-from .state_projection_support import (
-    amendment_action_ports_factory,
-    authority_operation,
-    calculation_action_ports_factory,
-    filing_action_ports_factory,
-)
+from .common import activate_subcommand_output_language, emit_envelope, no_active_profile_refusal
+from .runtime_modelo_amendment import read_modelo_work_amendment_context, run_modelo_work_amendment
+from .runtime_modelo_metadata import read_modelo_work_unit
+from .runtime_profile_binding import require_profile_client
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.filing_record import ModeloRecord
     from ...domain.modelos.work_unit import WorkUnit
 __all__ = ["work_amend_wizard"]
@@ -155,15 +145,6 @@ def _value_page_id(casilla_id: str) -> str:
 
 
 @dataclass(frozen=True, slots=True)
-class _AmendWizardDeps:
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
-    require_active_profile: Callable[[], None]
-    resolve_work_unit_for_cli: Callable[..., Any]
-    resolve_default_actor: Callable[[], str]
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
-
-
-@dataclass(frozen=True, slots=True)
 class _AmendWizardTarget:
     """The target coordinates for the amendment-only workflow."""
 
@@ -175,27 +156,15 @@ class _AmendWizardTarget:
     bucket_id: str | None
 
 
-deps = _AmendWizardDeps(
-    activate_output_language=activate_subcommand_output_language,
-    require_active_profile=require_active_profile,
-    resolve_work_unit_for_cli=resolve_work_unit_for_cli,
-    resolve_default_actor=resolve_default_actor,
-    bad_parameter_from_error=bad_parameter_from_error,
-)
-
-
 def run_modelo_work_amend_wizard(
     *,
-    deps: _AmendWizardDeps,
     ctx: typer.Context,
     target: _AmendWizardTarget,
     actor: str | None,
     output_language_opt: OutputLanguage | None,
 ) -> None:
-    unit = resolve_modelo_work_unit_for_wizard(
-        activate_output_language=deps.activate_output_language,
-        require_active_profile=deps.require_active_profile,
-        resolve_work_unit_for_cli=deps.resolve_work_unit_for_cli,
+    activate_subcommand_output_language(ctx, output_language_opt)
+    unit = read_modelo_work_unit(
         ctx=ctx,
         work_unit_id=target.work_unit_id,
         modelo=target.modelo,
@@ -203,22 +172,28 @@ def run_modelo_work_amend_wizard(
         period=target.period,
         revision=target.revision,
         bucket_id=target.bucket_id,
-        output_language_opt=output_language_opt,
     )
     if unit.current_filing_record_id is None:
-        raise deps.bad_parameter_from_error(
+        raise bad_parameter_from_error(
             ModeloRecordNotFoundError(
                 translated_message="cli.app.modelo.work.amend_wizard_no_current_filing",
                 context={"work_unit_id": unit.work_unit_id},
             )
         )
-    try:
-        baseline = get_filing_record(
-            unit.current_filing_record_id,
-            ports=filing_action_ports_factory(ctx)(bucket_id=unit.bucket_id),
-        )
-    except ModeloRecordNotFoundError as exc:
-        raise deps.bad_parameter_from_error(exc) from exc
+    profile_id = resolve_active_bucket_id()
+    if profile_id is None:
+        raise no_active_profile_refusal()
+    client = require_profile_client(ctx, expected_profile_id=UUID(profile_id))
+    context_projection = read_modelo_work_amendment_context(
+        client,
+        ModeloWorkAmendmentContextRequest(profile_id=client.profile_id, filing_record_id=unit.current_filing_record_id),
+    ).projection
+    if not isinstance(context_projection, ModeloWorkAmendmentContextProjection) or _amendment_context_scope_invalid(
+        context_projection, unit
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    baseline = context_projection.record
+    unit = context_projection.unit.to_work_unit()
     if baseline.external_evidence is None:
         raise AmendmentEvidenceMissingError(
             context={
@@ -231,18 +206,8 @@ def run_modelo_work_amend_wizard(
                 filing_record_id=baseline.filing_record_id,
             ),
         ) from None
-    try:
-        casilla_rows = _baseline_casilla_rows(unit, operation=authority_operation(ctx))
-    except RegistrySnapshotError as exc:
-        raise deps.bad_parameter_from_error(exc) from exc
-    baseline_revision: CalculationRevision = load_modelo_calculation_revision(
-        baseline.calculation_revision_id,
-        ports=calculation_action_ports_factory(ctx)(
-            bucket_id=unit.bucket_id,
-            operation=authority_operation(ctx),
-        ),
-    )
-    amendable = _amendable_rows(casilla_rows, baseline_revision)
+    baseline_values = _baseline_values(context_projection)
+    amendable = _amendable_rows(context_projection.casilla_rows, baseline_values)
     if not amendable:
         raise typer.BadParameter(
             tr(
@@ -253,7 +218,7 @@ def run_modelo_work_amend_wizard(
     _ACTIVE_RUNS[run_token] = {}
     try:
         selected = _prompt_selection(
-            amendable=amendable, baseline_revision=baseline_revision, unit=unit, run_token=run_token
+            amendable=amendable, baseline_values=baseline_values, unit=unit, run_token=run_token
         )
         if not selected:
             raise typer.BadParameter(
@@ -263,65 +228,50 @@ def run_modelo_work_amend_wizard(
             )
         corrections, amendment_kind, motive, reason = _prompt_values_kind_reason(
             selected=selected,
-            baseline_revision=baseline_revision,
+            baseline_values=baseline_values,
             modelo=str(baseline.modelo),
-            period=baseline.period,
+            permitted_amendment_kinds=context_projection.permitted_amendment_kinds,
+            m303_rectificativa_motive_applicable=context_projection.m303_rectificativa_motive_applicable,
             run_token=run_token,
         )
     finally:
         _ACTIVE_RUNS.pop(run_token, None)
-    overrides = {row.casilla_id: value for row, _previous, value in corrections}
-    try:
-        record = amend_modelo_revision(
-            from_filing_record_id=baseline.filing_record_id,
-            overrides=overrides,
-            amendment_kind=amendment_kind,
-            m303_rectificativa_motive=motive,
-            reason=reason,
-            actor=actor or deps.resolve_default_actor(),
-            ports=amendment_action_ports_factory(ctx)(
-                bucket_id=unit.bucket_id,
-                operation=authority_operation(ctx),
-            ),
-        )
-    except (
-        ModeloRecordNotFoundError,
-        AmendmentEvidenceMissingError,
-        AmendmentTargetStateError,
-        AmendmentOverrideCasillaError,
-        AmendmentVerificationRefusedError,
-        AmendmentKindNotPermittedError,
-        AmendmentM303RectificativaMotiveError,
-        AmendmentComplementariaLiabilityDecreaseError,
-        CalculationRevisionNotFoundError,
-        CalculationRevisionStateError,
-        WorkUnitNotFoundError,
-    ) as exc:
-        raise deps.bad_parameter_from_error(exc) from exc
+    request = ModeloWorkAmendRequest(
+        baseline=ModeloWorkAmendBaseline(from_filing_record_id=baseline.filing_record_id),
+        amendment_kind=amendment_kind,
+        overrides=tuple(
+            ModeloWorkAmendOverride(casilla_id=row.casilla_id, value=str(value))
+            for row, _previous, value in corrections
+        ),
+        reason=reason,
+        m303_rectificativa_motive=motive,
+        actor=resolve_actor_option(actor),
+    )
+    amended = run_modelo_work_amendment(client, request, work_unit_id=unit.work_unit_id).projection
+    if not isinstance(amended, ModeloWorkAmendPublicResultV2):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     _emit_amend_wizard_result(
         ctx,
-        record=record,
-        unit=unit,
-        amendment_kind=amendment_kind,
-        m303_rectificativa_motive=motive,
+        record=amended.record.to_record(),
+        amendment_kind=amended.amendment_kind,
+        m303_rectificativa_motive=amended.m303_rectificativa_motive,
         reason=reason,
         corrections=corrections,
     )
 
 
-def _baseline_casilla_rows(unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> tuple[ModeloCasillaRow, ...]:
-    """Return every casilla the registry declares for the unit's revision, for display."""
-    report = registry_casillas_for_registry_scope(
-        str(unit.modelo),
-        filing_year=unit.filing_year,
-        period=unit.period.registry_token,
-        operation=operation,
-    )
-    return tuple(report.rows)
+def _baseline_values(context: ModeloWorkAmendmentContextProjection) -> dict[str, Decimal]:
+    """Read exact persisted decimal values without reconstructing a revision."""
+    values: dict[str, Decimal] = {}
+    for fact in context.calculation.casilla_values:
+        if not isinstance(fact.value, PublicDecimal):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        values[fact.key] = Decimal(fact.value.decimal)
+    return values
 
 
 def _amendable_rows(
-    casilla_rows: tuple[ModeloCasillaRow, ...], baseline_revision: CalculationRevision
+    casilla_rows: tuple[ModeloCasillaRow, ...], baseline_values: Mapping[str, Decimal]
 ) -> tuple[ModeloCasillaRow, ...]:
     """Return the registry rows that carry a baseline value, in casilla-number order.
 
@@ -330,11 +280,7 @@ def _amendable_rows(
     (casilla number) so the CHECKBOX choices and the follow-up value pages
     read top-to-bottom like the printed return.
     """
-    return tuple(
-        row
-        for row in sorted(casilla_rows, key=lambda r: r.number)
-        if row.casilla_id in baseline_revision.casilla_values
-    )
+    return tuple(row for row in sorted(casilla_rows, key=lambda r: r.number) if row.casilla_id in baseline_values)
 
 
 def _run_flow(definition: FlowDefinition) -> FlowState:
@@ -349,7 +295,7 @@ def _run_flow(definition: FlowDefinition) -> FlowState:
 
 
 def _prompt_selection(
-    *, amendable: tuple[ModeloCasillaRow, ...], baseline_revision: CalculationRevision, unit: WorkUnit, run_token: str
+    *, amendable: tuple[ModeloCasillaRow, ...], baseline_values: Mapping[str, Decimal], unit: WorkUnit, run_token: str
 ) -> tuple[ModeloCasillaRow, ...]:
     """Ask which casillas changed through a single CHECKBOX page.
 
@@ -360,21 +306,18 @@ def _prompt_selection(
     empty answer did — the caller turns that into the no-corrections refusal.
     """
     definition = _selection_definition(
-        amendable=amendable, baseline_revision=baseline_revision, unit=unit, run_token=run_token
+        amendable=amendable, baseline_values=baseline_values, unit=unit, run_token=run_token
     )
     state = _run_flow(definition)
     return _selected_rows(amendable=amendable, unit=unit, state=state)
 
 
 def _selection_definition(
-    *, amendable: tuple[ModeloCasillaRow, ...], baseline_revision: CalculationRevision, unit: WorkUnit, run_token: str
+    *, amendable: tuple[ModeloCasillaRow, ...], baseline_values: Mapping[str, Decimal], unit: WorkUnit, run_token: str
 ) -> FlowDefinition:
     """Project the amendable casillas into a one-page CHECKBOX selection flow."""
     table = _ACTIVE_RUNS[run_token]
-    summary_lines = "\n".join(
-        f"  {row.number}\t{row.label}\t{baseline_revision.casilla_values.get(row.casilla_id, Decimal('0'))}"
-        for row in amendable
-    )
+    summary_lines = "\n".join(f"  {row.number}\t{row.label}\t{baseline_values[row.casilla_id]}" for row in amendable)
     prompt_ref = _copy_ref(run_token, "sel:prompt")
     table[prompt_ref] = tr(
         "cli.app.modelo.work.amend_wizard_select_prompt",
@@ -385,7 +328,7 @@ def _selection_definition(
     )
     choices: list[FlowChoice] = []
     for row in amendable:
-        previous = baseline_revision.casilla_values.get(row.casilla_id, Decimal("0"))
+        previous = baseline_values[row.casilla_id]
         label_ref = _copy_ref(run_token, f"sel:choice:{row.casilla_id}")
         table[label_ref] = f"{row.number} ({row.label}): {previous}"
         choices.append(FlowChoice(value=row.casilla_id, label=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=label_ref)))
@@ -455,9 +398,10 @@ def _wizard_corrected_amount(state: FlowState, casilla_id: str) -> Decimal:
 def _prompt_values_kind_reason(
     *,
     selected: tuple[ModeloCasillaRow, ...],
-    baseline_revision: CalculationRevision,
+    baseline_values: Mapping[str, Decimal],
     modelo: str,
-    period: Period,
+    permitted_amendment_kinds: tuple[CalculationRevisionAmendmentKind, ...],
+    m303_rectificativa_motive_applicable: bool,
     run_token: str,
 ) -> tuple[
     tuple[tuple[ModeloCasillaRow, Decimal, Decimal], ...],
@@ -476,12 +420,17 @@ def _prompt_values_kind_reason(
     one the period permits.
     """
     definition = _values_kind_reason_definition(
-        selected=selected, baseline_revision=baseline_revision, modelo=modelo, period=period, run_token=run_token
+        selected=selected,
+        baseline_values=baseline_values,
+        modelo=modelo,
+        permitted_amendment_kinds=permitted_amendment_kinds,
+        m303_rectificativa_motive_applicable=m303_rectificativa_motive_applicable,
+        run_token=run_token,
     )
     state = _run_flow(definition)
     corrections: list[tuple[ModeloCasillaRow, Decimal, Decimal]] = []
     for row in selected:
-        previous = baseline_revision.casilla_values.get(row.casilla_id, Decimal("0"))
+        previous = baseline_values[row.casilla_id]
         corrections.append((row, previous, _wizard_corrected_amount(state, row.casilla_id)))
     amendment_kind = CalculationRevisionAmendmentKind((state.answers.get(_KIND_PAGE_ID) or "").strip())
     raw_motive = (state.answers.get(_MOTIVE_PAGE_ID) or "").strip()
@@ -495,29 +444,27 @@ def _prompt_values_kind_reason(
 def _values_kind_reason_definition(
     *,
     selected: tuple[ModeloCasillaRow, ...],
-    baseline_revision: CalculationRevision,
+    baseline_values: Mapping[str, Decimal],
     modelo: str,
-    period: Period,
+    permitted_amendment_kinds: tuple[CalculationRevisionAmendmentKind, ...],
+    m303_rectificativa_motive_applicable: bool,
     run_token: str,
 ) -> FlowDefinition:
     """Project the corrected-value, amendment-kind, and reason questions into one flow.
 
-    The amendment-kind SELECT reads
-    :func:`~domain.calculations.registry.amendment_regime_policy.permitted_amendment_kind_values_for_period`
-    for ``modelo`` and ``period`` so the wizard only offers (and only accepts)
-    the kinds legally available for this filing — it never offers
-    ``rectificativa`` for a pre-adoption period, nor ``complementaria`` once
-    the rectificativa has replaced it. ``amend_modelo_revision`` re-asserts the
-    same guard downstream, so a kind outside the permitted set is refused there
-    too if this SELECT is ever bypassed.
+    The SELECT uses kinds projected under the same worker authority capture
+    as the baseline. The amendment writer reasserts the legal guard.
     """
     table = _ACTIVE_RUNS[run_token]
     pages = _correction_value_pages(
-        selected=selected, baseline_revision=baseline_revision, run_token=run_token, table=table
+        selected=selected, baseline_values=baseline_values, run_token=run_token, table=table
     )
-    pages.append(_amendment_kind_page(modelo=modelo, period=period, run_token=run_token, table=table))
+    pages.append(_amendment_kind_page(permitted_kinds=permitted_amendment_kinds, run_token=run_token, table=table))
     motive_page = _m303_motive_page(
-        modelo=modelo, baseline_revision=baseline_revision, run_token=run_token, table=table
+        modelo=modelo,
+        m303_rectificativa_motive_applicable=m303_rectificativa_motive_applicable,
+        run_token=run_token,
+        table=table,
     )
     if motive_page is not None:
         pages.append(motive_page)
@@ -528,13 +475,13 @@ def _values_kind_reason_definition(
 def _correction_value_pages(
     *,
     selected: tuple[ModeloCasillaRow, ...],
-    baseline_revision: CalculationRevision,
+    baseline_values: Mapping[str, Decimal],
     run_token: str,
     table: dict[str, str],
 ) -> list[FlowPage]:
     pages: list[FlowPage] = []
     for row in selected:
-        previous = baseline_revision.casilla_values.get(row.casilla_id, Decimal("0"))
+        previous = baseline_values[row.casilla_id]
         prompt_ref = _copy_ref(run_token, f"val:{row.casilla_id}:prompt")
         table[prompt_ref] = tr(
             "cli.app.modelo.work.amend_wizard_value_prompt",
@@ -564,9 +511,9 @@ def _value_help_ref(*, row: ModeloCasillaRow, run_token: str, table: dict[str, s
     return help_ref
 
 
-def _amendment_kind_page(*, modelo: str, period: Period, run_token: str, table: dict[str, str]) -> FlowPage:
-    permitted = permitted_amendment_kind_values_for_period(modelo, period)
-    permitted_kinds = tuple(kind for kind in CalculationRevisionAmendmentKind if kind.value in permitted)
+def _amendment_kind_page(
+    *, permitted_kinds: tuple[CalculationRevisionAmendmentKind, ...], run_token: str, table: dict[str, str]
+) -> FlowPage:
     kind_choices = tuple(
         _amendment_kind_choice(kind=kind, run_token=run_token, table=table) for kind in permitted_kinds
     )
@@ -599,17 +546,9 @@ def _amendment_kind_choice(
 
 
 def _m303_motive_page(
-    *, modelo: str, baseline_revision: CalculationRevision, run_token: str, table: dict[str, str]
+    *, modelo: str, m303_rectificativa_motive_applicable: bool, run_token: str, table: dict[str, str]
 ) -> FlowPage | None:
-    if modelo != Modelo("303"):
-        return None
-    filing_evidence = baseline_revision.filing_instance_evidence
-    if filing_evidence is None:
-        return None
-    regimen_snapshot = filing_evidence.m303.regimen_simplificado.regimen_snapshot
-    if not m303_rectificativa_motive_is_applicable(
-        registry_revision_id=regimen_snapshot.registry_revision_id, record_design=regimen_snapshot.record_design
-    ):
+    if modelo != "303" or not m303_rectificativa_motive_applicable:
         return None
     motive_choices = tuple(
         _m303_motive_choice(motive=motive, run_token=run_token, table=table) for motive in M303RectificativaMotive
@@ -672,7 +611,6 @@ def _emit_amend_wizard_result(
     ctx: typer.Context,
     *,
     record: ModeloRecord,
-    unit: WorkUnit,
     amendment_kind: CalculationRevisionAmendmentKind,
     m303_rectificativa_motive: M303RectificativaMotive | None,
     reason: str,
@@ -730,18 +668,11 @@ def work_amend_wizard(
 ) -> None:
     """Walk the resolved work unit's current AEAT-attested filing through a guided amendment.
 
-    Resolves (or reuses) a work unit exactly as ``work create`` /
-    ``work wizard`` do, loads its current filing record (the same
-    :class:`~ModeloRecord` ``work amend``
-    requires — it must carry
-    :class:`~ExternalEvidence`), shows every
-    baseline casilla value, prompts which casillas changed and their
-    corrected values, confirms the amendment kind and reason, then
-    calls :func:`~application.modelo.amendment_actions.amend_modelo_revision`
-    through the identical inputs ``work amend`` builds.
+    Resolve the work unit and its current filing through registered runtime
+    reads, prompt from the worker's pinned calculation and casilla snapshot,
+    then submit the same typed amendment operation as ``work amend``.
     """
     run_modelo_work_amend_wizard(
-        deps=deps,
         ctx=ctx,
         target=_AmendWizardTarget(
             work_unit_id=work_unit_id,
@@ -753,4 +684,12 @@ def work_amend_wizard(
         ),
         actor=actor,
         output_language_opt=output_language_opt,
+    )
+
+
+def _amendment_context_scope_invalid(context_projection: ModeloWorkAmendmentContextProjection, unit: WorkUnit) -> bool:
+    """Require the selected current filing record and work unit in the amendment context."""
+    return (
+        context_projection.unit.work_unit_id != unit.work_unit_id
+        or context_projection.record.filing_record_id != unit.current_filing_record_id
     )

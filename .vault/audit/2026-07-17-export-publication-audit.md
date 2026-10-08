@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#export-publication'
 date: '2026-07-17'
-modified: '2026-07-19'
+modified: '2026-10-03'
 body_hash: 'sha256:68d869fa4f3fb0de04a888054d5d95bae8d3d36d6a30383ae4157296d1dc8c21'
 related:
-  - "[[2026-07-17-export-publication-plan]]"
-  - "[[2026-07-17-export-publication-adr]]"
   - "[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]"
+  - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
 ---
 
 # `export-publication` audit: `export durable-layer continuous-gate review`

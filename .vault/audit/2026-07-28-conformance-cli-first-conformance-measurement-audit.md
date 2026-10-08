@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#conformance-cli'
 date: '2026-07-28'
-modified: '2026-07-28'
+modified: '2026-10-03'
 body_hash: 'sha256:e496d5cfd990b1e4548a69e591a9781f38febaf6e7136ca6c38cd607194a6e18'
 related:
-  - "[[2026-07-27-conformance-cli-plan]]"
   - "[[2026-07-27-conformance-cli-adr]]"
 ---
 

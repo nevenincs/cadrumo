@@ -44,7 +44,7 @@ import json
 import re
 import shutil
 import subprocess
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final, cast
@@ -72,9 +72,106 @@ _BLOCKER_LABEL: Final = "priority:P0-blocker"
 _GH_TIMEOUT_SECONDS: Final = 15
 _PROJECT_NAME_PATHS: Final = (
     (Path("pyproject.toml"), PRODUCT_IDENTITY.distribution),
-    (Path("packaging/cadrumo_data_manuals/pyproject.toml"), PRODUCT_IDENTITY.companion_distributions[0]),
-    (Path("packaging/cadrumo_data_official/pyproject.toml"), PRODUCT_IDENTITY.companion_distributions[1]),
+    *(
+        (Path("packaging") / distribution.replace("-", "_") / "pyproject.toml", distribution)
+        for distribution in PRODUCT_IDENTITY.companion_distributions
+    ),
 )
+
+
+def _distribution_evidence_verdict(
+    records: list[DistributionEvidence], required_rows: tuple[str, ...], cohort_id: str
+) -> ReadinessCheck:
+    """Distribution evidence verdict."""
+    failed = sorted({record.row_id for record in records if record.result.status is EvidenceStatus.FAILED})
+    if failed:
+        return ReadinessCheck(
+            "distribution-evidence-complete",
+            "blocking",
+            False,
+            f"cohort has failed distribution rows: {failed!r}",
+        )
+
+    canonical_passing, conflicts = _select_canonical_passing_evidence(records)
+    if conflicts:
+        return ReadinessCheck(
+            "distribution-evidence-complete",
+            "blocking",
+            False,
+            "conflicting passing evidence for the same row (runtime/client/destination "
+            f"disagree): {'; '.join(conflicts)}",
+        )
+
+    passed_rows = set(canonical_passing)
+    missing = sorted(set(required_rows) - passed_rows)
+    if missing:
+        return ReadinessCheck(
+            "distribution-evidence-complete",
+            "blocking",
+            False,
+            f"missing passing distribution evidence rows: {missing!r}",
+        )
+
+    return ReadinessCheck(
+        "distribution-evidence-complete",
+        "blocking",
+        True,
+        f"{len(required_rows)} required rows pass for cohort {cohort_id}",
+    )
+
+
+def _check_scoop_cohort_bindings(
+    cohort_root: Path, version: str, python_sha: Mapping[str, str], failures: list[str]
+) -> None:
+    """Check scoop cohort bindings."""
+    try:
+        scoop = _require_json_object(
+            json.loads((cohort_root / "scoop" / "cadrumo.json").read_text(encoding=_UTF_8)),
+            surface="scoop manifest",
+        )
+        if str(scoop.get("version")) != version:
+            failures.append(f"scoop version {scoop.get('version')!r} != cohort {version!r}")
+        expected_hashes = [python_sha[distribution] for distribution in PRODUCT_IDENTITY.cohort_distributions]
+        scoop_architecture = _require_json_object(scoop.get("architecture"), surface="scoop architecture")
+        scoop_64bit = _require_json_object(scoop_architecture.get("64bit"), surface="scoop 64bit architecture")
+        actual_hashes = scoop_64bit.get("hash")
+        if not isinstance(actual_hashes, list):
+            raise ValueError("scoop 64bit hashes must be a JSON array")
+        if actual_hashes != expected_hashes:
+            failures.append("scoop 64bit hashes do not equal the cohort python-wheel digests")
+    except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
+        failures.append(f"scoop manifest unreadable: {exc}")
+
+
+def _check_homebrew_cohort_bindings(
+    cohort_root: Path, version: str, python_sha: Mapping[str, str], failures: list[str]
+) -> None:
+    """Check homebrew cohort bindings."""
+    try:
+        formula = (cohort_root / "homebrew" / "Formula" / "cadrumo.rb").read_text(encoding=_UTF_8)
+        url_match = re.search(r'url "[^"]*/cadrumo-([0-9][^"/]*)\.tar\.gz"', formula)
+        sha_match = re.search(r'sha256 "([0-9a-f]{64})"', formula)
+        embedded_version = url_match.group(1) if url_match is not None else None
+        if embedded_version != version:
+            failures.append(f"homebrew formula stable version {embedded_version!r} != cohort {version!r}")
+        if sha_match is None or sha_match.group(1) != python_sha["cadrumo-sdist"]:
+            failures.append("homebrew formula stable sha256 != cohort cadrumo sdist digest")
+    except (OSError, KeyError) as exc:
+        failures.append(f"homebrew formula unreadable: {exc}")
+
+
+def _companion_version_pins(repo_root: Path, pyproject_version: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Companion version pins."""
+    root_project = parse_toml((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
+    observed_pins = tuple(
+        str(requirement)
+        for requirement in root_project["project"]["dependencies"]
+        if any(str(requirement).startswith(distribution) for distribution in PRODUCT_IDENTITY.companion_distributions)
+    )
+    expected_pins = tuple(
+        f"{distribution}=={pyproject_version}" for distribution in PRODUCT_IDENTITY.companion_distributions
+    )
+    return (observed_pins, expected_pins)
 
 
 def _repo_root() -> Path:
@@ -140,7 +237,7 @@ def _read_project_name(project_file: Path) -> str:
 
 
 def check_project_names_are_canonical(repo_root: Path) -> ReadinessCheck:
-    """Require the root and both companion distributions to use the Cadrumo tuple."""
+    """Require the root and every companion distribution to use the Cadrumo tuple."""
     observed = tuple(
         (relative, _read_project_name(repo_root / relative), expected) for relative, expected in _PROJECT_NAME_PATHS
     )
@@ -202,15 +299,7 @@ def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
     pyproject_version = project_versions[0][1]
     package_version = _read_package_version(repo_root)
     manifest_version = _read_manifest_version(repo_root)
-    root_project = parse_toml((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
-    observed_pins = tuple(
-        str(requirement)
-        for requirement in root_project["project"]["dependencies"]
-        if any(str(requirement).startswith(distribution) for distribution in PRODUCT_IDENTITY.companion_distributions)
-    )
-    expected_pins = tuple(
-        f"{distribution}=={pyproject_version}" for distribution in PRODUCT_IDENTITY.companion_distributions
-    )
+    observed_pins, expected_pins = _companion_version_pins(repo_root, pyproject_version)
     versions = {version for _relative, version in project_versions} | {package_version, manifest_version}
     passed = len(versions) == 1 and bool(pyproject_version) and observed_pins == expected_pins
     surfaces = " ".join(f"{relative}={version!r}" for relative, version in project_versions)
@@ -241,7 +330,7 @@ def check_changelog_is_ready(repo_root: Path) -> ReadinessCheck:
 
 
 def check_no_open_release_blockers(
-    *, repo_slug: str = "nevenincs/cadrumo", gh_executable: str | None = None, strict: bool = False
+    *, repo_slug: str = PRODUCT_IDENTITY.repository, gh_executable: str | None = None, strict: bool = False
 ) -> ReadinessCheck:
     """Confirm no open GitHub issue carries the `priority:P0-blocker` label.
 
@@ -469,41 +558,7 @@ def check_distribution_evidence_set(
                 f"invalid or mismatched evidence {path.name}: {exc}",
             )
 
-    failed = sorted({record.row_id for record in records if record.result.status is EvidenceStatus.FAILED})
-    if failed:
-        return ReadinessCheck(
-            "distribution-evidence-complete",
-            "blocking",
-            False,
-            f"cohort has failed distribution rows: {failed!r}",
-        )
-
-    canonical_passing, conflicts = _select_canonical_passing_evidence(records)
-    if conflicts:
-        return ReadinessCheck(
-            "distribution-evidence-complete",
-            "blocking",
-            False,
-            "conflicting passing evidence for the same row (runtime/client/destination "
-            f"disagree): {'; '.join(conflicts)}",
-        )
-
-    passed_rows = set(canonical_passing)
-    missing = sorted(set(required_rows) - passed_rows)
-    if missing:
-        return ReadinessCheck(
-            "distribution-evidence-complete",
-            "blocking",
-            False,
-            f"missing passing distribution evidence rows: {missing!r}",
-        )
-
-    return ReadinessCheck(
-        "distribution-evidence-complete",
-        "blocking",
-        True,
-        f"{len(required_rows)} required rows pass for cohort {manifest.cohort_id}",
-    )
+    return _distribution_evidence_verdict(records, required_rows, manifest.cohort_id)
 
 
 def check_generated_surface_versions(
@@ -537,39 +592,9 @@ def check_generated_surface_versions(
 
     failures: list[str] = []
 
-    try:
-        scoop = _require_json_object(
-            json.loads((cohort_root / "scoop" / "cadrumo.json").read_text(encoding=_UTF_8)),
-            surface="scoop manifest",
-        )
-        if str(scoop.get("version")) != version:
-            failures.append(f"scoop version {scoop.get('version')!r} != cohort {version!r}")
-        expected_hashes = [
-            python_sha["cadrumo"],
-            python_sha["cadrumo-data-manuals"],
-            python_sha["cadrumo-data-official"],
-        ]
-        scoop_architecture = _require_json_object(scoop.get("architecture"), surface="scoop architecture")
-        scoop_64bit = _require_json_object(scoop_architecture.get("64bit"), surface="scoop 64bit architecture")
-        actual_hashes = scoop_64bit.get("hash")
-        if not isinstance(actual_hashes, list):
-            raise ValueError("scoop 64bit hashes must be a JSON array")
-        if actual_hashes != expected_hashes:
-            failures.append("scoop 64bit hashes do not equal the cohort python-wheel digests")
-    except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
-        failures.append(f"scoop manifest unreadable: {exc}")
+    _check_scoop_cohort_bindings(cohort_root, version, python_sha, failures)
 
-    try:
-        formula = (cohort_root / "homebrew" / "Formula" / "cadrumo.rb").read_text(encoding=_UTF_8)
-        url_match = re.search(r'url "[^"]*/cadrumo-([0-9][^"/]*)\.tar\.gz"', formula)
-        sha_match = re.search(r'sha256 "([0-9a-f]{64})"', formula)
-        embedded_version = url_match.group(1) if url_match is not None else None
-        if embedded_version != version:
-            failures.append(f"homebrew formula stable version {embedded_version!r} != cohort {version!r}")
-        if sha_match is None or sha_match.group(1) != python_sha["cadrumo-sdist"]:
-            failures.append("homebrew formula stable sha256 != cohort cadrumo sdist digest")
-    except (OSError, KeyError) as exc:
-        failures.append(f"homebrew formula unreadable: {exc}")
+    _check_homebrew_cohort_bindings(cohort_root, version, python_sha, failures)
 
     if failures:
         return ReadinessCheck(name, "blocking", False, "; ".join(failures))

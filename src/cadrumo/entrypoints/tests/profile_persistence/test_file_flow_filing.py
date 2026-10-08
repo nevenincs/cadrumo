@@ -12,27 +12,28 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from cadrumo.application.modelo.action_errors import (
     CalculationRevisionStateError,
-    ModeloRecordNotFoundError,
     ModeloWorkflowGateError,
 )
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
-from cadrumo.application.modelo.filing_actions import file_modelo_revision, get_filing_record, list_filing_records
+from cadrumo.application.modelo.filing_actions import file_modelo_revision, list_filing_records
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.workflow.abort import WorkflowAbortReason
 from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowStage
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
-from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
     FilingOrigin,
+    ModeloRecord,
     ModeloRecordStatus,
 )
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.tests.filing_record_read_support import persisted_filing_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     _FILE_FLOW_PROFILE_ID,
     DEFAULT_130_BASELINE_INPUTS,
@@ -55,6 +56,8 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
+
+from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -94,10 +97,11 @@ def test_file_requires_verificado_completo_state(repos: Repos) -> None:
     ):
         file_modelo_revision(
             revision.calculation_revision_id,
+            approved_verification_report_id="0" * 64,  # absent: BORRADOR refusal precedes approval
             actor="operator-A",
             workflow_profile=workflow_profile(),
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
@@ -111,7 +115,12 @@ def test_file_requires_verificado_completo_state(repos: Repos) -> None:
     assert failure.verdict.argument_bindings[0].value == work_unit.work_unit_id
 
 
-def test_file_creates_filing_record_and_advances_pointers(repos: Repos) -> None:
+@pytest.mark.parametrize("reject_final_read", [False, True])
+def test_file_creates_filing_record_and_advances_pointers(
+    repos: Repos,
+    monkeypatch: pytest.MonkeyPatch,
+    reject_final_read: bool,
+) -> None:
     """The happy-path file flow: calculate → verify
     → file. After file: a ModeloRecord exists, the revision is in
     FILED state, the work unit's filed_calculation_revision_id and
@@ -145,19 +154,57 @@ def test_file_creates_filing_record_and_advances_pointers(repos: Repos) -> None:
         bucket_event_repository=bv_repo,
         clock=T2,
     )
-    filing = file_revision(
-        revision.calculation_revision_id,
-        revision=revision,
-        work_unit=work_unit,
-        actor="operator-A",
-        notes="Q1 IVA",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T3,
-    )
+    reads: list[str] = []
+    load = cr_repo.load
+    load_revisioned = cr_repo.load_revisioned
+    before_revisions = load()
+    before_filings = fr_repo.load()
+    before_work_units = wu_repo.load()
 
+    def counted_load(*, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue:
+        reads.append("load")
+        return load(operation=operation)
+
+    def counted_load_revisioned(
+        *,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> tuple[CalculationRevisionCatalogue, str]:
+        reads.append("load_revisioned")
+        if reject_final_read:
+            raise ValueError("final catalogue read refused")
+        return load_revisioned(operation=operation)
+
+    monkeypatch.setattr(cr_repo, "load", counted_load)
+    monkeypatch.setattr(cr_repo, "load_revisioned", counted_load_revisioned)
+
+    def publish() -> ModeloRecord:
+        record = file_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            actor="operator-A",
+            notes="Q1 IVA",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=T3,
+        )
+        assert isinstance(record, ModeloRecord)
+        return record
+
+    if reject_final_read:
+        with pytest.raises(ValueError, match="final catalogue read refused"):
+            publish()
+        assert reads == ["load", "load_revisioned"]
+        assert fr_repo.load() == before_filings
+        assert wu_repo.load() == before_work_units
+        assert load() == before_revisions
+        return
+
+    filing = publish()
+
+    assert reads == ["load", "load_revisioned"], f"filing catalogue reads: {reads}"
     assert filing.status is ModeloRecordStatus.VIGENTE
     assert filing.aeat_accepted is False
     assert filing.notes == "Q1 IVA"
@@ -283,7 +330,9 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
     assert computing.details.extemporanea is True
 
     assert target_filing_records(
-        list_filing_records(ports=build_filing_action_ports(bucket_id=work_unit.bucket_id)),
+        list_filing_records(
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=published_authority_operation())
+        ),
         work_unit,
     ) == (filing,)
 
@@ -353,7 +402,11 @@ def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> 
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
     assert (
         target_filing_records(
-            list_filing_records(ports=build_filing_action_ports(bucket_id=work_unit.bucket_id)),
+            list_filing_records(
+                ports=build_filing_action_ports(
+                    bucket_id=work_unit.bucket_id, operation=published_authority_operation()
+                )
+            ),
             work_unit,
         )
         == ()
@@ -528,9 +581,9 @@ def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> Non
     assert refreshed_revision_two.state is CalculationRevisionState.PRESENTADO
 
     # Prior filing is superseded; prior revision moved to FILED_SUPERSEDED.
-    refreshed_filing_one = get_filing_record(
+    refreshed_filing_one = persisted_filing_record(
         filing_one.filing_record_id,
-        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=published_authority_operation()),
     )
     assert refreshed_filing_one.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_filing_one.superseded_at == T5
@@ -660,7 +713,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos: Repos) -> Non
     )
 
     default_listing = list_filing_records(
-        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=published_authority_operation()),
     )
     target_default_listing = target_filing_records(default_listing, work_unit)
     assert len(target_default_listing) == 1
@@ -668,7 +721,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos: Repos) -> Non
 
     with_history = list_filing_records(
         include_superseded=True,
-        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
+        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=published_authority_operation()),
     )
     assert len(target_filing_records(with_history, work_unit)) == 2
 
@@ -727,7 +780,7 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
 
     listed = list_filing_records(
         ports=replace(
-            build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+            build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
             filing_repository=fr_repo,
         ),
     )
@@ -789,22 +842,9 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
     listed = list_filing_records(
         modelo="100",
         ports=replace(
-            build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+            build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
             filing_repository=fr_repo,
         ),
     )
 
     assert tuple(record.modelo for record in listed) == (ModeloCode("100"),)
-
-
-def test_get_filing_record_raises_on_missing_id(repos: Repos) -> None:
-    _, _, fr_repo, _, _ = repos
-    with pytest.raises(ModeloRecordNotFoundError) as excinfo:
-        get_filing_record(
-            "0" * 64,
-            ports=replace(
-                build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
-                filing_repository=fr_repo,
-            ),
-        )
-    assert excinfo.value.translated_message == "application.modelo.errors.filing_record_not_found"

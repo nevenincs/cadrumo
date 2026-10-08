@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#dependency-provisioning'
 date: '2026-07-06'
-modified: '2026-07-17'
-body_hash: 'sha256:9754e097e651cedd9a5e42e46144d883a5b291d6915e8428d5e3b2808ddc3723'
+modified: '2026-10-03'
+body_hash: 'sha256:4a9192674c23c875866118d77b2e500f7b393f481e3e97c854745dcd20849f96'
 related: []
 ---
 
@@ -30,24 +30,22 @@ tests with targeted grep/read slices before recording the bridge.
   and returns `ollama serve` or `ollama pull <model>` remediation; it does not run
   inference. `probe_playwright_browser` uses a filesystem cache check and returns
   `playwright install chromium` when absent. Sources:
-  `src/aeat/application/provisioning.py:1`,
-  `src/aeat/application/provisioning.py:48`,
-  `src/aeat/application/provisioning.py:74`, and
-  `src/aeat/application/provisioning.py:169`.
+
+  the former source file, and
+
 - Subprocess providers and optional Python extras share the same row shape.
   `probe_subprocess_providers` wraps provider CLI availability into
   `DependencyStatus`; `probe_optional_extra` and `probe_optional_extras` enumerate
   the core optional-extra registry and return install hints rather than raising.
-  Sources: `src/aeat/application/provisioning.py:119` and
-  `src/aeat/application/provisioning.py:200`.
+  Sources: the former source file and
+
 - The optional-extra registry lives in `core`, so adapters can guard lazy imports
   without importing application services. `OPTIONAL_EXTRAS` currently lists the
   Google, browser, and Anthropic extras; `MissingOptionalExtraError` is both an
   AEAT/core error and an `ImportError`, with a concrete install hint. Sources:
-  `src/aeat/core/_optional_extras.py:1`,
-  `src/aeat/core/_optional_extras.py:69`,
-  `src/aeat/core/_optional_extras.py:79`, and
-  `src/aeat/core/_optional_extras.py:107`.
+
+  the former source file, and
+
 - The package metadata mirrors the capability-gated install surface. `pyproject`
   declares `google`, `browser`, and `anthropic` extras and documents graceful
   degradation through `dependency-provisioning`; the dev-only torch placement is
@@ -62,26 +60,23 @@ tests with targeted grep/read slices before recording the bridge.
   `cloud_evidence_upload`, and `google_export`; Playwright/browser is reported as
   a dependency row but is not an issue gate because no browser capability exists
   in the current `ServiceCapability` enum. Sources:
-  `src/aeat/entrypoints/cli/_config/_check_cli.py:1`,
-  `src/aeat/entrypoints/cli/_config/_check_cli.py:24`,
-  `src/aeat/entrypoints/cli/_config/_check_cli.py:44`,
-  `src/aeat/entrypoints/cli/_config/_check_cli.py:62`, and
-  `src/aeat/core/_capabilities.py:37`.
+
+  the former source file, and
+
 - The JSON payload documents the emitted contract. `ConfigCheckResult` carries
   profile id, `ok`, capability rows, dependency rows, preflight rows, and issues;
   `CheckDependencyPayload` mirrors the `DependencyStatus` shape and names the
   probes that feed it. Source:
-  `src/aeat/entrypoints/cli/_config/_check_payloads.py:36` and
-  `src/aeat/entrypoints/cli/_config/_check_payloads.py:83`.
+  the former source file and
+
 - Real-behavior tests cover the non-crashing probe contract. They exercise an
   unreachable Ollama endpoint, missing and present Playwright cache roots,
   subprocess provider status rows, optional-extra status rows, and
   `MissingOptionalExtraError` as an instructive AEAT error caught by the central
-  boundary. Sources: `src/aeat/application/tests/test_provisioning.py:31`,
-  `src/aeat/application/tests/test_provisioning.py:43`,
-  `src/aeat/application/tests/test_provisioning.py:72`,
-  `src/aeat/application/tests/test_provisioning.py:102`, and
-  `src/aeat/application/tests/test_provisioning.py:113`.
+  boundary. Sources: the former source file,
+
+  the former source file, and
+
 - The packaging preflight protects the dependency surface mechanically. The
   dependency-surface script checks that the optional-extra registry matches the
   project metadata and validates frozen exports before reporting dependency

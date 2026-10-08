@@ -16,7 +16,7 @@ from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSX_EXTE
 from .....core.logging import get_logger
 from ._constants import CSV_EXTENSIONS, OFX_EXTENSIONS
 from ._mapped_tabular import MappedTabularProvider
-from .base import FinancialProvider
+from .base import FinancialProvider, require_admissible_source
 from .csv import CsvProvider
 from .ofx import OfxProvider
 from .pdf_n26 import PdfN26Provider
@@ -27,6 +27,11 @@ _logger = get_logger(__name__)
 
 #: Every legacy ``.xls`` workbook is an OLE2 compound document.
 _OLE2_SIGNATURE = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+
+#: Content sniffing reads only the leading signature bytes, so an oversized
+#: source is never pulled into memory before a provider applies the shared
+#: size ceiling.
+_SNIFF_BYTES = 256
 
 
 def _exact_layout_candidates(path: Path) -> tuple[FinancialProvider, ...]:
@@ -43,20 +48,12 @@ def _exact_layout_candidates(path: Path) -> tuple[FinancialProvider, ...]:
     if suffix in CSV_EXTENSIONS:
         return (CsvProvider(), OfxProvider(), XlsxProvider(), XlsProvider(), PdfN26Provider())
     try:
-        head = path.read_bytes()[:256]
+        with path.open("rb") as handle:
+            head = handle.read(_SNIFF_BYTES)
     except OSError:
-        _logger.warning("detect_provider: cannot read file header for sniffing path=%s", path, exc_info=True)
+        _logger.warning("detect_provider: cannot read file header for sniffing file=%s", path.name, exc_info=True)
         return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider(), PdfN26Provider())
-    upper_head = head.upper()
-    if head.startswith(b"%PDF"):
-        return (PdfN26Provider(), CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider())
-    if head.startswith(b"PK"):
-        return (XlsxProvider(), CsvProvider(), OfxProvider(), XlsProvider(), PdfN26Provider())
-    if head.startswith(_OLE2_SIGNATURE):
-        return (XlsProvider(), CsvProvider(), XlsxProvider(), OfxProvider(), PdfN26Provider())
-    if b"<OFX>" in upper_head or b"<BANKTRANLIST>" in upper_head:
-        return (OfxProvider(), CsvProvider(), XlsxProvider(), XlsProvider(), PdfN26Provider())
-    return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider(), PdfN26Provider())
+    return _header_layout_candidates(head)
 
 
 def detect_provider(path: Path) -> FinancialProvider | None:
@@ -65,6 +62,8 @@ def detect_provider(path: Path) -> FinancialProvider | None:
     Walks an extension- and content-prioritised candidate list and
     returns the first provider whose ``validate_source`` result is an
     ``is_valid`` :class:`~adapters.inbound.financial.providers.base.ProviderValidation`.
+    The shared size and file-kind guard runs before any header sniff or
+    provider probe reads the source.
 
     Args:
         path: Source document to classify.
@@ -72,7 +71,12 @@ def detect_provider(path: Path) -> FinancialProvider | None:
     Returns:
         The matching :class:`FinancialProvider`, or ``None`` when no
         provider can interpret ``path``.
+
+    Raises:
+        InvalidFinancialSourceError: When the source is a symlink, missing,
+            not a regular file, or over the ingest size ceiling.
     """
+    require_admissible_source(path)
     providers = _ordered_candidates(path)
     for provider in providers:
         if provider.validate_source(path).is_valid:
@@ -93,3 +97,17 @@ def _ordered_candidates(path: Path) -> tuple[FinancialProvider, ...]:
     parse for a deterministic one.
     """
     return (*_exact_layout_candidates(path), MappedTabularProvider())
+
+
+def _header_layout_candidates(head: bytes) -> tuple[FinancialProvider, ...]:
+    """Retain exact provider precedence for each supported content signature."""
+    upper_head = head.upper()
+    if head.startswith(b"%PDF"):
+        return (PdfN26Provider(), CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider())
+    if head.startswith(b"PK"):
+        return (XlsxProvider(), CsvProvider(), OfxProvider(), XlsProvider(), PdfN26Provider())
+    if head.startswith(_OLE2_SIGNATURE):
+        return (XlsProvider(), CsvProvider(), XlsxProvider(), OfxProvider(), PdfN26Provider())
+    if b"<OFX>" in upper_head or b"<BANKTRANLIST>" in upper_head:
+        return (OfxProvider(), CsvProvider(), XlsxProvider(), XlsProvider(), PdfN26Provider())
+    return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider(), PdfN26Provider())

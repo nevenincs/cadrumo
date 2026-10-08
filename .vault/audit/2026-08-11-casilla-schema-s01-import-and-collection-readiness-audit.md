@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:49b4c90cf2c4183ad105a38bfb7cb95a59dad61648fb2540148c5dd65289f92d'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-research]]"
 ---
 # `casilla-schema` audit: `s01 import and collection readiness`

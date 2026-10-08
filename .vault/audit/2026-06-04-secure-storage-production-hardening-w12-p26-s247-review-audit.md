@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:f3bdc832828026e126b437f04722795369bad696ab8da2b0a8c807b96eaa9e51'
+modified: '2026-10-03'
+body_hash: 'sha256:6e32f677349a96e41975951211d4ebfe0687e249867cbc0bdd5b3cbcdbc2c2ae'
 related: []
 ---
 
@@ -32,8 +32,8 @@ The active bucket session fallback logs debug metadata before allowing diagnosti
 
 ## S247-006 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/repair_integrity.py src/aeat/application/test_repair_integrity.py src/aeat/entrypoints/cli/_config/__init__.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/test_repair_integrity.py` passed with 13 tests.
+- the historical check passed.
+- the historical check passed with 13 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-145` as `runtime-default`.

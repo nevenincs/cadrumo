@@ -4,7 +4,7 @@
 @setup aeat --format json app modelo work create --modelo 349 --year 2026 --period 1T
 @setup aeat --format json app modelo work calculate --modelo 349 --year 2026 --period 1T
 @setup aeat --format json app modelo work verify --modelo 349 --year 2026 --period 1T
-@step After you upload at the portal, record the local filed marker in the obligation window.
+@step After you upload at the portal, record the filing in Cadrumo in the obligation window.
 @result aeat --format json app modelo work file --modelo 349 --year 2026 --period 1T
 @expect result.modelo == "349"
 @expect result.filing_year == 2026

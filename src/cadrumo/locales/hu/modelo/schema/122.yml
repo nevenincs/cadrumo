@@ -4,13 +4,54 @@ modelo:
       construct:
         modelo-122-regularizacion:
           field:
-            title: '122-es nyomtatvány: a nagycsaládosok/fogyatékossággal élők utáni
-              adókedvezmény korrekciója'
+            title: 'Modelo 122 nyomtatvány: a nagycsaládosok/fogyatékossággal élők
+              utáni adókedvezmény korrekciója'
       field:
         official_name: Modelo 122. A magánszemélyek jövedelemadója. Nagycsaládos vagy
           eltartott fogyatékos személy után járó kedvezmények. A kedvezményre való
           jogosultság korrekciója a bevallás benyújtására nem kötelezett adózók esetében.
         title: IRPF nagycsaládos / fogyatékossági kedvezmény korrekciója
+      form:
+        context:
+          complementaria-justificante:
+            heading: Bizonylatszám
+          complementaria-marca:
+            heading: Kiegészítő bevallás
+          contribuyente-apellidos:
+            heading: Vezetéknév
+          contribuyente-nif:
+            heading: Adóazonosító szám
+          contribuyente-nombre:
+            heading: Utónév
+          ingreso-iban:
+            heading: Bankszámlaszám (IBAN)
+        page:
+          pag-1:
+            heading: Adókedvezmények helyesbítése · 2018-as nyomtatvány
+        section:
+          ascendiente-dos-hijos:
+            heading: Kétgyermekes szülő tartásdíjra való jogosultság nélkül
+          ascendientes:
+            heading: Eltartott fogyatékossággal élő felmenők
+          complementaria:
+            heading: 5. Kiegészítő bevallás
+          contribuyente:
+            heading: 1. Bevallásra nem kötelezett adózó
+          conyuge:
+            heading: Nem különélő, fogyatékossággal élő házastárs
+          descendientes:
+            heading: 2. Jogtalanul felvett adókedvezmény-előlegek rendezése · Eltartott
+              fogyatékossággal élő leszármazók
+          ejercicio:
+            heading: Adóév
+          familia-numerosa:
+            heading: Nagycsalád
+          ingreso:
+            heading: 4. Befizetés
+          liquidacion:
+            heading: 3. Adószámítás
+          representante:
+            heading: 6. Képviselő
       revision:
         2017-y-siguientes:
           casilla:

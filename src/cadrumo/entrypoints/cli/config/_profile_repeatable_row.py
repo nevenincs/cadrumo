@@ -4,10 +4,21 @@ from __future__ import annotations
 
 import typer
 
+from ....application.user_profile.profile_operation_contracts import (
+    ProfileRepeatableRowChangeOperationProjection,
+    ProfileRepeatableRowMutationOperationProjection,
+    ProfileRepeatableRowMutationOperationRequest,
+    ProfileRepeatableRowRemoveOperationRequest,
+    ProfileRepeatableRowUpdateOperationRequest,
+    ProfileRepeatableRowValue,
+)
+from ....application.user_profile.section_rows import validate_profile_repeatable_row_fields
 from ....core.external_constants import OutputLanguage
 from ..common import activate_subcommand_output_language, emit_envelope
 from ..errors import CliRefusedBoundaryError
+from ..runtime_profile_binding import require_profile_client
 from ..state_projection_support import authority_operation
+from ._runtime_profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 
 
 def _parse_values(tokens: list[str]) -> dict[str, str]:
@@ -58,6 +69,14 @@ def _refuse_unknown_repeatable_section(section: str, *, schema: object) -> None:
     )
 
 
+def _require_distinct_clears(clear_fields: tuple[str, ...]) -> None:
+    """Refuse repeated CLI clear tokens before submitting a typed request."""
+    if len(clear_fields) != len(set(clear_fields)):
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.add_row.duplicate_field",
+        )
+
+
 def profile_add_row(
     ctx: typer.Context,
     section: str,
@@ -66,7 +85,8 @@ def profile_add_row(
 ) -> None:
     """Add one row through the application-owned schema and atomic writer."""
     activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile.section_rows import add_profile_repeatable_section_row
+    from uuid import UUID
+
     from ..config_payloads import ConfigProfileAddRowResult
     from ._profile_support import resolve_active_profile_pointer
 
@@ -75,19 +95,32 @@ def profile_add_row(
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
     profile_decode_context = authority_operation(ctx).profile_decode_context()
     _refuse_unknown_repeatable_section(section, schema=profile_decode_context.schema)
-    outcome = add_profile_repeatable_section_row(
-        profile_id=pointer.bucket_id,
-        section_key=section,
-        values=_parse_values(value),
-        schema=profile_decode_context.schema,
-        profile_decode_context=profile_decode_context,
+    values = _parse_values(value)
+    validate_profile_repeatable_row_fields(profile_decode_context.schema.section(section), values=values)
+    profile_id = UUID(str(pointer.bucket_id))
+    client = require_profile_client(ctx, expected_profile_id=profile_id)
+    deadline = mutation_deadline()
+    baseline = read_mutation_baseline(client, deadline=deadline)
+    completed, current = execute_profile_mutation(
+        client,
+        ProfileRepeatableRowMutationOperationRequest(
+            profile_id=profile_id,
+            expected_revision=baseline.record_revision,
+            expected_content_digest=baseline.content_digest,
+            section_key=section,
+            values=tuple(ProfileRepeatableRowValue(field_key=key, value=item) for key, item in values.items()),
+        ),
+        deadline=deadline,
     )
+    outcome = completed.projection
+    if not isinstance(outcome, ProfileRepeatableRowMutationOperationProjection):
+        raise TypeError("registered row mutation returned another projection")
     result = ConfigProfileAddRowResult(
-        profile_id=outcome.record.profile_id,
+        profile_id=str(outcome.profile_id),
         section=outcome.section_key,
         row_index=outcome.row_index,
-        record_revision=outcome.record.record_revision,
-        content_digest=outcome.record.content_digest,
+        record_revision=outcome.record_revision,
+        content_digest=current.content_digest,
     )
     emit_envelope(
         ctx,
@@ -112,7 +145,8 @@ def profile_edit_row(
 ) -> None:
     """Modify one stable row, retaining omitted fields and clearing only explicit ones."""
     activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile.section_rows import update_profile_repeatable_section_row
+    from uuid import UUID
+
     from ..config_payloads import ConfigProfileRowChangeResult
     from ._profile_support import resolve_active_profile_pointer
 
@@ -121,22 +155,40 @@ def profile_edit_row(
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
     profile_decode_context = authority_operation(ctx).profile_decode_context()
     _refuse_unknown_repeatable_section(section, schema=profile_decode_context.schema)
-    outcome = update_profile_repeatable_section_row(
-        profile_id=pointer.bucket_id,
-        section_key=section,
-        row_key=_parse_row_key(row),
-        values=_parse_values(value or []),
-        clear_fields=tuple(clear or ()),
-        schema=profile_decode_context.schema,
-        profile_decode_context=profile_decode_context,
+    row_key = _parse_row_key(row)
+    values = _parse_values(value or [])
+    clears = tuple(clear or ())
+    _require_distinct_clears(clears)
+    validate_profile_repeatable_row_fields(
+        profile_decode_context.schema.section(section), values=values, clear_fields=clears
     )
+    profile_id = UUID(str(pointer.bucket_id))
+    client = require_profile_client(ctx, expected_profile_id=profile_id)
+    deadline = mutation_deadline()
+    baseline = read_mutation_baseline(client, deadline=deadline)
+    completed, current = execute_profile_mutation(
+        client,
+        ProfileRepeatableRowUpdateOperationRequest(
+            profile_id=profile_id,
+            expected_revision=baseline.record_revision,
+            expected_content_digest=baseline.content_digest,
+            section_key=section,
+            row_key=row_key,
+            values=tuple(ProfileRepeatableRowValue(field_key=key, value=item) for key, item in values.items()),
+            clear_fields=clears,
+        ),
+        deadline=deadline,
+    )
+    outcome = completed.projection
+    if not isinstance(outcome, ProfileRepeatableRowChangeOperationProjection):
+        raise TypeError("registered row update returned another projection")
     result = ConfigProfileRowChangeResult(
-        profile_id=outcome.record.profile_id,
+        profile_id=str(outcome.profile_id),
         section=outcome.section_key,
         row=outcome.row_key or "base",
         changed=outcome.changed,
-        record_revision=outcome.record.record_revision,
-        content_digest=outcome.record.content_digest,
+        record_revision=outcome.record_revision,
+        content_digest=current.content_digest,
     )
     emit_envelope(
         ctx,
@@ -160,7 +212,8 @@ def profile_remove_row(
 ) -> None:
     """Remove one stable row through explicit clear tombstones."""
     activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile.section_rows import remove_profile_repeatable_section_row
+    from uuid import UUID
+
     from ..config_payloads import ConfigProfileRowChangeResult
     from ._profile_support import resolve_active_profile_pointer
 
@@ -169,20 +222,32 @@ def profile_remove_row(
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
     profile_decode_context = authority_operation(ctx).profile_decode_context()
     _refuse_unknown_repeatable_section(section, schema=profile_decode_context.schema)
-    outcome = remove_profile_repeatable_section_row(
-        profile_id=pointer.bucket_id,
-        section_key=section,
-        row_key=_parse_row_key(row),
-        schema=profile_decode_context.schema,
-        profile_decode_context=profile_decode_context,
+    row_key = _parse_row_key(row)
+    profile_id = UUID(str(pointer.bucket_id))
+    client = require_profile_client(ctx, expected_profile_id=profile_id)
+    deadline = mutation_deadline()
+    baseline = read_mutation_baseline(client, deadline=deadline)
+    completed, current = execute_profile_mutation(
+        client,
+        ProfileRepeatableRowRemoveOperationRequest(
+            profile_id=profile_id,
+            expected_revision=baseline.record_revision,
+            expected_content_digest=baseline.content_digest,
+            section_key=section,
+            row_key=row_key,
+        ),
+        deadline=deadline,
     )
+    outcome = completed.projection
+    if not isinstance(outcome, ProfileRepeatableRowChangeOperationProjection):
+        raise TypeError("registered row removal returned another projection")
     result = ConfigProfileRowChangeResult(
-        profile_id=outcome.record.profile_id,
+        profile_id=str(outcome.profile_id),
         section=outcome.section_key,
         row=outcome.row_key or "base",
-        changed=True,
-        record_revision=outcome.record.record_revision,
-        content_digest=outcome.record.content_digest,
+        changed=outcome.changed,
+        record_revision=outcome.record_revision,
+        content_digest=current.content_digest,
     )
     emit_envelope(
         ctx,
@@ -192,7 +257,7 @@ def profile_remove_row(
             f"profile_id\t{result.profile_id}",
             f"section\t{result.section}",
             f"row\t{result.row}",
-            "changed\ttrue",
+            f"changed\t{str(result.changed).lower()}",
             f"record_revision\t{result.record_revision}",
         ],
     )

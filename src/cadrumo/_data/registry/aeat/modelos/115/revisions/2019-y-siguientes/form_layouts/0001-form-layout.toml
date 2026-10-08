@@ -1,0 +1,75 @@
+# Authored form structure; automatic generation preserves this declaration.
+# Reconcile source changes explicitly. Authorship does not imply completed review.
+
+[[revisions.2019-y-siguientes.form_layouts]]
+id = "form-layout"
+revision_id = "2019-y-siguientes"
+seed_source = "authored"
+review = { state = "generated" }
+generator_version = 1
+source_state_digest = "03fd00f7477efd9305575073f030320d5ad83607b572b36be0e144faa47c61db"
+design_sources = [
+    { source_ref = "aeat-dr-115-2019-v13", sha256 = "4f7192e04c98ba31a053f2619416b77098ef1ed43665ce144774ec527dcffea7" },
+    { source_ref = "boe-2000-21430-modelo-115-form", sha256 = "b0bcdb4481216c47bd7db91b648b2efdd30b13e245e552c72f0c3742ad543358" },
+]
+placements = [
+    { casilla_id = "01", kind = "on_form", box_number = "01" },
+    { casilla_id = "02", kind = "on_form", box_number = "02" },
+    { casilla_id = "03", kind = "on_form", box_number = "03" },
+    { casilla_id = "04", kind = "on_form", box_number = "04" },
+    { casilla_id = "05", kind = "on_form", box_number = "05" },
+]
+
+[[revisions.2019-y-siguientes.form_layouts.pages]]
+id = "dr-11501"
+official_ref = "BOE-A-2000-21430, anexo II, pág. 20; DR 115 de 2019"
+heading_key = "modelo.schema.115.form.page.dr-11501.heading"
+official_heading = "Retenciones por arrendamiento de inmuebles urbanos"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "identificacion"
+heading_key = "modelo.schema.115.form.section.identificacion.heading"
+official_heading = "Identificación (1)"
+blocks = [
+    { kind = "context_field", id = "nif", export_layout_id = "generated-modelo-115-2019-y-siguientes-fichero", export_record_id = "modelo-115-page-01", export_field_id = "modelo-115-page-01-nif", heading_key = "modelo.schema.115.form.context.nif", official_heading = "NIF" },
+    { kind = "context_field", id = "apellidos", export_layout_id = "generated-modelo-115-2019-y-siguientes-fichero", export_record_id = "modelo-115-page-01", export_field_id = "modelo-115-page-01-apellidos", heading_key = "modelo.schema.115.form.context.apellidos", official_heading = "Apellidos o razón social" },
+    { kind = "context_field", id = "nombre", export_layout_id = "generated-modelo-115-2019-y-siguientes-fichero", export_record_id = "modelo-115-page-01", export_field_id = "modelo-115-page-01-nombre", heading_key = "modelo.schema.115.form.context.nombre", official_heading = "Nombre" },
+]
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "devengo"
+heading_key = "modelo.schema.115.form.section.devengo.heading"
+official_heading = "Devengo (2)"
+blocks = [
+    { kind = "context_field", id = "ejercicio", export_layout_id = "generated-modelo-115-2019-y-siguientes-fichero", export_record_id = "modelo-115-page-01", export_field_id = "modelo-115-page-01-ejercicio", heading_key = "modelo.schema.115.form.context.ejercicio", official_heading = "Ejercicio" },
+    { kind = "context_field", id = "periodo", export_layout_id = "generated-modelo-115-2019-y-siguientes-fichero", export_record_id = "modelo-115-page-01", export_field_id = "modelo-115-page-01-periodo", heading_key = "modelo.schema.115.form.context.periodo", official_heading = "Período" },
+]
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "liquidacion"
+heading_key = "modelo.schema.115.form.section.liquidacion.heading"
+official_heading = "Liquidación (3)"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "01" },
+    { kind = "field", id = "field-2", casilla_id = "02" },
+    { kind = "field", id = "field-3", casilla_id = "03" },
+    { kind = "field", id = "field-4", casilla_id = "04" },
+    { kind = "field", id = "field-5", casilla_id = "05" },
+]
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "complementaria"
+heading_key = "modelo.schema.115.form.section.complementaria.heading"
+official_heading = "Complementaria (4)"
+blocks = [
+    { kind = "context_field", id = "declaracion-complementaria", export_layout_id = "generated-modelo-115-2019-y-siguientes-fichero", export_record_id = "modelo-115-page-01", export_field_id = "modelo-115-page-01-declaracion-complementaria", heading_key = "modelo.schema.115.form.context.declaracion-complementaria", official_heading = "Declaración complementaria" },
+    { kind = "context_field", id = "justificante-anterior", export_layout_id = "generated-modelo-115-2019-y-siguientes-fichero", export_record_id = "modelo-115-page-01", export_field_id = "modelo-115-page-01-justificante-anterior", heading_key = "modelo.schema.115.form.context.justificante-anterior", official_heading = "N.º de justificante de la declaración anterior" },
+]
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "ingreso"
+heading_key = "modelo.schema.115.form.section.ingreso.heading"
+official_heading = "Ingreso (5)"
+blocks = [
+    { kind = "context_field", id = "iban", export_layout_id = "generated-modelo-115-2019-y-siguientes-fichero", export_record_id = "modelo-115-page-01", export_field_id = "modelo-115-page-01-iban", heading_key = "modelo.schema.115.form.context.iban", official_heading = "Código IBAN" },
+]

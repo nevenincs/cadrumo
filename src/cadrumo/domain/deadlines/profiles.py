@@ -34,14 +34,14 @@ from ..calculations.registry.irpf_income_categories import (
     require_irpf_income_category,
 )
 from ..calculations.registry.irpf_regimes import require_irpf_special_regime
-from ..calculations.registry.iva_schema_vocabulary import (
-    default_iva_regime as _default_iva_regime,
-)
-from ..calculations.registry.iva_schema_vocabulary import (
+from ..calculations.registry.iva_regime_vocabulary import default_iva_regime as _default_iva_regime
+from ..calculations.registry.iva_regime_vocabulary import (
     iva_regime_no_aplica_token,
+    require_iva_regime,
+)
+from ..calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_choices,
     m303_tax_territory_choices,
-    require_iva_regime,
     require_m303_regime_composition,
     require_m303_tax_territory,
     resolve_m303_tax_territory_catalogue,

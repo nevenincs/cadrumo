@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#distribution-installation-readiness'
 date: '2026-07-16'
-modified: '2026-07-16'
-body_hash: 'sha256:3e4c366bf6246a00ba895fb8f6d979c182d856b06af3b12fecfbd33b42677937'
+modified: '2026-10-05'
+body_hash: 'sha256:e648e0f1a5ad7f5466a8ec7c012497bbc399fb23853e77c16eefc9f777a700c1'
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
-  - '[[2026-07-15-distribution-installation-readiness-plan]]'
 ---
 
 # `distribution-installation-readiness` audit: `Installed tax and MCP phase code review`
@@ -55,7 +54,7 @@ checkout with product scripts removed from `PATH`.
 
 ### invoked-cli-origin
 
-S66 records the exact supervised `argv[0]` through payload-free production telemetry.
+S66 records the exact supervised `argv[0]` through payload-free production logging.
 S65 requires one attestation for each of profile creation, work creation, calculation,
 and observation retrieval; rejects missing, duplicate, or divergent attestations; and
 binds the shared executable-path digest to the installed cohort.

@@ -16,6 +16,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Final, Literal, cast
 
+from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError, authority_generation
 
 from .cli_journey import (
@@ -39,6 +40,65 @@ _PURCHASE_IVA: Final = Decimal("10.50")
 _EXPECTED_RESULT: Final = -_PURCHASE_IVA
 _ZERO: Final = Decimal("0.00")
 _PRIVATE_ARTIFACT_PLACEHOLDER: Final = "<synthetic-purchase-artifact>"
+
+
+def _require_negative_local_filing(filed: dict[str, object]) -> tuple[str, str, str]:
+    """Require negative local filing."""
+    filing_record_id = _required_id(filed, "filing_record_id")
+    filing_origin = _required_text(filed, "origin")
+    filing_confirmation = _required_text(filed, "confirmation")
+    if filing_origin != "local" or filing_confirmation != "pendiente":
+        raise IvaCliJourneyError("Modelo 303 file did not label the filing local and pending")
+    if filed.get("aeat_accepted") is not False or filed.get("live_submission") is not False:
+        raise IvaCliJourneyError("Modelo 303 file claimed AEAT acceptance or a live submission")
+    if filed.get("external_evidence") is not None:
+        raise IvaCliJourneyError("Modelo 303 local filing unexpectedly carries external AEAT evidence")
+    return filing_record_id, filing_origin, filing_confirmation
+
+
+def _require_negative_wallet_seed(history: Mapping[str, object], filing_year: int) -> tuple[int, list[object]]:
+    """Require negative wallet seed."""
+    if history.get("as_of_year") != filing_year:
+        raise IvaCliJourneyError("fresh-process IVA wallet history returned another as-of year")
+    rows = history.get("rows")
+    row_count = history.get("row_count")
+    if not isinstance(rows, list) or not isinstance(row_count, int) or row_count != len(rows):
+        raise IvaCliJourneyError("fresh-process IVA wallet history returned an invalid row projection")
+    prior_seed = _unique_history_row(rows, period=_PRIOR_PERIOD, provenance="operator_seed", filing_year=filing_year)
+    if _decimal_history_amount(prior_seed, "generated_amount") != _ZERO:
+        raise IvaCliJourneyError("fresh-process IVA wallet history did not retain the 3T zero seed")
+    if _decimal_history_amount(prior_seed, "available_end_amount") != _ZERO:
+        raise IvaCliJourneyError("fresh-process IVA wallet history did not retain the 3T zero availability")
+    return row_count, cast(list[object], rows)
+
+
+def _require_compensation_lot_projection(
+    generated: Decimal, available: Decimal, lot_count: object, lots: object
+) -> tuple[int, Mapping[str, object]]:
+    """Require compensation lot projection."""
+    if generated != _PURCHASE_IVA or available != _PURCHASE_IVA:
+        raise IvaCliJourneyError("fresh-process IVA wallet history did not retain the generated available credit")
+    if not isinstance(lot_count, int) or lot_count != 1:
+        raise IvaCliJourneyError("fresh-process IVA wallet history did not return one carry-forward lot")
+    if not isinstance(lots, list) or len(lots) != 1 or not isinstance(lots[0], Mapping):
+        raise IvaCliJourneyError("fresh-process IVA wallet history returned no one-lot projection")
+    lot = lots[0]
+    return lot_count, cast(Mapping[str, object], lot)
+
+
+def _require_compensation_lot_amounts(lot: Mapping[str, object], filing_year: int) -> Decimal:
+    """Require compensation lot amounts."""
+    if (
+        lot.get("source_filing_year") != filing_year
+        or _period_code(lot.get("source_period"), filing_year=filing_year) != _PERIOD
+    ):
+        raise IvaCliJourneyError("fresh-process IVA wallet lot did not identify the 4T filing")
+    if _decimal_history_amount(lot, "generated_amount") != _PURCHASE_IVA:
+        raise IvaCliJourneyError("fresh-process IVA wallet lot did not retain the generated credit")
+    remaining = _decimal_history_amount(lot, "remaining_amount")
+    if remaining != _PURCHASE_IVA:
+        raise IvaCliJourneyError("fresh-process IVA wallet lot did not retain the remaining credit")
+    return remaining
 
 
 @dataclass(frozen=True, slots=True)
@@ -355,15 +415,7 @@ def run_iva_negative_4t_cli_journey(
             result_keys=("filing_record_id",),
         )
     )
-    filing_record_id = _required_id(filed, "filing_record_id")
-    filing_origin = _required_text(filed, "origin")
-    filing_confirmation = _required_text(filed, "confirmation")
-    if filing_origin != "local" or filing_confirmation != "pendiente":
-        raise IvaCliJourneyError("Modelo 303 file did not label the filing local and pending")
-    if filed.get("aeat_accepted") is not False or filed.get("live_submission") is not False:
-        raise IvaCliJourneyError("Modelo 303 file claimed AEAT acceptance or a live submission")
-    if filed.get("external_evidence") is not None:
-        raise IvaCliJourneyError("Modelo 303 local filing unexpectedly carries external AEAT evidence")
+    filing_record_id, filing_origin, filing_confirmation = _require_negative_local_filing(filed)
 
     history_cli = InstalledCli(
         cli.executable,
@@ -384,7 +436,7 @@ def run_iva_negative_4t_cli_journey(
         history, refund_election=refund_election, filing_year=year
     )
 
-    descriptor = authority_root.resolve(strict=True) / "authority.current.json"
+    descriptor = authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME
     return IvaNegative4TCliJourneyReceipt(
         schema_version="iva-01-negative-4t-installed-cli-journey-v3",
         acceptance_ids=(_acceptance_id(refund_election, filing_year=year),),
@@ -428,52 +480,34 @@ def _decimal_casilla(calculated: Mapping[str, object], casilla_id: str) -> Decim
         raise IvaCliJourneyError(f"Modelo 303 calculate returned no decimal {casilla_id}") from exc
 
 
+def _require_devolver_wallet(
+    row_count: int, generated: Decimal, available: Decimal, lot_count: object, lots: object
+) -> tuple[int, Decimal, Decimal, int, None]:
+    """Require the devolver election to leave no generated or available carry."""
+    if generated != _ZERO or available != _ZERO:
+        raise IvaCliJourneyError("fresh-process IVA wallet history retained carry after the devolver election")
+    if not isinstance(lot_count, int) or lot_count != 0:
+        raise IvaCliJourneyError("fresh-process IVA wallet history returned a carry-forward lot after devolver")
+    if not isinstance(lots, list) or lots:
+        raise IvaCliJourneyError("fresh-process IVA wallet history returned non-empty lots after devolver")
+    return row_count, generated, available, lot_count, None
+
+
 def _assert_wallet_history(
     history: Mapping[str, object], *, refund_election: RefundElection, filing_year: int
 ) -> tuple[int, Decimal, Decimal, int, Decimal | None]:
     """Validate the required 3T seed and the election-specific 4T wallet result."""
-    if history.get("as_of_year") != filing_year:
-        raise IvaCliJourneyError("fresh-process IVA wallet history returned another as-of year")
-    rows = history.get("rows")
-    row_count = history.get("row_count")
-    if not isinstance(rows, list) or not isinstance(row_count, int) or row_count != len(rows):
-        raise IvaCliJourneyError("fresh-process IVA wallet history returned an invalid row projection")
-    prior_seed = _unique_history_row(rows, period=_PRIOR_PERIOD, provenance="operator_seed", filing_year=filing_year)
-    if _decimal_history_amount(prior_seed, "generated_amount") != _ZERO:
-        raise IvaCliJourneyError("fresh-process IVA wallet history did not retain the 3T zero seed")
-    if _decimal_history_amount(prior_seed, "available_end_amount") != _ZERO:
-        raise IvaCliJourneyError("fresh-process IVA wallet history did not retain the 3T zero availability")
+    row_count, rows = _require_negative_wallet_seed(history, filing_year)
     filed_row = _unique_history_row(rows, period=_PERIOD, provenance="app_filing", filing_year=filing_year)
     generated = _decimal_history_amount(filed_row, "generated_amount")
     available = _decimal_history_amount(filed_row, "available_end_amount")
     lot_count = history.get("carry_forward_lot_count")
     lots = history.get("carry_forward_lots")
     if refund_election == "devolver":
-        if generated != _ZERO or available != _ZERO:
-            raise IvaCliJourneyError("fresh-process IVA wallet history retained carry after the devolver election")
-        if not isinstance(lot_count, int) or lot_count != 0:
-            raise IvaCliJourneyError("fresh-process IVA wallet history returned a carry-forward lot after devolver")
-        if not isinstance(lots, list) or lots:
-            raise IvaCliJourneyError("fresh-process IVA wallet history returned non-empty lots after devolver")
-        return row_count, generated, available, lot_count, None
+        return _require_devolver_wallet(row_count, generated, available, lot_count, lots)
 
-    if generated != _PURCHASE_IVA or available != _PURCHASE_IVA:
-        raise IvaCliJourneyError("fresh-process IVA wallet history did not retain the generated available credit")
-    if not isinstance(lot_count, int) or lot_count != 1:
-        raise IvaCliJourneyError("fresh-process IVA wallet history did not return one carry-forward lot")
-    if not isinstance(lots, list) or len(lots) != 1 or not isinstance(lots[0], Mapping):
-        raise IvaCliJourneyError("fresh-process IVA wallet history returned no one-lot projection")
-    lot = lots[0]
-    if (
-        lot.get("source_filing_year") != filing_year
-        or _period_code(lot.get("source_period"), filing_year=filing_year) != _PERIOD
-    ):
-        raise IvaCliJourneyError("fresh-process IVA wallet lot did not identify the 4T filing")
-    if _decimal_history_amount(lot, "generated_amount") != _PURCHASE_IVA:
-        raise IvaCliJourneyError("fresh-process IVA wallet lot did not retain the generated credit")
-    remaining = _decimal_history_amount(lot, "remaining_amount")
-    if remaining != _PURCHASE_IVA:
-        raise IvaCliJourneyError("fresh-process IVA wallet lot did not retain the remaining credit")
+    lot_count, lot = _require_compensation_lot_projection(generated, available, lot_count, lots)
+    remaining = _require_compensation_lot_amounts(lot, filing_year)
     return row_count, generated, available, lot_count, remaining
 
 

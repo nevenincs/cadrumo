@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#ledger-operator-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:ba4b781d53ba6537ca9148a769070841262709d0ddc7711cf2315ae3ebfaf7fe'
+modified: '2026-10-03'
+body_hash: 'sha256:54902e439c9be2eee1524ba26b48971354dac153c1a8f553fb120ee4483bcfe5'
 related:
-  - "[[2026-06-02-ledger-operator-hardening-plan]]"
   - "[[2026-06-02-ledger-operator-hardening-adr]]"
 ---
 
@@ -122,7 +121,7 @@ each landing a green persona journey test and reporting an operator testimonial.
 
 ### Persona A — autónoma, first 1T-2025 quarterly close
 
-Test `src/aeat/entrypoints/cli/test_ledger_persona_autonoma_close.py` (green).
+Test the retired test (green).
 Findings: (1) MED no bulk/folder import — `import` is one-verb-per-CSV with a
 repeated `--provider`; (2) MED `review --filter period=...` renders only a human
 table, no machine output, so building a classify CSV forces a fallback to
@@ -137,7 +136,7 @@ emit explicit per-transaction issue lists; the `MIXED` path demands
 
 ### Persona B — multi-currency consultant (GBP/USD via Revolut)
 
-Test `src/aeat/entrypoints/cli/test_ledger_persona_multicurrency.py` (8 green).
+Test the retired test (8 green).
 Findings (both HIGH, both silent-omission — no crash): (1) the CLI `import` path
 calls `import_ledger_transactions` without a `currency_normalizer`, so every
 GBP/USD row persists `fx_rate=None` / `value_in_eur=None` and will silently gate
@@ -151,7 +150,7 @@ import and surfaced; export classification applies cleanly).
 
 ### Persona C — asesor fiscal, client review before sign-off
 
-Test `src/aeat/entrypoints/cli/test_ledger_persona_asesor_review.py` (10 green).
+Test the retired test (10 green).
 Findings: (1) HIGH `check`/`preflight` are swamped by `missing_business_classification`
 — a fresh import yields one issue per row (217/217 on BBVA), burying the signals
 an asesor wants (the recargo anomaly, gated/erroneous rows, foreign currency);
@@ -171,7 +170,7 @@ readiness dashboard).
 
 ### Persona D — year-end reviewer assembling the annual Renta (M100) picture
 
-Test `src/aeat/entrypoints/cli/test_ledger_persona_yearend_m100.py` (9 green).
+Test the retired test (9 green).
 Findings: (1) HIGH no annual money roll-up / M100-readiness surface — `status`
 and `check` emit counts and a boolean `ready`, never income/expense/net totals;
 the full-year picture must be hand-summed from `list --format json`; (2) MED the
@@ -214,7 +213,7 @@ the import normalizer is wired.
   negative-amount foreign row would have crashed the moment a normalizer was
   supplied. Fixed to store the magnitude (sign carried by `raw.amount` +
   direction). This had never fired only because the CLI never wired a normalizer.
-- Multicurrency HIGH #2 (project `value_in_eur`/`fx_rate` on read surfaces) and
+- Multicurrency HIGH #2 (project `value_in_eur`/`fx_rate` on read surfaces)
   the asesor/year-end findings remain tracked P10/W11 Steps; #2 is now meaningful
   to land since import populates the values.
 

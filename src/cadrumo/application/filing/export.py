@@ -44,7 +44,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -73,15 +73,10 @@ from ._envelope_modelo_policy import filing_envelope_modelo_policy
 from ._export_xml_dictionary import render_xml_dictionary_layout
 from ._m200_projection import build_m200_filing_projection_plan
 from ._m296_projection import build_m296_filing_projection_plan
-from ._record_field_renderer import complementaria_page_marker as _complementaria_page_marker
-from ._record_field_renderer import format_field as _format_field
-from ._record_field_renderer import m303_complementaria_marker as _m303_complementaria_marker
-from ._record_field_renderer import m303_no_activity_marker as _m303_no_activity_marker
-from ._record_field_renderer import projection_field_value as _projection_field_value
-from ._record_field_renderer import render_record as _render_record
 from .export_envelope import FilingEnvelopeOccurrence as _FilingEnvelopeOccurrence
 from .export_envelope import FilingEnvelopeRenderRequest as _FilingEnvelopeRenderRequest
 from .export_envelope import FilingEnvelopeRenderResult as _FilingEnvelopeRenderResult
+from .export_envelope import assemble_filing_envelope_payload as _assemble_filing_envelope_payload
 from .export_envelope import envelope_closer_bytes as _envelope_closer_bytes
 from .export_envelope import render_declared_prefix as _render_declared_prefix
 from .export_parity import (
@@ -184,6 +179,7 @@ def _validate_export_options(
     modelo: Modelo,
     renders_filing_envelope: bool,
     renders_auxiliary_header: bool,
+    requires_product_identity: bool,
     dictionary_values: Mapping[str, object] | None,
     prior_domiciliation_election: PriorDomiciliationElection | None,
     product_software_identity: AeatProductSoftwareIdentity | None,
@@ -199,24 +195,61 @@ def _validate_export_options(
     a property of the envelope.
     """
     if not renders_filing_envelope and not renders_auxiliary_header:
-        if product_software_identity is not None:
-            raise FilingExportValidationError(
-                "product/software identity is only admitted for a layout that renders an envelope prefix",
-            )
-        return prior_domiciliation_election or PriorDomiciliationElection.KEEP
-    if product_software_identity is None:
+        _require_identity_absent_without_prefix(product_software_identity)
+        return _resolved_prior_domiciliation_election(prior_domiciliation_election)
+    _validate_envelope_prefix_options(
+        modelo=modelo,
+        requires_product_identity=requires_product_identity,
+        dictionary_values=dictionary_values,
+        prior_domiciliation_election=prior_domiciliation_election,
+        product_software_identity=product_software_identity,
+    )
+    return _resolved_prior_domiciliation_election(prior_domiciliation_election)
+
+
+def _require_identity_absent_without_prefix(product_software_identity: AeatProductSoftwareIdentity | None) -> None:
+    if product_software_identity is not None:
         raise FilingExportValidationError(
-            "an envelope-prefix export requires explicit product/software identity authority",
+            "product/software identity is only admitted for a layout that renders an envelope prefix",
         )
+
+
+def _validate_envelope_prefix_options(
+    *,
+    modelo: Modelo,
+    requires_product_identity: bool,
+    dictionary_values: Mapping[str, object] | None,
+    prior_domiciliation_election: PriorDomiciliationElection | None,
+    product_software_identity: AeatProductSoftwareIdentity | None,
+) -> None:
+    _validate_envelope_identity_option(requires_product_identity, product_software_identity)
     if dictionary_values is not None:
         raise FilingExportValidationError("an envelope-prefix export does not admit XML dictionary values")
-    if filing_envelope_modelo_policy(modelo).requiresprior_domiciliation_election and (
-        prior_domiciliation_election is None
+    if (
+        filing_envelope_modelo_policy(modelo).requiresprior_domiciliation_election
+        and prior_domiciliation_election is None
     ):
         raise FilingExportValidationError(
             f"Modelo {modelo.value} export requires an explicit prior-domiciliation election",
         )
-    return prior_domiciliation_election or PriorDomiciliationElection.KEEP
+
+
+def _validate_envelope_identity_option(
+    requires_product_identity: bool,
+    product_software_identity: AeatProductSoftwareIdentity | None,
+) -> None:
+    if requires_product_identity and product_software_identity is None:
+        raise FilingExportValidationError(
+            "an envelope-prefix export requires explicit product/software identity authority",
+        )
+    if not requires_product_identity and product_software_identity is not None:
+        raise FilingExportValidationError("this envelope source declares no product/software identity slot")
+
+
+def _resolved_prior_domiciliation_election(
+    election: PriorDomiciliationElection | None,
+) -> PriorDomiciliationElection:
+    return election or PriorDomiciliationElection.KEEP
 
 
 def _prepare_export_draft(
@@ -244,6 +277,10 @@ def _prepare_export_draft(
         modelo=Modelo(draft.modelo),
         renders_filing_envelope=renders_filing_envelope,
         renders_auxiliary_header=renders_auxiliary_header,
+        requires_product_identity=(
+            renders_auxiliary_header
+            or (layout.filing_envelope is not None and layout.filing_envelope.product_identity_requirement is not None)
+        ),
         dictionary_values=dictionary_values,
         prior_domiciliation_election=prior_domiciliation_election,
         product_software_identity=product_software_identity,
@@ -272,10 +309,9 @@ def _render_prepared_export(
     product_software_identity: AeatProductSoftwareIdentity | None,
 ) -> bytes:
     if prepared.renders_filing_envelope:
-        if prior_domiciliation_election is None or product_software_identity is None:
+        if prior_domiciliation_election is None:
             raise FilingExportError(
-                "a filing envelope renders only with both the prior domiciliation election and the "
-                "product software identity the record design stamps",
+                "a filing envelope renders only with a resolved prior domiciliation election",
             )
         return render_filing_envelope(
             _FilingEnvelopeRenderRequest(
@@ -346,8 +382,12 @@ def _write_prepared_export(
     prepared: _PreparedExportDraft,
     payload: bytes,
     casilla_provenance: tuple[ModeloCasillaProvenance, ...],
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> _DeclaracionExportResult:
-    atomic_write_bytes(output_path, payload)
+    if mutation_writer is None:
+        atomic_write_bytes(output_path, payload)
+    else:
+        mutation_writer(lambda: atomic_write_bytes(output_path, payload))
     if not prepared.renders_filing_envelope:
         _verify_written_export(
             draft,
@@ -413,6 +453,7 @@ def export_draft(
     prior_domiciliation_election: PriorDomiciliationElection | None = None,
     product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> _DeclaracionExportResult: ...
 @overload
 def export_draft(
@@ -425,6 +466,7 @@ def export_draft(
     prior_domiciliation_election: PriorDomiciliationElection | None = None,
     product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> _FilingExportConsumedResult: ...
 def export_draft(
     draft: ModeloDraft,
@@ -436,6 +478,7 @@ def export_draft(
     prior_domiciliation_election: PriorDomiciliationElection | None = None,
     product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> _DeclaracionExportResult | _FilingExportConsumedResult:
     """Write an approved draft to a local fichero-BOE file and return a receipt.
 
@@ -464,6 +507,7 @@ def export_draft(
             Required for Modelo 303's DP30300 carrier and refused for every
             other modelo.
         schema_provider: Optional registry schema provider override.
+        mutation_writer: Admit the actual atomic file write after rendering and validation.
 
     Returns:
         A :class:`DeclaracionExportResult` with the output path, digest,
@@ -505,6 +549,7 @@ def export_draft(
             prepared=prepared,
             payload=payload,
             casilla_provenance=casilla_provenance,
+            mutation_writer=mutation_writer,
         )
     if payload_consumer is None:
         raise FilingExportValidationError("export payload consumer is unavailable")
@@ -758,9 +803,14 @@ def render_filing_envelope(request: _FilingEnvelopeRenderRequest) -> _FilingEnve
         modelo=request.modelo,
         period=request.draft.period,
         product_software_identity=request.product_software_identity,
+        declarant_tax_id=str(request.draft.subject_tax_id),
+        envelope=envelope,
+        casilla_values={item.casilla_id: item.value for item in request.draft.values},
     )
-    closer = _envelope_closer_bytes(modelo=request.modelo, period=request.draft.period)
-    payload = prefix + b"".join(item.payload for item in occurrences) + closer
+    closer = _envelope_closer_bytes(modelo=request.modelo, period=request.draft.period, envelope=envelope)
+    terminator, payload = _assemble_filing_envelope_payload(
+        envelope, prefix=prefix, occurrences=occurrences, closer=closer
+    )
     return _FilingEnvelopeRenderResult(
         draft_id=request.draft.draft_id,
         revision_id=str(request.registry_snapshot.revision.id),
@@ -771,6 +821,7 @@ def render_filing_envelope(request: _FilingEnvelopeRenderRequest) -> _FilingEnve
         occurrences=occurrences,
         prefix=prefix,
         closer=closer,
+        terminator=terminator,
         payload=payload,
         payload_sha256=sha256_hex(payload),
         total_length=len(payload),
@@ -821,13 +872,7 @@ __all__ = [
     "FilingProjectionValue",
     "FilingRecordRenderContext",
     "_RecordRenderRow",
-    "_complementaria_page_marker",
-    "_format_field",
-    "_m303_complementaria_marker",
-    "_m303_no_activity_marker",
     "_preflight_projection_plan",
-    "_projection_field_value",
-    "_render_record",
     "export_draft",
     "render_filing_layout",
 ]

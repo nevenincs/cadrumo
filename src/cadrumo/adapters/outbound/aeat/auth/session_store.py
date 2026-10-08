@@ -17,7 +17,9 @@ plaintext files.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
+from contextlib import AbstractContextManager, contextmanager
+from contextvars import ContextVar
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -28,7 +30,7 @@ from .....core.auth_session_keys import (
     former_product_auth_session_path_for,
     is_former_product_auth_session_path,
 )
-from .....core.errors.hierarchy import AuthError, pydantic_validation_boundary
+from .....core.errors.hierarchy import AuthError, InternalInvariantError, pydantic_validation_boundary
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import content_hash_hex
 from .....core.models import STRICT_FROZEN_CONFIG
@@ -44,6 +46,70 @@ type PlaywrightStorageState = JsonObject
 type ProviderSessionMetadata = JsonObject
 
 _JSON_OBJECT_ADAPTER: TypeAdapter[JsonObject] = TypeAdapter(JsonObject)
+
+
+class DeferredSessionWrites:
+    """One task's transient browser state, published only by its application owner."""
+
+    def __init__(self) -> None:
+        self._changes: dict[Path, PersistedBrowserSession | None] = {}
+        self._published = False
+
+    @property
+    def has_changes(self) -> bool:
+        """Report whether this stage would change encrypted session storage."""
+        return bool(self._changes)
+
+    def pending(self, path: Path) -> tuple[bool, PersistedBrowserSession | None]:
+        """Resolve a staged logical path without consulting durable storage."""
+        return path in self._changes, self._changes.get(path)
+
+    def save(self, path: Path, payload: PersistedBrowserSession) -> None:
+        """Replace an earlier staged write for the same provider path."""
+        self._changes[path] = payload
+
+    def delete(self, path: Path) -> None:
+        """Stage deletion of one provider path."""
+        self._changes[path] = None
+
+    def discard(self) -> None:
+        """Drop uncommitted browser credentials without touching encrypted storage."""
+        self._changes.clear()
+
+    def publish(self) -> None:
+        """Apply final provider states while the caller holds current COMMIT authority."""
+        if self._published:
+            raise InternalInvariantError("deferred auth session writes already published")
+        self._published = True
+        token = _DEFERRED_WRITES.set(None)
+        try:
+            for path, payload in self._changes.items():
+                if payload is None:
+                    delete(path)
+                else:
+                    _save_payload(path, payload)
+        finally:
+            _DEFERRED_WRITES.reset(token)
+            self.discard()
+
+
+_DEFERRED_WRITES: ContextVar[DeferredSessionWrites | None] = ContextVar(
+    "cadrumo_deferred_auth_session_writes", default=None
+)
+
+
+@contextmanager
+def defer_writes() -> Generator[DeferredSessionWrites]:
+    """Isolate provider saves and deletes during remote authentication."""
+    if _DEFERRED_WRITES.get() is not None:
+        raise InternalInvariantError("nested deferred auth session writes are unsupported")
+    stage = DeferredSessionWrites()
+    token = _DEFERRED_WRITES.set(stage)
+    try:
+        yield stage
+    finally:
+        _DEFERRED_WRITES.reset(token)
+        stage.discard()
 
 
 class FormerProductAuthSessionStateError(AuthError):
@@ -98,6 +164,11 @@ def exists(path: Path) -> bool:
     :func:`~application.auth.sessions.storage_state_paths` or provider-specific
     helpers, not a plaintext file path to inspect.
     """
+    stage = _DEFERRED_WRITES.get()
+    if stage is not None:
+        found, payload = stage.pending(path)
+        if found:
+            return payload is not None
     repository = _repository_for_path(path)
     return repository.exists(AEAT_BROWSER_SESSION_NAMESPACE.namespace, _key(path))
 
@@ -114,12 +185,21 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
     caller-facing boundary stays the wide ``Mapping[str, object]`` shape
     :class:`~cadrumo.application.auth.protocols.BrowserContextPort` exposes.
     """
-    repository = _repository_for_path(path)
     payload = PersistedBrowserSession(
         storage_state=_JSON_OBJECT_ADAPTER.validate_python(storage_state),
         metadata=_JSON_OBJECT_ADAPTER.validate_python(metadata),
         written_at=now(),
     )
+    stage = _DEFERRED_WRITES.get()
+    if stage is not None:
+        _repository_for_path(path)
+        stage.save(path, payload)
+        return
+    _save_payload(path, payload)
+
+
+def _save_payload(path: Path, payload: PersistedBrowserSession) -> None:
+    repository = _repository_for_path(path)
     repository.save(
         namespace=AEAT_BROWSER_SESSION_NAMESPACE.namespace,
         object_key=_key(path),
@@ -140,6 +220,11 @@ def load(path: Path) -> PersistedBrowserSession | None:
     :class:`~core.classification.policies.SensitivityClass` and current
     namespace schema version.
     """
+    stage = _DEFERRED_WRITES.get()
+    if stage is not None:
+        found, payload = stage.pending(path)
+        if found:
+            return payload
     repository = _repository_for_path(path)
     record = repository.load(
         AEAT_BROWSER_SESSION_NAMESPACE.namespace,
@@ -154,6 +239,11 @@ def load(path: Path) -> PersistedBrowserSession | None:
 
 def delete(path: Path) -> bool:
     """Delete the encrypted browser session for logical ``path``."""
+    stage = _DEFERRED_WRITES.get()
+    if stage is not None:
+        existed = exists(path)
+        stage.delete(path)
+        return existed
     repository = _repository_for_path(path)
     return repository.delete(AEAT_BROWSER_SESSION_NAMESPACE.namespace, _key(path))
 
@@ -214,6 +304,10 @@ class AeatSessionStoreAdapter:
     def delete(self, path: Path) -> bool:
         """Delete the persisted session at ``path``."""
         return delete(path)
+
+    def defer_writes(self) -> AbstractContextManager[DeferredSessionWrites]:
+        """Stage direct provider and application writes in the current context."""
+        return defer_writes()
 
 
 def build_session_store() -> AeatSessionStoreAdapter:

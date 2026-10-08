@@ -54,7 +54,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final, NamedTuple, NoReturn
+from typing import TYPE_CHECKING, Final, Literal, NamedTuple, NoReturn
 
 from pydantic import BaseModel, Field
 
@@ -62,11 +62,14 @@ from ...core.aggregation import IntracomOperationType
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.attachments.errors import AttachmentNotFoundError
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.attachments.service import link_attachment_invoice
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
@@ -112,7 +115,27 @@ if TYPE_CHECKING:
     from .confirmation_gate import ConfirmationBlocker, FindingResolution
     from .confirmation_record import InvoiceConfirmationRecord
 
-__all__ = ["InvoiceConfirmationResult", "confirm_invoice_draft_from_evidence"]
+__all__ = [
+    "InvoiceConfirmationResult",
+    "InvoiceEvidenceReviewChangedError",
+    "PreparedInvoiceConfirmation",
+    "invoice_draft_review_sha256",
+    "persist_prepared_invoice_confirmation",
+    "prepare_invoice_confirmation_from_evidence",
+]
+
+
+class InvoiceEvidenceReviewChangedError(InvoiceValidationError):
+    """The raw source or complete draft differs from the operator's review."""
+
+    def __init__(self, part: Literal["source", "draft"]) -> None:
+        """Retain the changed part while directing a fresh extract and review."""
+        self.part = part
+        super().__init__(
+            "The evidence bytes changed since review; extract and review the current document before confirming"
+            if part == "source"
+            else "The invoice reading changed since review; extract and review the current draft before confirming"
+        )
 
 
 class InvoiceConfirmationResult(BaseModel):
@@ -846,7 +869,45 @@ def _persist_confirmed_invoice(
     )
 
 
-def confirm_invoice_draft_from_evidence(
+class PreparedInvoiceConfirmation(NamedTuple):
+    """Validated in-memory confirmation, ready for the first durable write.
+
+    The preparation is intentionally transient. A runtime worker can finish the
+    potentially slow document read, check the reviewed source and draft, then
+    enter write custody immediately before calling the persistence function.
+    """
+
+    candidate: Invoice
+    preparation: _InvoiceConfirmationPreparation
+    bucket_id: str
+    evidence_id: str | None
+    resolutions: tuple[FindingResolution, ...]
+
+    @property
+    def draft(self) -> InvoiceDraft:
+        """Return the actual re-read draft that will be recorded on confirm."""
+        return self.preparation.draft
+
+    @property
+    def source_sha256(self) -> str:
+        """Return the secure attachment's verified raw-byte content address."""
+        return self.preparation.attachment_id
+
+
+def invoice_draft_review_sha256(draft: InvoiceDraft) -> str:
+    """Bind a review to every public draft fact, including structured class.
+
+    The shared projection includes the structured invoice class kept in a
+    private draft attribute. Hashing ``InvoiceDraft.model_dump`` directly would
+    miss that fact and could accept a different document-class reading.
+    """
+    from .invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
+
+    projection = InvoiceDraftProjectionV1.from_draft(draft)
+    return sha256_hex(canonical_json_bytes(projection.model_dump(mode="json")))
+
+
+def prepare_invoice_confirmation_from_evidence(
     *,
     bucket_id: str,
     kind: InvoiceKind,
@@ -868,141 +929,23 @@ def confirm_invoice_draft_from_evidence(
     retention_amount: Decimal | None = None,
     recargo_amount: Decimal | None = None,
     invoice_class: InvoiceClass | None = None,
+    invoice_class_token: str | None = None,
     supply_nature: SupplyNature | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
     notes: str = "",
     resolutions: Sequence[FindingResolution] = (),
-    confirmed_by: str = "operator",
+    expected_source_sha256: str | None = None,
+    expected_draft_review_sha256: str | None = None,
     settings: Settings | None = None,
     catalogue_creation_ports: CatalogueCreationPorts,
-    invoice_confirmation_ports: InvoiceConfirmationPorts,
     counterparty_establishment_repository: CounterpartyEstablishmentRepositoryProtocol,
     evidence_ports: LedgerEvidencePorts,
     extraction_ports: InvoiceDraftExtractionPorts,
     operation: PinnedAuthorityOperation,
     legends: tuple[RegimeLegend, ...],
-) -> InvoiceConfirmationResult:
-    """Re-extract one evidence reference and confirm it into a real :class:`Invoice`.
-
-    Re-runs :func:`extract_invoice_draft_from_evidence` on-host (bytes and text
-    stay in memory only), then layers any operator-supplied override on top of
-    each extracted field -- extraction is best-effort, so every field may be
-    corrected before the record is minted. The resulting identity fields are
-    handed to :func:`~application.invoices.catalogue_creation.create_catalogue_invoice`, the
-    single sanctioned :class:`Invoice` writer
-    (``aeat-architecture-boundaries``); this function never
-    writes the catalogue itself.
-
-    Idempotent-guarded (``aeat-cli-contract``): the
-    persisted :attr:`~domain.invoices.models.Invoice.invoice_id` is a stable hash of
-    ``(kind, invoice_number, issued_at, counterparty_tax_id, currency,
-    grand_total)`` — a confirm carrying identical resolved fields to an
-    already-persisted invoice returns that invoice unchanged
-    (``created=False``, no new bucket write); a confirm whose resolved fields
-    genuinely differ mints a distinct invoice record rather than overwriting.
-
-    Args:
-        bucket_id: Active ledger bucket the evidence belongs to.
-        kind: Invoice direction (``issued`` or ``received``). The operator's
-            statement is the decision. The document is also asked -- the reading
-            stage derives which party's block prints the filer's own identifier
-            and stamps a suggestion -- and a document that settles a direction
-            contradicting this one raises a resolvable
-            :attr:`~core.draft_discrepancy.DraftDiscrepancyKind.DIRECTION_CONTRADICTED` blocker
-            rather than being overridden or silently accepted.
-        counterparty_country: ISO 3166-1 alpha-2 counterparty country code.
-            Defaults to ``"ES"``; override for a non-Spanish counterparty.
-        evidence_id: A ``purchase_invoice_evidence`` record id, or ``None``.
-        attachment_id: A linked attachment id, or ``None``. Exactly one of
-            *evidence_id* / *attachment_id* must be supplied.
-        counterparty_tax_id: Override for the extracted supplier tax id.
-        counterparty_name: Override (there is no extraction heuristic for the
-            counterparty's display name yet, so this is normally required).
-        invoice_number: Override for the extracted invoice number.
-        invoice_date: Override for the extracted invoice date.
-        taxable_base: Override for the extracted taxable base.
-        iva_rate: Override for the extracted IVA rate (``None`` resolves to
-            the EXEMPT slot, matching :func:`build_catalogue_invoice`).
-        currency: ISO-4217 currency code overriding the extracted one.
-            When omitted, the currency printed on the document is used,
-            falling back to euro only when the document shows none.
-        iva_amount: The cuota PRINTED on the document, when it differs from
-            base times rate. A printed figure is evidence and outranks a
-            recomputed one, so supplying it makes the persisted line carry it
-            exactly. The line invariants still apply, so a cuota the base and
-            rate cannot support refuses rather than overriding them.
-        iva_category: IVA treatment of the operation. Required for the renta
-            income lane to ground the record.
-        operation_type: Modelo 349 clave for an entrega intracomunitaria. The
-            category alone cannot distinguish an ordinary supply (clave E) from
-            one following an exempt importation (clave M, or H through a fiscal
-            representative), and no document states which -- so the writer
-            demands it and only the operator can answer. Without this the
-            evidence path could confirm no intra-community invoice at all.
-        operation_date: Date the operation was performed, when it differs from
-            the issue date, letting the record reach a declared devengo rank.
-        retention_rate: RIRPF art. 95 withholding fraction, settled OUTSIDE
-            the invoice total.
-        retention_amount: The withheld figure. Accepted alone; required
-            whenever a rate is supplied.
-        recargo_amount: Recargo de equivalencia (LIVA art. 161), which rides
-            INSIDE the invoice total, unlike a retención.
-        supply_nature: The operator's statement of whether the supply is goods
-            or services. Demanded only where the law forks on it -- the
-            cross-border and reverse-charge families -- so an ordinary domestic
-            invoice never needs one, and supplying it there changes nothing.
-            Until this parameter existed the classifier could REPORT that gap
-            and the operator had no way to answer it, so a cross-border
-            document with no printed statutory citation reached a category of
-            ABSENT with no route forward.
-        invoice_class: Invoice class. A rectificativa also needs
-            ``rectifies_invoice_number``.
-        series: Invoice numbering series, when the issuer uses one.
-        rectifies_invoice_number: Number of the invoice a rectificativa
-            corrects.
-        notes: Free-text operator notes carried onto the invoice.
-        resolutions: One explicit answer per blocking finding the document
-            raises. A document with findings cannot be confirmed until every
-            one is answered individually; there is no bulk flag, deliberately.
-        confirmed_by: Who is confirming, recorded in the confirmation
-            provenance record.
-        settings: Resolved Settings; load_settings() when omitted.
-        counterparty_establishment_repository: Required remembered
-            counterparty-facts capability for the active bucket.
-        catalogue_creation_ports: Required invoice-catalogue repository, event
-            history, and exchange-rate capabilities for the active bucket.
-        invoice_confirmation_ports: Required attachment-manifest capability
-            for the active bucket.  The composition root binds its encrypted
-            implementation; this application service only sees the public
-            attachment protocol.
-        evidence_ports: Secure evidence and attachment lookup capabilities for
-            the active bucket.
-        extraction_ports: Application-owned structured, text and vision reader
-            capabilities used to re-extract the document.
-        operation: Caller-owned pinned authority operation retained through
-            extraction, confirmation and catalogue persistence.
-        legends: The dated regime declarations resolved from ``operation`` by
-            the enclosing composition boundary and shared by extraction,
-            grounding and establishment checks.
-
-    Returns:
-        :class:`InvoiceConfirmationResult`: The persisted (or pre-existing)
-        invoice, the re-run draft it was checked against, and whether this
-        call minted a new record.
-
-    Raises:
-        PurchaseInvoiceEvidenceInputError: When neither or both of
-            *evidence_id* / *attachment_id* are supplied, when *evidence_id*
-            resolves outside the bytes-bearing evidence-record id space, when the
-            resolved evidence has no usable text layer, or when a required field
-            is ``None`` after overrides (extraction found nothing and the
-            operator supplied no override).
-        InvoiceValidationError: When the resolved fields fail invoice-model
-            validation (e.g. an invalid counterparty tax id or IVA rate).
-        ConfirmationBlockedError: When the document raises a blocking finding
-            that carries no explicit per-finding resolution.
-    """
+) -> PreparedInvoiceConfirmation:
+    """Re-read, resolve and validate an invoice without a durable write."""
     preparation = _prepare_invoice_confirmation(
         bucket_id=bucket_id,
         kind=kind,
@@ -1029,6 +972,21 @@ def confirm_invoice_draft_from_evidence(
         operation=operation,
         legends=legends,
     )
+    if expected_source_sha256 is not None and preparation.attachment_id != expected_source_sha256:
+        raise InvoiceEvidenceReviewChangedError("source")
+    if (
+        expected_draft_review_sha256 is not None
+        and invoice_draft_review_sha256(preparation.draft) != expected_draft_review_sha256
+    ):
+        raise InvoiceEvidenceReviewChangedError("draft")
+    if invoice_class_token is not None:
+        if invoice_class is not None:
+            raise InvoiceValidationError("invoice class was supplied through two inputs")
+        classification_date = resolve_confirmed_invoice_date(invoice_date, preparation.draft)
+        with validating_governed_facts(operation):
+            invoice_class = resolve_invoice_legal_classification_catalogue(
+                effective_date=classification_date,
+            ).require_invoice_class(invoice_class_token)
     candidate = _build_confirmed_invoice_candidate(
         bucket_id=bucket_id,
         kind=kind,
@@ -1055,13 +1013,36 @@ def confirm_invoice_draft_from_evidence(
         catalogue_creation_ports=catalogue_creation_ports,
         preparation=preparation,
     )
-    return _persist_confirmed_invoice(
+    return PreparedInvoiceConfirmation(
         candidate=candidate,
         preparation=preparation,
         bucket_id=bucket_id,
         evidence_id=evidence_id,
+        resolutions=tuple(resolutions),
+    )
+
+
+def persist_prepared_invoice_confirmation(
+    prepared: PreparedInvoiceConfirmation,
+    *,
+    confirmed_by: str,
+    catalogue_creation_ports: CatalogueCreationPorts,
+    invoice_confirmation_ports: InvoiceConfirmationPorts,
+    evidence_ports: LedgerEvidencePorts,
+) -> InvoiceConfirmationResult:
+    """Apply the canonical catalogue, link, summary and audit writes.
+
+    Every successful call writes a confirmation audit record, including a
+    guarded catalogue replay. Runtime callers therefore report UPDATED even
+    when the returned ``created`` flag is false.
+    """
+    return _persist_confirmed_invoice(
+        candidate=prepared.candidate,
+        preparation=prepared.preparation,
+        bucket_id=prepared.bucket_id,
+        evidence_id=prepared.evidence_id,
         confirmed_by=confirmed_by,
-        resolutions=resolutions,
+        resolutions=prepared.resolutions,
         catalogue_creation_ports=catalogue_creation_ports,
         invoice_confirmation_ports=invoice_confirmation_ports,
         evidence_ports=evidence_ports,

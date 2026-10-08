@@ -10,7 +10,7 @@ Consumers import these models from this defining module.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
@@ -34,9 +34,10 @@ from ...core.filing_year import FilingYear
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.registry_token import StrictRegistryToken
-from ...core.time.utc import UtcInstant, validate_utc_aware
+from ...core.time.utc import UtcInstant
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.type_guards import is_object_collection
 from ..calculations.registry.renta_codes_catalogue import (
@@ -143,23 +144,40 @@ class ModeloEnrollment(BaseModel):
     public_administration_budget_gt_6000000: bool = False
 
 
+def _canonical_iban(value: object, *, account: str) -> str:
+    """Return the canonical IBAN, or ``""`` for a blank one, refusing any malformed value.
+
+    Blank is returned rather than refused because the two accounts disagree on
+    what a blank means: no refund account on file, or a missing debit account.
+    """
+    if not isinstance(value, str):
+        raise DeadlineValidationError(f"{account} iban must be a string")
+    canonical = normalise_iban(value)
+    if not canonical:
+        return ""
+    if not IBAN_SHAPE_RE.match(canonical):
+        raise DeadlineValidationError(f"{account} iban does not match the ISO 13616 shape")
+    if iban_mod_97(canonical) != 1:
+        raise DeadlineValidationError(f"{account} iban fails the mod-97 check")
+    return canonical
+
+
 class RefundAccount(BaseModel):
     """The cuenta-devolución refund account AEAT pays a Modelo 303 refund into.
 
     Refund-only. AEAT's DR303 position 23 is a single dual-purpose field
     labelled ``Domiciliación/Devolución - IBAN``, so the record has somewhere to
-    state a charge account too -- but this profile carries no separate charge
-    account, and the export path must not infer one by reusing this account for
-    a domiciliación del ingreso: nominating an account to RECEIVE a refund is
-    not an authorisation to DEBIT it. The export path refuses that election
-    unconditionally rather than make the inference.
+    state a charge account too -- but the export path must not infer a charge
+    account by reusing this account for a domiciliación del ingreso: nominating
+    an account to RECEIVE a refund is not an authorisation to DEBIT it. The
+    charge account is the separate :class:`ChargeAccount`.
 
     Groups the IBAN with the foreign-bank block used for a non-SEPA
-    account. Every field is sensitive financial identity data: per the
-    ``sensitive-financial-data-secure-storage-only`` invariant it lives
-    only in the encrypted secure-object store (``sensitivity="financial"``
-    on the profile schema), is read transiently into memory at export
-    time, and is never written to plaintext, logs, or a side store.
+    account. Every field is sensitive financial identity data: it is the
+    export-time projection of an own account held in the encrypted ledger
+    own-account register (or, for a modelo 360 solicitud, of the account the
+    solicitud embeds), is read transiently into memory at export time, and is
+    never written to plaintext, logs, or a side store.
 
     The IBAN is validated structurally at this boundary — country code,
     check digits, BBAN length, and the ISO 13616 mod-97 residue — so a
@@ -176,12 +194,12 @@ class RefundAccount(BaseModel):
         bank_city: Bank city for a non-SEPA account.
         bank_country_code: ISO 3166-1 alpha-2 country code of the bank
             for a non-SEPA account.
-        sepa_marca: The derived Marca SEPA token (``"1"`` Cuenta España /
-            ``"2"`` UE SEPA / ``"3"`` Resto Países). Derived from the
-            account country at export, not an operator input.
+
+    The Marca SEPA is not carried: the renderer derives it from the account
+    country at export, so no stored token can disagree with the IBAN.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     iban: str | None = None
     swift_bic: str = ""
@@ -189,7 +207,6 @@ class RefundAccount(BaseModel):
     bank_address: str = ""
     bank_city: str = ""
     bank_country_code: str = ""
-    sepa_marca: str = ""
 
     @field_validator("iban", mode="before")
     @classmethod
@@ -204,24 +221,11 @@ class RefundAccount(BaseModel):
         """
         if value is None:
             return None
-        if not isinstance(value, str):
-            raise DeadlineValidationError("refund-account iban must be a string")
-        canonical = normalise_iban(value)
-        if not canonical:
-            return None
-        if not IBAN_SHAPE_RE.match(canonical):
-            raise DeadlineValidationError(
-                f"refund-account iban {value!r} does not match the ISO 13616 shape",
-            )
-        if iban_mod_97(canonical) != 1:
-            raise DeadlineValidationError(
-                f"refund-account iban {value!r} fails the mod-97 check",
-            )
-        return canonical
+        return _canonical_iban(value, account="refund-account") or None
 
 
 class ChargeAccount(BaseModel):
-    """The cuenta de cargo AEAT may debit for a Modelo 303 domiciliación.
+    """The cuenta de cargo AEAT may debit for a domiciliación del ingreso.
 
     This is deliberately distinct from :class:`RefundAccount`.  The DR303 DID
     page has one IBAN position labelled ``Domiciliación/Devolución - IBAN``,
@@ -230,16 +234,16 @@ class ChargeAccount(BaseModel):
     contains exactly the affirmative debit instruction the operator recorded:
     one IBAN and no refund-only SWIFT, foreign-bank, or SEPA-mark fields.
 
-    Like the refund account, this financial identity data exists only in the
-    encrypted secure-object store and is read transiently when the export is
-    composed.  It is never logged or copied to a plaintext side store.
+    Like the refund account, this financial identity data is projected from
+    the encrypted ledger own-account register and is read transiently when the
+    export is composed.  It is never logged or copied to a plaintext side store.
 
     Attributes:
         iban: The authorised debit-account IBAN, canonicalised to the ISO 13616
             whitespace- and hyphen-stripped upper-case form.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     iban: str
 
@@ -248,19 +252,9 @@ class ChargeAccount(BaseModel):
     @pydantic_validation_boundary
     def _validate_iban(cls, value: object) -> object:
         """Reject an absent or malformed debit-account IBAN at the domain boundary."""
-        if not isinstance(value, str):
-            raise DeadlineValidationError("charge-account iban must be a string")
-        canonical = normalise_iban(value)
+        canonical = _canonical_iban(value, account="charge-account")
         if not canonical:
             raise DeadlineValidationError("charge-account iban must not be blank")
-        if not IBAN_SHAPE_RE.match(canonical):
-            raise DeadlineValidationError(
-                f"charge-account iban {value!r} does not match the ISO 13616 shape",
-            )
-        if iban_mod_97(canonical) != 1:
-            raise DeadlineValidationError(
-                f"charge-account iban {value!r} fails the mod-97 check",
-            )
         return canonical
 
 
@@ -306,7 +300,7 @@ def _project_persisted_token(
 
 
 def _iva_profile_token_resolvers() -> Mapping[str, Callable[[object], StrictRegistryToken]]:
-    from ..calculations.registry.iva_schema_vocabulary import (
+    from ..calculations.registry.m303_schema_vocabulary import (
         require_m303_regime_composition,
         require_m303_tax_territory,
     )
@@ -361,18 +355,9 @@ class ModeloIVAProfile(BaseModel):
             status, not by voluntary SII alone.
         redeme_enrolled: Registered in REDEME (Registro de Devolución
             Mensual del IVA) — one of the mandatory-SII triggers.
-        refund_account: The encrypted cuenta-devolución refund account
-            AEAT pays a Modelo 303 refund into. ``None`` when no refund
-            account is on file; a refund disposition with no refund
-            account is refused at export rather than emitting an empty
-            DID block.
-        charge_account: The encrypted cuenta de cargo AEAT may debit when
-            the operator elects domiciliación del ingreso. It is intentionally
-            separate from ``refund_account``; a U export with no recorded
-            charge account is refused rather than reusing a refund destination.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     tax_territory: M303TaxTerritory
     regime_composition: M303RegimeComposition
@@ -386,8 +371,6 @@ class ModeloIVAProfile(BaseModel):
     cash_accounting_regime_enrolled: bool
     voluntary_sii_enrolled: bool
     hydrocarbon_deposit_advance_payment_deduction_entitled: bool
-    refund_account: RefundAccount | None = None
-    charge_account: ChargeAccount | None = None
 
     @field_validator("tax_territory", "regime_composition", mode="before")
     @classmethod
@@ -548,8 +531,12 @@ class TaxpayerProfile(BaseModel):
         does_intracomunitario: Whether the taxpayer conducts
             operaciones intracomunitarias.
         third_party_transactions_above_347_threshold: Whether the
-            profile exceeded the applicable third-party transaction
-            threshold during the prior year; ``None`` when unanswered.
+            taxpayer's operations with some person or entity exceeded the
+            Modelo 347 threshold during the año natural the declaration
+            covers (RD 1065/2007 arts. 32.c and 33.1, "durante el año natural
+            correspondiente"), not the year before it; ``None`` when
+            unanswered. The obligations section is effective-dated, so the
+            answer for one filing year is read as of that year.
         bienes_extranjero_above_threshold: Whether the taxpayer holds
             bienes en el extranjero above the legal threshold; ``None``
             when unanswered.
@@ -604,7 +591,7 @@ class TaxpayerProfile(BaseModel):
             undeclared.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     tax_id: SubjectTaxId
     entity_type: EntityType | None = None
@@ -724,7 +711,7 @@ class TaxpayerProfile(BaseModel):
     @pydantic_validation_boundary
     def _validate_iva_regime_registry_membership(self) -> Self:
         """Reject IVA regime tokens that are absent from fact 0098."""
-        from ..calculations.registry.iva_schema_vocabulary import require_iva_regime
+        from ..calculations.registry.iva_regime_vocabulary import require_iva_regime
 
         require_iva_regime(self.iva_regime)
         return self
@@ -1038,16 +1025,9 @@ class Schedule(BaseModel):
             about the day a window opened or closed.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile: TaxpayerProfile
     year: int = Field(ge=1900, le=2999)
     obligations: tuple[ModeloDeadline, ...]
     generated_at: UtcInstant
-
-    @field_validator("generated_at")
-    @classmethod
-    @pydantic_validation_boundary
-    def _require_utc_generated_at(cls, value: datetime) -> datetime:
-        """Route the stamp through the canonical UTC-aware contract."""
-        return validate_utc_aware(value)

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-locale-delta-keying'
 date: '2026-09-17'
-modified: '2026-09-19'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:63eadf02f57c7e2681208b8b45d83558a03361c79545fd4a0ed146a46033b9ec'
+body_hash: 'sha256:6c3c09114582b4c20cccbfde88ebb632e58f0cdfdff66a41a646b15cb8eb7911'
 related: []
 ---
 
@@ -77,6 +77,5 @@ Moving a non-Spanish value to a less specific tier while Spanish keeps a more sp
 - `dev/registry/compiler/loader.py:365`
 - `src/cadrumo/application/modelo/workspace.py:723`
 - `src/cadrumo/domain/calculations/registry/schema_surfaces.py:439`
-- `dev/locales/revision_label_restatement.py`
-- `dev/locales/casilla_label_derivation.py`
+
 - commit `1d06155ad4`

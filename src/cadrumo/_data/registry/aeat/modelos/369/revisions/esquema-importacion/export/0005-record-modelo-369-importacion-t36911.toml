@@ -1,0 +1,795 @@
+[[revisions.esquema-importacion.export_layouts]]
+id = 'modelo-369-importacion-fichero'
+
+[[revisions.esquema-importacion.export_layouts.records]]
+id = 'modelo-369-importacion-t36911'
+record_type = 't36911-imp'
+order = 2
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-461-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-18'
+offset = 461
+length = 17
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-18'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-478-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-19'
+offset = 478
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-19'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-480-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-19'
+offset = 480
+length = 4
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-19'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-484-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-19'
+offset = 484
+length = 1
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-19'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-485-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-19'
+offset = 485
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-19'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-487-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-19'
+offset = 487
+length = 17
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-19'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-504-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-20'
+offset = 504
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-20'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-506-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-20'
+offset = 506
+length = 4
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-20'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-510-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-20'
+offset = 510
+length = 1
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-20'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-511-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-20'
+offset = 511
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-20'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-513-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-20'
+offset = 513
+length = 17
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-20'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-530-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-21'
+offset = 530
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-21'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-532-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-21'
+offset = 532
+length = 4
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-21'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-536-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-21'
+offset = 536
+length = 1
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-21'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-537-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-21'
+offset = 537
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-21'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-539-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-21'
+offset = 539
+length = 17
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-21'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-556-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-22'
+offset = 556
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-22'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-558-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-22'
+offset = 558
+length = 4
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-22'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-562-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-22'
+offset = 562
+length = 1
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-22'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-563-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-22'
+offset = 563
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-22'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-565-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-22'
+offset = 565
+length = 17
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-22'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-582-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-23'
+offset = 582
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-23'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-584-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-23'
+offset = 584
+length = 4
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-23'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-588-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-23'
+offset = 588
+length = 1
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-23'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-589-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-23'
+offset = 589
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-23'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-591-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-23'
+offset = 591
+length = 17
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-23'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-608-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-24'
+offset = 608
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-24'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-610-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-24'
+offset = 610
+length = 4
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-24'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-614-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-24'
+offset = 614
+length = 1
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-24'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-615-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-24'
+offset = 615
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-24'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-617-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-24'
+offset = 617
+length = 17
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-24'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-634-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-25'
+offset = 634
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-25'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-636-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-25'
+offset = 636
+length = 4
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-25'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-640-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-25'
+offset = 640
+length = 1
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-25'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-641-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-25'
+offset = 641
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-25'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-643-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-25'
+offset = 643
+length = 17
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-25'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-660-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-26'
+offset = 660
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-26'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-662-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-26'
+offset = 662
+length = 4
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-26'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-666-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-26'
+offset = 666
+length = 1
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-26'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-667-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-26'
+offset = 667
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-26'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-669-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-26'
+offset = 669
+length = 17
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-26'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-686-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-27'
+offset = 686
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-27'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-688-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-27'
+offset = 688
+length = 4
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-27'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-692-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-27'
+offset = 692
+length = 1
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-27'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-693-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-27'
+offset = 693
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-27'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-695-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-27'
+offset = 695
+length = 17
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-27'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-712-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-28'
+offset = 712
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-codi-28'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-714-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-28'
+offset = 714
+length = 4
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-ejer-28'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-718-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-28'
+offset = 718
+length = 1
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-tipo-28'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-719-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-28'
+offset = 719
+length = 2
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-peri-28'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'm369-importacion-11-721-4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-28'
+offset = 721
+length = 17
+kind = 'binding'
+binding = 'modelo-369-importacion-fichero.4-correcciones-de-declaraciones-de-periodos-anteriores-max-3-anos-cuot-28'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'modelo-369-importacion-t36911-738-reservado'
+offset = 738
+length = 17
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-importacion.export_layouts.records.fields]]
+id = 'modelo-369-importacion-t36911-755-constante-t36911'
+offset = 755
+length = 9
+kind = 'literal'
+literal = '</T36911>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[revisions.esquema-importacion.export_layouts.records.row_field_casilla_ids]

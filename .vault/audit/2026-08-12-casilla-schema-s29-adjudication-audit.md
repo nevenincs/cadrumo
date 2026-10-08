@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:80910ef0041ad5b9e673cb3035c41b4fee26a761761af815f524d8691a1283f0'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-dead-surface-adr]]"
 ---
 # `casilla-schema` audit: `S29 verify_declaracion adjudication review`

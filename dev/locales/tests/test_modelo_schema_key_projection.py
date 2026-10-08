@@ -9,6 +9,7 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
+    binding_locale_key,
     casilla_alias_locale_key,
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
@@ -78,6 +79,9 @@ def test_structural_projection_matches_every_modelo_identity_ignoring_binding_sh
         continuity,
         f"{continuity.removesuffix('.label')}.help",
         casilla_alias_locale_key("999", "2024", "c1", "0"),
+        binding_locale_key("999", "binding-1", "label"),
+        binding_locale_key("999", "binding-1", "help"),
+        binding_locale_key("999", "binding-1", "box_number"),
     }
 
 

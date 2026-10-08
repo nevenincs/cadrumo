@@ -144,6 +144,53 @@ class ConditionRelation:
         return self.shared / larger if larger else 0.0
 
 
+def _excluded_screen_names() -> set[str]:
+    """Return census screens and screens that explicitly derive from another."""
+    from .screens import CORPUS_SCREENS, SCREENS
+
+    return {
+        entry.name
+        for entry in (*SCREENS, *CORPUS_SCREENS)
+        if entry.entry_returns == "census" or getattr(entry, "derives_from", None) is not None
+    }
+
+
+def _condition_finding_rows(
+    authority: ValidatedRegistryAuthority,
+    modelo_ids: tuple[str, ...],
+) -> dict[str, list[tuple[str, str, object]]]:
+    """Group individual screen findings by their declared condition label."""
+    excluded = _excluded_screen_names()
+    rows: dict[str, list[tuple[str, str, object]]] = collections.defaultdict(list)
+    for name, findings in screen_findings(authority, modelo_ids):
+        if name in excluded:
+            continue
+        for finding in findings:
+            kind = getattr(finding, "kind", name)
+            modelo = getattr(finding, "modelo", None)
+            revision = getattr(finding, "revision", None)
+            if modelo is None or revision is None:
+                continue
+            label = f"{name}.{kind if isinstance(kind, str) else name}"
+            rows[label].append((str(modelo), str(revision), finding))
+    return rows
+
+
+def _population_from_findings(findings: list[tuple[str, str, object]]) -> ConditionPopulation | None:
+    """Key a condition's rows at every finer unit all of them carry."""
+    if not findings:
+        return None
+    units: dict[str, frozenset[tuple[str, ...]]] = {
+        "revision": frozenset((modelo, revision) for modelo, revision, _ in findings)
+    }
+    for unit, attribute in _UNIT_ATTRIBUTES.items():
+        keyed = [(modelo, revision, getattr(finding, attribute, None)) for modelo, revision, finding in findings]
+        if any(value is None for _, _, value in keyed):
+            continue
+        units[unit] = frozenset((modelo, revision, str(value)) for modelo, revision, value in keyed)
+    return ConditionPopulation(units=units)
+
+
 def condition_populations(
     authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
 ) -> dict[str, ConditionPopulation]:
@@ -159,39 +206,11 @@ def condition_populations(
 
     A finer unit is kept only when every finding of the condition carries it.
     """
-    from .screens import CORPUS_SCREENS, SCREENS
-
-    excluded = {
-        entry.name
-        for entry in (*SCREENS, *CORPUS_SCREENS)
-        if entry.entry_returns == "census" or getattr(entry, "derives_from", None) is not None
-    }
-    rows: dict[str, list[tuple[str, str, object]]] = collections.defaultdict(list)
-    for name, findings in screen_findings(authority, modelo_ids):
-        if name in excluded:
-            continue
-        for finding in findings:
-            kind = getattr(finding, "kind", name)
-            modelo = getattr(finding, "modelo", None)
-            revision = getattr(finding, "revision", None)
-            if modelo is None or revision is None:
-                continue
-            label = f"{name}.{kind if isinstance(kind, str) else name}"
-            rows[label].append((str(modelo), str(revision), finding))
-
     populations: dict[str, ConditionPopulation] = {}
-    for label, findings in rows.items():
-        if not findings:
-            continue
-        units: dict[str, frozenset[tuple[str, ...]]] = {
-            "revision": frozenset((modelo, revision) for modelo, revision, _ in findings)
-        }
-        for unit, attribute in _UNIT_ATTRIBUTES.items():
-            keyed = [(modelo, revision, getattr(finding, attribute, None)) for modelo, revision, finding in findings]
-            if any(value is None for _, _, value in keyed):
-                continue
-            units[unit] = frozenset((modelo, revision, str(value)) for modelo, revision, value in keyed)
-        populations[label] = ConditionPopulation(units=units)
+    for label, findings in _condition_finding_rows(authority, modelo_ids).items():
+        population = _population_from_findings(findings)
+        if population is not None:
+            populations[label] = population
     return populations
 
 

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:1002b5d9ba2debdb3466a007b4dd3eb298617bab4c10342da092cd9d05643afb'
+modified: '2026-10-03'
+body_hash: 'sha256:69a9f974c50e610471d0d35e96a26731ab3ed838045764f2629274a3291f4183'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S195-001 | PASS | Acquisition lock stays manifest-scoped and settings-routed
 
-`src/aeat/application/auth/_acquisition_lock.py` derives its lock path from the
+The retired module derives its lock path from the
 caller-supplied `Settings` object plus the active bucket id. It does not read
 environment variables directly and does not bypass the central settings surface.
 The plain lock file remains an intentional crash-recovery guard for
@@ -41,9 +41,9 @@ logic were added.
 
 Validation:
 
-- `uv run --no-sync ruff check src/aeat/application/auth/_acquisition_lock.py src/aeat/application/auth/test_acquisition_lock.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/auth/test_acquisition_lock.py` passed with 4 tests.
-- `uv run --no-sync pytest -q src/aeat/application/auth/test_ensure_session.py` passed with 5 tests.
+- the historical check passed.
+- the historical check passed with 4 tests.
+- the historical check passed with 5 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 
 Reviewer note: subagent review is currently unavailable because the review agent

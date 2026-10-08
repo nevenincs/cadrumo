@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#secure-object-integrity'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f180047959414f1be8518b49b1d397e5eb42250b1b3568fe989f479be63c8e18'
+body_hash: 'sha256:4a3e0bcadc9ea3e9ded6a6daabafdc5515b1b95c6eb8da9ba0094250ace8138d'
 related:
-  - '[[2026-06-04-secure-object-integrity-adr]]'
   - '[[2026-06-04-secure-object-integrity-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#secure-object-integrity`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-secure-object-integrity-adr` - `secure-object-integrity` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

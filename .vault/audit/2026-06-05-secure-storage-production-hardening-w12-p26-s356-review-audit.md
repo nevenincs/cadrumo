@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:8a38389edc4cc5ef2b715a5116c0a60c2fd61d72164ac91204248c75ac09650b'
+modified: '2026-10-03'
+body_hash: 'sha256:fd3d2ce9598283bc472b3c3004b43e232b71c43264dff62507ae324935d46d3a'
 related: []
 ---
 
@@ -43,9 +43,9 @@ typed errors.
 
 ## S356-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/modelos/_repository.py src/aeat/domain/modelos/test_secure_storage_roundtrip.py src/aeat/domain/modelos/_runtime_repository.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/modelos/test_secure_storage_roundtrip.py src/aeat/domain/modelos/test_repository_sensitivity_class.py` passed with 10 tests.
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "modelo or s85_runtime"` passed with 10 selected tests.
+- the historical check passed.
+- the historical check passed with 10 tests.
+- the historical check passed with 10 selected tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed in the shared worktree after adjacent modelo-resume locale work had been applied through the mandated locale CLI path.
 
 Reviewer note: no critical, high, medium, or low runtime-storage findings remain for

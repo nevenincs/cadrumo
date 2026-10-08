@@ -3,21 +3,20 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:14578c86eaa3e132d2a08a3764c210d3ed9dab61972708d40e13422b6db67da2'
+body_hash: 'sha256:88c1d0c91151fced07ef771aea25f1e8f188a95d7676d15623726f5362272b82'
 related: []
 ---
-
 # `calculation-correctness-campaign` audit: `the recargo tabaco rung has a rate and boxes but no ledger path`
 
 ## Scope
 
+Check whether the 1.75% tobacco recargo can enter the declared Modelo 303 calculation population and annual handoff.
+
 ## Findings
 
-## Recommendations
-
-## Finding
+### Finding
 
 The recargo de equivalencia tabaco rung -- 1,75 %, LIVA art. 161.4 -- is
 modelled everywhere except the one place that would make it reachable.
@@ -41,7 +40,7 @@ Two independent registry files say the same thing, written by different work:
   because the IVA category it depends on is not modelled at all; that is a
   separate omission from this merge and is not repaired by adding a rung here."
 
-## Why it matters, and which direction it fails in
+### Why it matters, and which direction it fails in
 
 This is the under-declaration direction. A recargo filer who supplies tobacco
 owes 1,75 % recargo; with no category to carry it, the cuota reaches no box
@@ -53,7 +52,7 @@ because there is no source kind to be unrouted.
 mode to prevent. The rung is not blank because a value resolved to zero; it is
 blank because the population it draws from does not exist as a concept.
 
-## What is NOT wrong
+### What is NOT wrong
 
 Checked and sound, recorded so a later reader does not re-open them:
 
@@ -68,18 +67,13 @@ Checked and sound, recorded so a later reader does not re-open them:
 - The M303 [158]/[170] mis-allocation named in the formula comment is already
   repaired: [170] carries the super-reducido binding and [158] is manual.
 
-## Status
-
-Open. Modelling the tabaco population is the fix; until then the rung is
-operator-input with no prompt.
-
-## Re-verification, 2026-08-28
+### Re-verification, 2026-08-28
 
 Every claim above was re-checked against the loaded snapshot
 (`bundled_authority().snapshot(...)`) rather than the TOML tree. The finding
 **stands unchanged**. Three additions sharpen it.
 
-### The gap has a precise shape: bound siblings beside a manual rung
+#### The gap has a precise shape: bound siblings beside a manual rung
 
 The tabaco rung is not merely "not routed" — it sits beside siblings that *are*
 routed, on both returns. From the 2025 snapshots:
@@ -101,7 +95,7 @@ operator knowledge rather than unconditional, which is a weaker claim than
 "unreachable" but still the unwatched direction: nothing tells an operator the
 box exists or that their ledger held supplies belonging in it.
 
-### A third registry file says the same, and it constrains the remedy
+#### A third registry file says the same, and it constrains the remedy
 
 Beyond the two files already quoted, `_data/registry/aeat/iva/recargo-rates.toml`
 excludes tabaco deliberately and explains why:
@@ -119,7 +113,7 @@ the rate would still have to be read directly from
 `liva-art-161:recargo-rate-tabaco` (confirmed present in the legal catalogue at
 `0.0175`, alongside the reviewed `0.052` / `0.014` / `0.005` siblings).
 
-### Probe caveat: the ids do not say "tabaco"
+#### Probe caveat: the ids do not say "tabaco"
 
 The registry ids for these boxes are `iva.anual.repercutido.recargo.tipo-1-75.*`
 and the M303 pair carries the positional roles `dr303_157` / `dr303_158`. None
@@ -129,3 +123,10 @@ an empty set on both returns and invites the false conclusion that the boxes do
 not exist. They do. Filter on the rate (`1-75`, `0.0175`) or read the comments.
 This is the thirteenth filter bug of this campaign and the standing rule applies:
 an implausibly empty derived set is a filter bug until proven otherwise.
+
+## Recommendations
+
+### Status
+
+Open. Modelling the tabaco population is the fix; until then the rung is
+operator-input with no prompt.

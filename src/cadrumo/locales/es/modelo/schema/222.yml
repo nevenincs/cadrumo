@@ -362,6 +362,32 @@ modelo:
         official_name: Modelo 222. Impuesto sobre Sociedades. Régimen de consolidación
           fiscal. Pago fraccionado.
         title: IS pago fraccionado régimen de consolidación fiscal (grupos)
+      form:
+        authored2025:
+          ajustes-grupo:
+            heading: Ajustes de la base imponible del grupo · DA 19.ª LIS
+          consolidacion:
+            heading: Diferimiento de resultados y otras correcciones de consolidación
+          dominante:
+            heading: Identificación de la entidad dominante
+          dominante-id:
+            heading: Número de identificación de la dominante
+          dominante-nombre:
+            heading: Razón social de la dominante
+          dominante-pais:
+            heading: País o territorio foral de la dominante
+          grupo:
+            heading: Número del grupo fiscal
+          identificacion:
+            heading: Entidad representante o dominante
+          inicio:
+            heading: Inicio del período impositivo
+          nrs-variacion:
+            heading: Número de referencia de la variación del grupo
+          phone:
+            heading: Teléfono
+          variacion:
+            heading: Comunicación de variación en la composición del grupo
       revision:
         '2022':
           field:

@@ -16,7 +16,6 @@ from cadrumo.domain.transactions.retencion_facts import (
     retencion_effective_date,
 )
 from cadrumo.domain.transactions.tipo_actividad_partitions import (
-    load_tipo_actividad_selectors,
     resolve_tipo_actividad_selector,
     tipo_actividad_code_set,
 )
@@ -78,8 +77,8 @@ def test_activity_selector_preserves_provenance_and_refuses_an_unknown_selector(
         effective_date=effective_date,
         authority=authority,
     )
-    selectors = load_tipo_actividad_selectors(
-        (_PROFESSIONAL_SELECTOR,),
+    codes = tipo_actividad_code_set(
+        _PROFESSIONAL_SELECTOR,
         effective_date=effective_date,
         authority=authority,
     )
@@ -88,7 +87,7 @@ def test_activity_selector_preserves_provenance_and_refuses_an_unknown_selector(
     assert selector.legal_refs == ("rd-439-2007:art-95", "orden-eha-1274-2007:art-1")
     assert selector.source_refs == ("aeat-m036-activity-code-table-2026-03-26", "boe-rirpf-art-95-2023-01-26")
     assert selector.authority_digest
-    assert selectors[_PROFESSIONAL_SELECTOR] == frozenset({TipoActividad("A04"), TipoActividad("A05")})
+    assert codes == frozenset({TipoActividad("A04"), TipoActividad("A05")})
     assert tipo_actividad_code_set(
         _PROFESSIONAL_SELECTOR,
         effective_date=date(2026, 3, 25),

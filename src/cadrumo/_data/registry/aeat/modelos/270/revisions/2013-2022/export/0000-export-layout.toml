@@ -1,0 +1,10 @@
+[[revisions.2013-2022.export_layouts]]
+id = 'modelo-270-fichero-boe'
+format = 'fixed_width'
+source_refs = ['boe-dr-270-2013-2022']
+legal_refs = [
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+    'orden-hap-2368-2013:art-1',
+]
+dictionary_path_overrides = []

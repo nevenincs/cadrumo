@@ -3,13 +3,13 @@ tags:
   - '#audit'
   - '#invoice-canonical-structure'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:28bbf53f3db5d9a94fb5e3b847585def9c61f9ecccbe52d13f0face22f407d6b'
+body_hash: 'sha256:23d3b02f1938c3662a85a1f8bc104a1d8ba60b97d53f354b4ee25cba32a4e20c'
 related:
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
-  - "[[2026-08-06-invoice-canonical-structure-plan]]"
 ---
+
 # `invoice-canonical-structure` audit: `Fresh-context honesty review of the campaign`
 
 ## Scope
@@ -217,7 +217,7 @@ it — the plan is complete "when every Step is closed", and P05 has no Steps.
 I confirmed the gap is real at HEAD:
 - `rg "def _raise_if" src/cadrumo/application/aggregation/` returns **exactly
   one** hit, `_modelo_bindings.py:1005`.
-- `rg -i "m390|modelo_390|\"390\"" src/cadrumo/application/aggregation/_modelo_bindings.py` returns **nothing**.
+- the historical check returns **nothing**.
 - The ES filter is live at `_modelo_bindings.py:1122`.
 - The four-binding screened set is live at `_modelo_bindings.py:144`.
 
@@ -391,8 +391,7 @@ Verified at HEAD by direct read:
 - `_business_invoice_clave` (`:663`) returns `None` immediately when
   `operation_type is None` (`:665-666`); `_business_invoice_observation` drops
   at `:588-590`.
-- The slim record **cannot hold an `iva_category` at all** — `rg "iva_category"
-  src/cadrumo/application/ledger/_business_operation_invoice.py` returns
+- The slim record **cannot hold an `iva_category` at all** — the historical check returns
   nothing.
 
 So: on the canonical path the fallback already exists and the invoice is
@@ -414,7 +413,7 @@ is **the commit that landed all three campaign documents.** It also landed the
 retención writer. Both facts verified:
 
 ```
-git log -S "retention_rate" -- src/cadrumo/application/invoices/_creation.py
+Historical command omitted; its target was retired.
   -> ef0438561d
 git show 0b1e3f040b:.../_creation.py | rg -c retention_rate  -> 0   (absent)
 git show HEAD:.../_creation.py       | rg -c retention_rate  -> 6   (present)
@@ -604,7 +603,7 @@ I verified the load-bearing citations myself at HEAD `daa9876ed3`.
 | `_importing.py:57-58` retención TypedDict | VERIFIED |
 | No M390 screen anywhere | VERIFIED |
 
-**DRIFTED — `src/cadrumo/domain/invoices/_models.py`, uniformly ~+31 lines:**
+**DRIFTED — the retired module, uniformly ~+31 lines:**
 
 | ADR cites | Actual at HEAD |
 | --- | --- |

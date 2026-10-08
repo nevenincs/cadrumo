@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#frontend-legal-compliance'
 date: '2026-07-12'
-modified: '2026-07-17'
-body_hash: 'sha256:01f2932f3b43ae7a590560ac3171c4f8b451962a435d2a3a787d55c3b1a7f003'
+modified: '2026-10-03'
+body_hash: 'sha256:bfaafa1b345d63ba06d20122b13aadbe787afd66ae6429aa992a07d4fce986a7'
 related: []
 ---
 
@@ -99,7 +99,7 @@ consent were required.
 
 ### F4 — Google Fonts CDN embedding was a live GDPR exposure; fonts are now self-hosted
 
-`src/styles.css` imported three families from `fonts.googleapis.com`, and
+the former source file imported three families from `fonts.googleapis.com`, and
 `public/404.html` linked the same CDN. Every page view therefore transmitted
 each visitor's IP address to Google. An IP address is personal data (GDPR
 art. 4(1), Recital 30; CJEU C-582/14 *Breyer*), and LG München I (judgment of

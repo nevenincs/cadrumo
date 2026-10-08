@@ -23,7 +23,8 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend_context
 from cadrumo.application.modelo.calculation_report_document import CALCULATION_REPORT_CSV_PREAMBLE_PREFIX
-from cadrumo.application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID, ModeloExportRequest
+from cadrumo.application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.work_export_contracts import ModeloExportRequest
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,

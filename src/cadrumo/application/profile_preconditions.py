@@ -23,7 +23,7 @@ from ..core.operator_action_enums import (
 )
 from ..core.profile_session import ProfileSessionRefusalReason
 from .operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
-from .operator_actions.preconditions import conditionality_for_binding, no_action_precondition_verdict
+from .operator_actions.preconditions import no_action_precondition_verdict
 
 
 class ProfilePreconditionCondition(StrEnum):
@@ -36,11 +36,11 @@ class ProfilePreconditionCondition(StrEnum):
     PROFILE_SELECTION_LIVE = "profile.selection.live"
     PROFILE_TARGET_NOT_SELECTED = "profile.target.not_selected"
     SESSION_LOGGED_IN = "profile.session.logged_in"
+    HUMAN_INPUT_CHANNEL_AVAILABLE = "profile.human.input_channel_available"
     SESSION_CURRENT = "profile.session.current"
     SESSION_SCHEMA_CURRENT = "profile.session.schema_current"
     SESSION_WELL_FORMED = "profile.session.well_formed"
     SESSION_INTEGRITY_VALID = "profile.session.integrity_valid"
-    TAX_ID_DECLARED = "taxpayer.identity.tax_id.declared"
     FORMER_PRODUCT_STATE_ABSENT = "storage.former_product_state.absent"
 
 
@@ -50,7 +50,7 @@ class ProfilePreconditionEvidence(StrEnum):
     ACTIVE_PROFILE_STATE = "profile.active.state"
     PROFILE_SELECTION = "profile.selection.resolution"
     PROFILE_SESSION = "profile.session.resume"
-    TAXPAYER_IDENTITY = "taxpayer.identity.declaration"
+    HUMAN_INPUT_CHANNEL = "profile.human.input_channel"
     FORMER_PRODUCT_STATE = "storage.former_product_state.detection"
 
 
@@ -110,45 +110,8 @@ def inspect_active_profile_precondition(
     )
 
 
-def inspect_filing_taxpayer_identity_precondition(
-    *,
-    declared_tax_id: str,
-    profile_name: str | None,
-) -> PreconditionVerdict | None:
-    """Return the profile-edit verdict when filing identity is undeclared."""
-    if declared_tax_id:
-        return None
-
-    condition_id = ProfilePreconditionCondition.TAX_ID_DECLARED.value
-    binding = _verdict_context_argument("profile_name", profile_name)
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            _evidence(
-                condition_id=condition_id,
-                evidence_id=ProfilePreconditionEvidence.TAXPAYER_IDENTITY.value,
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                values={
-                    "declared_tax_id_present": False,
-                    "missing_selector": "tax.id",
-                    "profile_name_available": profile_name is not None,
-                },
-            ),
-        ),
-        action=ActionReference(action_id="operator.profile.edit"),
-        argument_bindings=(binding,),
-        missing_argument_names=("profile_name",) if binding.status is ActionArgumentStatus.MISSING else (),
-        conditionality=conditionality_for_binding(binding),
-    )
-
-
-def profile_deletion_requires_logout_verdict(*, requested_profile: str) -> PreconditionVerdict:
-    """Return the outcome for deleting the profile that is currently selected.
-
-    Deletion refuses its own selected target, and closing that session is a
-    separate operation the operator already owns. Naming it on the action
-    channel is what lets an automated operator recover without parsing prose.
-    """
+def profile_deletion_requires_other_selection_verdict(*, requested_profile: str) -> PreconditionVerdict:
+    """Require selection of another profile; human sign-out preserves selection."""
     condition_id = ProfilePreconditionCondition.PROFILE_TARGET_NOT_SELECTED.value
     return PreconditionVerdict(
         failed_condition_id=condition_id,
@@ -163,8 +126,10 @@ def profile_deletion_requires_logout_verdict(*, requested_profile: str) -> Preco
                 },
             ),
         ),
-        action=ActionReference(action_id="operator.profile.logout"),
-        conditionality=ActionConditionality.IMMEDIATE,
+        action=ActionReference(action_id="operator.profile.login"),
+        argument_bindings=(_missing_argument("name"),),
+        missing_argument_names=("name",),
+        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
     )
 
 
@@ -281,6 +246,33 @@ def profile_session_failure_verdict(
     )
 
 
+def profile_password_channel_failure_verdict(*, profile_name: str) -> PreconditionVerdict:
+    """Project login recovery from an observed absence of a password channel."""
+    condition_id = ProfilePreconditionCondition.HUMAN_INPUT_CHANNEL_AVAILABLE.value
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            _evidence(
+                condition_id=condition_id,
+                evidence_id=ProfilePreconditionEvidence.HUMAN_INPUT_CHANNEL.value,
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values={"profile_name": profile_name, "password_channel_available": False},
+            ),
+        ),
+        action=ActionReference(action_id="operator.profile.login"),
+        argument_bindings=(
+            ActionArgumentBinding(
+                argument_name="name",
+                status=ActionArgumentStatus.RESOLVED,
+                value=profile_name,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="name",
+            ),
+        ),
+        conditionality=ActionConditionality.IMMEDIATE,
+    )
+
+
 def former_product_state_verdict(scope: FormerProductDetectionScope) -> PreconditionVerdict:
     """Return the safety refusal for state Cadrumo deliberately cannot adopt."""
     condition_id = ProfilePreconditionCondition.FORMER_PRODUCT_STATE_ABSENT.value
@@ -297,18 +289,6 @@ def _missing_argument(argument_name: str) -> ActionArgumentBinding:
     return ActionArgumentBinding(
         argument_name=argument_name,
         status=ActionArgumentStatus.MISSING,
-    )
-
-
-def _verdict_context_argument(argument_name: str, value: str | None) -> ActionArgumentBinding:
-    if value is None:
-        return _missing_argument(argument_name)
-    return ActionArgumentBinding(
-        argument_name=argument_name,
-        status=ActionArgumentStatus.RESOLVED,
-        value=value,
-        source=ActionArgumentSource.VERDICT_CONTEXT,
-        source_key=argument_name,
     )
 
 
@@ -334,8 +314,8 @@ __all__ = [
     "ProfileSelectionFailure",
     "former_product_state_verdict",
     "inspect_active_profile_precondition",
-    "inspect_filing_taxpayer_identity_precondition",
-    "profile_deletion_requires_logout_verdict",
+    "profile_deletion_requires_other_selection_verdict",
+    "profile_password_channel_failure_verdict",
     "profile_selection_failure_verdict",
     "profile_session_failure_verdict",
 ]

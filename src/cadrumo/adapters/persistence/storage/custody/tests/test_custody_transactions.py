@@ -33,6 +33,7 @@ from cadrumo.adapters.persistence.storage.custody.records import (
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.custody.sentinel_contract import ProfileCustodySentinelRecord
+from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
     bind_active_bucket_session,
     current_active_bucket_session,
@@ -70,6 +71,7 @@ from cadrumo.domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
+from cadrumo.tests.process_results import receive_process_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -92,12 +94,10 @@ def _select_pointer(root: Path, bucket_id: str) -> BucketPointer:
 
 
 def _clear_expected_pointer(root: Path, expected: BucketPointer) -> BucketPointer:
-    """Model a crash boundary using the canonical compare-and-transition verb."""
+    """Model a crash boundary while retaining the canonical root lock."""
     with active_profile_pointer_transaction(root) as transaction:
-        return transaction.compare_and_restore(
-            expected=expected,
-            captured=BucketPointer.absent(transition_revision=0),
-        )
+        assert transaction.read() == expected
+        return transaction.clear()
 
 
 def _committed_capsule(
@@ -205,6 +205,9 @@ def _persist_real_current_session_acceleration(root: Path) -> Path:
         now=_INSTANT,
         idle_minutes=15,
         absolute_minutes=240,
+        login_id=RECEIPT_LOGIN_ID,
+        sign_in=committed_sign_in(root, _PROFILE_ID),
+        generation=committed_sign_in(root, _PROFILE_ID).establish().current,
     )
     return profile_session_path(storage_root=root, profile_id=_PROFILE_ID)
 
@@ -383,6 +386,8 @@ def _create_labeled_capsule_in_sibling(
 
 def test_confirmed_local_delete_is_atomic_receipted_and_idempotent(tmp_path: Path) -> None:
     capsule = _committed_capsule(tmp_path)
+    sign_in = committed_sign_in(tmp_path, _PROFILE_ID)
+    captured = sign_in.establish().current
     _select_pointer(tmp_path, str(_PROFILE_ID))
     service = ProfileCustodyTransactionService(root=tmp_path)
     _authorise_clear_hold(service)
@@ -392,6 +397,9 @@ def test_confirmed_local_delete_is_atomic_receipted_and_idempotent(tmp_path: Pat
     receipt = service.execute_delete(confirmation, now=_INSTANT)
 
     assert not capsule.exists()
+    advanced = sign_in.observe().current
+    assert advanced is not None and advanced.lineage == captured.lineage
+    assert advanced.generation == captured.generation + 1
     assert _observe_pointer(tmp_path).bucket_id is None
     assert receipt.transaction_id == journal.transaction_id
     assert receipt.pointer_cleared is True
@@ -833,7 +841,7 @@ def test_create_recovery_after_real_subprocess_crash_at_each_durable_boundary(
         args=(str(tmp_path), str(transaction_id), boundary),
     )
     child.start()
-    child.join(30)
+    child.join(None)
     assert child.exitcode == 97
 
     receipt = ProfileCustodyTransactionService(root=tmp_path).recover_create(transaction_id, now=_INSTANT)
@@ -859,7 +867,7 @@ def test_create_recovery_refuses_a_label_claimed_while_its_real_stage_waited(tmp
         args=(str(tmp_path), str(transaction_id), "stage"),
     )
     child.start()
-    child.join(30)
+    child.join(None)
     assert child.exitcode == 97
 
     envelope, sentinel, data_files = _create_capsule_input(profile_id=_OTHER_PROFILE_ID)
@@ -893,7 +901,7 @@ def test_create_recovery_refuses_a_journal_label_not_bound_to_its_real_stage(tmp
         args=(str(tmp_path), str(transaction_id), "stage"),
     )
     child.start()
-    child.join(30)
+    child.join(None)
     assert child.exitcode == 97
 
     service = ProfileCustodyTransactionService(root=tmp_path)
@@ -926,12 +934,12 @@ def test_create_root_lock_serializes_duplicate_labels_across_real_processes(tmp_
     )
     first.start()
     second.start()
-    first.join(30)
-    second.join(30)
+    first.join(None)
+    second.join(None)
 
     assert first.exitcode == 0
     assert second.exitcode == 0
-    assert sorted((result_queue.get(timeout=5), result_queue.get(timeout=5))) == ["collision", "published"]
+    assert sorted((result_queue.get_nowait(), result_queue.get_nowait())) == ["collision", "published"]
     visible = list_current_profile_custody_capsule_ids(root=tmp_path)
     assert len(visible) == 1
     assert load_committed_profile_custody_label_record(visible[0], root=tmp_path).label.casefold() == "same label"
@@ -947,12 +955,12 @@ def test_publish_once_has_one_sibling_process_winner_and_never_overwrites(tmp_pa
     second = context.Process(target=_publish_once_in_sibling, args=(str(target), b"second", result_queue))
     first.start()
     second.start()
-    first.join(20)
-    second.join(20)
+    first.join(None)
+    second.join(None)
 
     assert first.exitcode == 0
     assert second.exitcode == 0
-    assert sorted((result_queue.get(timeout=5), result_queue.get(timeout=5))) == ["collision", "published"]
+    assert sorted((result_queue.get_nowait(), result_queue.get_nowait())) == ["collision", "published"]
     assert target.read_bytes() in {b"first", b"second"}
 
 
@@ -991,7 +999,7 @@ def test_transaction_lock_serializes_siblings_and_releases_after_process_death(t
         assert first.exitcode is not None and first.exitcode != 0
         assert result_queue.get(timeout=20) == "locked"
         second_release.set()
-        second.join(10)
+        second.join(None)
         assert second.exitcode == 0
     finally:
         if first.is_alive():
@@ -1028,8 +1036,8 @@ def test_pointer_transition_and_active_pointer_writer_share_one_root_lock(tmp_pa
             assert captured == original
             _clear_expected_pointer(tmp_path, captured)
 
-        assert result_queue.get(timeout=20) == "written"
-        writer.join(10)
+        assert receive_process_result(result_queue, owners=(writer,)) == "written"
+        writer.join(None)
         assert writer.exitcode == 0
         replacement = _observe_pointer(tmp_path)
         assert replacement.bucket_id == str(_OTHER_PROFILE_ID)
@@ -1037,14 +1045,12 @@ def test_pointer_transition_and_active_pointer_writer_share_one_root_lock(tmp_pa
             active_profile_pointer_transaction(tmp_path) as transaction,
             pytest.raises(ActiveProfilePointerTransactionError),
         ):
-            transaction.compare_and_restore(
-                expected=captured,
-                captured=BucketPointer.absent(transition_revision=0),
-            )
+            transaction.compare_and_select(expected=captured, bucket_id=str(_PROFILE_ID))
         assert _observe_pointer(tmp_path) == replacement
     finally:
         if writer.is_alive():
             writer.kill()
+        if writer.pid is not None:
             writer.join(10)
 
 

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:26b3e549a848db350fc4cc7c29cc8240d7d6dad8515e26936dc664d801ba4d05'
+modified: '2026-10-03'
+body_hash: 'sha256:aa74b4bdd32ac948a02dbf6ddebe666fad186c94c7cc44d7807567ff9abc45d7'
 related: []
 ---
 
@@ -16,9 +16,9 @@ No HIGH or CRITICAL findings were identified.
 
 Reviewed scope:
 
-- `src/aeat/adapters/persistence/storage/master_key/test_adverse_sessions.py`
-- Context from `src/aeat/adapters/persistence/storage/master_key/_active_session.py`, `src/aeat/adapters/persistence/storage/master_key/_bucket_session.py`, `src/aeat/adapters/persistence/storage/master_key/_master_key.py`, and `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py`
-- Neighboring tests `src/aeat/adapters/persistence/storage/master_key/test_bucket_session.py`, `src/aeat/adapters/persistence/storage/master_key/test_master_key.py`, and `src/aeat/adapters/persistence/storage/bucket/test_manifest_io.py`
+- the retired test
+- Context from the retired module, the retired module, the retired module, and the retired module
+- Neighboring tests the retired test, the retired test, and the retired test
 
 Review result:
 
@@ -30,5 +30,5 @@ Review result:
 
 Validation run:
 
-- `uv run pytest src/aeat/adapters/persistence/storage/master_key/test_adverse_sessions.py`
-- `uv run pytest src/aeat/adapters/persistence/storage/master_key/test_adverse_sessions.py src/aeat/adapters/persistence/storage/master_key/test_bucket_session.py src/aeat/adapters/persistence/storage/master_key/test_master_key.py src/aeat/adapters/persistence/storage/bucket/test_manifest_io.py`
+- the historical check
+- the historical check

@@ -1,8 +1,8 @@
-# Modelo 181 declaration-header casillas (scheduling/applicability-grade). Only
-# the declaration header is declared, grounded in orden-eha-3514-2009 art 1. No
-# numbered form casilla is invented — the authoritative Modelo 181 diseño de
-# registro IS bundled (aeat-dr-181-2022) but no casilla-to-position mapping
-# has been authored from it yet.
+# Modelo 181 source-backed casillas. The declaration header retains its
+# scheduling/applicability-grade basis in orden-eha-3514-2009 art 1. The
+# independently printed Type 2 property-address and operation-IBAN components,
+# plus the two Type 1 amendment bytes, follow aeat-dr-181-2022 exactly. This
+# correction does not promote the revision's authority grade.
 
 [[revisions."2022-y-siguientes".casillas]]
 id = "decl.ejercicio"
@@ -69,7 +69,26 @@ section = ["declarante"]
 data_type = "text"
 semantic_role = "m181_declaracion_complementaria_sustitutiva"
 semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / sustitutiva' box on this informativa; the role is modelo-scoped, so no sibling casilla can carry it. Modelo 190 records the same decision for its own complementaria and sustitutiva boxes."
+semantic_role_cardinality_reason = "This one official two-byte parent campo remains an aggregate declaration; its separately printed C and S bytes have distinct component roles and are encoded independently."
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+# The parent is two official one-byte choices, not one free-text filing flag.
+# The current manual export/form still consumes the parent until generated
+# replacement; its two new component casillas must not be solicited in parallel.
+[[revisions."2022-y-siguientes".casillas]]
+id = "decl.complementaria"
+number = "tipo1.121"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m181_declaracion_complementaria"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "decl.sustitutiva"
+number = "tipo1.122"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m181_declaracion_sustitutiva"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 
 # Campo 10. Positions 123-135. NUMERO IDENTIFICATIVO DE LA DECLARACION ANTERIOR.
@@ -182,6 +201,26 @@ number = "tipo2.79-82"
 section = ["operacion"]
 data_type = "text"
 semantic_role = "m181_prefijo_codigo_iban"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+# The source prints the two components of campo 10 separately. They describe
+# the declared person's operation, not the filer's selected bank account. The
+# current manual export/form still consumes the aggregate until generated
+# replacement, so these inputs are not independently solicited before cutover.
+[[revisions."2022-y-siguientes".casillas]]
+id = "iban-codigo-pais"
+number = "tipo2.79-80"
+section = ["operacion"]
+data_type = "text"
+semantic_role = "m181_iban_codigo_pais"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "iban-digitos-control"
+number = "tipo2.81-82"
+section = ["operacion"]
+data_type = "text"
+semantic_role = "m181_iban_digitos_control"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 
 # Campo 11. Positions 83-102. IDENTIFICACION DEL PRESTAMO, CREDITO U OTRA
@@ -323,7 +362,7 @@ semantic_role = "m181_saldo_pendiente"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 
 # Campo 26. Positions 220-412. DIRECCION DEL INMUEBLE. AEAT declares ONE
-# alfanumerico campo of 193 bytes and subdivides it into seventeen named parts
+# alfanumerico campo of 193 bytes and subdivides it into sixteen named parts
 # (220-224 tipo de via, 225-274 nombre via publica, 275-277 tipo de numeracion,
 # 278-282 numero de casa, 283-285 calificador, 286-288 bloque, 289-291 portal,
 # 292-294 escalera, 295-297 planta o piso, 298-300 puerta, 301-340 complemento,
@@ -336,6 +375,139 @@ number = "tipo2.220-412"
 section = ["inmueble"]
 data_type = "text"
 semantic_role = "m181_direccion_inmueble"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+# Each named source part is a distinct structured property-address input.
+# Numeric identifiers remain text so their leading zeroes survive. The current
+# manual export/form still consumes the aggregate above; the generated target
+# must switch to these parts and move the aggregate off the input surface in
+# the same reviewed cutover, without treating it as an official legal retirement.
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-tipo-via"
+number = "tipo2.220-224"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_tipo_via"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-nombre-via"
+number = "tipo2.225-274"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_nombre_via"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-tipo-numeracion"
+number = "tipo2.275-277"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_tipo_numeracion"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-numero-casa"
+number = "tipo2.278-282"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_numero_casa"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-calificador-numero"
+number = "tipo2.283-285"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_calificador_numero"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-bloque"
+number = "tipo2.286-288"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_bloque"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-portal"
+number = "tipo2.289-291"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_portal"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-escalera"
+number = "tipo2.292-294"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_escalera"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-planta"
+number = "tipo2.295-297"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_planta"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-puerta"
+number = "tipo2.298-300"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_puerta"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-complemento"
+number = "tipo2.301-340"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_complemento"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-localidad"
+number = "tipo2.341-370"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_localidad"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-municipio"
+number = "tipo2.371-400"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_municipio"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-codigo-municipio"
+number = "tipo2.401-405"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_codigo_municipio"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-codigo-provincia"
+number = "tipo2.406-407"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_codigo_provincia"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2022-y-siguientes".casillas]]
+id = "inmueble-codigo-postal"
+number = "tipo2.408-412"
+section = ["inmueble", "direccion"]
+data_type = "text"
+semantic_role = "m181_inmueble_codigo_postal"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 
 # Campo 27. Position 413. CLAVE DE INTERVENCION EN LA OPERACION.

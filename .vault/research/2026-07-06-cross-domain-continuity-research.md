@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#cross-domain-continuity'
 date: '2026-07-06'
-modified: '2026-08-15'
-body_hash: 'sha256:83dc494a007cf8d2e73b20f19f86d13216d33a53711d4e75745c4ea01d9ab0f2'
+modified: '2026-10-03'
+body_hash: 'sha256:2225d9e29bee6a3a71cf8a19799777c885254ab04ab05ceade25d2b838e78b1e'
 related: []
 ---
 
@@ -34,7 +34,7 @@ RAG grounding used before this note:
 
 ### Legal grounding
 
-Bundled corpus `src/aeat/_data/corpus/normatives/html/ley-37-1992.html.extracted.md`
+Bundled corpus the former source file
 contains the relevant consolidated LIVA text:
 
 - Art. 75 defines the general devengo timing for deliveries and services.
@@ -69,9 +69,6 @@ Live official cross-checks on 2026-07-06:
 
 The two M303 registry revisions declare boxes 62, 63, 74, and 75 as optional
 manual informational rows:
-
-- `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/casillas/0001-casillas.part-002.toml`
-- `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.part-002.toml`
 
 Their current legal refs are generic IVA/form refs (`art-88`, `art-92`,
 `rd-1624-1992:art-71`, `orden-eha-3786-2008:art-1`). The registry legal

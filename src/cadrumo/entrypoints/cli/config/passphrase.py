@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 import typer
 from pydantic import SecretStr
 
+from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
+
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from ....adapters.local_runtime.profile_password_rotation import run_profile_password_rotation
+from ....application.operations.registry import OperationFrontendProjection
 from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
@@ -15,7 +22,6 @@ from ....core.json_contract import Notice, NoticeSeverity
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope, notice_lines
 from ..errors import CliRefusedBoundaryError
-from ..state_projection_support import authority_operation
 from .secure_input import MachineSecretPayload
 
 if TYPE_CHECKING:
@@ -64,6 +70,23 @@ def _rotation_lines(outcome: ProfilePassphraseRotationOutcome) -> tuple[str, ...
     )
 
 
+def _open_rotation_client(profile_id: UUID, ctx: typer.Context | None = None) -> RuntimeFrontendClient:
+    """Open one exact CLI connection without local profile custody."""
+    from ..runtime_profile_binding import subscribe_profile_notices
+
+    client = asyncio.run(open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
+    try:
+        if ctx is not None:
+            subscribe_profile_notices(ctx, client)
+    except BaseException as primary:
+        try:
+            client.close()
+        except Exception:
+            primary.add_note("Runtime connection cleanup did not complete.")
+        raise
+    return client
+
+
 def passphrase_change(
     ctx: typer.Context,
     secrets_stdin: bool = False,
@@ -72,7 +95,6 @@ def passphrase_change(
 ) -> None:
     """Rotate the active profile's passphrase without replacing its data key."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile.passphrase_rotation import rotate_profile_passphrase
     from ..config_payloads import ConfigPassphraseChangeResult
 
     active = _resolve_active_bucket_id()
@@ -80,18 +102,45 @@ def passphrase_change(
         raise CliRefusedBoundaryError(translated_message="cli.config.passphrase.no_active_profile")
     profile_id = UUID(active)
 
-    # Resolve the exact mutation target before consuming any secret source.
-    # The application authority still owns proof, policy, transaction entry,
-    # and the custody-envelope swap after the bounded payload is collected.
-    secrets = _collect_passphrases(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-
-    outcome = rotate_profile_passphrase(
-        profile_id=profile_id,
-        current_passphrase=secrets.current_passphrase.get_secret_value(),
-        new_passphrase=secrets.new_passphrase.get_secret_value(),
-        new_passphrase_confirmation=secrets.new_passphrase_confirmation.get_secret_value(),
-        profile_decode_context=authority_operation(ctx).profile_decode_context(),
-    )
+    # The selected profile is fixed before reading a leaf secret channel.
+    current, replacement, confirmation = bytearray(), bytearray(), bytearray()
+    try:
+        secrets = _collect_passphrases(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+        try:
+            current.extend(secrets.current_passphrase.get_secret_value().encode("utf-8"))
+            replacement.extend(secrets.new_passphrase.get_secret_value().encode("utf-8"))
+            confirmation.extend(secrets.new_passphrase_confirmation.get_secret_value().encode("utf-8"))
+        finally:
+            del secrets
+        client = _open_rotation_client(profile_id, ctx)
+        try:
+            proof = bytearray(current)
+            try:
+                client.login_password(proof)
+            except RuntimeFrontendRefusedError as error:
+                raise CliRefusedBoundaryError(error.reason, context=error.context) from error
+            finally:
+                proof[:] = bytes(len(proof))
+            completion = run_profile_password_rotation(
+                client,
+                current_passphrase=current,
+                new_passphrase=replacement,
+                new_passphrase_confirmation=confirmation,
+                fresh_client=lambda: _open_rotation_client(profile_id, ctx),
+            )
+            outcome = completion.outcome
+        except BaseException as primary:
+            try:
+                client.close()
+            except Exception:
+                primary.add_note("Runtime connection cleanup did not complete.")
+            raise
+        else:
+            client.close()
+    finally:
+        current[:] = bytes(len(current))
+        replacement[:] = bytes(len(replacement))
+        confirmation[:] = bytes(len(confirmation))
     emit_envelope(
         ctx,
         command="config.passphrase.change",
@@ -141,27 +190,44 @@ def passphrase_reset(
     """Replace a forgotten passphrase by proving the profile's recovery code."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile.login_session import resolve_login_target
-    from ....application.user_profile.recovery_custody import reset_profile_passphrase_with_recovery
-    from ....domain.calculations.registry.authority import bundled_indexed_authority
     from ..config_payloads import ConfigPassphraseResetResult
 
     # Resolve the exact target before consuming any secret source: an unknown
     # name refuses without a prompt and without reading a machine payload.
     profile_id = UUID(resolve_login_target(name).bucket_id)
-    secrets = _collect_reset_secrets(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-
-    # Bootstrap-exempt by construction: the profile whose passphrase is lost is
-    # the one nobody can log in to, so the authority is opened here directly.
-    with bundled_indexed_authority().operation() as operation:
-        outcome = reset_profile_passphrase_with_recovery(
-            profile_id=profile_id,
-            recovery_code=secrets.recovery_code.get_secret_value(),
-            new_passphrase=secrets.new_passphrase.get_secret_value(),
-            new_passphrase_confirmation=secrets.new_passphrase_confirmation.get_secret_value(),
-            profile_decode_context=operation.profile_decode_context(),
-        )
-    # A reset re-wraps the same data key, so it revokes nothing the key already
-    # protects; an operator resetting out of suspicion must learn that here.
+    code, replacement, confirmation = bytearray(), bytearray(), bytearray()
+    try:
+        secrets = _collect_reset_secrets(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+        try:
+            code.extend(secrets.recovery_code.get_secret_value().encode("utf-8"))
+            replacement.extend(secrets.new_passphrase.get_secret_value().encode("utf-8"))
+            confirmation.extend(secrets.new_passphrase_confirmation.get_secret_value().encode("utf-8"))
+        finally:
+            del secrets
+        client = _open_rotation_client(profile_id, ctx)
+        try:
+            completion = client.reset_password(
+                recovery_code=code,
+                new_passphrase=replacement,
+                new_passphrase_confirmation=confirmation,
+            )
+            outcome = completion.outcome
+        except BaseException as primary:
+            try:
+                client.close()
+            except Exception:
+                primary.add_note("Runtime connection cleanup did not complete.")
+            if isinstance(primary, RuntimeFrontendRefusedError):
+                raise CliRefusedBoundaryError(primary.reason, context=primary.context) from primary
+            raise
+        else:
+            client.close()
+    finally:
+        code[:] = bytes(len(code))
+        replacement[:] = bytes(len(replacement))
+        confirmation[:] = bytes(len(confirmation))
+    # Reset fences saved human sign-in, but re-wraps the same data key.
+    # Recovery codes and previously exported archives retain their own scope.
     notices = (
         Notice(
             code="config.passphrase.reset_scope",
@@ -175,11 +241,19 @@ def passphrase_reset(
         result=ConfigPassphraseResetResult(
             profile_id=outcome.profile_id,
             changed=True,
+            human_receipt_revoked=True,
+            receipt_removed=completion.human_sign_in_revocation.receipt_removed,
+            keychain_removed=completion.human_sign_in_revocation.keychain_removed,
             password_generation=outcome.password_generation,
             dek_epoch_preserved=outcome.dek_epoch_preserved,
             recovery_enrollment_retained=outcome.recovery_enrollment_retained,
         ),
-        lines=[*notice_lines(notices), *_reset_lines(outcome)],
+        lines=[
+            *notice_lines(notices),
+            *_reset_lines(outcome),
+            f"receipt_removed\t{str(completion.human_sign_in_revocation.receipt_removed).lower()}",
+            f"keychain_removed\t{str(completion.human_sign_in_revocation.keychain_removed).lower()}",
+        ],
         notices=notices,
     )
 

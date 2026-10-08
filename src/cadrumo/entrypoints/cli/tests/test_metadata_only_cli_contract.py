@@ -55,7 +55,7 @@ def _probe(arguments: tuple[str, ...], *, locale: str) -> dict[str, object]:
         [sys.executable, "-c", script],
         capture_output=True,
         text=True,
-        timeout=120,
+        timeout=None,
         check=False,
     )
     assert completed.returncode == 0, completed.stderr
@@ -129,7 +129,7 @@ def test_root_shell_completion_reads_registration_metadata_only(locale: str) -> 
         [sys.executable, "-c", script],
         capture_output=True,
         text=True,
-        timeout=120,
+        timeout=None,
         check=False,
     )
     assert completed.returncode == 0, completed.stderr

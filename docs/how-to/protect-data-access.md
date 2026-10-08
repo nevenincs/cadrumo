@@ -14,7 +14,7 @@ resort.
 
 You need:
 
-- An active profile - see [set up your taxpayer profile](profile-setup.md).
+- An active profile; see [set up your taxpayer profile](profile-setup.md).
 - Your current profile passphrase.
 
 The examples in this documentation are recorded in English. `aeat` prints its
@@ -264,14 +264,14 @@ strings while decoding JSON and validating secret fields, so the application
 does not claim guaranteed memory erasure. Never reuse the pipe, redirect it to
 a regular file, or log the JSON object.
 
-Interactive commands may prompt only on a verified terminal. A redirected or
+Interactive commands may prompt only on a confirmed terminal. A redirected or
 non-interactive invocation without the required explicit channel is refused.
 
 ## Log out of the active profile
 
-Run `aeat config logout` when you finish working with a profile. Logout
-closes the active storage session, discards in-memory key material, disposes the
-bucket engines, and keeps the profile selected for the next exact login:
+Run `aeat config logout` when you finish working with a profile. Logout closes
+the active storage session, discards in-memory key material, closes the storage
+connections, and keeps the profile selected for the next exact login:
 
 ```{cli-sequence} protect-data-access-logout
 :verify: Confirm logout closes the active session without deleting the profile.
@@ -279,6 +279,33 @@ bucket engines, and keeps the profile selected for the next exact login:
 
 Nothing in the profile is deleted. Log in again with `aeat config login` to use
 the selected profile, or name another exact profile when you return.
+
+## Remove Google access
+
+Profile logout and Google logout serve different purposes. To remove the saved
+Google refresh token and account metadata from the active profile, run:
+
+```text
+aeat config google logout
+```
+
+This keeps the Drive folder and exported workbooks. It does not revoke Google's
+grant or invalidate a token copied elsewhere. To revoke access, open your
+[Google account connections](https://myaccount.google.com/connections), select
+Cadrumo, and remove its access to your Google account. Then clear the local
+session with the command above. Google documents this in
+[Manage third-party connections](https://support.google.com/accounts/answer/13533235).
+
+Google Sheets exports contain readable financial data. Review the workbook's
+sharing settings in Google Drive; anyone with sufficient Google authorization
+can read it. Removing Cadrumo's access does not delete exported data or copies
+already obtained by others. Encrypted backups have a different boundary: keep
+the profile passphrase and recovery material separate from the backup.
+
+Install Cadrumo through its published distribution channels. A counterfeit app
+can reuse the public Google client metadata and display the same consent brand.
+PKCE protects the authorization-code exchange; the consent screen does not
+prove which program you installed.
 
 ## Reset local state (last resort)
 
@@ -314,10 +341,11 @@ backup instructions.
 
 ## Next steps
 
-- [Import, export, and evidence](../reference/import-export-and-evidence.md) -
-  see where encrypted custody ends and deliberate plaintext handoffs begin.
-- [Set up your taxpayer profile](profile-setup.md) - create, export, and
+- [Import, export, and supporting
+  documents](../reference/import-export-and-evidence.md): see where encrypted
+  custody ends and deliberate plaintext handoffs begin.
+- [Set up your taxpayer profile](profile-setup.md): create, export, and
   import profiles.
-- [Diagnose and repair your local setup](troubleshooting.md) - quarantine
+- [Diagnose and repair your local setup](troubleshooting.md): quarantine
   unreadable records and fix storage or integrity problems without a reset.
-- [CLI reference](../cli/index.rst) - full option reference.
+- [CLI reference](../cli/index.rst): full option reference.

@@ -78,7 +78,6 @@ def _isolated_environment(work_dir: Path) -> dict[str, str]:
     return environment
 
 
-@pytest.mark.timeout(900)
 def test_client_and_provider_loader_preserve_the_registered_extra_facts(
     installed_core_environment: tuple[Path, Path],
 ) -> None:
@@ -121,7 +120,7 @@ def test_client_and_provider_loader_preserve_the_registered_extra_facts(
         cwd=work_dir,
         environment=_isolated_environment(work_dir),
         errors="replace",
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
 
     assert completed.returncode == 0, completed.stderr

@@ -3,22 +3,18 @@ tags:
   - '#plan'
   - '#arch-remediation-data-budget'
 date: '2026-07-02'
-modified: '2026-07-17'
-body_hash: 'sha256:ccf982d3e25a73c9502bda239d2d83a33462afcbb6744062e5c523ed8b0ea097'
 tier: L1
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-02-arch-remediation-data-budget-adr]]'
   - '[[2026-07-06-arch-remediation-data-budget-research]]'
+modified: '2026-10-03'
+body_hash: 'sha256:14f9c8fa05928179651b7cdc0e6b6293689b3d16b4c8a9588768e74581fc21e2'
 ---
+
 # `arch-remediation-data-budget` plan
 
-- [x] `S01` - Add hatchling wheel excludes for src/aeat/**/tests/** and src/aeat/tests/** so no test module or fixture ships in the installed wheel; `pyproject.toml`.
-- [x] `S02` - Add a packaging content-boundary gate that builds the wheel and asserts no tests member is present; `src/aeat/tests/test_wheel_content_boundary.py`.
-- [x] `S03` - Extend the packaging gate to assert the wheel contains the required data roots plus py.typed, the BIP-39 wordlist, and external_constants.toml so the exclude cannot silently strip functional payload; `src/aeat/tests/test_wheel_content_boundary.py`.
-- [x] `S04` - Add a size-budget gate asserting the _data tree is at or under 550 MB, failing with a message that names the data-budget ADR and the two breach options raise-by-ADR or split; `src/aeat/tests/test_data_size_budget.py`.
-- [x] `S05` - Declare the corpus-split escape hatch as a named constant beside the budget carrying its target condition so the option is discoverable in code; `src/aeat/tests/test_data_size_budget.py`.
 ## Description
 
 This is a small single-concern L1 plan implementing the data-budget ADR, which
@@ -46,6 +42,12 @@ verifies against the bundled authoritative text, and the exclude is scoped to
 into an ADR-governed decision.
 
 ## Steps
+
+- [x] `S01` - Add hatchling wheel excludes for src/aeat/**/tests/** and src/aeat/tests/** so no test module or fixture ships in the installed wheel; `pyproject.toml`.
+- [x] `S02` - Add a packaging content-boundary gate that builds the wheel and asserts no tests member is present; `dev/tests/test_wheel_content_boundary.py`.
+- [x] `S03` - Extend the packaging gate to assert the wheel contains the required data roots plus py.typed, the BIP-39 wordlist, and external_constants.toml so the exclude cannot silently strip functional payload; `dev/tests/test_wheel_content_boundary.py`.
+- [x] `S04` - Add a size-budget gate asserting the _data tree is at or under 550 MB, failing with a message that names the data-budget ADR and the two breach options raise-by-ADR or split; `src/cadrumo/tests/test_data_size_budget.py`.
+- [x] `S05` - Declare the corpus-split escape hatch as a named constant beside the budget carrying its target condition so the option is discoverable in code; `src/cadrumo/tests/test_data_size_budget.py`.
 
 ## Parallelization
 

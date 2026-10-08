@@ -58,9 +58,9 @@ from ..models import (
     OperationSnapshot,
     OperationTerminalReceipt,
 )
+from ..operation_definition import OperationDefinition, OperationExecutorFactory
 from ..registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
+    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
@@ -68,9 +68,9 @@ from ..registry import (
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationSchemaBindingV1,
-    OperationSchemaIdentityV1,
 )
 from ..registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
+from ..schema_identity import OperationSchemaIdentityV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -516,6 +516,13 @@ def snapshot(*, definition_id: str = "profile.sync", value: str = "submitted") -
     )
 
 
+def test_all_operation_frontends_names_every_declared_frontend() -> None:
+    assert isinstance(ALL_OPERATION_FRONTENDS, frozenset)
+    assert {frontend.value for frontend in ALL_OPERATION_FRONTENDS} == {"cli", "mcp", "tui"}
+    # A new frontend must be granted to all-frontend operations deliberately.
+    assert frozenset(OperationFrontendProjection) == ALL_OPERATION_FRONTENDS
+
+
 def test_registry_canonicalises_and_resolves_definition_and_action_identity() -> None:
     second = definition(definition_id="profile.sync", action_id="operator.profile.sync")
     first = definition(definition_id="auth.login")
@@ -528,6 +535,14 @@ def test_registry_canonicalises_and_resolves_definition_and_action_identity() ->
     assert isinstance(second.executor_factory.create(), Executor)
     with pytest.raises(ValidationError):
         registry.definitions = ()
+
+
+@pytest.mark.parametrize("raw", ['{"value":"a","value":"b"}', '{"value":NaN}', '{"value":"a","unknown":true}'])
+def test_registered_payload_decoder_refuses_ambiguous_or_extra_members(raw: str) -> None:
+    registry = OperationRegistry(definitions=(definition(definition_id="profile.sync"),))
+    assert registry.decode_request_payload("profile.sync", '{"value":"a"}') == RequestPayload(value="a")
+    with pytest.raises(ValueError):
+        registry.decode_request_payload("profile.sync", raw)
 
 
 def test_registry_refuses_unknown_and_ambiguous_identities() -> None:
@@ -1051,11 +1066,12 @@ def test_registry_public_contract_is_a_live_definition_fixed_point() -> None:
     registration = public_registration(item)
     registry = OperationRegistry(definitions=(item,), public_registrations=(registration,))
 
+    assert registration.contract.refusal_detail_codes == frozenset()
     assert registration.contract.definition_contract_digest == (
-        "52cca15e062028441c31313f2337360487b878bb89fc90d8817a9848dabc7cb3"
+        "63a310bee0a2fd9224252fa54abb9361d199fffcbc6347c407b96fef37852aac"
     )
     assert registry.public_contract_set.contract_set_digest == (
-        "44d6bb71a45ff1e0d67881d3dc26433de7c509e2c26cfcd25d4fa84937c373f2"
+        "48c5c7b4cc31335e95beceb581b13c4ede197c59d43ccb184252bf7737e8e719"
     )
     assert registry.public_contract_set.definitions == (registration.contract,)
     assert registry.lookup_public_contract(item.definition_id) == registration.contract

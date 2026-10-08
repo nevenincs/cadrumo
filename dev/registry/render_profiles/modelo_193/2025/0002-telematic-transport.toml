@@ -1,0 +1,35 @@
+schema_version = 1
+fragment_id = "telematic-transport"
+width_17_rules = []
+singleton_rules = []
+
+[design_identity]
+modelo = "193"
+design_epoch = "2025"
+source_ref = "aeat-dr-193-2025"
+source_sha256 = "25ab19076ecc1116c660f8d4b0c47523e6cd271d89869895699c91843f562489"
+
+[[telematic_transport_choice_rules]]
+rule_kind = "telematic_transport_choice"
+selected_literal = "T"
+alternative_literals = ["C"]
+selection_condition = "telematic_transmission"
+expected_source_content = "Se cumplimentará una de las siguientes claves: “C”: Si la información se presenta en soporte. “T”: Transmisión telemática"
+
+[telematic_transport_choice_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 58
+ordinal = "6"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[telematic_transport_choice_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m193-2025-row-58-telematic-transport"
+decision_statement = "This generated export is transmitted telematically and therefore selects the source-listed T code."
+justification = "The exact enrolled source at row 58, position 58 lists C for physical support and T for telematic transmission."
+
+[telematic_transport_choice_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 58
+ordinal = "6"
+record_identity = "Tipo 1 - Registro De Declarante"

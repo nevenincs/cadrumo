@@ -3,12 +3,12 @@ tags:
   - '#reference'
   - '#facts-registry'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:546a171a0d37c2d257b09610c72a406816f2e577b93b764caf224a5e6b6fd8d1'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+body_hash: 'sha256:7c6921e34afb7f5cdd915c3c5b3f90b2ad21aaf7b85b395a12b4bcfa3d5cc83e'
+related: []
 ---
+
 # `facts-registry` reference: adapted family normalization
 
 ## Summary
@@ -21,7 +21,7 @@ This assessment compares the approved campaign plan, the live provider registrat
 
 ## Live ownership matrix
 
-The authored provider owns `facts` and currently loads the sixty numbered fragments directly. The IVA registration owns `iva`, compiles `rates.toml` and `recargo-rates.toml` through `dev/registry/compiler/iva.py`, and emits the `iva-rate-schedule` and `iva-recargo-by-applied-rate` facts. The IVA retirement ledger expressly assigns both schedules to W04.P15.S30, then assigns their raw parser, cache, and files to W04.P17.S56. The runtime `rates.py` and `recargo_equivalencia.py` already project the installed authority, so an authored replacement can remove rather than wrap the adapter.
+The authored provider owns `facts` and currently loads the sixty numbered fragments directly. The IVA retirement ledger expressly assigns both schedules to W04.P15.S30, then assigns their raw parser, cache, and files to W04.P17.S56. The runtime `rates.py` and `recargo_equivalencia.py` already project the installed authority, so an authored replacement can remove rather than wrap the adapter.
 
 Categories, legal-holiday calendars, and treaty overrides are also raw-tree-to-generated-fact adapters. They are not assigned to the IVA ledger and cannot be silently left as permanent exceptions: their provider compilers must gain individually scoped normalization and deletion closure. Categories read `categories/profiles.toml`; holidays read the yearly `calendars/festivos-*.toml` records; and treaties read `treaties/*.toml` while the broader authority also compiles its convenio catalogue. Each has different structured payload and provenance requirements.
 

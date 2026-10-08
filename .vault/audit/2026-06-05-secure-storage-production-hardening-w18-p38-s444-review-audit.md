@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:4f65a7997dd7910d3c97b80643b08f9c63fec9acc1f869fe66c779d9a55f2118'
+modified: '2026-10-03'
+body_hash: 'sha256:de48ca7c626dcc7057dd00b9bf017f06ea2244f20ff76f3e019b584c69ea5f6a'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S444-001 | PASS | Work addressing remains a projection facade
 
-`src/aeat/application/modelo/_work_addressing.py` converts visible/exact work targets into selector requests and delegates repository reads to the selector layer. It does not own secure-object routing, direct persistence, or raw environment reads.
+The retired module converts visible/exact work targets into selector requests and delegates repository reads to the selector layer. It does not own secure-object routing, direct persistence, or raw environment reads.
 
 ## S444-002 | PASS | Error and validation contracts are enrolled
 

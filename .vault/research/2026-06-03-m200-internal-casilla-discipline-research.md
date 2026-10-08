@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#m200-internal-casilla-discipline'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:99984cbfcaeaf933316a83922952a98aa58b18bce01460b799bc523e4ac2bd03'
+modified: '2026-10-03'
+body_hash: 'sha256:627b65b8c6923eb9f3b52c43a2a4bedeb54efd8221a16a9f415d30685472699d'
 related:
   - "[[2026-06-02-modelo-200-base-determination-adr]]"
 ---
@@ -54,7 +54,7 @@ casilla in the first place.
 The only M200 casilla today declared with a registry-internal identity
 that is intentionally absent from the AEAT Diseno is
 `DP200014:bin-aplicada-maxima`, authored under
-`src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/casillas/liquidacion-bin-aplicada-maxima.toml`.
+
 Its declared shape is the canonical archetype for the discipline this
 research grounds:
 
@@ -65,7 +65,7 @@ research grounds:
   cell).
 - `input_kind = "computed"`, with `formula = "modelo-200-2024-bin-aplicada-maxima"`
   defined in
-  `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/formulas.toml`
+
   as `min(casilla(00670), max(1_000_000, 0.7 * base_imponible_previa))`.
 - `export_refs = ()` (the casilla never feeds a fichero / BOE record).
 - `legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]` and
@@ -85,8 +85,7 @@ The art. 26.1 ceiling is the first instance, not the last.
 
 ### Existing gate and schema surfaces that an exemption can ride on
 
-`CasillaDefinition` (in
-`src/aeat/domain/calculations/registry/_schema.py:1900-1995`) carries a
+`CasillaDefinition` () carries a
 narrow set of declared fields relevant to this question:
 
 - `segmento: str | None` (used to disambiguate the same `number` across
@@ -95,8 +94,7 @@ narrow set of declared fields relevant to this question:
 - `input_kind: InputKindValue` with `formula` required when computed.
 - `legal_refs` and `source_refs` (both required).
 
-`derive_calculation_completeness_casillas` in
-`src/aeat/domain/calculations/registry/_record_design.py:1475-1572` is
+`derive_calculation_completeness_casillas`  is
 the gate that surfaces the three reds. Its logic in the multi-segment
 path is precisely:
 

@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#corporate-tax-runtime'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1514d3016aa92c3e59a3a15903a9f56a003f98a4a89d67a0c6399df464b6ca19'
+body_hash: 'sha256:d92fbe38750f2d003392cd505d259103698ae81b680fb5c68253c27fcf448ab8'
 related:
-  - '[[2026-06-04-corporate-tax-runtime-adr]]'
   - '[[2026-06-04-corporate-tax-runtime-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#corporate-tax-runtime`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-corporate-tax-runtime-adr` - `corporate-tax-runtime` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

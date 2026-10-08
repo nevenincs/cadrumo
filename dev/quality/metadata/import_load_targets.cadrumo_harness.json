@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "target_sets": {
+    "cadrumo_harness": {
+      "kind": "python-module-names",
+      "source": {
+        "exclude_test_module_prefixes": [
+          "test_",
+          "_test_",
+          "conftest"
+        ],
+        "exclude_test_packages": true,
+        "package": "cadrumo_harness",
+        "source_root": "src/cadrumo_harness",
+        "subpackages": []
+      },
+      "targets": [
+        "cadrumo_harness",
+        "cadrumo_harness._resources",
+        "cadrumo_harness._skill_metadata",
+        "cadrumo_harness._workspace",
+        "cadrumo_harness.mcp",
+        "cadrumo_harness.mcp.admitted_operations",
+        "cadrumo_harness.mcp.authority_query",
+        "cadrumo_harness.mcp.corpus_query",
+        "cadrumo_harness.mcp.main",
+        "cadrumo_harness.mcp.operation_search",
+        "cadrumo_harness.mcp.protocol_contract",
+        "cadrumo_harness.mcp.runtime_adapter",
+        "cadrumo_harness.mcp.runtime_admission",
+        "cadrumo_harness.mcp.runtime_cleanup",
+        "cadrumo_harness.mcp.server",
+        "cadrumo_harness.resources"
+      ]
+    }
+  }
+}

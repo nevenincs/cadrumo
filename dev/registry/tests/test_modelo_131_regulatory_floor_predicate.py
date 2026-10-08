@@ -6,8 +6,8 @@ from functools import cache
 
 import pytest
 
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 

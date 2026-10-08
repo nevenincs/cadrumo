@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import typer
 
-from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_list, list_work_units
+from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_list
 from ...core.external_constants import OutputLanguage
-from ._modelo_behavior_support import require_active_profile
 from ._modelo_payloads import WorkSelectResult
 from ._modelo_rendering import work_unit_list_lines, work_unit_payload
 from .common import (
@@ -15,7 +14,7 @@ from .common import (
     emit_envelope,
     resolve_lifecycle_continuation_notice,
 )
-from .state_projection_support import work_lifecycle_ports_factory
+from .runtime_modelo_work_inventory import read_modelo_work_inventory
 
 __all__ = ["work_select"]
 
@@ -28,15 +27,10 @@ def work_select(
 ) -> None:
     """List modelo work units through the scripted command surface."""
     activate_subcommand_output_language(ctx, output_language)
-    require_active_profile()
-    from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
-
-    units = list_work_units(
+    units = read_modelo_work_inventory(
+        ctx,
         bucket_id=bucket_id,
         include_discarded=include_discarded,
-        ports=work_lifecycle_ports_factory(ctx)(
-            bucket_id=resolve_explicit_or_active_bucket_id(bucket_id),
-        ),
     )
 
     result = WorkSelectResult.model_validate(

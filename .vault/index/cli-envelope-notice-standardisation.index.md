@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#cli-envelope-notice-standardisation'
 date: '2026-08-16'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:af00e48c6a117dace4e6b60ff96ff623c2831cfa34d5ed7516a72181cd094bcd'
+body_hash: 'sha256:243dabeb422254df8b12b26f1d17481d72d877f9860ad86ba2bf0e569feca4d8'
 related:
   - '[[2026-06-10-cli-envelope-notice-standardisation-adr]]'
-  - '[[2026-06-10-cli-envelope-notice-standardisation-ledger]]'
-  - '[[2026-06-10-cli-envelope-notice-standardisation-plan]]'
   - '[[2026-06-10-cli-envelope-notice-standardisation-research]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#cli-envelope-notice-standard
 ### adr
 
 - `2026-06-10-cli-envelope-notice-standardisation-adr` - `cli-envelope-notice-standardisation` adr: `Shared outer-key envelope spine with status and typed notices` | (**status:** `accepted`)
-
-### exec
-
-- `2026-06-10-cli-envelope-notice-standardisation-ledger` - `cli-envelope-notice-standardisation` ledger
-
-### plan
-
-- `2026-06-10-cli-envelope-notice-standardisation-plan` - `cli-envelope-notice-standardisation` `CLI notice and status standardisation burndown` plan
 
 ### research
 

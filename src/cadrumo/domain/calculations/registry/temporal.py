@@ -43,7 +43,7 @@ from .schema_base import (
     SourceRefs,
 )
 from .schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
-from .schema_references import PeriodSelector, TemporalProjectionDirection
+from .schema_references import PeriodSelector, TemporalProjectionDirection, date_within_validity_window
 
 
 class RevisionSelectionMetadata(RegistryModel):
@@ -62,7 +62,7 @@ class RevisionSelectionMetadata(RegistryModel):
 
     def contains_date(self, coordinate: date) -> bool:
         """Return whether the coordinate lies inside the governed period window."""
-        return coordinate >= self.valid_from and (self.valid_to is None or coordinate <= self.valid_to)
+        return date_within_validity_window(coordinate, valid_from=self.valid_from, valid_to=self.valid_to)
 
     @classmethod
     def from_revision(cls, revision: ModeloRevision) -> RevisionSelectionMetadata:
@@ -363,30 +363,71 @@ def _nearest_authored_candidates[RevisionT: _SelectableRevision](
     # A pinned revision must be the one the law selects; the anchor year is
     # chosen across every revision before the pin narrows it, so a pin never
     # projects a revision the nearest authored edition displaces.
-    exact = [
-        revision
-        for revision in revisions
-        if revision.period_selector.includes_year(filing_year)
-        and (
-            period is None
-            or selector_token_for_request(revision.period_selector.periods_for_year(filing_year), period) is not None
-        )
-    ]
+    exact = _exact_year_candidates(revisions, filing_year=filing_year, period=period)
     if exact or support is None:
-        return [revision for revision in exact if revision_id is None or revision.id == revision_id], filing_year
-    anchors = [
-        (year, revision)
-        for revision in revisions
-        for year in _eligible_authored_years(revision, requested_year=filing_year, period=period)
-    ]
+        return _pinned_revisions(exact, revision_id), filing_year
+    anchors = _authored_anchors(revisions, requested_year=filing_year, period=period)
     if not anchors:
         return [], filing_year
-    authored_year = min((year for year, _ in anchors), key=lambda year: (abs(year - filing_year), year))
+    authored_year = _nearest_authored_year(anchors, filing_year)
+    return _pinned_authored_revisions(anchors, authored_year, revision_id), authored_year
+
+
+def _exact_year_candidates[RevisionT: _SelectableRevision](
+    revisions: Sequence[RevisionT],
+    *,
+    filing_year: int,
+    period: str | None,
+) -> list[RevisionT]:
+    return [
+        revision
+        for revision in revisions
+        if _revision_matches_request(revision, filing_year=filing_year, period=period)
+    ]
+
+
+def _revision_matches_request(revision: _SelectableRevision, *, filing_year: int, period: str | None) -> bool:
+    if not revision.period_selector.includes_year(filing_year):
+        return False
+    if period is None:
+        return True
+    return selector_token_for_request(revision.period_selector.periods_for_year(filing_year), period) is not None
+
+
+def _pinned_revisions[RevisionT: _SelectableRevision](
+    revisions: Sequence[RevisionT],
+    revision_id: RevisionId | None,
+) -> list[RevisionT]:
+    return [revision for revision in revisions if revision_id is None or revision.id == revision_id]
+
+
+def _authored_anchors[RevisionT: _SelectableRevision](
+    revisions: Sequence[RevisionT],
+    *,
+    requested_year: int,
+    period: str | None,
+) -> list[tuple[int, RevisionT]]:
+    return [
+        (year, revision)
+        for revision in revisions
+        for year in _eligible_authored_years(revision, requested_year=requested_year, period=period)
+    ]
+
+
+def _nearest_authored_year(anchors: Sequence[tuple[int, _SelectableRevision]], requested_year: int) -> int:
+    return min((year for year, _ in anchors), key=lambda year: (abs(year - requested_year), year))
+
+
+def _pinned_authored_revisions[RevisionT: _SelectableRevision](
+    anchors: Sequence[tuple[int, RevisionT]],
+    authored_year: int,
+    revision_id: RevisionId | None,
+) -> list[RevisionT]:
     return [
         revision
         for year, revision in anchors
         if year == authored_year and (revision_id is None or revision.id == revision_id)
-    ], authored_year
+    ]
 
 
 def revision_temporal_resolution[RevisionT: _SelectableRevision](

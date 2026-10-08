@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#current-schema-only-purge'
 date: '2026-08-10'
-modified: '2026-09-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:da81d7fe33e644395ccaa0d279ed1b78e8f609b172a7f861086dea60626cd3c0'
 related:
   - "[[2026-07-09-compatibility-lifecycle-adr]]"
   - "[[2026-06-10-zero-legacy-purge-research]]"
-  - "[[2026-08-10-current-schema-only-purge-plan]]"
 ---
 
 # `current-schema-only-purge` adr: `current-schema-only hydration and persistence` | (**status:** `accepted`)

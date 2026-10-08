@@ -27,7 +27,7 @@ modelo:
           m345-declarado-nombre:
             label: A bevallott személy vezeték- és keresztneve
           m345-declarante-nif:
-            label: A bejelentő adószáma
+            label: A bevalló NIF-azonosítója
           m345-declarante-razon-social:
             label: A bejelentő vezetékneve és utóneve, vagy cégneve
           m345-devoluciones-excesos:
@@ -69,7 +69,7 @@ modelo:
           m345-rendimientos-trabajo-no-superiores-60000:
             label: Bruttó munkajövedelem, amely nem haladja meg a 60.000 eurót
           m345-representante-legal-nif:
-            label: A törvényes képviselő adószáma
+            label: A törvényes képviselő NIF-azonosítója
           m345-subclave:
             label: Alkód
           m345-total-declarados:

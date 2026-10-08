@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#docs-cli-sequences'
 date: '2026-07-13'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:96b085b9045d9b8da6b17bde58b05e082d989ac9dfd51d4d6d3cf054767d9082'
+body_hash: 'sha256:7eb96abcd6286fc10b2b7ad43ac16c6e4b029a64eadb24a2f8abfd4c882db5e5'
 related:
   - "[[2026-07-13-docs-cli-sequences-plan]]"
 ---
@@ -18,16 +18,16 @@ related:
 - `S02` `T` `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`
 - `S03` `T` `docs/how-to`
 - `S04` `T` `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`
-- `S05` `T` `dev/docs/sequences/_parser.py`
-- `S06` `T` `dev/docs/sequences/_parser.py`
+- `S05` `T`
+- `S06` `T`
 - `S07` `T` `dev/docs/sequences/_seeds.py`
 - `S08` `T` `dev/docs/sequences/tests/test_parser.py`
-- `S09` `T` `dev/docs/sequences/_runner.py`
-- `S10` `T` `dev/docs/sequences/_runner.py`
+- `S09` `T`
+- `S10` `T`
 - `S11` `T` `dev/docs/sequences/tests/test_runner.py`
-- `S12` `T` `dev/docs/sequences/_golden_store.py`
-- `S13` `T` `dev/docs/sequences/_compare.py`
-- `S14` `T` `dev/docs/sequences/_compare.py`
+- `S12` `T`
+- `S13` `T`
+- `S14` `T`
 - `S15` `T` `dev/docs/sequences/tests/test_compare.py`
 - `S16` `T` `dev/docs/sequences/__main__.py`
 - `S17` `T` `dev/docs/sequences/__main__.py`
@@ -35,7 +35,7 @@ related:
 - `S19` `T` `dev/docs/sequences/tests`
 - `S20` `T` `dev/docs/cli_tree.py`
 - `S21` `T` `dev/docs/tests/test_cli_tree.py`
-- `S22` `T` `dev/docs/sequences/_tokeniser.py`
+- `S22` `T`
 - `S23` `T` `docs/conf.py`
 - `S24` `T` `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`
 - `S25` `T` `dev/docs/tests/test_sequence_directive.py`

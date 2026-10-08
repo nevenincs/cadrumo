@@ -52,8 +52,6 @@ claims are fields a gate reads:
   exemption carries today. A verb added under an exempt prefix changes the live
   subtree and reds the gate, so it cannot inherit the exemption silently ---
   the failure mode prefix matching invites.
-- ``asserts_family_read_only`` mechanises the one structural claim some entries
-  make about the operator-surface contract.
 
 ``note`` is the residue: the part of the reasoning that is judgement, not fact.
 **It is not verified by anything and must not be read as if it were.** Keep it
@@ -99,9 +97,6 @@ class ExemptionCriterion(StrEnum):
     BUNDLED_CATALOGUE = "bundled_catalogue"
     """It projects bundled or compiled data, never a taxpayer's records."""
 
-    CONFIGURATION_ONLY = "configuration_only"
-    """It answers from deployment configuration, not from the secure store."""
-
     OPERATOR_SUPPLIED_ARTEFACT = "operator_supplied_artefact"
     """It reads only files and keys the caller passes on the command line."""
 
@@ -124,8 +119,6 @@ class BootstrapExemption:
             resolve against the live command tree.
         cites_tests: Test function names the justification leans on. Each must
             exist in the test tree.
-        asserts_family_read_only: The entry claims its operator-surface command
-            family is declared read-only. Checked against the live contract.
     """
 
     verb_path: str
@@ -134,7 +127,6 @@ class BootstrapExemption:
     subtree: tuple[str, ...] = ()
     cites_verbs: tuple[str, ...] = ()
     cites_tests: tuple[str, ...] = ()
-    asserts_family_read_only: bool = False
 
 
 #: Every bootstrap exemption, with its criterion and its checkable citations.
@@ -353,17 +345,6 @@ BOOTSTRAP_EXEMPTIONS: tuple[BootstrapExemption, ...] = (
             "handler ran even though the answer needs nothing the gate protects."
         ),
         cites_verbs=("config profile archive export",),
-    ),
-    BootstrapExemption(
-        verb_path="app diagnostics telemetry status",
-        criterion=ExemptionCriterion.CONFIGURATION_ONLY,
-        note=(
-            "Answers from deployment configuration and needs no session. The entry is a LEAF "
-            "rather than the `app diagnostics telemetry` prefix on purpose, so its sibling "
-            "stays gated: exempting the prefix would carry that sibling with it silently, "
-            "which is the failure mode prefix matching invites."
-        ),
-        cites_tests=("test_matching_stays_prefix_based_so_a_leaf_entry_does_not_carry_its_siblings",),
     ),
 )
 

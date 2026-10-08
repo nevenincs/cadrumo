@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:0466e88f791d2bbe8ab35b58afc8ca2ebf1e806a4ff5eab3f2c42b50d5ef552d'
+modified: '2026-10-03'
+body_hash: 'sha256:ae5da4e4e470fd5a41a39a2d2bde549c7a914a9a79402bca14394f4cc77053fe'
 related:
   - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s240-s243-review-audit]]'
 ---
@@ -13,7 +13,7 @@ related:
 
 ## S240-001 | PASS | Contract is manifest discovery, not storage ownership
 
-`src/aeat/application/operator_surface/_contract.py` declares immutable
+The retired module declared immutable
 operator-surface contract records and cached lookup helpers. It does not build
 storage repositories, select secure storage backends, build SQL routes, read
 environment variables, open files, write plaintext side stores, or mutate
@@ -34,8 +34,8 @@ contract change so the plan does not hide the cross-file dependency.
 
 ## S240-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/operator_surface/_contract.py src/aeat/application/operator_surface/_models.py src/aeat/application/operator_surface/test_contract.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/operator_surface/test_contract.py` passed with 15 tests.
+- the historical check passed.
+- the historical check passed with 15 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-138` as `manifest-discovery`; implementation hardening

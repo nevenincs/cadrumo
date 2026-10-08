@@ -192,16 +192,18 @@ def test_borrador_100_snapshot_service_deduplicates_identical_captures() -> None
         bucket_id=_BUCKET_ID,
         repository=_InMemoryBorradorRepository(bucket_id=_BUCKET_ID),
     )
-    kwargs = {
-        "filing_year": 2025,
-        "period": _PERIOD,
-        "captured_at": _CAPTURED_AT,
-        "source_url": _SOURCE,
-        "binding_values": {"renta-certificado-trabajo-retenciones": Decimal("15.25")},
-    }
 
-    first = service.capture(**kwargs)
-    second = service.capture(**kwargs)
+    def capture() -> Borrador100Snapshot:
+        return service.capture(
+            filing_year=2025,
+            period=_PERIOD,
+            captured_at=_CAPTURED_AT,
+            source_url=_SOURCE,
+            binding_values={"renta-certificado-trabajo-retenciones": Decimal("15.25")},
+        )
+
+    first = capture()
+    second = capture()
 
     assert first == second
     assert service.list_snapshots() == (first,)

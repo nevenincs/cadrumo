@@ -19,7 +19,7 @@ from ......core.errors.hierarchy import AeatLoginAssertionError
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...browser.factory import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
-from ...tests.process_support import wait_for_process_exit
+from ...tests.process_support import wait_for_process_exit, wait_for_task_readiness
 from .. import session_store as session_store
 from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator
 from ..authenticator_persistence import PersistedSessionMetadata
@@ -232,8 +232,8 @@ async def test_failed_live_resume_is_deleted_before_single_fresh_fallback(tmp_pa
 
 
 @pytest.mark.asyncio
-async def test_reauthenticate_succeeds_then_propagates_a_real_probe_failure(tmp_path: Path) -> None:
-    """Public reauthentication delegates once and leaves no failed persisted proof."""
+async def test_close_then_authenticate_succeeds_and_propagates_a_real_probe_failure(tmp_path: Path) -> None:
+    """Reusing the closed provider leaves no failed persisted authentication proof."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         settings = _settings(tmp_path)
         storage_state_path = aeat_auth_session_storage_state_path(_BUCKET_ID, "storage")
@@ -248,12 +248,14 @@ async def test_reauthenticate_succeeds_then_propagates_a_real_probe_failure(tmp_
             )
             async with authenticator:
                 first = await authenticator.authenticate()
-                refreshed = await authenticator.reauthenticate(first)
+                await authenticator.close()
+                refreshed = await authenticator.authenticate()
                 assert refreshed is not first
                 assert refreshed.authenticated_at >= first.authenticated_at
                 boundary.configure("failure")
+                await authenticator.close()
                 with pytest.raises(AeatLoginAssertionError, match=r"authentication|verification"):
-                    await authenticator.reauthenticate(refreshed)
+                    await authenticator.authenticate()
 
         assert not session_store.exists(storage_state_path)
 
@@ -287,10 +289,24 @@ async def test_authenticator_context_exit_reaps_real_browser_under_body_cancella
                     await hold_body.wait()
 
             owner_task = asyncio.create_task(cancelled_owner())
-            await authenticated.wait()
-            owner_task.cancel()
-            with pytest.raises(asyncio.CancelledError):
-                await owner_task
+            try:
+                await wait_for_task_readiness(
+                    authenticated.wait(),
+                    owner_task,
+                    after="authenticator authentication",
+                    timeout_seconds=(
+                        settings.cadrumo_browser_navigation_timeout_ms + settings.cadrumo_browser_close_timeout_ms
+                    )
+                    / 1000
+                    + 5.0,
+                )
+                owner_task.cancel()
+                with pytest.raises(asyncio.CancelledError):
+                    await owner_task
+            finally:
+                if not owner_task.done():
+                    owner_task.cancel()
+                await asyncio.gather(owner_task, return_exceptions=True)
 
         assert driver_pid > 0
         await wait_for_process_exit(driver_pid, after="authenticator cancellation")
@@ -314,17 +330,24 @@ async def test_authenticate_cancellation_retains_real_provider_owners_until_clos
             driver_pid = 0
             async with authenticator:
                 authenticate_task = asyncio.create_task(authenticator.authenticate())
-                await boundary.wait_until_blocked()
-                browser = authenticator._browser_session
-                assert isinstance(browser, DefaultBrowserSession)
-                assert authenticator._context is not None
-                driver_pid = browser._playwright._impl_obj._connection._transport._proc.pid
+                try:
+                    await wait_for_task_readiness(
+                        boundary.wait_until_blocked(), authenticate_task, after="blocked authentication proof"
+                    )
+                    browser = authenticator._browser_session
+                    assert isinstance(browser, DefaultBrowserSession)
+                    assert authenticator._context is not None
+                    driver_pid = browser._playwright._impl_obj._connection._transport._proc.pid
 
-                authenticate_task.cancel()
-                with pytest.raises(asyncio.CancelledError):
-                    await authenticate_task
-                assert authenticator._browser_session is browser
-                assert authenticator._context is not None
+                    authenticate_task.cancel()
+                    with pytest.raises(asyncio.CancelledError):
+                        await authenticate_task
+                    assert authenticator._browser_session is browser
+                    assert authenticator._context is not None
+                finally:
+                    if not authenticate_task.done():
+                        authenticate_task.cancel()
+                    await asyncio.gather(authenticate_task, return_exceptions=True)
 
         assert driver_pid > 0
         await wait_for_process_exit(driver_pid, after="authenticator cancellation")

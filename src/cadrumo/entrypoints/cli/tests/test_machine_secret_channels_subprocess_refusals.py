@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -21,6 +22,7 @@ from ._machine_secret_channels_support import (
     _storage_snapshot,
     cleanup_keychain,
 )
+from ._machine_secret_channels_support import host_profile_runtime as host_profile_runtime
 from .password_only_profile import FIXTURE_PROFILE_INPUT, register_password_only_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -85,9 +87,12 @@ def test_root_refuses_same_scope_channel_conflict_before_state_or_read(tmp_path:
 
 
 @pytest.mark.parametrize("collision", ("two-stdin", "root-fd0", "leaf-fd0", "same-fd"))
-def test_cross_scope_collision_refuses_before_read_authentication_or_mutation(tmp_path: Path, collision: str) -> None:
+def test_cross_scope_collision_refuses_before_read_authentication_or_mutation(
+    tmp_path: Path, collision: str, host_profile_runtime: Callable[[Path], None]
+) -> None:
     root = tmp_path / f"cross-scope-{collision}"
     register_password_only_profile(root, label="collision-operator")
+    host_profile_runtime(root)
     _register_certificate_source(root, name="collision-cert")
     before = _storage_snapshot(root)
     args = ["--format", "json"]
@@ -172,10 +177,11 @@ def test_leaf_descriptor_refusals_are_typed_secret_free_and_state_free(
     ),
 )
 def test_root_descriptor_refusals_are_typed_secret_free_and_non_mutating(
-    tmp_path: Path, descriptor: int, expected: str
+    tmp_path: Path, descriptor: int, expected: str, host_profile_runtime: Callable[[Path], None]
 ) -> None:
     root = tmp_path / f"root-fd-{descriptor}"
     register_password_only_profile(root, label="root-fd-operator")
+    host_profile_runtime(root)
     before = _storage_snapshot(root)
     result = _run(
         root,
@@ -272,9 +278,11 @@ def test_root_strict_payload_refusals_close_descriptor_without_mutation(
     payload: str | bytes,
     diagnostic: str,
     planted_secrets: tuple[str, ...],
+    host_profile_runtime: Callable[[Path], None],
 ) -> None:
     root = tmp_path / "malformed-root"
     register_password_only_profile(root, label="malformed-root-operator")
+    host_profile_runtime(root)
     before = _storage_snapshot(root)
     result = _run(
         root,
@@ -322,9 +330,12 @@ def test_retired_restore_password_field_is_refused_without_publication(tmp_path:
     assert "unexpected ones" in _assert_refused(result, root, before={})
 
 
-def test_retired_certificate_secret_field_is_refused_without_mutation(tmp_path: Path) -> None:
+def test_retired_certificate_secret_field_is_refused_without_mutation(
+    tmp_path: Path, host_profile_runtime: Callable[[Path], None]
+) -> None:
     root = tmp_path / "legacy-certificate"
     register_password_only_profile(root, label="legacy-cert-operator")
+    host_profile_runtime(root)
     _register_certificate_source(root, name="legacy-cert")
     before = _storage_snapshot(root)
     result = _run(
@@ -432,10 +443,12 @@ def test_root_wrong_blank_target_or_secret_refuses_without_secret_disclosure(
     payload: dict[str, str],
     consumed: bool,
     expected: str,
+    host_profile_runtime: Callable[[Path], None],
 ) -> None:
     root = tmp_path / "wrong-blank-root"
     if command[-1] in {"wrong-secret-target", "wrong-nonblank-secret-target"}:
         register_password_only_profile(root, label=command[-1])
+        host_profile_runtime(root)
     before = _storage_snapshot(root)
     serialized_payload = json.dumps(payload)
     result = _run(

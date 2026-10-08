@@ -1,0 +1,393 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--activity-start-date",
+        "2026-01-01"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "349",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\t640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e\nshort_work_unit_id\t2d35589f9d5e\nbucket_id\t<bucket-id>\nmodelo\t349\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2020-y-siguientes\nname\t349-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\nplazo_nominal_closes_on\t2026-04-20\nplazo_holiday_coverage\tnational_only\ndays_remaining\t19\nNew declaration created.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "modelo",
+        "work",
+        "calculate",
+        "--modelo",
+        "349",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "operation\tmodelo.work.calculate\ncalculation_revision_id\t50cc4770545aadc042e433ea45e00a90f6c46528237edd863155bef68dc40529\nwork_unit_id\t640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary Modelo 349 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\tdecl.numero-operadores\t0\tTotal number of intra-Community operators\nkey_figure\tdecl.importe-operaciones\t0\tAmount of intra-Community transactions\ncasilla\tdecl.importe-operaciones\t0\ncasilla\tdecl.importe-rectificaciones\t0\ncasilla\tdecl.numero-operadores\t0\ncasilla\tdecl.numero-rectificaciones\t0\nplazo_closes_on\t2026-04-20\nplazo_nominal_closes_on\t2026-04-20\nplazo_holiday_coverage\tnational_only\ndays_remaining\t19\nSaved as draft calculation revision 50cc4770545aadc042e433ea45e00a90f6c46528237edd863155bef68dc40529 (state: draft). It is persisted and can be resumed later.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "verify",
+        "--modelo",
+        "349",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.verify",
+        "notices": [
+          {
+            "action": null,
+            "code": "modelo.work.verify.finding.missing_required_casilla",
+            "context": {
+              "casilla_id": "op.codigo-pais",
+              "kind": "missing_required_casilla",
+              "legal_refs": "orden-eha-769-2010:art-1, orden-hac-174-2020:art-1, ley-58-2003:art-93",
+              "severity": "blocking",
+              "source_refs": "aeat-dr-349-2020-current"
+            },
+            "message": "Required box [op.codigo-pais] is empty.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.verify.finding.missing_required_casilla",
+            "context": {
+              "casilla_id": "op.nif-comunitario",
+              "kind": "missing_required_casilla",
+              "legal_refs": "orden-eha-769-2010:art-1, orden-hac-174-2020:art-1, ley-58-2003:art-93",
+              "severity": "blocking",
+              "source_refs": "aeat-dr-349-2020-current"
+            },
+            "message": "Required box [op.nif-comunitario] is empty.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.verify.finding.missing_required_casilla",
+            "context": {
+              "casilla_id": "op.apellidos-razon-social",
+              "kind": "missing_required_casilla",
+              "legal_refs": "orden-eha-769-2010:art-1, orden-hac-174-2020:art-1, ley-58-2003:art-93",
+              "severity": "blocking",
+              "source_refs": "aeat-dr-349-2020-current"
+            },
+            "message": "Required box [op.apellidos-razon-social] is empty.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.verify.finding.missing_required_casilla",
+            "context": {
+              "casilla_id": "op.clave-operacion",
+              "kind": "missing_required_casilla",
+              "legal_refs": "orden-eha-769-2010:art-1, orden-hac-174-2020:art-1, ley-58-2003:art-93",
+              "severity": "blocking",
+              "source_refs": "aeat-dr-349-2020-current"
+            },
+            "message": "Required box [op.clave-operacion] is empty.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.verify.finding.missing_required_casilla",
+            "context": {
+              "casilla_id": "op.base-imponible",
+              "kind": "missing_required_casilla",
+              "legal_refs": "orden-eha-769-2010:art-1, orden-hac-174-2020:art-1, ley-58-2003:art-93",
+              "severity": "blocking",
+              "source_refs": "aeat-dr-349-2020-current"
+            },
+            "message": "Required box [op.base-imponible] is empty.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "calculation_revision_id": "50cc4770545aadc042e433ea45e00a90f6c46528237edd863155bef68dc40529",
+          "completeness_status": "incomplete",
+          "findings": [
+            {
+              "action": {
+                "action": null,
+                "argument_bindings": [],
+                "conditionality": "not_applicable",
+                "evidence": [
+                  {
+                    "condition_id": "modelo.work.verify.required_casillas.complete",
+                    "evidence_id": "modelo.work.verify.required_casillas",
+                    "provenance": "registry_record",
+                    "values": {
+                      "calculation_revision_id": "50cc4770545aadc042e433ea45e00a90f6c46528237edd863155bef68dc40529",
+                      "casilla_id": "op.codigo-pais",
+                      "modelo": "349",
+                      "period": "1T",
+                      "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e",
+                      "year": 2026
+                    }
+                  }
+                ],
+                "failed_condition_id": "modelo.work.verify.required_casillas.complete",
+                "missing_argument_names": [],
+                "no_recovery_outcome": "operator_decision"
+              },
+              "casilla_id": "op.codigo-pais",
+              "expectation_id": null,
+              "kind": "missing_required_casilla",
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "message": "Required box [op.codigo-pais] is empty.",
+              "severity": "blocking",
+              "source_refs": [
+                "aeat-dr-349-2020-current"
+              ]
+            },
+            {
+              "action": {
+                "action": null,
+                "argument_bindings": [],
+                "conditionality": "not_applicable",
+                "evidence": [
+                  {
+                    "condition_id": "modelo.work.verify.required_casillas.complete",
+                    "evidence_id": "modelo.work.verify.required_casillas",
+                    "provenance": "registry_record",
+                    "values": {
+                      "calculation_revision_id": "50cc4770545aadc042e433ea45e00a90f6c46528237edd863155bef68dc40529",
+                      "casilla_id": "op.nif-comunitario",
+                      "modelo": "349",
+                      "period": "1T",
+                      "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e",
+                      "year": 2026
+                    }
+                  }
+                ],
+                "failed_condition_id": "modelo.work.verify.required_casillas.complete",
+                "missing_argument_names": [],
+                "no_recovery_outcome": "operator_decision"
+              },
+              "casilla_id": "op.nif-comunitario",
+              "expectation_id": null,
+              "kind": "missing_required_casilla",
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "message": "Required box [op.nif-comunitario] is empty.",
+              "severity": "blocking",
+              "source_refs": [
+                "aeat-dr-349-2020-current"
+              ]
+            },
+            {
+              "action": {
+                "action": null,
+                "argument_bindings": [],
+                "conditionality": "not_applicable",
+                "evidence": [
+                  {
+                    "condition_id": "modelo.work.verify.required_casillas.complete",
+                    "evidence_id": "modelo.work.verify.required_casillas",
+                    "provenance": "registry_record",
+                    "values": {
+                      "calculation_revision_id": "50cc4770545aadc042e433ea45e00a90f6c46528237edd863155bef68dc40529",
+                      "casilla_id": "op.apellidos-razon-social",
+                      "modelo": "349",
+                      "period": "1T",
+                      "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e",
+                      "year": 2026
+                    }
+                  }
+                ],
+                "failed_condition_id": "modelo.work.verify.required_casillas.complete",
+                "missing_argument_names": [],
+                "no_recovery_outcome": "operator_decision"
+              },
+              "casilla_id": "op.apellidos-razon-social",
+              "expectation_id": null,
+              "kind": "missing_required_casilla",
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "message": "Required box [op.apellidos-razon-social] is empty.",
+              "severity": "blocking",
+              "source_refs": [
+                "aeat-dr-349-2020-current"
+              ]
+            },
+            {
+              "action": {
+                "action": null,
+                "argument_bindings": [],
+                "conditionality": "not_applicable",
+                "evidence": [
+                  {
+                    "condition_id": "modelo.work.verify.required_casillas.complete",
+                    "evidence_id": "modelo.work.verify.required_casillas",
+                    "provenance": "registry_record",
+                    "values": {
+                      "calculation_revision_id": "50cc4770545aadc042e433ea45e00a90f6c46528237edd863155bef68dc40529",
+                      "casilla_id": "op.clave-operacion",
+                      "modelo": "349",
+                      "period": "1T",
+                      "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e",
+                      "year": 2026
+                    }
+                  }
+                ],
+                "failed_condition_id": "modelo.work.verify.required_casillas.complete",
+                "missing_argument_names": [],
+                "no_recovery_outcome": "operator_decision"
+              },
+              "casilla_id": "op.clave-operacion",
+              "expectation_id": null,
+              "kind": "missing_required_casilla",
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "message": "Required box [op.clave-operacion] is empty.",
+              "severity": "blocking",
+              "source_refs": [
+                "aeat-dr-349-2020-current"
+              ]
+            },
+            {
+              "action": {
+                "action": null,
+                "argument_bindings": [],
+                "conditionality": "not_applicable",
+                "evidence": [
+                  {
+                    "condition_id": "modelo.work.verify.required_casillas.complete",
+                    "evidence_id": "modelo.work.verify.required_casillas",
+                    "provenance": "registry_record",
+                    "values": {
+                      "calculation_revision_id": "50cc4770545aadc042e433ea45e00a90f6c46528237edd863155bef68dc40529",
+                      "casilla_id": "op.base-imponible",
+                      "modelo": "349",
+                      "period": "1T",
+                      "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e",
+                      "year": 2026
+                    }
+                  }
+                ],
+                "failed_condition_id": "modelo.work.verify.required_casillas.complete",
+                "missing_argument_names": [],
+                "no_recovery_outcome": "operator_decision"
+              },
+              "casilla_id": "op.base-imponible",
+              "expectation_id": null,
+              "kind": "missing_required_casilla",
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "message": "Required box [op.base-imponible] is empty.",
+              "severity": "blocking",
+              "source_refs": [
+                "aeat-dr-349-2020-current"
+              ]
+            }
+          ],
+          "granted_verificado_completo": false,
+          "missing_required_casilla_ids": [
+            "op.codigo-pais",
+            "op.nif-comunitario",
+            "op.apellidos-razon-social",
+            "op.clave-operacion",
+            "op.base-imponible"
+          ],
+          "operation": "modelo.work.verify",
+          "registry_snapshot_ref": {
+            "modelo": "349",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2020-y-siguientes"
+          },
+          "resolved_casilla_ids": [
+            "rect.ejercicio-rectificado",
+            "rect.periodo-rectificado",
+            "rect.base-rectificada",
+            "rect.base-anterior"
+          ],
+          "run_at": "2026-04-01T09:00:00+00:00",
+          "verification_report_id": "0c0eaacc5383a3fd11dfb0b489ed55a41ecfe3c0fb1fc592a5e73ffc721f9c25",
+          "verified_by": "docs-sequence-sandbox"
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 1,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 2,
+  "sequence_id": "verification-reports-incomplete-report"
+}

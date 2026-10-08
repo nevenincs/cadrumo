@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -30,18 +29,15 @@ def active_profile_pointer_observation(
     coordinate is folded into the cache key. A fresh root observes the initial
     absent coordinate zero; a later clear is a distinct persisted tombstone.
 
-    The root is read straight from the environment: that read is deliberately
-    independent of the settings model it guards, because it has to answer
-    "which pointer would the next construction see" BEFORE any settings exist
-    to ask.
+    The root is read straight from the environment through ``storage_root``,
+    which applies the storage root declaration's precedence: that read is
+    deliberately independent of the settings model it guards, because it has
+    to answer "which pointer would the next construction see" BEFORE any
+    settings exist to ask.
     """
-    configured_root = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
-    root = normalizer(Path(configured_root)) if configured_root else storage_root()
+    root = normalizer(storage_root())
     if root is None:
-        raise ValueError(
-            "CADRUMO_LOCAL_STORAGE_ROOT is set but normalises to no path, "
-            "so the active-profile pointer has no coordinate to be read from",
-        )
+        raise ValueError("the storage root normalises to no path, so the active-profile pointer has no coordinate")
     from .bucket_pointer import read_pointer_selection
 
     return (root, read_pointer_selection(root))

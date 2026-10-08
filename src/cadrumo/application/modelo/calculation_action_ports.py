@@ -33,6 +33,7 @@ from ..aggregation.percepciones_observations_repository import PercepcionObserva
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
+from ..foreign_assets.ports import ForeignAssetRegisterRepositoryProtocol
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
@@ -92,6 +93,7 @@ class CalculationActionPorts:
     filing_repository: ModeloRecordCatalogueRepositoryProtocol
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol
+    foreign_asset_register_repository: ForeignAssetRegisterRepositoryProtocol
     inventory_repository: InventoryLedgerRepositoryProtocol
     observation_repository: CalculationObservationRepositoryProtocol
     invoice_source_ports: InvoiceSourceResolverPorts

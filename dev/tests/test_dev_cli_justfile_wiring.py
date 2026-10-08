@@ -22,6 +22,7 @@ _EXPECTED_WIRING: Final[dict[str, str]] = {
     "dev.release": "release-preview",
     "dev.registry.aeip": "report-registry-aeip",
     "dev.registry.conformance": "report-registry-conformance",
+    "dev.registry.form_layout": "report-registry-form-layout-coverage",
     "dev.registry.newmodelo": "registry-modelo-scaffold",
     "dev.registry.pipeline": "registry-publish-target",
     "dev.test_runs": "test-registry",

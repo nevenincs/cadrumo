@@ -14,7 +14,7 @@ class AuthDiagnosticPhoneStateError(CoreValidationError):
     """Raised when an unrecognised phone-state value is supplied to the auth diagnostic recorder.
 
     Replaces the bare :exc:`ValueError` at the validation guard in
-    :func:`application.auth.diagnostics.record_auth_diagnostic_phone_state`
+    :func:`application.auth.diagnostics.prepare_auth_diagnostic_phone_state`
     so callers can catch a typed, registry-bound error.  Inherits from
     :class:`core.errors.hierarchy.CoreValidationError`; protocol boundaries translate
     it to a builtin only where an external validator requires that contract.

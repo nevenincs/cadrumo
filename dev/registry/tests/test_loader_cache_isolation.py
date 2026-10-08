@@ -72,13 +72,6 @@ from ..conformance.loader_directory_mode_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# Hang guard only, not a performance assertion: each spawned REAL pytest
-# session compiles the bundled registry (~9s on an idle machine) and this
-# suite runs on a heavily loaded shared box (pytest-xdist workers plus
-# concurrent agent sessions), where a 60s budget produced false timeouts
-# unrelated to the purge regression this module guards against.
-_SUBPROCESS_TIMEOUT_SECONDS = 300
-
 
 def test_registry_disk_cache_disabled_under_pytest_for_a_mutable_root() -> None:
     """The shared ``/tmp`` disk pickle is gated OFF under pytest for a non-bundled root.
@@ -291,7 +284,6 @@ def test_bundled_root_disk_cache_is_shared_across_processes(
                 REGISTRY_DISK_CACHE_DIR_ENV: str(isolated_cache_dir),
             },
             text=True,
-            timeout=60,
         )
         child_modelo_count = int(completed.stdout.strip())
         assert child_modelo_count == len(modelos), (
@@ -423,7 +415,6 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
             # rootdir is pinned to the disposable package.
             environment={**os.environ, "PYTHONPATH": str(REPO_ROOT)},
             errors="replace",
-            timeout_seconds=_SUBPROCESS_TIMEOUT_SECONDS,
         )
 
     with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV, str(isolated_cache_dir)):

@@ -22,9 +22,10 @@ from textual.widgets import Button, Input, Static
 from .....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from .....adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....application.user_profile.authentication import ProfileAuthenticationRefusedError
-from .....application.user_profile.login_session import login_profile, logout_active_profile
+from .....application.user_profile.login_session import authenticate_profile_for_invocation
 from .....application.user_profile.passphrase_rotation import (
     ProfilePassphraseRotationError,
     rotate_profile_passphrase,
@@ -163,7 +164,7 @@ async def test_a_wrong_current_passphrase_refuses_and_never_rotates(tmp_path: Pa
 
         # The old passphrase must still open the profile: no rotation occurred.
         _, profile_decode_context = _profile_contexts_for_test()
-        login_profile(
+        authenticate_profile_for_invocation(
             name=str(profile_id),
             passphrase_callback=lambda: _CURRENT_CREDENTIAL_INPUT,
             profile_decode_context=profile_decode_context,
@@ -239,7 +240,7 @@ async def test_a_completed_rotation_opens_under_the_new_passphrase_only(tmp_path
         assert app.outcome.password_generation == 2
 
         _, profile_decode_context = _profile_contexts_for_test()
-        login_profile(
+        authenticate_profile_for_invocation(
             name=str(profile_id),
             passphrase_callback=lambda: _NEW_CREDENTIAL_INPUT,
             profile_decode_context=profile_decode_context,
@@ -247,9 +248,9 @@ async def test_a_completed_rotation_opens_under_the_new_passphrase_only(tmp_path
         # Where this process has a working keychain that login persisted its
         # session, and a repeated login would resume it without asking for any
         # passphrase. Logging out makes the next login authenticate afresh.
-        logout_active_profile()
+        reset_test_profile_session()
         with pytest.raises(ProfileAuthenticationRefusedError):
-            login_profile(
+            authenticate_profile_for_invocation(
                 name=str(profile_id),
                 passphrase_callback=lambda: _CURRENT_CREDENTIAL_INPUT,
                 profile_decode_context=profile_decode_context,
@@ -301,7 +302,7 @@ async def test_abandoning_the_screen_leaves_no_outcome_and_never_touches_storage
         assert app.outcome is None
 
         _, profile_decode_context = _profile_contexts_for_test()
-        login_profile(
+        authenticate_profile_for_invocation(
             name=str(profile_id),
             passphrase_callback=lambda: _CURRENT_CREDENTIAL_INPUT,
             profile_decode_context=profile_decode_context,

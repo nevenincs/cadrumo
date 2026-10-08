@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#cadrumo-product-rename'
 date: '2026-07-12'
-modified: '2026-07-12'
-body_hash: 'sha256:c219c64062454330fd66822d45763222d3cd48666863266f478e43101f613529'
+modified: '2026-10-03'
+body_hash: 'sha256:01213c2773df8bbaaaeee70a7fe192380065898d455d3f8857ede75c584ad9c6'
 related: []
 ---
 
@@ -59,7 +59,7 @@ and generated API references as one coherent wave.
 The MCP surface carries product identity in tool prefixes, client prefixes,
 resource URI schemes, server names, subprocess argv, plugin metadata, allowlists,
 snapshots, and generated `.mcp.json`. Tool-name budgets must be recomputed after
-the prefix changes. The generator in `src/aeat/agent/_workspace.py` is the
+the prefix changes. The generator  is the
 authority for generated marketplace artifacts and must change before regeneration.
 
 Product persistence identity is embedded in the application directory, database

@@ -17,7 +17,13 @@ from uuid import UUID
 import pytest
 
 from ......core.config import Settings, override_settings
-from .._kdf_attestation import parse_ready_attestation
+from ......core.pid_liveness import pid_is_alive
+from .._kdf_attestation import (
+    expected_kdf_worker_limits,
+    kdf_worker_platform,
+    parse_ready_attestation,
+    validate_ready_attestation_shape,
+)
 from .._kdf_codec import KDF_FRAME_CONTROL, KDF_FRAME_HEADER, KDF_FRAME_MAGIC, KDF_FRAME_VERSION, read_kdf_frame
 from .._kdf_process import apply_posix_worker_limits, worker_environment
 from .._kdf_process import terminate_process_tree as _terminate_process_tree
@@ -212,15 +218,19 @@ def test_ready_without_a_secret_then_failure_reaps_the_real_worker_tree() -> Non
     assert process.poll() is not None
 
 
-def test_ready_attestation_proves_the_real_os_containment_environment_and_handle_boundary() -> None:
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS)
+def test_ready_attestation_proves_the_real_os_containment_environment_and_handle_boundary(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS, settings=settings)
 
     with worker:
         process = worker._process
         job = worker._job
         attestation = worker._ready_payload
+        neutral_directory = worker._neutral_directory
         assert process is not None
         assert attestation is not None
+        assert neutral_directory is not None
+        assert Path(neutral_directory.name).parent == settings.cadrumo_temp_dir
         assert attestation["cwd"] != str(Path.cwd())
         environment_keys = attestation["environment_keys"]
         assert isinstance(environment_keys, list)
@@ -228,6 +238,11 @@ def test_ready_attestation_proves_the_real_os_containment_environment_and_handle
         assert "PATH" not in environment_keys
         assert worker._request_fd is not None
         assert worker._result_fd is not None
+        assert attestation["platform"] == kdf_worker_platform()
+        limits = attestation["limits"]
+        assert isinstance(limits, dict)
+        # Darwin cannot lower the address-space limit, so it never claims one.
+        assert ("memory_bytes" in limits) is (sys.platform != "darwin")
         if sys.platform == "win32":
             assert job is not None
             assert job.contains(process)
@@ -249,6 +264,32 @@ def test_ready_attestation_proves_the_real_os_containment_environment_and_handle
             )
             assert not os.get_inheritable(worker._request_fd)
             assert not os.get_inheritable(worker._result_fd)
+
+
+def _ready_shape(platform: str) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "cwd": "/neutral",
+        "environment_keys": [],
+        "limits": expected_kdf_worker_limits(platform),
+        "platform": platform,
+        "protocol": "profile-kdf-ready/v1",
+        "transport": "framed-anonymous-pipe/v1",
+    }
+    if platform != "win32":
+        payload["open_file_descriptors"] = [0, 1, 2]
+    return payload
+
+
+@pytest.mark.parametrize("attested", ["win32", "darwin", "posix"])
+@pytest.mark.parametrize("expected", ["win32", "darwin", "posix"])
+def test_each_ready_contract_verifies_only_on_its_own_platform(attested: str, expected: str) -> None:
+    """A Darwin attestation without a memory cap never satisfies the POSIX or Windows contract."""
+    payload = _ready_shape(attested)
+    if attested == expected:
+        validate_ready_attestation_shape(payload, expected)
+        return
+    with pytest.raises(ValueError, match="profile KDF ready"):
+        validate_ready_attestation_shape(payload, expected)
 
 
 async def _assert_posix_worker_sheds_extra_inherited_pty_and_pipe_descriptors_async() -> None:
@@ -390,11 +431,7 @@ time.sleep(30)
             assert os.getpgid(descendant_pid) == parent.pid
         _terminate_process_tree(native_parent, job)
         deadline = time.monotonic() + 2.0
-        while True:
-            try:
-                os.kill(descendant_pid, 0)
-            except ProcessLookupError:
-                break
+        while pid_is_alive(descendant_pid):
             if time.monotonic() >= deadline:
                 raise AssertionError("OS containment left the real worker descendant alive")
             await asyncio.sleep(0.02)
@@ -436,6 +473,7 @@ def test_unavailable_canonical_root_has_no_weaker_supervision_fallback(tmp_path:
     assert first_enrollment_root.is_dir()
 
     blocked_parent = tmp_path / "non-directory-parent"
+    blocked_settings = _settings(blocked_parent / "custody-root")
     blocked_parent.write_text("not a directory", encoding="utf-8")
 
     with pytest.raises(ProfileCustodyRefusedError) as captured:
@@ -443,7 +481,7 @@ def test_unavailable_canonical_root_has_no_weaker_supervision_fallback(tmp_path:
             envelope,
             _PASSPHRASE,
             sentinel=sentinel,
-            settings=_settings(blocked_parent / "custody-root"),
+            settings=blocked_settings,
         )
 
     assert captured.value.refusal is ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE

@@ -3,15 +3,20 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8e736537de4097789382b21349ea3d003d4d7ebe42ce6857d7e7443c8790c0ca'
+body_hash: 'sha256:aa274201a74814aa7c9e937b21c0bb65b584f1706cb7f520b29ddf5d9a911248'
 related: []
 ---
-
 # `calculation-correctness-campaign` audit: the 2025 arrendamiento reduction is no longer computed
 
-## CORRECTION — this audit's central claim is wrong
+## Scope
+
+Re-examine the published 2025 arrendamiento-reduction claim against the three casillas, the revision transition, and the probe that produced it.
+
+## Findings
+
+### CORRECTION — this audit's central claim is wrong
 
 Casillas 0150 and 0613 are NOT a regression. They are a **deliberate, tested
 deferral**, and this audit missed the guard that says so.
@@ -46,7 +51,7 @@ art. 23.2 arrendamiento reduction and the art. 81.2 guardería increment is the
 open question, and it belongs to an owner. The method failure was mine: I did not
 search for a guard on the rows before calling their state a defect.
 
-## The finding
+### The finding
 
 Modelo 100 casilla 0150 carries the LIRPF art. 23.2 reduction for arrendamiento
 de vivienda -- the 50 / 60 / 70 / 90 percent tiers as amended by Ley 12/2023.
@@ -72,7 +77,7 @@ Both revisions compute the reduced net rental income identically as
 `0154 = max(0149 - 0150 - 0151, 0152)`. So 0150 still feeds the chain -- it simply
 has nothing to fill it.
 
-## Direction, and why it is silent
+### Direction, and why it is silent
 
 If the operator leaves 0150 blank -- the natural state for a value the engine used
 to derive -- the reduction is zero, `0154` equals the unreduced rendimiento, and
@@ -89,28 +94,14 @@ Nothing in the verify gate fires on it: a blank optional relief is a legitimate
 zero for a taxpayer with no qualifying tenancy, and the gate cannot distinguish
 that from a qualifying landlord whose reduction was never computed.
 
-## Not incompleteness
+### Not incompleteness
 
 The 2025 revision is mature and comparable to 2024 -- 2249 casillas, 192 formulas,
 65 bindings against 2024's 2103 / 188 / 67. It is not a half-built revision that
 has yet to reach this box. The rate parameters were authored for 2025; the binding
 and formula that consume them were not.
 
-## Remediation, for an owner
-
-The 2024 shape is the template and is present in the tree: a
-`rental-reduccion-art-23-2-tier` binding plus an `if_then_else` /
-`lookup_parameter_by_entity_type` formula targeting 0150 over the four declared
-tier parameters. Porting it is registry authoring against a live tax rule, and it
-must be grounded and reviewed rather than copied mechanically -- the 2025 casilla
-carries `rd-439-2007:art-13` alongside `ley-35-2006:art-23`, which the 2024 one
-does not, so the two revisions do not describe the box identically and the
-difference needs adjudication before wiring.
-
-Do not close this by deleting the four unread parameters. That would remove the
-evidence of the gap while leaving the taxpayer's reduction uncomputed.
-
-## How it was found, and the probe's limits
+### How it was found, and the probe's limits
 
 A sweep for parameters no formula, binding, construct or expectation references
 reported 130 candidates across 18 revisions. **That raw count is not
@@ -130,7 +121,7 @@ The general class -- a rate parameter no formula reads -- remains only partly
 swept, because a reliable sweep needs the Python resolution channel modelled
 properly rather than by stem matching.
 
-## The class, swept: three casillas, one revision transition
+### The class, swept: three casillas, one revision transition
 
 The rental reduction is not isolated. Sweeping every modelo with two or more
 revisions -- 32 of them -- for casillas that were computed in the older revision
@@ -153,7 +144,7 @@ across the same comparisons, including a batch in 2023 -> 2024 that introduced
 all three of these. So 2025 is not broadly regressing -- these three reliefs were
 built in 2024 and not carried forward.
 
-### 0611 and 0613 contradict an instruction the 2024 registry writes down
+#### 0611 and 0613 contradict an instruction the 2024 registry writes down
 
 The 2024 formula for casilla 0611 carries this in its own comment:
 
@@ -168,7 +159,7 @@ month rule, and explains the art. 81.3 proration and per-child bound that fixed
 it. That reasoning and its fix exist only in the 2024 fold. The 2025 revision has
 no fold to carry it.
 
-### Direction
+#### Direction
 
 All three reduce what the taxpayer pays. Left blank -- the natural state for a
 box the engine used to fill -- the relief is simply absent and the taxpayer
@@ -181,7 +172,7 @@ Nothing signals this. A blank optional relief is a legitimate zero for a taxpaye
 with no children and no qualifying tenancy, and the verify gate cannot tell that
 apart from a qualifying taxpayer whose relief was never computed.
 
-## A false positive, and the probe correction it forced
+### A false positive, and the probe correction it forced
 
 The first sweep also reported Modelo 123 casilla 08 as a lost computation. It is
 not. The 2024 revision renumbered the form from 8 boxes to 14: the old c08 was
@@ -199,3 +190,19 @@ Direction classification by role keyword also proved unreliable in that case:
 and as a liability on Modelo 123, where the withholder owes them. The direction
 label is sound for the three M100 reliefs, which were each confirmed by reading
 the casilla, and should not be trusted mechanically elsewhere.
+
+## Recommendations
+
+### Remediation, for an owner
+
+The 2024 shape is the template and is present in the tree: a
+`rental-reduccion-art-23-2-tier` binding plus an `if_then_else` /
+`lookup_parameter_by_entity_type` formula targeting 0150 over the four declared
+tier parameters. Porting it is registry authoring against a live tax rule, and it
+must be grounded and reviewed rather than copied mechanically -- the 2025 casilla
+carries `rd-439-2007:art-13` alongside `ley-35-2006:art-23`, which the 2024 one
+does not, so the two revisions do not describe the box identically and the
+difference needs adjudication before wiring.
+
+Do not close this by deleting the four unread parameters. That would remove the
+evidence of the gap while leaving the taxpayer's reduction uncomputed.

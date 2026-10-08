@@ -1,14 +1,3 @@
-# Modelo 322 numbered casillas, transcribed from the bundled Diseno de
-# Registro aeat-dr-322-2026, sha256
-# f014cec44d4906bc1e2ba96ee1b336f9b400254519df5b1ab0ce69d513631a76.
-# Box number, byte extent and label are AEAT's own; data_type is derived from
-# the row's declared length and decimal shape (17 = 15 enteros + 2 decimales
-# -> money; 5 = 3 enteros + 2 decimales -> ratio).
-#
-# No row is named after a rate. Where AEAT repeats a Base/Tipo/Cuota triple,
-# the rate is a DATA slot on the row, not a label, so which statutory rate a
-# triple carries is the filer's entry and is not asserted here.
-
 [[revisions."2026-y-siguientes".casillas]]
 id = "112"
 continuidad_origin = "new_on_form"

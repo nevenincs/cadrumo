@@ -55,6 +55,7 @@ from .unified_record import SearchRecord
 
 if TYPE_CHECKING:
     from ..pagefind_inject import SearchRecordProjection
+    from ..terminology_handbook.schema import ConceptRecord
 
 # Dev tooling runs from a source checkout by definition, so it owns its own
 # repo-root anchor. Production code has no repository concept and must never
@@ -159,40 +160,10 @@ def enumerate_query_vocabulary(
     resolved = handbook if handbook is not None else load_terminology_handbook()
     wanted = set(concept_ids) if concept_ids is not None else None
 
-    queries: dict[tuple[str, str], SweepQuery] = {}
-    declared: set[tuple[str, OutputLanguage, str]] = set()
-    for concept in resolved.concepts:
-        if wanted is not None and concept.concept_id not in wanted:
-            continue
-        # Only APPROVED concepts reach the shipped search surface (the glossary
-        # and the Pagefind injection gate on approved), so only their terms are
-        # the closed query vocabulary; a deprecated/draft concept's terms must
-        # not be swept into the relevance mapping (they would target a card that
-        # is never injected -- a dead entry).
-        if concept.lifecycle is not ConceptLifecycle.APPROVED:
-            continue
-        for section in concept.languages:
-            for term in section.terms:
-                if term.term_status not in _SHIPPED_TERM_STATUSES:
-                    continue
-                row = _add_query(queries, concept.concept_id, term.label, section.language, is_hidden=False)
-                if row is not None:
-                    declared.add(row)
-                for form in term.hidden_search_forms:
-                    row = _add_query(queries, concept.concept_id, form, section.language, is_hidden=True)
-                    if row is not None:
-                        declared.add(row)
+    queries, declared = _declared_concept_queries(resolved, wanted)
 
     authority = query_alias_authority if query_alias_authority is not None else load_query_alias_authority()
-    authority_for_validation = authority
-    if wanted is not None:
-        # A concept-scoped sweep is a legitimate test/diagnostic boundary.  A
-        # global authority entry must not be validated against the deliberately
-        # smaller canonical-query set, otherwise an unrelated alias makes the
-        # subset fail before its own entries are selected below.
-        authority_for_validation = authority.model_copy(
-            update={"entries": tuple(entry for entry in authority.entries if entry.concept_id in wanted)}
-        )
+    authority_for_validation = _query_alias_subset(authority, wanted)
     validate_query_alias_authority(
         authority_for_validation,
         handbook=resolved,
@@ -603,37 +574,13 @@ def _match_structured_casilla_query(
     if address is None:
         return None
 
-    casillas = tuple(
-        record
-        for record in records
-        if record.kind is SearchRecordKind.CASILLA
-        and record.metadata.modelo is not None
-        and _normalise_structured_value(str(record.metadata.modelo)) == address.modelo
-    )
-    canonical_matches = tuple(
-        record
-        for record in casillas
-        if record.metadata.casilla_id is not None
-        and _normalise_structured_text(str(record.metadata.casilla_id)) == address.casilla_id
-    )
+    casillas, canonical_matches = _canonical_casilla_matches(records, address)
     if len(canonical_matches) == 1:
         return canonical_matches[0]
     if canonical_matches:
         return None
 
-    display_matches = tuple(
-        record
-        for record in casillas
-        if record.metadata.number is not None
-        and _normalise_structured_value(record.metadata.number) == address.number
-        and (
-            address.segmento is None
-            or (
-                record.metadata.segmento is not None
-                and _normalise_structured_value(record.metadata.segmento) == address.segmento
-            )
-        )
-    )
+    display_matches = _display_casilla_matches(casillas, address)
     return display_matches[0] if len(display_matches) == 1 else None
 
 
@@ -713,3 +660,94 @@ def _seed_concept_card(
 
 def _default_repo_root() -> Path:
     return _REPO_ROOT
+
+
+def _declared_concept_queries(
+    resolved: TerminologyHandbook, wanted: set[str] | None
+) -> tuple[dict[tuple[str, str], SweepQuery], set[tuple[str, OutputLanguage, str]]]:
+    """Declared concept queries."""
+    queries: dict[tuple[str, str], SweepQuery] = {}
+    declared: set[tuple[str, OutputLanguage, str]] = set()
+    for concept in resolved.concepts:
+        if wanted is not None and concept.concept_id not in wanted:
+            continue
+        # Only APPROVED concepts reach the shipped search surface (the glossary
+        # and the Pagefind injection gate on approved), so only their terms are
+        # the closed query vocabulary; a deprecated/draft concept's terms must
+        # not be swept into the relevance mapping (they would target a card that
+        # is never injected -- a dead entry).
+        if concept.lifecycle is not ConceptLifecycle.APPROVED:
+            continue
+        _concept_language_queries(concept, queries, declared)
+    return queries, declared
+
+
+def _display_casilla_matches(
+    casillas: tuple[SearchRecord, ...], address: _StructuredCasillaQuery
+) -> tuple[SearchRecord, ...]:
+    """Display casilla matches."""
+    display_matches = tuple(
+        record
+        for record in casillas
+        if record.metadata.number is not None
+        and _normalise_structured_value(record.metadata.number) == address.number
+        and (
+            address.segmento is None
+            or (
+                record.metadata.segmento is not None
+                and _normalise_structured_value(record.metadata.segmento) == address.segmento
+            )
+        )
+    )
+    return display_matches
+
+
+def _concept_language_queries(
+    concept: ConceptRecord, queries: dict[tuple[str, str], SweepQuery], declared: set[tuple[str, OutputLanguage, str]]
+) -> None:
+    """Accumulate a concept's authored visible and hidden queries."""
+    for section in concept.languages:
+        for term in section.terms:
+            if term.term_status not in _SHIPPED_TERM_STATUSES:
+                continue
+            row = _add_query(queries, concept.concept_id, term.label, section.language, is_hidden=False)
+            if row is not None:
+                declared.add(row)
+            for form in term.hidden_search_forms:
+                row = _add_query(queries, concept.concept_id, form, section.language, is_hidden=True)
+                if row is not None:
+                    declared.add(row)
+
+
+def _query_alias_subset(authority: QueryAliasAuthority, wanted: set[str] | None) -> QueryAliasAuthority:
+    """Bound validation to the requested concept set."""
+    authority_for_validation = authority
+    if wanted is not None:
+        # A concept-scoped sweep is a legitimate test/diagnostic boundary.  A
+        # global authority entry must not be validated against the deliberately
+        # smaller canonical-query set, otherwise an unrelated alias makes the
+        # subset fail before its own entries are selected below.
+        authority_for_validation = authority.model_copy(
+            update={"entries": tuple(entry for entry in authority.entries if entry.concept_id in wanted)}
+        )
+    return authority_for_validation
+
+
+def _canonical_casilla_matches(
+    records: Iterable[SearchRecord], address: _StructuredCasillaQuery
+) -> tuple[tuple[SearchRecord, ...], tuple[SearchRecord, ...]]:
+    """Select modelo records and their exact canonical identity matches."""
+    casillas = tuple(
+        record
+        for record in records
+        if record.kind is SearchRecordKind.CASILLA
+        and record.metadata.modelo is not None
+        and _normalise_structured_value(str(record.metadata.modelo)) == address.modelo
+    )
+    canonical_matches = tuple(
+        record
+        for record in casillas
+        if record.metadata.casilla_id is not None
+        and _normalise_structured_text(str(record.metadata.casilla_id)) == address.casilla_id
+    )
+    return casillas, canonical_matches

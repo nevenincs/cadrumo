@@ -41,6 +41,8 @@ def read_bucket_output_language_hint(*, storage_root: Path, bucket_id: str) -> s
         text = bucket_output_language_hint_path(storage_root=storage_root, bucket_id=bucket_id).read_text(
             encoding=UTF_8_ENCODING,
         )
+    except FileNotFoundError:
+        return None
     except Exception as exc:
         _log.debug(
             "bucket output-language hint unavailable bucket_id=%s error_type=%s",

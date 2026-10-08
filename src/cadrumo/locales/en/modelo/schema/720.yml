@@ -1,6 +1,32 @@
 modelo:
   schema:
     '720':
+      binding:
+        x-dlnm8pbcdsmjechg5pq7is35bsoisp35cdm62sj1cdkmurhdcdnmqs3cclmmarjkc5p6io9ddsmn6tbjehkn8tbkd5r62:
+          help: Enter C if this declaration adds records omitted from an earlier one
+            for the same year, or S if it cancels and replaces an earlier one for
+            the same year.
+          label: Supplementary or substitute declaration
+        x-dlnm8pbcdsmjechg5pq7is35bsoisrjfdlh74p9dcdnmst31cdq6u:
+          label: Contact person’s name
+        x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdd5i6arjkd5j6ior1ehkncrpdchiiqr315li6aorcc5p62or9dtn0:
+          label: Declaration identification number
+        x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdd5i6arjkd5j6ior1ehkncrpdchiiqr315li6aorcc5p62or9dtn2qobeehin4qbfe8:
+          label: Identification number of the earlier declaration
+        x-dlnm8pbcdsmjechg5pq7is35bsoisrjldlin4rpdehnn8obc5li6abbicljmisrke9nn6bb4clhmoobic5i6uso:
+          label: Total number of records declared
+        ? x-dlnm8pbcdsmjechg5pq7is35bsoissrldlgiqt3fehgmobb4ckmncobcdtp62or9dtn2qc9dedgmop3f5lniqtj1dhnn4bb15kpj2bb4ckmm8qb3d5imqojickmn6
+        : help: Balance or value at 31 December, balance or value at the date of extinction,
+            or acquisition value.
+          label: Total of valuation 1
+        ? x-dlnm8pbcdsmjechg5pq7is35bsoissrldlgiqt3fehgmobb4ckmncobcdtp62or9dtn2qchdd5mn0rriehiiqrpdepgmorri5li6abbcc4mn8sj1dppmqqbjd5nms
+        : help: Amount or value of the transfer, or average balance of the last quarter.
+          label: Total of valuation 2
+        x-dlnm8pbcdsmjechg5pq7is35bsoist35dhimcrredsmm6rreehgm6t3f:
+          label: Contact person’s telephone number
+        x-dlnm8pbcdsmjechg5pq7is35bsoist39e1niqp355lpmus3fe9q6a:
+          help: 'Enter the key T: electronic transmission.'
+          label: Medium type
       construct:
         modelo-720-informative:
           field:

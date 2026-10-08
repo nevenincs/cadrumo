@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:21e42b36896ad11eb4c1164128910c8c085e8284fb925a147cddc2fd8e3fe406'
+body_hash: 'sha256:e8442d4ac9a93921a4075c7768c17b7fc6d25a4e3252f812dee7dcc0e9506f78'
 related:
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
 ---
 
@@ -67,10 +66,10 @@ still produces no conformance verdict — but for a content reason rather than a
 budget one.
 
 This is another owner's live surface, not this plan's. The masking layer is under
-active uncommitted work in the shared tree: `dev/docs/sequences/_golden_store.py`
+active uncommitted work in the shared tree: the retired module
 carries a WIP change adding a JSON-escaped form to the path replacements, whose
 own docstring refers to the host-conditional fact mask as a sibling layer, and
-`docs/_sequences/workstation-setup/install-confirm.json` is modified alongside it.
+The retired data file was modified alongside it.
 The nearest landed commit on that surface masks host-measured facts. The fix is
 therefore in flight rather than absent, and this plan must not touch those files.
 

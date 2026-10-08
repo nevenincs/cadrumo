@@ -3,13 +3,13 @@ tags:
   - '#reference'
   - '#m303-carry-reconciliation'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:170ea39619caa5732eae8aeb683880e093b97973eebaf2bb0140341ab45acdb1'
+body_hash: 'sha256:22c40a4a5b56f8b9a1dba5acae672878d898c1228d26cd4ac3df5e8777853690'
 related:
-  - "[[2026-08-07-m303-carry-reconciliation-plan]]"
   - "[[2026-06-21-m303-carry-reconciliation-adr]]"
 ---
+
 # `m303-carry-reconciliation` reference: `S21 prior-domiciliation election implementation reference`
 
 ## Summary
@@ -24,14 +24,12 @@ The S21 surface deliberately exposes the typed election needed by S19 but does n
 
 ## Baseline-U evidence chain
 
-The cancellation/modification path is fail closed in `src/cadrumo/application/modelo/_prior_domiciliation.py`.
-
 1. Read `CalculationRevision.amends_filing_record_id` as the explicit baseline link.
 2. Require an accepted, externally evidenced baseline `ModeloRecord` with the same bucket, modelo, year, and period as the rectificativa. The baseline may already be superseded.
 3. Load the official persisted observation for that exact target and require its `aeat_justificante_csv` metadata value to equal the baseline external-evidence reference.
 4. Require `ResultDispositionProjection` with `provenance_kind = source_header` and disposition `DOMICILIACION` (`U`). Profile data, casillas, `aeat_tipo_solicitud`, amount inference, and a local export do not establish this proof.
 
-`PriorDomiciliationElectionProjection` retains only the semantic election, baseline filing id, evidence reference id, submitted-header locator, and U disposition. It is persisted through the observation envelope, filing record event payload, and export receipt by `src/cadrumo/application/calculations/_observations_repository.py`, `src/cadrumo/application/modelo/_revision_persistence.py`, and `src/cadrumo/application/modelo/_export.py`.
+`PriorDomiciliationElectionProjection` retains only the semantic election, baseline filing id, evidence reference id, submitted-header locator, and U disposition.
 
 ## Registry boundary
 
@@ -45,4 +43,4 @@ The 2026 M303 simplified-regime authority is BOE-A-2025-25272, Orden HAC/1425/20
 
 The typed option defaults to `KEEP` and is threaded through export, quickfile, file action, verification/review wrappers, CLI payload output, receipt, event, and filing observation. Public CLI help and refusal text are present in `ca`, `en`, `es`, and `hu` locale catalogues.
 
-`src/cadrumo/application/modelo/tests/test_prior_domiciliation_export_layout.py` uses the real runtime schema provider and byte renderer. It proves `X` at the authoritative marker byte in both revisions: 2025 offset 406 with casilla 111 at 424, and 2026 offset 440 with casilla 111 at 441. The focused registry and direct-debit regression suite passed 35 tests. `aeat app registry verify`, locale scaffold check, and targeted Ruff passed.
+It proves `X` at the authoritative marker byte in both revisions: 2025 offset 406 with casilla 111 at 424, and 2026 offset 440 with casilla 111 at 441. The focused registry and direct-debit regression suite passed 35 tests. `aeat app registry verify`, locale scaffold check, and targeted Ruff passed.

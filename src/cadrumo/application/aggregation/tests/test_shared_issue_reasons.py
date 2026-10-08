@@ -2,7 +2,7 @@
 
 The IVA and Renta ledger aggregators expose distinct
 ``StrEnum`` classes whose first five upstream-filter rejections must
-emit identical string values so cross-ledger telemetry, locale lookup,
+emit identical string values so cross-ledger reporting, locale lookup,
 and downstream consumers can key on a single vocabulary.
 """
 

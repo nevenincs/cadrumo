@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -114,6 +115,7 @@ class PreviousFilingSourceResolver:
                     source_kind="previous_filing",
                     resolver_id=self.resolver_id,
                     binding_id=item.binding_id,
+                    casilla_id=sole_bound_casilla(snapshot.revision, item.binding_id),
                     message=(
                         f"Modelo {context.modelo} declares previous-filing binding {item.binding_id!r}, "
                         f"but no observation for modelo {item.source_modelo} {item.source_filing_year} "

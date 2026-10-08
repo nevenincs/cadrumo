@@ -155,13 +155,13 @@ restate_provenance = true
 
 [[revisions."2023-y-siguientes".casilla_overrides]]
 selector = { revision = "2018-2022", id = "decl.situacion-tributaria" }
-fields = { continuidad_evidence = "AEAT aeat-dr-309-2018 and aeat-dr-309-2023 explicitly preserve the taxpayer-status selection: agriculture, equivalence surcharge, no deduction, non-business legal person, non-business individual, or other. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2018 and aeat-dr-309-2023 explicitly preserve the taxpayer-status selection: agriculture, equivalence surcharge, no deduction, non-business legal person, non-business individual, or other. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded", constraints = {legal_refs = ["orden-hac-3625-2003:apartado-1"]}}
 removed_fields = []
 restate_provenance = true
 
 [[revisions."2023-y-siguientes".casilla_overrides]]
 selector = { revision = "2018-2022", id = "decl.hecho-imponible" }
-fields = { continuidad_evidence = "AEAT aeat-dr-309-2018 and aeat-dr-309-2023 explicitly preserve the taxable-event selection: intra-EU goods, new means of transport, reverse charge, immovable investment goods, administrative/judicial proceedings, or other. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded" }
+fields = { continuidad_evidence = "AEAT aeat-dr-309-2018 and aeat-dr-309-2023 explicitly preserve the taxable-event selection: intra-EU goods, new means of transport, reverse charge, immovable investment goods, administrative/judicial proceedings, or other. The M30901 description and qualification establish the same legal role independently of the field's record position.", continuidad_origin = "grounded", constraints = {legal_refs = ["orden-hac-3625-2003:apartado-1"]}}
 removed_fields = []
 restate_provenance = true
 
@@ -453,6 +453,46 @@ fields = { continuidad_evidence = "Internal Modelo 309 authority preserves this 
 removed_fields = []
 restate_provenance = true
 
+[[revisions."2023-y-siguientes".casilla_overrides]]
+[revisions."2023-y-siguientes".casilla_overrides.selector]
+revision = "2018-2022"
+id = "firma-lugar"
+
+[revisions."2023-y-siguientes".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "Compared BOE-A-2017-15190 Annex I printed126021 and BOE-A-2022-21458 Annex printed175185: identical signature place/date/signature and payment-method roles, separate from electronic authentication and declaration-type codes."
+source_refs = ["boe-modelo-309-2023-form-pdf"]
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+[[revisions."2023-y-siguientes".casilla_overrides]]
+[revisions."2023-y-siguientes".casilla_overrides.selector]
+revision = "2018-2022"
+id = "firma-fecha"
+
+[revisions."2023-y-siguientes".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "Compared BOE-A-2017-15190 Annex I printed126021 and BOE-A-2022-21458 Annex printed175185: identical signature place/date/signature and payment-method roles, separate from electronic authentication and declaration-type codes."
+source_refs = ["boe-modelo-309-2023-form-pdf"]
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+[[revisions."2023-y-siguientes".casilla_overrides]]
+[revisions."2023-y-siguientes".casilla_overrides.selector]
+revision = "2018-2022"
+id = "firma"
+
+[revisions."2023-y-siguientes".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "Compared BOE-A-2017-15190 Annex I printed126021 and BOE-A-2022-21458 Annex printed175185: identical signature place/date/signature and payment-method roles, separate from electronic authentication and declaration-type codes."
+source_refs = ["boe-modelo-309-2023-form-pdf"]
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+[[revisions."2023-y-siguientes".casilla_overrides]]
+[revisions."2023-y-siguientes".casilla_overrides.selector]
+revision = "2018-2022"
+id = "papel-forma-pago"
+
+[revisions."2023-y-siguientes".casilla_overrides.fields]
+continuidad_origin = "grounded"
+continuidad_evidence = "Compared BOE-A-2017-15190 Annex I printed126021 and BOE-A-2022-21458 Annex printed175185: identical signature place/date/signature and payment-method roles, separate from electronic authentication and declaration-type codes."
+source_refs = ["boe-modelo-309-2023-form-pdf"]
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
 [[revisions."2023-y-siguientes".family_overrides]]
 family = "formulas"
 selector = {revision = "2018-2022", id = "modelo-309-cuota-devengada-total"}
@@ -477,9 +517,9 @@ sequence_order = {source_refs = [2, 0, 1]}
 [[revisions."2023-y-siguientes".family_overrides]]
 family = "constructs"
 selector = {revision = "2018-2022", id = "modelo-309-iva-no-periodica"}
-sequence_additions = {source_refs = ["aeat-dr-309-2023"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {source_refs = [3, 0, 1, 2]}
+sequence_additions = {source_refs = ["aeat-dr-309-2023", "boe-modelo-309-2023-form-pdf"]}
+sequence_removals = {source_refs = [0, 4]}
+sequence_order = {source_refs = [3, 0, 1, 2, 4]}
 
 [[revisions."2023-y-siguientes".family_overrides]]
 family = "application_links"

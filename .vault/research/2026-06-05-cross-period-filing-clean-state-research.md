@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#cross-period-filing-clean-state'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:83c87c6b10554bd73e4d440deb2050c58472b78955a102f5158b535a3831088e'
+modified: '2026-10-03'
+body_hash: 'sha256:0b3f5c5a64c4cad0b4b4fc9ed2ee3628ff37ae999e3566fc6a4b593c74dfbb20'
 related:
   - '[[2026-06-02-modelo-filing-ledger-snapshot-adr]]'
   - '[[2026-06-04-calendar-live-filing-integration-adr]]'
@@ -34,38 +34,38 @@ reconciled against the local calculation that produced or imports it.
 Current implementation supports cross-period dependency discovery and value
 resolution, but it does not enforce that clean state uniformly:
 
-- `src/aeat/application/calculations/_binding_prefill.py` resolves
+- the former source file resolves
   `previous_filing` bindings from `CalculationObservationRepository`.
   Its contract explicitly skips unavailable bindings and leaves strict
   enforcement to callers through coverage inspection.
-- `src/aeat/application/calculations/_relation_prefill.py` resolves registry
+- the former source file resolves registry
   relations from prior filing observations. Missing or invalid relation
   sources become blank/operator-manual relation values instead of a hard
   filing-grade refusal.
-- `src/aeat/application/calculations/_multi_year.py` documents that the
+- the former source file documents that the
   multi-year resolver does not invent missing history, but returns shorter
   reports and leaves refusal, prompt, live fallback, or zero-fill decisions to
   callers.
-- `src/aeat/application/calculations/_observations_repository.py` persists
+- the former source file persists
   `RegistryModeloObservation`, `captured_at`, `source_kind`, and optional
   `member_nif`. It does not persist filing-record id, AEAT row status,
   justificante reference, captured artefact reference, reconciliation verdict,
   external-evidence kind, or an upstream verification report pointer.
-- `src/aeat/domain/modelos/_filing_record.py` carries stronger filing-state
+- the former source file carries stronger filing-state
   concepts: current/superseded status, AEAT acceptance, and external evidence
   kinds for justificante PDF, CSV register, and live capture. The cross-period
   resolvers do not consult this catalogue.
-- `src/aeat/application/live/__init__.py` can capture filed dependency sources
+- the former source file can capture filed dependency sources
   through `capture_source_filed_data` and can promote AEAT filed observations
   into the calculation observation store with `source_kind =
   "aeat_sede_justificante"`. Promotion still stores only a calculation
   observation, not the full clean-state proof.
-- `src/aeat/application/modelo/_actions.py` verifies required manual inputs,
+- the former source file verifies required manual inputs,
   registry predicates, content integrity, ledger snapshot evidence, and IVA
   wallet reconciliation. It does not generally re-check that every
   cross-period source dependency is backed by a current filing record,
   reconciled justificante, AEAT live capture, and matching local calculation.
-- `src/aeat/application/modelo/_export.py` allows export from verified-complete
+- the former source file allows export from verified-complete
   or filed revisions and checks ledger evidence parity, but it does not impose
   a separate upstream clean-state dependency gate.
 

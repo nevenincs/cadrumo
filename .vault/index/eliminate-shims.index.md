@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#eliminate-shims'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6bf4bd0381221e183452657d96a51a9ff5a515560ac84f970593756981cb892e'
+body_hash: 'sha256:5ee963300a2051faf69f2b28a014dddb1a809d900752158af10be70250530685'
 related:
-  - '[[2026-06-04-eliminate-shims-adr]]'
   - '[[2026-06-04-eliminate-shims-research]]'
   - '[[2026-07-16-eliminate-shims-audit]]'
 ---
@@ -18,10 +17,6 @@ related:
 Auto-generated index of all documents tagged with `#eliminate-shims`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-eliminate-shims-adr` - `eliminate-shims` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### audit
 

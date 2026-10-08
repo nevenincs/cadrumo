@@ -23,6 +23,48 @@ modelo:
             label: Filing year to which the self-assessment relates
           letras-etiqueta-persona-fisica:
             label: Identification label letters
+          m341-papel-domicilio-codigo-postal:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Postal code
+          m341-papel-domicilio-escalera:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Staircase
+          m341-papel-domicilio-municipio:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Municipality
+          m341-papel-domicilio-numero:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Street number
+          m341-papel-domicilio-piso:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Floor
+          m341-papel-domicilio-provincia:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Province
+          m341-papel-domicilio-puerta:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Door
+          m341-papel-domicilio-telefono:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Telephone
+          m341-papel-domicilio-tipo-via:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Street type
+          m341-papel-domicilio-via:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Street name
+          m341-papel-firma:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Signature
+          m341-papel-firma-fecha:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Date of signature
+          m341-papel-firma-lugar:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Place of signature
+          m341-papel-nombre-completo:
+            help: Original paper-form detail; not included in the electronic file.
+            label: Surname and given name or company name
           observaciones-presentacion:
             label: Observations
           reagp-importe-compensacion:
@@ -37,11 +79,54 @@ modelo:
         modelo-341-autoliquidacion:
           field:
             title: Modelo 341 self-assessment of the IVA
+        modelo-341-papel-identificacion-firma:
+          field:
+            title: Paper identification and signature
       field:
         official_name: Modelo 341. Application for reimbursement of compensation under
           the special regime for agriculture, livestock farming and fisheries.
         title: Reimbursement of compensation under the VAT special regime for agriculture,
           livestock farming and fisheries
+      form:
+        authored:
+          apellidos:
+            heading: Surnames or company name
+          base:
+            heading: Transaction amount
+          bic:
+            heading: SWIFT/BIC
+          compensacion:
+            heading: Compensation
+          contacto:
+            heading: Contact person
+          devengo:
+            heading: Tax period
+          devolucion:
+            heading: Refund
+          fila-1:
+            heading: Transactions 1
+          fila-2:
+            heading: Transactions 2
+          fila-3:
+            heading: Transactions 3
+          firma:
+            heading: Taxpayer · Signature
+          iban:
+            heading: IBAN
+          identificacion:
+            heading: Identification
+          importe:
+            heading: Compensation amount
+          nif:
+            heading: Tax identification number
+          nombre:
+            heading: Given name
+          porcentaje:
+            heading: Compensation percentage
+          presentacion:
+            heading: Submission details
+          telefono:
+            heading: Contact telephone
       revision:
         2005-2015:
           field:

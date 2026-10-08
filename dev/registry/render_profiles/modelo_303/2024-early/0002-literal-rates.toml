@@ -1,0 +1,160 @@
+schema_version = 1
+fragment_id = "literal-rates"
+width_17_rules = []
+singleton_rules = []
+
+[design_identity]
+modelo = "303"
+design_epoch = "2024-early"
+source_ref = "aeat-dr-303-2024-early"
+source_sha256 = "8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9"
+
+[[literal_numeric_rules]]
+rule_kind = "literal_numeric"
+literal = "00400"
+decimal_digits = 2
+
+[literal_numeric_rules.anchor]
+ordinal = "29"
+record_identity = "DP30301"
+sheet = "DP30301"
+source_cell = "A34"
+source_row = 34
+
+[literal_numeric_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m303-2024-early-box-02-printed-percent-scale"
+decision_statement = "The exact numeric literal of Tipo % [02] has two implied decimal places in percentage units."
+justification = "The pinned record design states the exact five-digit constant in a Tipo % slot. Reading its digits at two decimal places agrees with the official Modelo 303 instructions for the corresponding printed row: 00400 means4%, 01000 means10%, 02100 means21%, 00175 means1.75%, 00140 means1.4%, and00520 means5.2%. See https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-303-iva-autoliquidacion_/instrucciones-2025.html, IVA devengado. This declares the constant presentation scale and does not impose that rate on the calculation or remove Note7 for exclusively foral filing."
+
+[literal_numeric_rules.evidence.governed_anchor]
+ordinal = "29"
+record_identity = "DP30301"
+sheet = "DP30301"
+source_cell = "A34"
+source_row = 34
+
+[[literal_numeric_rules]]
+rule_kind = "literal_numeric"
+literal = "01000"
+decimal_digits = 2
+
+[literal_numeric_rules.anchor]
+ordinal = "35"
+record_identity = "DP30301"
+sheet = "DP30301"
+source_cell = "A40"
+source_row = 40
+
+[literal_numeric_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m303-2024-early-box-05-printed-percent-scale"
+decision_statement = "The exact numeric literal of Tipo % [05] has two implied decimal places in percentage units."
+justification = "The pinned record design states the exact five-digit constant in a Tipo % slot. Reading its digits at two decimal places agrees with the official Modelo 303 instructions for the corresponding printed row: 00400 means4%, 01000 means10%, 02100 means21%, 00175 means1.75%, 00140 means1.4%, and00520 means5.2%. See https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-303-iva-autoliquidacion_/instrucciones-2025.html, IVA devengado. This declares the constant presentation scale and does not impose that rate on the calculation or remove Note7 for exclusively foral filing."
+
+[literal_numeric_rules.evidence.governed_anchor]
+ordinal = "35"
+record_identity = "DP30301"
+sheet = "DP30301"
+source_cell = "A40"
+source_row = 40
+
+[[literal_numeric_rules]]
+rule_kind = "literal_numeric"
+literal = "02100"
+decimal_digits = 2
+
+[literal_numeric_rules.anchor]
+ordinal = "38"
+record_identity = "DP30301"
+sheet = "DP30301"
+source_cell = "A43"
+source_row = 43
+
+[literal_numeric_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m303-2024-early-box-08-printed-percent-scale"
+decision_statement = "The exact numeric literal of Tipo % [08] has two implied decimal places in percentage units."
+justification = "The pinned record design states the exact five-digit constant in a Tipo % slot. Reading its digits at two decimal places agrees with the official Modelo 303 instructions for the corresponding printed row: 00400 means4%, 01000 means10%, 02100 means21%, 00175 means1.75%, 00140 means1.4%, and00520 means5.2%. See https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-303-iva-autoliquidacion_/instrucciones-2025.html, IVA devengado. This declares the constant presentation scale and does not impose that rate on the calculation or remove Note7 for exclusively foral filing."
+
+[literal_numeric_rules.evidence.governed_anchor]
+ordinal = "38"
+record_identity = "DP30301"
+sheet = "DP30301"
+source_cell = "A43"
+source_row = 43
+
+[[literal_numeric_rules]]
+rule_kind = "literal_numeric"
+literal = "00175"
+decimal_digits = 2
+
+[literal_numeric_rules.anchor]
+ordinal = "47"
+record_identity = "DP30301"
+sheet = "DP30301"
+source_cell = "A52"
+source_row = 52
+
+[literal_numeric_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m303-2024-early-box-157-printed-percent-scale"
+decision_statement = "The exact numeric literal of Tipo % [157] has two implied decimal places in percentage units."
+justification = "The pinned record design states the exact five-digit constant in a Tipo % slot. Reading its digits at two decimal places agrees with the official Modelo 303 instructions for the corresponding printed row: 00400 means4%, 01000 means10%, 02100 means21%, 00175 means1.75%, 00140 means1.4%, and00520 means5.2%. See https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-303-iva-autoliquidacion_/instrucciones-2025.html, IVA devengado. This declares the constant presentation scale and does not impose that rate on the calculation or remove Note7 for exclusively foral filing."
+
+[literal_numeric_rules.evidence.governed_anchor]
+ordinal = "47"
+record_identity = "DP30301"
+sheet = "DP30301"
+source_cell = "A52"
+source_row = 52
+
+[[literal_numeric_rules]]
+rule_kind = "literal_numeric"
+literal = "00140"
+decimal_digits = 2
+
+[literal_numeric_rules.anchor]
+ordinal = "53"
+record_identity = "DP30301"
+sheet = "DP30301"
+source_cell = "A58"
+source_row = 58
+
+[literal_numeric_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m303-2024-early-box-20-printed-percent-scale"
+decision_statement = "The exact numeric literal of Tipo % [20] has two implied decimal places in percentage units."
+justification = "The pinned record design states the exact five-digit constant in a Tipo % slot. Reading its digits at two decimal places agrees with the official Modelo 303 instructions for the corresponding printed row: 00400 means4%, 01000 means10%, 02100 means21%, 00175 means1.75%, 00140 means1.4%, and00520 means5.2%. See https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-303-iva-autoliquidacion_/instrucciones-2025.html, IVA devengado. This declares the constant presentation scale and does not impose that rate on the calculation or remove Note7 for exclusively foral filing."
+
+[literal_numeric_rules.evidence.governed_anchor]
+ordinal = "53"
+record_identity = "DP30301"
+sheet = "DP30301"
+source_cell = "A58"
+source_row = 58
+
+[[literal_numeric_rules]]
+rule_kind = "literal_numeric"
+literal = "00520"
+decimal_digits = 2
+
+[literal_numeric_rules.anchor]
+ordinal = "56"
+record_identity = "DP30301"
+sheet = "DP30301"
+source_cell = "A61"
+source_row = 61
+
+[literal_numeric_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m303-2024-early-box-23-printed-percent-scale"
+decision_statement = "The exact numeric literal of Tipo % [23] has two implied decimal places in percentage units."
+justification = "The pinned record design states the exact five-digit constant in a Tipo % slot. Reading its digits at two decimal places agrees with the official Modelo 303 instructions for the corresponding printed row: 00400 means4%, 01000 means10%, 02100 means21%, 00175 means1.75%, 00140 means1.4%, and00520 means5.2%. See https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-303-iva-autoliquidacion_/instrucciones-2025.html, IVA devengado. This declares the constant presentation scale and does not impose that rate on the calculation or remove Note7 for exclusively foral filing."
+
+[literal_numeric_rules.evidence.governed_anchor]
+ordinal = "56"
+record_identity = "DP30301"
+sheet = "DP30301"
+source_cell = "A61"
+source_row = 61

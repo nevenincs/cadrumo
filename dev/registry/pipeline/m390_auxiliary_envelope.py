@@ -34,6 +34,7 @@ from .export_fragment_provenance import ExportFragmentTarget
 from .record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignIntermediateAuxiliaryEnvelopeHeader,
+    RecordDesignIntermediateAuxiliaryEnvelopeHeaderField,
     RecordDesignIntermediateField,
     RecordDesignIntermediateSource,
 )
@@ -174,10 +175,7 @@ def validate_m390_auxiliary_envelope(
         source_catalogue=source_catalogue,
         source_root=source_root,
     )
-    headers = intermediate.auxiliary_envelope_headers
-    if len(headers) != 1:
-        raise RegistryValidationError("Modelo 390 generation requires exactly one parser-owned auxiliary header")
-    header = headers[0]
+    header = _source_header(intermediate)
     _require_header_geometry_and_literals(header)
     expected_page_ids = tuple(sheet.record_identity for sheet in intermediate.sheets)
     actual_page_ids = tuple(page.record_identity for page in generation_input.numbered_pages)
@@ -187,6 +185,37 @@ def validate_m390_auxiliary_envelope(
             f"expected={expected_page_ids!r}, actual={actual_page_ids!r}",
         )
     return header
+
+
+def _source_header(intermediate: RecordDesignIntermediate) -> RecordDesignIntermediateAuxiliaryEnvelopeHeader:
+    """Read the auxiliary prefix from the parser's complete wrapper composition.
+
+    A source carrying a variable body and relative closer is a variable envelope;
+    its thirteen prefix fields still own the auxiliary header's exact anchors.
+    Do not classify that source a second time as an independent fixed header.
+    """
+    if intermediate.auxiliary_envelope_headers:
+        if len(intermediate.auxiliary_envelope_headers) != 1 or intermediate.variable_envelopes:
+            raise RegistryValidationError("Modelo 390 generation requires exactly one parser-owned auxiliary header")
+        return intermediate.auxiliary_envelope_headers[0]
+    if len(intermediate.variable_envelopes) != 1:
+        raise RegistryValidationError("Modelo 390 generation requires exactly one parser-owned variable envelope")
+    (envelope,) = intermediate.variable_envelopes
+    if envelope.prefix_extent != 328 or len(envelope.prefix_fields) != 13:
+        raise RegistryValidationError("Modelo 390 auxiliary header requires its thirteen exact source roles")
+    # Validate through the same explicit refusal boundary used for a standalone
+    # header, including copied typed inputs which deliberately bypass validation.
+    header = RecordDesignIntermediateAuxiliaryEnvelopeHeader.model_construct(
+        sheet=envelope.sheet,
+        record_identity=envelope.record_identity,
+        emitted_extent=envelope.prefix_extent,
+        fields=tuple(
+            RecordDesignIntermediateAuxiliaryEnvelopeHeaderField(role=role, parser_field=field)
+            for role, field in zip(RecordDesignAuxiliaryEnvelopeHeaderRole, envelope.prefix_fields, strict=True)
+        ),
+    )
+    _require_header_geometry_and_literals(header)
+    return RecordDesignIntermediateAuxiliaryEnvelopeHeader.model_validate(header.model_dump())
 
 
 def render_m390_auxiliary_envelope_bytes(
@@ -276,7 +305,10 @@ def _require_exact_generation_target(
         )
 
 
-def _require_header_geometry_and_literals(header: RecordDesignIntermediateAuxiliaryEnvelopeHeader) -> None:
+def _require_header_roles(
+    header: RecordDesignIntermediateAuxiliaryEnvelopeHeader,
+    fields: tuple[RecordDesignIntermediateField, ...],
+) -> None:
     expected_roles = (
         "opening_tag",
         "modelo",
@@ -292,19 +324,27 @@ def _require_header_geometry_and_literals(header: RecordDesignIntermediateAuxili
         "post_developer_reserved",
         "auxiliary_closing_tag",
     )
-    fields = header.source_fields
     if tuple(item.role.value for item in header.fields) != expected_roles or len(fields) != 13:
         raise RegistryValidationError("Modelo 390 auxiliary header requires its thirteen exact source roles")
+
+
+def _require_header_extent(fields: tuple[RecordDesignIntermediateField, ...]) -> None:
     if any(field.offset + field.length != next_field.offset for field, next_field in pairwise(fields)):
         raise RegistryValidationError("Modelo 390 auxiliary header source anchors must be contiguous")
     if fields[0].offset != 1 or fields[-1].offset + fields[-1].length - 1 != 328:
         raise RegistryValidationError("Modelo 390 auxiliary header source anchors must occupy positions 1 through 328")
+
+
+def _require_header_source_coordinates(fields: tuple[RecordDesignIntermediateField, ...]) -> None:
     if tuple(field.source_row for field in fields) != AUXILIARY_ENVELOPE_HEADER_ROWS:
         raise RegistryValidationError("Modelo 390 auxiliary header source rows must retain their exact anchors")
     if tuple(field.source_cell for field in fields) != tuple(f"A{row}" for row in AUXILIARY_ENVELOPE_HEADER_ROWS):
         raise RegistryValidationError("Modelo 390 auxiliary header source cells must retain their exact anchors")
     if tuple(field.ordinal for field in fields) != AUXILIARY_ENVELOPE_HEADER_ORDINALS:
         raise RegistryValidationError("Modelo 390 auxiliary header ordinals must retain their exact anchors")
+
+
+def _require_header_literals(fields: tuple[RecordDesignIntermediateField, ...]) -> None:
     expected_contents = (
         'Constante "<T"',
         'Constante "390"',
@@ -322,6 +362,14 @@ def _require_header_geometry_and_literals(header: RecordDesignIntermediateAuxili
     )
     if tuple(field.content for field in fields) != expected_contents:
         raise RegistryValidationError("Modelo 390 auxiliary header literals conflict with the official source anchors")
+
+
+def _require_header_geometry_and_literals(header: RecordDesignIntermediateAuxiliaryEnvelopeHeader) -> None:
+    fields = header.source_fields
+    _require_header_roles(header, fields)
+    _require_header_extent(fields)
+    _require_header_source_coordinates(fields)
+    _require_header_literals(fields)
 
 
 def _render_header_field(

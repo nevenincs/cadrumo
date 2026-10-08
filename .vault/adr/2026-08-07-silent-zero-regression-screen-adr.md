@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#silent-zero-regression-screen'
 date: '2026-08-07'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:2b6c6f49c68809ec4741e8d2c3f13c4e18bd80cf1455921dab1f5e6f388dfc11'
+body_hash: 'sha256:5d3a7dbb977914926cf1ba9429a66bd14165e9fcb6278bd85b54d3d1b5f68d27'
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
 ---
@@ -22,7 +22,7 @@ Direct prior art exists and narrows the decision more than the research alone sh
 
 - Three existing mechanisms each miss the measured gap for a different reason (`2026-08-07-silent-zero-regression-screen-research`, Findings §1): the observation-consumption screen asks the wrong question; `expected_but_missing_binding_ids` asks the right family of question at the wrong granularity (`binding.id in resolved_binding_values` is `True` at either `300.00` or `0`); `implies_nonzero` is the right shape but verify-time and opt-in, never authored for this casilla.
 - The observation-backed three-state contract (`2026-05-26-modelo-130-relation-regression-adr`, Decision 2 / the observation-backed-scope amendment) is direct, already-shipped prior art for exactly this failure class, scoped narrower than this decision needs (two source kinds, not the ledger-backed and other non-observation-backed sources this gap covers).
-- The relation-prefill tier's own contract (`src/cadrumo/application/calculations/_relation_prefill.py`) establishes the authoritative shape of "legitimately empty": no prior filing for a relation returns `value=None`, `provenance="operator_manual"` -- a blank the operator fills by hand, never a zero the engine asserts. Any detection mechanism must treat this as the false-positive floor, not a defect signature.
+- The relation-prefill tier's own contract establishes the authoritative shape of "legitimately empty": no prior filing for a relation returns `value=None`, `provenance="operator_manual"` -- a blank the operator fills by hand, never a zero the engine asserts. Any detection mechanism must treat this as the false-positive floor, not a defect signature.
 - False-fire cost is the dominant selection criterion. The project has already paid for an advisory that fires on legitimately-exempt cases once this session (`ledger-iva-advisory-only-on-cuota-bearing-categories`); a detector whose false-fire rate tracks normal business or first-filing variation will be dismissed within a session or two and then protects nothing while appearing to.
 - `no-tautological-calculation-tests` and `no-silent-under-declaration` both bear on any chosen mechanism's own test/grounding shape.
 
@@ -46,7 +46,7 @@ Two additive layers, neither replacing the other:
 
 **Primary -- registry-build reachability (option 2).** For each ledger-backed (and other non-observation-backed) binding source family, a build-time probe constructs a synthetic minimal matching row from the family's own declared selector shape and asserts the resolver accepts it as a candidate. A binding whose selector cannot match any constructible shape fails registry build, naming the binding and the family. This generalises the same structural principle `2026-05-26-modelo-130-relation-regression-adr`'s Decision 1 (`max_year_delta` anchor-dropping) already applies to the observation-backed selector shape: a binding's absence-or-presence is a property the selector declares, not a runtime accident.
 
-**Layered -- the `implies_nonzero` coverage floor (option 4).** Registry build additionally asserts that every casilla whose binding source is ledger-backed either names a `verification_predicate` in which it appears as a consequent, or is listed on an explicit, named, reasoned can-legitimately-be-zero exemption set -- mirroring `CUOTA_LESS_M303_IVA_CATEGORIES` (`src/cadrumo/domain/iva/_schema.py`), the project's own established pattern for a reasoned zero-is-fine carve-out. This closes the residual gap option 2 cannot reach on its own: a resolver correctly wired to real matching rows that aggregates them incorrectly still has SOME declared antecedent-nonzero check watching it, even though that check's strength depends on the authored predicate.
+**Layered -- the `implies_nonzero` coverage floor (option 4).** Registry build additionally asserts that every casilla whose binding source is ledger-backed either names a `verification_predicate` in which it appears as a consequent, or is listed on an explicit, named, reasoned can-legitimately-be-zero exemption set -- mirroring `CUOTA_LESS_M303_IVA_CATEGORIES`, the project's own established pattern for a reasoned zero-is-fine carve-out. This closes the residual gap option 2 cannot reach on its own: a resolver correctly wired to real matching rows that aggregates them incorrectly still has SOME declared antecedent-nonzero check watching it, even though that check's strength depends on the authored predicate.
 
 **Rejected -- calculate-time prior-period comparison (option 1).** Not built. The false-fire profile is structural (routine business variation, first-filing blanks already contracted as legitimate by the relation-prefill tier) rather than a tuning problem, and no state-loading primitive exists to build it on cheaply.
 

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:be46fb87fd7ad6836b8e2ed0daa75a9c49609f3522c7753b71fde3af35dcd061'
+body_hash: 'sha256:36cd1892e242df272b053ecbcc019ab7dd3f8ae346e69c66fccb9e4a37a00c89'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
   - "[[2026-08-08-m200-export-envelope-tag-adr]]"
@@ -18,7 +18,7 @@ Modelo 303 cannot enter semantic-map authoring while its `DP30300` variable enve
 
 ### The missing denominator is one typed variable-envelope channel, not thirteen more fixed fields
 
-The parser already represents a variable envelope separately as `RecordDesignIntermediateVariableEnvelope`, and the joined design preserves it unchanged (`dev/registry/_record_design_ir.py:141`, `dev/registry/_semantic_map_join.py:81`). `SemanticMap` has only fixed `records` and `entries` (`dev/registry/_semantic_map.py:128-139`), while `render_complete_export_tree` refuses whenever `joined.variable_envelopes` is non-empty (`dev/registry/_export_tree.py:149-152`). This matches the accepted generator ADR: a variable wrapper must not be truncated or treated as a fixed record, and generation remains blocked until a separate composition contract has byte-level proof (`.vault/adr/2026-08-10-aeat-export-fragment-generator-authority-adr.md:49`, `:64`, `:86`).
+The parser already represents a variable envelope separately as `RecordDesignIntermediateVariableEnvelope`, and the joined design preserves it unchanged (the former source file, the former source file). `SemanticMap` has only fixed `records` and `entries` , while `render_complete_export_tree` refuses whenever `joined.variable_envelopes` is non-empty . This matches the accepted generator ADR: a variable wrapper must not be truncated or treated as a fixed record, and generation remains blocked until a separate composition contract has byte-level proof (`.vault/adr/2026-08-10-aeat-export-fragment-generator-authority-adr.md:49`, `:64`, `:86`).
 
 Across the five reviewed Modelo 303 sources in `src/cadrumo/_data/registry/aeat/legal/iva.toml:567-631`, the parser yields 2,032 fixed fields plus 65 envelope-prefix fields: 406, 406, 426, 429, and 430 total parser fields by epoch. Each epoch has one `DP30300` envelope with thirteen contiguous prefix fields ending at byte 328, a Variable body beginning at byte 329, one relative closer, and a Variable total. The prefix geometry and source descriptions are identical across the five epochs, but semantic authority must still remain source-hash and exact-anchor bound rather than copied by resemblance.
 
@@ -30,11 +30,11 @@ The remaining four-character "Versión del programa" and nine-character "NIF Emp
 
 ### Program version has a dormant candidate but no accepted four-byte derivation
 
-The package exposes version `0.2.2`, but AEAT's field is four characters and existing application code explicitly says the AEAT program identifier is distinct from package `__version__`. A dormant `_PROGRAM_VERSION_CODE = "A001"` exists only in `src/cadrumo/application/modelo/_export.py:163-169`; exact production search finds no consumer. Conversely, `program_version` is deliberately rejected from `FilingProducerKey` in `src/cadrumo/application/filing/tests/test_export_semantic_vocabulary.py:50-66`. Therefore neither the package version nor `A001` is currently an authorized generated value. The ADR must decide one product-owned, validated four-character program-code authority or require fail-closed configuration; it must not silently reinterpret a release version.
+The package exposes version `0.2.2`, but AEAT's field is four characters and existing application code explicitly says the AEAT program identifier is distinct from package `__version__`. A dormant `_PROGRAM_VERSION_CODE = "A001"` exists only ; exact production search finds no consumer. Conversely, `program_version` is deliberately rejected from `FilingProducerKey` in `src/cadrumo/application/filing/tests/test_export_semantic_vocabulary.py:50-66`. Therefore neither the package version nor `A001` is currently an authorized generated value. The ADR must decide one product-owned, validated four-character program-code authority or require fail-closed configuration; it must not silently reinterpret a release version.
 
 ### Developer NIF is a separate product identity and current presenter reuse is wrong
 
-`FilingProducerSnapshot` keeps `taxpayer_tax_id` and `presenter` as distinct facts (`src/cadrumo/application/filing/_producer_snapshot.py:279-290`), and `FilingProducerKey` now has separate `presenter.tax_id` and `taxpayer.tax_id` identities (`src/cadrumo/core/_filing_producer_key.py:18-20`). Neither denotes the software-development entity. Exact production census finds no developer-company NIF authority or configuration.
+`FilingProducerSnapshot` keeps `taxpayer_tax_id` and `presenter` as distinct facts , and `FilingProducerKey` now has separate `presenter.tax_id` and `taxpayer.tax_id` identities . Neither denotes the software-development entity. Exact production census finds no developer-company NIF authority or configuration.
 
 The accepted M200 envelope ADR currently describes "NIF empresa desarrollo" as `presenter_nif`-equivalent and instructs a `presenter_nif` header at offset 101 (`.vault/adr/2026-08-08-m200-export-envelope-tag-adr.md:88-94`, `:193-201`). That conflicts with the official definition above. S61 must not propagate this mapping. The ADR corpus must amend or supersede that statement and any implementation depending on it; M303 generation must refuse when an explicit developer-company NIF is required but unavailable.
 
@@ -56,15 +56,9 @@ The current Spanish-stem conformance gate passes and exact production identifier
 
 ## Sources
 
-- `dev/registry/_record_design_ir.py:141-169`
-- `dev/registry/_semantic_map.py:128-139`
-- `dev/registry/_semantic_map_join.py:81-135`
-- `dev/registry/_export_tree.py:149-154`
 - `src/cadrumo/_data/registry/aeat/legal/iva.toml:567-631`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:18-27`
-- `src/cadrumo/application/modelo/_export.py:163-169`
-- `src/cadrumo/application/filing/_producer_snapshot.py:279-290`
-- `src/cadrumo/core/_filing_producer_key.py:18-20`
+
 - `src/cadrumo/application/filing/tests/test_export_semantic_vocabulary.py:50-66`
 - `.vault/adr/2026-08-10-aeat-export-fragment-generator-authority-adr.md:21-88`
 - `.vault/adr/2026-08-08-m200-export-envelope-tag-adr.md:88-94`

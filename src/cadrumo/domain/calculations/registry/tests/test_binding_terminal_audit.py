@@ -80,7 +80,7 @@ def test_a_folded_family_does_not_demand_a_fingerprint_it_cannot_produce() -> No
 
 def test_a_deferred_or_non_runtime_kind_never_demands_a_fingerprint() -> None:
     """Only a filing-grade family can be held to an evidence demand."""
-    for kind in (BindingSourceKind.MANUAL_INPUT, BindingSourceKind.REFUND_OPERATION):
+    for kind in (BindingSourceKind.MANUAL_INPUT, BindingSourceKind.GASTO193_CONTRIBUTOR):
         assert all(expectation.fingerprint == "optional" for expectation in expected_terminal_origins(kind))
 
 

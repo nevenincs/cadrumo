@@ -3,8 +3,8 @@ tags:
   - '#reference'
   - '#ci-discipline'
 date: '2026-07-21'
-modified: '2026-07-21'
-body_hash: 'sha256:314db2c46f9179586ae2dd15160e64f39df34469d3c64ff72f55abbf5b558d0b'
+modified: '2026-10-03'
+body_hash: 'sha256:79c73e606bbc5168199584152a12e25764262f5d7c0fd4decb8634f11dda02b2'
 related:
   - "[[2026-07-21-ci-discipline-adr]]"
   - '[[2026-07-20-ci-speed-redesign-adr]]'
@@ -36,10 +36,6 @@ Two verbatim-intent directives drove the campaign:
    push-, PR-, or dispatch-triggered. This supersedes the nightly-schedule
    element of the ci-speed-redesign decision (that record carries a truth-update
    line).
-
-A standing prior mandate frames both: self-hosted fleet only (GitHub-hosted
-runner images are a spend regression), enforced by
-`dev/packaging/tests/test_self_hosted_fleet.py`.
 
 ### Prior decision substrate
 
@@ -94,7 +90,6 @@ The campaign built on two accepted records rather than a green field:
   campaign on release-artifact-shaping changes (T2), release dispatch untouched
   (T3); same-repo-guarded `pull_request` triggers on `ci.yml` and
   `packaging-quick.yml`; `.github/README.md` documenting the control plane; and
-  the `dev/packaging/tests/test_change_class_tiers.py` conformance gates.
 - Merged to main via `9235e8cabc`.
 
 ### Post-campaign surface
@@ -111,11 +106,3 @@ machine-aware load), fleet topology, tier table, and the branch-protection
 proposal held for operator application.
 
 ### Conformance pins
-
-`dev/packaging/tests/test_change_class_tiers.py` (T2 paths set, trigger-workflow
-shape and confined `actions: write`, T0 carve-out, fork guard on every
-`pull_request` job, repo-wide artifact ban, repo-wide no-schedule invariant,
-naming convention, relocated maintenance gates, drift-detector target
-existence), `test_packaging_quick_workflow.py` (trigger pin extended for
-`pull_request`), `test_ci_workflow.py` (full-lane pins swept to `ci-full.yml`
-and dispatch-only triggers), `test_self_hosted_fleet.py` (runner labels).

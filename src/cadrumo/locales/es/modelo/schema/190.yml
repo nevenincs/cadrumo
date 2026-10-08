@@ -1,6 +1,52 @@
 modelo:
   schema:
     '190':
+      binding:
+        modelo-190-111-actividades-dinerario-importe-anual:
+          label: Rendimientos de actividades económicas dinerarios · total anual del
+            Modelo 111, casilla 08
+        modelo-190-111-actividades-especie-importe-anual:
+          label: Rendimientos de actividades económicas en especie · total anual del
+            Modelo 111, casilla 11
+        modelo-190-111-derechos-imagen-importe-anual:
+          label: Contraprestaciones por cesión de derechos de imagen · total anual
+            del Modelo 111, casilla 26
+        modelo-190-111-ganancias-dinerario-importe-anual:
+          label: Ganancias patrimoniales forestales dinerarias · total anual del Modelo
+            111, casilla 20
+        modelo-190-111-ganancias-especie-importe-anual:
+          label: Ganancias patrimoniales forestales en especie · total anual del Modelo
+            111, casilla 23
+        modelo-190-111-premios-dinerario-importe-anual:
+          label: Premios dinerarios · total anual del Modelo 111, casilla 14
+        modelo-190-111-premios-especie-importe-anual:
+          label: Premios en especie · total anual del Modelo 111, casilla 17
+        modelo-190-111-retenciones-anual:
+          label: Retenciones e ingresos a cuenta · total anual del Modelo 111, casilla
+            28
+        modelo-190-111-trabajo-dinerario-importe-anual:
+          label: Rendimientos del trabajo dinerarios · total anual del Modelo 111,
+            casilla 02
+        modelo-190-111-trabajo-especie-importe-anual:
+          label: Rendimientos del trabajo en especie · total anual del Modelo 111,
+            casilla 05
+        modelo-190-perceptor-rows-incapacidad-dineraria-total:
+          label: Total de percepciones dinerarias por incapacidad laboral
+        modelo-190-perceptor-rows-incapacidad-especie-total:
+          label: Total de valoraciones en especie por incapacidad laboral
+        modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total:
+          label: Total de ingresos a cuenta por prestaciones en especie de incapacidad
+            laboral
+        modelo-190-perceptor-rows-incapacidad-retencion-total:
+          label: Total de retenciones por incapacidad laboral
+        modelo-190-perceptor-rows-ingreso-a-cuenta-total:
+          label: Total de ingresos a cuenta
+        modelo-190-perceptor-rows-percepcion-dineraria-total:
+          label: Total de percepciones dinerarias
+        modelo-190-perceptor-rows-percepcion-especie-total:
+          label: Total de percepciones en especie
+        modelo-190-perceptor-rows-retencion-practicada-total:
+          label: Total de retenciones practicadas
       casilla:
         continuidad:
           devengo-year:
@@ -204,6 +250,66 @@ modelo:
           y determinadas ganancias patrimoniales e imputaciones de rentas. Resumen
           anual.
         title: Resumen anual de retenciones del trabajo y actividades
+      form:
+        context:
+          ejercicio:
+            heading: Ejercicio
+          nif:
+            heading: NIF del declarante
+          nombre:
+            heading: Apellidos y nombre o razón social
+        page:
+          datos-adicionales:
+            heading: Datos adicionales de la percepción
+          familia:
+            heading: Descendientes y ascendientes
+          percepciones:
+            heading: Relación de percepciones
+          prestaciones:
+            heading: Prestaciones y otras percepciones
+          resumen:
+            heading: Resumen de la declaración
+          territorios:
+            heading: Retenciones por territorio
+        section:
+          ascendientes:
+            heading: Ascendientes
+          claves:
+            heading: Clase de percepción
+          computo:
+            heading: Cómputo de los tres primeros hijos
+          contacto:
+            heading: Persona y teléfono de contacto
+          declaracion:
+            heading: Identificación y rectificación de la declaración
+          declarante:
+            heading: Declarante y ejercicio
+          descendientes:
+            heading: Hijos y otros descendientes
+          dinerarias:
+            heading: Percepciones dinerarias
+          especie:
+            heading: Percepciones en especie
+          identificacion:
+            heading: Identificación del perceptor
+          incapacidad:
+            heading: Prestaciones derivadas de incapacidad laboral
+          laborales:
+            heading: Relación laboral y movilidad
+          otras:
+            heading: Otros datos de la percepción
+          pensiones:
+            heading: Tipo de prestación de la clave B.01
+          personales:
+            heading: Datos personales y familiares
+          reducciones:
+            heading: Reducciones y gastos
+          retenciones-territoriales:
+            heading: Retenciones e ingresos a cuenta por administración
+          totales:
+            heading: Resumen de los datos incluidos en la declaración
+          vivienda:
+            heading: Préstamos para vivienda habitual
       revision:
         '2022':
           field:

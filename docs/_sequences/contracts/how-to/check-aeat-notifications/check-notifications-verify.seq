@@ -7,9 +7,9 @@
 @step List past verifications you have run.
 @static aeat app live verify list --surface tgvi
 @blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
-@step View details of a specific verification.
+@step View the details of a specific check.
 @static aeat app live verify view <observation-id>
 @blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
-@step Show the latest verification observation for a NIF.
+@step Show the latest check result for a NIF.
 @static aeat app live verify latest --surface nif_iva --nif DE123456789
 @blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.

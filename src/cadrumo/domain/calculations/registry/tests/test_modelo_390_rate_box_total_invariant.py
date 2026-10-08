@@ -1,53 +1,7 @@
-"""No rate-asserting Modelo 390 casilla may be an operand of a total formula.
+"""Rate-specific subtotals never add the matching blind control a second time.
 
-This is the structural invariant the two-layer rate-box shape rests on, gated
-once for the whole modelo rather than once per block.
-
-THE SHAPE. A tier's roles are split: rate-specific casillas serve the official
-per-rate boxes, and a rate-blind sibling serves the total and catches rows whose
-rate the ledger never recorded. The two are complements. If a rate-specific
-casilla ALSO reaches the total, every rate-recorded row is counted twice --
-once through its box and once through the blind sibling that still carries it --
-and the return OVER-declares. That is the opposite error from the mis-allocation
-the split exists to fix, and it is the only way the repair can damage a figure
-that was previously correct.
-
-WHY THIS GATE EXISTS SEPARATELY FROM ITS TWO SIBLINGS. The Reg. ordinario and
-recargo suites each assert this for their own block, by matching a casilla-id
-prefix. Both are correct and both are blind by construction: they encode which
-blocks exist today, so a block added later is invisible to them and could wire a
-box into a total with nothing objecting. Everything here is derived from the
-loaded revision instead -- no prefix, no fixture list, no count.
-
-THE DISCRIMINATOR IS THE BINDING, NOT THE BOX NUMBER. A casilla asserts a rate
-when its binding pins ``applied_rates``; that is what makes it a claim about one
-rate rather than a quantity. Keying on "carries an official box number" instead
-is WRONG and would fail on correct data: at the time of writing, four numbered
-casillas are legitimately operands -- ``regularizacion-bienes-inversion`` (box
-63), ``regularizacion-prorrata-definitiva`` (box 522), and the two totals, which
-carry numbers and feed ``resultado-regimen-general``. A box number marks a slot
-in the record; it says nothing about whether the casilla asserts a rate.
-
-MODELO 303 LEGITIMATELY VIOLATES THIS INVARIANT, AND IS NOT DEFECTIVE FOR IT.
-Its total cuota devengada enumerates the tier cuota boxes directly, including
-the RD-ley 4/2024 transitional rungs. It has no rate-blind total, so there is no
-sibling to double against, and a rate-specific operand there is simply how the
-form is built. The governing decision records the precondition: the two-layer
-shape requires a total that is NOT the sum of the tier boxes.
-
-SO DO NOT WIDEN THIS GATE TO ANOTHER MODELO WITHOUT MEASURING THAT MODELO FIRST.
-Extending it is not a matter of dropping the ``390`` filter: it requires
-establishing that the modelo's totals are drawn independently of its tiers. On a
-modelo where they are not, this assertion would red correct data and the obvious
-"fix" would be to break the form.
-
-Real-behaviour: the committed registry through the real authority, walked with
-the canonical ``expression_casilla_refs``. No mocks, stubs, skips or xfail.
-
-Non-tautology: both derived sets are asserted populated before the disjointness
-is asserted over them. "No rate-asserting casilla among the operands" is trivially
-true of an empty operand set, and a walker that silently returned nothing would
-otherwise make this module pass while measuring nothing at all.
+Official printed sums can consume rate boxes. Their independent blind controls
+retain unrated observations for coverage diagnostics and export refusal.
 """
 
 from __future__ import annotations
@@ -57,8 +11,10 @@ from collections.abc import Iterator
 import pytest
 
 from ..binding_selector_utils import selector_as_dict
+from ..rate_box_partition import derive_rate_box_partitions
 from ..runtime_graph import expression_casilla_refs
 from ..schema import ModeloRevision
+from .m390_formula_support import assert_partition_is_not_double_counted
 from .registry_tree import bundled_modelo_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -142,20 +98,33 @@ def test_the_derived_sets_are_populated() -> None:
     assert measured, "no modelo 390 revision declares a formula, so this module measured nothing at all"
 
 
-def test_no_rate_asserting_casilla_is_a_total_operand() -> None:
-    """The invariant: a casilla may assert a rate OR feed a total, never both.
+def test_no_formula_consumes_both_layers_of_a_rate_partition() -> None:
+    """No formula consumes a blind control together with its rate breakdown."""
+    measured = 0
+    for _revision_id, revision in _revisions():
+        for partition in derive_rate_box_partitions(revision):
+            assert_partition_is_not_double_counted(revision, partition)
+            measured += 1
+    assert measured, "no rate-box partition was checked"
 
-    Derived wholly from the revision, so a régimen block added later is covered
-    the moment it declares a rate-pinned binding. Nothing here enumerates the
-    blocks that happen to exist.
-    """
-    for revision_id, revision in _revisions():
-        operands = _formula_operand_ids(revision)
-        asserting = _rate_asserting_casilla_ids(revision)
-        leaked = sorted(asserting & operands)
-        assert not leaked, (
-            f"{revision_id}: {leaked} assert a specific rate via applied_rates AND are "
-            f"summed by a formula. Their rate-blind sibling already carries those rows "
-            f"for the total, so each rate-recorded row is counted twice and the return "
-            f"over-declares. Feed the total from the rate-blind layer only."
-        )
+
+def test_a_blind_control_added_beside_its_printed_boxes_is_rejected() -> None:
+    """Prove that the graph guard detects an indirect second copy of a tier."""
+    revision = next(revision for revision_id, revision in _revisions() if revision_id == "2024")
+    partition = next(
+        partition
+        for partition in derive_rate_box_partitions(revision)
+        if partition.total_casilla_id == "iva.anual.repercutido.reducido"
+    )
+    total = next(
+        formula for formula in revision.formulas if formula.target_casilla_id == "iva.anual.cuota-devengada-total"
+    )
+    blind = total.expression.args[0].model_copy(update={"casilla_id": partition.total_casilla_id})
+    changed = total.model_copy(
+        update={"expression": total.expression.model_copy(update={"args": (*total.expression.args, blind)})}
+    )
+    mutated = revision.model_copy(
+        update={"formulas": tuple(changed if formula.id == total.id else formula for formula in revision.formulas)}
+    )
+    with pytest.raises(AssertionError, match="consumes both"):
+        assert_partition_is_not_double_counted(mutated, partition)

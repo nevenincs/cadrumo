@@ -47,7 +47,7 @@ def _race(root: Path) -> tuple[int, int]:
             else:
                 present += 1
     finally:
-        writer.join(30)
+        writer.join(None)
     return present, absent
 
 

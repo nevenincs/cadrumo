@@ -1,4 +1,4 @@
-@step Preview a suggestion that also selects the IVA category.
+@step Preview a suggestion that also selects the VAT category.
 @static aeat app ledger classify <transaction-id> --llm --saturate
 @blocked external-service Needs the on-host local model runtime and its reader models, which the hermetic sandbox does not run.
 @step Apply the saturated suggestion.

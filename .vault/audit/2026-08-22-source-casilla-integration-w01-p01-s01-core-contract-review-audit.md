@@ -3,23 +3,18 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:03556fbd90e9d7187a7498363f53772434d5b16aaf93503c2a91fbb019f85dd5'
+body_hash: 'sha256:e4e5ecb7ee28ee0541be1b6bb270aee25fe97fbc5b2c815460dd33e03e84e359'
 related:
   - "[[2026-08-22-source-casilla-integration-adr]]"
-  - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
 
 # `source-casilla-integration` audit: `W01 P01 S01 core contract review`
 
 ## Scope
 
-Commit `60a7b73cd6` was reviewed against the accepted source-casilla integration
-ADR, `W01.P01.S01`, the research grounding, and the core architecture, naming,
-and quality rules. The review covered only the new canonical candidate identity
-and closed disposition vocabulary in `src/cadrumo/core/source_connectivity.py`,
-plus the Step execution record and plan closure carried by that commit.
+Commit `60a7b73cd6` was reviewed against the accepted source-casilla integration ADR, `W01.P01.S01`, the research grounding, and the core architecture, naming, and quality rules.
 
 ## Findings
 

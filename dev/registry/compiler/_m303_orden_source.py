@@ -10,9 +10,9 @@ from pathlib import Path
 from typing import cast
 from urllib.parse import urlsplit
 
-from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import (
     GovernedFactNotApplicableError,
     RegistryLoadError,

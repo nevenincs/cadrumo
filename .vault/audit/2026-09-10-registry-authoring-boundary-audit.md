@@ -3,15 +3,17 @@ tags:
   - '#audit'
   - '#registry-authoring-boundary'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:efef6daa344ccf4770a7962550f4ee2bd67e4ff74a40d1bbb18d85f6826e7c7c'
+body_hash: 'sha256:1297006fe2db1f1cc28c6235cd33a43017667898b2686491c9940444e0183b1d'
 related: []
 ---
 
 # `registry-authoring-boundary` audit: `Production/development registry-authoring boundary`
 
 ## Scope
+
+Review the production/development registry-authoring boundary after the registry CLI rehome, including stale command contracts, conformance composition, and the remaining production topic catalogue.
 
 ## Findings
 
@@ -25,15 +27,15 @@ The live command graph no longer contains `aeat app registry manuals list`, but 
 
 ### conformance-composer-still-shipped-under-src | high | Development conformance still depends on a production-package test module
 
-`dev/registry/conformance/manager.py` imports `audit_bundled_registry_conformance`, `RegistryConformanceProfile`, and associated coverage types from `cadrumo.tests.registry_conformance` and `cadrumo.tests.registry_coverage`. The moved `integrity` command is development-only, but the report and coverage verbs still execute authoring/conformance composition from `src/cadrumo/tests/registry_conformance.py`. That directly contradicts the stated destination of `dev/registry/conformance` and leaves the major conformance implementation in the shipped package namespace. The implementation must be rehomed, with development tests adjusted to import the development module, before the boundary can be considered structurally complete.
+`dev/registry/conformance/manager.py` imports `audit_bundled_registry_conformance`, `RegistryConformanceProfile`, and associated coverage types from `cadrumo.tests.registry_conformance` and `cadrumo.tests.registry_coverage`. The report and coverage verbs now compose the registry conformance profile in `dev/registry/conformance/profile.py` and coverage logic in `dev/registry/conformance/coverage.py`, both development-only modules. That directly contradicts the stated destination of `dev/registry/conformance` and leaves the major conformance implementation in the shipped package namespace. The implementation must be rehomed, with development tests adjusted to import the development module, before the boundary can be considered structurally complete.
 
 ### orphaned-topic-catalogue | medium | A production core registry-topic service has no remaining production consumer
 
-`src/cadrumo/core/topics/catalogue.py` loads `registry/aeat/topics` and its package documentation still defines its CLI contract as `aeat app registry citations`. The only non-test consumer found by the repository search is `dev/docs/terminology_handbook/_enrolment.py`; the citation CLI adapter that previously rendered those records has been removed. This leaves a shipped core service that is functionally dead on the production path and whose contract names a retired user command. Rehome it to development documentation tooling or remove it after confirming no supported product reference surface needs it.
+The former production core registry-topic catalogue loads `registry/aeat/topics` and its package documentation still defines its CLI contract as `aeat app registry citations`. The only non-test consumer found by the repository search is `dev/docs/terminology_handbook/_enrolment.py`; the citation CLI adapter that previously rendered those records has been removed. This leaves a shipped core service that is functionally dead on the production path and whose contract names a retired user command. Rehome it to development documentation tooling or remove it after confirming no supported product reference surface needs it.
 
 ## Recommendations
 
 - Regenerate the CLI-tree artifact through its owning generator, update or remove authored sequences and help fixtures, and replace the retired manual-list assertion with an assertion about an actually supported reference surface.
 - Remove the `app registry` bootstrap exemption, then update packaging smoke/cohort contracts and their tests to exercise the development gate only where a development package workflow is intended.
-- Move `registry_conformance.py` and `registry_coverage.py` implementation from `src/cadrumo/tests` into `dev/registry/conformance` (or a development-only subordinate package), preserving production authority consumption but eliminating the shipped authoring composer.
+- Keep the conformance profile and coverage implementation in the development-only `dev/registry/conformance` package, with the import boundary proving that the shipped package does not own authoring composition.
 - Decide whether any product-facing reference access is still required. If not, remove the orphaned core topic catalogue and its error registrations; if yes, give it a justified non-registry product surface and update its documentation accordingly.

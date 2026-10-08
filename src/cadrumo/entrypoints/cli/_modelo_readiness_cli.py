@@ -4,21 +4,16 @@ from __future__ import annotations
 
 import typer
 
-from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
-from ...application.auth.operator_probe_ports import OperatorProbePorts
-from ...application.auth.operator_scope_ports import OperatorScopePorts
 from ...application.modelo.export import modelo_export_readiness_refusal
-from ...application.state_projection import (
-    ModeloReadinessRequest,
-    ProjectionModeloReadiness,
-    build_operator_state_projection,
-)
-from ...application.state_projection_ports import StateProjectionReadPorts
+from ...application.modelo.query_read_contracts import ModeloReadinessOperationRequest
+from ...application.operations.public_period import PublicPeriod
+from ...application.state_projection import ProjectionModeloReadiness
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language, tr
+from ...core.identity.digest import ContentDigest
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...core.period import Period, PeriodError
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.user_profile.errors import ProfileNotFoundError
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._modelo_cli_support import unsupported_local_work_period_refusal
 from ._modelo_payloads import (
@@ -27,15 +22,9 @@ from ._modelo_payloads import (
     ModeloReadinessMissingRequirementPayload,
     ModeloReadinessResult,
 )
-from .common import emit_envelope, no_active_profile_refusal, resolve_cli_precondition_action
-from .errors import CliRefusedBoundaryError
-from .state_projection_support import (
-    authority_operation,
-    certificate_secret_backend_factory,
-    operator_probe_ports,
-    operator_scope_ports,
-    state_projection_read_ports,
-)
+from .common import active_bucket_id_or_refuse, emit_envelope, resolve_cli_precondition_action
+from .runtime_modelo_query_read import read_modelo_readiness, to_modelo_readiness_report
+from .state_projection_support import authority_operation
 
 
 def modelo_readiness(
@@ -57,30 +46,26 @@ def modelo_readiness(
     only by reading the payload.
     """
     resolved_period = _resolve_readiness_period(modelo=modelo, filing_year=filing_year, period=period)
+    from uuid import UUID
+
     operation = authority_operation(ctx)
-    revision_id = _resolve_readiness_revision_id(
-        modelo=modelo,
-        filing_year=filing_year,
-        period=resolved_period,
-        revision_id=revision_id,
-        operation=operation,
+    projection = read_modelo_readiness(
+        ctx,
+        ModeloReadinessOperationRequest(
+            profile_id=UUID(active_bucket_id_or_refuse()),
+            modelo=modelo,
+            filing_year=filing_year,
+            period=PublicPeriod.from_period(resolved_period) if resolved_period is not None else None,
+            revision_id=revision_id,
+            language=OutputLanguage(output_language()),
+        ),
+        expected_authority_generation=operation.generation.logical_generation,
     )
-    request = ModeloReadinessRequest(
-        modelo=modelo,
-        revision_id=revision_id,
-        filing_year=filing_year,
-        period=resolved_period,
-    )
-    report = _readiness_report(
-        request,
-        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-        operator_probe_ports=operator_probe_ports(ctx),
-        operator_scope_ports=operator_scope_ports(ctx),
-        read_ports=state_projection_read_ports(ctx),
-        operation=operation,
-    )
+    report = to_modelo_readiness_report(projection)
+    revision_id = report.revision_id
     readiness_result = _readiness_result(
         report,
+        authority_generation=projection.authority_generation,
         modelo=modelo,
         revision_id=revision_id,
         filing_year=filing_year,
@@ -90,39 +75,21 @@ def modelo_readiness(
         ctx,
         command="modelo.readiness",
         result=readiness_result,
-        lines=_readiness_lines(
-            report,
-            modelo=modelo,
-            revision_id=revision_id,
-            filing_year=filing_year,
-            period=period,
-            profile_action=profile_action,
-        ),
+        lines=[
+            f"authority_generation\t{projection.authority_generation}",
+            *_readiness_lines(
+                report,
+                modelo=modelo,
+                revision_id=revision_id,
+                filing_year=filing_year,
+                period=period,
+                profile_action=profile_action,
+            ),
+        ],
         notices=_readiness_notices(report, profile_action=profile_action),
     )
     if not report.ready:
         raise typer.Exit(code=2)
-
-
-def _resolve_readiness_revision_id(
-    *,
-    modelo: str,
-    filing_year: int,
-    period: Period | None,
-    revision_id: str | None,
-    operation: PinnedAuthorityOperation,
-) -> str:
-    """Resolve the revision law-determined, or assert a supplied override equal to it."""
-    from ...application.modelo.work_addressing import law_selected_revision_for_work_target
-
-    target_period = period or Period.from_year_and_code(filing_year, "0A")
-    return law_selected_revision_for_work_target(
-        modelo=modelo,
-        filing_year=filing_year,
-        period=target_period,
-        requested_revision_id=revision_id or None,
-        operation=operation,
-    )
 
 
 def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | None) -> Period | None:
@@ -136,46 +103,16 @@ def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | No
         raise
 
 
-def _readiness_report(
-    request: ModeloReadinessRequest,
-    *,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
-    operator_probe_ports: OperatorProbePorts,
-    operator_scope_ports: OperatorScopePorts,
-    read_ports: StateProjectionReadPorts,
-    operation: PinnedAuthorityOperation,
-) -> ProjectionModeloReadiness:
-    from ...core.bucket_pointer import resolve_active_bucket_id
-    from ...core.i18n.render import tr as _tr
-
-    if resolve_active_bucket_id() is None:
-        raise no_active_profile_refusal()
-    try:
-        projection = build_operator_state_projection(
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_probe_ports=operator_probe_ports,
-            operator_scope_ports=operator_scope_ports,
-            read_ports=read_ports,
-            modelo_readiness_requests=(request,),
-            operation=operation,
-        )
-    except ProfileNotFoundError as exc:
-        raise CliRefusedBoundaryError(
-            _tr("cli.config.profile.unknown_profile", name=resolve_active_bucket_id() or ""),
-        ) from exc
-    if not projection.modelo_readiness:
-        raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
-    return projection.modelo_readiness[0]
-
-
 def _readiness_result(
     report: ProjectionModeloReadiness,
     *,
+    authority_generation: ContentDigest,
     modelo: str,
     revision_id: RevisionId,
     filing_year: int,
 ) -> ModeloReadinessResult:
     return ModeloReadinessResult(
+        authority_generation=authority_generation,
         profile_id=str(report.profile_id),
         modelo=modelo,
         revision_id=revision_id,
@@ -262,10 +199,7 @@ def _readiness_lines(
     lines.extend(_readiness_ledger_export_lines(report, export_context))
     lines.extend(_readiness_detail_lines(report))
     if _ledger_ready_but_bindings_missing(report):
-        lines.append(
-            "readiness_note\tledger_ready only means the period ledger rows passed transaction preflight; "
-            "missing_bindings/source_binding_ready still decide source completeness.",
-        )
+        lines.append(f"readiness_note\t{tr('cli.app.modelo.readiness.sources_still_missing')}")
     return lines
 
 
@@ -344,10 +278,7 @@ def _readiness_notices(
             Notice(
                 severity=NoticeSeverity.INFO,
                 code="modelo.readiness.ledger_preflight_scope",
-                message=(
-                    "ledger_ready only means the period ledger rows passed transaction preflight; "
-                    "missing_bindings/source_binding_ready still decide source completeness."
-                ),
+                message=tr("cli.app.modelo.readiness.sources_still_missing"),
                 context={
                     "ledger_ready": "true",
                     "binding_ready": "false",

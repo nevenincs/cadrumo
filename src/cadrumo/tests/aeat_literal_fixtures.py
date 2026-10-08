@@ -150,7 +150,7 @@ RENTA_REGIMEN_CITATION_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/regi
 RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/renta"
 AUTH_DIAGNOSTIC_SEDE_URL_FIXTURE = "sede.agenciatributaria.gob.es/auth"
 #: Sibling-application-path comparison canaries for
-#: ``_same_aeat_application_path`` (the ``wlpl``/``inwinvoc`` root pairing
+#: ``same_aeat_application_path`` (the ``wlpl``/``inwinvoc`` root pairing
 #: shape, not a specific captured AEAT landing).
 INWINVOC_LANDING_PATH_CANARY = "/wlpl/inwinvoc/es.aeat.dit.adu.eeca.catalogo.vis.VisorCatalogo"
 INWINVOC_SIBLING_PATH_CANARY = "/wlpl/inwinvoc/other/page"
@@ -328,3 +328,27 @@ SII_SUMINISTRO_LR_NAMESPACE_FIXTURE = f"{_SSII_SCHEMA_BASE}/ssii/fact/ws/Suminis
 SII_SUMINISTRO_INFORMACION_NAMESPACE_FIXTURE = f"{_SSII_SCHEMA_BASE}/ssii/fact/ws/SuministroInformacion.xsd"
 VERIFACTU_SUMINISTRO_LR_NAMESPACE_FIXTURE = f"{_SSII_SCHEMA_BASE}/tike/cont/ws/SuministroLR.xsd"
 VERIFACTU_SUMINISTRO_INFORMACION_NAMESPACE_FIXTURE = f"{_SSII_SCHEMA_BASE}/tike/cont/ws/SuministroInformacion.xsd"
+
+
+CENSAL_CONSULTATION_URL_FIXTURE = "https://www6.agenciatributaria.gob.es/consulta"
+CENSAL_PRIVATE_QUERY_FRAGMENT_CANARY = "https://www6.agenciatributaria.gob.es/consulta?nif=PRIVATE#PRIVATE"
+CENSO_CONSULTATION_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/censo/consulta"
+CENSO_SOURCE_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/censo"
+CLAVE_AUTHORIZATION_SELECTOR_HTML_FIXTURE = '\n<html><head><title>Selector de acceso</title></head><body>\n  <form method="post" action="/wlpl/AUTH/Autorizar">\n    <button type="button" name="autoriza-P" style="display:none">Cl@ve Movil</button>\n  </form>\n</body></html>\n'
+CLAVE_QR_PROTECTED_QUERY_URL_CANARY = (
+    "https://www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/ObtenerClaveMovil?ref=/wlpl/TEWV-CORE/ResumenVlt"
+)
+CSV_CONSULTATION_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/Sede/consulta-csv"
+DOTTED_AEAT_HOST_SUFFIX_FIXTURE = ".agenciatributaria.gob.es"
+OBLIGACIONES_SOURCE_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/obligaciones"
+OTHER_APPLICATION_START_PATH_CANARY = "/wlpl/OTRA-APLI/Inicio"
+PROTECTED_RESOURCE_FOREIGN_HOST_CANARY = "https://attacker.example/wlpl/TEWV-CORE/ResumenVlt"
+PROTECTED_RESOURCE_PATH_FIXTURE = "/wlpl/TEWV-CORE/ResumenVlt"
+PROTECTED_RESOURCE_QUERY_PATH_CANARY = "https://www6.agenciatributaria.gob.es/error?next=/wlpl/TEWV-CORE/ResumenVlt"
+PROTECTED_RESOURCE_URL_FIXTURE = "https://www6.agenciatributaria.gob.es/wlpl/TEWV-CORE/ResumenVlt"
+SEDE_EXAMPLE_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/example"
+SEDE_NOTIFICATIONS_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/Sede/notificaciones"
+SEDE_TEST_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/test"
+WWW6_LOGIN_URL_FIXTURE = "https://www6.agenciatributaria.gob.es/login"
+WWW6_PRIVATE_QUERY_DISCLOSURE_CANARY = "https://www6.agenciatributaria.gob.es/private?secret=do-not-publish"
+WWW6_UNLISTED_URL_CANARY = "https://www6.agenciatributaria.gob.es/unlisted"

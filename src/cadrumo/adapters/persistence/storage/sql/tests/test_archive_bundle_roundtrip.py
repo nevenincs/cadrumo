@@ -39,6 +39,7 @@ from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..orm import Base
 from ..secure_object_records import SecureObjectRawRow
 from ..secure_objects import SecureObjectRepository
+from .raw_key_writer import save_with_raw_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -174,7 +175,8 @@ def _restore_rows_under_hashed_keys(
         assert len(ns_entries) == 1
         hashed_key = next(iter(ns_entries))
         raw = ns_entries[hashed_key]
-        repo.save_with_raw_key(
+        save_with_raw_key(
+            repo,
             namespace=namespace,
             hashed_object_key=hashed_key,
             classification=classification,

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c5910e3876b1cbd8312477ce5734b63f9680d141d1168482d5885dcefb736576'
+body_hash: 'sha256:a230805d2e984441eaab98e40cba4cd6e0265737d84ef9e3919bdae927546fed'
 related:
   - "[[2026-08-28-registry-relation-and-export-integrity-formula-member-continuity-across-revisions-audit]]"
 ---
@@ -13,20 +13,12 @@ related:
 # `calculation-correctness-campaign` audit: `Registry rounding discipline is coherent; the ratio dividing line is the substance`
 
 ## Scope
-
-## Findings
-
-## Recommendations
-
-## Why rounding is a direction question
-
 Rounding a cuota up over-charges and rounding it down under-charges, so every
 rounding rule in the registry is a small standing bias unless it is symmetric or
 legally mandated. This sweeps all 1457 compiled formulas and asks, of each
 combination, which way it fails.
 
-## The full picture
-
+## Findings
 | target `data_type` | rounding | count | verdict |
 |---|---|---|---|
 | money | `money-2` | 1151 | correct — `ROUND_HALF_UP`, symmetric about zero |
@@ -41,6 +33,20 @@ combination, which way it fails.
 sharpest question — a money box rounded with `integer` would silently drop cents
 on every filing — and nothing does it.
 
+## Recommendations
+The percentage-versus-fraction test used here is a **heuristic** — it looks for a
+literal 100 in the expression. A percentage-valued ratio could legitimately be
+produced from a parameter already expressed in percent, with no literal 100
+anywhere, and would be flagged wrongly. Gating a heuristic manufactures false
+positives and trains the next author to widen an allowlist, so this is recorded
+rather than enforced.
+
+The one rounding rule that *is* enforced is `integer-ceiling`, gated separately:
+it is the only code whose correctness depends on the sign of its operand, and its
+precondition is stated as mandatory by the production docstring rather than
+inferred.
+
+No production code, registry data or test was changed by this audit.
 ## The dividing line the registry gets right everywhere
 
 `ratio` covers two different things, and rounding must treat them oppositely.
@@ -60,19 +66,3 @@ The registry makes that distinction correctly in every one of the 34 instances.
 It is not stated anywhere as a rule, which is the only reason it is worth writing
 down here: a future ratio target that copies the wrong sibling's rounding would be
 a quiet rate error, and the two siblings sit in the same table.
-
-## Not gated, and why
-
-The percentage-versus-fraction test used here is a **heuristic** — it looks for a
-literal 100 in the expression. A percentage-valued ratio could legitimately be
-produced from a parameter already expressed in percent, with no literal 100
-anywhere, and would be flagged wrongly. Gating a heuristic manufactures false
-positives and trains the next author to widen an allowlist, so this is recorded
-rather than enforced.
-
-The one rounding rule that *is* enforced is `integer-ceiling`, gated separately:
-it is the only code whose correctness depends on the sign of its operand, and its
-precondition is stated as mandatory by the production docstring rather than
-inferred.
-
-No production code, registry data or test was changed by this audit.

@@ -83,6 +83,10 @@ at all. Those need AEAT's published design for the missing year bundled.
 An open-ended ``applies_to`` and an open-ended ``year_to`` are both bounded by the newest
 corpus year rather than by a literal ceiling, so neither goes stale as a constant.
 
+The corpus gate assesses the supported filing window, matching runtime selection.
+Historical declarations remain inspectable but do not widen that window. The
+comparison helper also accepts historical years for its explicit controls.
+
 No count is hardcoded. The divergence set is the finding and it is named in full.
 """
 
@@ -99,6 +103,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.authority import compile_validated_authority
+from ..maintenance_support import coverage_assessment_floor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -253,6 +258,8 @@ def _revision_divergences(
     revision: ModeloRevision,
     windows: Mapping[str, tuple[int | None, int | None]],
     ejercicio_scoped: Collection[str],
+    *,
+    assessment_floor: int | None = None,
 ) -> tuple[int, list[str]]:
     """Return ``(export layouts compared, divergence messages)`` for one revision.
 
@@ -270,7 +277,7 @@ def _revision_divergences(
         starts = [start for ref in declared if (start := windows[ref][0]) is not None]
         if not starts:
             continue
-        claimed = _claimed_years(revision)
+        claimed = [year for year in _claimed_years(revision) if assessment_floor is None or year >= assessment_floor]
         if not claimed:
             continue
         compared += 1
@@ -327,14 +334,16 @@ def test_every_claimed_filing_year_is_covered_by_its_declared_layout_design() ->
     revision's claim is brought inside its design's applicability -- either by narrowing
     the claim so the uncovered years refuse, or by declaring the design that does apply.
     """
+    authority = _authority()
+    floor = coverage_assessment_floor(authority.catalogues)
     windows = _record_design_windows()
     ejercicio_scoped = _ejercicio_scoped_designs()
     divergences: list[str] = []
     compared = 0
-    for modelo in sorted(_authority().modelos, key=lambda candidate: candidate.id):
+    for modelo in sorted(authority.modelos, key=lambda candidate: candidate.id):
         for revision_id, revision in sorted(modelo.revisions.items()):
             layer_compared, layer_divergences = _revision_divergences(
-                modelo.id, revision_id, revision, windows, ejercicio_scoped
+                modelo.id, revision_id, revision, windows, ejercicio_scoped, assessment_floor=floor
             )
             compared += layer_compared
             divergences.extend(layer_divergences)
@@ -364,6 +373,26 @@ def test_presentation_calendar_years_reads_the_declared_deadline_window() -> Non
 def test_presentation_calendar_years_falls_back_to_the_claimed_year_when_undeclared() -> None:
     """No declared window means no axis shift -- the prior, unshifted comparison."""
     assert _presentation_calendar_years(2019, {}) == {2019}
+
+
+def test_supported_window_excludes_historical_gaps_and_detects_a_current_gap() -> None:
+    authority = _authority()
+    floor = coverage_assessment_floor(authority.catalogues)
+    modelo = authority.modelo("126")
+    revision = modelo.revisions["2019-y-siguientes"]
+    windows = _record_design_windows()
+    scoped = _ejercicio_scoped_designs()
+    start = windows["aeat-dr-126-2020"][0]
+    assert start is not None and start < floor
+
+    compared, historical = _revision_divergences(modelo.id, revision.id, revision, windows, scoped)
+    assert compared and historical
+    _, supported = _revision_divergences(modelo.id, revision.id, revision, windows, scoped, assessment_floor=floor)
+    assert supported == []
+
+    corrupted = {**windows, "aeat-dr-126-2020": (floor + 1, None)}
+    _, current_gap = _revision_divergences(modelo.id, revision.id, revision, corrupted, scoped, assessment_floor=floor)
+    assert current_gap and f"{floor}-{floor}" in current_gap[0]
 
 
 def test_presentation_calendar_years_spans_a_window_crossing_a_calendar_boundary() -> None:

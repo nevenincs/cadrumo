@@ -24,6 +24,7 @@ so no surface can offer a gate that could succeed.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
 
 from pydantic import BaseModel
@@ -43,6 +44,7 @@ __all__ = [
     "cloud_evidence_upload_eligible_for_active_profile",
     "resolve_active_capability",
     "resolve_capability",
+    "resolve_capability_from_values",
 ]
 
 #: Capabilities the global safety floor bars outright, whatever the profile
@@ -112,6 +114,17 @@ def resolve_capability(
     Returns:
         The resolved :class:`CapabilityDecision` carrying the posture and reason.
     """
+    values = record_to_path_values(profile_record) if profile_record is not None else {}
+    return resolve_capability_from_values(capability, profile_values=values, settings=settings)
+
+
+def resolve_capability_from_values(
+    capability: ServiceCapability,
+    *,
+    profile_values: Mapping[str, str],
+    settings: Settings,
+) -> CapabilityDecision:
+    """Resolve one runtime-authorized fact projection through the canonical policy."""
     # The floor is applied FIRST and returns, so a profile opt-in cannot even be
     # read into the decision for a barred capability -- the "opted in" branch is
     # unreachable rather than overridden, which is the difference between a bar
@@ -125,8 +138,7 @@ def resolve_capability(
         )
     # llm_vision / google_export: profile fact, else the conservative default. No
     # safety-floor bar — vision is on-host, google export is non-sensitive.
-    values = record_to_path_values(profile_record) if profile_record is not None else {}
-    fact = _parse_bool_fact(values.get(capability.schema_path))
+    fact = _parse_bool_fact(profile_values.get(capability.schema_path))
     if fact is not None:
         return CapabilityDecision(
             capability=capability,

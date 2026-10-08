@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:65a3bf608a1b6e2a936e14560c0ef5506d4c150176ffb4687b4361a6b8d46880'
+modified: '2026-10-03'
+body_hash: 'sha256:214dd3ed2f3ba544a9865ea6138cd6edb390ba09b0112dd7cfc5971279e12bbe'
 related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-registry-hardening-fragment-headroom-audit]]'
 ---
 
@@ -27,7 +26,7 @@ gate remains active in the loader directory-mode tests.
 
 ## Verification
 
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py::test_committed_registry_toml_files_stay_reviewable -q`
+- the historical check
   - Result: 1 passed in 2.84s.
-- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py -q`
+- the historical check
   - Result: 24 passed in 70.78s.

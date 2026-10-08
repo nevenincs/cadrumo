@@ -27,7 +27,6 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ..flows.definition import locale_copy_ref as _locale_ref
-from .apoderado_service import ApoderadoConfiguration, ApoderadoService
 
 if TYPE_CHECKING:
     from prompt_toolkit.input import Input
@@ -189,34 +188,18 @@ def apoderado_answers_from_state(state: FlowState) -> tuple[str, tuple[str, ...]
     return represented_nif, scope_tokens
 
 
-def run_apoderado_flow(
-    service: ApoderadoService,
+def collect_apoderado_flow_answers(
+    catalogue: ApoderamientosCatalogue,
     *,
-    bucket_id: str,
     input: Input | None = None,
     output: Output | None = None,
-) -> ApoderadoConfiguration:
-    """Drive one apoderado door and persist its reviewed answer atomically.
-
-    The CLI supplies the real service and leaves prompt devices unbound for an
-    operator terminal. Headless callers bind real prompt-toolkit devices; the
-    same line frontend, flow validators, and service writer then execute with
-    no callback substitute or post-flow persistence step.
-    """
+) -> tuple[str, tuple[str, ...]]:
+    """Collect reviewed answers without opening a repository or committing them."""
     from ..flows.line_frontend import LineFlowFrontend
 
-    definition = build_apoderado_flow_definition(service.catalogue)
-    state, _projection = LineFlowFrontend(
-        definition,
-        input=input,
-        output=output,
-    ).run(mode=FlowMode.MODIFY)
-    represented_nif, scope_tokens = apoderado_answers_from_state(state)
-    return service.configure(
-        bucket_id=bucket_id,
-        represented_nif=represented_nif,
-        scope_tokens=scope_tokens,
-    )
+    definition = build_apoderado_flow_definition(catalogue)
+    state, _projection = LineFlowFrontend(definition, input=input, output=output).run(mode=FlowMode.MODIFY)
+    return apoderado_answers_from_state(state)
 
 
 __all__ = [
@@ -227,5 +210,5 @@ __all__ = [
     "ApoderadoFlowAnswers",
     "apoderado_answers_from_state",
     "build_apoderado_flow_definition",
-    "run_apoderado_flow",
+    "collect_apoderado_flow_answers",
 ]

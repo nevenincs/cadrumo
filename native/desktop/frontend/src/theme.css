@@ -1,0 +1,342 @@
+/* The shell's colour roles, elevation and base styles.
+
+   Colour values come only from the generated documentation palette
+   (`virtual:desktop-palette.css`): light on :root, dark under
+   [data-scheme="dark"], on the root or on any area that is always dark. This
+   file maps those values to roles and hands the roles to Tailwind, so a
+   component says `bg-card` or `text-muted-foreground` and never a value.
+
+   Roles are declared on every scheme boundary, and Tailwind reads them
+   `inline`, so a utility resolves its role on the element that uses it: an
+   always-dark area inside a light window gets dark values. The only colour
+   values written here are the alphas of shadows and scrims. */
+
+@custom-variant dark (&:where([data-scheme="dark"], [data-scheme="dark"] *));
+/* The bottom panel at little more than its floor: what is inside gives up a
+   row to keep its content. */
+@custom-variant panel-short {
+  @container panel (height < 11rem) {
+    @slot;
+  }
+  @media (pointer: coarse) {
+    @container panel (height < 18rem) {
+      @slot;
+    }
+  }
+}
+
+/* A row that scrolls sideways with its scrollbar hidden fades at whichever
+   edge has more beyond it, so it is seen to continue. The fade follows the
+   scroll position without script. A row with nothing beyond it has no
+   timeline and draws no fade, and neither does an engine without scroll
+   timelines. */
+@property --scroll-cue-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-cue-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@utility scroll-cue-x {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--scroll-cue-start),
+    #000 calc(100% - var(--scroll-cue-end)),
+    transparent
+  );
+  animation: scroll-cue-x linear both;
+  animation-timeline: scroll(self inline);
+}
+@keyframes scroll-cue-x {
+  from {
+    --scroll-cue-start: 0px;
+    --scroll-cue-end: calc(var(--spacing) * 8);
+  }
+  8%,
+  92% {
+    --scroll-cue-start: calc(var(--spacing) * 8);
+    --scroll-cue-end: calc(var(--spacing) * 8);
+  }
+  to {
+    --scroll-cue-start: calc(var(--spacing) * 8);
+    --scroll-cue-end: 0px;
+  }
+}
+
+@layer base {
+  :root,
+  [data-scheme] {
+    /* Surfaces. */
+    --background: var(--color-background-primary);
+    --chrome: var(--color-background-secondary);
+    --card: var(--color-card-background);
+    --popover: var(--color-card-background);
+    --muted: var(--color-background-secondary);
+    --secondary: var(--color-background-hover);
+    /* The surface a control takes when hovered: a wash of ink over whatever
+       it sits on, so it shows on paper, chrome and card alike. */
+    --accent: color-mix(in srgb, var(--foreground) 6%, transparent);
+    /* A step stronger: a control that is pressed, or the chosen item. */
+    --selected: color-mix(in srgb, var(--foreground) 12%, transparent);
+    /* What lifts above a track: the chosen segment of a segmented control. */
+    --raised: var(--color-card-background);
+
+    /* Text. */
+    --foreground: var(--color-foreground-primary);
+    --card-foreground: var(--color-foreground-primary);
+    --popover-foreground: var(--color-foreground-primary);
+    --secondary-foreground: var(--color-foreground-primary);
+    --accent-foreground: var(--color-foreground-primary);
+    --muted-foreground: var(--color-foreground-secondary);
+    --faint: var(--color-foreground-muted);
+
+    /* The strongest action is ink on paper, as the documentation's own
+       brand is, and so is keyboard focus: the terracotta sits too close to
+       the failure colour to mark either. It is kept for the chosen-item
+       indicator alone. */
+    --primary: var(--color-brand-primary);
+    --primary-foreground: var(--color-background-primary);
+    --brand: var(--color-brand-content);
+    --ring: var(--color-foreground-primary);
+
+    /* Lines. */
+    --border: var(--color-background-border);
+    --border-strong: var(--color-foreground-border);
+    /* A field's outline has to be seen as its edge, so it is stronger than a
+       divider: three to one against the surface behind it. */
+    --input: color-mix(
+      in srgb,
+      var(--color-foreground-muted) 72%,
+      var(--color-card-background)
+    );
+
+    /* Status. */
+    --destructive: var(--cadrumo-accent-danger);
+    --warning: var(--cadrumo-accent-warning);
+    --success: var(--cadrumo-accent-success);
+
+    /* Elevation and scrim: the only colour values this file writes. */
+    --scrim: rgb(0 0 0 / 22%);
+    --elevation-raised:
+      0 0 0 var(--hairline) var(--border), 0 0.0625rem 0.125rem rgb(0 0 0 / 8%);
+    --elevation-overlay:
+      0 0 0 var(--hairline) rgb(0 0 0 / 5%),
+      0 1rem 3rem -0.75rem rgb(0 0 0 / 30%);
+
+    color: var(--foreground);
+  }
+  :root {
+    color-scheme: light;
+  }
+  [data-scheme="dark"] {
+    /* In the dark the card is the darker surface, so what lifts is lighter. */
+    --raised: var(--color-background-border);
+    --scrim: rgb(0 0 0 / 48%);
+    --elevation-raised:
+      0 0 0 var(--hairline) var(--border), 0 0.0625rem 0.125rem rgb(0 0 0 / 30%);
+    --elevation-overlay:
+      0 0 0 var(--hairline) rgb(255 255 255 / 6%),
+      0 1rem 3rem -0.75rem rgb(0 0 0 / 60%);
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-chrome: var(--chrome);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-selected: var(--selected);
+  --color-raised: var(--raised);
+  --color-brand: var(--brand);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-scrim: var(--scrim);
+
+  --shadow-raised: var(--elevation-raised);
+  --shadow-overlay: var(--elevation-overlay);
+
+  /* The documentation's own type stacks, from the generated palette. */
+  --font-sans: var(--font-stack);
+  --font-serif: var(--font-stack--headings);
+  --font-mono: var(--font-stack--monospace);
+
+  --default-transition-duration: var(--motion-fast);
+  --default-transition-timing-function: var(--motion-ease);
+}
+
+/* The documentation's own typefaces, declared as the documentation declares
+   them: the Latin subset and the extended one, which carries the Hungarian
+   long vowels. */
+@font-face {
+  font-family: "Hanken Grotesk";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../../../../docs/_static/hanken-grotesk-var-latin.woff2")
+    format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Hanken Grotesk";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("../../../../docs/_static/hanken-grotesk-var-latin-ext.woff2")
+    format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../../../docs/_static/jetbrains-mono-400-latin.woff2")
+    format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../../../docs/_static/jetbrains-mono-400-latin-ext.woff2")
+    format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Newsreader";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../../../docs/_static/newsreader-400-latin.woff2")
+    format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Newsreader";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../../../docs/_static/newsreader-400-latin-ext.woff2")
+    format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: var(--ring);
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  /* The window never scrolls, not even to bring a focused control into view:
+     every area that can overflow scrolls inside itself. */
+  html,
+  body {
+    overflow: clip;
+  }
+  body {
+    background: var(--chrome);
+    color: var(--foreground);
+    font-family: var(--font-stack);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+  }
+  /* One focus treatment for every control: a ring in the accent, drawn only
+     for keyboard focus. A component may move it inward, never restyle it. */
+  :focus-visible {
+    outline: var(--focus-ring) solid var(--ring);
+    outline-offset: var(--focus-ring);
+  }
+  kbd {
+    font-family: inherit;
+  }
+
+  /* Scrollbars and text selection take the theme, like every other part. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--brand) 28%, transparent);
+  }
+
+  /* While a splitter is dragged, nothing underneath selects text, shows its
+     own cursor or, for a frame, takes the pointer. */
+  body[data-resizing],
+  body[data-resizing] * {
+    user-select: none;
+  }
+  body[data-resizing="vertical"] * {
+    cursor: col-resize !important;
+  }
+  body[data-resizing="horizontal"] * {
+    cursor: row-resize !important;
+  }
+  body[data-resizing] iframe {
+    pointer-events: none;
+  }
+
+  /* Motion is decoration here, never information: with reduced motion asked
+     for, every transition and animation ends at once. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* xterm paints its viewport itself; the pane's own surface shows through. */
+  .xterm .xterm-viewport {
+    background-color: transparent !important;
+  }
+}

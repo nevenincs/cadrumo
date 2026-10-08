@@ -11,6 +11,7 @@ slip past the audit.
 
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 
 import pytest
@@ -22,6 +23,7 @@ from cadrumo.core.i18n.translatable import Translatable as tr
 from ..wizard_translation_audit import (
     _FIXED_RUNTIME_KEYS,
     _resolves_in,
+    _translation_call_names,
     _walk_keys,
     cli_keys_referenced_in_source,
 )
@@ -199,7 +201,10 @@ def test_cli_keys_referenced_in_source_extracts_representative_namespaces() -> N
 
 def test_cli_keys_referenced_in_source_only_harvests_translation_call_sites(tmp_path: Path, monkeypatch) -> None:
     """A condition identifier is data, even when its spelling begins ``cli.``."""
-    source = tmp_path / "translation_contexts.py"
+    package_root = tmp_path / "src" / "cadrumo"
+    cli_root = package_root / "entrypoints" / "cli"
+    cli_root.mkdir(parents=True)
+    source = cli_root / "translation_contexts.py"
     source.write_text(
         "\n".join(
             (
@@ -210,11 +215,43 @@ def test_cli_keys_referenced_in_source_only_harvests_translation_call_sites(tmp_
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr("dev.locales.wizard_translation_audit._cli_entrypoints_root", lambda: tmp_path)
+    monkeypatch.setattr("dev.locales.wizard_translation_audit.SRC_DIR", package_root)
 
     keys = cli_keys_referenced_in_source()
 
     assert keys == ("cli.config.list.help",)
+
+
+def test_translation_call_names_resolves_reported_package_relative_render_import() -> None:
+    """A package-relative ``.render`` import binds the canonical ``tr`` name."""
+    tree = ast.parse("from .render import tr as _tr\n")
+
+    names = _translation_call_names(tree, importer_mod="cadrumo.core.i18n", importer_is_pkg=True)
+
+    assert names == frozenset({"_tr"})
+
+
+def test_cli_keys_referenced_in_source_resolves_relative_alias_and_rejects_wrong_level(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Relative aliases resolve from each CLI module's real package context."""
+    package_root = tmp_path / "src" / "cadrumo"
+    cli_root = package_root / "entrypoints" / "cli"
+    cli_root.mkdir(parents=True)
+    (cli_root / "valid_relative.py").write_text(
+        "from ...core.i18n.render import tr as _tr\n_tr('cli.config.relative_alias.help')\n",
+        encoding="utf-8",
+    )
+    (cli_root / "wrong_level.py").write_text(
+        "from ..core.i18n.render import tr\ntr('cli.config.wrong_level.help')\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr("dev.locales.wizard_translation_audit.SRC_DIR", package_root)
+
+    keys = set(cli_keys_referenced_in_source())
+
+    assert "cli.config.relative_alias.help" in keys
+    assert "cli.config.wrong_level.help" not in keys
 
 
 def test_cli_keys_referenced_in_source_omits_f_string_interpolated_keys() -> None:

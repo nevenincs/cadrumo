@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:f3afea95e049cc4da2ef4a5371f9c9d47baeed764ef47ab4320db713aee8d4c6'
+modified: '2026-10-03'
+body_hash: 'sha256:98481d73a1de5e214a09c0284e7bfdb9241f8cc34547d36bcc4f04db943ecbd9'
 related: []
 ---
 
@@ -15,32 +15,32 @@ related: []
 `_app_live.py` imports application live services and payload models but does not construct `SecureObjectRepository` directly. Bucket-scoped local views resolve through the shared active-bucket helper before calling the relevant application service, keeping runtime ownership below the CLI boundary.
 
 Evidence:
-- `src/aeat/entrypoints/cli/_app_live.py:533`
-- `src/aeat/entrypoints/cli/_app_live.py:1150`
-- `src/aeat/entrypoints/cli/_app_live.py:1299`
-- `src/aeat/entrypoints/cli/_app_live.py:1706`
-- `src/aeat/entrypoints/cli/_app_live.py:1888`
-- `src/aeat/entrypoints/cli/_app_live.py:2203`
+- the retired module
+- the retired module
+- the retired module
+- the retired module
+- the retired module
+- the retired module
 
 ## S375-002 | PASS | Settings access is centralized for watchdog and capture limits
 
 The app-live CLI settings reads go through `load_settings()` for live IVA watchdog and capture-limit configuration. No direct environment access was found in `_app_live.py` or `_app_live_payloads.py`.
 
 Evidence:
-- `src/aeat/entrypoints/cli/_app_live.py:647`
-- `src/aeat/entrypoints/cli/_app_live.py:650`
-- `src/aeat/entrypoints/cli/_app_live.py:675`
-- `src/aeat/entrypoints/cli/_app_live.py:677`
-- `src/aeat/entrypoints/cli/_app_live.py:1949`
-- `src/aeat/entrypoints/cli/_app_live.py:2006`
+- the retired module
+- the retired module
+- the retired module
+- the retired module
+- the retired module
+- the retired module
 
 ## S375-003 | PASS | Live IVA and read-subgroup behavior remains functional
 
 Focused tests passed over the app-live read subgroup, filed-capture, IVA remote-state acquisition, and IVA wallet capture backend surfaces. The tests use real profile/runtime storage helpers and validate secure-object persistence through the active bucket rather than substituting storage fakes.
 
 Commands:
-- `uv run --no-sync ruff check src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/_app_live_payloads.py src/aeat/entrypoints/cli/test_live_read_subgroups.py src/aeat/entrypoints/cli/test_registry_cli.py src/aeat/application/live/__init__.py src/aeat/application/live/test_filed_bulk_capture.py src/aeat/application/live/test_iva_remote_state_acquisition.py src/aeat/application/live/test_iva_wallet_capture_backend.py`
-- `uv run --no-sync pytest -q src/aeat/entrypoints/cli/test_live_read_subgroups.py src/aeat/application/live/test_filed_bulk_capture.py src/aeat/application/live/test_iva_remote_state_acquisition.py src/aeat/application/live/test_iva_wallet_capture_backend.py`
+- the historical check
+- the historical check
 
 ## S375-004 | PASS | Locale drift repaired through the required CLI
 

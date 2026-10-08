@@ -11,11 +11,13 @@ from cadrumo.core.toml import render_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from ..compiler.edition_materialisation import materialise_edition
+from ..compiler.edition_materialisation import materialise_edition, resolve_edition
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
 from ..conformance.edition import ReviewCoverage, read_registry_edition
 from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
+from ..edition_delta_chain_materialisation import chain_materialisation
+from ..edition_delta_source import _read_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -234,6 +236,21 @@ def test_materialisation_does_not_discard_distinct_sidecar_references(tmp_path: 
     manifest.write_text(head + separator + tail.replace(original, replacement), encoding="utf-8")
     with pytest.raises(RegistryLoadError, match="without losing its distinct legal_refs or source_refs"):
         materialise_edition(modelo, "2025")
+
+    resolved = resolve_edition(modelo, "2025")
+    assert resolved.table["predecessor"] == "2024"
+    before = load_modelo_directory(modelo).revisions["2025"]
+    source = _read_edition(modelo, "2025")
+    assert source.table["lineage_attestations"] == resolved.table["lineage_attestations"]
+    row = next(row for row in source.rows if row["continuidad_id"] == "base")
+    assert row[field] == list(getattr(before.casillas[0], field))
+    assert row["continuidad_origin"] == "grounded"
+    # Distinct edge evidence must remain part of the normalization proof;
+    # changing only it cannot compare equal to the original edition.
+    proof = chain_materialisation(source)
+    assert (b"other-source" if field == "source_refs" else b"ley-58-2003:art-30") in proof
+    manifest.write_text(head + separator + tail, encoding="utf-8")
+    assert chain_materialisation(_read_edition(modelo, "2025")) != proof
 
 
 def test_materialisation_validates_sidecar_edge_before_projecting_its_claim(tmp_path: Path) -> None:

@@ -7,11 +7,13 @@ from enum import StrEnum
 from itertools import pairwise
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect, OperationEventKind, OperationTerminalCondition
+from ...core.operator_progress import OperatorDisplayCode
 from ...core.time.utc import validate_utc_aware
 from .event_replay import OperationEventCursor
 from .events import OperationEventCode, OperationEventSequence, OperationLogSeverity
@@ -31,10 +33,12 @@ from .persistence.replay import (
     OperationReplayStatus,
     PublicReplayStatus,
 )
-from .registry import OperationSchemaIdentityV1
+from .schema_identity import OperationSchemaIdentityV1
 from .secret_submission import OperationSecretRequirement
 
-_PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+# The common observation projection is owned by this versioned service, rather
+# than by any one domain operation's result schema.
+OPERATION_OBSERVATION_PROJECTION_ID = "operation.observation"
 
 
 class OperationObservationRefusalCode(StrEnum):
@@ -120,56 +124,56 @@ class OperationDetachRefusalCode(StrEnum):
 class OperationObservationVersionHeader(BaseModel):
     """Minimal header parsed before exact observation request dispatch."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     observation_version: Annotated[int, Field(ge=1)]
 
 
 class OperationReviewProjectionVersionHeader(BaseModel):
     """Minimal header parsed before exact REVIEW request dispatch."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     review_projection_version: Annotated[int, Field(ge=1)]
 
 
 class OperationResponseControlVersionHeader(BaseModel):
     """Minimal header parsed before exact response-control request dispatch."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     response_control_version: Annotated[int, Field(ge=1)]
 
 
 class OperationCancellationVersionHeader(BaseModel):
     """Minimal header parsed before exact cancellation request dispatch."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     cancellation_version: Annotated[int, Field(ge=1)]
 
 
 class OperationDetachVersionHeader(BaseModel):
     """Minimal header parsed before exact detach request dispatch."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     detach_version: Annotated[int, Field(ge=1)]
 
 
 class OperationWorkspaceRefreshTargetVersionHeader(BaseModel):
     """Minimal header parsed before exact refresh-target request dispatch."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     refresh_target_version: Annotated[int, Field(ge=1)]
 
 
 class OperationResultProjectionVersionHeader(BaseModel):
     """Minimal header parsed before exact settled-result projection dispatch."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     result_projection_version: Annotated[int, Field(ge=1)]
 
 
 class OperationObservationRequestV1(BaseModel):
     """Request one atomic projection and bounded event page."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     observation_version: Literal[1] = 1
     operation_id: OperationId
@@ -180,7 +184,7 @@ class OperationObservationRequestV1(BaseModel):
 class OperationReviewProjectionRequestV1(BaseModel):
     """Versioned request for a safe REVIEW projection."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     review_projection_version: Literal[1] = 1
     reference: OperationReviewProjectionReferenceV1
 
@@ -188,7 +192,7 @@ class OperationReviewProjectionRequestV1(BaseModel):
 class OperationReviewProjectionSuccessV1[ReviewProjectionT: BaseModel](BaseModel):
     """Successful typed REVIEW projection response."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["success"] = "success"
     review_projection_version: Literal[1] = 1
@@ -200,7 +204,7 @@ class OperationReviewProjectionSuccessV1[ReviewProjectionT: BaseModel](BaseModel
 class OperationReviewProjectionRefusalV1(BaseModel):
     """Renderer-neutral refusal for a REVIEW projection request."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["refused"] = "refused"
     review_projection_version: Literal[1] = 1
@@ -213,7 +217,7 @@ class OperationReviewProjectionRefusalV1(BaseModel):
 class OperationResponseControlRequestV1(BaseModel):
     """Versioned request for the safe response-control surface."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     response_control_version: Literal[1] = 1
     operation_id: OperationId
@@ -225,7 +229,7 @@ class OperationResponseControlRequestV1(BaseModel):
 class OperationResponseControlSuccessV1(BaseModel):
     """Successful response-control inspection result."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["success"] = "success"
     response_control_version: Literal[1] = 1
@@ -245,7 +249,7 @@ class OperationResponseControlSuccessV1(BaseModel):
 class OperationResponseControlRefusalV1(BaseModel):
     """Renderer-neutral refusal for a response-control request."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["refused"] = "refused"
     response_control_version: Literal[1] = 1
@@ -285,7 +289,7 @@ class OperationResponseRejectRequestV1(OperationResponseControlRequestV1):
 class OperationResponseMutationSuccessV1(BaseModel):
     """Safe acknowledgement that one exact response was durably consumed."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["success"] = "success"
     response_control_version: Literal[1] = 1
@@ -298,7 +302,7 @@ class OperationResponseMutationSuccessV1(BaseModel):
 class OperationSubmissionReceiptV1(BaseModel):
     """Credential-free result of durable registered-operation submission."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     submission_version: Literal[1] = 1
     operation_id: OperationId
@@ -308,7 +312,7 @@ class OperationSubmissionReceiptV1(BaseModel):
 class OperationCancellationRequestV1(BaseModel):
     """Versioned request to cooperatively cancel an operation."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     cancellation_version: Literal[1] = 1
     operation_id: OperationId
     expected_revision: OperationRevision
@@ -317,7 +321,7 @@ class OperationCancellationRequestV1(BaseModel):
 class OperationCancellationSuccessV1(BaseModel):
     """Successful cooperative-cancellation request result."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["success"] = "success"
     cancellation_version: Literal[1] = 1
@@ -330,7 +334,7 @@ class OperationCancellationSuccessV1(BaseModel):
 class OperationCancellationRefusalV1(BaseModel):
     """Renderer-neutral refusal for a cancellation request."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["refused"] = "refused"
     cancellation_version: Literal[1] = 1
@@ -343,7 +347,7 @@ class OperationCancellationRefusalV1(BaseModel):
 class OperationDetachRequestV1(BaseModel):
     """Versioned request to detach an operation from a frontend."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     detach_version: Literal[1] = 1
     operation_id: OperationId
     expected_revision: OperationRevision
@@ -352,7 +356,7 @@ class OperationDetachRequestV1(BaseModel):
 class OperationDetachSuccessV1(BaseModel):
     """Successful frontend detach result."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["success"] = "success"
     detach_version: Literal[1] = 1
@@ -364,7 +368,7 @@ class OperationDetachSuccessV1(BaseModel):
 class OperationDetachRefusalV1(BaseModel):
     """Renderer-neutral refusal for a detach request."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["refused"] = "refused"
     detach_version: Literal[1] = 1
@@ -377,7 +381,7 @@ class OperationDetachRefusalV1(BaseModel):
 class OperationWorkspaceRefreshTargetRequestV1(BaseModel):
     """Resolve a restart-safe target without accepting a caller result reference."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     refresh_target_version: Literal[1] = 1
     operation_id: OperationId
@@ -389,7 +393,7 @@ class OperationWorkspaceRefreshTargetRequestV1(BaseModel):
 class OperationWorkspaceRefreshTargetSuccessV1[RefreshTargetT: BaseModel](BaseModel):
     """Successful typed workspace refresh target resolution."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["success"] = "success"
     refresh_target_version: Literal[1] = 1
@@ -401,7 +405,7 @@ class OperationWorkspaceRefreshTargetSuccessV1[RefreshTargetT: BaseModel](BaseMo
 class OperationWorkspaceRefreshTargetRefusalV1(BaseModel):
     """Renderer-neutral refusal for a workspace refresh-target request."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["refused"] = "refused"
     refresh_target_version: Literal[1] = 1
@@ -420,7 +424,7 @@ class OperationResultProjectionRequestV1(BaseModel):
     contract it trusts, and the registered result schema it wants back.
     """
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     result_projection_version: Literal[1] = 1
     operation_id: OperationId
@@ -432,7 +436,7 @@ class OperationResultProjectionRequestV1(BaseModel):
 class OperationResultProjectionSuccessV1[ResultProjectionT: BaseModel](BaseModel):
     """Successful typed settled-result projection."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["success"] = "success"
     result_projection_version: Literal[1] = 1
@@ -444,7 +448,7 @@ class OperationResultProjectionSuccessV1[ResultProjectionT: BaseModel](BaseModel
 class OperationResultProjectionRefusalV1(BaseModel):
     """Renderer-neutral refusal for a settled-result projection request."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["refused"] = "refused"
     result_projection_version: Literal[1] = 1
@@ -455,7 +459,7 @@ class OperationResultProjectionRefusalV1(BaseModel):
 
 
 class _OperationPublicEventBase(BaseModel):
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     revision: OperationRevision
     sequence: OperationEventSequence
@@ -507,10 +511,11 @@ class OperationPublicEffectEventV1(_OperationPublicEventBase):
 
 
 class OperationPublicNoticeEventV1(_OperationPublicEventBase):
-    """Public projection of one localized-notice identity event."""
+    """Public projection of one localized-notice identity event and its optional comparison code."""
 
     kind: Literal[OperationEventKind.NOTICE] = OperationEventKind.NOTICE
     notice_code: OperationEventCode
+    display_code: OperatorDisplayCode | None = None
 
 
 class OperationPublicReconciliationEventV1(_OperationPublicEventBase):
@@ -573,7 +578,7 @@ type OperationPublicEventV1 = Annotated[
 class OperationPublicEventPageV1(BaseModel):
     """Bounded public event replay page tied to one observation anchor."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     observation_version: Literal[1] = 1
     operation_id: OperationId
@@ -645,7 +650,7 @@ def _validate_event_page_anchor_bounds(page: OperationPublicEventPageV1) -> None
 class OperationObservationSuccessV1(BaseModel):
     """Successful atomic public operation observation."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["success"] = "success"
     observation_version: Literal[1] = 1
@@ -667,7 +672,7 @@ class OperationObservationSuccessV1(BaseModel):
 class OperationObservationRefusalV1(BaseModel):
     """Renderer-neutral refusal for an operation observation request."""
 
-    model_config = _PUBLIC_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     outcome: Literal["refused"] = "refused"
     observation_version: Literal[1] = 1

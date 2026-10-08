@@ -8,6 +8,86 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.application.prorrata_register.mutation_steps.ProrrataPreflightRefusalError",
+        ErrorCode(
+            code="REFUSED_PRORRATA_PREFLIGHT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.prorrata_preflight",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.mcp_query_contracts.ModeloBindingValueContractUnsupportedError",
+        ErrorCode(
+            code="REFUSED_MODELO_BINDING_VALUE_CONTRACT_UNSUPPORTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_modelo_binding_value_contract_unsupported",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.mcp_query_contracts.ModeloBindingValueInvalidError",
+        ErrorCode(
+            code="REFUSED_MODELO_BINDING_VALUE_INVALID",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_modelo_binding_value_invalid",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.lifecycle_mutation_operation.LedgerLifecycleValidationRefusedError",
+        ErrorCode(
+            code="REFUSED_LEDGER_LIFECYCLE_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_transaction_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger.attachment_mutation_operation.LedgerAttachmentValidationRefusedError",
+        ErrorCode(
+            code="REFUSED_LEDGER_ATTACHMENT_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_validation_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.invoices.catalogue_add_contracts.InvoiceAddValidationRefusedError",
+        ErrorCode(
+            code="REFUSED_INVOICE_ADD_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_validation_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.invoices.catalogue_selection.InvoiceLookupRefusedError",
+        ErrorCode(
+            code="REFUSED_INVOICE_LOOKUP",
+            category=ErrorCategory.REFUSED,
+            message_key="application.invoices.lifecycle.errors.invoice_not_found",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.work_create_policy.ModeloWorkCreateApplicabilityRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_WORK_CREATE_APPLICABILITY",
+            category=ErrorCategory.REFUSED,
+            message_key="cli.app.modelo.work.create_not_applicable_refused",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.declarations_calendar.DeclarationsCalendarProjectionError",
         ErrorCode(
             code="INTEGRITY_DECLARATIONS_CALENDAR_PROJECTION",
@@ -18,7 +98,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.declarations_workspace.DeclarationsWorkspaceProjectionError",
+        "cadrumo.application.modelo.declarations_workspace_contracts.DeclarationsWorkspaceProjectionError",
         ErrorCode(
             code="INTEGRITY_DECLARATIONS_WORKSPACE_PROJECTION",
             category=ErrorCategory.INTEGRITY,
@@ -78,6 +158,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.m145_communication_contracts.M145CommunicationOperationRecordNotFoundError",
+        ErrorCode(
+            code="REFUSED_M145_COMMUNICATION_RECORD_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.m145_communication_record_not_found",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.settlement_casilla.AmbiguousDeclarationResultError",
         ErrorCode(
             code="REFUSED_AMBIGUOUS_DECLARATION_RESULT",
@@ -93,6 +183,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_TAXATION_COMPARISON_PERSISTENCE",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.canonical_taxation_comparison_persistence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.work_missing_input.ModeloWorkMissingInputError",
+        ErrorCode(
+            code="ERROR_MODELO_WORK_INPUT_REQUIRED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_validation",
             retryable=False,
             runbook_id=None,
         ),
@@ -155,6 +255,17 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             message_key="errors.refused.canonical_modelo_workspace_stale_cursor",
             retryable=False,
             runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.operations.financial_operand_contract.OperationFinancialOperandRefusedError",
+        ErrorCode(
+            code="REFUSED_OPERATION_FINANCIAL_OPERAND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_operation_financial_operand",
+            retryable=False,
+            runbook_id=None,
+            public_message_from_registry=True,
         ),
     ),
     (
@@ -223,6 +334,66 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_PRORRATA_ELECTION",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.canonical_prorrata_election",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.casilla_help.CasillaHelpCatalogueError",
+        ErrorCode(
+            code="INTERNAL_MODELO_HELP_CATALOGUE_GAP",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_modelo_help_catalogue_gap",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.edit_parse_errors.ModeloEditParseRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_EDIT_PARSE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_edit_parse",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.source_policy.UnclassifiedSourceKindError",
+        ErrorCode(
+            code="INTERNAL_MODELO_SOURCE_KIND_UNCLASSIFIED",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_modelo_source_kind_unclassified",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.value_presentation.UnknownValuePresentationError",
+        ErrorCode(
+            code="INTERNAL_MODELO_VALUE_PRESENTATION_UNKNOWN",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_modelo_value_presentation_unknown",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.value_presentation.ValuePresentationCatalogueError",
+        ErrorCode(
+            code="INTERNAL_MODELO_VALUE_PRESENTATION_CATALOGUE_GAP",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_modelo_value_presentation_catalogue_gap",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.work_form_errors.ModeloWorkFormLayoutError",
+        ErrorCode(
+            code="INTERNAL_MODELO_WORK_FORM_LAYOUT",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_modelo_work_form_layout",
             retryable=False,
             runbook_id=None,
         ),

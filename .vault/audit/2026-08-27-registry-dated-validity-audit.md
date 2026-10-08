@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-dated-validity'
 date: '2026-08-27'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a5a62a7451f57917eb21d1d84d4a470675f0d5c3ef4bae4ac46f87dfd15b05c9'
+body_hash: 'sha256:a22f0422f6d446a63c1b464ca60def1cfb8fe993afde03099e709437404b7ca7'
 related: []
 ---
 
@@ -188,7 +188,7 @@ Neither is a deferral, and neither should be revisited as one.
 
 ### Unrelated red in the shared worktree at the time of this work
 
-`src/cadrumo/domain/usage_ratios/tests/test_censo_refuse_load.py` fails eight
+The retired test fails eight
 parameterisations with
 `load_usage_ratios_with_censo_guard() missing 1 required keyword-only argument: 'year'`.
 Neither that test nor the service it calls was touched here; a peer's in-flight

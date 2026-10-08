@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:99ac7817c0fdd055bf451707cf2499e3fb7f43365afba3c606061bd8fb309493'
-related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+body_hash: 'sha256:326556fa24de789aaa73111046677935e86c57cf03e85a2eb90675df35232dbe'
+related: []
 ---
+
 # `tui-architecture` audit: `S38 filed-history conformance review`
 
 ## Scope
@@ -27,11 +27,11 @@ Current-tree resolution: the coordinator added `_settlement_reference`, which re
 
 ### real-behavior-seam | high | The canonical acceptance proof replaces the composed production path
 
-`src/cadrumo/application/live/tests/test_filed_history_operation.py` supplies `_FixtureBackedFiledHistoryDiscovery`, `_local_pull`, and an inline `persisted_pull` in place of the registered definition's production pull. The terminal-reference proof calls the private `_persisted_bulk_filed_capture_report` writer directly and returns a constructed `FiledHistoryOnboardingRun`; it therefore bypasses the production `pull_filed_history` stage composition. This violates the explicit no-fakes or stubs acceptance rule and permits the suite to pass while composition, stage joins, production cleanup, or provenance handoff is broken. A writer-backed callable is useful as a narrow writer/reference unit proof, but it cannot serve as the composed-operation acceptance proof.
+The terminal-reference proof calls the private `_persisted_bulk_filed_capture_report` writer directly and returns a constructed `FiledHistoryOnboardingRun`; it therefore bypasses the production `pull_filed_history` stage composition. This violates the explicit no-fakes or stubs acceptance rule and permits the suite to pass while composition, stage joins, production cleanup, or provenance handoff is broken. A writer-backed callable is useful as a narrow writer/reference unit proof, but it cannot serve as the composed-operation acceptance proof.
 
 Current-tree re-read: the direct private writer and inline `persisted_pull` were removed, and the production `pull_filed_history` composition now accepts and forwards the existing register seam. The replacement `_DeterministicEmptyRegister` still skips `DeclaracionesRegisterSession.__init__` and overrides `walk` to return a canned empty tuple. It is a test-only fake of the outbound adapter despite inheriting its production class. The HIGH finding therefore remains open under the explicit no-fakes or stubs rule.
 
-Stabilized resolution: `_DeterministicEmptyRegister` was deleted. The canonical S38 dry-run and committed-child branches now construct an actual `AeatSession`, Playwright browser, browser context, page, and `DeclaracionesRegisterSession`; only external HTTP response bytes are routed to canonical local HTML. Both branches execute the production `pull_filed_history` composition through discovery, pair walking, declaration capture or preview, result construction, normal browser teardown, supervisor settlement, and lease release. No mock, fake, patch, skip, or xfail construct remains. Routed-browser support duplicated across three test modules was consolidated into the single `src/cadrumo/tests/offline_aeat_register.py` owner. This HIGH finding is resolved.
+Stabilized resolution: `_DeterministicEmptyRegister` was deleted. The canonical S38 dry-run and committed-child branches now construct an actual `AeatSession`, Playwright browser, browser context, page, and `DeclaracionesRegisterSession`; only external HTTP response bytes are routed to canonical local HTML. Both branches execute the production `pull_filed_history` composition through discovery, pair walking, declaration capture or preview, result construction, normal browser teardown, supervisor settlement, and lease release. No mock, fake, patch, skip, or xfail construct remains. This HIGH finding is resolved.
 
 ### dry-run-provenance-proof | medium | S38 does not prove the encrypted sync-run namespace stays untouched
 

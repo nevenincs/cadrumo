@@ -10,6 +10,78 @@ modelo:
           járulékai az anyasági kedvezmény céljából. Éves adatszolgáltatási bevallás.
         title: Tagok és önsegélyező-tagok járulékai az anyasági kedvezmény céljából
           (éves adatszolgáltatás)
+      form:
+        choice:
+          complementaria:
+            heading: Kiegészítő bevallás
+          sustitutiva:
+            heading: Helyettesítő bevallás
+        column:
+          importe:
+            heading: Esedékes járulék (€)
+          situacion:
+            heading: Havi állapot (S/N)
+        context:
+          ejercicio:
+            heading: Adóév
+          nif:
+            heading: Bevalló adószáma
+          nombre:
+            heading: Kapcsolattartó neve
+          telefono:
+            heading: Kapcsolattartó telefonszáma
+        month:
+          abril:
+            heading: Április
+          agosto:
+            heading: Augusztus
+          diciembre:
+            heading: December
+          enero:
+            heading: Január
+          febrero:
+            heading: Február
+          julio:
+            heading: Július
+          junio:
+            heading: Június
+          marzo:
+            heading: Március
+          mayo:
+            heading: Május
+          noviembre:
+            heading: November
+          octubre:
+            heading: Október
+          septiembre:
+            heading: Szeptember
+        page:
+          afiliado:
+            heading: Tag · részleges megvalósítás
+          resumen:
+            heading: Összesítő lap · részleges megvalósítás
+        section:
+          afiliado:
+            heading: Tag azonosítása
+          contacto:
+            heading: Kapcsolattartó
+          declaracion:
+            heading: Kiegészítő vagy helyettesítő bevallás
+          domicilio:
+            heading: Adózási cím
+          firma:
+            heading: Dátum és aláírás
+          identificacion:
+            heading: Bevalló és adóév
+          resumen:
+            heading: A bevallott tételek összesítése
+        signature:
+          administracion:
+            heading: Hatósági használatra fenntartva
+          paper:
+            heading: Aláírás papíron
+          space:
+            heading: Kézi aláírás helye
       revision:
         2003-y-siguientes:
           casilla:
@@ -18,33 +90,125 @@ modelo:
             afiliado-nombre:
               label: A tag vagy önsegélyezőpénztári tag családi és utóneve
             cotizacion-abril:
-              label: 'Járulék, április: havi állapot és az esedékes járulék összege'
+              label: Április · Esedékes járulék
+            cotizacion-abril-situacion:
+              help: 'S: a hónapban legalább egy nap járulékfizetés. N: nem volt járulékfizetési
+                nap. Az összeg külön adat.'
+              label: Április · Legalább egy nap járulékfizetés
             cotizacion-agosto:
-              label: 'Járulék, augusztus: havi állapot és az esedékes járulék összege'
+              label: Augusztus · Esedékes járulék
+            cotizacion-agosto-situacion:
+              help: 'S: a hónapban legalább egy nap járulékfizetés. N: nem volt járulékfizetési
+                nap. Az összeg külön adat.'
+              label: Augusztus · Legalább egy nap járulékfizetés
             cotizacion-diciembre:
-              label: 'Járulék, december: havi állapot és az esedékes járulék összege'
+              label: December · Esedékes járulék
+            cotizacion-diciembre-situacion:
+              help: 'S: a hónapban legalább egy nap járulékfizetés. N: nem volt járulékfizetési
+                nap. Az összeg külön adat.'
+              label: December · Legalább egy nap járulékfizetés
             cotizacion-enero:
-              label: 'Járulék, január: havi állapot és az esedékes járulék összege'
+              label: Január · Esedékes járulék
+            cotizacion-enero-situacion:
+              help: 'S: a hónapban legalább egy nap járulékfizetés. N: nem volt járulékfizetési
+                nap. Az összeg külön adat.'
+              label: Január · Legalább egy nap járulékfizetés
             cotizacion-febrero:
-              label: 'Járulék, február: havi állapot és az esedékes járulék összege'
+              label: Február · Esedékes járulék
+            cotizacion-febrero-situacion:
+              help: 'S: a hónapban legalább egy nap járulékfizetés. N: nem volt járulékfizetési
+                nap. Az összeg külön adat.'
+              label: Február · Legalább egy nap járulékfizetés
             cotizacion-julio:
-              label: 'Járulék, július: havi állapot és az esedékes járulék összege'
+              label: Július · Esedékes járulék
+            cotizacion-julio-situacion:
+              help: 'S: a hónapban legalább egy nap járulékfizetés. N: nem volt járulékfizetési
+                nap. Az összeg külön adat.'
+              label: Július · Legalább egy nap járulékfizetés
             cotizacion-junio:
-              label: 'Járulék, június: havi állapot és az esedékes járulék összege'
+              label: Június · Esedékes járulék
+            cotizacion-junio-situacion:
+              help: 'S: a hónapban legalább egy nap járulékfizetés. N: nem volt járulékfizetési
+                nap. Az összeg külön adat.'
+              label: Június · Legalább egy nap járulékfizetés
             cotizacion-marzo:
-              label: 'Járulék, március: havi állapot és az esedékes járulék összege'
+              label: Március · Esedékes járulék
+            cotizacion-marzo-situacion:
+              help: 'S: a hónapban legalább egy nap járulékfizetés. N: nem volt járulékfizetési
+                nap. Az összeg külön adat.'
+              label: Március · Legalább egy nap járulékfizetés
             cotizacion-mayo:
-              label: 'Járulék, május: havi állapot és az esedékes járulék összege'
+              label: Május · Esedékes járulék
+            cotizacion-mayo-situacion:
+              help: 'S: a hónapban legalább egy nap járulékfizetés. N: nem volt járulékfizetési
+                nap. Az összeg külön adat.'
+              label: Május · Legalább egy nap járulékfizetés
             cotizacion-noviembre:
-              label: 'Járulék, november: havi állapot és az esedékes járulék összege'
+              label: November · Esedékes járulék
+            cotizacion-noviembre-situacion:
+              help: 'S: a hónapban legalább egy nap járulékfizetés. N: nem volt járulékfizetési
+                nap. Az összeg külön adat.'
+              label: November · Legalább egy nap járulékfizetés
             cotizacion-octubre:
-              label: 'Járulék, október: havi állapot és az esedékes járulék összege'
+              label: Október · Esedékes járulék
+            cotizacion-octubre-situacion:
+              help: 'S: a hónapban legalább egy nap járulékfizetés. N: nem volt járulékfizetési
+                nap. Az összeg külön adat.'
+              label: Október · Legalább egy nap járulékfizetés
             cotizacion-septiembre:
-              label: 'Járulék, szeptember: havi állapot és az esedékes járulék összege'
+              label: Szeptember · Esedékes járulék
+            cotizacion-septiembre-situacion:
+              help: 'S: a hónapban legalább egy nap járulékfizetés. N: nem volt járulékfizetési
+                nap. Az összeg külön adat.'
+              label: Szeptember · Legalább egy nap járulékfizetés
             declaracion-complementaria-sustitutiva:
               label: Kiegészítő vagy helyettesítő bevallás
             declarante-razon-social:
               label: A bejelentő cégneve
+            domicilio-codigo-postal:
+              help: A papírűrlap adata; nem része az elektronikus fájlnak. Nem igazol
+                aláírást vagy benyújtást.
+              label: Irányítószám
+            domicilio-escalera:
+              help: A papírűrlap adata; nem része az elektronikus fájlnak. Nem igazol
+                aláírást vagy benyújtást.
+              label: Lépcsőház
+            domicilio-municipio:
+              help: A papírűrlap adata; nem része az elektronikus fájlnak. Nem igazol
+                aláírást vagy benyújtást.
+              label: Település
+            domicilio-numero:
+              help: A papírűrlap adata; nem része az elektronikus fájlnak. Nem igazol
+                aláírást vagy benyújtást.
+              label: Házszám
+            domicilio-piso:
+              help: A papírűrlap adata; nem része az elektronikus fájlnak. Nem igazol
+                aláírást vagy benyújtást.
+              label: Emelet
+            domicilio-provincia:
+              help: A papírűrlap adata; nem része az elektronikus fájlnak. Nem igazol
+                aláírást vagy benyújtást.
+              label: Tartomány
+            domicilio-puerta:
+              help: A papírűrlap adata; nem része az elektronikus fájlnak. Nem igazol
+                aláírást vagy benyújtást.
+              label: Ajtó
+            domicilio-via:
+              help: A papírűrlap adata; nem része az elektronikus fájlnak. Nem igazol
+                aláírást vagy benyújtást.
+              label: Utca / tér / sugárút
+            firma-cargo:
+              help: A papírűrlap adata; nem része az elektronikus fájlnak. Nem igazol
+                aláírást vagy benyújtást.
+              label: Beosztás vagy munkakör
+            firma-fecha:
+              help: A papírűrlap adata; nem része az elektronikus fájlnak. Nem igazol
+                aláírást vagy benyújtást.
+              label: Dátum
+            firma-nombre:
+              help: A papírűrlap adata; nem része az elektronikus fájlnak. Nem igazol
+                aláírást vagy benyújtást.
+              label: Aláíró neve
             numero-afiliacion:
               label: Tagsági azonosító szám
             numero-identificativo-anterior:

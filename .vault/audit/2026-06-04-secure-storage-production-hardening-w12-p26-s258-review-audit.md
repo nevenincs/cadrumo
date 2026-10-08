@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:9d7ac70f7e72d614f1fb83e71f3968663dc5e743bb940e1d045e8bd7f46201bf'
+modified: '2026-10-03'
+body_hash: 'sha256:ceb16174089701b26528379f691b6704e9c9d24ab7935c3f1c66f19698f0a4d0'
 related: []
 ---
 
@@ -28,8 +28,8 @@ The harness remains the remote parity driver: it builds a plan, applies it throu
 
 ## S258-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/storage/calc_sheets/_parity_harness.py src/aeat/application/storage/calc_sheets/test_parity_harness_hardening.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/storage/calc_sheets/test_parity_harness_hardening.py src/aeat/application/storage/calc_sheets/test_modelo_export_parity.py` passed with 24 tests.
+- the historical check passed.
+- the historical check passed with 24 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Disposition: close `AFR-156` as `remote-mirror` with settings resolution, scenario errors, and seed-anchor failure paths hardened.

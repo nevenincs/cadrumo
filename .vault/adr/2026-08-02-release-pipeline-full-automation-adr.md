@@ -3,14 +3,13 @@ tags:
   - '#adr'
   - '#release-pipeline-full-automation'
 date: '2026-08-02'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e3f10d12cb5499826d4c632f77e5b28b9767c04bc286f45e93b5cfb44f28b34d'
+body_hash: 'sha256:1f55e8376af0075119209afa40402e3abc16d63786ba6b8d495f8ebce74e3361'
 related:
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
   - "[[2026-07-27-publication-lane-consolidation-adr]]"
   - "[[2026-07-27-pipeline-config-topology-adr]]"
-  - "[[2026-07-27-canonical-release-pipeline-plan]]"
   - "[[2026-07-27-canonical-release-pipeline-research]]"
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
   - "[[2026-07-20-release-asset-transport-adr]]"
@@ -35,7 +34,7 @@ opt-in variable" (`:63-65`), the delivery record
 reasoning on a human-approved publication authority, the publication record
 `2026-07-27-publication-lane-consolidation-adr` keeps it through P4/P5, and the
 conformance gate `test_preflight_enforces_the_human_approval_gate_it_promises`
-in `dev/release/tests/test_publish_release_workflow.py` (`:258-278`) pins it so
+ (`:258-278`) pins it so
 it cannot be removed by accident.
 
 The operator has reversed that choice. The ruling, verbatim: "I want cadrumo
@@ -150,7 +149,7 @@ supersessions by ruling rather than contradicting them silently.
 - Those rows are not currently in the loop. `docs/_data/download_channels.toml`
   marks `scoop`, `homebrew`, `claude-plugin`, and `mcpb` as `public_launch`, so
   only the registry-tier `python` channel is claimed and
-  `dev/packaging/publication_inputs.py` demands `packaging_run_id` alone for the
+  the former source file demands `packaging_run_id` alone for the
   first release.
 - `CADRUMO_PUBLISH_ENABLED` no longer exists anywhere in the tree, yet the
   workflow header (`:4-7`) and the runbook's arming section still describe an
@@ -353,7 +352,7 @@ of the loop.** The orchestrator dispatches `packaging-scoop.yml`,
 and head commit, waits for their conclusions, and feeds the resulting run ids to
 the publication dispatch. Which lanes it dispatches is DERIVED, not fixed: it
 reads the same claimed-channel authority that
-`dev/packaging/publication_inputs.py` and the readiness gate already read, so an
+the former source file and the readiness gate already read, so an
 unclaimed channel is not dispatched and a claimed one cannot be skipped. The
 four `claude-*` real-client rows remain a human act, because the honesty guard
 in `dev/packaging/distribution_evidence_emit.py` refuses SDK-driven runs and

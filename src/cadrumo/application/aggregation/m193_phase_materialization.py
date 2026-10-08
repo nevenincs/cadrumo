@@ -131,44 +131,59 @@ class Modelo193PhaseRow(BaseModel):
 
     @model_validator(mode="after")
     def _matches_derived_phase_contract(self) -> Modelo193PhaseRow:
-        detail = self.annual_detail
-        if detail.source_id != self.source_object_id or detail.source_allocation_id != self.allocation_id:
-            raise ValueError("Modelo 193 phase annual detail must retain source/allocation provenance")
-        if detail.percibido_dinerario != self.taxable_base or detail.retencion_practicada != self.retencion_amount:
-            raise ValueError("Modelo 193 phase annual detail amounts must match the economic allocation")
-        if detail.base_retenciones != self.taxable_base:
-            raise ValueError("Modelo 193 phase retention base must match the economic allocation")
         if self.phase is Modelo193DisclosurePhase.PENDING:
-            if self.filing_year != self.original_accrual_year:
-                raise ValueError("Modelo 193 pending disclosure belongs to the accrual year")
-            if (
-                detail.perceptor_tax_id != _PENDING_PERCEPTOR_NIF
-                or detail.representative_tax_id != _PENDING_PERCEPTOR_NIF
-                or detail.perceptor_legal_name != _PENDING_PERCEPTOR_NAME
-                or detail.pendiente_flag != "X"
-                or detail.accrual_year is not None
-            ):
-                raise ValueError("Modelo 193 pending disclosure must use the prescribed recipient values")
-            if self.settlement_event_id is not None:
-                raise ValueError("Modelo 193 pending disclosure cannot carry a settlement event")
-            if self.amount_authority_advisory is not None:
-                raise ValueError("Modelo 193 pending disclosure amounts are settled by the design")
+            _validate_pending_phase_row(self)
         else:
-            advisory = self.amount_authority_advisory
-            if (
-                advisory is None
-                or advisory.filing_year != self.filing_year
-                or advisory.accrual_year != self.original_accrual_year
-                or advisory.source_kind is not self.source_kind
-            ):
-                raise ValueError("Modelo 193 prior-accrual settlement must carry its unresolved-amount advisory")
-            if self.filing_year <= self.original_accrual_year:
-                raise ValueError("Modelo 193 prior-accrual settlement must be in a later payment year")
-            if self.settlement_event_id is None:
-                raise ValueError("Modelo 193 prior-accrual settlement requires its settlement event")
-            if detail.pendiente_flag is not None or detail.accrual_year != self.original_accrual_year:
-                raise ValueError("Modelo 193 prior-accrual settlement must carry only the original accrual year")
+            _validate_settled_phase_row(self)
         return self
+
+
+def _validate_pending_phase_row(row: Modelo193PhaseRow) -> None:
+    _validate_phase_allocation(row)
+    detail = row.annual_detail
+    if row.filing_year != row.original_accrual_year:
+        raise ValueError("Modelo 193 pending disclosure belongs to the accrual year")
+    if (
+        detail.perceptor_tax_id != _PENDING_PERCEPTOR_NIF
+        or detail.representative_tax_id != _PENDING_PERCEPTOR_NIF
+        or detail.perceptor_legal_name != _PENDING_PERCEPTOR_NAME
+        or detail.pendiente_flag != "X"
+        or detail.accrual_year is not None
+    ):
+        raise ValueError("Modelo 193 pending disclosure must use the prescribed recipient values")
+    if row.settlement_event_id is not None:
+        raise ValueError("Modelo 193 pending disclosure cannot carry a settlement event")
+    if row.amount_authority_advisory is not None:
+        raise ValueError("Modelo 193 pending disclosure amounts are settled by the design")
+
+
+def _validate_settled_phase_row(row: Modelo193PhaseRow) -> None:
+    _validate_phase_allocation(row)
+    detail = row.annual_detail
+    advisory = row.amount_authority_advisory
+    if (
+        advisory is None
+        or advisory.filing_year != row.filing_year
+        or advisory.accrual_year != row.original_accrual_year
+        or advisory.source_kind is not row.source_kind
+    ):
+        raise ValueError("Modelo 193 prior-accrual settlement must carry its unresolved-amount advisory")
+    if row.filing_year <= row.original_accrual_year:
+        raise ValueError("Modelo 193 prior-accrual settlement must be in a later payment year")
+    if row.settlement_event_id is None:
+        raise ValueError("Modelo 193 prior-accrual settlement requires its settlement event")
+    if detail.pendiente_flag is not None or detail.accrual_year != row.original_accrual_year:
+        raise ValueError("Modelo 193 prior-accrual settlement must carry only the original accrual year")
+
+
+def _validate_phase_allocation(row: Modelo193PhaseRow) -> None:
+    detail = row.annual_detail
+    if detail.source_id != row.source_object_id or detail.source_allocation_id != row.allocation_id:
+        raise ValueError("Modelo 193 phase annual detail must retain source/allocation provenance")
+    if detail.percibido_dinerario != row.taxable_base or detail.retencion_practicada != row.retencion_amount:
+        raise ValueError("Modelo 193 phase annual detail amounts must match the economic allocation")
+    if detail.base_retenciones != row.taxable_base:
+        raise ValueError("Modelo 193 phase retention base must match the economic allocation")
 
 
 def materialize_modelo_193_disclosure_phases(
@@ -196,25 +211,44 @@ def materialize_modelo_193_disclosure_phases(
         recognized_on = date.fromisoformat(str(observation.accrued_on))
         if recognized_on.year not in pending_disclosure_years:
             raise Modelo193PhaseMaterializationError("unsupported_accrual_year")
-        allocation_key = (
-            observation.source_kind.value,
-            observation.source_object_id,
-            capital.pending_payment.actual_recipient_detail.source_allocation_id,
-        )
-        if not allocation_key[-1]:
-            raise Modelo193PhaseMaterializationError("missing_allocation_provenance")
-        if allocation_key in seen_allocations:
-            raise Modelo193PhaseMaterializationError("duplicate_active_allocation")
-        seen_allocations.add(allocation_key)
+        allocation_key = _active_allocation_key(observation, capital)
+        _remember_unique_allocation(allocation_key, seen_allocations)
         _validate_active_evidence(observation, capital, recognized_on)
-
-        settlement = capital.settlement_event
-        if filing_year == recognized_on.year:
-            if settlement is None or settlement.occurred_on.year > recognized_on.year:
-                rows.append(_pending_row(observation, capital, recognized_on))
-        elif settlement is not None and filing_year == settlement.occurred_on.year:
-            rows.append(_settled_prior_accrual_row(observation, capital, recognized_on))
+        row = _row_for_filing_year(observation, capital, filing_year=filing_year, recognized_on=recognized_on)
+        if row is not None:
+            rows.append(row)
     return tuple(sorted(rows, key=_phase_sort_key))
+
+
+def _active_allocation_key(observation: RetencionObservation, capital: Modelo193CapitalDetail) -> tuple[str, str, str]:
+    allocation_id = capital.pending_payment.actual_recipient_detail.source_allocation_id
+    if not allocation_id:
+        raise Modelo193PhaseMaterializationError("missing_allocation_provenance")
+    return observation.source_kind.value, observation.source_object_id, allocation_id
+
+
+def _remember_unique_allocation(
+    allocation_key: tuple[str, str, str], seen_allocations: set[tuple[str, str, str]]
+) -> None:
+    if allocation_key in seen_allocations:
+        raise Modelo193PhaseMaterializationError("duplicate_active_allocation")
+    seen_allocations.add(allocation_key)
+
+
+def _row_for_filing_year(
+    observation: RetencionObservation,
+    capital: Modelo193CapitalDetail,
+    *,
+    filing_year: int,
+    recognized_on: date,
+) -> Modelo193PhaseRow | None:
+    settlement = capital.settlement_event
+    if filing_year == recognized_on.year:
+        if settlement is None or settlement.occurred_on.year > recognized_on.year:
+            return _pending_row(observation, capital, recognized_on)
+    elif settlement is not None and filing_year == settlement.occurred_on.year:
+        return _settled_prior_accrual_row(observation, capital, recognized_on)
+    return None
 
 
 def modelo_193_phase_rows_may_settle_prior_accruals(

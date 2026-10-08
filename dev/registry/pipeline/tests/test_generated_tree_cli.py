@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import shutil
+from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
+from typing import Any, cast
 
 import pytest
 from typer.testing import CliRunner
@@ -11,25 +14,22 @@ from typer.testing import CliRunner
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
+from .. import cli as cli_module
 from .._export_tree import render_complete_export_tree
-from .._tree_publication import (
-    GeneratedExportTreePublicationContext,
-    GeneratedExportTreeTargetStateReceipt,
-    require_expected_target_state,
-)
 from .._tree_validation import GeneratedExportTreeValidationContext
-from ..candidate_staging import (
-    retarget_bootstrap_construct_export_layout,
-    stage_continuity_metadata,
-)
+from ..bootstrap_construct_retarget import retarget_bootstrap_construct_export_layout
+from ..bootstrap_targets import _bootstrap_target_from_row
 from ..cli import (
     GeneratedTreeInvocation,
     PreparedGeneratedTreeInvocation,
+    TargetCurrentnessFact,
+    TargetCurrentnessState,
     app,
     check_prepared_invocation,
     prepare_generated_tree_invocation,
@@ -37,6 +37,7 @@ from ..cli import (
     require_republication_eligibility,
     reviewed_bootstrap_target,
 )
+from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import ExportFragmentTarget
 from ..generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
 from ..render_check import (
@@ -45,6 +46,8 @@ from ..render_check import (
     RevisionRenderInputs,
     revision_render_inputs,
 )
+from ..tree_publication_contracts import GeneratedExportTreePublicationContext, GeneratedExportTreeTargetStateReceipt
+from ..tree_publication_paths import require_expected_target_state
 from ._generated_tree_test_support import (
     ISOLATED_TREE,
     isolated_authorities,
@@ -66,6 +69,40 @@ def test_pipeline_cli_registers_the_separate_check_and_publish_verbs() -> None:
 
 def _republish_invocation(expected_manifest_sha256: str) -> GeneratedTreeInvocation:
     return GeneratedTreeInvocation("190", "2024", "aeat-dr-190-2024", 2024, "0A", expected_manifest_sha256)
+
+
+@pytest.mark.parametrize("mode", ["row-bindings", "scalar-sources"])
+def test_field_republication_routes_to_the_explicit_mode(monkeypatch: pytest.MonkeyPatch, mode: str) -> None:
+    calls = []
+
+    def capture(invocation, **kwargs):
+        calls.append((invocation, kwargs))
+
+    monkeypatch.setattr(cli_module, "_run", capture)
+    result = CliRunner().invoke(
+        app,
+        [
+            "republish-target",
+            "156",
+            "2003-y-siguientes",
+            "enrolled-modelo-156-layout",
+            "2025",
+            "0A",
+            "a" * 64,
+            f"--reconcile-{mode}",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert len(calls) == 1
+    invocation, options = calls[0]
+    assert invocation.expected_manifest_sha256 == "a" * 64
+    assert options == {
+        "action": "republish",
+        "reconcile_authored_form": False,
+        "reconcile_casilla_splits": False,
+        "reconcile_row_bindings": mode == "row-bindings",
+        "reconcile_scalar_sources": mode == "scalar-sources",
+    }
 
 
 def _republish_comparison(*, differing: tuple[str, ...]) -> RenderComparison:
@@ -198,6 +235,25 @@ def test_bootstrap_target_refuses_unenrolled_source_digest() -> None:
         )
 
 
+def test_bootstrap_supersession_accepts_an_explicit_zero_construct_reference_pin() -> None:
+    """A reviewed manual layout may be replaced when no construct points to it."""
+    target = _bootstrap_target_from_row(
+        {
+            "modelo": "360",
+            "revision": "2023-y-siguientes",
+            "source_ref": "aeat-dr-360",
+            "source_sha256": "a" * 64,
+            "layout_id": "generated-modelo-360",
+            "line_ending": "crlf",
+            "supersedes_layout_id": "modelo-360-fichero-boe",
+            "superseded_construct_references": 0,
+        },
+    )
+
+    assert target.supersedes_layout_id == "modelo-360-fichero-boe"
+    assert target.superseded_construct_references == 0
+
+
 #: The reviewed Modelo 200 design whose export publication retires its bootstrap authorization.
 _M200_BOOTSTRAP_DESIGN_SHA256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
 _M200_BOOTSTRAP_DESIGN = source_with_sha256(_M200_BOOTSTRAP_DESIGN_SHA256)
@@ -262,6 +318,28 @@ def test_bootstrap_construct_retarget_refuses_reference_count_drift_without_muta
         )
 
     assert path.read_bytes() == original
+
+
+def test_bootstrap_construct_retarget_changes_only_the_pinned_reference(tmp_path: Path) -> None:
+    """A positive reviewed reference count retargets its member and preserves unrelated layout ids."""
+    path = tmp_path / "revisions" / "2022" / "constructs" / "0001-constructs.toml"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        '[[revisions."2022".constructs]]\nid = "annual"\nexport_layouts = ["manual-layout", "unrelated-layout"]\n',
+        encoding="utf-8",
+    )
+
+    retarget_bootstrap_construct_export_layout(
+        tmp_path,
+        revision="2022",
+        superseded_layout_id="manual-layout",
+        generated_layout_id="generated-layout",
+        expected_references=1,
+    )
+
+    payload = parse_toml(path.read_text("utf-8"))
+    construct = payload["revisions"]["2022"]["constructs"][0]
+    assert construct["export_layouts"] == ["generated-layout", "unrelated-layout"]
 
 
 def test_every_bootstrap_target_still_names_a_tree_awaiting_publication() -> None:
@@ -424,7 +502,11 @@ def _prepared_absent_target(candidate_base: Path, target_root: Path) -> Prepared
 def test_absent_tree_is_validated_then_published_through_the_canonical_authorities(tmp_path: Path) -> None:
     """An owed tree is bootstrap-publishable only after its fresh candidate validates."""
     first = _prepared_absent_target(tmp_path / "check", tmp_path / "target" / "registry" / "aeat")
-    shutil.copytree(first.candidate_root, first.target_root)
+    # Final publication validates the complete authority, including the
+    # predecessor editions that own this child's seeded continuity.
+    shutil.copytree(bundled_path("registry", "aeat"), first.target_root)
+    assert first.target_export_root.resolve().is_relative_to(tmp_path.resolve())
+    shutil.rmtree(first.target_export_root)
 
     result, _rendered, _target_state = check_prepared_invocation(first)
     assert result == "publishable_absence"
@@ -442,6 +524,85 @@ def test_absent_tree_is_validated_then_published_through_the_canonical_authoriti
     publish_prepared_invocation(publication, publication_rendered, publication_target_state)
 
     assert first.target_export_root.is_dir()
+
+
+def test_final_live_validator_does_not_recover_while_it_checks_the_cutover_authority(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The final currency callback's supplied authority takes the read-only prepare path."""
+    invocation = GeneratedTreeInvocation(
+        ISOLATED_TREE.modelo,
+        ISOLATED_TREE.revision,
+        ISOLATED_TREE.source_ref,
+        ISOLATED_TREE.filing_year,
+        ISOLATED_TREE.period,
+    )
+    target_root = tmp_path / "live-registry" / "aeat"
+    (target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export").mkdir(
+        parents=True,
+    )
+    authority = compiled_bundled_authority()
+    monkeypatch.setattr(cli_module, "bundled_path", lambda *_parts: target_root)
+    monkeypatch.setattr(cli_module, "compile_validated_authority", lambda *_args, **_kwargs: authority)
+
+    def reject_recovery(**_kwargs: object) -> bool:
+        raise AssertionError("final live validation re-entered transaction recovery")
+
+    monkeypatch.setattr(cli_module, "recover_interrupted_supersession_bundle", reject_recovery)
+    monkeypatch.setattr(cli_module, "supporting_modelos", lambda _modelo: frozenset())
+    monkeypatch.setattr(
+        cli_module,
+        "revision_render_inputs",
+        lambda *_args, **_kwargs: SimpleNamespace(
+            revision_id=invocation.revision,
+            layout_id="fixture-layout",
+            joined=object(),
+            semantic_map=object(),
+            transport_profile=SimpleNamespace(design_epoch="2025"),
+            render_profile=object(),
+            render_profile_source_evidence=object(),
+        ),
+    )
+    monkeypatch.setattr(cli_module, "stage_generated_export_candidate", lambda *_args, **_kwargs: target_root)
+    monkeypatch.setattr(cli_module, "stage_published_modelo", lambda *_args, **_kwargs: None)
+    real_prepare = cli_module.prepare_generated_tree_invocation
+    prepared_authorities: list[object] = []
+
+    def inspect_read_only_prepare(
+        selected: GeneratedTreeInvocation,
+        root: Path,
+        *,
+        authority: object | None = None,
+    ) -> PreparedGeneratedTreeInvocation:
+        assert authority is not None
+        prepared_authorities.append(authority)
+        return real_prepare(selected, root, authority=cast(ValidatedRegistryAuthority, authority))
+
+    def currentness_with_real_prepare(
+        modelo: str,
+        revision: str,
+        source_ref: str,
+        filing_year: int,
+        period: str,
+        *,
+        authority: object,
+    ) -> TargetCurrentnessFact:
+        inspect_read_only_prepare(
+            GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period),
+            tmp_path / "currentness",
+            authority=authority,
+        )
+        return TargetCurrentnessFact(modelo, revision, TargetCurrentnessState.CURRENT)
+
+    monkeypatch.setattr(cli_module, "target_currentness", currentness_with_real_prepare)
+
+    prepared = cast(
+        PreparedGeneratedTreeInvocation, cast(Any, SimpleNamespace(invocation=invocation, target_root=target_root))
+    )
+    cli_module._validate_final_live_target(prepared)
+
+    assert prepared_authorities == [authority]
 
 
 def test_modelo_200_calculation_grade_does_not_widen_its_runtime_filing_authority() -> None:
@@ -500,7 +661,6 @@ def test_modelo_200_bootstrap_assembly_reaches_the_real_join_and_renderer(tmp_pa
 
 # A full candidate compile of modelo 390 and its supporting modelos runs about
 # 245s serially, so the lane's 300s ceiling leaves no margin under parallel load.
-@pytest.mark.timeout(900)
 def test_modelo_390_cli_assembly_uses_the_pipeline_source_defect_catalogue(tmp_path: Path) -> None:
     """The operator path validates M390 without consulting either prior export tree."""
     prepared = prepare_generated_tree_invocation(
@@ -555,25 +715,43 @@ def test_republish_admits_record_drift_a_disposition_explains() -> None:
     )
     state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=digest, output_files=())
 
-    require_republication_eligibility(
-        GeneratedTreeInvocation(
-            explained.modelo,
-            explained.revision,
-            explained.source_ref,
-            2024,
-            "0A",
-            digest,
-        ),
-        state,
-        RenderComparison(
-            modelo=explained.modelo,
-            revision=explained.revision,
-            layout_id=f"generated-modelo-{explained.modelo}-{explained.revision}-fichero",
-            files_compared=3,
-            differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME, "0001-record.toml"),
-            only_committed=(),
-            only_rendered=(),
-            serialization_only=(),
-        ),
-        dispositions=(explained,),
+    invocation = GeneratedTreeInvocation(explained.modelo, explained.revision, explained.source_ref, 2024, "0A", digest)
+    comparison = RenderComparison(
+        modelo=explained.modelo,
+        revision=explained.revision,
+        layout_id=f"generated-modelo-{explained.modelo}-{explained.revision}-fichero",
+        files_compared=3,
+        differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME, "0001-record.toml"),
+        only_committed=(),
+        only_rendered=(),
+        serialization_only=(),
     )
+    require_republication_eligibility(invocation, state, comparison, source_sha256="b" * 64, dispositions=(explained,))
+    with pytest.raises(ValueError, match="source ref/SHA"):
+        require_republication_eligibility(
+            invocation, state, comparison, source_sha256="c" * 64, dispositions=(explained,)
+        )
+    with pytest.raises(ValueError, match="source ref/SHA"):
+        require_republication_eligibility(
+            invocation,
+            state,
+            comparison,
+            source_sha256="b" * 64,
+            dispositions=(explained.model_copy(update={"source_ref": "aeat-dr-other"}),),
+        )
+    with pytest.raises(ValueError, match="explains 2 differing record"):
+        require_republication_eligibility(
+            invocation,
+            state,
+            comparison,
+            source_sha256="b" * 64,
+            dispositions=(explained.model_copy(update={"differing_records": 2}),),
+        )
+    with pytest.raises(ValueError, match="added or removed"):
+        require_republication_eligibility(
+            invocation,
+            state,
+            replace(comparison, only_rendered=("0002-unreviewed.toml",)),
+            source_sha256="b" * 64,
+            dispositions=(explained,),
+        )

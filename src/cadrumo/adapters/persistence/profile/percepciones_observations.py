@@ -7,13 +7,12 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping
 from datetime import datetime
 from typing import ClassVar, override
 
 from pydantic import BaseModel, Field
 
-from ....application.aggregation.observation_window import replace_observation_window
 from ....application.aggregation.percepciones_observations_repository import (
     PercepcionObservationPersistenceError,
     PercepcionObservationRepository,
@@ -28,19 +27,19 @@ from ....core.time.clock import now
 from ....core.time.utc import UtcInstant
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ..storage.envelope.secure_bound_repository import SecureBoundRepository
-from ..storage.errors import StorageError
+from ..storage.errors import STORAGE_OPERATION_FAILURES
 from ..storage.path_safety import safe_repository_id
 from ..storage.secure_object_namespaces import WITHHOLDING_OBSERVATIONS_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
 
 
 def _translate_storage_failure[ResultT](operation: str, action: Callable[[], ResultT]) -> ResultT:
-    """Translate persistence failures into the application-owned error."""
+    """Translate storage failures into the application-owned error."""
     try:
         return action()
     except PercepcionObservationPersistenceError:
         raise
-    except (StorageError, OSError, TypeError, KeyError) as exc:
+    except (*STORAGE_OPERATION_FAILURES, TypeError, KeyError) as exc:
         raise PercepcionObservationPersistenceError(operation) from exc
 
 
@@ -73,13 +72,6 @@ class PercepcionObservationRepositoryAdapter(
     def __init__(self, *, objects: SecureObjectRepository) -> None:
         """Bind an already-composed secure-object store."""
         super().__init__(objects=objects)
-
-    def validate_observation_window_modelo(self, modelo: str) -> str:
-        """Bind application window-key validation to persistence storage safety."""
-        return _translate_storage_failure(
-            "percepcion_validate_observation_window_modelo",
-            lambda: safe_repository_id(modelo, context="modelo"),
-        )
 
     @override
     def extract_identifier(self, payload: _PercepcionObservationEnvelopePayload) -> str:
@@ -116,61 +108,6 @@ class PercepcionObservationRepositoryAdapter(
             source_kind=source_kind,
             source_metadata=dict(source_metadata or {}),
             projection_identity=projection_identity,
-        )
-
-    def save_observation(
-        self,
-        *,
-        modelo: str,
-        filing_year: int,
-        period: Period,
-        observation: WithholdingObservation,
-        source_kind: AggregationCaptureKind,
-        captured_at: datetime | None = None,
-        source_metadata: Mapping[str, str] | None = None,
-    ) -> None:
-        """Persist one per-perceptor-clave observation."""
-        _translate_storage_failure(
-            "percepcion_save_observation",
-            lambda: self.save(
-                self.build_observation_payload(
-                    modelo=modelo,
-                    filing_year=filing_year,
-                    period=period,
-                    observation=observation,
-                    source_kind=source_kind,
-                    captured_at=captured_at,
-                    source_metadata=source_metadata,
-                )
-            ),
-        )
-
-    @override
-    def replace_observations(
-        self,
-        *,
-        modelo: str,
-        filing_year: int,
-        period: Period,
-        observations: Sequence[WithholdingObservation],
-        source_kind: AggregationCaptureKind,
-        captured_at: datetime | None = None,
-        source_metadata: Mapping[str, str] | None = None,
-    ) -> None:
-        """Atomically replace the complete per-perceptor-clave window."""
-        _translate_storage_failure(
-            "percepcion_replace_observations",
-            lambda: replace_observation_window(
-                self,
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                observations=observations,
-                source_kind=source_kind,
-                build_payload=self.build_observation_payload,
-                captured_at=captured_at,
-                source_metadata=source_metadata,
-            ),
         )
 
     @override

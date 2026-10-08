@@ -1,0 +1,45 @@
+# Complete arithmetic closure printed in Annex II, BOE page 44305.
+[revisions."2005-2015".completeness_manifest]
+source_ref = "boe-modelo-341-2000-form-pdf"
+legal_refs = ["orden-min-2000-12-15-m341:art-1"]
+source_refs = ["boe-modelo-341-2000-form-pdf"]
+
+[[revisions."2005-2015".completeness_manifest.casillas]]
+casilla_id = "01"
+number = "01"
+
+[[revisions."2005-2015".completeness_manifest.casillas]]
+casilla_id = "02"
+number = "02"
+
+[[revisions."2005-2015".completeness_manifest.casillas]]
+casilla_id = "03"
+number = "03"
+
+[[revisions."2005-2015".completeness_manifest.casillas]]
+casilla_id = "04"
+number = "04"
+
+[[revisions."2005-2015".completeness_manifest.casillas]]
+casilla_id = "05"
+number = "05"
+
+[[revisions."2005-2015".completeness_manifest.casillas]]
+casilla_id = "06"
+number = "06"
+
+[[revisions."2005-2015".completeness_manifest.casillas]]
+casilla_id = "07"
+number = "07"
+
+[[revisions."2005-2015".completeness_manifest.casillas]]
+casilla_id = "08"
+number = "08"
+
+[[revisions."2005-2015".completeness_manifest.casillas]]
+casilla_id = "09"
+number = "09"
+
+[[revisions."2005-2015".completeness_manifest.casillas]]
+casilla_id = "10"
+number = "10"

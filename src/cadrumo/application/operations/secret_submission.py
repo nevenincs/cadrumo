@@ -81,6 +81,22 @@ class EphemeralSecretBroker:
         self._closed = False
         self._lock = RLock()
 
+    def require_ready(self, requirement: OperationSecretRequirement, *, observed_at: datetime) -> None:
+        """Refuse an unusable one-use slot before a frontend sends secret bytes."""
+        with self._lock:
+            self._require_ready_unlocked(requirement, observed_at=observed_at)
+
+    def _require_ready_unlocked(self, requirement: OperationSecretRequirement, *, observed_at: datetime) -> None:
+        if self._closed:
+            raise ValueError("ephemeral secret submission channel is closed")
+        if observed_at >= requirement.expires_at:
+            raise ValueError("ephemeral secret requirement is expired")
+        operation_id = requirement.identity.operation_id
+        if operation_id in self._consumed:
+            raise ValueError("ephemeral secret requirement is already consumed")
+        if operation_id in self._entries or operation_id in self._active:
+            raise ValueError("ephemeral secret requirement already has a submission")
+
     def submit(
         self,
         requirement: OperationSecretRequirement,
@@ -93,17 +109,10 @@ class EphemeralSecretBroker:
         owned: bytearray | None = None
         try:
             with self._lock:
-                if self._closed:
-                    raise ValueError("ephemeral secret submission channel is closed")
+                self._require_ready_unlocked(requirement, observed_at=observed_at)
                 if not secret or len(secret) > _MAX_SECRET_BYTES:
                     raise ValueError("ephemeral secret submission has an invalid length")
-                if observed_at >= requirement.expires_at:
-                    raise ValueError("ephemeral secret requirement is expired")
                 operation_id = requirement.identity.operation_id
-                if operation_id in self._consumed:
-                    raise ValueError("ephemeral secret requirement is already consumed")
-                if operation_id in self._entries or operation_id in self._active:
-                    raise ValueError("ephemeral secret requirement already has a submission")
                 owned = bytearray(secret)
                 self._entries[operation_id] = (requirement, owned)
                 owned = None

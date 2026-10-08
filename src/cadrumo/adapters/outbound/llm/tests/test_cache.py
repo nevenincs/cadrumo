@@ -3,7 +3,7 @@
 Covers cache key determinism, hit/miss accounting, statistics, and the
 defensive containment checks in :class:`cadrumo.adapters.outbound.llm.LLMCache`
 that prevent operator-supplied model identifiers from composing unsafe logical
-cache paths.
+secure-object identities.
 
 ``"probe-cache"`` is a fictional directory: ``LLMCache.root_dir`` is a
 constructor parameter, never a taxonomy accessor, and the test proves the
@@ -180,7 +180,7 @@ def test_cache_default_root_uses_central_settings(tmp_path: Path) -> None:
     assert not configured_root.exists()
 
 
-def test_cache_path_rejects_unsafe_model_identifiers(tmp_path: Path) -> None:
+def test_cache_reads_and_writes_reject_unsafe_model_identifiers(tmp_path: Path) -> None:
     # regression: ``key.model`` flows from the operator-
     # configured registry / env-driven ``model_override``. A path-
     # shaped value must not let the cache write outside ``root_dir``.
@@ -199,37 +199,30 @@ def test_cache_path_rejects_unsafe_model_identifiers(tmp_path: Path) -> None:
         "",
     )
     for model in unsafe_models:
-        key = cache.build_key(request, LLMProvider.ANTHROPIC, model)
         try:
             with pytest.raises(LLMCacheError):
-                cache._path_for(key)
+                cache.read(request, LLMProvider.ANTHROPIC, model)
+            with pytest.raises(LLMCacheError):
+                cache.write(request, _response().model_copy(update={"model": model}))
         except AssertionError as exc:
             raise AssertionError(f"unsafe model identifier was accepted: {model!r}") from exc
 
 
-def test_cache_path_normalises_namespaced_model(tmp_path: Path) -> None:
-    # Forward slashes in legitimate vendor-prefixed names
-    # (``anthropic/claude-3-7-sonnet``) become ``__`` so the model
-    # is a single directory segment under the provider directory.
+@pytest.mark.parametrize(
+    ("provider", "model"), [(LLMProvider.ANTHROPIC, "anthropic/claude-3-7-sonnet"), (LLMProvider.LOCAL, "qwen2.5vl:3b")]
+)
+def test_cache_preserves_namespaced_and_tagged_model_identity(
+    tmp_path: Path, provider: LLMProvider, model: str
+) -> None:
     cache = LLMCache(root_dir=tmp_path)
     request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
-    key = cache.build_key(request, LLMProvider.ANTHROPIC, "anthropic/claude-3-7-sonnet")
-    composed = cache._path_for(key)
-    assert composed.is_relative_to(tmp_path)
-    assert composed.parent.name == "anthropic__claude-3-7-sonnet"
-
-
-def test_cache_path_normalises_ollama_tag_model(tmp_path: Path) -> None:
-    # The Ollama ``name:tag`` separator (``qwen2.5vl:3b``) is folded to
-    # ``_`` so the tagged model becomes a single, traversal-free path
-    # segment under the provider directory rather than being rejected.
-    cache = LLMCache(root_dir=tmp_path)
-    request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
-    key = cache.build_key(request, LLMProvider.LOCAL, "qwen2.5vl:3b")
-    composed = cache._path_for(key)
-    assert composed.is_relative_to(tmp_path)
-    assert composed.parent.name == "qwen2.5vl_3b"
-    assert ":" not in composed.parent.name
+    response = _response().model_copy(update={"provider": provider, "model": model})
+    cache.write(request, response)
+    loaded = cache.read(request, provider, model)
+    assert loaded is not None
+    assert loaded.model == model
+    assert loaded.provider == provider
+    assert loaded.text == response.text
 
 
 def test_cache_payload_canary_is_encrypted_in_database(tmp_path: Path) -> None:

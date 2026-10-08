@@ -14,6 +14,7 @@ import secrets
 import shutil
 from collections.abc import Callable, Mapping
 from pathlib import Path
+from typing import cast
 
 from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.directory_scan import scan_directory
@@ -42,6 +43,47 @@ def publish_verified_casilla_tree(
     A durable journal makes a crash observable and lets the owner recover it on
     its next locked invocation.
     """
+    replace, workspace, journal_path = _prepare_publication_context(
+        casillas_root,
+        journal_name=journal_name,
+        stage_prefix=stage_prefix,
+        backup_prefix=backup_prefix,
+        journal_root=journal_root,
+        transaction_root=transaction_root,
+        replace_tree=replace_tree,
+    )
+    _validate_publication_replacements(casillas_root, rendered)
+
+    token = secrets.token_hex(16)
+    stage = workspace / f"{stage_prefix}{token}"
+    backup = workspace / f"{backup_prefix}{token}"
+    journal: dict[str, object] = {"schema_version": 1, "state": "intent", "stage": stage.name, "backup": backup.name}
+    _write_journal(journal_path, journal)
+    try:
+        _stage_casilla_replacements(casillas_root, stage, rendered)
+        verifier(stage)
+        _make_candidate_live(casillas_root, stage, backup, journal=journal, journal_path=journal_path, replace=replace)
+        verifier(casillas_root)
+    except BaseException:
+        _restore_backup(casillas_root, backup, workspace=workspace, stage_prefix=stage_prefix, replace_tree=replace)
+        _remove_transaction_tree(stage, workspace, (stage_prefix, backup_prefix))
+        if casillas_root.exists():
+            _delete_journal(journal_path)
+        raise
+    _remove_transaction_tree(backup, workspace, (stage_prefix, backup_prefix))
+    _delete_journal(journal_path)
+
+
+def _prepare_publication_context(
+    casillas_root: Path,
+    *,
+    journal_name: str,
+    stage_prefix: str,
+    backup_prefix: str,
+    journal_root: Path | None,
+    transaction_root: Path | None,
+    replace_tree: Callable[[Path, Path], None] | None,
+) -> tuple[Callable[[Path, Path], None], Path, Path]:
     _require_regular_tree(casillas_root, subject="canonical casilla tree")
     replace = _replace_tree if replace_tree is None else replace_tree
     _require_transaction_token(journal_name, subject="journal name")
@@ -58,6 +100,10 @@ def publish_verified_casilla_tree(
     journal_path = journal_directory / journal_name
     if journal_path.exists() or is_link_like(journal_path):
         raise RegistryValidationError(f"casilla publication journal already exists: {journal_path}")
+    return replace, workspace, journal_path
+
+
+def _validate_publication_replacements(casillas_root: Path, rendered: Mapping[Path, str]) -> None:
     if not rendered:
         raise RegistryValidationError("casilla publication has no compiler-owned replacement paths")
     for path, payload in rendered.items():
@@ -65,34 +111,31 @@ def publish_verified_casilla_tree(
         if not isinstance(payload, str):
             raise RegistryValidationError(f"casilla publication payload is not text: {path}")
 
-    token = secrets.token_hex(16)
-    stage = workspace / f"{stage_prefix}{token}"
-    backup = workspace / f"{backup_prefix}{token}"
-    journal = {"schema_version": 1, "state": "intent", "stage": stage.name, "backup": backup.name}
+
+def _stage_casilla_replacements(casillas_root: Path, stage: Path, rendered: Mapping[Path, str]) -> None:
+    shutil.copytree(casillas_root, stage)
+    _require_regular_tree(stage, subject="staged casilla tree")
+    for path, payload in rendered.items():
+        staged_path = stage / path.relative_to(casillas_root)
+        _require_replacement_path(staged_path, stage)
+        atomic_write_text(staged_path, payload, encoding="utf-8")
+
+
+def _make_candidate_live(
+    casillas_root: Path,
+    stage: Path,
+    backup: Path,
+    *,
+    journal: dict[str, object],
+    journal_path: Path,
+    replace: Callable[[Path, Path], None],
+) -> None:
+    replace(casillas_root, backup)
+    journal["state"] = "backup_staged"
     _write_journal(journal_path, journal)
-    try:
-        shutil.copytree(casillas_root, stage)
-        _require_regular_tree(stage, subject="staged casilla tree")
-        for path, payload in rendered.items():
-            staged_path = stage / path.relative_to(casillas_root)
-            _require_replacement_path(staged_path, stage)
-            atomic_write_text(staged_path, payload, encoding="utf-8")
-        verifier(stage)
-        replace(casillas_root, backup)
-        journal["state"] = "backup_staged"
-        _write_journal(journal_path, journal)
-        replace(stage, casillas_root)
-        journal["state"] = "candidate_live"
-        _write_journal(journal_path, journal)
-        verifier(casillas_root)
-    except BaseException:
-        _restore_backup(casillas_root, backup, workspace=workspace, stage_prefix=stage_prefix, replace_tree=replace)
-        _remove_transaction_tree(stage, workspace, (stage_prefix, backup_prefix))
-        if casillas_root.exists():
-            _delete_journal(journal_path)
-        raise
-    _remove_transaction_tree(backup, workspace, (stage_prefix, backup_prefix))
-    _delete_journal(journal_path)
+    replace(stage, casillas_root)
+    journal["state"] = "candidate_live"
+    _write_journal(journal_path, journal)
 
 
 def recover_verified_casilla_tree(
@@ -106,6 +149,49 @@ def recover_verified_casilla_tree(
     transaction_root: Path | None = None,
 ) -> bool:
     """Recover one interrupted transaction; return whether recovery changed state."""
+    context = _resolve_recovery_context(
+        casillas_root,
+        journal_name=journal_name,
+        stage_prefix=stage_prefix,
+        backup_prefix=backup_prefix,
+        journal_root=journal_root,
+        transaction_root=transaction_root,
+    )
+    if context is None:
+        return False
+    workspace, journal_path = context
+    journal, stage, backup = _read_recovery_journal(
+        journal_path,
+        workspace=workspace,
+        stage_prefix=stage_prefix,
+        backup_prefix=backup_prefix,
+    )
+    _validate_recovery_trees(casillas_root, stage, backup, journal, journal_path=journal_path)
+    _recover_transaction_state(
+        casillas_root,
+        stage,
+        backup,
+        journal,
+        journal_path=journal_path,
+        workspace=workspace,
+        stage_prefix=stage_prefix,
+        backup_prefix=backup_prefix,
+        verifier=verifier,
+    )
+    _remove_transaction_tree(stage, workspace, (stage_prefix, backup_prefix))
+    _delete_journal(journal_path)
+    return True
+
+
+def _resolve_recovery_context(
+    casillas_root: Path,
+    *,
+    journal_name: str,
+    stage_prefix: str,
+    backup_prefix: str,
+    journal_root: Path | None,
+    transaction_root: Path | None,
+) -> tuple[Path, Path] | None:
     _require_transaction_token(journal_name, subject="journal name")
     _require_transaction_token(stage_prefix, subject="stage prefix")
     _require_transaction_token(backup_prefix, subject="backup prefix")
@@ -118,9 +204,53 @@ def recover_verified_casilla_tree(
         raise RegistryValidationError("casilla publication journal and transaction roots must match")
     journal_path = journal_directory / journal_name
     if not journal_path.exists():
-        return False
+        return None
     if is_link_like(journal_path) or not journal_path.is_file():
         raise RegistryValidationError(f"casilla publication journal is unsafe: {journal_path}")
+    return workspace, journal_path
+
+
+def _recover_transaction_state(
+    casillas_root: Path,
+    stage: Path,
+    backup: Path,
+    journal: Mapping[str, object],
+    *,
+    journal_path: Path,
+    workspace: Path,
+    stage_prefix: str,
+    backup_prefix: str,
+    verifier: Callable[[Path], None],
+) -> None:
+    if journal["state"] == "candidate_live" and casillas_root.exists():
+        _recover_live_candidate(
+            casillas_root,
+            backup,
+            journal_path=journal_path,
+            workspace=workspace,
+            stage_prefix=stage_prefix,
+            backup_prefix=backup_prefix,
+            verifier=verifier,
+        )
+    elif backup.exists():
+        _restore_backup(
+            casillas_root,
+            backup,
+            workspace=workspace,
+            stage_prefix=stage_prefix,
+            replace_tree=_replace_tree,
+        )
+    elif journal["state"] != "intent" and not casillas_root.exists():
+        raise RegistryValidationError(f"casilla publication cannot recover missing canonical tree: {journal_path}")
+
+
+def _read_recovery_journal(
+    journal_path: Path,
+    *,
+    workspace: Path,
+    stage_prefix: str,
+    backup_prefix: str,
+) -> tuple[dict[str, object], Path, Path]:
     try:
         journal = json.loads(journal_path.read_text(encoding="utf-8"))
         if (
@@ -133,6 +263,17 @@ def recover_verified_casilla_tree(
         backup = _transaction_child(workspace, journal["backup"], backup_prefix)
     except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
         raise RegistryValidationError(f"casilla publication journal is invalid: {journal_path}") from exc
+    return cast(dict[str, object], journal), stage, backup
+
+
+def _validate_recovery_trees(
+    casillas_root: Path,
+    stage: Path,
+    backup: Path,
+    journal: Mapping[str, object],
+    *,
+    journal_path: Path,
+) -> None:
     if casillas_root.exists():
         _require_regular_tree(casillas_root, subject="casilla publication recovery canonical tree")
     if stage.exists():
@@ -141,25 +282,25 @@ def recover_verified_casilla_tree(
         _require_regular_tree(backup, subject="casilla publication recovery backup tree")
     if journal["state"] == "backup_staged" and not backup.exists():
         raise RegistryValidationError(f"casilla publication recovery backup is missing: {journal_path}")
-    if journal["state"] == "candidate_live" and casillas_root.exists():
-        try:
-            verifier(casillas_root)
-        except RegistryValidationError as candidate_error:
-            if not backup.exists():
-                raise RegistryValidationError(
-                    f"casilla publication cannot recover an invalid candidate without backup: {journal_path}"
-                ) from candidate_error
-            _restore_backup(
-                casillas_root,
-                backup,
-                workspace=workspace,
-                stage_prefix=stage_prefix,
-                replace_tree=_replace_tree,
-            )
-        else:
-            if backup.exists():
-                _remove_transaction_tree(backup, workspace, (stage_prefix, backup_prefix))
-    elif backup.exists():
+
+
+def _recover_live_candidate(
+    casillas_root: Path,
+    backup: Path,
+    *,
+    journal_path: Path,
+    workspace: Path,
+    stage_prefix: str,
+    backup_prefix: str,
+    verifier: Callable[[Path], None],
+) -> None:
+    try:
+        verifier(casillas_root)
+    except RegistryValidationError as candidate_error:
+        if not backup.exists():
+            raise RegistryValidationError(
+                f"casilla publication cannot recover an invalid candidate without backup: {journal_path}"
+            ) from candidate_error
         _restore_backup(
             casillas_root,
             backup,
@@ -167,11 +308,9 @@ def recover_verified_casilla_tree(
             stage_prefix=stage_prefix,
             replace_tree=_replace_tree,
         )
-    elif journal["state"] != "intent" and not casillas_root.exists():
-        raise RegistryValidationError(f"casilla publication cannot recover missing canonical tree: {journal_path}")
-    _remove_transaction_tree(stage, workspace, (stage_prefix, backup_prefix))
-    _delete_journal(journal_path)
-    return True
+    else:
+        if backup.exists():
+            _remove_transaction_tree(backup, workspace, (stage_prefix, backup_prefix))
 
 
 def _require_replacement_path(path: Path, root: Path) -> None:

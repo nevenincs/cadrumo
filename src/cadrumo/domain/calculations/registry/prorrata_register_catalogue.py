@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import Final
 
 from ....core.prorrata_register import (
@@ -14,10 +12,17 @@ from ....core.prorrata_register import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from ....core.time.clock import today_madrid
+from . import prorrata_register_models as _models
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    BooleanTokenCase,
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+    required_mapping_boolean,
+)
+from .governed_fact_scope import GovernedFactSource
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "prorrata register mapping"
@@ -34,292 +39,35 @@ _SECTOR_ORDER_KEY = "prorrata.sector_diferenciado_letra_order"
 _SECTOR_PREFIX = "prorrata.sector_diferenciado_letra."
 
 
-@dataclass(frozen=True, slots=True)
-class ProrrataRegisterRegimeDefinition:
-    """One registry-declared register regime and its applicability metadata."""
-
-    token: ProrrataRegisterRegime
-    description: str
-    legal_ref: str
-    apportions: bool
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-@dataclass(frozen=True, slots=True)
-class ProrrataTransitionDefinition:
-    """One registry-declared special-prorrata transition kind."""
-
-    token: ProrrataEspecialTransitionKind
-    description: str
-    legal_ref: str
-
-
-@dataclass(frozen=True, slots=True)
-class ProrrataProvenanceDefinition:
-    """One registry-declared art. 105 provisional provenance."""
-
-    token: ProrrataProvisionalProvenance
-    description: str
-    legal_ref: str
-    authorisation_required: bool
-    election_allowed: bool
-
-
-@dataclass(frozen=True, slots=True)
-class SectorDiferenciadoLetraDefinition:
-    """One registry-declared LIVA art. 9.1.c sector letter."""
-
-    token: SectorDiferenciadoLetra
-    description: str
-    legal_ref: str
-
-
-@dataclass(frozen=True, slots=True)
-class ProrrataRegisterCatalogue:
-    """Complete typed projection of the dated 0116 register vocabulary."""
-
-    regimes: tuple[ProrrataRegisterRegimeDefinition, ...]
-    transition_kinds: tuple[ProrrataTransitionDefinition, ...]
-    provenances: tuple[ProrrataProvenanceDefinition, ...]
-    sector_letters: tuple[SectorDiferenciadoLetraDefinition, ...]
-
-    @property
-    def all_regimes(self) -> frozenset[ProrrataRegisterRegime]:
-        """Return every register regime declared by the registry."""
-        return frozenset(definition.token for definition in self.regimes)
-
-    @property
-    def apportioning_regimes(self) -> tuple[ProrrataRegisterRegime, ...]:
-        """Return registry regimes that apportion deductible amounts."""
-        return tuple(definition.token for definition in self.regimes if definition.apportions)
-
-    @property
-    def non_apportioning_regimes(self) -> tuple[ProrrataRegisterRegime, ...]:
-        """Return registry regimes that do not apportion deductible amounts."""
-        return tuple(definition.token for definition in self.regimes if not definition.apportions)
-
-    @property
-    def all_transition_kinds(self) -> frozenset[ProrrataEspecialTransitionKind]:
-        """Return every special-prorrata transition declared by the registry."""
-        return frozenset(definition.token for definition in self.transition_kinds)
-
-    @property
-    def all_provenances(self) -> frozenset[ProrrataProvisionalProvenance]:
-        """Return every provisional provenance declared by the registry."""
-        return frozenset(definition.token for definition in self.provenances)
-
-    @property
-    def all_sector_letters(self) -> frozenset[SectorDiferenciadoLetra]:
-        """Return every differentiated-sector letter declared by the registry."""
-        return frozenset(definition.token for definition in self.sector_letters)
-
-    @property
-    def referenced_provenances(self) -> frozenset[ProrrataProvisionalProvenance]:
-        """Return provenances that require an authorisation reference."""
-        return frozenset(definition.token for definition in self.provenances if definition.authorisation_required)
-
-    @property
-    def electable_provenances(self) -> tuple[ProrrataProvisionalProvenance, ...]:
-        """Return provenances that the operator may elect."""
-        return tuple(definition.token for definition in self.provenances if definition.election_allowed)
-
-    def require_regime(self, value: object) -> ProrrataRegisterRegime:
-        """Validate and return one registry-declared register regime."""
-        token = _coerce_regime(value)
-        if token not in self.all_regimes:
-            raise RegistryValidationError(
-                f"prorrata register regime {str(token)!r} is not declared by the facts registry",
-            )
-        return token
-
-    def require_transition(self, value: object) -> ProrrataEspecialTransitionKind:
-        """Validate and return one registry-declared transition kind."""
-        token = _coerce_transition(value)
-        if token not in self.all_transition_kinds:
-            raise RegistryValidationError(
-                f"prorrata especial transition {str(token)!r} is not declared by the facts registry",
-            )
-        return token
-
-    def require_provenance(self, value: object) -> ProrrataProvisionalProvenance:
-        """Validate and return one registry-declared provisional provenance."""
-        token = _coerce_provenance(value)
-        if token not in self.all_provenances:
-            raise RegistryValidationError(
-                f"prorrata provisional provenance {str(token)!r} is not declared by the facts registry",
-            )
-        return token
-
-    def require_sector_letter(self, value: object) -> SectorDiferenciadoLetra:
-        """Validate and return one registry-declared differentiated-sector letter."""
-        token = _coerce_sector_letter(value)
-        if token not in self.all_sector_letters:
-            raise RegistryValidationError(
-                f"differentiated-sector letter {str(token)!r} is not declared by the facts registry",
-            )
-        return token
-
-    # The first two entries are the existing canonical general/especial order;
-    # the additional register-only entries are appended by the fact. These
-    # accessors keep consumers from copying either vocabulary or token values.
-    @property
-    def general_regime(self) -> ProrrataRegisterRegime:
-        """Return the first, general regime in registry order."""
-        return self.regimes[0].token
-
-    @property
-    def especial_regime(self) -> ProrrataRegisterRegime:
-        """Return the second, special regime in registry order."""
-        return self.regimes[1].token
-
-    @property
-    def no_prorrata_regime(self) -> ProrrataRegisterRegime:
-        """Return the sole non-apportioning regime declared by the registry."""
-        non_apportioning = self.non_apportioning_regimes
-        if len(non_apportioning) != 1:
-            raise RegistryValidationError("0116 must declare exactly one non-apportioning register regime")
-        return non_apportioning[0]
-
-    @property
-    def opcion_transition(self) -> ProrrataEspecialTransitionKind:
-        """Return the first special-prorrata transition in registry order."""
-        return self.transition_kinds[0].token
-
-    @property
-    def revocacion_transition(self) -> ProrrataEspecialTransitionKind:
-        """Return the second special-prorrata transition in registry order."""
-        return self.transition_kinds[1].token
-
-    @property
-    def aeat_autorizada_provenance(self) -> ProrrataProvisionalProvenance:
-        """Return the AEAT-authorised provenance in registry order."""
-        return self.provenances[0].token
-
-    @property
-    def inicio_actividad_provenance(self) -> ProrrataProvisionalProvenance:
-        """Return the activity-start provenance in registry order."""
-        return self.provenances[1].token
-
-    @property
-    def carried_prior_definitiva_provenance(self) -> ProrrataProvisionalProvenance:
-        """Return the carried prior definitive provenance in registry order."""
-        return self.provenances[2].token
-
-    @property
-    def provenance_precedence(self) -> tuple[ProrrataProvisionalProvenance, ...]:
-        """Return provisional provenances in their registry precedence order."""
-        return tuple(definition.token for definition in self.provenances)
-
-
-def _coerce_regime(value: object) -> ProrrataRegisterRegime:
-    if isinstance(value, ProrrataRegisterRegime):
-        token = value
-    elif isinstance(value, str):
-        try:
-            token = ProrrataRegisterRegime.from_registry(value.strip())
-        except (TypeError, ValueError) as exc:
-            raise RegistryValidationError("prorrata register regime must be a non-empty registry token") from exc
-    else:
-        raise RegistryValidationError("prorrata register regime must be a registry-projected string token")
-    if not str(token):
-        raise RegistryValidationError("prorrata register regime must not be blank")
-    return token
-
-
-def _coerce_transition(value: object) -> ProrrataEspecialTransitionKind:
-    if isinstance(value, ProrrataEspecialTransitionKind):
-        token = value
-    elif isinstance(value, str):
-        try:
-            token = ProrrataEspecialTransitionKind.from_registry(value.strip())
-        except (TypeError, ValueError) as exc:
-            raise RegistryValidationError("prorrata especial transition must be a non-empty registry token") from exc
-    else:
-        raise RegistryValidationError("prorrata especial transition must be a registry-projected string token")
-    if not str(token):
-        raise RegistryValidationError("prorrata especial transition must not be blank")
-    return token
-
-
-def _coerce_provenance(value: object) -> ProrrataProvisionalProvenance:
-    if isinstance(value, ProrrataProvisionalProvenance):
-        token = value
-    elif isinstance(value, str):
-        try:
-            token = ProrrataProvisionalProvenance.from_registry(value.strip())
-        except (TypeError, ValueError) as exc:
-            raise RegistryValidationError("prorrata provisional provenance must be a non-empty registry token") from exc
-    else:
-        raise RegistryValidationError("prorrata provisional provenance must be a registry-projected string token")
-    if not str(token):
-        raise RegistryValidationError("prorrata provisional provenance must not be blank")
-    return token
-
-
-def _coerce_sector_letter(value: object) -> SectorDiferenciadoLetra:
-    if isinstance(value, SectorDiferenciadoLetra):
-        token = value
-    elif isinstance(value, str):
-        try:
-            token = SectorDiferenciadoLetra.from_registry(value.strip())
-        except (TypeError, ValueError) as exc:
-            raise RegistryValidationError("differentiated-sector letter must be a non-empty registry token") from exc
-    else:
-        raise RegistryValidationError("differentiated-sector letter must be a registry-projected string token")
-    if not str(token):
-        raise RegistryValidationError("differentiated-sector letter must not be blank")
-    return token
-
-
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("prorrata register mapping entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate prorrata register mapping key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
-
-
-def _boolean(entries: Mapping[str, str], key: str) -> bool:
-    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
-    if value == "true":
-        return True
-    if value == "false":
-        return False
-    raise RegistryValidationError(f"prorrata register mapping {key!r} must be true or false")
-
-
-def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("Renta IVA ratio policy must resolve as a mapping fact")
-    return _mapping_entries(resolved)
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def resolve_prorrata_register_catalogue(
     *,
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
-) -> ProrrataRegisterCatalogue:
+) -> _models.ProrrataRegisterCatalogue:
     """Resolve all register vocabularies through the dated 0116 mapping fact."""
-    coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError("prorrata register catalogue requires an explicit authority operation or scope")
-    entries = _resolve_entries(effective_date=coordinate, authority=selected)
+    entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
+    catalogue = _models.ProrrataRegisterCatalogue(
+        regimes=_prorrata_regimes(entries),
+        transition_kinds=_prorrata_transition_kinds(entries),
+        provenances=_prorrata_provenances(entries),
+        sector_letters=_prorrata_sector_letters(entries),
+    )
+    _validate_prorrata_register_catalogue(catalogue)
+    return catalogue
 
+
+def _prorrata_regimes(entries: Mapping[str, str]) -> tuple[_models.ProrrataRegisterRegimeDefinition, ...]:
     regime_tokens = (
         *unique_mapping_tokens(entries, _REGIME_ORDER_KEY, subject=_ENTRY_SUBJECT),
         *unique_mapping_tokens(entries, _REGISTER_REGIME_ADDITIONS_KEY, subject=_ENTRY_SUBJECT),
     )
-    regimes: list[ProrrataRegisterRegimeDefinition] = []
+    regimes: list[_models.ProrrataRegisterRegimeDefinition] = []
     for raw_token in regime_tokens:
         prefix = f"{_REGIME_PREFIX}{raw_token}"
         token = ProrrataRegisterRegime.from_registry(
@@ -328,15 +76,20 @@ def resolve_prorrata_register_catalogue(
         if str(token) != raw_token:
             raise RegistryValidationError(f"register regime {raw_token!r} declares a mismatched value")
         regimes.append(
-            ProrrataRegisterRegimeDefinition(
+            _models.ProrrataRegisterRegimeDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
-                apportions=_boolean(entries, f"{prefix}.apportions"),
+                apportions=required_mapping_boolean(
+                    entries, f"{prefix}.apportions", subject=_ENTRY_SUBJECT, case=BooleanTokenCase.CASE_INSENSITIVE
+                ),
             ),
         )
+    return tuple(regimes)
 
-    transition_kinds: list[ProrrataTransitionDefinition] = []
+
+def _prorrata_transition_kinds(entries: Mapping[str, str]) -> tuple[_models.ProrrataTransitionDefinition, ...]:
+    transition_kinds: list[_models.ProrrataTransitionDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _TRANSITION_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_TRANSITION_PREFIX}{raw_token}"
         token = ProrrataEspecialTransitionKind.from_registry(
@@ -345,14 +98,17 @@ def resolve_prorrata_register_catalogue(
         if str(token) != raw_token:
             raise RegistryValidationError(f"transition {raw_token!r} declares a mismatched value")
         transition_kinds.append(
-            ProrrataTransitionDefinition(
+            _models.ProrrataTransitionDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
             ),
         )
+    return tuple(transition_kinds)
 
-    provenances: list[ProrrataProvenanceDefinition] = []
+
+def _prorrata_provenances(entries: Mapping[str, str]) -> tuple[_models.ProrrataProvenanceDefinition, ...]:
+    provenances: list[_models.ProrrataProvenanceDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _PROVENANCE_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_PROVENANCE_PREFIX}{raw_token}"
         token = ProrrataProvisionalProvenance.from_registry(
@@ -361,16 +117,29 @@ def resolve_prorrata_register_catalogue(
         if str(token) != raw_token:
             raise RegistryValidationError(f"provenance {raw_token!r} declares a mismatched value")
         provenances.append(
-            ProrrataProvenanceDefinition(
+            _models.ProrrataProvenanceDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
-                authorisation_required=_boolean(entries, f"{prefix}.authorisation_required"),
-                election_allowed=_boolean(entries, f"{prefix}.election_allowed"),
+                authorisation_required=required_mapping_boolean(
+                    entries,
+                    f"{prefix}.authorisation_required",
+                    subject=_ENTRY_SUBJECT,
+                    case=BooleanTokenCase.CASE_INSENSITIVE,
+                ),
+                election_allowed=required_mapping_boolean(
+                    entries,
+                    f"{prefix}.election_allowed",
+                    subject=_ENTRY_SUBJECT,
+                    case=BooleanTokenCase.CASE_INSENSITIVE,
+                ),
             ),
         )
+    return tuple(provenances)
 
-    sector_letters: list[SectorDiferenciadoLetraDefinition] = []
+
+def _prorrata_sector_letters(entries: Mapping[str, str]) -> tuple[_models.SectorDiferenciadoLetraDefinition, ...]:
+    sector_letters: list[_models.SectorDiferenciadoLetraDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _SECTOR_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_SECTOR_PREFIX}{raw_token}"
         token = SectorDiferenciadoLetra.from_registry(
@@ -379,26 +148,22 @@ def resolve_prorrata_register_catalogue(
         if str(token) != raw_token:
             raise RegistryValidationError(f"sector letter {raw_token!r} declares a mismatched value")
         sector_letters.append(
-            SectorDiferenciadoLetraDefinition(
+            _models.SectorDiferenciadoLetraDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
             ),
         )
+    return tuple(sector_letters)
 
-    catalogue = ProrrataRegisterCatalogue(
-        regimes=tuple(regimes),
-        transition_kinds=tuple(transition_kinds),
-        provenances=tuple(provenances),
-        sector_letters=tuple(sector_letters),
-    )
+
+def _validate_prorrata_register_catalogue(catalogue: _models.ProrrataRegisterCatalogue) -> None:
     if len(catalogue.regimes) < 3 or len(catalogue.apportioning_regimes) != 2:
         raise RegistryValidationError("0116 must retain the two canonical apportioning regimes and add register states")
     if len(catalogue.transition_kinds) != 2 or len(catalogue.provenances) != 4 or len(catalogue.sector_letters) != 4:
         raise RegistryValidationError("0116 register vocabulary cardinalities do not match the declared scope")
     if not set(catalogue.apportioning_regimes).issubset(catalogue.all_regimes):
         raise RegistryValidationError("0116 apportioning regimes must be declared in the regime vocabulary")
-    return catalogue
 
 
 def general_prorrata_register_regime(
@@ -447,30 +212,6 @@ def revocacion_prorrata_transition(
         effective_date=effective_date,
         authority=authority,
     ).revocacion_transition
-
-
-def aeat_autorizada_prorrata_provenance(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> ProrrataProvisionalProvenance:
-    """Return the registry-declared AEAT-authorised provenance token."""
-    return resolve_prorrata_register_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).aeat_autorizada_provenance
-
-
-def inicio_actividad_prorrata_provenance(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> ProrrataProvisionalProvenance:
-    """Return the registry-declared start-of-activity provenance token."""
-    return resolve_prorrata_register_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).inicio_actividad_provenance
 
 
 def carried_prior_definitiva_prorrata_provenance(
@@ -595,16 +336,9 @@ def require_sector_diferenciado_letra(
 
 
 __all__ = [
-    "ProrrataProvenanceDefinition",
-    "ProrrataRegisterCatalogue",
-    "ProrrataRegisterRegimeDefinition",
-    "ProrrataTransitionDefinition",
-    "SectorDiferenciadoLetraDefinition",
-    "aeat_autorizada_prorrata_provenance",
     "carried_prior_definitiva_prorrata_provenance",
     "especial_prorrata_register_regime",
     "general_prorrata_register_regime",
-    "inicio_actividad_prorrata_provenance",
     "ninguna_prorrata_register_regime",
     "opcion_prorrata_transition",
     "prorrata_electable_provenances",

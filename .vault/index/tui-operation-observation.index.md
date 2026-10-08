@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#tui-operation-observation'
 date: '2026-08-24'
-modified: '2026-09-24'
+modified: '2026-10-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8a2fd93c294c47ab3c73346fc131a1b34a6d37d5828aeab2cdc346307b69ad3'
+body_hash: 'sha256:93a8a1c2a9f5231670eb82b75c4ed4f8c52f030a765a253014b3d9514945b4a1'
 related:
   - '[[2026-08-24-tui-operation-observation-adr]]'
   - '[[2026-08-24-tui-operation-observation-research]]'
@@ -23,7 +23,7 @@ Auto-generated index of all documents tagged with `#tui-operation-observation`.
 ### adr
 
 - `2026-08-24-tui-operation-observation-adr` - `tui-operation-observation` adr: `public operation contract parent-amendment staging` | (**status:** `rejected`)
-- `2026-09-24-tui-operation-observation-manual-edit-operand-custody-adr` - `tui-operation-observation` adr: `complete operand custody for manual edit values` | (**status:** `proposed`)
+- `2026-09-24-tui-operation-observation-manual-edit-operand-custody-adr` - `tui-operation-observation` adr: `complete operand custody for manual edit values` | (**status:** `accepted`)
 
 ### reference
 

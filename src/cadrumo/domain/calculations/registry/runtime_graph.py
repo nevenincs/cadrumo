@@ -128,6 +128,8 @@ def _enum_dispatch_binding_arg_index(expression: FormulaExpression) -> int | Non
 
 
 def _collect_enum_dispatch_binding_refs(expression: FormulaExpression, refs: list[BindingId]) -> None:
+    if expression.op == "text_equal":
+        refs.extend(arg.binding for arg in expression.args if arg.binding is not None)
     arg_index = _enum_dispatch_binding_arg_index(expression)
     if arg_index is not None and len(expression.args) > arg_index:
         dispatch_binding = expression.args[arg_index].binding
@@ -144,8 +146,9 @@ def enum_consumed_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
     channels. When a binding is the ``args[1]`` enum-key argument of a
     dispatch op (``lookup_bracket_by_ccaa`` /
     ``lookup_parameter_by_entity_type``) the runtime reads it from the
-    string-valued ``enum_binding_values`` channel. Every other binding
-    leaf is read from the Decimal-valued ``binding_values`` channel.
+    string-valued ``enum_binding_values`` channel. The explicit ``text_equal``
+    operator reads binding operands from that same string channel. Other
+    numeric binding leaves are read from ``binding_values``.
 
     The engine channel is therefore a property of *how the formula
     consumes the binding*, not of the binding's ``typed_enum``

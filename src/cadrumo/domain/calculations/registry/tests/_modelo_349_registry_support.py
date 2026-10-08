@@ -99,14 +99,8 @@ _OFFICIAL_FIELD_WIDTHS: dict[CasillaId, int] = {
     casilla_id: end - start + 1 for casilla_id, (start, end) in _OFFICIAL_FIELD_POSITIONS.items()
 }
 _M349_GB_XI_SOURCE_REF = "aeat-modelo-349-instructions"
-_M349_GB_XI_ORDINARY_BINDINGS = (
-    "iva-349-operador-row-codigo-pais",
-    "iva-349-operador-row-codigo-pais-adquisicion",
-)
-_M349_GB_XI_RECTIFICATION_BINDINGS = (
-    "iva-349-rectificacion-row-codigo-pais",
-    "iva-349-rectificacion-row-codigo-pais-adquisicion",
-)
+_M349_GB_XI_ORDINARY_BINDINGS = ("iva-349-operador-row-codigo-pais",)
+_M349_GB_XI_RECTIFICATION_BINDINGS = ("iva-349-rectificacion-row-codigo-pais",)
 _M349_GB_XI_ORDINARY_REQUIRED_TEXT = (
     "exclusivamente para los bienes (no para servicios)",
     "NIVA que comenzará por XI",

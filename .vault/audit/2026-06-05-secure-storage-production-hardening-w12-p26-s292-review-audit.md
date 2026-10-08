@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:6c4cf2bc19b1b5d1861d2c0dd9715112237f95a72c6b04e93d8ce40bbdcc0564'
+modified: '2026-10-03'
+body_hash: 'sha256:b812e76ef4763671686e57854c89df8f0840848279b259494970cb1fd7389cc5'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S292-001 | PASS | Env I/O is file persistence, not process env access
 
-`src/aeat/core/env_io.py` reads and rewrites simple `KEY=VALUE` `.env` files. It does
+The retired module read and rewrites simple `KEY=VALUE` `.env` files. It does
 not call `os.environ`, `getenv`, `load_settings()`, remote providers, secure-object
 repositories, SQL routes, active profiles, or master-key loaders. It is a plain-file
 configuration persistence helper used for operator-controlled resource identifiers.
@@ -42,8 +42,8 @@ operator-controlled `.env` strings; secret material must still be consumed throu
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/core/env_io.py src/aeat/core/test_env_io.py src/aeat/core/test_settings_single_surface_invariant.py src/aeat/tests/test_config.py`
-- `uv run --no-sync pytest -q src/aeat/core/test_env_io.py src/aeat/core/test_settings_single_surface_invariant.py src/aeat/tests/test_config.py::TestEnvExampleAlignment::test_settings_fields_documented_in_env_example src/aeat/tests/test_config.py::TestEnvExampleAlignment::test_env_example_vars_defined_in_settings`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "env_io .env file atomic write os.replace fsync settings provider drive ids plain file" --type code --port 8766 --max-results 8`
 - `uv run --no-sync vaultspec-rag search "write_env_vars read_env_file env .env google drive sheets docs resource identifiers no os.environ" --type code --port 8766 --max-results 8`

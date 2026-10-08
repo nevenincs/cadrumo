@@ -3,13 +3,13 @@ tags:
   - '#research'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d9e4d030689165c6877260b85438542fcb44ce771b3823551fa71eee2622c78b'
+body_hash: 'sha256:3a1f1b0044d0da868d27802f6624f8f4b3f7b53016d6ed03fcd1b4e991806f49'
 related: []
 ---
 
-## Why this exists
+### Why this exists
 
 Commit `4277ecc160` made `CalculationSourceDiagnostic.message` truncate at 512
 characters rather than raise, killing a class of failure in which a NON-blocking
@@ -21,7 +21,7 @@ honestly claim to have closed the quality half, and the reason is a specific tra
 Step found two over-long advisories, fixed them, and gated exactly those two. A set
 derived from the work cannot support a completeness claim about the tree.
 
-## Method
+### Method
 
 An AST sweep over every `.py` under `src/cadrumo`, excluding tests, collecting every
 keyword `message=` argument to a `CalculationSourceDiagnostic` or
@@ -50,7 +50,7 @@ exactly that close forever. They need no gate.
 
 **35 of the 37 have no headroom assertion.** The gate names two.
 
-## Where the ungated growable sites live
+### Where the ungated growable sites live
 
 Roughly seven are in `application/modelo/_minimo_descendientes_advisory.py`, which is
 this campaign's own surface and is owned by Step `S49`.
@@ -64,7 +64,7 @@ family of `resolve` methods), `aggregation/_oss_ioss.py`,
 `aggregation/_retencion_rate_advisory.py`, `calculations/_relation_prefill.py`, and
 `calculations/_iva_compensation_annual_partition.py`.
 
-## Severity, stated honestly
+### Severity, stated honestly
 
 **Corrected after measurement.** This section originally filed the whole class as a
 quality gap rather than a correctness one. That holds for most of the population and
@@ -83,7 +83,7 @@ still fires -- nothing is silent -- and the operator is left knowing something i
 with no instruction for fixing it. That sits closer to correctness than to polish, and
 filing it under quality under-ranked it.
 
-## Two advisories are truncating in production today
+### Two advisories are truncating in production today
 
 Measured against the real factories, not reconstructions:
 
@@ -96,7 +96,7 @@ The trigger is a late-qualifying subset of a large household. **Four children is
 to reach 498 and 493 respectively -- not an extreme-tail case requiring an implausible
 family.
 
-## The static-floor ranking in this document was inverted
+### The static-floor ranking in this document was inverted
 
 The floor table ranks by FIXED PROSE, and the risk is not in the fixed prose. It put
 `count_desync` (floor 406) at the top and `dependencia_suppressed` (floor 333) last.
@@ -107,7 +107,7 @@ is the one already over the cap.
 A static floor is a lower bound on a message, not a ranking of risk. Ranking by it
 substitutes the part that cannot grow for the part that can.
 
-## The interpolation delta is ~123, and shaped differently than assumed
+### The interpolation delta is ~123, and shaped differently than assumed
 
 The working assumption was ~100 characters, extrapolated from two sites. Measured: 96 at
 a household of four, 101 at a million all-qualifying, and **123** at a late-qualifying
@@ -125,7 +125,7 @@ Compressing a shared prefix would return ~60 characters to every advisory in the
 at once with no prose lost -- larger and cheaper than per-advisory trimming, subject to
 checking whether anything downstream parses that string.
 
-## What this does not claim
+### What this does not claim
 
 It does not claim the ~28 out-of-scope sites are near their caps. Their static floors
 were measured; their RENDERED worst cases were not, because doing so requires
@@ -136,10 +136,16 @@ It also does not claim 37 is exact. The sweep detects growth through f-strings, 
 and format calls; a message assembled through a helper that returns a string would read
 as constant. The number is a floor on the growable population, not a census of it.
 
-## Instrument note
+### Instrument note
 
 The first cross-reference pass reported the gate covering zero sites, because the
 ripgrep glob `*/tests/*` does not match nested test directories on this tree while
 `**/tests/**` does. The corrected pass found the two. A gate-coverage number produced
 by a filter that silently matches nothing reads identically to a real finding of zero
 coverage, which is the failure mode worth recording alongside the result.
+
+## Sources
+
+- `4277ecc160` — the change that made overlong diagnostic messages truncate instead of raising.
+- `src/cadrumo/application/modelo/_minimo_descendientes_advisory.py` — the dynamic advisories and their message rendering.
+- `src/cadrumo/application/aggregation/tests/test_diagnostic_message_bound.py` — the headroom gate and the two enrolled factories.

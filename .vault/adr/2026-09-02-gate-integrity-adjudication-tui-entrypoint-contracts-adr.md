@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#gate-integrity-adjudication'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1ee8362787bb7a99b209035c6ca81ce7be97fbd30df388dd81f9150d11d76b9c'
+body_hash: 'sha256:d39774daec58b31c94b55e3f218aeaa667d62cbd4f57ba6ad3a193634cc4eae5'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
@@ -40,7 +40,7 @@ indistinguishable, from the exit status alone, from repairing the code.
 - `2026-09-02-unreachable-capability-tui-navigation-join-adr` restates it as a hard
   constraint of the accepted design: the join must not introduce a CLI-to-TUI import
   edge, and the root request starts the session as a child interpreter.
-- The consolidation did not create an import edge. `src/cadrumo/entrypoints/cli/_tui_session.py`
+- The consolidation did not create an import edge. the former source file
   names the TUI as a module string, spawns it with `python -m`, and its docstring states
   that out-of-process execution is the sanctioned way for one entrypoint to reach the
   other. It is the consolidation's implementation and it keeps both contracts.

@@ -148,7 +148,7 @@ def _live_record_ids() -> tuple[frozenset[str], frozenset[str]]:
     """
     from dev._paths import REPO_ROOT
 
-    from ...legal_reference import load_legal_provisions
+    from ...legal_catalogue import load_legal_provisions
     from ...terminology_handbook.loader import load_terminology_handbook
     from ..concept_card_projection import project_concept_cards
     from ..legal_projection import legal_target_record_id

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 18:34+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -24,17 +24,17 @@ msgstr "Identidad y nomenclatura"
 
 #: ../../reference/identity-and-naming.md:3
 msgid ""
-"The Agencia Estatal de Administración Tributaria (AEAT) is the external "
+"The Agencia Estatal de AdministraciÃ³n Tributaria (AEAT) is the external "
 "tax authority. CLI means command-line interface. MCP means Model Context "
 "Protocol."
 msgstr ""
-"La Agencia Estatal de Administración Tributaria (AEAT) es la autoridad "
-"tributaria externa. CLI significa interfaz de línea de comandos. MCP "
+"La Agencia Estatal de AdministraciÃ³n Tributaria (AEAT) es la autoridad "
+"tributaria externa. CLI significa interfaz de lÃ­nea de comandos. MCP "
 "significa Model Context Protocol."
 
 #: ../../reference/identity-and-naming.md:6
 msgid "Canonical product identity"
-msgstr "Identidad canónica del producto"
+msgstr "Identidad canÃ³nica del producto"
 
 #: ../../reference/identity-and-naming.md
 msgid "Surface"
@@ -42,7 +42,7 @@ msgstr "Superficie"
 
 #: ../../reference/identity-and-naming.md
 msgid "Canonical value"
-msgstr "Valor canónico"
+msgstr "Valor canÃ³nico"
 
 #: ../../reference/identity-and-naming.md
 msgid "Display name"
@@ -62,7 +62,7 @@ msgstr "`cadrumo`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Root distribution"
-msgstr "Distribución raíz"
+msgstr "DistribuciÃ³n raÃ­z"
 
 #: ../../reference/identity-and-naming.md
 msgid "Human CLI executable"
@@ -93,16 +93,12 @@ msgid "`cadrumo-mcp`"
 msgstr "`cadrumo-mcp`"
 
 #: ../../reference/identity-and-naming.md
-msgid "MCP tool prefix"
-msgstr "Prefijo de herramientas MCP"
+msgid "MCP tool naming"
+msgstr "Nombres de las herramientas MCP"
 
 #: ../../reference/identity-and-naming.md
-msgid "`cadrumo_`"
-msgstr "`cadrumo_`"
-
-#: ../../reference/identity-and-naming.md
-msgid "MCP resource scheme"
-msgstr "Esquema de recursos MCP"
+msgid "Unprefixed names advertised by `tools/list`"
+msgstr "Nombres sin prefijo anunciados por `tools/list`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Plugin identifier"
@@ -121,8 +117,8 @@ msgid "Companion distributions"
 msgstr "Distribuciones complementarias"
 
 #: ../../reference/identity-and-naming.md
-msgid "`cadrumo-data-manuals`, `cadrumo-data-official`"
-msgstr "`cadrumo-data-manuals`, `cadrumo-data-official`"
+msgid "`cadrumo-data-manuals`, `cadrumo-data-official`, `cadrumo-data-normatives`"
+msgstr "`cadrumo-data-manuals`, `cadrumo-data-official`, `cadrumo-data-normatives`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Companion Python namespace"
@@ -132,15 +128,15 @@ msgstr "Espacio de nombres de Python complementario"
 msgid "`cadrumo_data`"
 msgstr "`cadrumo_data`"
 
-#: ../../reference/identity-and-naming.md:24
+#: ../../reference/identity-and-naming.md:23
 msgid ""
 "These values identify one product. There is no alternate human CLI "
 "spelling or Python import alias."
 msgstr ""
-"Estos valores identifican un único producto. No existe una grafía "
-"alternativa de la CLI para personas ni un alias de importación de Python."
+"Estos valores identifican un Ãºnico producto. No existe una grafÃ­a "
+"alternativa de la CLI para personas ni un alias de importaciÃ³n de Python."
 
-#: ../../reference/identity-and-naming.md:27
+#: ../../reference/identity-and-naming.md:26
 msgid "Product and authority names"
 msgstr "Nombres de producto y de la autoridad"
 
@@ -162,7 +158,7 @@ msgstr "Producto Cadrumo"
 
 #: ../../reference/identity-and-naming.md
 msgid "`Cadrumo` or the canonical identifier in the identity table"
-msgstr "`Cadrumo` o el identificador canónico de la tabla de identidad"
+msgstr "`Cadrumo` o el identificador canÃ³nico de la tabla de identidad"
 
 #: ../../reference/identity-and-naming.md
 msgid ""
@@ -174,7 +170,7 @@ msgstr ""
 
 #: ../../reference/identity-and-naming.md
 msgid "Spanish tax authority"
-msgstr "Autoridad tributaria española"
+msgstr "Autoridad tributaria espaÃ±ola"
 
 #: ../../reference/identity-and-naming.md
 msgid "`AEAT`"
@@ -186,9 +182,9 @@ msgid ""
 "AEAT taxonomy"
 msgstr ""
 "portal de la AEAT, credenciales de la AEAT, fichero oficial de la AEAT, "
-"fuente legal de la AEAT, taxonomía de la AEAT"
+"fuente legal de la AEAT, taxonomÃ­a de la AEAT"
 
-#: ../../reference/identity-and-naming.md:34
+#: ../../reference/identity-and-naming.md:33
 msgid ""
 "AEAT is an external authority and counterparty, not the application name."
 " Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
@@ -196,7 +192,6 @@ msgid ""
 "Cadrumo."
 msgstr ""
 "La AEAT es una autoridad externa y contraparte, no el nombre de la "
-"aplicación. Los términos propios de la autoridad como *modelo*, "
+"aplicaciÃ³n. Los tÃ©rminos propios de la autoridad como *modelo*, "
 "*casilla*, *justificante* y los tokens oficiales de periodo o de "
-"clasificación conservan su significado de la AEAT dentro de Cadrumo."
-
+"clasificaciÃ³n conservan su significado de la AEAT dentro de Cadrumo."

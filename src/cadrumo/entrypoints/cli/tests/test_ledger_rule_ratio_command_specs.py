@@ -14,7 +14,9 @@ from .._app_ledger_rule_ratio_command_spec_support import (
     _RULE_ACTOR_OPTION,
 )
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_spec import ArgumentSpec, CommandSpec, CommandSpecGraph, InvocationSpec, OptionSpec
+from ..command_graph import CommandSpecGraph
+from ..command_parameter_contracts import ArgumentSpec, OptionSpec
+from ..command_spec import CommandSpec, InvocationSpec
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

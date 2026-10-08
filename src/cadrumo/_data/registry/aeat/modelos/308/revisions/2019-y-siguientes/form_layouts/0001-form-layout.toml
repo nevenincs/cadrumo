@@ -1,0 +1,616 @@
+[[revisions.2019-y-siguientes.form_layouts]]
+id = "form-layout"
+revision_id = "2019-y-siguientes"
+seed_source = "authored"
+generator_version = 1
+source_state_digest = "a90b58a0089cf000308566d17057985a4c92babb0f43385efa8782361e558d1b"
+
+[[revisions.2019-y-siguientes.form_layouts.design_sources]]
+source_ref = "aeat-dr-308-2019"
+sha256 = "465d3dddc96aec3368e6934071a4f750c1dc906c562328c992605dd6d3d5d7fd"
+
+[[revisions.2019-y-siguientes.form_layouts.design_sources]]
+source_ref = "boe-modelo-308-2011-form-pdf"
+sha256 = "35feb3e91255a4c4e745910aa982093e8993d1fc0291e31644db1c0f01067b8d"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.devolucion-bic"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.devolucion-iban"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.ejercicio"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-adquirente-apellidos"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-adquirente-nif"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-adquirente-nombre"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-adquirente-pais"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-aeronave-ano"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-aeronave-fabricante"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-aeronave-marca"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-aeronave-peso"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-aeronave-serie"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-embarcacion-eslora"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-embarcacion-fabricante"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-embarcacion-identificacion"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-embarcacion-tipo"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-iva-devolver-art21"
+kind = "on_form"
+box_number = "20"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-iva-devolver-eib"
+kind = "on_form"
+box_number = "07"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-iva-devolver-transporte"
+kind = "on_form"
+box_number = "18"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-iva-soportado"
+kind = "on_form"
+box_number = "03"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-iva-soportado-art21"
+kind = "on_form"
+box_number = "19"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-maximo-devolver"
+kind = "on_form"
+box_number = "06"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-precio-adquisicion"
+kind = "on_form"
+box_number = "01"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-precio-venta"
+kind = "on_form"
+box_number = "04"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-tipo-01"
+kind = "on_form"
+box_number = "02"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-tipo-04"
+kind = "on_form"
+box_number = "05"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-vehiculo-bastidor"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-vehiculo-clasificacion"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-vehiculo-marca"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-vehiculo-modelo"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.mtn-vehiculo-tipo"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.nombre"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.periodo"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.req-base-08"
+kind = "on_form"
+box_number = "08"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.req-base-11"
+kind = "on_form"
+box_number = "11"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.req-base-14"
+kind = "on_form"
+box_number = "14"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.req-cuota-10"
+kind = "on_form"
+box_number = "10"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.req-cuota-13"
+kind = "on_form"
+box_number = "13"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.req-cuota-16"
+kind = "on_form"
+box_number = "16"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.req-iva-devolver-17"
+kind = "on_form"
+box_number = "17"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.req-tipo-09"
+kind = "on_form"
+box_number = "09"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.req-tipo-12"
+kind = "on_form"
+box_number = "12"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.req-tipo-15"
+kind = "on_form"
+box_number = "15"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.tipo-declaracion"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.tipo-solicitud"
+kind = "working_figure"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "decl.tipo-tributacion"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "firma-lugar"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "firma-fecha"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "firma"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.placements]]
+casilla_id = "papel-importe-devolucion"
+kind = "on_form"
+
+[[revisions.2019-y-siguientes.form_layouts.pages]]
+id = "m30801"
+official_ref = "BOE-A-2011-7479 Annex I PDF4; AEAT 2019 record design"
+heading_key = "modelo.schema.308.form.page.m30801.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "identificacion"
+heading_key = "modelo.schema.308.form.section.identificacion.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "context_field"
+id = "nif"
+export_layout_id = "generated-modelo-308-2019-y-siguientes-fichero"
+export_record_id = "m308-page-01"
+export_field_id = "m308-2019.declaracion.f007"
+heading_key = "modelo.schema.308.form.context.nif.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "context_field"
+id = "nombre"
+export_layout_id = "generated-modelo-308-2019-y-siguientes-fichero"
+export_record_id = "m308-page-01"
+export_field_id = "m308-2019.declaracion.f008"
+heading_key = "modelo.schema.308.form.context.nombre.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-nombre"
+casilla_id = "decl.nombre"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "devengo"
+heading_key = "modelo.schema.308.form.section.devengo.heading"
+official_heading = "Devengo"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "field"
+casilla_id = "decl.ejercicio"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "field-2"
+casilla_id = "decl.periodo"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "solicitud"
+heading_key = "modelo.schema.308.form.section.solicitud.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-tipo-declaracion"
+casilla_id = "decl.tipo-declaracion"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.choices]]
+value = "D"
+heading_key = "modelo.schema.308.form.choice.devolucion.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-tipo-tributacion"
+casilla_id = "decl.tipo-tributacion"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.choices]]
+value = "1"
+heading_key = "modelo.schema.308.form.choice.ocasional.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.choices]]
+value = "2"
+heading_key = "modelo.schema.308.form.choice.recargo.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.choices]]
+value = "3"
+heading_key = "modelo.schema.308.form.choice.transporte.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.choices]]
+value = "4"
+heading_key = "modelo.schema.308.form.choice.social.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "adquirente"
+heading_key = "modelo.schema.308.form.section.adquirente.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-adquirente-nif"
+casilla_id = "decl.mtn-adquirente-nif"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-adquirente-apellidos"
+casilla_id = "decl.mtn-adquirente-apellidos"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-adquirente-nombre"
+casilla_id = "decl.mtn-adquirente-nombre"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-adquirente-pais"
+casilla_id = "decl.mtn-adquirente-pais"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "vehiculo"
+heading_key = "modelo.schema.308.form.section.vehiculo.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-vehiculo-marca"
+casilla_id = "decl.mtn-vehiculo-marca"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-vehiculo-tipo"
+casilla_id = "decl.mtn-vehiculo-tipo"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-vehiculo-modelo"
+casilla_id = "decl.mtn-vehiculo-modelo"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-vehiculo-bastidor"
+casilla_id = "decl.mtn-vehiculo-bastidor"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-vehiculo-clasificacion"
+casilla_id = "decl.mtn-vehiculo-clasificacion"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "embarcacion"
+heading_key = "modelo.schema.308.form.section.embarcacion.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-embarcacion-fabricante"
+casilla_id = "decl.mtn-embarcacion-fabricante"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-embarcacion-tipo"
+casilla_id = "decl.mtn-embarcacion-tipo"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-embarcacion-identificacion"
+casilla_id = "decl.mtn-embarcacion-identificacion"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-embarcacion-eslora"
+casilla_id = "decl.mtn-embarcacion-eslora"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "aeronave"
+heading_key = "modelo.schema.308.form.section.aeronave.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-aeronave-fabricante"
+casilla_id = "decl.mtn-aeronave-fabricante"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-aeronave-marca"
+casilla_id = "decl.mtn-aeronave-marca"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-aeronave-serie"
+casilla_id = "decl.mtn-aeronave-serie"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-aeronave-ano"
+casilla_id = "decl.mtn-aeronave-ano"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-aeronave-peso"
+casilla_id = "decl.mtn-aeronave-peso"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "liquidacion-transporte"
+heading_key = "modelo.schema.308.form.section.liquidacion-transporte.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "grid"
+id = "precios-iva"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.columns]]
+key = "precio"
+heading_key = "modelo.schema.308.form.column.precio.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.columns]]
+key = "tipo"
+heading_key = "modelo.form.column.tipo"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.columns]]
+key = "iva"
+heading_key = "modelo.schema.308.form.column.iva.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows]]
+key = "adquisicion"
+heading_key = "modelo.schema.308.form.row.adquisicion.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.mtn-precio-adquisicion"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.mtn-tipo-01"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.mtn-iva-soportado"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows]]
+key = "venta"
+heading_key = "modelo.schema.308.form.row.venta.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.mtn-precio-venta"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.mtn-tipo-04"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.mtn-maximo-devolver"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-iva-devolver-eib"
+casilla_id = "decl.mtn-iva-devolver-eib"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-iva-devolver-transporte"
+casilla_id = "decl.mtn-iva-devolver-transporte"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "articulo21"
+heading_key = "modelo.schema.308.form.section.articulo21.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-iva-soportado-art21"
+casilla_id = "decl.mtn-iva-soportado-art21"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "decl-mtn-iva-devolver-art21"
+casilla_id = "decl.mtn-iva-devolver-art21"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "req"
+heading_key = "modelo.schema.308.form.section.recargo.heading"
+official_heading = "Régimen especial del recargo de equivalencia"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "grid"
+id = "recargo-liquidacion"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.columns]]
+key = "base"
+heading_key = "modelo.form.column.base_imponible"
+official_heading = "Base imponible"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.columns]]
+key = "tipo"
+heading_key = "modelo.form.column.tipo"
+official_heading = "Tipo %"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.columns]]
+key = "cuota"
+heading_key = "modelo.form.column.cuota"
+official_heading = "Cuota"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows]]
+key = "linea-1"
+heading_key = "modelo.schema.308.form.row.recargo-1.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.req-base-08"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.req-tipo-09"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.req-cuota-10"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows]]
+key = "linea-2"
+heading_key = "modelo.schema.308.form.row.recargo-2.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.req-base-11"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.req-tipo-12"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.req-cuota-13"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows]]
+key = "linea-3"
+heading_key = "modelo.schema.308.form.row.recargo-3.heading"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.req-base-14"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.req-tipo-15"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks.rows.cells]]
+kind = "casilla"
+casilla_id = "decl.req-cuota-16"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "recargo-total"
+casilla_id = "decl.req-iva-devolver-17"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "firma"
+heading_key = "modelo.schema.308.form.section.firma.heading"
+official_heading = "Sujeto pasivo (5)"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "firma-lugar"
+casilla_id = "firma-lugar"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "firma-fecha"
+casilla_id = "firma-fecha"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "firma"
+casilla_id = "firma"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "devolucion"
+heading_key = "modelo.schema.308.form.section.devolucion.heading"
+official_heading = "Devolución"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "importe-devolucion"
+casilla_id = "papel-importe-devolucion"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "field"
+casilla_id = "decl.devolucion-iban"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections.blocks]]
+kind = "field"
+id = "field-2"
+casilla_id = "decl.devolucion-bic"
+
+[revisions.2019-y-siguientes.form_layouts.review]
+state = "generated"
+notes = "Partial authored adaptation grounded in BOE-A-2011-7479 Annex I PDF4 and current AEAT2019 record design. Corrected recargo grid to rows08/09/10,11/12/13,14/15/16 in base/rate/quota order. Wire positions13 and109 are not printed box numbers. Conditional sections and historical enrollment still require work. Paper signature context is now represented by informational place/date/signature fields; blank values do not attest a signature or submission. Box17 is calculated from declared quotas10+13+16, as printed in Annex I; other financial entries remain manual and do not establish refund entitlement. Transport identity families now separated; purchase/sale price-rate-VAT rows follow boxes01-06. Exact export-owner taxpayer identity is read-only. No invented taxpayer data or transport selection. Refund category choices use M30801 field12 codes1-4 and field6 D from the pinned AEAT2019 design; selecting a category is not eligibility verification."

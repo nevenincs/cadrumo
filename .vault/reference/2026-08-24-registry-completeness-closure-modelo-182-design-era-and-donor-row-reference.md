@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:275b1ae4b34c70ce4965d1a18644b1329c77f190a6ac5ad3e6f6f31218368e43'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:fa05c0636aa3a465a8b5563202bf1494615c06d411c1ec8ec1f6349ab221ae9b'
+related: []
 ---
 
 # `registry-completeness-closure` reference: `Modelo 182 design-era and donor-row filing boundary`
@@ -146,10 +145,6 @@ landed and reviewed:
 - `src/cadrumo/_data/registry/aeat/legal/modelo-182.toml`
 - `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2007-y-siguientes/`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/`
-- `src/cadrumo/domain/calculations/registry/_donativo_bindings.py`
-- `src/cadrumo/application/calculations/_row_set_assembly.py`
-- `src/cadrumo/application/aggregation/_source_mesh.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_detail_row_field_declaration_coverage.py`
 - `2026-08-22-source-casilla-integration-plan`
 - `2026-08-14-registry-temporal-coverage-plan`
 - `2026-08-10-aeat-export-fragment-generator-authority-plan`

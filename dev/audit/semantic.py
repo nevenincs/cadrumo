@@ -14,7 +14,11 @@ import sys
 import textwrap
 import urllib.request
 from collections.abc import Iterable, Mapping
+from pathlib import Path
 from typing import cast
+
+from dev._paths import REPO_ROOT
+from dev.first_party_source import is_test_source
 
 
 def _json_object(value: object) -> dict[str, object] | None:
@@ -105,7 +109,7 @@ def is_violation(path: str) -> bool:
     normalised = path.replace("\\", "/")
     parts = normalised.split("/")
     # Filter out tests and locale files
-    if "tests" in parts or any(p.startswith("test_") for p in parts):
+    if is_test_source(normalised, root=REPO_ROOT if Path(normalised).is_absolute() else None):
         return False
     if path.endswith(".yml") or path.endswith(".yaml"):
         return False
@@ -238,37 +242,10 @@ def calculation_evidence(query: str, result: dict[str, object]) -> str | None:
         return None
 
     if query == "calculate tax base":
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Assign) and any(_is_tax_base_target(target) for target in node.targets):
-                if _is_transcribed_value(node.value):
-                    continue
-                if _is_calculation(node.value):
-                    return "tax-base arithmetic assignment"
-            if (
-                isinstance(node, ast.AnnAssign)
-                and _is_tax_base_target(node.target)
-                and node.value is not None
-                and not _is_transcribed_value(node.value)
-                and _is_calculation(node.value)
-            ):
-                return "tax-base arithmetic assignment"
-
-        function_name = _calculation_function_name(result)
-        if function_name is not None and any(
-            _is_calculation(node) for node in ast.walk(tree) if isinstance(node, ast.expr)
-        ):
-            return f"tax-base arithmetic in {function_name}"
-        return None
+        return _tax_base_evidence(tree, result)
 
     if query == "currency rounding":
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Call) and (_call_name(node) or "").lower() in {
-                "quantize",
-                "round",
-                "round_to_cents",
-                "to_integral_value",
-            }:
-                return "currency-rounding call"
+        return _currency_rounding_evidence(tree)
     return None
 
 
@@ -323,6 +300,57 @@ def main() -> None:
         # Exit silent/concise on success
         print("no semantic leak violations detected")
         sys.exit(0)
+
+
+def _tax_base_evidence(tree: ast.Module, result: dict[str, object]) -> str | None:
+    """Require tax-base arithmetic assignment or arithmetic in the named calculation function."""
+    for node in ast.walk(tree):
+        evidence = _tax_base_assignment_evidence(node)
+        if evidence is not None:
+            return evidence
+
+    function_name = _calculation_function_name(result)
+    if function_name is not None and any(
+        _is_calculation(node) for node in ast.walk(tree) if isinstance(node, ast.expr)
+    ):
+        return f"tax-base arithmetic in {function_name}"
+    return None
+
+
+def _currency_rounding_evidence(tree: ast.Module) -> str | None:
+    """Require one of the existing explicit currency-rounding calls."""
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and (_call_name(node) or "").lower() in {
+            "quantize",
+            "round",
+            "round_to_cents",
+            "to_integral_value",
+        }:
+            return "currency-rounding call"
+    return None
+
+
+def _tax_base_assignment_evidence(node: ast.AST) -> str | None:
+    """Distinguish arithmetic assignments from transcribed invoice fields."""
+    if isinstance(node, ast.Assign) and any(_is_tax_base_target(target) for target in node.targets):
+        if _is_transcribed_value(node.value):
+            return None
+        if _is_calculation(node.value):
+            return "tax-base arithmetic assignment"
+    return _annotated_tax_base_evidence(node)
+
+
+def _annotated_tax_base_evidence(node: ast.AST) -> str | None:
+    """Require an annotated tax-base assignment with arithmetic rather than transcription."""
+    if (
+        isinstance(node, ast.AnnAssign)
+        and _is_tax_base_target(node.target)
+        and node.value is not None
+        and not _is_transcribed_value(node.value)
+        and _is_calculation(node.value)
+    ):
+        return "tax-base arithmetic assignment"
+    return None
 
 
 if __name__ == "__main__":

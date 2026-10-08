@@ -57,6 +57,7 @@ PROFILE_SESSION_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SES
 #: declared once in the taxonomy and read here rather than typed at the writer.
 PROFILE_SESSION_RETIREMENT_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SESSION_RETIREMENT).subpath
 LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTTLE).subpath
+SIGN_IN_GENERATION_FILENAME = storage_location(StorageCategory.KEYSTORE_SIGN_IN_GENERATION).subpath
 #: The three owner directories below the hold-evidence root, each the home of one
 #: persisted format. Declared as whole taxonomy subpaths (``<root>``-relative,
 #: two components) rather than as bare leaf names, so the grammars below spell
@@ -79,19 +80,15 @@ ACTIVE_PROFILE_POINTER_FILENAME = storage_location(StorageCategory.ACTIVE_PROFIL
 CONFIG_RESET_JOURNAL_DIRNAME = storage_location(StorageCategory.CONFIG_RESET_JOURNAL).subpath
 OPERATION_JOURNAL_DIRNAME = storage_location(StorageCategory.OPERATION_JOURNAL).subpath
 #: The six names below back the parameterised fan-out grammars further down this
-#: module (run-trace, LLM usage/telemetry logs, the token acquisition lock, and
+#: module (run-trace, LLM usage/run-record logs, the token acquisition lock, and
 #: the two cache families). Each was previously hand-typed straight into its
 #: grammar string even though the taxonomy already declares it, duplicating the
 #: name the same way the bucket/keystore literals above did before this module
 #: started reading them off ``storage_location`` too.
 RUNS_DIRNAME = storage_location(StorageCategory.RUNS).subpath
 LLM_USAGE_DIRNAME = storage_location(StorageCategory.LLM_USAGE).subpath
-LLM_RUN_TELEMETRY_DIRNAME = storage_location(StorageCategory.LLM_RUN_TELEMETRY).subpath
+LLM_RUN_RECORD_DIRNAME = storage_location(StorageCategory.LLM_RUN_RECORD).subpath
 TOKENS_DIRNAME = storage_location(StorageCategory.TOKENS).subpath
-#: A two-component subpath (``cache/<name>``) -- interpolated whole, not split,
-#: since the taxonomy declares the compound as one subpath rather than two
-#: nested categories.
-LLM_CACHE_SUBPATH = storage_location(StorageCategory.LLM_CACHE).subpath
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
 INDEX_FILENAME = "index.json"
@@ -329,6 +326,14 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=LOGIN_THROTTLE_FILENAME,
     ),
+    StoragePathDefinition(
+        key="sign_in_generation",
+        kind=StoragePathKind.FILE,
+        grammar=f"<root>/{KEYSTORE_DIRNAME}/<bucket_id>/{SIGN_IN_GENERATION_FILENAME}",
+        owner="cadrumo.adapters.persistence.storage.custody",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
+        segment=SIGN_IN_GENERATION_FILENAME,
+    ),
     # The three custody hold-evidence records. Each is one file per profile
     # under its own owner directory, each carries its own schema version, and
     # each is enrolled in the durability inventory. No ``segment``: the owner
@@ -479,21 +484,20 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     # The four entries below declare filename TEMPLATES rather than a single
     # fixed leaf -- a daily log filename, a bucket/provider-keyed lock name, a
     # provider/model-keyed cache path -- each governed by the taxonomy's parent
-    # directory member (LLM_USAGE, LLM_RUN_TELEMETRY, TOKENS, LLM_CACHE) plus a
+    # directory member (LLM_USAGE, LLM_RUN_RECORD, TOKENS, LLM_CACHE) plus a
     # grammar spelling the interpolated shape, exactly the mechanism the six
     # entries above already use for the blob/run fan-outs.
     #
-    # Three of the four (llm_usage_record, llm_run_telemetry_record,
-    # llm_cache_entry) are NOT materialised as files: their producers persist
+    # Usage and run-record display paths are not materialised as files;
+    # their producers persist
     # through ``secure_object_repository_for_active_bucket().save(...)``
     # (encrypted SQL secure objects), and each producer's own docstring
-    # states its returned path is "logical ... for operator display only" /
-    # "The cache itself is persisted in encrypted SQL secure objects". The
+    # states its returned path is "logical ... for operator display only". The
     # grammar still documents that real, produced STRING -- callers build and
     # return it for display -- but no byte is ever written at it. Declared as
     # ``kind=FILE`` anyway (matching the composition the honesty review's taint
     # pass found, and giving the display-path contract a governed home) rather
-    # than invented as a new kind; the conformance tests for these three name
+    # than invented as a new kind; the conformance tests for both producers name
     # this explicitly and assert the returned Path, never on-disk presence.
     StoragePathDefinition(
         key="llm_usage_record",
@@ -503,9 +507,9 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
-        key="llm_run_telemetry_record",
+        key="llm_run_record_file",
         kind=StoragePathKind.FILE,
-        grammar=f"<root>/{LLM_RUN_TELEMETRY_DIRNAME}/run-telemetry-<timestamp>.jsonl",
+        grammar=f"<root>/{LLM_RUN_RECORD_DIRNAME}/run-record-<timestamp>.jsonl",
         owner="cadrumo.adapters.outbound.llm",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
@@ -514,13 +518,6 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar=f"<root>/{TOKENS_DIRNAME}/<bucket_id>-<auth_provider_kind>-auth.lock",
         owner="cadrumo.application.auth",
-        anchor=StoragePathAnchor.STORAGE_ROOT,
-    ),
-    StoragePathDefinition(
-        key="llm_cache_entry",
-        kind=StoragePathKind.FILE,
-        grammar=f"<root>/{LLM_CACHE_SUBPATH}/<provider>/<model>/<sha256>-<sha256>.json",
-        owner="cadrumo.adapters.outbound.llm",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
 )

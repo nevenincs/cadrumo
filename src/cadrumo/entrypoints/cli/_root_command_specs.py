@@ -7,25 +7,21 @@ from cadrumo.application.operator_surface.command_ports import (
     CommandWriteRoute,
 )
 
-from .command_spec import (
+from ._command_secret_contracts import MachineSecretFieldSpec, ProfileSecretChannelKind, ProfileSecretSpec
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     FLAG_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
-    CommandSpec,
     DeferredTarget,
-    ExecutionPolicySpec,
-    InvocationSpec,
     LazyBinding,
-    MachineSecretFieldSpec,
-    OptionSpec,
     ParameterDefault,
-    ProfileSecretChannelKind,
-    ProfileSecretSpec,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 _OUTPUT_FORMAT = ValueContract(DeferredTarget("...core.output_rendering", "OutputFormat", __package__))
@@ -90,6 +86,20 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.config.custody.profile_secrets_fd_help"),
                 profile_secret_channel=ProfileSecretChannelKind.FILE_DESCRIPTOR,
+            ),
+            OptionSpec(
+                name="profile_auth_method",
+                declarations=("--profile-auth-method",),
+                value=ValueContract(DeferredTarget("builtins", "str"), choices=("password", "api-key")),
+                default=ParameterDefault.value("password"),
+                help_key=TranslationKey("cli.config.custody.profile_auth_method_help"),
+            ),
+            OptionSpec(
+                name="profile_credential_ref",
+                declarations=("--profile-credential-ref",),
+                value=ValueContract(DeferredTarget("uuid", "UUID")),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.config.custody.profile_credential_ref_help"),
             ),
             OptionSpec(
                 name="version",
@@ -158,7 +168,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             identity="root.status",
         ),
         profile_secret=ProfileSecretSpec(
-            fields=(MachineSecretFieldSpec("profile_passphrase"),),
+            fields=(MachineSecretFieldSpec("profile_passphrase"), MachineSecretFieldSpec("api_key")),
             model=DeferredTarget(
                 "._profile_authentication_contract",
                 "ProfileAuthenticationSecrets",

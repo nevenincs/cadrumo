@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 
 import pytest
 from pydantic import ValidationError
@@ -23,6 +23,7 @@ from ....domain.user_profile.values import (
     UserProfileRecord,
     create_user_profile_record,
 )
+from .. import preflight as preflight_module
 from ..commands import ProfilePreflightRequirement
 from ..preflight import ProfilePreflightService, build_profile_preflight_requirement
 from ..validation import ProfileValidationService
@@ -235,6 +236,7 @@ def test_preflight_ready_with_no_modelo_selectors_matched_is_not_assessed(
 def test_preflight_modelo_100_per_operation_axis_now_contributes(
     schema: ProfileSchemaDefinition,
     operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """``identity.tax_id`` is grounded for modelo 100 - the axis is not universally empty.
 
@@ -246,16 +248,14 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(
     """
     svc = ProfilePreflightService(schema=schema)
     period = Period.from_year_and_code(2024, "0A")
+    build = preflight_module.build_profile_grounding_index
+    reads: list[PinnedAuthorityOperation] = []
 
-    empty_record = _record(schema, operation)
-    missing_report = svc.report(
-        record=empty_record,
-        modelo="100",
-        revision_id="2024-y-siguientes",
-        period=period,
-    )
-    assert missing_report.per_operation_requirements_assessed is True
-    assert any(item.section_key == "identity" and item.field_key == "tax_id" for item in missing_report.missing)
+    def counted(pin: PinnedAuthorityOperation) -> Mapping[str, ProfileKeyGrounding]:
+        reads.append(pin)
+        return build(pin)
+
+    monkeypatch.setattr(preflight_module, "build_profile_grounding_index", counted)
 
     complete_record = _record(
         schema,
@@ -267,9 +267,59 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(
         modelo="100",
         revision_id="2024-y-siguientes",
         period=period,
+        operation=operation,
     )
     assert ready_report.per_operation_requirements_assessed is True
     assert not any(item.section_key == "identity" and item.field_key == "tax_id" for item in ready_report.missing)
+    assert ready_report.ready and ready_report.missing == ()
+    assert reads == []
+
+    empty_record = _record(schema, operation)
+    missing_report = svc.report(
+        record=empty_record,
+        modelo="100",
+        revision_id="2024-y-siguientes",
+        period=period,
+        operation=operation,
+    )
+    assert missing_report.per_operation_requirements_assessed is True
+    assert any(item.section_key == "identity" and item.field_key == "tax_id" for item in missing_report.missing)
+    assert reads == [operation]
+    with monkeypatch.context() as eager:
+        eager.setattr(preflight_module, "deferred_profile_grounding_index", build)
+        expected = svc.report(
+            record=empty_record,
+            modelo="100",
+            revision_id="2024-y-siguientes",
+            period=period,
+            operation=operation,
+        )
+    assert missing_report.model_dump_json() == expected.model_dump_json()
+
+
+@pytest.mark.parametrize("error_type", [RuntimeError, KeyError])
+def test_deferred_grounding_retries_failure_and_reuses_empty_success(
+    operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch, error_type: type[Exception]
+) -> None:
+    """A failed lookup grants no cached answer; an empty successful index is still reusable."""
+    calls = 0
+
+    def load(pin: PinnedAuthorityOperation) -> Mapping[str, ProfileKeyGrounding]:
+        nonlocal calls
+        assert pin is operation
+        calls += 1
+        if calls == 1:
+            raise error_type("grounding unavailable")
+        return dict[str, ProfileKeyGrounding]()
+
+    monkeypatch.setattr(preflight_module, "build_profile_grounding_index", load)
+    index = preflight_module.deferred_profile_grounding_index(operation)
+    assert calls == 0
+    with pytest.raises(error_type, match="grounding unavailable"):
+        index.get("identity.tax_id")
+    assert index.get("identity.tax_id") is None
+    assert len(index) == 0 and tuple(index) == ()
+    assert calls == 2
 
 
 def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaration(

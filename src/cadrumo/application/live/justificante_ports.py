@@ -15,7 +15,9 @@ from typing import Protocol
 from ...core.period import Period
 from ...domain.justificante.schema import Justificante
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
+from .filed_data_ports import FiledEffectGuard
 from .filed_observation_ports import FiledFilingReconciliationPort
+from .session import SessionWriteReporter
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,13 +29,6 @@ class JustificanteDeclaration:
     expediente_id: str
     estado: str
     presented_at: datetime
-
-
-@dataclass(frozen=True, slots=True)
-class JustificanteExpediente:
-    """Minimal Sede procedure-tree entry needed to fetch a receipt."""
-
-    expediente_id: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,15 +101,17 @@ class JustificanteRegistrationPorts:
 
 
 class JustificanteLiveReadPort(Protocol):
-    """Read the declaration register, procedure tree, and selected receipt."""
+    """Read the declaration register and its selected receipt."""
 
-    async def declarations_and_expedientes(
+    async def declarations(
         self,
         *,
         modelo: str,
         year: int,
-    ) -> tuple[Sequence[JustificanteDeclaration], Sequence[JustificanteExpediente]]:
-        """Read declarations and their matching procedure-tree entries."""
+        effect_guard: FiledEffectGuard | None = None,
+        on_session_write: SessionWriteReporter | None = None,
+    ) -> Sequence[JustificanteDeclaration]:
+        """Read the period-bearing declaration register."""
         ...
 
     async def capture(self, *, expediente_id: str) -> CapturedJustificante:

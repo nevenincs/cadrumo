@@ -1,43 +1,21 @@
 # cadrumo-data-manuals
 
-Corpus source binaries — the AEAT/BOE práctico **manuals** — for the
-[`cadrumo`](https://github.com/cadrumo/cadrumo) Spanish-tax toolkit.
+This Cadrumo corpus companion ships source binaries under `corpus/manuals`.
+It preserves their bytes and mirrored resource paths. Derived text and metadata
+remain in the command-bearing `cadrumo` distribution.
 
-The command-bearing `cadrumo` wheel excludes the corpus source binaries — the
-AEAT and BOE manuals (`*.pdf`) and workbooks (`*.xls`/`*.xlsx`) — that make up
-roughly 94% of its weight. Those binaries are split across two sub-cap data
-distributions so each stays under PyPI's 100 MB per-file cap without a size
-grant:
+The three mandatory companions partition the complete corpus binary set:
 
-- **`cadrumo-data-manuals`** (this package) ships `corpus/manuals`.
-- **`cadrumo-data-official`** ships `corpus/aeat_official` and `corpus/normatives`.
+- `cadrumo-data-manuals`: `corpus/manuals`.
+- `cadrumo-data-official`: `corpus/aeat_official` and `corpus/eu_official`.
+- `cadrumo-data-normatives`: `corpus/normatives`.
 
-Both ship subtrees of the same `cadrumo_data` implicit namespace package under a
-mirrored `cadrumo_data/_data/corpus` tree, so `importlib.resources.files("cadrumo_data")`
-spans both installed portions.
+Each stays below the existing 100 MB per-artifact limit. All contribute disjoint
+portions of the implicit `cadrumo_data` namespace under
+`cadrumo_data/_data/corpus`, with no namespace `__init__.py`.
 
-At runtime `cadrumo` resolves a corpus binary from its own package tree first and
-then from these data distributions, so a full source checkout and an installed
-three-wheel cohort read the corpus identically. They are required bundled
-calculation inputs; registry authoring and conformance verification run only in
-the development lane.
+Install `cadrumo` normally; its dependencies install all three companions at
+the exact matching version. The root and every companion ship together.
 
-## Install
-
-Install Cadrumo normally. Its base dependency metadata pins and installs both
-data distributions at the exact matching version:
-
-```
-pip install cadrumo
-```
-
-## Versioning
-
-`cadrumo-data-manuals` is version-locked to the `cadrumo` distribution. It and
-its sibling `cadrumo-data-official` ship at the same version as `cadrumo`,
-enforced by release and packaging gates. Direct installation is only for
-artifact inspection; command-bearing installs should install `cadrumo`.
-
-## License
-
-Apache-2.0.
+The Apache-2.0 license covers packaging and derived work. The accompanying
+NOTICE preserves attribution and the separate status of official source texts.

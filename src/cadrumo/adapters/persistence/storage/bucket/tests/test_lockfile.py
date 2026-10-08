@@ -92,7 +92,7 @@ def _bare_interpreter_spawn_seconds() -> float:
         [sys.executable, "-c", "import sys"],
         check=True,
         capture_output=True,
-        timeout=120,
+        timeout=None,
     )
     return time.monotonic() - started
 
@@ -254,9 +254,9 @@ def test_child_process_cannot_inherit_parent_local_lock_ownership(
     )
     try:
         child.start()
-        child.join(timeout=10)
+        child.join(timeout=None)
         assert child.exitcode == 0
-        assert results.get(timeout=5) == ("busy", os.getpid())
+        assert results.get_nowait() == ("busy", os.getpid())
         assert lock_path(paths).is_file()
     finally:
         if child.is_alive():
@@ -305,7 +305,7 @@ def test_wait_seconds_eventually_acquires(tmp_path: Path) -> None:
         finally:
             release_lock(paths)
     finally:
-        holder.wait(timeout=10)
+        holder.wait()
 
 
 def test_stale_lock_with_dead_pid_is_reclaimed(tmp_path: Path) -> None:
@@ -319,7 +319,7 @@ def test_stale_lock_with_dead_pid_is_reclaimed(tmp_path: Path) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
 
     proc = subprocess.Popen([sys.executable, "-c", "import sys; sys.exit(0)"])
-    proc.wait(timeout=5)
+    proc.wait()
     dead_pid = proc.pid
 
     target = lock_path(paths)

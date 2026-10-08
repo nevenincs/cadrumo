@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#export-fragment-generator-authority'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2bc6048fe414795338f8907bce1bb6e39b753f977abd24b878fe22927c2d4513'
+body_hash: 'sha256:e3645a47e40f00e94b5985040498e54546a9604e7d3dd6dc2dea3ca99712ad73'
 related:
   - "[[2026-08-31-export-fragment-generator-authority-auxiliary-envelope-classification-research]]"
   - "[[2026-08-28-registry-narrow-mechanism-widening-adr]]"
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
 ---
 
 # `export-fragment-generator-authority` adr: `the file closer is a field, and the aux-header branch is a spelling artifact` | (**status:** `proposed`)
@@ -154,3 +155,7 @@ Not established here: whether an accepted filing or a live oracle confirms the c
 emitted bytes. The grounding is the AEAT design document, the strongest authority
 available without filing and the same one every other layout decision rests on. A live
 oracle that later contradicts it outranks this record.
+
+## Current code status (2026-10-03)
+
+This ADR remains proposed. The parser has since gained generic spelling support: `dev/registry/compiler/record_design_workbook.py` case-folds the variable-body and variable-total markers, and `dev/registry/pipeline/variable_envelope.py` accepts the `EEEE` year placeholder in its closer grammar. Those generic capabilities do not establish a new Modelo 390 classification. The current generated 2022 layout at `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/export/0000-export-layout.toml` still declares `[revisions.2022.export_layouts.auxiliary_envelope_header]` for `Pág. 0` with a 328-byte prefix. The accepted 2026-08-10 parent ADR explicitly governs page zero as a typed fixed auxiliary-envelope header. The proposed reclassification and closer policy remain unaccepted; the implementation changes do not supersede that authority.

@@ -20,8 +20,8 @@ from ...calculations.cross_period_models import (
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
 )
-from ..verification_actions import _classify_verification_outcome
 from ..verification_cross_period import cross_period_clean_state_findings
+from ..verification_report_facts import classify_verification_outcome
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -77,7 +77,7 @@ def test_registry_revision_divergence_blocks_verified_complete_grant() -> None:
     )
     findings = list(cross_period_clean_state_findings(_verdict(evidence)))
 
-    _completeness, granted = _classify_verification_outcome(findings=findings, missing_required=[])
+    _completeness, granted = classify_verification_outcome(findings=findings, missing_required=[])
 
     assert granted is False
 

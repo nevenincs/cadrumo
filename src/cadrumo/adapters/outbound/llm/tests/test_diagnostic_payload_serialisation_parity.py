@@ -1,6 +1,6 @@
 """The three diagnostic stores in this package write one payload byte shape.
 
-``LLMCache``, ``UsageRecorder`` and ``LLMRunTelemetryRecorder`` each wrap a
+``LLMCache``, ``UsageRecorder`` and ``LLMRunRecorder`` each wrap a
 ``model_dump(mode="json")`` record in a ``logical_root``-tagged envelope and
 write it as a secure-object payload. The cache used to serialise that envelope
 with a hand-rolled ``json.dumps(payload, indent=2, sort_keys=True,

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:d47ce9e9663eb2407ef46e723d097fe9ca1e3ca10c3a4b4659014a3ebd8615b3'
+modified: '2026-10-03'
+body_hash: 'sha256:7f54c55520eb1f470bb5818aa2a82acde100efbbb28d1753e7b2935723ef531e'
 related:
   - '[[2026-06-02-secure-storage-production-hardening-w12-p25-s100-scanner-delta-audit]]'
 ---
@@ -60,9 +60,9 @@ checked, but the affected-file register still marks their matching rows as `pend
 
 | AFR | Step | Target | Path |
 | --- | --- | --- | --- |
-| `AFR-291` | `W12.P26.S393` | `plaintext-exception` | `src/aeat/locales/_ast_scanner.py` |
-| `AFR-292` | `W12.P26.S394` | `plaintext-exception` | `src/aeat/locales/cli.py` |
-| `AFR-293` | `W12.P26.S395` | `plaintext-exception` | `src/aeat/locales/manager.py` |
+| `AFR-291` | `W12.P26.S393` | `plaintext-exception` | the retired module |
+| `AFR-292` | `W12.P26.S394` | `plaintext-exception` | the retired module |
+| `AFR-293` | `W12.P26.S395` | `plaintext-exception` | the retired module |
 
 The local vault search did not find S393-S395 execution or review artifacts under the
 secure-storage production-hardening exec/audit folders. That makes the checked state

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#profile-registration-password-policy'
 date: '2026-08-22'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd49081bc6291ee51688659b35bff0c173a09403120a92de3ebbc8c9b8ea42fd'
+body_hash: 'sha256:d99aabb661444a1387dbb71c2f496430e03486146bd427863e372d54b0e3b3d4'
 related:
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
 ---
@@ -14,7 +14,7 @@ related:
 
 ## Changes
 
-- `S02` `T` `src/cadrumo/core/_credentials.py`
+- `S02` `T`
 - `S03` `T` `src/cadrumo/core/__init__.py`
 - `S04` `T` `src/cadrumo/core/tests/test_credentials.py`
 - `S05` `T` `src/cadrumo/adapters/persistence/storage/custody`

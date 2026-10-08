@@ -40,13 +40,7 @@ def sequence_contract_path(
     never met the check, and a UNC or drive-qualified segment made
     ``joinpath`` discard the root before it entirely.
     """
-    if chr(92) in page:
-        raise SequenceEngineError(f"a docname is POSIX-shaped and cannot contain a backslash: {page!r}")
-    page_parts = tuple(page.split("/"))
-    if not page_parts or any(part in {"", ".", ".."} for part in page_parts):
-        raise SequenceEngineError(f"invalid docname for a private sequence contract: {page!r}")
-    if any(PurePosixPath(part).is_absolute() or ntpath.splitdrive(part)[0] for part in page_parts):
-        raise SequenceEngineError(f"a docname segment cannot be absolute or drive-qualified: {page!r}")
+    page_parts = _validated_docname_parts(page)
     if _SEQUENCE_ID_RE.fullmatch(sequence_id) is None:
         raise SequenceEngineError(f"invalid sequence id for a private sequence contract: {sequence_id!r}")
     root = contracts_root if contracts_root is not None else docs_root / "_sequences" / "contracts"
@@ -108,3 +102,14 @@ def read_sequence_contract(
     if not body:
         raise SequenceEngineError(f"private sequence contract {path} contains no frame grammar")
     return options, body
+
+
+def _validated_docname_parts(page: str) -> tuple[str, ...]:
+    if chr(92) in page:
+        raise SequenceEngineError(f"a docname is POSIX-shaped and cannot contain a backslash: {page!r}")
+    page_parts = tuple(page.split("/"))
+    if not page_parts or any(part in {"", ".", ".."} for part in page_parts):
+        raise SequenceEngineError(f"invalid docname for a private sequence contract: {page!r}")
+    if any(PurePosixPath(part).is_absolute() or ntpath.splitdrive(part)[0] for part in page_parts):
+        raise SequenceEngineError(f"a docname segment cannot be absolute or drive-qualified: {page!r}")
+    return page_parts

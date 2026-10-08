@@ -53,7 +53,7 @@ _DAY: Final[float] = 24 * 60 * 60
 #: the two spellings the development tree uses to name a real ``var/`` member.
 _VAR_MEMBER_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r'"var"\s*/\s*"([A-Za-z0-9._-]+)"'),
-    re.compile(r"var/([A-Za-z0-9._-]+)"),
+    re.compile(r"var/([A-Za-z0-9_-](?:[A-Za-z0-9._-]*[A-Za-z0-9_-])?)"),
 )
 
 #: These modules name scratch-family instances on purpose: this test, the module
@@ -109,13 +109,8 @@ def _foreign_owner_name(family: ScratchFamily, body: str) -> str:
     only way this exercises the probe rather than a guess about it.
     """
     finished = subprocess.Popen([sys.executable, "-c", "pass"])
-    # Bounded: an interpreter that does nothing exits at once, but a bare wait()
-    # is unbounded, and a test blocked in wait() is the one shape the repository's
-    # per-test ceiling cannot interrupt - the thread method cannot unwind it, so
-    # the worker exits uncleanly and --max-worker-restart=0 stops the session
-    # naming a test that was never the defect. TimeoutExpired here is loud and
-    # attributable instead.
-    finished.wait(timeout=60)
+    # Reap the real child before using its dead PID as the foreign-owner specimen.
+    finished.wait()
     return f"{family.prefix}{finished.pid}-{body}{family.suffix}"
 
 

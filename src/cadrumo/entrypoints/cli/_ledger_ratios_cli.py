@@ -6,26 +6,15 @@ active bucket so category overrides remain auditable.
 
 from __future__ import annotations
 
-from datetime import date
-
 import typer
 
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
-from ...domain.categories.spending_category_catalogue import require_spending_category
 from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import ledger_cli_no_recovery
 from .common import activate_subcommand_output_language as _activate_subcommand_output_language
-from .common import active_bucket_id_or_refuse as _ratios_bucket_id
 from .common import bad, emit_envelope
-from .state_projection_support import authority_operation
-
-
-def _ratios_bucket_and_profile() -> tuple[str, str | None]:
-    """Return ``(bucket_id, active_profile_id)`` from workflow state."""
-    from ...core.bucket_pointer import resolve_active_bucket_id
-
-    return _ratios_bucket_id(), resolve_active_bucket_id()
+from .runtime_ledger_ratios import list_eligible_ratios, list_ratios, set_ratio, unset_ratio, validate_ratios
 
 
 def _resolved_ratio_year(year: int | None) -> int:
@@ -48,40 +37,23 @@ def ratios_list(
 ) -> None:
     """List every per-category proportional-deduction override stored on the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...adapters.persistence.profile.usage_ratios import (
-        load_usage_ratios_with_censo_guard,
-    )
-    from ...application.user_profile.censo_sync import bound_raw_afectacion_ratio
     from ...domain.usage_ratios.errors import CensoRatioMismatchError
     from ._ledger_ratios_payloads import RatiosListResult, RatiosRowPayload
 
-    bucket_id, profile_id = _ratios_bucket_and_profile()
-    operation = authority_operation(ctx)
-    raw_afectacion = None
-    if profile_id is not None:
-        raw_afectacion = bound_raw_afectacion_ratio(
-            bucket_id=bucket_id,
-            profile_id=profile_id,
-            operation=operation,
-        )
-    try:
-        profile = load_usage_ratios_with_censo_guard(
-            bucket_id=bucket_id,
-            raw_afectacion_ratio=raw_afectacion,
-            year=_resolved_ratio_year(year),
-            operation=operation,
-        )
-    except CensoRatioMismatchError as exc:
+    completion = list_ratios(ctx, year=_resolved_ratio_year(year))
+    projection = completion.projection
+    if projection.outcome == "censo_mismatch":
         from ...application.cli_exception_preconditions import CliExceptionPrecondition
 
         raise ledger_cli_no_recovery(
-            exc,
+            CensoRatioMismatchError("persisted HOME_OFFICE ratio overrides conflict with the bound censo"),
             condition=CliExceptionPrecondition.LEDGER_CENSO_RATIO_CONSISTENT,
             facts={"censo_ratio_consistent": False},
         ) from None
-    rows = [RatiosRowPayload(category=category, ratio=str(ratio)) for category, ratio in profile.ratios.items()]
-    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
-    lines.extend(f"{row.category.value}\t{row.ratio}" for row in rows)
+    bucket_id = str(projection.profile_id)
+    rows = [RatiosRowPayload(category=row.category, ratio=row.ratio) for row in projection.rows]
+    lines = [f"bucket\t{bucket_id}", f"count\t{projection.count}"]
+    lines.extend(f"{row.category}\t{row.ratio}" for row in rows)
     emit_envelope(
         ctx,
         command="ledger.ratios.list",
@@ -104,42 +76,24 @@ def ratios_set(
 ) -> None:
     """Set or replace one per-category usage-ratio override on the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.ledger.ratios import apply_usage_ratio_override
-    from ...application.user_profile.censo_sync import bound_raw_afectacion_ratio
+    from ...domain.usage_ratios.model import validate_usage_ratio_bound
     from ._ledger_ratios_payloads import RatiosSetResult
 
-    resolved_year = _resolved_ratio_year(year)
-    operation = authority_operation(ctx)
-    category = require_spending_category(
-        category,
-        effective_date=date(resolved_year, 12, 31),
-        authority=operation,
-    )
     parsed = parse_decimal_amount(ratio, label="ratio")
-    bucket_id, profile_id = _ratios_bucket_and_profile()
-    raw_afectacion = (
-        bound_raw_afectacion_ratio(
-            bucket_id=bucket_id,
-            profile_id=profile_id,
-            operation=operation,
-        )
-        if profile_id is not None
-        else None
-    )
-    apply_usage_ratio_override(
-        bucket_id=bucket_id,
+    validate_usage_ratio_bound(parsed, label="ratio")
+    completion = set_ratio(
+        ctx,
         category=category,
-        ratio=parsed,
-        year=resolved_year,
-        profile_id=profile_id,
-        raw_afectacion_ratio=raw_afectacion,
-        operation=operation,
+        ratio=str(parsed),
+        year=_resolved_ratio_year(year),
     )
+    projection = completion.projection
+    bucket_id = str(projection.profile_id)
     emit_envelope(
         ctx,
         command="ledger.ratios.set",
-        result=RatiosSetResult(bucket_id=bucket_id, category=category, ratio=str(parsed)),
-        lines=(f"bucket\t{bucket_id}", f"{category.value}\t{parsed}"),
+        result=RatiosSetResult(bucket_id=bucket_id, category=projection.category, ratio=projection.ratio),
+        lines=(f"bucket\t{bucket_id}", f"{projection.category}\t{projection.ratio}"),
     )
 
 
@@ -150,27 +104,24 @@ def ratios_unset(
 ) -> None:
     """Clear one per-category usage-ratio override from the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.ledger.ratios import clear_usage_ratio_override
-    from ...domain.usage_ratios.errors import UsageRatioValidationError
     from ._ledger_ratios_payloads import RatiosUnsetResult
 
-    category = require_spending_category(category, authority=authority_operation(ctx))
-    bucket_id = _ratios_bucket_id()
-    try:
-        clear_usage_ratio_override(bucket_id=bucket_id, category=category, operation=authority_operation(ctx))
-    except UsageRatioValidationError as exc:
+    completion = unset_ratio(ctx, category=category)
+    projection = completion.projection
+    bucket_id = str(projection.profile_id)
+    if projection.outcome == "no_override":
         raise bad(
             tr(
                 "cli.app.ledger.ratios.no_override_error",
-                category=category.value,
+                category=projection.category,
                 bucket_id=bucket_id,
             ),
-        ) from exc
+        )
     emit_envelope(
         ctx,
         command="ledger.ratios.unset",
-        result=RatiosUnsetResult(bucket_id=bucket_id, category=category, ratio=""),
-        lines=(f"bucket\t{bucket_id}", f"{category.value}\t<unset>"),
+        result=RatiosUnsetResult(bucket_id=bucket_id, category=projection.category, ratio=""),
+        lines=(f"bucket\t{bucket_id}", f"{projection.category}\t<unset>"),
     )
 
 
@@ -181,22 +132,18 @@ def ratios_eligible(
 ) -> None:
     """List every ``SpendingCategory`` that may carry a per-category proportional-deduction override."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.ledger.ratios import list_eligible_ratios_for_bucket
     from ._ledger_ratios_payloads import RatiosEligibleResult, RatiosEligibleRowPayload
 
-    bucket_id = _ratios_bucket_id()
-    rows = list_eligible_ratios_for_bucket(
-        bucket_id=bucket_id,
-        year=_resolved_ratio_year(year),
-        operation=authority_operation(ctx),
-    )
-    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
-    for row in rows:
-        default = "" if row.default_ratio is None else str(row.default_ratio)
+    completion = list_eligible_ratios(ctx, year=_resolved_ratio_year(year))
+    projection = completion.projection
+    bucket_id = str(projection.profile_id)
+    lines = [f"bucket\t{bucket_id}", f"count\t{projection.count}"]
+    for row in projection.rows:
+        default = "" if row.default_ratio is None else row.default_ratio
         override_marker = "X" if row.override_present else "."
-        kind_text = row.proportionality_kind.value
+        kind_text = row.proportionality_kind
         lines.append(
-            f"{row.category.value}\t{kind_text}\tdefault={default or '-'}\toverride={override_marker}",
+            f"{row.category}\t{kind_text}\tdefault={default or '-'}\toverride={override_marker}",
         )
     emit_envelope(
         ctx,
@@ -207,12 +154,12 @@ def ratios_eligible(
                 RatiosEligibleRowPayload(
                     category=row.category,
                     proportionality_kind=row.proportionality_kind,
-                    default_ratio=None if row.default_ratio is None else str(row.default_ratio),
+                    default_ratio=row.default_ratio,
                     override_present=row.override_present,
                 )
-                for row in rows
+                for row in projection.rows
             ],
-            count=len(rows),
+            count=projection.count,
         ),
         lines=lines,
     )
@@ -224,38 +171,38 @@ def ratios_validate(
 ) -> None:
     """Validate per-category usage-ratio overrides against eligibility and bound rules without mutating state."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.ledger.ratios import validate_ratios_for_bucket
     from ._ledger_ratios_payloads import RatiosValidateFindingPayload, RatiosValidateResult
 
-    bucket_id = _ratios_bucket_id()
-    report = validate_ratios_for_bucket(bucket_id=bucket_id, operation=authority_operation(ctx))
+    completion = validate_ratios(ctx)
+    projection = completion.projection
+    bucket_id = str(projection.profile_id)
     lines = [
         f"bucket\t{bucket_id}",
-        f"profile_present\t{report.profile_present}",
-        f"eligible\t{report.eligible_count}",
-        f"overrides\t{report.overrides_count}",
+        f"profile_present\t{projection.profile_present}",
+        f"eligible\t{projection.eligible_count}",
+        f"overrides\t{projection.overrides_count}",
     ]
-    if report.missing_overrides:
-        lines.append("missing\t" + ",".join(c.value for c in report.missing_overrides))
-    for finding in report.findings:
+    if projection.missing_overrides:
+        lines.append("missing\t" + ",".join(projection.missing_overrides))
+    for finding in projection.findings:
         detail = f"\t{finding.detail}" if finding.detail else ""
-        lines.append(f"finding\t{finding.category.value}\t{finding.kind}{detail}")
+        lines.append(f"finding\t{finding.category}\t{finding.kind}{detail}")
     emit_envelope(
         ctx,
         command="ledger.ratios.validate",
         result=RatiosValidateResult(
-            bucket_id=report.bucket_id,
-            profile_present=report.profile_present,
-            eligible_count=report.eligible_count,
-            overrides_count=report.overrides_count,
-            missing_overrides=list(report.missing_overrides),
+            bucket_id=bucket_id,
+            profile_present=projection.profile_present,
+            eligible_count=projection.eligible_count,
+            overrides_count=projection.overrides_count,
+            missing_overrides=list(projection.missing_overrides),
             findings=[
                 RatiosValidateFindingPayload(
                     category=finding.category,
                     kind=finding.kind,
                     detail=finding.detail,
                 )
-                for finding in report.findings
+                for finding in projection.findings
             ],
         ),
         lines=lines,

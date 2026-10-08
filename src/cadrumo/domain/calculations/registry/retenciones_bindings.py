@@ -29,7 +29,8 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import provider_member, selector_against_model
 from .errors import RegistryValidationError
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .facts.resolution import ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import BindingId
 from .schema_base import coerce_enum_member, coerce_enum_tuple
 from .schema_exports import ExportFieldDataType
@@ -252,23 +253,37 @@ def _validated_retenciones_aggregation_selector(binding: BindingDefinition) -> R
     selector = provider_member(binding, RetencionesAggregationProvider)
     op = binding_aggregation_op(binding)
     if selector.fact is RetencionesAggregationFact.ROW_FIELD:
-        if op is not BindingAggregationOp.ROWS:
-            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
-        if selector.row_field is None:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key"
-            )
-        if selector.grouping is None:
-            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
-        if selector.record is None:
-            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'record' selector key")
-        if selector.data_type is None:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'row_field' requires a 'data_type' selector key"
-            )
-        if selector.schemes:
-            raise RegistryValidationError(f"binding {binding.id!r} Modelo 180 type-2 row binding cannot filter schemes")
+        _validate_retenciones_row_selector(binding, selector, op)
         return selector
+    _validate_retenciones_scalar_selector(binding, selector, op)
+    return selector
+
+
+def _validate_retenciones_row_selector(
+    binding: BindingDefinition,
+    selector: RetencionesAggregationProvider,
+    op: BindingAggregationOp,
+) -> None:
+    if op is not BindingAggregationOp.ROWS:
+        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
+    _require_row_selector_key(binding, selector.row_field, "row_field")
+    _require_row_selector_key(binding, selector.grouping, "grouping")
+    _require_row_selector_key(binding, selector.record, "record")
+    _require_row_selector_key(binding, selector.data_type, "data_type")
+    if selector.schemes:
+        raise RegistryValidationError(f"binding {binding.id!r} Modelo 180 type-2 row binding cannot filter schemes")
+
+
+def _require_row_selector_key(binding: BindingDefinition, value: object, key: str) -> None:
+    if value is None:
+        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a {key!r} selector key")
+
+
+def _validate_retenciones_scalar_selector(
+    binding: BindingDefinition,
+    selector: RetencionesAggregationProvider,
+    op: BindingAggregationOp,
+) -> None:
     if op is BindingAggregationOp.ROWS:
         raise RegistryValidationError(
             f"binding {binding.id!r} scalar retenciones fact cannot use aggregation op 'rows'"
@@ -279,7 +294,6 @@ def _validated_retenciones_aggregation_selector(binding: BindingDefinition) -> R
         )
     if selector.fact is RetencionesAggregationFact.TYPE2_RECORD_COUNT and selector.schemes:
         raise RegistryValidationError(f"binding {binding.id!r} type-2 record count cannot filter schemes")
-    return selector
 
 
 def resolve_retenciones_aggregation_binding_values(
@@ -319,26 +333,46 @@ def resolve_retenciones_aggregation_binding_row_values(
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
-    row_bindings = [
+    row_bindings = _retenciones_type2_row_bindings(revision)
+    if not row_bindings:
+        return {}
+    _require_modelo_180_row_bindings(aggregation.modelo)
+    resolved: dict[tuple[BindingId, int], Decimal | str | int | bool] = {}
+    for binding, selector in row_bindings:
+        resolved.update(_retenciones_type2_binding_row_values(binding, selector, aggregation.type2_rows))
+    return resolved
+
+
+def _retenciones_type2_row_bindings(
+    revision: ModeloRevision,
+) -> list[tuple[BindingDefinition, RetencionesAggregationProvider]]:
+    return [
         (binding, selector)
         for binding in revision.bindings
         if binding.source is BindingSourceKind.RETENCIONES_AGGREGATION
         and (selector := _validated_retenciones_aggregation_selector(binding)).fact
         is RetencionesAggregationFact.ROW_FIELD
     ]
-    if not row_bindings:
-        return {}
-    if aggregation.modelo != "180":
+
+
+def _require_modelo_180_row_bindings(modelo: str) -> None:
+    if modelo != "180":
         raise RegistryValidationError("retenciones type-2 row bindings are only supported for Modelo 180")
+
+
+def _retenciones_type2_binding_row_values(
+    binding: BindingDefinition,
+    selector: RetencionesAggregationProvider,
+    rows: tuple[_Modelo180Type2RowProtocol, ...],
+) -> dict[tuple[BindingId, int], Decimal | str | int | bool]:
+    if selector.row_field is None:  # pragma: no cover - protected by selector validation
+        raise RegistryValidationError(f"binding {binding.id!r} is missing its Modelo 180 type-2 row field")
     resolved: dict[tuple[BindingId, int], Decimal | str | int | bool] = {}
-    for binding, selector in row_bindings:
-        if selector.row_field is None:  # pragma: no cover - protected by selector validation
-            raise RegistryValidationError(f"binding {binding.id!r} is missing its Modelo 180 type-2 row field")
-        for row_index, row in enumerate(aggregation.type2_rows, start=1):
-            value = _modelo_180_type2_row_value(row, selector.row_field, binding_id=binding.id)
-            if value is None or (isinstance(value, str) and not value.strip()):
-                continue
-            resolved[(binding.id, row_index)] = value
+    for row_index, row in enumerate(rows, start=1):
+        value = _modelo_180_type2_row_value(row, selector.row_field, binding_id=binding.id)
+        if value is None or (isinstance(value, str) and not value.strip()):
+            continue
+        resolved[(binding.id, row_index)] = value
     return resolved
 
 
@@ -348,12 +382,10 @@ def _registry_schemes_for_modelo(
     authority: GovernedFactSource | None = None,
 ) -> frozenset[RetencionScheme]:
     """Resolve the selected modelo's allowed scheme tokens from fact authority."""
-    from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+    from .facts.resolution import MappingFactQuery
     from .schema_base import DateAxis
 
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise RegistryValidationError("retenciones scheme lookup requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="retenciones scheme lookup")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m111-m115-m123-withholding-scheme-catalogue",
@@ -364,14 +396,28 @@ def _registry_schemes_for_modelo(
     if not isinstance(resolved, ResolvedMappingFact):
         raise RegistryValidationError("withholding scheme catalogue did not resolve as a mapping fact")
     target_key = f"modelo.{aggregation.modelo}.schemes"
+    declaration = _withholding_scheme_declaration(resolved, target_key)
+    tokens = _withholding_scheme_tokens(declaration, target_key)
+    return _validated_withholding_schemes(tokens, target_key)
+
+
+def _withholding_scheme_declaration(resolved: ResolvedMappingFact, target_key: str) -> str:
     declarations = [entry.value for entry in resolved.payload.entries if entry.key == target_key]
     if len(declarations) != 1 or not isinstance(declarations[0], str):
         raise RegistryValidationError(
             f"withholding scheme catalogue must declare exactly one {target_key!r} entry",
         )
-    tokens = tuple(token.strip() for token in declarations[0].split(",") if token.strip())
+    return declarations[0]
+
+
+def _withholding_scheme_tokens(declaration: str, target_key: str) -> tuple[str, ...]:
+    tokens = tuple(token.strip() for token in declaration.split(",") if token.strip())
     if not tokens:
         raise RegistryValidationError(f"withholding scheme catalogue entry {target_key!r} is empty")
+    return tokens
+
+
+def _validated_withholding_schemes(tokens: tuple[str, ...], target_key: str) -> frozenset[RetencionScheme]:
     try:
         schemes = frozenset(RetencionScheme(token) for token in tokens)
     except ValueError as exc:
@@ -388,19 +434,7 @@ def _retenciones_selector_value(
     authority: GovernedFactSource | None = None,
 ) -> Decimal:
     if not selector.schemes:
-        values: dict[RetencionesAggregationFact, Decimal] = {
-            RetencionesAggregationFact.PERCEPTOR_COUNT_DISTINCT: Decimal(aggregation.total_perceptors),
-            RetencionesAggregationFact.TYPE2_RECORD_COUNT: Decimal(aggregation.type2_record_count),
-            RetencionesAggregationFact.TAXABLE_BASE_SUM: aggregation.total_taxable_base,
-            RetencionesAggregationFact.RETENCION_AMOUNT_SUM: aggregation.total_retencion,
-        }
-        try:
-            return values[selector.fact]
-        except KeyError as exc:  # pragma: no cover - protected by selector validation
-            raise RegistryValidationError(
-                f"retenciones scalar binding declares unsupported fact {selector.fact!r}"
-            ) from exc
-
+        return _unfiltered_retenciones_value(selector.fact, aggregation)
     declared_schemes = _registry_schemes_for_modelo(aggregation, authority=authority)
     unknown_schemes = frozenset(selector.schemes).difference(declared_schemes)
     if unknown_schemes:
@@ -409,13 +443,36 @@ def _retenciones_selector_value(
             f"retenciones binding declares scheme token(s) outside the selected registry catalogue: {rendered}",
         )
     selected = tuple(row for row in aggregation.rollups if row.scheme in selector.schemes)
-    if selector.fact is RetencionesAggregationFact.PERCEPTOR_COUNT_DISTINCT:
+    return _filtered_retenciones_value(selector.fact, selected)
+
+
+def _unfiltered_retenciones_value(
+    fact: RetencionesAggregationFact,
+    aggregation: _RetencionesAggregationProtocol,
+) -> Decimal:
+    values: dict[RetencionesAggregationFact, Decimal] = {
+        RetencionesAggregationFact.PERCEPTOR_COUNT_DISTINCT: Decimal(aggregation.total_perceptors),
+        RetencionesAggregationFact.TYPE2_RECORD_COUNT: Decimal(aggregation.type2_record_count),
+        RetencionesAggregationFact.TAXABLE_BASE_SUM: aggregation.total_taxable_base,
+        RetencionesAggregationFact.RETENCION_AMOUNT_SUM: aggregation.total_retencion,
+    }
+    try:
+        return values[fact]
+    except KeyError as exc:  # pragma: no cover - protected by selector validation
+        raise RegistryValidationError(f"retenciones scalar binding declares unsupported fact {fact!r}") from exc
+
+
+def _filtered_retenciones_value(
+    fact: RetencionesAggregationFact,
+    selected: tuple[_RetencionesRollupProtocol, ...],
+) -> Decimal:
+    if fact is RetencionesAggregationFact.PERCEPTOR_COUNT_DISTINCT:
         return Decimal(len({row.perceptor_nif for row in selected}))
-    if selector.fact is RetencionesAggregationFact.TAXABLE_BASE_SUM:
+    if fact is RetencionesAggregationFact.TAXABLE_BASE_SUM:
         return sum((row.total_taxable_base for row in selected), Decimal("0"))
-    if selector.fact is RetencionesAggregationFact.RETENCION_AMOUNT_SUM:
+    if fact is RetencionesAggregationFact.RETENCION_AMOUNT_SUM:
         return sum((row.total_retencion for row in selected), Decimal("0"))
-    raise RegistryValidationError(f"retenciones scheme-filtered binding declares unsupported fact {selector.fact!r}")
+    raise RegistryValidationError(f"retenciones scheme-filtered binding declares unsupported fact {fact!r}")
 
 
 def _modelo_180_type2_row_value(
@@ -431,7 +488,6 @@ def _modelo_180_type2_row_value(
     unsupported layout extension cannot turn into a blank official record.
     """
     detail = row.property_detail
-    address = detail.address
     values: dict[str, Decimal | str | int | bool | None] = {
         "perceptor_nif": str(row.perceptor_nif),
         "representative_nif": None if detail.representative_nif is None else str(detail.representative_nif),
@@ -444,29 +500,61 @@ def _modelo_180_type2_row_value(
         "accrual_year": detail.accrual_year,
         "situation": detail.situation,
         "cadastral_reference": detail.cadastral_reference,
-        "street_type": None if address is None else address.street_type,
-        "street_name": None if address is None else address.street_name,
-        "number_type": None if address is None else address.number_type,
-        "house_number": None if address is None else address.house_number,
-        "number_qualifier": None if address is None else address.number_qualifier,
-        "block": None if address is None else address.block,
-        "portal": None if address is None else address.portal,
-        "staircase": None if address is None else address.staircase,
-        "floor": None if address is None else address.floor,
-        "door": None if address is None else address.door,
-        "complement": None if address is None else address.complement,
-        "locality": None if address is None else address.locality,
-        "municipality": None if address is None else address.municipality,
-        "municipality_code": None if address is None else address.municipality_code,
-        "province_code": None if address is None else address.province_code,
-        "postal_code": None if address is None else address.postal_code,
     }
+    values.update(_modelo_180_structured_address_values(detail.address))
     try:
         return values[row_field]
     except KeyError as exc:
         raise RegistryValidationError(
             f"binding {binding_id!r} row_field {row_field!r} is not produced for Modelo 180 type-2 rows",
         ) from exc
+
+
+def _modelo_180_structured_address_values(
+    address: _Modelo180StructuredAddressProtocol | None,
+) -> dict[str, str | None]:
+    return {
+        **_modelo_180_address_street_values(address),
+        **_modelo_180_address_unit_values(address),
+        **_modelo_180_address_locality_values(address),
+    }
+
+
+def _modelo_180_address_street_values(
+    address: _Modelo180StructuredAddressProtocol | None,
+) -> dict[str, str | None]:
+    return {
+        "street_type": None if address is None else address.street_type,
+        "street_name": None if address is None else address.street_name,
+        "number_type": None if address is None else address.number_type,
+        "house_number": None if address is None else address.house_number,
+        "number_qualifier": None if address is None else address.number_qualifier,
+        "block": None if address is None else address.block,
+    }
+
+
+def _modelo_180_address_unit_values(
+    address: _Modelo180StructuredAddressProtocol | None,
+) -> dict[str, str | None]:
+    return {
+        "portal": None if address is None else address.portal,
+        "staircase": None if address is None else address.staircase,
+        "floor": None if address is None else address.floor,
+        "door": None if address is None else address.door,
+        "complement": None if address is None else address.complement,
+    }
+
+
+def _modelo_180_address_locality_values(
+    address: _Modelo180StructuredAddressProtocol | None,
+) -> dict[str, str | None]:
+    return {
+        "locality": None if address is None else address.locality,
+        "municipality": None if address is None else address.municipality,
+        "municipality_code": None if address is None else address.municipality_code,
+        "province_code": None if address is None else address.province_code,
+        "postal_code": None if address is None else address.postal_code,
+    }
 
 
 __all__ = [

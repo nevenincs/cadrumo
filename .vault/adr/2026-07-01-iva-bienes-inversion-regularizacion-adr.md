@@ -3,8 +3,8 @@ tags:
   - "#adr"
   - "#iva-bienes-inversion-regularizacion"
 date: "2026-07-01"
-modified: '2026-09-08'
-body_hash: 'sha256:1aea1781c31c00b3271d4c3874f93a06fa2619f5535aa7b02bb03ff655f1152e'
+modified: '2026-10-03'
+body_hash: 'sha256:3b3fe587c446b441d9b265326a9072f0b100b7e761ccf6d3ec5511ab4807d631'
 related:
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-research]]"
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
@@ -250,9 +250,9 @@ the core register plus the single-good annual path.
   (the 4/9-year windows, the over-10-point gate, the /5 and /10 divisors) live in the registry,
   grounded in LIVA arts. 107/109. Deferred until the mechanism ships and the split holds.
 
-## Status
+## Scope and sibling IVA surface
 
-`accepted`. Closes the design portion of issue #349. Depends on the separately-deferred
+Closes the design portion of issue #349. Depends on the separately-deferred
 prorrata-definitiva source (`2026-06-19-silent-zero-base-aggregation-adr`) for full automation;
 the first slice ships independently of it. Sibling annual-IVA surface:
 `2026-06-21-m390-iva-carry-boxes-adr`.

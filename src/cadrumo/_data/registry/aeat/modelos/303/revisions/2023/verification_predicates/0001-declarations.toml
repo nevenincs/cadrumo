@@ -24,3 +24,12 @@ id = "equals:dr303-03-equals-iva-cuota-devengada-super-reducido"
 predicate_id = "modelo-303-dr303-03-equals-iva-cuota-devengada-super-reducido"
 expression = 'equals(["03", "iva.cuota-devengada.super-reducido"])'
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# ── Printed-total consistency for [27] ─────────────────────────────────────
+# Restates the 2022 printed-total predicate with this design's addends. The
+# 2023 design (aeat-dr-303-2023, campo 60, posicion 617) defines "Total cuota
+# devengada ( [152] + [03] + [155] + [06] + [09] + [11] + [13] + [15] + [158] +
+# [18] + [21] + [24] + [26] ) [27]", adding [152], [155] and [158] to the 2022
+# list. The 2024 design for periods up to 08 and 2T (aeat-dr-303-2024-early,
+# campo 60, posicion 617) prints the same list, so 2024-hasta-08-y-2t inherits
+# this declaration unchanged.

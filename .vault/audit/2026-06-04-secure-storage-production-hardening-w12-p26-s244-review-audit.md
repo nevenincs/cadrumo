@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:6383bddedb0c12b1d6fb6a5b2e7bc2c191164002d07d6887df1acea080d160b4'
+modified: '2026-10-03'
+body_hash: 'sha256:1b58e77b506914cb0fce0b2856fc9c6702539931837d0fff3e8d9480c452042c'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S244-001 | FIXED | Overview row was misclassified as remote-mirror
 
-`src/aeat/application/overview/__init__.py` has no remote provider call and the CLI overview help states the verbs are local-only. The status path reads persisted state by delegating to the canonical `build_operator_state_projection`, which is runtime-backed and secure-object enrolled. The correct affected-file target is therefore `runtime-default`, not `remote-mirror` or `manifest-discovery`.
+The retired module had no remote provider call and the CLI overview help states the verbs are local-only. The status path reads persisted state by delegating to the canonical `build_operator_state_projection`, which is runtime-backed and secure-object enrolled. The correct affected-file target is therefore `runtime-default`, not `remote-mirror` or `manifest-discovery`.
 
 ## S244-002 | FIXED | Intentional degradation paths now leave non-secret debug evidence
 
@@ -22,7 +22,7 @@ Invalid filing-obligation profile inputs now log field-name and error-shape meta
 
 ## S244-003 | FIXED | Central decimal coercion no longer logs raw malformed values
 
-`src/aeat/core/decimal/_coerce.py` previously logged the malformed value and default with `%r` on parse failure. That could leak operator profile or spreadsheet data at debug level. The helper now logs only `value_type`, `default_is_none`, and `error_type`, preserving centralized decimal coercion while removing raw-value exposure.
+The retired module previously logged the malformed value and default with `%r` on parse failure. That could leak operator profile or spreadsheet data at debug level. The helper now logs only `value_type`, `default_is_none`, and `error_type`, preserving centralized decimal coercion while removing raw-value exposure.
 
 ## S244-004 | FIXED | Unused raw overview status renderer removed
 
@@ -30,8 +30,8 @@ The application package exported an unused `render_overview_status_lines` helper
 
 ## S244-005 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/core/decimal/_coerce.py src/aeat/core/decimal/test_coerce.py src/aeat/application/overview/__init__.py src/aeat/application/overview/test_calendar.py src/aeat/entrypoints/cli/test_overview_rendering.py src/aeat/entrypoints/cli/test_overview_verbs.py` passed.
-- `uv run --no-sync pytest -q src/aeat/core/decimal/test_coerce.py src/aeat/application/overview/test_calendar.py src/aeat/entrypoints/cli/test_overview_rendering.py src/aeat/entrypoints/cli/test_overview_verbs.py` passed with 109 tests.
+- the historical check passed.
+- the historical check passed with 109 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca`, `en`, `es`, and `hu`.
 
 Disposition: close `AFR-142` as `runtime-default`.

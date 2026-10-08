@@ -9,6 +9,54 @@ modelo:
         official_name: Modelo 349. Informative return. Recapitulative statement of
           intra-Community transactions.
         title: Recapitulative statement of intra-Community transactions
+      form:
+        authored:
+          base:
+            heading: Tax base or amount
+          base-anterior:
+            heading: Previously declared tax base
+          base-rectificada:
+            heading: Corrected tax base
+          clave:
+            heading: Transaction code
+          contacto:
+            heading: Contact person and telephone
+          contacto-nombre:
+            heading: Contact person
+          contacto-telefono:
+            heading: Contact telephone
+          declaracion:
+            heading: Supplementary or replacement declaration
+          ejercicio:
+            heading: Year
+          identificacion:
+            heading: Declarant
+          nif:
+            heading: Declarant tax ID
+          nif-comunitario:
+            heading: EU VAT number
+          nombre:
+            heading: Full name or company name
+          operaciones:
+            heading: Intra-Community transactions
+          operador-nombre:
+            heading: Operator name
+          pais:
+            heading: Country code
+          period-code:
+            heading: Period
+          periodo:
+            heading: Year and period
+          rectificaciones:
+            heading: Corrections to earlier periods
+          resumen:
+            heading: Summary
+          resumen-importes:
+            heading: Declaration totals
+          sustituto-nif:
+            heading: Replacement recipient VAT number
+          sustituto-nombre:
+            heading: Replacement recipient name
       revision:
         2020-y-siguientes:
           casilla:

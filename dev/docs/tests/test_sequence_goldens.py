@@ -44,7 +44,8 @@ import pytest
 from sphinx.application import Sphinx
 from sphinx.errors import SphinxError
 
-from cadrumo.tests.env_scope import scoped_env_var
+from cadrumo.core.config import load_settings, override_settings
+from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_paths
 from dev._paths import REPO_ROOT
 
@@ -58,31 +59,12 @@ from ..sequences.checks import (
 )
 from ..sequences.cli import main as sequences_cli_main
 from ..sequences.compare import compare_transcript_to_golden
-from ..sequences.golden_store import SequenceGolden, build_golden
+from ..sequences.golden_store import SequenceGolden, build_golden, normalise_document_paths
 from ..sequences.parser import parse_sequence
 from ..sequences.runner import SequenceTranscript, execute_sequence
 from ..sequences.schema import ParsedSequence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
-
-#: Wall ceiling for the two gates that fan out into a pool of child
-#: interpreters. Deliberately far above the repository's 300s default rather
-#: than a shaved margin: the unscoped gate measured 344s on an IDLE box, and
-#: these tests run in a lane sharing the machine, so a tight bound would fire
-#: on load rather than on a defect. The ceiling still exists -- a genuinely
-#: wedged pool fails here instead of running forever.
-#:
-#: Sizing this correctly is load-bearing beyond this file. When the ceiling
-#: fires on a test parked in ``subprocess.wait()``, the thread timeout method
-#: cannot interrupt it, so the xdist WORKER dies instead of the test failing,
-#: and the run is then re-scheduled or wedged rather than reported.
-_SUBPROCESS_POOL_TIMEOUT = 1800
-
-#: Ceiling for the clean child run that sizes the bounded-check gate's
-#: deadline. Kept under the repository's 300s per-test default so a wedged
-#: child is reported by its own supervisor rather than by the test timeout,
-#: which cannot interrupt a test parked in ``subprocess.wait()``.
-_CLEAN_CHILD_CEILING_SECONDS = 240
 
 _PAGE = "tutorials/anti-tautology-gate"
 _PROFILE_DELETE_SEQUENCE_ID = "profile-setup-delete"
@@ -268,7 +250,9 @@ def _set_delete_fingerprint_leaf(
 ) -> SequenceGolden | SequenceTranscript:
     """Return ``value`` with one real profile-delete fingerprint leaf changed."""
     document = value.model_dump(mode="json")
-    fingerprint = document["frames"][1]["envelope"]["result"]["fingerprint"]
+    delete_frames = [frame for frame in document["frames"] if frame["envelope"]["command"] == "config.profile.delete"]
+    assert len(delete_frames) == 1
+    fingerprint = delete_frames[0]["envelope"]["result"]["fingerprint"]
     fingerprint[leaf] = replacement
     return type(value).model_validate_json(json.dumps(document))
 
@@ -453,13 +437,18 @@ def export_release_double_run(
     (item,) = discovered
     runs: list[tuple[str, SequenceTranscript, bytes]] = []
     current = software_identity.PACKAGE_VERSION
-    for label, version in (("current", current), ("next", _another_release_of_the_same_width(current))):
-        root = tmp_path_factory.mktemp(f"export-{label}")
-        with pytest.MonkeyPatch.context() as patch:
-            patch.setattr(software_identity, "PACKAGE_VERSION", version)
-            aux = software_identity.aeat_aux_version()
-            transcript = execute_sequence(item.sequence, sandbox_root=root)
-        runs.append((aux, transcript, (root / "workdir" / _EXPORT_FILE).read_bytes()))
+    authority_root = load_settings().cadrumo_authority_root
+    with (
+        derived_storage_settings(tmp_path_factory.mktemp("export-release-storage")),
+        override_settings(cadrumo_authority_root=authority_root),
+    ):
+        for label, version in (("current", current), ("next", _another_release_of_the_same_width(current))):
+            root = tmp_path_factory.mktemp(f"export-{label}")
+            with pytest.MonkeyPatch.context() as patch:
+                patch.setattr(software_identity, "PACKAGE_VERSION", version)
+                aux = software_identity.aeat_aux_version()
+                transcript = execute_sequence(item.sequence, sandbox_root=root)
+            runs.append((aux, transcript, (root / "workdir" / _EXPORT_FILE).read_bytes()))
     return runs[0], runs[1]
 
 
@@ -476,7 +465,14 @@ class TestModeloExportReleaseMaskHonesty:
             if (
                 left.envelope is not None
                 and right.envelope is not None
-                and (paths := differing_paths(left.envelope, right.envelope))
+                and (
+                    paths := differing_paths(
+                        normalise_document_paths(left.envelope, storage_root=first.storage_root, workdir=first.workdir),
+                        normalise_document_paths(
+                            right.envelope, storage_root=second.storage_root, workdir=second.workdir
+                        ),
+                    )
+                )
             ):
                 residual[index] = paths
         export = _export_frame(first)
@@ -505,12 +501,56 @@ class TestModeloExportReleaseMaskHonesty:
         assert compare_transcript_to_golden(second, golden, page=_EXPORT_PAGE) == ()
 
         export = _export_frame(second)
+        assert _export_result(second, export)["format"] == "xml-dictionary"
         document = second.model_dump(mode="json")
         document["frames"][export]["envelope"]["result"]["byte_size"] += 1
         resized = SequenceTranscript.model_validate_json(json.dumps(document))
         problems = compare_transcript_to_golden(resized, golden, page=_EXPORT_PAGE)
+        assert len(problems) == 2
+        assert any("XML receipt does not prove its canonical export event" in problem for problem in problems)
+        assert any("result.byte_size" in problem for problem in problems)
+
+        # Release masking cannot hide a false digest or audit event for this XML.
+        for field in ("file_sha256", "bucket_event_id"):
+            changed = second.model_dump(mode="json")
+            changed["frames"][export]["envelope"]["result"][field] = "a" * 64
+            problems = compare_transcript_to_golden(
+                SequenceTranscript.model_validate_json(json.dumps(changed)), golden, page=_EXPORT_PAGE
+            )
+            assert len(problems) == 1
+            assert "XML receipt does not prove its canonical export event" in problems[0]
+
+        from ..sequences.tests.modelo_export_evidence_support import changed_modelo_export_event
+
+        changed = second.model_dump(mode="json")
+        result = changed["frames"][export]["envelope"]["result"]
+        result["file_sha256"] = "a" * 64
+        result["bucket_event_id"] = changed_modelo_export_event(
+            SequenceTranscript.model_validate_json(json.dumps(changed))
+        )
+        problems = compare_transcript_to_golden(
+            SequenceTranscript.model_validate_json(json.dumps(changed)), golden, page=_EXPORT_PAGE
+        )
         assert len(problems) == 1
-        assert "result.byte_size" in problems[0]
+        assert "XML artifact digest differs from its export receipt" in problems[0]
+
+        # Skipping the fichero proof cannot skip ordinary envelope comparison.
+        for field, path, changed_value in (
+            ("format", "result.format", "verification-report"),
+            ("format", "result.format", {"malformed": True}),
+            ("format", "result.format", ["malformed"]),
+            ("status", "status", "error"),
+        ):
+            changed = second.model_dump(mode="json")
+            envelope = changed["frames"][export]["envelope"]
+            if field == "format":
+                envelope["result"][field] = changed_value
+            else:
+                envelope[field] = changed_value
+            problems = compare_transcript_to_golden(
+                SequenceTranscript.model_validate_json(json.dumps(changed)), golden, page=_EXPORT_PAGE
+            )
+            assert any(path in problem for problem in problems)
 
 
 class TestExecutorMaskHonesty:
@@ -595,24 +635,13 @@ class TestCommittedGoldensCleanGate:
     printed verbatim on failure.
     """
 
-    @pytest.mark.timeout(_SUBPROCESS_POOL_TIMEOUT)
     def test_every_committed_golden_matches_live_execution(self) -> None:
         """Every enrolled sequence re-executes clean against its committed golden.
 
         Page-sharded across 8 bounded child interpreters: each sequence still
         executes in its own fresh hermetic sandbox, so the verdict is identical
-        to the serial run — only the scheduling changes. Width 8 is the
-        machine-aware CI lane size (24 cores / 3 co-resident lanes, the same
-        bound the pytest lanes use).
-
-        Carries its own timeout because it legitimately outruns the repository
-        ceiling: measured at 344s on an idle box, against a 300s default. That
-        gap is what killed xdist workers rather than failing this test. The
-        default timeout method here is ``thread``, which cannot interrupt a
-        thread parked in ``subprocess.wait()`` on eight children, so the ceiling
-        fired, the test did not die, and the WORKER exited uncleanly instead --
-        after which xdist re-ran this test on a replacement node (one id
-        reported as three failures) or wedged its scheduler.
+        to the serial run — only the scheduling changes. The pool bounds
+        concurrency while each child runs to completion.
         """
         problems = check_sequences_in_subprocess(jobs=8)
         assert problems == (), "cli-sequence goldens diverge from live execution:\n" + "\n".join(problems)
@@ -828,11 +857,8 @@ class TestBothSurfacesRedOnDivergence:
         tracks the machine instead: it is always well inside the page and well
         past the child's first journalled frame.
 
-        The clean run is timed through the same bounded child path, not
-        in-process. An in-process check inherits this worker's already-imported
-        command tree, so its duration omits the child's interpreter start and
-        CLI import; on a slow or loaded host that start alone outlasted half the
-        in-process figure and the bound fired before any frame was journalled.
+        The clean run uses the same child path without an elapsed deadline, so
+        its duration includes interpreter startup and CLI imports on this host.
         """
         seed_sequence_id = "irpf-lifecycle-position"
         seed, discovery_problems = discover_sequences(sequence_id=seed_sequence_id)
@@ -843,10 +869,10 @@ class TestBothSurfacesRedOnDivergence:
         assert discovery_problems == ()
 
         started = time.monotonic()
-        clean_exit = sequences_cli_main(["check", "--page", page, "--timeout", str(_CLEAN_CHILD_CEILING_SECONDS)])
+        clean = check_sequences_in_subprocess(page=page)
         clean_duration = time.monotonic() - started
         capsys.readouterr()
-        assert clean_exit == 0, "the bound is measured against a CLEAN run of this page"
+        assert clean == (), f"the bound is measured against a CLEAN run of this page: {clean}"
         timeout = round(clean_duration / 2, 3)
 
         exit_code = sequences_cli_main(
@@ -911,16 +937,11 @@ class TestPageCoherenceGate:
     own accumulated state and the page content must change.
     """
 
-    @pytest.mark.timeout(_SUBPROCESS_POOL_TIMEOUT)
     def test_every_enrolled_page_is_coherent_top_to_bottom(self) -> None:
         """Coherence is a page-scoped property (one sandbox per page, state
         accumulating only within the page), so pages shard cleanly across the
-        same bounded 8-wide child pool as the goldens gate above.
-
-        Carries the same ceiling as that gate, and for the same reason: it fans
-        out into the identical 8-wide child pool, so it has the identical
-        exposure to a ceiling firing while the test thread is parked in
-        ``subprocess.wait()`` and unkillable by the thread timeout method.
+        same bounded 8-wide child pool as the goldens gate above. Each child
+        runs to completion independently of host speed.
         """
         problems = check_page_coherence_in_subprocess(jobs=8)
         assert problems == (), "enrolled pages are not coherent under cumulative execution:\n" + "\n".join(problems)

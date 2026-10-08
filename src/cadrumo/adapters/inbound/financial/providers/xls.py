@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import override
 
-from .....core.external_constants import XLS_EXTENSION
 from .....core.legacy_workbook import LegacyWorksheet, read_legacy_workbook
 from .....core.tabular import TabularSourceError
 from .....core.workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
@@ -60,7 +59,6 @@ class XlsProvider(FinancialProvider):
     """
 
     name = "XLS provider"
-    supported_extensions = frozenset({XLS_EXTENSION})
     source_format = SourceFormat.XLS
     # The fixtures are synthetic workbooks generated from the same published
     # bank export column schemas as the XLSX corpus; no operator .xls specimen
@@ -72,7 +70,7 @@ class XlsProvider(FinancialProvider):
     def validate_source(self, path: Path) -> ProviderValidation:
         """Validate that ``path`` is a readable ``.xls`` workbook with a known bank layout and data rows."""
         try:
-            selected = self._select_worksheet(path)
+            selected = self._select_worksheet(self._read_source_bytes(path), path=path)
         except InvalidFinancialSourceError as exc:
             return ProviderValidation(is_valid=False, warnings=(str(exc),))
         match = selected.match
@@ -96,8 +94,9 @@ class XlsProvider(FinancialProvider):
     @override
     def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
         """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the best-matching worksheet."""
-        source_sha256 = self._compute_sha256(self._read_source_bytes(path))
-        selected = self._select_worksheet(path)
+        source_bytes = self._read_source_bytes(path)
+        source_sha256 = self._compute_sha256(source_bytes)
+        selected = self._select_worksheet(source_bytes, path=path)
         yield from iter_worksheet_rows(
             provider=self,
             path=path,
@@ -107,17 +106,13 @@ class XlsProvider(FinancialProvider):
             sheet_name=selected.name,
         )
 
-    def _select_worksheet(self, path: Path) -> _SelectedWorksheet:
+    def _select_worksheet(self, source_bytes: bytes, *, path: Path) -> _SelectedWorksheet:
         """Read the workbook, choose its best worksheet and refuse formula cells in its data rows."""
         try:
-            worksheets = read_legacy_workbook(self._read_source_bytes(path))
+            worksheets = read_legacy_workbook(source_bytes)
         except TabularSourceError as exc:
             raise InvalidFinancialSourceError(f"could not open legacy workbook {path.name}: {exc}") from exc
-        best: tuple[LegacyWorksheet, WorksheetLayoutMatch] | None = None
-        for worksheet in worksheets:
-            candidate = best_layout_match([cell.value for cell in row] for row in worksheet.rows[:LAYOUT_SAMPLE_ROWS])
-            if candidate is not None and (best is None or candidate.score > best[1].score):
-                best = (worksheet, candidate)
+        best = _best_worksheet_layout(worksheets)
         if best is None or best[1].score < MIN_LAYOUT_SCORE:
             raise InvalidFinancialSourceError("Workbook does not contain a supported bank-statement header row")
         worksheet, match = best
@@ -140,3 +135,15 @@ def _refuse_formula_data_rows(worksheet: LegacyWorksheet, *, header_index: int) 
                 f"worksheet {worksheet.name!r} contains formula cell at row {row_number}, "
                 f"column {column_number}; {FORMULA_CELL_REFUSAL}",
             )
+
+
+def _best_worksheet_layout(
+    worksheets: tuple[LegacyWorksheet, ...],
+) -> tuple[LegacyWorksheet, WorksheetLayoutMatch] | None:
+    """Choose the highest layout score while preserving first-worksheet ties."""
+    best: tuple[LegacyWorksheet, WorksheetLayoutMatch] | None = None
+    for worksheet in worksheets:
+        candidate = best_layout_match([cell.value for cell in row] for row in worksheet.rows[:LAYOUT_SAMPLE_ROWS])
+        if candidate is not None and (best is None or candidate.score > best[1].score):
+            best = (worksheet, candidate)
+    return best

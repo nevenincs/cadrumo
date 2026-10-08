@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:2bf5467f109d112716b91c801b3d056d127741c2fbfbb2306dc3398b7035e716'
 related:
-  - "[[2026-09-04-reachability-burndown-plan]]"
   - "[[2026-08-23-amortization-casilla-mapping-adr]]"
 ---
 

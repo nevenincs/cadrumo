@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#modelo-100-trabajo-casilla-compute'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:00b40aa2725ac1e8ddc38c3dd326ed730473e83b5bd170e6804746c93e0ca875'
+modified: '2026-10-03'
+body_hash: 'sha256:c2076b0f675215d097ca9d9bedffdfd72e3c7d5a049e741596ed52f6e4acb51d'
 related:
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
 ---
@@ -26,7 +26,7 @@ Casilla 0019 (label "Otros gastos deducibles (*)", semantic_role
 irpf_rendimiento_trabajo_gasto_otros, legal_refs ley-35-2006:art-19) has no input_kind and
 no formula - a bare manual box - in every revision 2021, 2022, 2023, 2024, 2025
 (.../modelos/100/revisions/<year>/casillas/0023-0019.toml). Art. 19.2.f LIRPF (verified
-verbatim against bundled src/aeat/_data/corpus/normatives/html/ley-35-2006.html, anchor
+verbatim against bundled the former source file, anchor
 a19): "f) En concepto de otros gastos distintos de los anteriores, 2.000 euros anuales."
 The AEAT program writes this EUR 2.000 for any contribuyente with rendimientos integros del
 trabajo. A blank 0019 therefore OVER-taxes by omitting a determinable EUR 2.000 deduction -
@@ -76,7 +76,7 @@ por 100 de la suma de los rendimientos netos del trabajo y de actividades econom
 1.500 euros anuales. Este limite se incrementara ... En 8.500 euros anuales, siempre que tal
 incremento provenga de contribuciones empresariales, o de aportaciones del trabajador al
 mismo instrumento de prevision social ...". The art-52 legal-catalogue entry
-(src/aeat/_data/registry/aeat/legal/irpf.toml, legal ley-35-2006:art-52, reviewed) already
+(the former source file, legal ley-35-2006:art-52, reviewed) already
 documents "lesser-of 30 percent / 1,500 EUR limit ... 8,500 EUR maximum increment cap".
 
 So the correct structure is 1.500 (general) + up to 8.500 (increment), and the EUR 8.500
@@ -99,9 +99,9 @@ fold into Phase-2 grounding).
 2026-06-15-art20-trabajo-reduccion-compute-adr (accepted) decided the identical
 advisory-first shape for 0023: Phase 1 non-blocking ADVISORY, Phase 2 compute-flip deferred
 behind a cross-section aggregate plus the engine refactor. Phase 1 shipped as a Python helper
-_art20_reduccion_advisory_finding (src/aeat/application/modelo/_art20_advisory.py), wired in
+_art20_reduccion_advisory_finding , wired in
 _verification_actions._collect_revision_verification_findings
-(src/aeat/application/modelo/_verification_actions.py:1428 region) beside the DT-12a advisory
+(the former source fileregion) beside the DT-12a advisory
 (_dt12_advisory.py) - NOT a registry verification_predicate, because the registry-predicate
 mechanism needs the registry to load and a peer engine refactor blocked it. Both mechanisms
 co-exist (M200 base-determination uses the predicate; DT-12a and art-20 use the helper). The
@@ -119,7 +119,7 @@ external_constants.MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR, not an i
   (src/aeat/_data/corpus/manuals/renta/<year>/part1/...) - the individual/employer 1.500 vs
   8.500 split is worked in the 2023/2024/2025 manuals. Derive expected values from those,
   never from the same formula under test. The #574/#545 chain tests
-  (src/aeat/domain/calculations/registry/tests/test_renta_chain_behaviour.py) already carry
+   already carry
   manual-grounded oracles for the prevision-social chain and are the extension point.
 - Diseno-de-Registros parity: 0019 is listed by AEAT as an INPUT box. Flipping it to COMPUTED
   (Phase 2) needs the same parity-gate treatment the art-20 ADR used for 0023 (a computed
@@ -146,15 +146,15 @@ this ADR needs are already in the catalogue.
 
 ## Sources
 
-- Bundled consolidated LIRPF: src/aeat/_data/corpus/normatives/html/ley-35-2006.html (anchor
+- Bundled consolidated LIRPF: the former source file (anchor
   a19 art. 19.2.f plus letter-f cap; anchor a52 art. 52.1 joint-limit / 1.500 / 8.500),
   BOE-A-2006-20764.
 - Registry: M100 revisions 2021-2025 casillas 0018-0022, 0463/0426/0427, 0467/0468 and
   formulas renta-<year>-trabajo-rendimiento-neto, renta-<year>-reduccion-prevision-social-total.
-- Legal catalogue: src/aeat/_data/registry/aeat/legal/irpf.toml legal ley-35-2006:art-19,
+- Legal catalogue: the former source file legal ley-35-2006:art-19,
   legal ley-35-2006:art-52.
 - Precedent: 2026-06-15-art20-trabajo-reduccion-compute-adr;
-  src/aeat/application/modelo/_art20_advisory.py; _verification_actions.py;
-  _semantic_role_resolution.py; src/aeat/core/external_constants.py.
+  the former source file; _verification_actions.py;
+  _semantic_role_resolution.py; the former source file.
 - AEAT Renta manuals (worked oracles): src/aeat/_data/corpus/manuals/renta/{2023,2024,2025}/part1/.
 - Chain tests extension point: test_renta_chain_behaviour.py (#574/#545 oracles).

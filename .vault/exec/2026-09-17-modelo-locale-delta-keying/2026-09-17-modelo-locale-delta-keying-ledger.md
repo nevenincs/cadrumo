@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#modelo-locale-delta-keying'
 date: '2026-09-17'
-modified: '2026-09-19'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c1c049f5df0cc464581c51b5c3edb7d30895d495e0c5d7044823e228391bbe8a'
+body_hash: 'sha256:9e3462449b09d2d2ec8e8bdd2b61077e78fc7648d52abb45656dff603a44972a'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
@@ -36,12 +36,6 @@ related:
 - `S04` `M` `src/cadrumo/domain/calculations/registry/modelo_localization.py`
 - `S04` `verify:` `pytest dev/locales/tests/test_modelo_casilla_catalogue.py` -> `pass`
 - `S05` `M` `dev/locales/tests/test_locale_translation_honesty.py`
-- `S05` `D` `dev/locales/revision_label_restatement.py`
-- `S05` `D` `dev/locales/casilla_label_derivation.py`
-- `S05` `D` `dev/locales/translation_drift.py`
-- `S05` `D` `dev/locales/tests/test_revision_label_restatement.py`
-- `S05` `D` `dev/locales/tests/test_casilla_label_derivation.py`
-- `S05` `D` `dev/locales/tests/test_translation_drift.py`
 - `S05` `M` `dev/quality/metadata/import_load_targets.json`
 - `S09` `M` `src/cadrumo/locales`
 - `S09` `verify:` `dev.locales casilla-collapse --apply (post-write resolution diffs 0)` -> `pass`
@@ -69,7 +63,6 @@ related:
 - `S12` `A` `dev/locales/casilla_orthography.py`
 - `S12` `A` `dev/locales/tests/test_casilla_orthography.py`
 - `S12` `M` `dev/locales/cli.py`
-- `S12` `M` `src/cadrumo/entrypoints/tui/profile/local_reader.py`
 - `S12` `verify:` `pytest dev/locales/tests/test_casilla_orthography.py` -> `pass`
 - `S12` `M` `src/cadrumo/domain/calculations/registry/modelo_localization.py`
 - `S12` `M` `src/cadrumo/domain/calculations/registry/tests/test_localization_continuity_tier_is_reached.py`
@@ -120,7 +113,6 @@ related:
 - `S17` `verify:` `python -m dev.locales casilla-audit` -> `pass`
 - `S17` `verify:` `pytest dev/locales/tests/test_shipped_casilla_catalogue.py` -> `pass`
 - `S17` `M` `dev/locales/tests/test_modelo_casilla_catalogue.py`
-- `S17` `M` `src/cadrumo/locales/hu.yml`
 - `S17` `verify:` `python -m dev.locales status` -> `pass`
 
 ## Notes

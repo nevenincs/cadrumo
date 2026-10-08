@@ -13,35 +13,6 @@ if TYPE_CHECKING:
     from ....core.json_contract import ResolvedPreconditionAction
 
 
-def unavailable_profile_record_status(
-    *,
-    active_profile: str | None,
-    status: str,
-    profile_record_error: str | None,
-    precondition_action: ResolvedPreconditionAction | None,
-) -> tuple[ConfigStatusResult, tuple[str, ...]]:
-    """Build the stable payload and text rows for an unavailable profile record."""
-    result = ConfigStatusResult(
-        active_profile=active_profile,
-        registered_profile=True,
-        profile_record_present=False,
-        configured=False,
-        profile_record_error=profile_record_error,
-        precondition_action=precondition_action,
-    )
-    record_state = "unreadable" if status == "profile_record_unreadable" else "missing"
-    lines = [
-        f"profile\t{active_profile}",
-        f"readiness\t{status}",
-        "registered_profile\tpresent",
-        f"profile_record\t{record_state}",
-    ]
-    if profile_record_error:
-        lines.append(f"profile_record_error\t{profile_record_error}")
-    lines.extend(precondition_action_lines(precondition_action))
-    return result, tuple(lines)
-
-
 def blocked_readiness_status(
     *,
     active_profile: str | None,
@@ -104,4 +75,4 @@ def _presence(values: Mapping[str, str], path: str) -> str:
     return "present" if values.get(path) else "missing"
 
 
-__all__ = ["blocked_readiness_status", "precondition_action_lines", "unavailable_profile_record_status"]
+__all__ = ["blocked_readiness_status", "precondition_action_lines"]

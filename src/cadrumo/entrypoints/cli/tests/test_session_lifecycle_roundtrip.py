@@ -34,8 +34,9 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.errors import SessionExpiredError, StorageValidationError
-from ....adapters.persistence.storage.master_key.active_session import active_session, suspend_active_session
+from ....adapters.persistence.storage.master_key.active_session import active_session
 from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
+from ....adapters.persistence.storage.master_key.tests.session_scope import suspend_active_session
 from ....adapters.persistence.storage.runtime_readiness import StorageRuntimeReadinessCode
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b6e26255c30914c83fe4b8dd0625ae807ea6629e5d72665e0140eccb15c733b5'
+body_hash: 'sha256:9aeaa68eec57d9afda3ce29e0165f9ccf89e3cf20b2fef514cd09d07ffb1a492'
 related:
   - "[[2026-08-05-modelo-parity-rollup-s16-s18-evidence-research]]"
   - "[[2026-08-05-modelo-parity-rollup-s16-s18-candidate-contract-matrix-research]]"
@@ -20,7 +20,7 @@ The evidence-only S17 addendum does not support promoting Modelo 100/2025 casill
 
 The bundled Renta 2025 manual defines custody expenses as pre-registration and matrÃƒÂ­cula, attendance, and food paid for complete months, excludes exempt employer in-kind amounts, and extends the turning-three period only for post-birthday expenses through the month before the second cycle may begin (`src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md:54765-54880`). It states an increase of up to `83.33` euros per qualifying month and a per-child annual limit of `1,000` euros (`src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md:54863-54916`). It separately defines the annual effective non-subsidized spend limit, including amounts paid by both parents and subtracting subsidies and exempt employer payments (`src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md:54884-54904` and `src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md:55010-55022`). The official 2025 help page confirms the same two limits and the both-parent effective-spend rule: https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/irpf-2025/8-cumplimentacion-irpf/8_8-cuota-diferencial-resultado-declaracion/8_8_2-resultado-declaracion/8_8_2_1-deduccion-maternidad/guarderia.html.
 
-The consequence for the producer contract is load-bearing: the correct value is a sum of per-child minima, not `min(total spend, total child cap)`. Two children with unequal qualifying-month counts can produce a different result from an aggregate minimum. A 2025 profile must therefore carry, or canonically derive, each child's complete-month population and effective annual spend. The current aggregate paths do not provide that contract (`src/cadrumo/application/modelo/_profile_binding.py:235-286`; `src/cadrumo/domain/contribuyente/family.py:984-1060`; `src/cadrumo/domain/contribuyente/family.py:1373-1398`).
+The consequence for the producer contract is load-bearing: the correct value is a sum of per-child minima, not `min(total spend, total child cap)`. Two children with unequal qualifying-month counts can produce a different result from an aggregate minimum. A 2025 profile must therefore carry, or canonically derive, each child's complete-month population and effective annual spend. The current aggregate paths do not provide that contract (the former source file; the former source file; the former source file).
 
 ### Official examples leave the rounding stage unresolved
 
@@ -34,11 +34,11 @@ The competing executable interpretations are materially different:
 - Exact `1,000 / 12` retained through the total and rounded once gives `666.67` for eight, `583.33` for seven, `166.67` for two, and `1,000.00` for twelve.
 - An annual cap of `1,000` alone resolves twelve months but does not define partial-month results.
 
-The published `666.64` and `583.33` observations cannot both be produced by one of those simple stages. The evidence therefore establishes a genuine authority discrepancy, not a safe implementation choice. The `money-2` rounding marker on the existing 2024 formula is not sufficient evidence for 2025, and the 2024 `cotizaciones_ss_madre_2024` term must not be reused (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/0181-renta-2024-incremento-guarderia-0613.toml:1-21`).
+The published `666.64` and `583.33` observations cannot both be produced by one of those simple stages. The evidence therefore establishes a genuine authority discrepancy, not a safe implementation choice. The `money-2` rounding marker on the existing 2024 formula is not sufficient evidence for 2025, and the 2024 `cotizaciones_ss_madre_2024` term must not be reused .
 
 ### The current profile surface cannot yet express the 2025 producer
 
-The 2025 schema declares `0613` as a manual casilla with legal and form sources and no formula back-reference (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas/0194-c0613.toml:1-8`). The user-profile schema exposes year-parameterized raw guarderí spend and population selectors, but the only Social Security field is explicitly 2024-specific (`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml:19-55` and `:1651-1657`). The canonical family record has annual and sparse monthly raw spend, but no explicit versioned effective non-subsidized per-child amount or per-child cap result (`src/cadrumo/domain/contribuyente/family.py:151-177` and `:303-314`).
+The 2025 schema declares `0613` as a manual casilla with legal and form sources and no formula back-reference . The user-profile schema exposes year-parameterized raw guarderí spend and population selectors, but the only Social Security field is explicitly 2024-specific (`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml:19-55` and `:1651-1657`). The canonical family record has annual and sparse monthly raw spend, but no explicit versioned effective non-subsidized per-child amount or per-child cap result (the former source file and `:303-314`).
 
 Adding only three 2025 registry rows would therefore create a producer whose input contract cannot distinguish parent-paid totals, subsidies, exempt employer payments, unequal child caps, or unresolved annual-only month counts. Cloning the 2024 formula would also falsely carry the 2024-only Social Security fact into 2025. Both alternatives are rejected by the existing S17 evidence boundary (`.vault/research/2026-08-05-modelo-parity-rollup-s16-s18-evidence-research.md:32-42`; `.vault/exec/2026-08-05-modelo-parity-rollup/2026-08-05-modelo-parity-rollup-W03-P08-S17.md:18-28`).
 
@@ -52,15 +52,10 @@ Until the authority discrepancy is resolved, a domain test may exercise the exis
 
 - `src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md:54765-55022`
 - `src/cadrumo/_data/corpus/manuals/renta/2024/part1/source.pdf.extracted.md:58777-59042`
-- `src/cadrumo/domain/contribuyente/family.py:151-177`
-- `src/cadrumo/domain/contribuyente/family.py:303-314`
-- `src/cadrumo/domain/contribuyente/family.py:984-1060`
-- `src/cadrumo/domain/contribuyente/family.py:1373-1398`
-- `src/cadrumo/application/modelo/_profile_binding.py:235-286`
+
 - `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml:19-55`
 - `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml:1651-1657`
-- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/0181-renta-2024-incremento-guarderia-0613.toml:1-21`
-- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas/0194-c0613.toml:1-8`
+
 - `.vault/research/2026-08-05-modelo-parity-rollup-s16-s18-evidence-research.md:32-42`
 - `.vault/exec/2026-08-05-modelo-parity-rollup/2026-08-05-modelo-parity-rollup-W03-P08-S17.md:18-28`
 - https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/irpf-2025/8-cumplimentacion-irpf/8_8-cuota-diferencial-resultado-declaracion/8_8_2-resultado-declaracion/8_8_2_1-deduccion-maternidad/guarderia.html

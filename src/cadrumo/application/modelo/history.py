@@ -36,7 +36,7 @@ See Also:
         Emits work-unit create, rename, and discard events.
     :func:`cadrumo.application.modelo.calculate_input.calculate_modelo_work_revision`:
         Persists calculation revisions and ``MODELO_CALCULATION_CREATED`` events.
-    :func:`cadrumo.application.modelo.verification_actions.verify_modelo_revision`:
+    :func:`cadrumo.application.modelo.verification_actions.verify_modelo_revision_with_preconditions`:
         Persists verification reports and verification pass/refusal events.
     :func:`cadrumo.application.modelo.filing_actions.file_modelo_revision`:
         Persists local filing records and filing/supersession events.
@@ -229,11 +229,13 @@ def assemble_work_unit_history(
     # object_type=WORK_UNIT keyed by work_unit_id.
     collected = _work_unit_history_events(catalogue, work_unit_id)
 
-    revisions = cr_repo.load()
+    revisions = cr_repo.load(operation=operation)
     calculation_events, revision_ids = _calculation_history_events(catalogue, revisions.values(), work_unit_id)
     collected.extend(calculation_events)
 
-    verifications = require_verification_report_coordinates_current(vr_repo.load(), operation=operation)
+    verifications = require_verification_report_coordinates_current(
+        vr_repo.load(operation=operation), operation=operation
+    )
     collected.extend(_verification_history_events(catalogue, verifications.values(), revision_ids))
 
     filings = fr_repo.load()

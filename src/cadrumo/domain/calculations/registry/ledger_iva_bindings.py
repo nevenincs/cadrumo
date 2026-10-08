@@ -17,10 +17,7 @@ from pydantic import (
     model_validator,
 )
 
-from ....core.aggregation import (
-    BindingAggregationOp,
-    BindingSourceKind,
-)
+from ....core.aggregation import BindingSourceKind
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -56,25 +53,30 @@ from ._ledger_binding_resolution import (
     unrouted_ledger_family_quantities,
     unsupported_ledger_family_observations,
 )
-from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
+from .binding_selector_utils import provider_member, selector_against_model
 from .binding_targets import casillas_by_binding
 from .errors import RegistryValidationError
 from .ids import BindingId
+from .iva_cash_accounting_vocabulary import (
+    require_iva_cash_accounting_treatment,
+    require_registry_declared_iva_cash_accounting_treatment,
+)
 from .iva_category_catalogue import resolve_iva_category_catalogue
 from .iva_deduction_catalogue import require_iva_deduction_fact_kind
 from .iva_flow_catalogue import require_iva_flow_direction, require_registry_declared_iva_flow_direction
+from .iva_legal_vocabulary import require_iva_exemption_article
 from .iva_rate_kind_catalogue import (
     require_iva_rate_kind,
     require_registry_declared_iva_rate_kind,
     resolve_iva_rate_kind_catalogue,
 )
-from .iva_schema_vocabulary import (
-    require_iva_cash_accounting_treatment,
-    require_iva_exemption_article,
-    require_registry_declared_iva_cash_accounting_treatment,
+from .ledger_binding_selector_support import LEDGER_IVA_FACTS, LedgerIvaFact, LedgerIvaFactValue
+from .ledger_binding_validation import (
+    ledger_binding_build_diagnostics,
+    ledger_binding_selector,
+    require_ledger_aggregation_op,
+    require_ledger_fact,
 )
-from .ledger_binding_selector_support import LedgerIvaFact, LedgerIvaFactValue
 from .prorrata_vocabulary import require_input_classification
 from .quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
 from .schema_base import coerce_decimal_tuple, coerce_enum_tuple
@@ -282,15 +284,6 @@ class IvaLedgerObservation(BaseModel):
         return self
 
 
-#: The closed fact vocabulary a ``ledger_iva_aggregation`` selector may declare.
-#: Named rather than inlined at each check so the quantity screen below can
-#: derive its screened set from the same vocabulary the validator enforces and
-#: :func:`_iva_aggregate` dispatches on.
-_IVA_SUPPORTED_FACTS: frozenset[str] = frozenset(
-    {"iva_amount_sum", "base_amount_sum", "recargo_amount_sum"},
-)
-
-
 class LedgerIvaProvider(BaseModel):
     """Validated form of a ledger_iva_aggregation binding selector."""
 
@@ -466,14 +459,6 @@ class LedgerIvaProvider(BaseModel):
         return self
 
 
-def iva_ledger_selector(binding: BindingDefinition) -> LedgerIvaProvider:
-    """Validate and parse a binding selector into a typed IVA selector."""
-    try:
-        return provider_member(binding, LedgerIvaProvider)
-    except (ValueError, TypeError) as exc:
-        raise RegistryValidationError(f"binding {binding.id!r} has malformed ledger_iva_aggregation selector") from exc
-
-
 class IvaLedgerScreenBinding(NamedTuple):
     """One selected-revision binding used by the invoice-versus-ledger screen.
 
@@ -586,6 +571,21 @@ def _is_invoice_ledger_screen_candidate(
     not the conceptual screen slot.  This keeps the distinction in authored
     registry target identity rather than copying a rate fact into Python.
     """
+    if not _is_conceptual_invoice_screen_rung(revision, binding, selector, modelo=modelo):
+        return False
+    rate_kinds = frozenset(resolve_iva_rate_kind_catalogue(effective_date=effective_date).positive_kinds)
+    if not _has_invoice_screen_selector_axes(selector, cash_accounting_treatments):
+        return False
+    return _invoice_screen_categories_match(selector, effective_date) and set(selector.rate_kinds).issubset(rate_kinds)
+
+
+def _is_conceptual_invoice_screen_rung(
+    revision: ModeloRevision,
+    binding: BindingDefinition,
+    selector: LedgerIvaProvider,
+    *,
+    modelo: str,
+) -> bool:
     if selector.applied_rates is not None:
         if modelo != "303":
             return False
@@ -594,21 +594,29 @@ def _is_invoice_ledger_screen_candidate(
             return False
         if any("transitorio" in str(target_id).casefold() for target_id in target_ids):
             return False
-    rate_kinds = frozenset(resolve_iva_rate_kind_catalogue(effective_date=effective_date).positive_kinds)
+    return True
+
+
+def _has_invoice_screen_selector_axes(
+    selector: LedgerIvaProvider,
+    cash_accounting_treatments: tuple[str, ...] | None,
+) -> bool:
     return (
         selector.exemption_articles is None
         and selector.observation_roles == _INVOICE_LEDGER_SCREEN_OBSERVATION_ROLES
         and (cash_accounting_treatments is None or selector.cash_accounting_treatments == cash_accounting_treatments)
         and is_standard_issued_or_received_flow(selector.flow_direction)
         and selector.fact in _INVOICE_LEDGER_SCREEN_FACTS
-        and set(selector.categories).issubset(
-            {
-                resolve_iva_category_catalogue(effective_date=effective_date).require("domestic_general"),
-                resolve_iva_category_catalogue(effective_date=effective_date).require("domestic_reduced"),
-                resolve_iva_category_catalogue(effective_date=effective_date).require("domestic_super_reduced"),
-            },
-        )
-        and set(selector.rate_kinds).issubset(rate_kinds)
+    )
+
+
+def _invoice_screen_categories_match(selector: LedgerIvaProvider, effective_date: date) -> bool:
+    return set(selector.categories).issubset(
+        {
+            resolve_iva_category_catalogue(effective_date=effective_date).require("domestic_general"),
+            resolve_iva_category_catalogue(effective_date=effective_date).require("domestic_reduced"),
+            resolve_iva_category_catalogue(effective_date=effective_date).require("domestic_super_reduced"),
+        },
     )
 
 
@@ -668,6 +676,21 @@ def invoice_ledger_screen_bindings(
         return ()
 
     rate_slots = _invoice_ledger_screen_rate_slots(revision.valid_from)
+    expected_by_shape = _invoice_ledger_screen_candidates(revision, modelo, rate_slots)
+    selected = _select_invoice_ledger_screen_bindings(revision, modelo, rate_slots, expected_by_shape)
+    selected_ids = tuple(item.binding_id for item in selected)
+    if len(set(selected_ids)) != len(selected_ids):
+        raise RegistryValidationError(
+            f"revision {revision.id!r} modelo {modelo!r} invoice IVA screen resolved duplicate binding IDs",
+        )
+    return tuple(selected)
+
+
+def _invoice_ledger_screen_candidates(
+    revision: ModeloRevision,
+    modelo: str,
+    rate_slots: tuple[_InvoiceLedgerScreenShape, ...],
+) -> dict[_InvoiceLedgerScreenShape, list[IvaLedgerScreenBinding]]:
     shape_set = frozenset(rate_slots)
     expected_by_shape: dict[_InvoiceLedgerScreenShape, list[IvaLedgerScreenBinding]] = {
         shape: [] for shape in rate_slots
@@ -681,7 +704,7 @@ def invoice_ledger_screen_bindings(
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
             continue
-        selector = iva_ledger_selector(binding)
+        selector = provider_member(binding, LedgerIvaProvider)
         if not _is_invoice_ledger_screen_candidate(
             revision,
             binding,
@@ -704,7 +727,15 @@ def invoice_ledger_screen_bindings(
                 f"revision {revision.id!r} modelo {modelo!r} has cross-model invoice IVA screen binding {binding.id!r}",
             )
         expected_by_shape[shape].append(IvaLedgerScreenBinding(binding.id, selector))
+    return expected_by_shape
 
+
+def _select_invoice_ledger_screen_bindings(
+    revision: ModeloRevision,
+    modelo: str,
+    rate_slots: tuple[_InvoiceLedgerScreenShape, ...],
+    expected_by_shape: Mapping[_InvoiceLedgerScreenShape, list[IvaLedgerScreenBinding]],
+) -> list[IvaLedgerScreenBinding]:
     selected: list[IvaLedgerScreenBinding] = []
     for shape in rate_slots:
         matches = expected_by_shape[shape]
@@ -716,13 +747,7 @@ def invoice_ledger_screen_bindings(
                 f"got {len(matches)} for {shape!r}",
             )
         selected.extend(matches)
-
-    selected_ids = tuple(item.binding_id for item in selected)
-    if len(set(selected_ids)) != len(selected_ids):
-        raise RegistryValidationError(
-            f"revision {revision.id!r} modelo {modelo!r} invoice IVA screen resolved duplicate binding IDs",
-        )
-    return tuple(selected)
+    return selected
 
 
 def invoice_ledger_screen_binding_ids(
@@ -775,29 +800,50 @@ def deducible_deduction_kind_overlaps(revision: ModeloRevision) -> tuple[Deducti
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
+    groups = _deducible_binding_groups(revision)
+    return tuple(overlap for members in groups.values() for overlap in _deduction_kind_overlaps_in_group(members))
+
+
+def _deducible_binding_groups(
+    revision: ModeloRevision,
+) -> dict[tuple[tuple[str, str], ...], list[tuple[BindingId, LedgerIvaProvider]]]:
     targets = casillas_by_binding(revision)
-    deducible_casillas = {casilla.id for casilla in revision.casillas if "deducible" in casilla.section}
+    deducible_casillas = frozenset(casilla.id for casilla in revision.casillas if "deducible" in casilla.section)
     groups: dict[tuple[tuple[str, str], ...], list[tuple[BindingId, LedgerIvaProvider]]] = {}
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
             continue
         if not any(casilla_id in deducible_casillas for casilla_id in targets.get(binding.id, ())):
             continue
-        selector = iva_ledger_selector(binding)
+        selector = provider_member(binding, LedgerIvaProvider)
         groups.setdefault(_selector_identity_without_deduction_kinds(selector), []).append((binding.id, selector))
+    return groups
+
+
+def _deduction_kind_overlaps_in_group(
+    members: list[tuple[BindingId, LedgerIvaProvider]],
+) -> tuple[DeductionKindClaimOverlap, ...]:
+    if all(selector.deduction_fact_kinds is None for _, selector in members):
+        return ()
     overlaps: list[DeductionKindClaimOverlap] = []
-    for members in groups.values():
-        if all(selector.deduction_fact_kinds is None for _, selector in members):
-            continue
-        for index, (left_id, left) in enumerate(members):
-            for right_id, right in members[index + 1 :]:
-                if left.deduction_fact_kinds is None or right.deduction_fact_kinds is None:
-                    overlaps.append(DeductionKindClaimOverlap((left_id, right_id), None))
-                    continue
-                shared = tuple(kind for kind in left.deduction_fact_kinds if kind in right.deduction_fact_kinds)
-                if shared:
-                    overlaps.append(DeductionKindClaimOverlap((left_id, right_id), shared))
+    for index, (left_id, left) in enumerate(members):
+        for right_id, right in members[index + 1 :]:
+            overlap = _deduction_kind_overlap(left_id, left, right_id, right)
+            if overlap is not None:
+                overlaps.append(overlap)
     return tuple(overlaps)
+
+
+def _deduction_kind_overlap(
+    left_id: BindingId,
+    left: LedgerIvaProvider,
+    right_id: BindingId,
+    right: LedgerIvaProvider,
+) -> DeductionKindClaimOverlap | None:
+    if left.deduction_fact_kinds is None or right.deduction_fact_kinds is None:
+        return DeductionKindClaimOverlap((left_id, right_id), None)
+    shared = tuple(kind for kind in left.deduction_fact_kinds if kind in right.deduction_fact_kinds)
+    return DeductionKindClaimOverlap((left_id, right_id), shared) if shared else None
 
 
 def validate_ledger_iva_aggregation_binding_definition(
@@ -815,25 +861,12 @@ def validate_ledger_iva_aggregation_binding_definition(
             tuple), if the aggregation operator is not "sum", or if
             the binding source is not "ledger_iva_aggregation".
     """
-    if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
-        raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_iva_aggregation source")
+    selector = ledger_binding_selector(binding, BindingSourceKind.LEDGER_IVA_AGGREGATION, LedgerIvaProvider)
     diagnostics = selector_against_model(binding, LedgerIvaProvider)
     if diagnostics:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed IVA selector: {'; '.join(diagnostics)}")
-    selector = iva_ledger_selector(binding)
-
-    if binding.aggregation is not None:
-        op = binding_aggregation_op(binding)
-        if op != BindingAggregationOp.SUM:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} ledger_iva_aggregation supports only aggregation op 'sum', got {op.value!r}",
-            )
-
-    if selector.fact not in _IVA_SUPPORTED_FACTS:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_iva_aggregation supports only "
-            f"facts {sorted(_IVA_SUPPORTED_FACTS)!r}, got {selector.fact!r}",
-        )
+    require_ledger_aggregation_op(binding)
+    require_ledger_fact(binding, selector.fact, LEDGER_IVA_FACTS)
 
     try:
         _iva_reachability_probe(selector)
@@ -991,15 +1024,20 @@ def _iva_ledger_observation_matches_selector(
         return False
     if observation.observation_role not in set(selector.observation_roles):
         return False
+    return _iva_optional_selector_axes_match(observation, selector)
+
+
+def _iva_optional_selector_axes_match(
+    observation: IvaSelectorAxesProtocol,
+    selector: LedgerIvaProvider,
+) -> bool:
     if selector.applied_rates is not None and observation.applied_rate not in set(selector.applied_rates):
         return False
     if selector.deduction_fact_kinds is not None and observation.deduction_fact_kind not in set(
         selector.deduction_fact_kinds,
     ):
         return False
-    if selector.exemption_articles is None:
-        return True
-    return observation.exemption_article in set(selector.exemption_articles)
+    return selector.exemption_articles is None or observation.exemption_article in set(selector.exemption_articles)
 
 
 def _iva_build_matcher(selector: LedgerIvaProvider) -> Callable[[IvaSelectorAxesProtocol], bool]:
@@ -1053,7 +1091,7 @@ def resolve_ledger_iva_aggregation_binding_values(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        parse_selector=iva_ledger_selector,
+        provider_model=LedgerIvaProvider,
         build_matcher=_iva_build_matcher,
         aggregate=_iva_aggregate,
     )
@@ -1102,7 +1140,7 @@ def unsupported_ledger_iva_observations(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        parse_selector=iva_ledger_selector,
+        provider_model=LedgerIvaProvider,
         build_matcher=_iva_build_matcher,
         is_declarable=lambda observation: True,
         extra_exclusion=lambda observation: observation.category in registry_category_projection("cuota_less_m303"),
@@ -1126,7 +1164,7 @@ _IVA_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = dict[str, str]()
 #: DERIVED as the complement, exactly as the renta side derives its own, so the
 #: two sets cannot drift apart.
 _IVA_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = independent_quantity_facts(
-    _IVA_SUPPORTED_FACTS,
+    LEDGER_IVA_FACTS,
     _IVA_ALTERNATIVE_MEASURE_FACTS,
 )
 
@@ -1189,7 +1227,7 @@ def unrouted_ledger_iva_quantities(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        parse_selector=iva_ledger_selector,
+        provider_model=LedgerIvaProvider,
         build_matcher=_iva_build_matcher,
         read_fact=lambda selector: selector.fact,
         independent_facts=_IVA_INDEPENDENT_QUANTITY_FACTS,
@@ -1200,7 +1238,7 @@ def unrouted_ledger_iva_quantities(
 def _base_iva_selectors(revision: ModeloRevision) -> tuple[LedgerIvaProvider, ...]:
     """Return the revision's ``base_amount_sum`` IVA selectors in source order."""
     selectors = [
-        iva_ledger_selector(binding)
+        provider_member(binding, LedgerIvaProvider)
         for binding in revision.bindings
         if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
     ]
@@ -1289,7 +1327,7 @@ def structurally_unroutable_iva_base_categories(
     registry-expressiveness gap in its own right), so a caller working a
     different modelo must supply its own set rather than default into M303's.
 
-    Uses the real production selector parser (:func:`iva_ledger_selector`)
+    Uses the real production selector narrowing (:func:`provider_member`)
     and matcher (:func:`_iva_build_matcher`) -- never a re-implementation of
     the match rule. For each ``base_amount_sum`` binding whose declared
     categories include the candidate, a probe observation is assembled from
@@ -1353,10 +1391,9 @@ def validate_ledger_iva_aggregation_binding(binding: BindingDefinition) -> list[
     :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_iva_aggregation_binding_definition`.
     """
-    failures = selector_against_model(binding, LedgerIvaProvider)
-    if failures:
-        return failures
-    return invariant_diagnostics(binding, "ledger_iva_aggregation", validate_ledger_iva_aggregation_binding_definition)
+    return ledger_binding_build_diagnostics(
+        binding, LedgerIvaProvider, validate_ledger_iva_aggregation_binding_definition
+    )
 
 
 LedgerIvaProvider = LedgerIvaProvider

@@ -19,19 +19,6 @@ flows:
     select_unknown: 'Elige uno de los valores aceptados: %{choices}.'
     unsupported_console: Esta consola no puede mostrar preguntas interactivas. Ejecuta
       el flujo desde un terminal real o guíalo con un archivo de respuestas.
-  login:
-    cancel_button: Cancelar
-    intro: Elige el perfil que quieres abrir y escribe la contraseña que lo protege.
-      No se desbloquea nada hasta que la contraseña se acepte.
-    password_hint: La contraseña que elegiste al crear este perfil. No se puede restablecer.
-    password_label: Contraseña
-    profile_label: Perfil
-    refusal:
-      password_required: Escribe la contraseña de este perfil.
-      unlock_failed: No se ha podido abrir el perfil.
-    section: Perfil y contraseña
-    title: Inicia sesión en tu perfil
-    unlock_button: Iniciar sesión
   manager:
     action:
       auth_clave_movil_route_app_request: Solicitud en la aplicación
@@ -56,6 +43,8 @@ flows:
       cancel: Cancelar
       choose_one: Elige una de las opciones, o cancela para dejar el valor sin cambios.
       clear: Borrar
+      completed_refresh_unavailable: La operación se completó, pero la vista actualizada
+        no está disponible. Vuelve a Inicio para actualizarla.
       masked_kept: Este valor está oculto, por eso el campo empieza vacío. Déjalo
         vacío para conservar el valor guardado o escribe uno nuevo para sustituirlo.
       no_change: No fue necesario realizar cambios.
@@ -85,28 +74,19 @@ flows:
     namespace_detail: detalle {number}
     onboarding:
       continue: Continuar
-      done: La configuración está completa. Continúa al área de trabajo o sigue añadiendo
-        detalles opcionales abajo.
       finish: Terminar la configuración
       heading: Configura tu perfil
-      intro: Aquí solo se piden las respuestas necesarias para preparar tus declaraciones.
-        Pulsa Continuar y responde a cada pregunta; todo lo demás es opcional y puede
-        esperar.
       progress: '{answered} de {total} respuestas obligatorias'
       question: Pregunta {number} de {total} · {section}
-      ready: Ya tienes todas las respuestas obligatorias. Termina la configuración
-        para empezar a preparar tus declaraciones.
       required_only: Solo obligatorias
       search_empty: Ningún ajuste coincide con «{query}».
       search_placeholder: Buscar ajustes
       section_done: ✓ {title} - {present}/{total}
-      section_pending: ✖ {title} - {missing} obligatorias
+      section_pending: '! {title} - obligatorias sin completar: {missing}'
       sources_summary: Rellena el perfil a partir de los registros de la AEAT o de
         tus documentos en lugar de escribirlo.
       sources_title: Importar datos (opcional)
-      step: 'Paso {step} de {steps}: {section}'
-      step_finish: 'Paso {step} de {steps}: terminar la configuración'
-      to_workbench: Continuar al área de trabajo
+      to_workbench: Continuar a Inicio
     plantilla_media:
       average_workforce: Plantilla media
       list_failed: No se han podido leer los años declarados. Vuelve a intentarlo.
@@ -129,17 +109,66 @@ flows:
       remove: Eliminar fila
       remove_confirm: ¿Eliminar la fila %{row} de la sección %{section}?
     section_title: '{title} - {present}/{total}'
+    setup:
+      achievement: '✓ Perfil seguro creado
+
+        ✓ Datos obligatorios guardados
+
+        ✓ Configuración confirmada'
+      answer_required: Completar datos
+      edit_intro: Despliega una sección y selecciona un campo para editarlo. * Obligatorio
+        · Los demás son opcionales. Cada cambio se guarda inmediatamente.
+      get_data_copy: Opcional. Importa los datos disponibles o salta este paso e introduce
+        los datos obligatorios tú mismo. No necesitas acceder a la AEAT para terminar
+        la configuración.
+      get_data_title: Obtener datos
+      nav_get_data: Importar
+      nav_overview: Inicio
+      nav_ready: Listo
+      nav_required: Datos *
+      nav_review: Revisar
+      overview_checklist: '✓ Perfil seguro creado
+
+        ○ Importar datos o saltar el paso
+
+        ○ Completar los datos obligatorios
+
+        ○ Revisar y terminar'
+      overview_copy: 'Tu perfil seguro está creado. Te pediremos solo los datos necesarios
+        para configurarlo y podrás revisarlos antes de terminar. Puedes salir y volver:
+        cada respuesta se guarda al introducirla.'
+      overview_title: Resumen
+      previous: Anterior
+      ready_copy: ¡Bien hecho! Tu perfil está configurado y tus respuestas están guardadas.
+        Continúa a Inicio para empezar a preparar una declaración. Puedes editar tu
+        perfil en cualquier momento.
+      ready_title: Listo
+      required_complete: Datos obligatorios completos
+      required_copy: Quedan {missing} respuestas obligatorias. Continuar te guía por
+        ellas. Los campos con * son obligatorios; los datos opcionales pueden esperar.
+      required_title: Obligatorios
+      review_copy: Comprueba los datos guardados. Despliega una sección para editarlos.
+        Los campos opcionales pueden quedar vacíos. Terminar confirma que el perfil
+        está configurado; cada declaración tiene sus propias comprobaciones.
+      review_missing: Quedan {missing} respuestas obligatorias por completar. Continuar
+        te lleva a ellas.
+      review_saved: ✓ Todas las respuestas obligatorias están guardadas. Los datos
+        opcionales no impiden terminar.
+      review_title: Revisar
+      skip_import: Saltar importación
+      start: Empezar
+      step: Paso {step} de {steps} · Quedan {remaining}
     title: 'Perfil: {profile}'
   modelo_review:
     filter:
       option:
         binding_source:
+          afiliado_cotizacion: Cuotas de afiliados
           atribucion_member: Miembro de atribución de rentas
           bienes_inversion_regularizacion: Regularización de bienes de inversión
           borrador: Borrador de la AEAT
-          collectible_invoice: Factura emitida
+          collectible_invoice: Facturas emitidas
           design_constant: Constante del diseño
-          donativo_donor: Donante
           foreign_asset: Activo extranjero
           gasto193_contributor: Gastos por contribuyente (modelo 193)
           inventory: Existencias
@@ -147,25 +176,23 @@ flows:
           iva_wallet_decision: Decisión de saldo de IVA
           ledger_impatriado_income_aggregation: Totales de ingresos de impatriados
           ledger_irnr_income_aggregation: Totales de ingresos de no residentes
-          ledger_iva_aggregation: Totales del libro de IVA
-          ledger_oss_aggregation: Totales del libro OSS
-          ledger_renta_gastos_estimacion_directa_aggregation: Totales de gastos en
-            estimación directa
-          ledger_renta_gastos_pago_fraccionado_aggregation: Totales de gastos del
-            pago fraccionado
-          ledger_renta_income_aggregation: Totales de ingresos
-          ledger_transaction: Movimiento del libro
+          ledger_iva_aggregation: Registros de IVA
+          ledger_oss_aggregation: Registros de ventas OSS
+          ledger_renta_gastos_estimacion_directa_aggregation: Registros de gastos
+            (estimación directa)
+          ledger_renta_gastos_pago_fraccionado_aggregation: Registros de gastos
+          ledger_renta_income_aggregation: Registros de ingresos
+          ledger_transaction: Registro
           m303_regimen_simplificado_annual_summary: Resumen régimen simplificado (modelo
             303)
           m347_third_party_operation: Operación con terceros
+          m349_intracommunity_operation: Operación intracomunitaria
           manual_input: Entrada manual
           payable_invoice: Factura recibida
           previous_filing: Declaración anterior
           profile: Perfil
           prorrata_regularizacion: Regularización de prorrata
           purchase_invoice_evidence: Evidencia de factura de compra
-          refund_operation: Operación de reembolso
-          related_party_operation: Operación vinculada
           relation_prefill: Declaración relacionada
           retenciones_aggregation: Totales de retenciones
           withholding: Registro de retención
@@ -180,6 +207,7 @@ flows:
           cross_period_dependency_unclean: Dependencia anterior no limpia
           missing_required_casilla: Falta una casilla obligatoria
           reconciliation_mismatch: Discrepancia de conciliación
+          stale_calculation: Cálculo desactualizado
         finding_severity:
           blocking: Bloqueante
           warning: Advertencia
@@ -215,116 +243,10 @@ flows:
           alternate_binding: Vínculo alternativo
           formula_binding: Vínculo de fórmula
           primary_binding: Vínculo principal
-  modelo_select:
-    column:
-      filing_year: Ejercicio
-      modelo: Modelo
-      name: Nombre
-      period: Periodo
-      state: Estado
-  modelo_workspace_filing:
-    column:
-      capability: Capacidad
-      disposition: Disposición
-    handoff: La presentación se realiza fuera de esta aplicación. Construya, verifique
-      y exporte aquí, y presente usted mismo ante la AEAT.
-    state_not_carried: Esta página no muestra el estado ni el historial de presentación.
-    title: Presentación - modelo {modelo}
-    why:
-      draft_structural: Cadrumo no puede saber de antemano si el borrador de presentación
-        se podrá generar; se comprueba al generarlo.
-    why_line: '{capability}: {why}'
-  modelo_workspace_inputs:
-    column:
-      address: Dirección
-      input_kind: Tipo de entrada declarado
-      label: Etiqueta
-      value: Valor
-    empty: Esta revisión no declara valores materializados.
-    input_kind_unmeasured: sin medir
-    page_bounded: Se muestran {shown} filas de un conjunto mayor; las restantes no
-      son accesibles desde esta lectura.
-    section:
-      unsectioned: Sin sección
-    title: Entradas - modelo {modelo}
-    values_unmeasured: Esta página solo muestra la estructura del formulario; aún
-      no muestra valores calculados.
   modelo_workspace_overview:
-    actions_none: Todavía no se puede realizar ningún paso siguiente desde este espacio
-      de trabajo.
-    actions_suggested: 'Pasos siguientes sugeridos: {actions}'
     column:
-      capability: Capacidad
-      disposition: Disposición
       field: Campo
       value: Valor
-    label:
-      filing_year: Ejercicio
-      law_selected: Revisión seleccionada por norma
-      modelo: Modelo
-      period: Periodo
-      requested_assertion: Aserción de revisión solicitada
-      review_status: Estado de revisión
-      stored_assertion: Aserción de revisión almacenada
-      work_state: Estado de la unidad
-      work_unit: Unidad de trabajo
-    section:
-      address: Dirección
-      capabilities: Capacidades
-      revision: Coordenadas de revisión
-    title: Resumen - modelo {modelo}
-    value:
-      no_work_unit: aún sin unidad de trabajo
-  modelo_workspace_provenance:
-    column:
-      resolver: Resolutor
-      source_ref: Referencia de origen
-      subject: Sujeto
-    empty: Este cálculo no ha registrado fuentes contribuyentes.
-    not_applicable: Esta página aún no muestra de dónde proceden los valores.
-    page_bounded: Se muestran {shown} de un conjunto mayor. Una fuente puede aportar
-      muchas filas, así que el número de filas no indica completitud.
-    title: Procedencia - modelo {modelo}
-    value:
-      unattributed: sin atribuir
-  modelo_workspace_results:
-    column:
-      casilla: Casilla
-      formula: Fórmula
-      value: Valor
-    empty: Este cálculo no ha producido ninguna casilla calculada.
-    not_applicable: 'Esta página aún no puede mostrar resultados calculados: no distingue
-      las casillas calculadas de las que rellenas tú.'
-    page_bounded: Se muestran {shown} filas de un conjunto mayor; las restantes no
-      son accesibles desde esta lectura.
-    title: Resultados - modelo {modelo}
-  modelo_workspace_verification:
-    axis:
-      binding_ready: Vínculos preparados
-      ledger_ready: Libro preparado
-      profile_ready: Perfil preparado
-      ready: Preparado (veredicto del productor)
-      registry_ready: Registro preparado
-    capability_line: 'Verificación: {disposition}'
-    column:
-      axis: Eje
-      casilla: Casilla
-      kind: Tipo
-      message: Qué se encontró
-      severity: Severidad
-      value: Valor
-    evidence_carried: 'Referencias de respaldo y paso siguiente: {entries}'
-    evidence_none: Esta capacidad de verificación no cita ninguna referencia del registro
-      ni indica ningún paso siguiente realizable.
-    findings_none: La revisión de trabajo no ha registrado hallazgos.
-    findings_unmeasured: Esta página aún no muestra los hallazgos de la verificación.
-    readiness_unmeasured: Esta página aún no muestra si la declaración está lista.
-    section:
-      findings: Hallazgos
-      readiness: Ejes de preparación
-    title: Verificación - modelo {modelo}
-    value:
-      unmeasured: sin medir
   passphrase:
     cancel_button: Cancelar
     change_button: Cambiar contraseña
@@ -352,13 +274,14 @@ flows:
   registration:
     confirm_label: Repite la contraseña
     create_button: Crear perfil
-    intro: 'Elige un nombre para este perfil y una contraseña que lo proteja. No hace
-      falta nada más: tu perfil existe en cuanto continúes, y completas el resto cuando
-      quieras.'
+    intro: Elige un nombre y una contraseña para crear tu perfil seguro. Podrás configurar
+      sus datos después.
+    password_help: Protección y recuperación de la contraseña
     password_hint: Al menos {minimum_length} caracteres. Varias palabras corrientes
       seguidas son más fáciles de recordar y más difíciles de adivinar que una sola
       palabra corta y complicada.
     password_label: Contraseña
+    progress: 1 · Crear tu perfil seguro    2 · Configurar tus datos
     recovery:
       cancel_button: Cancelar
       confirm_button: Ya lo he anotado
@@ -377,6 +300,8 @@ flows:
       profile_already_exists: Ya existe un perfil llamado '%{profile}'. Elige otro
         nombre, o sal de esta pantalla e inicia sesión en ese perfil.
       username_required: Introduce un nombre para este perfil.
+    requirements: El nombre y ambos campos de contraseña son obligatorios. Puedes
+      cambiar el idioma más adelante.
     section: Nombre y contraseña
     strength:
       fair: Razonable.

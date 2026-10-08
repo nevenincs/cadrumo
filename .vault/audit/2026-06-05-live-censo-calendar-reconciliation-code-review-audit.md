@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#live-censo-calendar-reconciliation'
 date: '2026-06-05'
-modified: '2026-07-17'
-body_hash: 'sha256:2468d9ed9c70f41cc0ce6d39c31d15f75ac947e14cac79c8610bcca9f5d6e2aa'
+modified: '2026-10-03'
+body_hash: 'sha256:6398cb6afa0a734bc784ee23148ba8ad97c4835d646932452b9d1d0365f9ac42'
 related:
-  - '[[2026-06-05-live-censo-calendar-reconciliation-plan]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-reference]]'
 ---
 
@@ -74,7 +73,7 @@ The profile-bound CLI smoke for `app overview calendar` still timed out before a
 
 Resolution 2026-06-11: fixed for the hang path. `_default_passphrase_callback` now refuses when no configured `Settings.aeat_secret_passphrase` exists and either stdin or stderr is not interactive. Configured passphrase resolution remains unchanged. The real CLI smoke now exits promptly with `AEAT_SECRET_PASSPHRASE is not set and stdin is not interactive` instead of hanging. W04.P04.S09, S10, and S11 remain open because the encrypted profile store is still not unlocked and no authenticated censo/filed-history/message/justificante/calendar proof has been completed.
 
-Verification 2026-06-11: `uv run pytest src/aeat/adapters/persistence/storage/master_key/tests/test_passphrase_failclosed.py src/aeat/adapters/persistence/storage/master_key/tests/test_master_key.py -q` passed with 62 tests. `uv run ruff check src/aeat/adapters/persistence/storage/master_key/_master_key_io.py src/aeat/adapters/persistence/storage/master_key/tests/test_passphrase_failclosed.py` passed. `uv run aeat --format json app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete` returned the noninteractive passphrase refusal in about 3 seconds.
+Verification 2026-06-11: the historical check passed with 62 tests. The historical check passed. `uv run aeat --format json app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete` returned the noninteractive passphrase refusal in about 3 seconds.
 
 ## CENSO-010 | MEDIUM | Live verification initially targeted stale shared profile instead of fresh user-created profile
 
@@ -90,7 +89,7 @@ The authenticated all-model `app live filed list` run reached AEAT and queried t
 
 Resolution 2026-06-11: fixed. `app live filed list` now preserves fail-loud behavior for an explicit `--modelo`, but when no modelo filter is supplied it catches per-model failures, continues, and emits `failed_count` plus typed `failures` in the JSON payload using the same failure-row shape as `pull-all`. Typed `Period` values are stringified at the CLI boundary.
 
-Verification 2026-06-11: `uv run aeat --format json app live filed list --from-year 2026 --to-year 2026` now succeeds with `row_count=0`, `failed_count=1`, and an explicit Modelo `721` AEAT-register failure. `uv run ruff check src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/_app_live_payloads.py` passed. `uv run pytest src/aeat/application/live/tests/test_filed_bulk_capture.py -q` passed with 3 tests.
+Verification 2026-06-11: `uv run aeat --format json app live filed list --from-year 2026 --to-year 2026` now succeeds with `row_count=0`, `failed_count=1`, and an explicit Modelo `721` AEAT-register failure. The historical check passed. The historical check passed with 3 tests.
 
 ## CENSO-012 | LOW | Locale scaffold drift remains outside the pull-only live CLI slice
 
@@ -98,7 +97,7 @@ The S14 audit found the live filed and expedientes acquisition surfaces consolid
 
 Resolution 2026-06-12: accepted as residual repository drift for this step. Focused documented-command conformance passed, and `rg` found no `pull-all` / `pull_all` tokens in the live CLI implementation, live locale catalogues, pull/file naming rule, or notification how-to guide. Full locale scaffold cleanup remains separate work.
 
-Verification 2026-06-12: `uv run pytest src/aeat/application/overview/tests/test_calendar.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py src/aeat/application/live/tests/test_filed_bulk_capture.py src/aeat/application/live/tests/test_justificante_capture.py src/aeat/application/live/tests/test_justificante_capture_resolution.py src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py src/aeat/entrypoints/cli/tests/test_live_justificante_verbs.py src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py -m "integration or not integration" -q` passed with 310 tests. Ruff passed for the touched live CLI and overview calendar surfaces. Live `config profile censo pull` still refused with no legible G313 censo, while live filed, expedientes, notifications, justificante, and calendar checks completed under the fresh profile.
+Verification 2026-06-12: the historical check passed with 310 tests. Ruff passed for the touched live CLI and overview calendar surfaces. Live `config profile censo pull` still refused with no legible G313 censo, while live filed, expedientes, notifications, justificante, and calendar checks completed under the fresh profile.
 
 ## CENSO-013 | HIGH | IVA wallet history payload stringified typed Period rows
 
@@ -118,7 +117,7 @@ The S15 review found stale `capture_all_modelo_help` locale keys behind live `pu
 
 Resolution 2026-06-12: fixed through the locale CLI. Live filed and expedientes help keys are now `pull_modelo_help` across `en`, `es`, `ca`, and `hu`, and the stale `capture_all_modelo_help` keys were removed. Added `test_live_pull_help_locale_keys_do_not_use_capture_all_names`.
 
-Verification 2026-06-12: `uv run ruff check src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/_app_live_expedientes_cli.py src/aeat/entrypoints/cli/tests/test_registry_cli.py` passed. `uv run pytest src/aeat/entrypoints/cli/tests/test_registry_cli.py -m integration -q` passed with 54 tests. The focused calendar/live/modelo gate passed with 440 tests. `uv run python -m aeat.locales scaffold --check` still fails on the previously recorded catalogue drift unrelated to the pull-only rename.
+Verification 2026-06-12: the historical check passed. The historical check passed with 54 tests. The focused calendar/live/modelo gate passed with 440 tests. `uv run python -m aeat.locales scaffold --check` still fails on the previously recorded catalogue drift unrelated to the pull-only rename.
 
 ## CENSO-016 | INFO | Fresh-profile live calendar works, censo pull correctly refuses mismatched live identity
 
@@ -132,7 +131,7 @@ The calendar builders produced consistent rows, but the typed boundary models di
 
 Resolution 2026-06-12: fixed. `OverviewCalendarFilingEvidence` and `OverviewCalendarEvent` now enforce the justificante state invariant at model validation time. Added application tests that construct contradictory evidence/events directly and assert they are refused.
 
-Verification 2026-06-12: `uv run ruff check src/aeat/application/overview/_calendar.py src/aeat/application/overview/tests/test_calendar.py` passed. `uv run pytest src/aeat/application/overview/tests/test_calendar.py -q` passed with 54 tests. The focused calendar/live/modelo/cross-period gate passed with 442 tests.
+Verification 2026-06-12: the historical check passed. The historical check passed with 54 tests. The focused calendar/live/modelo/cross-period gate passed with 442 tests.
 
 ## CENSO-018 | MEDIUM | Non-ALTA AEAT register rows could upgrade calendar filing evidence
 
@@ -140,7 +139,7 @@ The S17 audit focused on AEAT declaration-register status semantics. Live acquis
 
 Resolution 2026-06-12: fixed. Calendar projection now requires `ALTA` before expedientes events, observed filing events, or persisted filed-declaration observations can produce or enrich per-obligation AEAT submitted/justificante evidence. Non-`ALTA` rows remain visible as historical calendar events with their raw status but do not upgrade the obligation state. Added application and CLI-storage regressions, including the late enrichment path where a non-`ALTA` event shares a reference id with separate verified evidence.
 
-Verification 2026-06-12: `uv run ruff check src/aeat/application/overview/_calendar.py src/aeat/application/overview/tests/test_calendar.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py` passed. `uv run pytest src/aeat/application/overview/tests/test_calendar.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py -m "integration or not integration" -q` passed with 66 tests. The focused calendar/live/modelo/cross-period gate passed with 445 tests. `vaultspec-code-reviewer` returned no findings; residual risk is limited to callers manually constructing `OverviewCalendarFilingEvidence` outside the guarded production merger.
+Verification 2026-06-12: the historical check passed. The historical check passed with 66 tests. The focused calendar/live/modelo/cross-period gate passed with 445 tests. `vaultspec-code-reviewer` returned no findings; residual risk is limited to callers manually constructing `OverviewCalendarFilingEvidence` outside the guarded production merger.
 
 ## CENSO-019 | HIGH | Non-ALTA filed observations could enter official calculation history
 
@@ -150,7 +149,7 @@ Resolution 2026-06-12: fixed. Direct filed-observation persistence now refuses n
 
 Review 2026-06-12: `vaultspec-code-reviewer` initially found a HIGH failure-mode issue where the strict IVA path could raise on a non-`ALTA`-only period. The fix added the skip behavior and `test_iva_history_strict_persist_skips_non_alta_only_period`; re-review returned no findings. Residual risk: historical `aeat_sede_justificante` observations persisted before S18 may not carry source AEAT status metadata, so downstream readers cannot recover whether those old records came from a non-current register row.
 
-Verification 2026-06-12: `uv run ruff check src/aeat/application/live/_filed_observation_persistence.py src/aeat/application/live/tests/test_filed_capture_calculation_history.py` passed. `uv run pytest src/aeat/application/live/tests/test_filed_capture_calculation_history.py -q` passed with 14 tests. The focused calendar/live/modelo/cross-period gate passed with 459 tests.
+Verification 2026-06-12: the historical check passed. The historical check passed with 14 tests. The focused calendar/live/modelo/cross-period gate passed with 459 tests.
 
 ## CENSO-020 | HIGH | Official observation provenance needed taxpayer-bound AEAT register metadata
 
@@ -158,7 +157,7 @@ The S19 audit added encrypted source metadata to official `aeat_sede_justificant
 
 Review 2026-06-12: `vaultspec-code-reviewer` initially found a HIGH issue because the calendar used stamped status and expediente id but did not compare stamped `authenticated_identity` to the active taxpayer. The fix threads `expected_tax_id` into calculation-observation projection and rejects mismatched stamped identities. Re-review returned no findings.
 
-Verification 2026-06-12: `uv run ruff check src/aeat/application/calculations/_observations_repository.py src/aeat/application/live/_filed_observation_persistence.py src/aeat/application/overview/_calendar.py src/aeat/application/calculations/tests/test_observations_repository_roundtrip.py src/aeat/application/live/tests/test_filed_capture_calculation_history.py src/aeat/application/overview/tests/test_calendar.py` passed. `uv run pytest src/aeat/application/calculations/tests/test_observations_repository_roundtrip.py src/aeat/application/live/tests/test_filed_capture_calculation_history.py src/aeat/application/overview/tests/test_calendar.py -q` passed with 80 tests. The focused calendar/live/modelo/cross-period gate passed with 468 tests. Residual risk: older `aeat_sede_justificante` calculation observations without `source_metadata` still degrade as submitted evidence because no historical AEAT status or identity exists to validate.
+Verification 2026-06-12: the historical check passed. The historical check passed with 80 tests. The focused calendar/live/modelo/cross-period gate passed with 468 tests. Residual risk: older `aeat_sede_justificante` calculation observations without `source_metadata` still degrade as submitted evidence because no historical AEAT status or identity exists to validate.
 
 ## CENSO-021 | HIGH | Cross-period clean-state still accepts official observations without AEAT register provenance
 
@@ -168,7 +167,7 @@ This preserves the residual old-record risk recorded in CENSO-020 for the cross-
 
 Resolution 2026-06-12: fixed. Current `aeat_sede_justificante` source observations without stamped AEAT register provenance now produce `MISMATCHED_EXTERNAL_EVIDENCE_RECORD`; clean acceptance fixtures seed explicit `ALTA` register status and authenticated identity metadata; `test_cross_period_clean_state_blocks_missing_aeat_register_observation_provenance` covers the missing-metadata bypass.
 
-Verification 2026-06-12: `uv run --no-sync ruff check src/aeat/application/calculations/_cross_period_clean_state.py src/aeat/application/calculations/tests/test_cross_period_clean_state.py` passed. `uv run --no-sync pytest src/aeat/application/calculations/tests/test_cross_period_clean_state.py -q` passed with 28 tests.
+Verification 2026-06-12: the historical check passed. The historical check passed with 28 tests.
 
 Re-review 2026-06-12: PASS. The CENSO-021 bypass is closed for the cross-period clean-state path: empty `source_metadata` on `aeat_sede_justificante` observations now produces `MISMATCHED_EXTERNAL_EVIDENCE_RECORD`, the clean fixtures stamp `ALTA` status plus authenticated identity, and the missing-provenance regression covers a matching filing/justificante row with no observation metadata. No follow-up finding was identified.
 
@@ -184,7 +183,7 @@ Live verification 2026-06-12 used a fresh isolated file-backed profile under `va
 
 Review 2026-06-12: `vaultspec-code-reviewer` returned no findings. The reviewer noted that year and period mismatches were covered by the predicate but not explicit tests; this was resolved immediately by adding dedicated real-PDF tests for both cases. No residual S23/S24 review findings remain.
 
-Verification 2026-06-12: `uv run ruff check src/aeat/application/live/_justificante.py src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py src/aeat/application/calculations/_cross_period_clean_state.py src/aeat/application/calculations/tests/test_cross_period_clean_state.py src/aeat/application/overview/_calendar.py src/aeat/application/overview/tests/test_calendar.py src/aeat/entrypoints/cli/_overview.py src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py src/aeat/entrypoints/cli/tests/test_registry_cli.py` passed. `uv run pytest src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py -q` passed with 11 tests. `uv run pytest src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py src/aeat/application/calculations/tests/test_cross_period_clean_state.py src/aeat/application/overview/tests/test_calendar.py -q` passed with 101 tests. `uv run pytest src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py src/aeat/entrypoints/cli/tests/test_registry_cli.py -m integration -q` passed with 63 tests.
+Verification 2026-06-12: the historical check passed. The historical check passed with 11 tests. The historical check passed with 101 tests. The historical check passed with 63 tests.
 
 ## CENSO-023 | INFO | Bare AEAT acceptance no longer upgrades calendar state
 
@@ -194,7 +193,7 @@ S25 also canonicalizes taxpayer identity comparisons across the three evidence g
 
 Review 2026-06-12: `vaultspec-code-reviewer` returned no findings. The reviewer noted a residual missing exact cross-period fixture for `aeat_accepted = true` with no `external_evidence`; this was resolved before closeout with `test_bare_aeat_acceptance_without_external_evidence_does_not_clear_cross_period_gate`.
 
-Verification 2026-06-12: `uv run ruff check src/aeat/application/overview/_calendar.py src/aeat/application/overview/tests/test_calendar.py src/aeat/application/modelo/_external_import_actions.py src/aeat/application/modelo/tests/test_import_flow.py src/aeat/application/calculations/_cross_period_clean_state.py src/aeat/application/calculations/tests/test_cross_period_clean_state.py` passed. `uv run pytest src/aeat/application/overview/tests/test_calendar.py src/aeat/application/modelo/tests/test_import_flow.py src/aeat/application/calculations/tests/test_cross_period_clean_state.py -q` passed with 121 tests. `uv run pytest src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py -m integration -q` passed with 9 tests.
+Verification 2026-06-12: the historical check passed. The historical check passed with 121 tests. The historical check passed with 9 tests.
 
 ## CENSO-024 | HIGH | ModeloRecord copy updates bypassed the AEAT-evidence invariant
 
@@ -204,7 +203,7 @@ Resolution 2026-06-12: fixed. `ModeloRecord.model_copy(update=...)` now revalida
 
 Review 2026-06-12: `vaultspec-code-reviewer` re-reviewed the S26 patch and returned PASS. The reviewer verified that normal domain paths now reject AEAT acceptance without external evidence, the remaining `model_construct` usage is explicit corrupt/legacy fixture setup, typed `Period` survives the copy/revalidation path, and the scoped 106-test gate passed.
 
-Verification 2026-06-12: `uv run ruff check src/aeat/domain/modelos/_filing_record.py src/aeat/domain/modelos/tests/test_filing_record_repository_roundtrip.py src/aeat/application/overview/tests/test_calendar.py src/aeat/application/calculations/tests/test_cross_period_clean_state.py` passed. `uv run pytest src/aeat/domain/modelos/tests/test_filing_record_repository_roundtrip.py src/aeat/application/overview/tests/test_calendar.py src/aeat/application/calculations/tests/test_cross_period_clean_state.py -q` passed with 106 tests. `uv run pytest src/aeat/application/modelo/tests/test_import_flow.py src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py src/aeat/application/modelo/tests/test_file_flow_filing.py src/aeat/application/modelo/tests/test_amend_flow.py -q` passed with 60 tests. `uv run pytest src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py src/aeat/entrypoints/cli/tests/test_registry_cli.py -m integration -q` passed with 63 tests.
+Verification 2026-06-12: the historical check passed. The historical check passed with 106 tests. The historical check passed with 60 tests. The historical check passed with 63 tests.
 
 ## CENSO-025 | HIGH | External evidence without AEAT acceptance could still look submitted
 
@@ -214,11 +213,11 @@ Resolution 2026-06-12: fixed. `ModeloRecord` now rejects `external_evidence` unl
 
 Review 2026-06-12: `vaultspec-code-reviewer` reviewed S27 and returned PASS.
 
-Verification 2026-06-12: `uv run ruff check src/aeat/domain/modelos/_filing_record.py src/aeat/domain/modelos/tests/test_filing_record_repository_roundtrip.py src/aeat/application/overview/_calendar.py src/aeat/application/overview/tests/test_calendar.py src/aeat/entrypoints/cli/tests/test_modelo.py src/aeat/application/modelo/tests/test_import_flow.py src/aeat/application/calculations/tests/test_cross_period_clean_state.py src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py` passed. `uv run pytest src/aeat/domain/modelos/tests/test_filing_record_repository_roundtrip.py src/aeat/application/modelo/tests/test_import_flow.py src/aeat/application/overview/tests/test_calendar.py src/aeat/application/calculations/tests/test_cross_period_clean_state.py src/aeat/application/live/tests/test_justificante_reconcile_from_persisted.py src/aeat/entrypoints/cli/tests/test_modelo.py -m "integration or not integration" -q` passed with 235 tests. `uv run pytest src/aeat/entrypoints/cli/tests/test_overview_calendar_verb.py src/aeat/entrypoints/cli/tests/test_registry_cli.py -m integration -q` passed with 63 tests. `uv run vaultspec-core vault plan check .vault/plan/2026-06-05-live-censo-calendar-reconciliation-plan.md` passed.
+Verification 2026-06-12: the historical check passed. The historical check passed with 235 tests. The historical check passed with 63 tests. `uv run vaultspec-core vault plan check .vault/plan/2026-06-05-live-censo-calendar-reconciliation-plan.md` passed.
 
 ## CENSO-026 | MEDIUM | Text censo-apply obligation rows omit required deadline and state fields
 
-W03.P03.S28 requires both JSON and text `config profile censo apply` output to expose concrete calendar obligation rows with filing year, typed period token, opens/closes/adjusted dates, payment cutoff, and state. The JSON payload row built in `src/aeat/entrypoints/cli/_config/_profile_censo.py` includes `closes_on`, `payment_cutoff_on`, `status`, and `user_state`, but the text renderer only emits `modelo`, `filing_year`, `period`, `opens_on`, and `adjusted_closes_on` on each `calendar_obligation` line.
+W03.P03.S28 requires both JSON and text `config profile censo apply` output to expose concrete calendar obligation rows with filing year, typed period token, opens/closes/adjusted dates, payment cutoff, and state. The JSON payload row built in the retired module includes `closes_on`, `payment_cutoff_on`, `status`, and `user_state`, but the text renderer only emits `modelo`, `filing_year`, `period`, `opens_on`, and `adjusted_closes_on` on each `calendar_obligation` line.
 
 This leaves the human/tabular CLI surface unable to reconcile normal close date versus adjusted close date, direct-debit cutoff, or current filing state after censo apply. The current text regression only asserts that a `calendar_obligation	303` line exists, so it would not catch the missing fields. JSON output and the application-level test do prove censo-derived taxpayer axes can produce a real Modelo 303 filing window, so this is a text contract gap rather than a calendar-projection failure. S06/S07 should remain advanced only as local censo-derived projection proof; this does not close the live G313 proof gap.
 
@@ -228,9 +227,9 @@ Post-review hardening 2026-06-12: the JSON censo-apply test now explicitly asser
 
 ## CENSO-027 | INFO | S29 pull-only live CLI drift guard review passed
 
-Review 2026-06-12: PASS. The S29 change adds a real command-tree guard in `src/aeat/entrypoints/cli/tests/test_registry_cli.py` that walks the materialized `app live` Typer subtree, rejects any descendant command named `pull-all` or `capture-all`, and asserts the live filed and expedientes read facades still expose `pull`. The review found no issue in the helper or assertions: lazy `app live` loading is exercised through the actual Click/Typer command tree, the live subcommands are regular Typer groups, and active live CLI source scans showed no hidden or explicit `pull-all` / `capture-all` registrations.
+Review 2026-06-12: PASS. The S29 change adds a real command-tree guard in the retired test that walks the materialized `app live` Typer subtree, rejects any descendant command named `pull-all` or `capture-all`, and asserts the live filed and expedientes read facades still expose `pull`. The review found no issue in the helper or assertions: lazy `app live` loading is exercised through the actual Click/Typer command tree, the live subcommands are regular Typer groups, and active live CLI source scans showed no hidden or explicit `pull-all` / `capture-all` registrations.
 
-Verification credited from S29: `uv run ruff check src/aeat/entrypoints/cli/tests/test_registry_cli.py` passed; `uv run pytest src/aeat/entrypoints/cli/tests/test_registry_cli.py -m integration -q` passed with 55 tests; literal active-source scans for `pull-all` and `capture-all` only found the guard assertions in tests. Residual risk is limited to future command-registration mechanisms outside Typer's command registry or intentionally hidden aliases; neither pattern is present in the reviewed live CLI files.
+Verification credited from S29: the historical check passed; the historical check passed with 55 tests; literal active-source scans for `pull-all` and `capture-all` only found the guard assertions in tests. Residual risk is limited to future command-registration mechanisms outside Typer's command registry or intentionally hidden aliases; neither pattern is present in the reviewed live CLI files.
 
 ## CENSO-028 | INFO | S31 censo-derived enrolment provenance review passed
 

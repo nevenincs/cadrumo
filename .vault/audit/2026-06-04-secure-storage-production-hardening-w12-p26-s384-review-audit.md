@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:741e0c821383935a6e07ee27555a14918c04361943c9d542da787101894b9ca6'
+modified: '2026-10-03'
+body_hash: 'sha256:82cfb422f42dfc7ede371bfb87f5a8fcd8ab18370ebeccac1b145abb7e02fa49'
 related: []
 ---
 
@@ -21,6 +21,6 @@ Projection and comparison results are emitted through existing output-schema mod
 ## S384-003 | PASS | Validation
 
 - `uv run --no-sync ruff check ...`
-- `uv run --no-sync pytest -q src/aeat/entrypoints/cli/test_modelo_projection.py src/aeat/entrypoints/cli/test_modelo_work_natural_key.py src/aeat/entrypoints/cli/test_modelo_work_ux.py`
+- the historical check
 
 Disposition: close `AFR-282`.

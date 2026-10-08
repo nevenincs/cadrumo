@@ -5,14 +5,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import Final
 
 from ....core.prorrata_exclusions import Art104TresExclusion
-from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+)
+from .governed_fact_scope import GovernedFactSource
 from .schema_base import DateAxis
 
 _ENTRY_SUBJECT: Final = "art. 104.Tres mapping"
@@ -73,16 +76,9 @@ class Art104TresExclusionCatalogue:
         return token
 
 
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    """Narrow a resolved mapping payload to a unique string-to-string map."""
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("art. 104.Tres mapping entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate art. 104.Tres mapping key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
+
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def resolve_art104_tres_exclusion_catalogue(
@@ -91,19 +87,15 @@ def resolve_art104_tres_exclusion_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> Art104TresExclusionCatalogue:
     """Resolve the complete art. 104.Tres catalogue through facts authority."""
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError("prorrata exclusion catalogue requires an explicit authority operation or scope")
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date or today_madrid(),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("Renta IVA ratio policy must resolve as a mapping fact")
-    entries = _mapping_entries(resolved)
+    entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
+    ordered, operator = _art104_exclusion_partitions(entries)
+    definitions = _art104_exclusion_definitions(entries, ordered, operator)
+    return Art104TresExclusionCatalogue(definitions=definitions)
+
+
+def _art104_exclusion_partitions(
+    entries: Mapping[str, str],
+) -> tuple[tuple[Art104TresExclusion, ...], frozenset[Art104TresExclusion]]:
     ordered_tokens = unique_mapping_tokens(
         entries, _ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
     )
@@ -121,7 +113,14 @@ def resolve_art104_tres_exclusion_catalogue(
         raise RegistryValidationError(
             "art. 104.Tres operator and auto-derived partitions must be disjoint and cover the exclusion order",
         )
+    return ordered, operator
 
+
+def _art104_exclusion_definitions(
+    entries: Mapping[str, str],
+    ordered: tuple[Art104TresExclusion, ...],
+    operator: frozenset[Art104TresExclusion],
+) -> tuple[Art104TresExclusionDefinition, ...]:
     definitions: list[Art104TresExclusionDefinition] = []
     for token in ordered:
         prefix = f"art104_tres.exclusion.{token}"
@@ -140,7 +139,7 @@ def resolve_art104_tres_exclusion_catalogue(
                 kind=kind,
             ),
         )
-    return Art104TresExclusionCatalogue(definitions=tuple(definitions))
+    return tuple(definitions)
 
 
 def require_art104_tres_exclusion(

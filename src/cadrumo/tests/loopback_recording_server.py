@@ -1,6 +1,6 @@
 """Loopback HTTP server plumbing for suites that record arriving requests.
 
-Three telemetry-adjacent suites each stood up a real ``ThreadingHTTPServer`` on
+Three recording-adjacent suites each stood up a real ``ThreadingHTTPServer`` on
 loopback to prove a genuine HTTP POST left the process, then tore it down with
 identical bind-thread-shutdown-join boilerplate. Each suite still owns its own
 handler class (the recorded event shape genuinely differs between them), so

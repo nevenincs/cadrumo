@@ -56,7 +56,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.classify",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_event_ids": [
             "61e7203679a2689c9a11cf6a24ddaa370cfcbd16cad1a677ef3aa2dc14e52433",
@@ -105,7 +113,7 @@
           "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

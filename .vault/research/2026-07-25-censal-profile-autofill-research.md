@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#censal-profile-autofill'
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:69e379d5febe0869a1a8faceb8f9dd11e0ef5b4bf16001ca4f7d9782e25cc868'
+modified: '2026-10-03'
+body_hash: 'sha256:d795e0478cbc66335cc9a7175cb9e2e8c926077dc063c5f042509c10e4fda43c'
 related: []
 ---
 
@@ -97,7 +97,7 @@ operator setting up through the TUI has no way to supply them, and a
 second profile on the same machine cannot carry different ones.
 
 `_assert_active_profile_identity_matches_provider`
-(`src/cadrumo/application/auth/_sessions.py:563`) already fails closed
+ already fails closed
 when the Cl@ve identity does not match the active profile's tax id, so
 the two are contractually coupled already - the profile simply has
 nowhere to store its half.
@@ -123,9 +123,8 @@ onto which profile schema paths is likewise unresolved beyond the two
 
 ## Sources
 
-- `src/cadrumo/application/live/_censo_036_pull.py`
 - `src/cadrumo/adapters/outbound/aeat/sede/`
-- `src/cadrumo/application/auth/_sessions.py:563`
+
 - `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
 - `src/cadrumo/_data/corpus/aeat_official/instructions/modelo_036/files/presentacion-papel-modelo-036.html`
 - `src/cadrumo/_data/corpus/manuals/renta/2021/part1/source.pdf.extracted.md`

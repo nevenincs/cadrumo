@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:0be9d83e57565e8adcf3ecf558b7ee7d85707feb1643c6537e3f1a313261e98a'
 related:
-  - "[[2026-09-04-reachability-burndown-plan]]"
   - "[[2026-06-24-modelo-200-bin-continuity-adr]]"
   - "[[2026-09-04-reachability-burndown-reference]]"
 ---

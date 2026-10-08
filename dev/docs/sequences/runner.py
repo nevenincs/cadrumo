@@ -2,12 +2,11 @@
 
 Each :class:`~dev.docs.sequences.schema.ParsedSequence` executes in FULL
 isolation: a fresh real-crypto storage root (:func:`isolated_profile_storage_root`
-— genuine ``bucket-dek-v1`` provisioning under the ephemeral dev-test master-key
-backend), the project-wide frozen instant :data:`SANDBOX_INSTANT`
+with genuine password custody over an ephemeral deterministic test DEK),
+the project-wide frozen instant :data:`SANDBOX_INSTANT`
 (:func:`cadrumo.core.time.frozen_clock`), a deterministic injected profile
 identity :data:`SANDBOX_PROFILE_ID` published through the canonical capsule
-writer
-(:func:`~cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime.publish_test_profile_capsule`,
+writer (:class:`~cadrumo.application.user_profile.lifecycle.ProfileCapsuleLifecycle`,
 with facts merged by
 :func:`~cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime.upsert_test_profile_facts` inside
 :func:`~cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime.open_test_profile_session` — never a
@@ -56,14 +55,16 @@ import re
 import shutil
 import time
 import warnings
-from collections.abc import Generator, Mapping, Sequence
-from contextlib import chdir, contextmanager, nullcontext
+from base64 import b64encode
+from collections.abc import Callable, Generator, Mapping, Sequence
+from contextlib import AbstractContextManager, chdir, contextmanager, nullcontext
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Literal
+from typing import Literal, cast
+from uuid import UUID
 
 import keyring
 import keyring.backends.null
@@ -83,21 +84,32 @@ from cadrumo.adapters.persistence.storage.profile_persistence_composition import
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
+    derive_test_bucket_key,
     open_test_profile_session,
-    publish_test_profile_capsule,
+    profile_authority_contexts,
     upsert_test_profile_facts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
+from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
+from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
+from cadrumo.application.user_profile.custody_ports import create_profile_custody_registration_material
+from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.core.time.clock import frozen_clock
-from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.entrypoints.cli.command_schema import command_registration_for_node
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from dev._paths import REPO_ROOT
 
 from .errors import SequenceExecutionError
+from .receipt_fixture import requires_persistent_sign_in, sequence_receipt_store
+from .runtime_fixture import SANDBOX_INSTANT, sequence_runtime
 from .schema import (
     FrameKind,
     Identifier,
@@ -108,7 +120,6 @@ from .schema import (
 )
 
 __all__ = [
-    "SANDBOX_INSTANT",
     "SANDBOX_PROFILE_ID",
     "SANDBOX_PROFILE_LABEL",
     "CapturedValue",
@@ -119,14 +130,28 @@ __all__ = [
     "default_fixtures_root",
     "execute_page_sequences",
     "execute_sequence",
+    "executed_sequence_sandbox",
     "live_aeat_tokens",
     "m303_filing_evidence_fixture_name",
+    "observe_sequence_frames",
     "refuse_live_frames",
     "sequence_sandbox",
 ]
 
-#: The one project-wide frozen instant every sequence executes under.
-SANDBOX_INSTANT: datetime = datetime(2026, 4, 1, 9, 0, 0, tzinfo=UTC)
+_FRAME_OBSERVER: ContextVar[Callable[[int], AbstractContextManager[None]] | None] = ContextVar(
+    "sequence_frame_observer", default=None
+)
+
+
+@contextmanager
+def observe_sequence_frames(observer: Callable[[int], AbstractContextManager[None]]) -> Generator[None]:
+    """Observe invocation durations without exposing arguments or captured outputs."""
+    token = _FRAME_OBSERVER.set(observer)
+    try:
+        yield
+    finally:
+        _FRAME_OBSERVER.reset(token)
+
 
 #: The deterministic injected profile identity (a fixed valid UUIDv4 shape,
 #: distinct from the shared test-fixture bucket ids). With the clock frozen and
@@ -136,6 +161,10 @@ SANDBOX_PROFILE_ID: str = "99999999-9999-4999-8999-999999999999"
 
 #: The sandbox profile's display label (a decoupled label, no role in any key).
 SANDBOX_PROFILE_LABEL: str = "docs-sequence-sandbox"
+
+#: An existing alternative for the documented selected-profile deletion journey.
+SANDBOX_REPLACEMENT_PROFILE_ID = "f6a2ae44-2493-4c98-b856-ea071ff26dea"
+SANDBOX_REPLACEMENT_PROFILE_LABEL = "docs-sequence-replacement"
 
 #: Synthetic profile facts for the injected sandbox identity, mirroring the
 #: fact paths the workspace-initialization service persists. All values are
@@ -503,6 +532,48 @@ def _refuse_live_opt_in(sequence_id: str) -> None:
         )
 
 
+def _publish_sandbox_profile(*, profile_id: str, label: str) -> None:
+    """Create and select one real synthetic capsule without authenticating it."""
+    identity = UUID(profile_id)
+    dek = derive_test_bucket_key(profile_id, purpose="dek")
+    material = create_profile_custody_registration_material(
+        profile_id=identity,
+        password=load_settings().cadrumo_dev_test_database_password.get_secret_value(),
+        dek=dek,
+        dek_epoch=b64encode(derive_test_bucket_key(profile_id, purpose="dek-epoch")[:16]).decode("ascii"),
+        salt=derive_test_bucket_key(profile_id, purpose="password-salt")[:16],
+    )
+    create_context, decode_context = profile_authority_contexts()
+    initial = create_user_profile_record(
+        context=create_context,
+        profile_id=profile_id,
+        setup_state=ProfileSetupState.INCOMPLETE,
+    )
+    session = ProfileRecordSession.from_envelope(
+        envelope=material.envelope, dek=dek, profile_decode_context=decode_context
+    )
+    try:
+        ProfileCapsuleLifecycle().create(
+            label=label,
+            profile_id=identity,
+            password_envelope=material.envelope,
+            sentinel=material.sentinel,
+            data_files={},
+            initial_record=initial,
+            record_session=session,
+        )
+    finally:
+        session.close()
+
+
+def _publish_replacement_sandbox_profile() -> None:
+    """Publish the replacement, then restore the original documented login target."""
+    _publish_sandbox_profile(profile_id=SANDBOX_REPLACEMENT_PROFILE_ID, label=SANDBOX_REPLACEMENT_PROFILE_LABEL)
+    # Canonical capsule creation selects its new capsule. The first documented
+    # logout still belongs to the original profile's real persisted receipt.
+    ProfileCapsuleLifecycle().select(SANDBOX_PROFILE_ID)
+
+
 @contextmanager
 def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
     """Publish the deterministic sandbox profile and hold its custody span open.
@@ -514,12 +585,11 @@ def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
     ``profile_id`` is what makes every profile-derived identifier in a frame's
     output deterministic across runs.
 
-    The session stays open for the whole sandbox span rather than just the
-    facts merge. A published test capsule derives its custody material from
-    the profile's immutable identity, not from an operator passphrase, so
-    there is no password any frame could present: an in-process frame reaches
-    the bucket only by reusing the session bound here. Closing it after the
-    merge would leave every profile-bound verb refusing on custody.
+    Password custody is minted by the public custody owner using the existing
+    synthetic dev-test password. The deterministic test DEK remains compatible
+    with the shared session fixture; the real envelope can also authenticate a
+    separately owned runtime worker. The session stays open for the whole
+    current in-process sandbox span rather than just the facts merge.
 
     ``published`` is set when the storage root is a clone of a sandbox that
     already went through exactly this publication (:func:`_sandbox_template`):
@@ -529,10 +599,11 @@ def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
         with open_test_profile_session(SANDBOX_PROFILE_ID):
             yield
         return
-    publish_test_profile_capsule(SANDBOX_PROFILE_ID, label=SANDBOX_PROFILE_LABEL)
+    _publish_sandbox_profile(profile_id=SANDBOX_PROFILE_ID, label=SANDBOX_PROFILE_LABEL)
+    # A settings override provides a route; it does not publish the durable
+    # CLI default whose logout/delete walkthroughs observe real transitions.
+    ProfileCapsuleLifecycle().select(SANDBOX_PROFILE_ID)
     with open_test_profile_session(SANDBOX_PROFILE_ID):
-        from uuid import UUID
-
         from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
         from cadrumo.application.filing.retention import try_record_filing_retention_snapshot
 
@@ -562,8 +633,9 @@ def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
 
 
 #: The provisioned-at-rest sandbox state each later sandbox in this process is
-#: cloned from, keyed by the authority generation it was provisioned under.
-_SANDBOX_TEMPLATES: dict[str, Path] = {}
+#: cloned from, keyed by authority, synthetic password and temporary-root lifetime.
+#: Neither the password nor its digest is exposed in transcripts or diagnostics.
+_SANDBOX_TEMPLATES: dict[tuple[str, str, Path], Path] = {}
 _SANDBOX_TEMPLATE_HOLDER: list[TemporaryDirectory[str]] = []
 
 
@@ -573,17 +645,29 @@ def _sandbox_template() -> Path:
     Publishing the sandbox profile (capsule, facts, setup, retention and
     legal-hold observations) is the same work for every sequence and was most
     of each sandbox's cost. It is done once per process and per authority
-    generation, through the production writers exactly as before, then closed
-    so every file is at rest before it is copied.
+    generation and effective synthetic password, through the production writers,
+    then closed so every file is at rest before it is copied. The shared test
+    DEK depends only on the fixed profile identity, so it adds no settings input
+    to this cache identity.
     """
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
     with bundled_indexed_authority().operation() as operation:
         generation = str(operation.generation)
-    template = _SANDBOX_TEMPLATES.get(generation)
-    if template is not None:
+    # Resolve under the same environment boundary as provisioning; an ambient
+    # operator password must never enter the template identity or its custody.
+    with _neutralized_ambient_env():
+        password_digest = sha256_hex(load_settings().cadrumo_dev_test_database_password.get_secret_value().encode())
+    temporary_root = prepare_temporary_directory().resolve()
+    identity = (generation, password_digest, temporary_root)
+    template = _SANDBOX_TEMPLATES.get(identity)
+    if template is not None and template.is_dir():
         return template
-    holder = TemporaryDirectory(prefix="cadrumo-docs-sandbox-template-")
+    # A caller may end its temporary-root scope before this process ends.
+    # Rebuild an absent owned template through the same capsule publication;
+    # failures copying a present template still propagate normally.
+    _SANDBOX_TEMPLATES.pop(identity, None)
+    holder = TemporaryDirectory(prefix="cadrumo-docs-sandbox-template-", dir=temporary_root)
     _SANDBOX_TEMPLATE_HOLDER.append(holder)
     template = Path(holder.name)
     dispose_engine()
@@ -605,7 +689,7 @@ def _sandbox_template() -> Path:
         pass
     close_active_bucket_session()
     dispose_engine()
-    _SANDBOX_TEMPLATES[generation] = template
+    _SANDBOX_TEMPLATES[identity] = template
     return template
 
 
@@ -752,14 +836,15 @@ def _absent_credential_vault() -> Generator[None]:
     unstable BY CONSTRUCTION — it encodes the capturing machine, and flips as
     soon as a differently-postured machine runs the gate.
 
-    Pinning absence resolves that without blocking the frames: every host now
+    Pinning absence resolves that without blocking ordinary frames: every host now
     executes the documented path a machine with no usable vault takes, so the
     frames stay executed truth and the golden is a property of the sandbox rather
-    than of the contributor's workstation. Absence — rather than a synthetic
-    working vault — is the only admissible pin here: the vault-bearing path
+    than of the contributor's workstation. Absence is the default: a native vault-bearing path
     WRITES a real wrapped session key into the operator's own credential store
     (measured: a ``cadrumo:profile-session`` entry under a per-run sandbox bucket
-    id, surviving the run), which a hermetic docs sandbox must never do.
+    id, surviving the run), which a hermetic docs sandbox must never do. The
+    explicit sign-out journeys layer an ephemeral synthetic shared receipt store
+    over this default; they never select the workstation's credential provider.
 
     Both resolution channels are closed, because both are live: the environment
     variable covers the subprocess execution paths, and
@@ -791,6 +876,7 @@ def sequence_sandbox(
     sequence_id: str,
     sandbox_root: Path,
     fixtures_root: Path | None = None,
+    enrolled_sequence_ids: Sequence[str] | None = None,
 ) -> Generator[SequenceSandbox]:
     """Open one hermetic per-sequence sandbox under ``sandbox_root``.
 
@@ -816,6 +902,9 @@ def sequence_sandbox(
         sandbox_root: An empty per-sequence directory the sandbox owns.
         fixtures_root: The committed fixtures tree to copy into the workdir;
             defaults to :func:`default_fixtures_root` (skipped when absent).
+        enrolled_sequence_ids: Executable scenarios sharing a cumulative page
+            sandbox. Their explicit sign-out enrollment selects receipt custody
+            before the worker starts; omitted for an isolated sequence.
 
     Yields:
         The open :class:`SequenceSandbox`.
@@ -829,6 +918,9 @@ def sequence_sandbox(
 
     ensure_isolated_storage_root()
     _refuse_live_opt_in(sequence_id)
+    persistent_sign_in = requires_persistent_sign_in(
+        (sequence_id,) if enrolled_sequence_ids is None else enrolled_sequence_ids
+    )
     workdir = sandbox_root / "workdir"
     workdir.mkdir(parents=True, exist_ok=True)
     fixtures = fixtures_root if fixtures_root is not None else default_fixtures_root()
@@ -874,17 +966,24 @@ def sequence_sandbox(
         frozen_clock(SANDBOX_INSTANT),
         chdir(workdir),
         _provisioned_sandbox_profile(published=True),
+        sequence_receipt_store(Path(load_settings().cadrumo_local_storage_root), enabled=persistent_sign_in),
     ):
-        effective_settings = load_settings()
-        try:
-            yield SequenceSandbox(
-                storage_root=Path(effective_settings.cadrumo_local_storage_root),
-                workdir=workdir.resolve(),
-                profile_id=SANDBOX_PROFILE_ID,
-                frozen_instant=SANDBOX_INSTANT,
-            )
-        finally:
-            close_active_bucket_session()
+        if enrolled_sequence_ids is None and sequence_id == "profile-setup-delete":
+            _publish_replacement_sandbox_profile()
+        with sequence_runtime(
+            Path(load_settings().cadrumo_local_storage_root),
+            signed_in_profile=UUID(SANDBOX_PROFILE_ID) if persistent_sign_in else None,
+        ):
+            effective_settings = load_settings()
+            try:
+                yield SequenceSandbox(
+                    storage_root=Path(effective_settings.cadrumo_local_storage_root),
+                    workdir=workdir.resolve(),
+                    profile_id=SANDBOX_PROFILE_ID,
+                    frozen_instant=SANDBOX_INSTANT,
+                )
+            finally:
+                close_active_bucket_session()
 
 
 def _interpolation_text(value: CapturedScalar) -> str:
@@ -950,7 +1049,7 @@ def _parse_envelope(output: str) -> dict[str, JsonValue] | None:
     return {str(key): value for key, value in document.items()}
 
 
-def _resolve_json_path(document: Mapping[str, object], path: str) -> tuple[bool, object]:
+def resolve_json_path(document: Mapping[str, object], path: str) -> tuple[bool, object]:
     """Walk a dotted/bracketed json-path; return ``(found, value)``.
 
     Segment-form resolution rules:
@@ -967,29 +1066,15 @@ def _resolve_json_path(document: Mapping[str, object], path: str) -> tuple[bool,
     for match in _PATH_SEGMENT_RE.finditer(path):
         key, index, quoted_key = match.group(1), match.group(2), match.group(3)
         if quoted_key is not None:
-            if isinstance(current, Mapping):
-                step_q: Mapping[str, object] = {str(item): entry for item, entry in current.items()}
-                if quoted_key not in step_q:
-                    return False, None
-                current = step_q[quoted_key]
-                continue
-            return False, None
+            found, current = _resolve_object_key(current, quoted_key)
+            if not found:
+                return False, None
+            continue
         if key is not None:
-            if isinstance(current, Mapping):
-                # Re-key defensively: JSON object keys are always strings, and
-                # the str-keyed view gives the checker a concrete key type.
-                step: Mapping[str, object] = {str(item): entry for item, entry in current.items()}
-                if key not in step:
-                    return False, None
-                current = step[key]
-                continue
-            if isinstance(current, list) and key.isdigit():
-                position = int(key)
-                if position >= len(current):
-                    return False, None
-                current = current[position]
-                continue
-            return False, None
+            found, current = _resolve_dotted_segment(current, key)
+            if not found:
+                return False, None
+            continue
         if not isinstance(current, list) or int(index) >= len(current):
             return False, None
         current = current[int(index)]
@@ -1016,7 +1101,7 @@ def _capture_values(
         )
     captured: list[CapturedValue] = []
     for binding in frame.captures:
-        found, value = _resolve_json_path(envelope, binding.json_path)
+        found, value = resolve_json_path(envelope, binding.json_path)
         if not found:
             top_level = ", ".join(sorted(envelope))
             raise SequenceExecutionError(
@@ -1122,13 +1207,13 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     _drop_handlers_bound_to_a_dead_stream()
     # The synthetic capsule stays readable across a sequence through a
     # test-only active-profile override. Profile deletion is deliberately
-    # sessionless, however, and must observe the durable pointer that logout
-    # clears rather than that provisioning override. Narrowly mask the harness
+    # sessionless, however, and must observe the durable selection retained
+    # after logout rather than that provisioning override. Narrowly mask the harness
     # field for this exact leaf; every sibling retains the normal sandbox span.
     is_profile_delete = any(args[index : index + 3] == ("config", "profile", "delete") for index in range(len(args)))
     settings_context = override_settings(cadrumo_active_profile=None) if is_profile_delete else nullcontext()
     with settings_context, _next_process_session_view():
-        result = invoke_cached_cli(list(args))
+        result = _invoke_authenticated_frame(args)
     if os.environ.get("CI"):
         return result
     tries = 1
@@ -1139,9 +1224,32 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     ):
         time.sleep(2)
         dispose_engine()
-        result = invoke_cached_cli(list(args))
+        result = _invoke_authenticated_frame(args)
         tries += 1
     return result
+
+
+def _invoke_authenticated_frame(args: tuple[str, ...]) -> Result:
+    """Supply a fresh bounded password proof without replacing authored channels."""
+    explicit = {
+        "--profile-secrets-stdin",
+        "--profile-secrets-fd",
+        "--profile-credential-ref",
+        "--profile-auth-method",
+        "--secrets-stdin",
+        "--secrets-fd",
+    }
+    if any(argument.split("=", 1)[0] in explicit for argument in args):
+        return invoke_cached_cli(list(args))
+    spec = COMMAND_GRAPH.resolve_invocation(args)
+    registration = None if spec is None else command_registration_for_node(COMMAND_GRAPH.node(spec.key))
+    if spec is not None and spec.key == "config_login":
+        password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+        return invoke_cached_cli([*args, "--secrets-stdin"], input=json.dumps({"passphrase": password}))
+    if registration is None or registration.profile_authentication is not ProfileAuthenticationPosture.RESUME_FALLBACK:
+        return invoke_cached_cli(list(args))
+    password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    return invoke_cached_cli(["--profile-secrets-stdin", *args], input=json.dumps({"profile_passphrase": password}))
 
 
 def _execute_frame(
@@ -1154,7 +1262,9 @@ def _execute_frame(
     """Execute one frame, enforce its exit code, and thread its captures."""
     argv = _resolved_argv(frame, captures)
     _record_frame_progress(sequence, frame, frame_index=frame_index, argv=argv)
-    result = _invoke_frame(argv[1:])
+    observer = _FRAME_OBSERVER.get()
+    with observer(frame_index) if observer is not None else nullcontext():
+        result = _invoke_frame(argv[1:])
     # The runner records the two streams separately: ``Result.output`` under
     # this Click version is the COMBINED capture, so read the split
     # ``stdout``/``stderr`` properties — a refusal's error document (which
@@ -1237,6 +1347,17 @@ def execute_sequence(
             code, declares a capture its output cannot satisfy, or the live-test
             opt-in is set.
     """
+    _refuse_unexecutable(sequence)
+    if sandbox_root is not None:
+        return _execute_in_root(sequence, sandbox_root, fixtures_root)
+    # Engine handles on Windows can outlive the run despite the teardown's
+    # dispose; ignore_cleanup_errors keeps a stale handle from failing the run.
+    with TemporaryDirectory(prefix="seq-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()) as tmp:
+        return _execute_in_root(sequence, Path(tmp), fixtures_root)
+
+
+def _refuse_unexecutable(sequence: ParsedSequence) -> None:
+    """Refuse a sequence with nothing to run, or one that would reach live AEAT."""
     if not sequence.executed_frames:
         raise SequenceExecutionError(
             sequence.sequence_id,
@@ -1244,12 +1365,6 @@ def execute_sequence(
             "the check/refresh path skips it (it is display-only)",
         )
     refuse_live_frames(sequence)
-    if sandbox_root is not None:
-        return _execute_in_root(sequence, sandbox_root, fixtures_root)
-    # Engine handles on Windows can outlive the run despite the teardown's
-    # dispose; ignore_cleanup_errors keeps a stale handle from failing the run.
-    with TemporaryDirectory(prefix="cli-sequence-", ignore_cleanup_errors=True) as tmp:
-        return _execute_in_root(sequence, Path(tmp), fixtures_root)
 
 
 def _execute_in_root(
@@ -1258,6 +1373,41 @@ def _execute_in_root(
     fixtures_root: Path | None,
 ) -> SequenceTranscript:
     """Open the sandbox under ``sandbox_root`` and run every frame in order."""
+    with executed_sequence_sandbox(sequence, sandbox_root=sandbox_root, fixtures_root=fixtures_root) as (_, transcript):
+        return transcript
+
+
+@contextmanager
+def executed_sequence_sandbox(
+    sequence: ParsedSequence,
+    *,
+    sandbox_root: Path,
+    fixtures_root: Path | None = None,
+) -> Generator[tuple[SequenceSandbox, SequenceTranscript]]:
+    """Run a sequence and hold its sandbox open over the state it built.
+
+    The golden tier needs only the transcript, so it leaves the scope at once.
+    A consumer that renders what the sequence produced -- the TUI visual
+    review, which shows the calculated declaration a sequence leaves behind --
+    needs the storage, the frozen clock and the open profile session still in
+    place, and reads them inside this scope. It is the same execution as
+    :func:`execute_sequence`, with the same refusals; there is no second way
+    to run a frame.
+
+    Args:
+        sequence: The structurally valid parsed sequence to run.
+        sandbox_root: An empty directory the sandbox owns.
+        fixtures_root: Optional override of the committed synthetic-fixtures
+            tree copied into the sandbox workdir.
+
+    Yields:
+        The open sandbox and the transcript of every executed frame.
+
+    Raises:
+        SequenceExecutionError: Under the conditions :func:`execute_sequence`
+            names.
+    """
+    _refuse_unexecutable(sequence)
     with sequence_sandbox(
         sequence_id=sequence.sequence_id,
         sandbox_root=sandbox_root,
@@ -1270,14 +1420,17 @@ def _execute_in_root(
             _execute_frame(sequence, frame, captures, frame_index=frame_index)
             for frame_index, frame in enumerate(sequence.executed_frames)
         )
-    return SequenceTranscript(
-        sequence_id=sequence.sequence_id,
-        profile_id=sandbox.profile_id,
-        frozen_instant=sandbox.frozen_instant,
-        storage_root=str(sandbox.storage_root),
-        workdir=str(sandbox.workdir),
-        frames=frames,
-    )
+        yield (
+            sandbox,
+            SequenceTranscript(
+                sequence_id=sequence.sequence_id,
+                profile_id=sandbox.profile_id,
+                frozen_instant=sandbox.frozen_instant,
+                storage_root=str(sandbox.storage_root),
+                workdir=str(sandbox.workdir),
+                frames=frames,
+            ),
+        )
 
 
 def execute_page_sequences(
@@ -1324,7 +1477,7 @@ def execute_page_sequences(
         return ()
     if sandbox_root is not None:
         return _execute_page_in_root(sequences, label, sandbox_root, fixtures_root)
-    with TemporaryDirectory(prefix="cli-sequence-page-", ignore_cleanup_errors=True) as tmp:
+    with TemporaryDirectory(prefix="page-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()) as tmp:
         return _execute_page_in_root(sequences, label, Path(tmp), fixtures_root)
 
 
@@ -1347,104 +1500,192 @@ def _execute_page_in_root(
         sequence_id=label,
         sandbox_root=sandbox_root,
         fixtures_root=fixtures_root,
+        enrolled_sequence_ids=tuple(sequence.sequence_id for sequence in sequences if sequence.executed_frames),
     ) as sandbox:
         for sequence in sequences:
-            if not sequence.executed_frames:
-                continue  # all-@static: nothing runs, so no transcript
-            captures: dict[str, CapturedScalar] = {}
-            seed_source = f"seed:{sequence.seed}" if sequence.seed is not None else None
-            seed_frames = (
-                tuple(frame for frame in sequence.executed_frames if frame.source == seed_source)
-                if seed_source is not None
-                else ()
-            )
-            body_frames = tuple(frame for frame in sequence.executed_frames if frame.source != seed_source)
-            reused_seed_executions: tuple[FrameExecution, ...] = ()
-            seed_signature = _seed_execution_signature(seed_frames)
-
-            if sequence.seed is not None and not seed_frames:
-                detail = (
-                    f"page {label!r} sequence {sequence.sequence_id!r} requests seed "
-                    f"{sequence.seed!r}, but no inlined seed frames are available; reparse the "
-                    "sequence from its contract before running page coherence"
-                )
-                warnings.warn(detail, UserWarning, stacklevel=2)
-                raise SequenceExecutionError(sequence.sequence_id, detail)
-
-            if sequence.seed is not None and sequence.seed not in page_seeds and seed_signature in page_seed_signatures:
-                prior_identity, prior = page_seed_signatures[seed_signature]
-                warnings.warn(
-                    f"page {label!r} sequence {sequence.sequence_id!r} seed {sequence.seed!r} "
-                    f"is execution-equivalent to already-run seed {prior_identity!r}; reused its "
-                    "once-per-page state and immutable captures instead of replaying side effects",
-                    UserWarning,
-                    stacklevel=2,
-                )
-                page_seeds[sequence.seed] = _PageSeedState(
-                    frames=seed_frames,
-                    executions=prior.executions,
-                    captures=prior.captures,
-                )
-                captures.update({item.name: item.value for item in prior.captures})
-                reused_seed_executions = prior.executions
-            elif sequence.seed is not None and sequence.seed in page_seeds:
-                prior = page_seeds[sequence.seed]
-                if prior.frames != seed_frames:
-                    detail = (
-                        f"page {label!r} sequence {sequence.sequence_id!r} reuses seed identity "
-                        f"{sequence.seed!r} with a divergent definition; give the changed recipe "
-                        "a new seed identity or make every use structurally equivalent"
-                    )
-                    warnings.warn(detail, UserWarning, stacklevel=2)
-                    raise SequenceExecutionError(sequence.sequence_id, detail)
-                available = {item.name: item.value for item in prior.captures}
-                required = {binding.name for frame in seed_frames for binding in frame.captures}
-                missing = sorted(required - available.keys())
-                if missing:
-                    detail = (
-                        f"page {label!r} sequence {sequence.sequence_id!r} cannot reuse seed "
-                        f"{sequence.seed!r}; page seed state lacks captures {missing}. Re-run from "
-                        "a clean page root and ensure every declared seed capture resolves"
-                    )
-                    warnings.warn(detail, UserWarning, stacklevel=2)
-                    raise SequenceExecutionError(sequence.sequence_id, detail)
-                warnings.warn(
-                    f"page {label!r} sequence {sequence.sequence_id!r} would replay seed "
-                    f"{sequence.seed!r}; reused its once-per-page state and immutable captures instead",
-                    UserWarning,
-                    stacklevel=2,
-                )
-                captures.update(available)
-                reused_seed_executions = prior.executions
-            elif sequence.seed is not None:
-                seed_executions = tuple(
-                    _execute_frame(sequence, frame, captures, frame_index=frame_index)
-                    for frame_index, frame in enumerate(seed_frames)
-                )
-                seed_captures = tuple(item for execution in seed_executions for item in execution.captured)
-                state = _PageSeedState(
-                    frames=seed_frames,
-                    executions=seed_executions,
-                    captures=seed_captures,
-                )
-                page_seeds[sequence.seed] = state
-                page_seed_signatures[seed_signature] = (sequence.seed, state)
-                reused_seed_executions = seed_executions
-
-            body_start = len(seed_frames)
-            body_executions = tuple(
-                _execute_frame(sequence, frame, captures, frame_index=body_start + frame_index)
-                for frame_index, frame in enumerate(body_frames)
-            )
-            frames = reused_seed_executions + body_executions
-            transcripts.append(
-                SequenceTranscript(
-                    sequence_id=sequence.sequence_id,
-                    profile_id=sandbox.profile_id,
-                    frozen_instant=sandbox.frozen_instant,
-                    storage_root=str(sandbox.storage_root),
-                    workdir=str(sandbox.workdir),
-                    frames=frames,
-                ),
-            )
+            transcript = _execute_page_sequence(sequence, label, sandbox, page_seeds, page_seed_signatures)
+            if transcript is not None:
+                transcripts.append(transcript)
     return tuple(transcripts)
+
+
+def _execute_page_sequence(
+    sequence: ParsedSequence,
+    label: str,
+    sandbox: SequenceSandbox,
+    page_seeds: dict[str, _PageSeedState],
+    page_seed_signatures: dict[tuple[str, ...], tuple[str, _PageSeedState]],
+) -> SequenceTranscript | None:
+    if not sequence.executed_frames:
+        return None  # all-@static: nothing runs, so no transcript
+    if sequence.sequence_id == "profile-setup-delete":
+        _publish_replacement_sandbox_profile()
+    captures: dict[str, CapturedScalar] = {}
+    seed_source = f"seed:{sequence.seed}" if sequence.seed is not None else None
+    seed_frames = (
+        tuple(frame for frame in sequence.executed_frames if frame.source == seed_source)
+        if seed_source is not None
+        else ()
+    )
+    body_frames = tuple(frame for frame in sequence.executed_frames if frame.source != seed_source)
+    reused_seed_executions: tuple[FrameExecution, ...] = ()
+    seed_signature = _seed_execution_signature(seed_frames)
+
+    _require_page_seed_frames(sequence, label, seed_frames)
+
+    reused_seed_executions = _page_seed_executions(
+        sequence, label, seed_frames, seed_signature, captures, page_seeds, page_seed_signatures
+    )
+
+    body_start = len(seed_frames)
+    body_executions = tuple(
+        _execute_frame(sequence, frame, captures, frame_index=body_start + frame_index)
+        for frame_index, frame in enumerate(body_frames)
+    )
+    frames = reused_seed_executions + body_executions
+    return SequenceTranscript(
+        sequence_id=sequence.sequence_id,
+        profile_id=sandbox.profile_id,
+        frozen_instant=sandbox.frozen_instant,
+        storage_root=str(sandbox.storage_root),
+        workdir=str(sandbox.workdir),
+        frames=frames,
+    )
+
+
+def _page_seed_executions(
+    sequence: ParsedSequence,
+    label: str,
+    seed_frames: tuple[SequenceFrame, ...],
+    seed_signature: tuple[str, ...],
+    captures: dict[str, CapturedScalar],
+    page_seeds: dict[str, _PageSeedState],
+    page_seed_signatures: dict[tuple[str, ...], tuple[str, _PageSeedState]],
+) -> tuple[FrameExecution, ...]:
+    if sequence.seed is not None and sequence.seed not in page_seeds and seed_signature in page_seed_signatures:
+        return _reuse_equivalent_page_seed(
+            sequence, label, seed_frames, seed_signature, captures, page_seeds, page_seed_signatures
+        )
+    if sequence.seed is not None and sequence.seed in page_seeds:
+        return _reuse_named_page_seed(sequence, label, seed_frames, captures, page_seeds)
+    if sequence.seed is not None:
+        return _execute_new_page_seed(sequence, seed_frames, seed_signature, captures, page_seeds, page_seed_signatures)
+    return ()
+
+
+def _reuse_equivalent_page_seed(
+    sequence: ParsedSequence,
+    label: str,
+    seed_frames: tuple[SequenceFrame, ...],
+    seed_signature: tuple[str, ...],
+    captures: dict[str, CapturedScalar],
+    page_seeds: dict[str, _PageSeedState],
+    page_seed_signatures: dict[tuple[str, ...], tuple[str, _PageSeedState]],
+) -> tuple[FrameExecution, ...]:
+    prior_identity, prior = page_seed_signatures[seed_signature]
+    warnings.warn(
+        f"page {label!r} sequence {sequence.sequence_id!r} seed {sequence.seed!r} "
+        f"is execution-equivalent to already-run seed {prior_identity!r}; reused its "
+        "once-per-page state and immutable captures instead of replaying side effects",
+        UserWarning,
+        stacklevel=5,
+    )
+    page_seeds[cast(str, sequence.seed)] = _PageSeedState(
+        frames=seed_frames,
+        executions=prior.executions,
+        captures=prior.captures,
+    )
+    captures.update({item.name: item.value for item in prior.captures})
+    return prior.executions
+
+
+def _reuse_named_page_seed(
+    sequence: ParsedSequence,
+    label: str,
+    seed_frames: tuple[SequenceFrame, ...],
+    captures: dict[str, CapturedScalar],
+    page_seeds: dict[str, _PageSeedState],
+) -> tuple[FrameExecution, ...]:
+    prior = page_seeds[cast(str, sequence.seed)]
+    if prior.frames != seed_frames:
+        detail = (
+            f"page {label!r} sequence {sequence.sequence_id!r} reuses seed identity "
+            f"{sequence.seed!r} with a divergent definition; give the changed recipe "
+            "a new seed identity or make every use structurally equivalent"
+        )
+        warnings.warn(detail, UserWarning, stacklevel=5)
+        raise SequenceExecutionError(sequence.sequence_id, detail)
+    available = {item.name: item.value for item in prior.captures}
+    required = {binding.name for frame in seed_frames for binding in frame.captures}
+    missing = sorted(required - available.keys())
+    if missing:
+        detail = (
+            f"page {label!r} sequence {sequence.sequence_id!r} cannot reuse seed "
+            f"{sequence.seed!r}; page seed state lacks captures {missing}. Re-run from "
+            "a clean page root and ensure every declared seed capture resolves"
+        )
+        warnings.warn(detail, UserWarning, stacklevel=5)
+        raise SequenceExecutionError(sequence.sequence_id, detail)
+    warnings.warn(
+        f"page {label!r} sequence {sequence.sequence_id!r} would replay seed "
+        f"{sequence.seed!r}; reused its once-per-page state and immutable captures instead",
+        UserWarning,
+        stacklevel=5,
+    )
+    captures.update(available)
+    return prior.executions
+
+
+def _execute_new_page_seed(
+    sequence: ParsedSequence,
+    seed_frames: tuple[SequenceFrame, ...],
+    seed_signature: tuple[str, ...],
+    captures: dict[str, CapturedScalar],
+    page_seeds: dict[str, _PageSeedState],
+    page_seed_signatures: dict[tuple[str, ...], tuple[str, _PageSeedState]],
+) -> tuple[FrameExecution, ...]:
+    seed_executions = tuple(
+        _execute_frame(sequence, frame, captures, frame_index=frame_index)
+        for frame_index, frame in enumerate(seed_frames)
+    )
+    seed_captures = tuple(item for execution in seed_executions for item in execution.captured)
+    state = _PageSeedState(
+        frames=seed_frames,
+        executions=seed_executions,
+        captures=seed_captures,
+    )
+    page_seeds[cast(str, sequence.seed)] = state
+    page_seed_signatures[seed_signature] = (cast(str, sequence.seed), state)
+    return seed_executions
+
+
+def _require_page_seed_frames(sequence: ParsedSequence, label: str, seed_frames: tuple[SequenceFrame, ...]) -> None:
+    if sequence.seed is not None and not seed_frames:
+        detail = (
+            f"page {label!r} sequence {sequence.sequence_id!r} requests seed "
+            f"{sequence.seed!r}, but no inlined seed frames are available; reparse the "
+            "sequence from its contract before running page coherence"
+        )
+        warnings.warn(detail, UserWarning, stacklevel=4)
+        raise SequenceExecutionError(sequence.sequence_id, detail)
+
+
+def _resolve_object_key(current: object, key: str) -> tuple[bool, object]:
+    if not isinstance(current, Mapping):
+        return False, None
+    # JSON keys are strings; preserve the defensive str-keyed view.
+    step: Mapping[str, object] = {str(item): entry for item, entry in current.items()}
+    if key not in step:
+        return False, None
+    return True, step[key]
+
+
+def _resolve_dotted_segment(current: object, key: str) -> tuple[bool, object]:
+    if isinstance(current, Mapping):
+        return _resolve_object_key(current, key)
+    if isinstance(current, list) and key.isdigit():
+        position = int(key)
+        if position >= len(current):
+            return False, None
+        return True, current[position]
+    return False, None

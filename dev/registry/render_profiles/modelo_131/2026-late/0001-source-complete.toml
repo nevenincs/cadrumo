@@ -1,0 +1,11 @@
+schema_version = 1
+fragment_id = "source-complete"
+width_17_rules = []
+singleton_rules = []
+empty_rule_assertion = "canonical_eligibility_empty"
+
+[design_identity]
+modelo = "131"
+design_epoch = "2026-late"
+source_ref = "aeat-dr-131-2026-late"
+source_sha256 = "b394370ae16d303a3ed7e192ca34ba1ff49dbbbea49e4d2bbe220085cc53600f"

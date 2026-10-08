@@ -40,7 +40,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
+from ...domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 
 # Runtime imports: both are pydantic field types on the models below, so a
 # TYPE_CHECKING-only import leaves the models un-buildable at construction.

@@ -1,0 +1,30 @@
+[sources."boe-2008-18497-modelo-216-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2008-18497-modelos-216-296.pdf"
+sha256 = "1e777a9367e42563cd3525ad54408fe1c922fdd4e63423ac4e5963415190d949"
+bytes = 648950
+retrieved_at = 2026-10-05
+published_at = 2008-11-17
+applies_from = 2009-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/boe/dias/2008/11/17/pdfs/A45583-45621.pdf"
+review_status = "pending_review"
+
+# The same original BOE bytes also provide the operative calculation instruction:
+# annex I, PDF page 11 (BOE page 45593), "Resultado a ingresar ( 03 - 06 )".
+# This role is separate from page geometry; it does not extend applicability.
+[sources."boe-2008-18497-modelo-216-calculation-guidance"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2008-18497-modelos-216-296.pdf"
+sha256 = "1e777a9367e42563cd3525ad54408fe1c922fdd4e63423ac4e5963415190d949"
+bytes = 648950
+retrieved_at = 2026-10-05
+published_at = 2008-11-17
+applies_from = 2009-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/boe/dias/2008/11/17/pdfs/A45583-45621.pdf"
+review_status = "pending_review"

@@ -13,13 +13,6 @@ source_refs = [
     "aeat-dr-182-2021-2023",
 ]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
-bindings = [
-    "modelo-182-donor-row-nif",
-    "modelo-182-donor-row-name",
-    "modelo-182-donor-row-amount",
-    "modelo-182-donor-row-deduction-percentage",
-    "modelo-182-donor-row-recurrencia",
-]
 application_links = [
     "modelo-182-filing",
     "modelo-182-deadline",

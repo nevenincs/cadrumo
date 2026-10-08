@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#tui-wizard-substrate'
 date: '2026-07-23'
-modified: '2026-07-23'
-body_hash: 'sha256:b7d72c40baa462930dc3f333355cb779f4fdf261b7de4260a2930654181dfce3'
+modified: '2026-10-03'
+body_hash: 'sha256:71bd2375bf557a0ddb18e989c74317e27f80495f41118294c2c068d50c313512'
 related: []
 ---
 
@@ -26,7 +26,7 @@ needs an external survey (in flight) before the ADR can finalise it.
 
 ### The canonical wizard is a forward-only, single-pass walk
 
-The runtime `run_flow` (`src/cadrumo/application/wizard/_runner.py:122`)
+The runtime `run_flow`
 iterates sections and questions strictly in declaration order, asking each
 visible question exactly once: it evaluates `visible_when` incrementally,
 calls `prompter.ask(question, default=...)`, validates, accumulates a
@@ -35,12 +35,12 @@ no history, no way to return to an earlier question, no summary view, and no
 mid-flow persistence: an operator who mistypes question 3 of 12 and notices at
 question 10 can only abort and start over, losing every answer. Checkpoint or
 resume state does not exist anywhere in the package
-(`src/cadrumo/application/wizard/_persistence.py` persists only *completed*
+(the former source file persists only *completed*
 answer sets into the profile).
 
 ### The prompter contract is one-shot and line-oriented
 
-`Prompter.ask` (`src/cadrumo/application/wizard/_prompter.py:82`) is a
+`Prompter.ask`  is a
 one-question-in, one-canonical-token-out protocol. The module docstring pins
 the shipping implementations to exactly two — `CanonicalAnswerPrompter`
 (scripted, non-interactive) and `QuestionaryPrompter` (live, one `questionary`
@@ -60,7 +60,7 @@ into any substrate rather than be reinvented:
 
 - **Declarative, frozen flow descriptors.** `WizardFlow` / `WizardSection` /
   `WizardQuestion` / `WizardChoice` / `WizardCondition`
-  (`src/cadrumo/application/wizard/_models.py`) are strict frozen pydantic v2
+   are strict frozen pydantic v2
   records; the descriptor is the single source of truth read by the runtime,
   the Typer command factory, and the profile-key projection. Build-time
   model validators enforce unique question ids, forward-only `visible_when`
@@ -71,7 +71,7 @@ into any substrate rather than be reinvented:
   (`_persistence.py:_parse_canonical`), including a deliberate three-state
   treatment of optional CONFIRMs (blank ≠ declared-false).
 - **Widget-level validators with i18n message keys.**
-  `validate_widget_answer` (`src/cadrumo/application/wizard/_widgets.py:241`)
+  `validate_widget_answer`
   dispatches a closed `WizardWidget` StrEnum onto pure validators that raise
   `WizardValidationError` carrying translation keys and *redacted* context
   (raw operator answers are never carried into diagnostics — significant for
@@ -279,19 +279,19 @@ dispatch brief named as the authoritative surface.
 
 ## Sources
 
-- `src/cadrumo/application/wizard/_runner.py:122` — forward-only walk.
-- `src/cadrumo/application/wizard/_prompter.py:82` — one-shot `Prompter`
+- the former source file — forward-only walk.
+- the former source file — one-shot `Prompter`
   protocol; module docstring pinning exactly two implementations;
   `from_ambient_app_session` IO-injection; `NoConsoleScreenBufferError`
   handling at `:29` and `:51`.
-- `src/cadrumo/application/wizard/_models.py` — frozen descriptor records and
+- the former source file — frozen descriptor records and
   build-time validators.
-- `src/cadrumo/application/wizard/_widgets.py:241` — validator dispatch;
+- the former source file — validator dispatch;
   redacted diagnostics at `:69`.
-- `src/cadrumo/application/wizard/_persistence.py:94` — create-vs-edit
+- the former source file — create-vs-edit
   persistence split; `:226` three-state CONFIRM parsing.
-- `src/cadrumo/application/wizard/_catalogue.py` — import-time-pure flow
-  catalogue; `src/cadrumo/application/wizard/_commands.py` — Typer command
+- the former source file — import-time-pure flow
+  catalogue; the former source file — Typer command
   factory deriving flags from the descriptor.
 - General-knowledge claims about Textual, prompt_toolkit full-screen, urwid,
   and Rich capabilities are unverified pending the delegated external survey.

@@ -59,16 +59,17 @@ from .....application.auth.session_types import (
     is_exact_active_provider_session,
 )
 from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
+from .....core.authentication_links import aeat_authentication_url
 from .....core.config import Settings as _Settings
 from .....core.config_support import unwrap_optional_secret
 from .....core.errors.hierarchy import AeatLoginAssertionError, AuthError
 from .....core.i18n.render import tr
 from .....core.identity.tax_id import same_tax_identifier, tax_id_identity_token
 from .....core.logging import get_logger
-from .....core.remote_authority import canonical_remote_hostname
 from .....core.time.clock import now
 from .....domain.user_profile.errors import UserProfileError
 from .._playwright import PlaywrightTimeoutError
+from ..browser.desktop import interactive_desktop_available
 from . import session_store as session_store
 from ._clave_movil_page_flow import _ClaveMovilPageFlowMixin
 from ._clave_movil_salvage import _ClaveMovilSessionSalvageMixin
@@ -76,12 +77,14 @@ from ._clave_provider_common import (
     close_clave_browser_session,
     close_clave_context,
     default_sede_target_url,
+    is_authenticated_clave_landing,
     verification_probe_url,
 )
 from ._session_probe import run_authenticated_landing_probe
 from .authenticator import AEAT_SESSION_IDLE_TTL
 from .browser_lifecycle import CloseIntentBarrier
 from .clave_movil_metadata import ClaveMovilSessionMetadata
+from .clave_movil_state import ClaveMovilPageState
 from .clave_movil_support import (
     ClaveMovilApprovalTimeoutError,
     ClaveMovilConfigurationError,
@@ -99,7 +102,7 @@ from .clave_movil_support import (
 from .clave_movil_support import (
     url_diagnostic as _url_diagnostic,
 )
-from .errors import AuthProviderCleanupError
+from .errors import AuthConfigurationError, AuthProviderCleanupError
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -485,9 +488,10 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         target_path: str,
     ) -> bool:
         """Click through the Cl@ve selector page when the probe lands on it."""
-        if self._clave_surface().selector_access_path_marker not in landing_url:
+        if self._clave_surface().selector_access_path_marker in urlsplit(landing_url).path:
+            await self._click_clave_movil_button(page)
+        elif not self._is_authenticated_representation_landing(landing_url):
             return False
-        await self._click_clave_movil_button(page)
         await self._wait_for_post_auth_landing(page, target_path, self._navigation_timeout_ms)
         return True
 
@@ -591,52 +595,20 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
     @override
     def _is_authenticated_aeat_landing(self, *, landing_url: str, target_path: str) -> bool:
-        """Return True for a protected AEAT page reached after Cl@ve dispatch."""
-        external = self._settings.external_constants()
-        surface = external.aeat.clave_movil
-        try:
-            parsed = urlsplit(landing_url)
-        except ValueError:
-            return False
-        # The authority is decided by the one canonical helper, never by
-        # ``parsed.netloc``: that string still ends in the AEAT suffix when a
-        # credential prefix rides in front of it, so
-        # ``https://evil@www6.agenciatributaria.gob.es/`` was read as a
-        # protected AEAT landing.
-        host = canonical_remote_hostname(landing_url)
-        if host is None:
-            return False
-        host_suffix = external.aeat.domains.host_suffix.casefold()
-        if host != host_suffix and not host.endswith(f".{host_suffix}"):
-            return False
-        path = parsed.path.casefold()
-        if external.aeat.sede_paths.auth_gate_4033.casefold() in path:
-            return False
-        clave_path_markers = (
-            surface.selector_access_path_marker,
-            surface.dialogo_representacion_path_marker,
-            surface.obtener_clave_movil_path_marker,
-            surface.obtener_clave_movil_qr_path_marker,
-            surface.cancelar_clave_movil_path_marker,
+        """Return True for a protected AEAT page reached after Cl@ve Móvil dispatch."""
+        surface = self._settings.external_constants().aeat.clave_movil
+        return is_authenticated_clave_landing(
+            landing_url=landing_url,
+            target_path=target_path,
+            settings=self._settings,
+            clave_path_markers=(
+                surface.selector_access_path_marker,
+                surface.dialogo_representacion_path_marker,
+                surface.obtener_clave_movil_path_marker,
+                surface.obtener_clave_movil_qr_path_marker,
+                surface.cancelar_clave_movil_path_marker,
+            ),
         )
-        if any(marker.casefold() in path for marker in clave_path_markers):
-            return False
-        if target_path in landing_url:
-            return True
-        return self._same_aeat_application_path(landing_path=path, target_path=target_path)
-
-    @staticmethod
-    def _same_aeat_application_path(*, landing_path: str, target_path: str) -> bool:
-        target_path_only = urlsplit(target_path).path.casefold()
-        landing_parts = tuple(part for part in landing_path.split("/") if part)
-        target_parts = tuple(part for part in target_path_only.split("/") if part)
-        if len(landing_parts) < 2 or len(target_parts) < 2:
-            return False
-        if target_parts[0] == "wlpl":
-            return landing_parts[:2] == target_parts[:2]
-        if target_parts[0] == "sede":
-            return landing_parts[:2] == target_parts[:2]
-        return False
 
     @override
     def _attempt_context(self) -> dict[str, object]:
@@ -859,6 +831,15 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         target = target_url or self._default_target_url()
         target_path = self._target_path_from_url(target)
         selector_url = self._selector_url(target_path)
+        if not self._settings.cadrumo_clave_prefer_non_qr and not interactive_desktop_available():
+            # Publish only the public entry point, never a live challenge URL,
+            # cookies, target query parameters, or a claimed authenticated state.
+            authentication_url = aeat_authentication_url()
+            raise AuthConfigurationError(
+                "QR authentication needs an interactive desktop; open the authentication URL in your browser",
+                translated_message="adapters.auth.clave_movil.errors.desktop_unavailable",
+                context={"reason": "interactive_desktop_unavailable", "authentication_url": authentication_url},
+            )
         attempt_context = self._attempt_context()
 
         session_like = await self._resolve_browser_session(settings=self._fresh_login_settings())
@@ -949,7 +930,11 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         except Exception as exc:
             if page is not None and not self._exception_already_has_diagnostic(exc):
                 try:
-                    await self._dump_diagnostic(page, reason=f"fresh-login-exception:{type(exc).__name__}")
+                    diagnostic_id = await self._dump_diagnostic(
+                        page, reason=f"fresh-login-exception:{type(exc).__name__}"
+                    )
+                    if diagnostic_id is not None and isinstance(exc, AuthError):
+                        exc.context = {**(exc.context or {}), "diagnostic_id": diagnostic_id}
                 except Exception as _exc:
                     log.debug("ClaveMovilAuthProvider: diagnostic dump suppressed: %s", _exc, exc_info=True)
             await self._salvage_session_before_teardown(
@@ -1012,11 +997,11 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             attempt_context["headless"],
         )
 
-        if use_non_qr:
-            await self._drive_non_qr_fallback(page, dni_nie)
-        else:
-            await self._click_clave_movil_button(page)
-            await self._raise_if_pending_request_error(page)
+        await self._drive_clave_entry(page, dni_nie=dni_nie, target_path=target_path)
+        state = await self._observe_clave_page(page, target_path)
+        if state in {ClaveMovilPageState.AUTHENTICATED, ClaveMovilPageState.REPRESENTATION}:
+            await self._wait_for_post_auth_landing(page, target_path, self._navigation_timeout_ms)
+            return None
         verification_code = await self._extract_verification_code(page)
         await self._assert_push_wait_state(
             page,
@@ -1026,7 +1011,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         )
 
         timeout_ms = int(self._settings.cadrumo_clave_movil_timeout_ms)
-        _render_progress_banner(
+        await _render_progress_banner(
             verification_code=verification_code,
             timeout_seconds=timeout_ms // 1000,
             used_non_qr_fallback=use_non_qr,
@@ -1049,13 +1034,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                     "target_path": target_path,
                     "diagnostic_id": diagnostic_id,
                     "phone_state": "unknown",
-                    "operator_report_required": True,
-                    "operator_report_options": (
-                        "app_prompted_and_accepted",
-                        "app_prompted_not_accepted",
-                        "app_did_not_prompt",
-                        "operator_did_not_check",
-                    ),
+                    "operator_report_required": False,
                     **attempt_context,
                     "verification_code_present": bool(verification_code),
                 },
@@ -1167,15 +1146,17 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 },
             )
             self.active_session = refreshed
+            refreshed_state = await context.storage_state()
             refreshed_metadata = metadata.model_copy(
                 update={
                     "authenticated_at": refreshed.authenticated_at,
                     "idle_deadline": refreshed.idle_deadline,
+                    "storage_state_sha256": session_store.storage_state_sha256(refreshed_state),
                 },
             )
             self._persist_session(
                 storage_state_path,
-                storage_state=persisted.storage_state,
+                storage_state=refreshed_state,
                 metadata=refreshed_metadata,
             )
             log.info(

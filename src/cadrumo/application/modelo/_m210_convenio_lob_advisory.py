@@ -23,7 +23,7 @@ See Also:
     :func:`~application.modelo._m210_rate.resolve_m210_rate`
         Application-layer replay of the same tipo-de-gravamen resolution path;
         this advisory reads the same governed fact to detect a matched override.
-    :func:`~application.modelo.verification_actions._collect_revision_verification_findings`
+    :func:`~application.modelo.verification_revision_findings.collect_revision_verification_findings`
         Verification collector that appends this advisory beside the DT 12ª /
         art. 20 / art. 52 advisories using the same non-blocking mechanism.
     ``irnr.convenio.override``

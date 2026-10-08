@@ -1,0 +1,355 @@
+---
+tags:
+  - '#exec'
+  - '#application-distribution'
+date: '2026-10-04'
+modified: '2026-10-08'
+body_schema: 'body-v2'
+body_hash: 'sha256:33539ad73914e95c7f6f4a6088ec2999b7779a6b43f10c1a216e66e99378eb1f'
+related:
+  - "[[2026-10-04-application-distribution-plan]]"
+---
+
+# `application-distribution` ledger
+
+## Changes
+
+- `S01` `M` `src/cadrumo/core/product_identity.py`
+- `S01` `M` `src/cadrumo/core/tests/test_product_identity.py`
+- `S01` `A` `dev/packaging/native/identity.py`
+- `S01` `A` `dev/packaging/tests/test_distribution_identity.py`
+- `S01` `verify:` `pytest identity suites 17 passed` -> `pass`
+- `S01` `verify:` `ruff and ty focused identity` -> `pass`
+- `S02` `M` `CMakeLists.txt`
+- `S02` `A` `native/cmake/Identity.cmake`
+- `S02` `A` `native/cmake/CompilePolicy.cmake`
+- `S02` `M` `native/cmake/Packaging.cmake`
+- `S02` `M` `native/cmake/platforms/Windows.cmake`
+- `S02` `M` `dev/packaging/native/metadata.py`
+- `S02` `M` `dev/packaging/native/platforms/windows.py`
+- `S02` `M` `native/interpreter/windows/python.c`
+- `S02` `verify:` `cmake configure windows-x64` -> `pass`
+- `S02` `verify:` `Release interpreter and ABI consumer build` -> `pass`
+- `S02` `verify:` `ctest platform 3 tests` -> `pass`
+- `S03` `A` `dev/packaging/native/installation.py`
+- `S03` `A` `dev/packaging/tests/test_native_installation.py`
+- `S03` `A` `native/cmake/distribution/CMakeLists.txt`
+- `S03` `A` `native/cmake/distribution/VerifyInstall.cmake.in`
+- `S03` `M` `native/desktop/CMakeLists.txt`
+- `S03` `M` `native/desktop/scripts/host.mjs`
+- `S03` `M` `native/CONTRACT.md`
+- `S03` `M` `dev/packaging/native/identity.py`
+- `S03` `M` `dev/packaging/tests/test_distribution_identity.py`
+- `S03` `M` `native/cmake/CompilePolicy.cmake`
+- `S03` `verify:` `34 focused identity and installation tests` -> `pass`
+- `S03` `verify:` `Ruff format lint and ty` -> `pass`
+- `S03` `verify:` `Linux synthetic DEB prefix install and uninstall` -> `pass`
+- `S03` `verify:` `Windows real runtime ZIP install smoke and modified-file-preserving uninstall` -> `pass`
+- `S03` `verify:` `GCC compile policy fixture build and execution` -> `pass`
+- `S03` `verify:` `Node host syntax and desktop identity configure` -> `pass`
+- `S05` `A` `native/cmake/BuildPaths.cmake`
+- `S05` `A` `dev/packaging/native/build_paths.py`
+- `S05` `M` `dev/packaging/native/cleanup.py`
+- `S05` `M` `dev/packaging/native/cmake_build.py`
+- `S05` `M` `dev/packaging/native/artifact_verify.py`
+- `S05` `M` `native/CMakeLists.txt`
+- `S05` `M` `native/cmake/Identity.cmake`
+- `S05` `M` `native/cmake/Packaging.cmake`
+- `S05` `M` `native/cmake/Rust.cmake`
+- `S05` `M` `native/cmake/platforms/Windows.cmake`
+- `S05` `M` `native/application/CMakeLists.txt`
+- `S05` `M` `native/cmake/CPackProject.cmake.in`
+- `S05` `M` `native/cmake/Artifact.cmake.in`
+- `S05` `M` `native/CONTRACT.md`
+- `S05` `A` `dev/packaging/tests/test_build_paths.py`
+- `S05` `M` `dev/packaging/tests/test_native_artifact_identity.py`
+- `S05` `verify:` `cmake --preset windows-x64` -> `pass`
+- `S05` `verify:` `pytest test_build_paths.py test_native_artifact_identity.py (11 tests)` -> `pass`
+- `S05` `verify:` `ruff check and format; ty check changed Python helpers` -> `pass`
+- `S05` `M` `native/desktop/CMakeLists.txt`
+- `S05` `A` `native/desktop/scripts/build-paths.mjs`
+- `S05` `A` `native/desktop/scripts/build-paths.d.mts`
+- `S05` `M` `native/desktop/scripts/tauri.mjs`
+- `S05` `M` `native/desktop/frontend/vite.config.ts`
+- `S05` `M` `native/desktop/frontend/playwright.config.ts`
+- `S05` `M` `native/desktop/tests/headless.test.mjs`
+- `S05` `A` `native/desktop/tests/build-paths.test.mjs`
+- `S05` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S05` `M` `native/cmake/distribution/VerifyInstall.cmake.in`
+- `S05` `M` `dev/packaging/native/installation.py`
+- `S05` `M` `dev/packaging/tests/test_native_installation.py`
+- `S05` `verify:` `pytest native installation, build paths, artifact identity: 33 passed, 2 POSIX skips` -> `pass`
+- `S05` `verify:` `CMake desktop-paths-test, desktop-frontend-build, desktop-frontend-check` -> `pass`
+- `S05` `verify:` `ruff and ty affected Python modules` -> `pass`
+- `S04` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S04` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S04` `A` `.vault/adr/2026-10-07-application-distribution-windows-versioned-msi-adr.md`
+- `S04` `verify:` `uv run --no-sync pytest -q -n 0 dev/packaging/tests/test_native_installation.py dev/packaging/tests/test_native_installation_windows.py dev/packaging/native/tests/test_distribution_prepare.py dev/packaging/tests/test_distribution_identity.py (40 passed, 2 POSIX-only skips, 8 Windows cases deselected)` -> `pass`
+- `S04` `verify:` `uv run --no-sync pytest -q -n 0 -m windows_only dev/packaging/tests/test_native_installation_windows.py (8 passed)` -> `pass`
+- `S04` `verify:` `vaultspec-core vault check all (0 errors, 14 concurrent/index warnings)` -> `pass`
+- `S04` `verify:` `git diff --check for Windows installer decision and owning audit/plan` -> `pass`
+- `S06` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S06` `M` `native/cmake/distribution/CMakePresets.json`
+- `S06` `M` `dev/packaging/native/tests/test_distribution_prepare.py`
+- `S06` `M` `native/CONTRACT.md`
+- `S06` `M` `.vault/adr/2026-10-07-application-distribution-windows-versioned-msi-adr.md`
+- `S06` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S06` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S06` `verify:` `uv run --no-sync pytest -q -n 0 dev/packaging/native/tests/test_distribution_prepare.py (8 passed)` -> `pass`
+- `S06` `verify:` `uv run --no-sync ruff check dev/packaging/native/tests/test_distribution_prepare.py` -> `pass`
+- `S06` `verify:` `uv run --no-sync ruff format --check dev/packaging/native/tests/test_distribution_prepare.py` -> `pass`
+- `S06` `verify:` `uv run --no-sync ty check dev/packaging/native/tests/test_distribution_prepare.py` -> `pass`
+- `S06` `verify:` `cmake --list-presets=all -S native/cmake/distribution (Windows host lists Windows native build only)` -> `pass`
+- `S06` `verify:` `vaultspec-core vault check --feature application-distribution (0 errors, 1 stale-index warning)` -> `pass`
+- `S06` `verify:` `git diff --check` -> `pass`
+- `S06` `by:` `Codex`
+- `S07` `M` `dev/packaging/native/identity.py`
+- `S07` `A` `dev/packaging/native/windows_msi_identity.py`
+- `S07` `A` `dev/packaging/tests/test_windows_msi_identity.py`
+- `S07` `M` `.vault/adr/2026-10-07-application-distribution-windows-versioned-msi-adr.md`
+- `S07` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S07` `verify:` `uv run --no-sync pytest -q -n 0 dev/packaging/tests/test_windows_msi_identity.py dev/packaging/tests/test_distribution_identity.py (31 passed)` -> `pass`
+- `S07` `verify:` `uv run --no-sync ruff check changed MSI identity modules and test` -> `pass`
+- `S07` `verify:` `uv run --no-sync ruff format --check changed MSI identity modules and test` -> `pass`
+- `S07` `verify:` `uv run --no-sync ty check changed MSI identity modules and test after correcting test scope annotation` -> `pass`
+- `S07` `verify:` `vaultspec-core vault check --feature application-distribution (0 errors, 1 stale-index warning)` -> `pass`
+- `S07` `verify:` `git diff --check on S07 paths` -> `pass`
+- `S07` `by:` `Codex`
+- `S08` `A` `dev/packaging/native/windows_msi.py`
+- `S08` `A` `dev/packaging/tests/test_windows_msi.py`
+- `S08` `A` `native/cmake/distribution/WindowsMsiGate.cmake.in`
+- `S08` `M` `dev/packaging/native/windows_msi_identity.py`
+- `S08` `M` `dev/packaging/native/tests/test_distribution_prepare.py`
+- `S08` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S08` `M` `native/CONTRACT.md`
+- `S08` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S08` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S08` `verify:` `uv run --no-sync pytest -q -n 0 dev/packaging/tests/test_windows_msi.py dev/packaging/native/tests/test_distribution_prepare.py dev/packaging/tests/test_windows_msi_identity.py dev/packaging/tests/test_distribution_identity.py (51 passed)` -> `pass`
+- `S08` `verify:` `WiX 5.0.2 PATH, DOTNET_ROLL_FORWARD=Major, uv run --no-sync pytest -q -n 0 -m windows_only dev/packaging/tests/test_windows_msi.py (2 passed; eight MSI builds and database readbacks)` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff check changed MSI Python modules and tests` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check changed MSI Python modules and tests` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check changed MSI Python modules and tests` -> `pass`
+- `S08` `verify:` `git diff --check scoped S08 files` -> `pass`
+- `S08` `by:` `Codex`
+- `S10` `M` `native/platform/src/installation.rs`
+- `S10` `M` `native/application/src/installation.rs`
+- `S10` `M` `native/application/tests/installation.rs`
+- `S10` `M` `native/manager/src/installation.rs`
+- `S10` `M` `native/desktop/src-tauri/src/manager.rs`
+- `S10` `M` `native/desktop/src-tauri/src/manager/package_tests.rs`
+- `S10` `M` `native/CONTRACT.md`
+- `S10` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S10` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S10` `verify:` `ctest --test-dir build/windows-x64 -C Release -R '^(application[.]rust|manager[.]rust)$' --output-on-failure --parallel 1 (2 suites; 14 installation cases)` -> `pass`
+- `S10` `verify:` `CMake-generated Release environment and tauri.mjs test-unit manager:: (19 passed; real desktop host/path crates)` -> `pass`
+- `S10` `verify:` `pinned rustfmt --check --edition 2024 --config skip_children=true six changed Rust source and test files` -> `pass`
+- `S10` `verify:` `CMake-derived application and manager clippy --all-targets -- -D warnings with pinned Rust/Clippy 1.96 PATH and RUSTUP_TOOLCHAIN` -> `pass`
+- `S10` `verify:` `CMake-generated Release environment and tauri.mjs clippy-backend --all-targets -- -D warnings` -> `pass`
+- `S10` `verify:` `git diff --check scoped S10 files` -> `pass`
+- `S10` `by:` `Codex`
+- `S10` `verify:` `vaultspec-core check --feature application-distribution (zero errors; existing stale-index warning)` -> `pass`
+- `S11` `A` `dev/packaging/native/windows_msi_build.py`
+- `S11` `A` `dev/packaging/native/windows_msi_database.py`
+- `S11` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S11` `M` `dev/packaging/native/tests/test_distribution_prepare.py`
+- `S11` `M` `dev/packaging/tests/test_windows_msi.py`
+- `S11` `M` `native/CONTRACT.md`
+- `S11` `verify:` `pytest -m unit distribution_prepare and windows_msi: 28 tests` -> `pass`
+- `S11` `verify:` `pytest dev/quality/tests/test_no_git_cli.py: 25 tests` -> `pass`
+- `S11` `verify:` `scoped Ruff lint and format, ty, git diff --check` -> `pass`
+- `S11` `by:` `Codex`
+- `S12` `A` `native/application/src/installation/maintenance.rs`
+- `S12` `M` `native/application/src/installation.rs`
+- `S12` `M` `native/application/tests/installation.rs`
+- `S12` `M` `native/manager/src/installation.rs`
+- `S12` `M` `native/manager/src/installed.rs`
+- `S12` `M` `native/desktop/src-tauri/src/manager.rs`
+- `S12` `M` `native/desktop/src-tauri/src/manager/package_tests.rs`
+- `S12` `M` `native/package-layout.json`
+- `S12` `M` `native/CONTRACT.md`
+- `S12` `verify:` `configured application.rust CTest` -> `pass`
+- `S12` `verify:` `configured application Clippy all-targets -D warnings` -> `pass`
+- `S12` `verify:` `configured desktop test-unit manager:: (19 tests)` -> `pass`
+- `S12` `verify:` `configured desktop clippy-backend` -> `pass`
+- `S12` `verify:` `pytest native layout installation MSI identity (52 passed, 2 POSIX skipped)` -> `pass`
+- `S12` `verify:` `scoped git diff --check` -> `pass`
+- `S12` `by:` `Codex`
+- `S13` `M` `CMakeLists.txt`
+- `S13` `A` `native/cmake/ManylinuxToolchain.cmake`
+- `S13` `M` `native/CONTRACT.md`
+- `S13` `verify:` `native manylinux CMake configure with CADRUMO_CONFIGURE_PAYLOAD=OFF` -> `pass`
+- `S13` `verify:` `CMake Release rust_platform rust_application baseline rust_manager` -> `pass`
+- `S13` `verify:` `Linux platform.resolver CTest` -> `pass`
+- `S13` `verify:` `manylinux toolchain refuses Ubuntu glibc2.43` -> `pass`
+- `S13` `verify:` `pytest CMake configurations/package inputs (15 passed)` -> `pass`
+- `S13` `verify:` `scoped git diff --check` -> `pass`
+- `S13` `by:` `Codex`
+- `S05` `M` `native/cmake/Manager.cmake`
+- `S05` `M` `native/manager/tests/custody_conformance.rs`
+- `S05` `M` `native/manager/tests/diagnostics.rs`
+- `S05` `M` `native/platform/src/lib.rs`
+- `S05` `M` `native/platform/src/storage.rs`
+- `S05` `M` `native/platform/src/posix_tests.rs`
+- `S05` `verify:` `Pinned Linux platform/application/manager Release CTest` -> `pass`
+- `S05` `verify:` `Pinned Linux platform all-target Clippy` -> `pass`
+- `S05` `by:` `Codex`
+- `S05` `M` `CMakePresets.json`
+- `S05` `M` `native/cmake/InstallerFlow.cmake`
+- `S05` `M` `dev/packaging/native/tests/test_cmake_installer_flow.py`
+- `S05` `verify:` `Sixteen CMake configuration/input/flow tests` -> `pass`
+- `S05` `verify:` `Post-review concurrent native-installer graph regression` -> `pass`
+- `S05` `verify:` `Scoped Ruff format lint and ty` -> `pass`
+- `S05` `verify:` `Pinned isolated Windows source configure` -> `pass`
+- `S05` `verify:` `Pinned Linux full source configure and frontend production build` -> `pass`
+- `S09` `M` `native/installer`
+- `S09` `M` `native/cmake/Installer.cmake`
+- `S09` `M` `native/CMakeLists.txt`
+- `S09` `M` `native/cmake/platforms/Posix.cmake`
+- `S09` `M` `native/application/src/installation/maintenance.rs`
+- `S09` `M` `native/application/tests/installation.rs`
+- `S09` `M` `dev/packaging/native/windows_msi.py`
+- `S09` `M` `dev/packaging/native/windows_msi_build.py`
+- `S09` `M` `dev/packaging/native/windows_msi_database.py`
+- `S09` `M` `dev/packaging/tests/test_windows_msi.py`
+- `S09` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S09` `M` `native/cmake/distribution/LinuxPackageGate.cmake.in`
+- `S09` `M` `dev/packaging/native/linux_packages.py`
+- `S09` `M` `dev/packaging/native/tests/test_linux_packages.py`
+- `S09` `verify:` `Pinned isolated Windows installer DLL and runner Release build` -> `pass`
+- `S09` `verify:` `Application and installer CTests` -> `pass`
+- `S09` `verify:` `Pinned installer and application all-target Clippy` -> `pass`
+- `S09` `verify:` `22 real Windows MSI/compiler/runner tests` -> `pass`
+- `S09` `verify:` `11 Linux package/XDG native-tool tests` -> `pass`
+- `S09` `verify:` `Native PE loader flags and runner asInvoker manifest` -> `pass`
+- `S09` `by:` `Codex`
+- `S09` `A` `native/installer/src/publication.rs`
+- `S09` `M` `native/installer/src/lib.rs`
+- `S09` `M` `native/installer/src/owner.rs`
+- `S09` `M` `native/installer/src/runner.rs`
+- `S09` `M` `native/installer/src/windows.rs`
+- `S09` `verify:` `CMake rust_installer Release and native PE manifest checks` -> `pass`
+- `S09` `verify:` `installer.rust (13 native tests, 33.25 seconds)` -> `pass`
+- `S09` `verify:` `Pinned Rust 1.96 installer all-target Clippy` -> `pass`
+- `S09` `verify:` `Windows MSI Python suite (22 tests, real CA-enrolled MSI compiler/database checks, 16.87 seconds)` -> `pass`
+- `S09` `verify:` `Scoped MSI Python Ruff and ty` -> `pass`
+- `S09` `A` `native/installer/src/ownership.rs`
+- `S09` `M` `native/installer/src/publication.rs`
+- `S09` `verify:` `CMake isolated rust_installer Release DLL and runner 41.62s` -> `pass`
+- `S09` `verify:` `installer.rust native owner record and sticky ownership tests 40.75s` -> `pass`
+- `S09` `verify:` `Rust 1.96 installer all-target Clippy 30.30s` -> `pass`
+- `S09` `verify:` `Windows MSI Python 23 tests 41.32s` -> `pass`
+- `S09` `verify:` `Final binary-bound four MSI compile and runner refusal regression 13.01s` -> `pass`
+- `S09` `verify:` `Scoped MSI Python Ruff and ty` -> `pass`
+- `S09` `M` `native/installer/src/custody.rs`
+- `S09` `M` `native/installer/src/runner/removal.rs`
+- `S09` `M` `native/installer/src/bin/cadrumo-msi-maintenance.rs`
+- `S09` `verify:` `Windows installer.rust latest focused CTest (9.46s)` -> `pass`
+- `S09` `verify:` `Windows application.rust integrated rollback guards (11.29s)` -> `pass`
+- `S09` `verify:` `Linux application.rust shared rollback guards (16.36s)` -> `pass`
+- `S09` `verify:` `Pinned Rust 1.96 installer all-target Clippy (20.83s)` -> `pass`
+- `S09` `verify:` `Windows CMake release DLL and maintenance runner build (35.16s)` -> `pass`
+- `S09` `verify:` `Windows MSI Python ownership tests 20 (13.67s)` -> `pass`
+- `S09` `verify:` `Windows native WiX compiler tests 3 with new removal gate checks (27.78s)` -> `pass`
+- `S09` `verify:` `Ruff and ty scoped Python helpers` -> `pass`
+- `S05` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S05` `verify:` `manylinux rpm-verify` -> `pass`
+- `S05` `verify:` `actual DEB and RPM 17403 payload hashes each` -> `pass`
+- `S05` `verify:` `native Linux package pytest (5 tests 10.99s)` -> `pass`
+- `S05` `verify:` `Windows CMake installer flow (3.79s)` -> `pass`
+- `S09` `M` `native/installer/src/admission.rs`
+- `S09` `A` `native/installer/src/runner/recovery.rs`
+- `S09` `M` `native/CONTRACT.md`
+- `S09` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S09` `verify:` `installer.rust 19 tests (43.01s)` -> `pass`
+- `S09` `verify:` `installer pinned Clippy all-targets (12.00s)` -> `pass`
+- `S09` `verify:` `installer Release DLL and runner (33.02s)` -> `pass`
+- `S09` `verify:` `real four-product MSI owner gate regression (7.61s)` -> `pass`
+- `S09` `verify:` `independent combined recovery and cleanup review` -> `pass`
+- `S09` `verify:` `application.rust (38.28s)` -> `pass`
+- `S09` `verify:` `installer.rust (9.42s)` -> `pass`
+- `S09` `verify:` `installer and application pinned Clippy (10.39s 8.18s)` -> `pass`
+- `S09` `verify:` `installer Release DLL runner (25.83s)` -> `pass`
+- `S09` `verify:` `real four owner-MSI gate checks (5.91s)` -> `pass`
+- `S09` `verify:` `independent Removing recovery source review` -> `pass`
+- `S05` `M` `dev/packaging/native/build_toolchain.py`
+- `S05` `M` `dev/packaging/native/tests/test_builder_identity.py`
+- `S05` `verify:` `pytest builder identity and action cache (11 tests, 6.89s)` -> `pass`
+- `S05` `verify:` `scoped Ruff lint format and ty` -> `pass`
+- `S05` `verify:` `independent SDK alias identity review` -> `pass`
+- `S05` `verify:` `native Apple SDK CMake configure and platform manager application Release compilation` -> `pass`
+- `S05` `M` `dev/docs/sequences/checks.py`
+- `S05` `A` `dev/docs/tests/test_sequence_environment.py`
+- `S05` `M` `.vault/plan/2026-10-04-application-distribution-plan.md`
+- `S05` `verify:` `Windows child-environment regression (1 test, 9.01s)` -> `pass`
+- `S05` `verify:` `Linux child-environment regression (1 test, 10.60s)` -> `pass`
+- `S05` `verify:` `scoped Ruff format ty and independent review` -> `pass`
+- `S05` `verify:` `native Linux docs profile-setup without user-systemd bus` -> `fail`
+- `S05` `M` `dev/docs/sequences/runner.py`
+- `S05` `verify:` `actual Mac docs profile-setup goldens` -> `pass`
+- `S05` `verify:` `actual WSL docs profile-setup goldens and worker cleanup` -> `pass`
+- `S05` `verify:` `scoped Ruff format ty` -> `pass`
+- `S05` `verify:` `independent docs scratch-prefix review` -> `pass`
+- `S05` `A` `native/cmake/DarwinToolchain.cmake`
+- `S05` `A` `dev/packaging/native/tests/test_darwin_toolchain.py`
+- `S05` `verify:` `portable Darwin admission tests (4 passed 1 native skipped, 8.55s)` -> `pass`
+- `S05` `verify:` `actual Mac empty-cache bindings C configure build run and three native refusals` -> `pass`
+- `S05` `verify:` `scoped Ruff format ty` -> `pass`
+- `S05` `verify:` `cmake --list-presets` -> `pass`
+- `S05` `verify:` `independent corrected Darwin toolchain integrated review` -> `pass`
+- `S05` `M` `dev/packaging/native/docs_build.py`
+- `S05` `M` `dev/packaging/native/tests/test_docs_shared_site.py`
+- `S05` `A` `dev/packaging/native/tests/test_docs_input_publication.py`
+- `S05` `verify:` `pytest docs shared site and input publication (11 tests, 3.83s)` -> `pass`
+- `S05` `verify:` `scoped Ruff format ty` -> `pass`
+- `S05` `verify:` `independent docs cache mutation corrective review` -> `pass`
+- `S05` `verify:` `Windows full native-installer documentation compile (4673s)` -> `fail`
+- `S05` `verify:` `frozen Windows Renta page 349.03s runtime_deadline_exceeded` -> `fail`
+- `S05` `verify:` `frozen Windows Modelo036 page 121.85s` -> `pass`
+- `S05` `verify:` `instrumented unchanged frozen Windows Renta page 238.23s` -> `pass`
+- `S05` `verify:` `vault check application-distribution zero errors four warnings` -> `pass`
+- `S14` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_verification.py`
+- `S14` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_filing_settlement.py`
+- `S14` `verify:` `focused filing settlement unit tests 10 passed 3.82s` -> `pass`
+- `S14` `verify:` `scoped Ruff check and format check` -> `pass`
+- `S14` `verify:` `scoped ty check` -> `pass`
+- `S14` `verify:` `independent filing-only source review` -> `pass`
+- `S14` `by:` `Codex`
+- `S14` `verify:` `retained native frozen Windows modelo-390-annual-2025 forensic check 440.89s` -> `pass`
+- `S05` `verify:` `WSL retained filing-spine-chain diagnostic exit 0 in 59.56 seconds` -> `pass`
+- `S05` `M` `dev/docs/language_switcher.py`
+- `S05` `A` `dev/docs/tests/test_docs_language_switcher_compile.py`
+- `S05` `verify:` `Owning language-switcher pytest suite 47 tests` -> `pass`
+- `S05` `verify:` `Native Mac frozen-builder multilingual 404 regressions 8 tests` -> `pass`
+- `S05` `verify:` `Scoped Ruff formatting ty and git diff checks` -> `pass`
+- `S05` `verify:` `Independent multilingual link source review` -> `pass`
+
+## Notes
+
+- `S03` Native MSI RPM macOS and full platform lifecycle evidence remain in S04; WiX UI extension setup requires operator EULA acceptance.
+- `S05` S05 remains open. Automatic approval review rejected both PowerShell deletion attempts for the enumerated disposable build files and directories, including literal absolute paths, with blocked by policy and no further reason. No build clutter was removed. Source-build paths are centralized; desktop and standalone distribution output integration and physical cleanup remain pending.
+- `S05` Extended CMake path ownership to desktop and native installation staging. Removed development-status labels from build-framework documentation. Existing physical clutter remains blocked by the previously recorded deletion rejection; S05 remains open.
+- `S04` S04 remains open: forty-eight passing fixture tests do not establish live MSI/release acceptance. S03 reopened for the high current-template Removing major-upgrade finding. Proposed two-product MSI ownership and transaction contract requires acceptance before dependent implementation. Requested a disposable interactive Windows runner; current host is Session 0, has no VM, Sandbox disabled, Docker linux. No real install/registry/login/reboot/logoff action.
+- `S06` S06 covers format setup only. No native installer creation/install or release lifecycle acceptance; S03/S04 remain open for ownership, manager integration and disposable native runner gates.
+- `S08` Source/database authoring only. Every product retains the literal-false installation gate; S09 native transaction/scope admission and safe maintenance remain unimplemented. No product installed or release upgrade acceptance claimed.
+- `S10` Initial ad-hoc Clippy picked ambient cargo-clippy 1.99 despite pinned RUSTC and failed E0514; pinned 1.96 extension rerun passed without cleaning shared build outputs. Native transaction/scope admission and disposable-host acceptance remain open in other Steps.
+- `S12` Shared publication/lease foundation only. Native MSI transaction/rollback, all-session process proof and independent runtime leases remain S09. MSI is still installable:false.
+- `S13` Native component lane only. Full payload remains default ON. New desktop WebKitGTK4.1 dependency and full installer/session acceptance remain unresolved; no complete Linux artifact claimed.
+- `S05` Cross-platform validation repairs. Full Linux Clippy encountered concurrently introduced manager cutover source and awaits owner stabilization. S05 stays open; no full payload acceptance.
+- `S05` Shared nested distribution configure/build serialized under process lock after independent review. Full payload and native installation acceptance remain open; standalone distribution commands must not overlap source native-installer.
+- `S09` Partial S09 transaction/custody/owner foundation; immutable exact-role binding corrected before freeze. Owner callbacks not enrolled; literal MSI gate retained. Publication ACLs, full owner recovery/uninstall/all-session protection and native acceptance remain open. Includes verified Linux graph gates and root SDK/bridge graph repairs in shared CMake files.
+- `S09` Partial S09: protected namespace ACLs including `OWNER_RIGHTS` and Program Files ancestry, read-only lease access, actual immediate/deferred owner CA enrollment and postcommit ACL revalidation verified. Literal-false installation gate remains. Cached old MSI compatibility, protected owner-record protocol, owner-loss recovery, native removal and disposable two-release acceptance remain unfinished. Record protocol decision was refined under existing user authorization; not implemented in this checkpoint.
+- `S09` Partial S09: protected exact native owner record and cached-registration claims, independent ACL/custody/peer process creation and image verification, sticky owner-loss revocation, exact native family prefix/account and role admission. Explicit native launch policy added; portable writer and lifetime launch fencing are a concurrent workstream. Literal MSI gate remains closed. Native removal runner, rollback/recovery, inherited MSI UI policy, relocated cached-uninstall behavior and disposable interactive two-release acceptance remain open. Session 0 and fixture MSIs are not lifecycle evidence; no certificates or signing. Independent full implementation review not claimed.
+- `S09` Partial checkpoint: native-owned removal, quiet UI, cached native custody and typed publication rollback. Literal gate remains. Positive native execution, interrupted native commit recovery, relocated upgrade and disposable two-release acceptance are pending. CMake operation targets are authored in the shared distribution integration file and will checkpoint with its concurrent RPM payload-preservation fix under S05.
+- `S05` Partial S05 checkpoint: runtime-only native packages; desktop/docs/full lifecycle acceptance remain pending. All installation gates retained.
+- `S09` Partial S09: post-removal interrupted settlement and native interactive two-release acceptance remain pending; installation gates retained.
+- `S09` Native empty-transaction settlement and interactive lifecycle acceptance remain unverified; all installation gates retained.
+- `S05` S05 remains open; native full packages and lifecycle acceptance are not established by component compilation.
+- `S05` S05 remains open. The remaining Linux docs failure is real worker containment unavailable in the build container, not permission to weaken containment.
+- `S05` Full documentation/package runs remain active; native host installation and session-ending acceptance are not authorized on the existing non-disposable hosts.
+- `S05` S05 remains open; full-product build currently retains its earlier explicit experiment toolchain, and native installation acceptance remains gated.
+- `S05` S05 remains open. Full Windows documentation execution failed; other hosts are running frozen builds. Input revalidation does not replace immutable-source discipline.
+- `S05` Build recovery evidence only; original Renta deadline failure unresolved. Windows Modelo390 and verification reports and WSL strict docs still pending. Mac full build final status unknown while SSH unavailable. Both provided hosts are non-disposable: preserve product installations/login/session state.
+- `S14` Filing-only source checkpoint. Preserve independent dirty verification edits through partial staging. Native annual scenario rerun pending after frozen one-module overlay; S14 remains open until that confirmation. No changes to golden files or registered global/result-read deadlines.
+- `S14` Native failed filing boundary and completegoldencheck now pass with ordinary fixture cleanup. Observer sees28cleanfutures/drainreceipt1/zero missing-uncontained-unsettled and releasedtrue. Earlier intermittent runtime connection loss remains unresolved; full installer and lifecycle gates stay open.
+- `S05` Targeted diagnostic passed with normal cleanup and retained workspace; prior full strict documentation failure remains unexplained. Frozen Windows native-installer full docs gate and Mac full build remain running. Neither machine is disposable; installation and login/session-ending acceptance remain excluded.
+- `S05` Full Mac build failed nine translated 404 cross-root links after HTML compile success. Reviewed two-file overlay is verified and full CMake build relaunched; no complete DMG or native installation acceptance yet. Concurrent Windows frozen inputs unchanged.

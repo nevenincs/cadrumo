@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#docs-terminology-search'
 date: '2026-06-11'
-modified: '2026-07-17'
-body_hash: 'sha256:410dd2e484e963c0920e5f3bf42d846f05b404b6d9ddf28f7a58fe86f3cf056d'
-related:
-  - '[[2026-06-10-docs-terminology-search-plan]]'
+modified: '2026-10-03'
+body_hash: 'sha256:148956934cf31320e68b8256a1eb37d76bdea4d4b1f94aa4ce0e21927e77e09b'
+related: []
 ---
 
 # `docs-terminology-search` audit: `plan exec reconciliation`
@@ -52,10 +51,10 @@ Read-only evidence checks used `rg`, `fd`, `git status --short`, `git log`, and
 `git show` against the docs-terminology plan, exec records, audit/index files,
 and terminology/search surfaces. Targeted verification ran:
 
-- `uv run pytest dev/docs/terminology/tests/test_relevance_data.py dev/docs/terminology/tests/test_sweep.py dev/docs/tests/test_prorrata_smoke_gate.py src/aeat/entrypoints/cli/tests/test_terminology_redeclaration_conformance.py -q`
+- the historical check
   - Result: 15 passed; 43 integration-marked tests deselected by the default
     marker filter.
-- `uv run pytest dev/docs/tests/test_prorrata_smoke_gate.py src/aeat/entrypoints/cli/tests/test_terminology_redeclaration_conformance.py -q -m integration`
+- the historical check
   - Result: 42 passed.
 - `uv run vaultspec-core vault feature index -f docs-terminology-search`
   - Result: passed; regenerated the feature index.

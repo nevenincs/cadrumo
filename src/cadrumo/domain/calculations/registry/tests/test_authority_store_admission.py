@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 from .....core.hashing import sha256_hex
-from ..authority import bundled_authority_descriptor_path
+from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import (
     AuthorityDescriptor,
     AuthorityStoreCorruptionError,

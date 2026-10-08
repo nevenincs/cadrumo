@@ -22,7 +22,7 @@ import pytest
 
 from ..all_extra_smoke import COMPANION_MODULES, build_parser, declared_claims, optional_import_probe_source
 from ..command_execution import CommandResult, run_command
-from ..lane_verification_core import optional_extra_registry
+from ..dependency_contract import optional_extra_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -28,7 +28,7 @@ from ...domain.calculations.registry.export_parse import (
     parse_export_payload,
     xml_dictionary_entries,
 )
-from ...domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
+from ...domain.calculations.registry.fixed_width_codec import render_empty_block_slot, render_fixed_width_export_field
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
@@ -421,7 +421,11 @@ def _mismatched_casilla_ids(
         expected = values.get(parsed.casilla_id)
         try:
             field = fields_by_identity[(parsed.record_id, parsed.field_id)]
-            expected_wire = render_fixed_width_export_field(field, expected)
+            if field.required_with is not None and values.get(field.required_with) is None:
+                # An occurrence block the draft leaves empty renders its blank fill.
+                expected_wire = render_empty_block_slot(field)
+            else:
+                expected_wire = render_fixed_width_export_field(field, expected)
         except (KeyError, RegistryValidationError) as exc:
             raise FilingExportValidationError(
                 f"export field {parsed.field_id!r} could not render its expected verification value"

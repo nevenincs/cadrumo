@@ -20,7 +20,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from dataclasses import replace as _dataclass_replace
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -32,7 +32,7 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.calculations.registry.iva_schema_vocabulary import (
+from ...domain.calculations.registry.iva_regime_vocabulary import (
     iva_regime_simplificado_token,
     require_iva_regime,
 )
@@ -70,6 +70,11 @@ from .iva_wallet_gate import (
     apply_iva_compensation_decision_binding,
     resolve_iva_compensation_decision_for_calculation,
     taxpayer_nif_from_path_values,
+)
+from .lifecycle_clock_gate import (
+    ModeloLifecycleClockOperation,
+    require_lifecycle_clock_not_before,
+    work_unit_ordering_instants,
 )
 from .preconditions import build_modelo_precondition_failure
 from .work_profile import ModeloWorkProfile
@@ -110,6 +115,7 @@ class PreparedCalculation:
 def prepare_calculation(
     *,
     work_unit_id: str,
+    evaluated_at: datetime,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     casilla_inputs: Mapping[CasillaId, Decimal],
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
@@ -152,6 +158,13 @@ def prepare_calculation(
         work_unit_id=work_unit_id,
         repository_bucket_id=work_unit_repository.bucket_id,
     )
+    # Wallet reconciliation can persist a refreshed decision during preparation.
+    # Refuse an invalid operation instant before any such write.
+    require_lifecycle_clock_not_before(
+        evaluated_at,
+        operation=ModeloLifecycleClockOperation.CALCULATE,
+        instants=work_unit_ordering_instants(work_unit),
+    )
     from .profile_readiness_gate import require_profile_ready_for_work_unit
 
     checked_profile = require_profile_ready_for_work_unit(
@@ -187,6 +200,7 @@ def prepare_calculation(
     )
     iva_compensation_decision = resolve_iva_compensation_decision_for_calculation(
         work_unit,
+        evaluated_at=evaluated_at,
         snapshot=snapshot,
         supplied_decision=iva_compensation_decision,
         observation_repository=observation_repository,

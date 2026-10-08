@@ -27,7 +27,7 @@ See Also:
         Single catalogue writer invoked for every accepted row.
     :func:`~application.invoices.creation_wizard.create_invoice_via_wizard`
         Manual single-invoice path with the same writer and idempotent identity.
-    :func:`~application.ledger.invoice_confirmation.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_confirmation.persist_prepared_invoice_confirmation`
         Evidence-confirm path that also delegates the final invoice write to
         the catalogue writer.
 """
@@ -56,6 +56,7 @@ from ...core.parsing.dates import parse_iso8601_date
 from ...core.tabular import TabularSourceError, coerce_cell_text, normalize_tabular_bytes
 from ...core.time.clock import now
 from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.classification import InvoiceKind
 from ...domain.transactions.raw_transaction import RawProvenance, SourceFormat
@@ -748,6 +749,7 @@ def read_bulk_invoice_import_source(
     path: Path,
     *,
     mapper: ColumnRoleMapper | None = None,
+    expected_sha256: str | None = None,
 ) -> BulkInvoiceImportSource:
     """Read a CSV, TSV, XLSX/XLSM or legacy XLS invoice book into rows keyed by importer field.
 
@@ -763,6 +765,8 @@ def read_bulk_invoice_import_source(
     Args:
         path: The invoice book to read.
         mapper: Establishes roles for columns exact matching did not resolve.
+        expected_sha256: Optional submitted source digest, checked against the
+            single read before parsing or consulting the mapping lane.
 
     Returns:
         The resolved source, ready to apply.
@@ -787,6 +791,8 @@ def read_bulk_invoice_import_source(
             context={"path_name": path.name, "error_type": type(exc).__name__},
         ) from exc
     source_sha256 = sha256_hex(source_bytes)
+    if expected_sha256 is not None and source_sha256 != expected_sha256:
+        raise InvoiceValidationError("bulk invoice import source differs from its submitted digest")
     ingested_at = now()
     if suffix in {".csv", ".tsv"}:
         return _read_delimited_source(
@@ -813,6 +819,7 @@ def import_invoices_from_rows(
     kind: InvoiceKind,
     declared_country: str | None = None,
     ports: CatalogueCreationPorts,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> BulkInvoiceImportResult:
     """Create one catalogue :class:`Invoice` per valid row in *rows*.
 
@@ -878,6 +885,7 @@ def import_invoices_from_rows(
                 currency=parsed.currency,
                 notes=parsed.notes,
                 rate_provider=ports.rate_provider,
+                operation=operation,
             )
         except (InvoiceValidationError, ValidationError) as exc:
             reason = str(exc.errors()[0].get("msg", str(exc))) if isinstance(exc, ValidationError) else str(exc)

@@ -51,7 +51,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "evidence_id\tmedia_kind\tsupplier\tinvoice_number\tinvoice_date\ttaxable_base\tnotes\n4fbeef4e52f5c0a8\tpdf\tPapelería Sol SL\t2026-0142\t2026-03-10\t100.00\t-\n"
+      "text": "evidence_id\tmedia_kind\tsupplier\tinvoice_number\tinvoice_date\ttaxable_base\tnotes\n4fbeef4e52f5c0a8\tpdf\tPapelería Sol SL\t2026-0142\t2026-03-10\t100\t-\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -68,7 +68,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "evidence_id\t4fbeef4e52f5c0a8\nbucket_id\t<bucket-id>\nsource_path\tfixtures/factura-material-oficina.pdf\nsource_sha256\t725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16\nmedia_kind\tpdf\nsupplier\tPapelería Sol SL\ninvoice_number\t2026-0142\ninvoice_date\t2026-03-10\ntaxable_base\t100.00\niva_rate\t21\niva_amount\t21.00\nnotes\t-\ncreated_at\t2026-04-01T09:00:00Z\nupdated_at\t2026-04-01T09:00:00Z\n"
+      "text": "evidence_id\t4fbeef4e52f5c0a8\nbucket_id\t<bucket-id>\nsource_path\tfixtures/factura-material-oficina.pdf\nsource_sha256\t725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16\nmedia_kind\tpdf\nsupplier\tPapelería Sol SL\ninvoice_number\t2026-0142\ninvoice_date\t2026-03-10\ntaxable_base\t100\niva_rate\t21\niva_amount\t21\nnotes\t-\ncreated_at\t2026-04-01T09:00:00Z\nupdated_at\t2026-04-01T09:00:00Z\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -87,7 +87,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "evidence_id\t4fbeef4e52f5c0a8\nbucket_id\t<bucket-id>\nsource_path\tfixtures/factura-material-oficina.pdf\nsource_sha256\t725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16\nmedia_kind\tpdf\nsupplier\tPapelería Central SL\ninvoice_number\t2026-0142\ninvoice_date\t2026-03-10\ntaxable_base\t100.00\niva_rate\t21\niva_amount\t21.00\nnotes\t-\ncreated_at\t2026-04-01T09:00:00Z\nupdated_at\t2026-04-01T09:00:00Z\nbucket_event_ids\t8f439cce2a9b8972cff6a94ed9e944438548dcd2af320e2f2f4039d9b1c2d99f\n"
+      "text": "evidence_id\t4fbeef4e52f5c0a8\nbucket_id\t<bucket-id>\nsource_path\tfixtures/factura-material-oficina.pdf\nsource_sha256\t725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16\nmedia_kind\tpdf\nsupplier\tPapelería Central SL\ninvoice_number\t2026-0142\ninvoice_date\t2026-03-10\ntaxable_base\t100\niva_rate\t21\niva_amount\t21\nnotes\t-\ncreated_at\t2026-04-01T09:00:00Z\nupdated_at\t2026-04-01T09:00:00Z\nbucket_event_ids\t8f439cce2a9b8972cff6a94ed9e944438548dcd2af320e2f2f4039d9b1c2d99f\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -104,7 +104,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.evidence.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
           "bucket_event_ids": [],
@@ -113,18 +121,18 @@
           "evidence_id": "4fbeef4e52f5c0a8",
           "invoice_date": "2026-03-10",
           "invoice_number": "2026-0142",
-          "iva_amount": "21.00",
+          "iva_amount": "21",
           "iva_rate": "21",
           "media_kind": "pdf",
           "notes": "",
           "source_path": "fixtures/factura-material-oficina.pdf",
           "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
           "supplier": "Papelería Central SL",
-          "taxable_base": "100.00",
+          "taxable_base": "100",
           "updated_at": "2026-04-01T09:00:00Z"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

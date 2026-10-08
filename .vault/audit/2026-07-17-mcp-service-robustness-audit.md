@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#mcp-service-robustness'
 date: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:85aa1d62ee3b66f83fe0829be00c8c4bd5a8be32bcbe120d874834888a95a23d'
 related:
   - '[[2026-07-17-mcp-service-robustness-research]]'
-  - '[[2026-07-15-distribution-installation-readiness-plan]]'
 ---
 
 # `mcp-service-robustness` audit: `execute meta-tool event-loop blocking fix`

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#arch-remediation-modelo-surface'
 date: '2026-07-04'
-modified: '2026-07-17'
-body_hash: 'sha256:3dd1fe8c695cb7676f8977a0ff1e7f3507f27a829f38ceb0ff8dcaaf56b4842e'
+modified: '2026-10-03'
+body_hash: 'sha256:b2de4ca8a34cbe8effb860fc52b0a8af164a208fef5e1db91fa0c7e1196b2739'
 related:
-  - "[[2026-07-02-arch-remediation-modelo-surface-plan]]"
   - "[[2026-07-02-arch-remediation-modelo-surface-adr]]"
 ---
 
@@ -31,22 +30,15 @@ Evidence used:
   `_rewrite_m210_sentinels`, or `_M100_IMPUTATION_YEAR_DAYS` in the live
   implementation surface.
 - Direct source inspection confirmed `RegistryCalculationUnresolvedOutcome`
-  consumption in `src/aeat/application/modelo/_verification_actions.py`, the
+  consumption in the retired module, the
   shared iva-wallet ownership declaration in
-  `src/aeat/domain/calculations/registry/_validate_relation_sources.py`, the
+  The retired module, the
   same declaration consumed by
-  `src/aeat/application/modelo/_calculation_actions.py`, and
+  The retired module, and
   `CALLER_OVERRIDE_PRECEDENCE_LADDER` driving the aggregation guard shape.
-- `uv run --no-sync pytest -q
-  src/aeat/application/modelo/tests/test_modelo_210_convenio_rate_resolution.py
-  src/aeat/application/calculations/tests/test_modelo_210_irnr_continuity.py
-  src/aeat/application/aggregation/tests/test_precedence_ladder_conformance.py
-  src/aeat/tests/test_generic_module_modelo_carveouts.py
-  src/aeat/application/modelo/tests/test_iva_wallet_decision_binding.py
-  src/aeat/application/modelo/tests/test_local_cross_period_carry.py`: 59
+- the historical check: 59
   passed.
-- `uv run --no-sync pytest -q
-  src/aeat/domain/calculations/registry/tests/test_modelo_100_imputed_real_estate_art85.py`:
+- the historical check:
   5 passed.
 
 ## Findings

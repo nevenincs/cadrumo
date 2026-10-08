@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:91f4cd2980d839b0f572f9ad2b0f861fbb0588670f4e018db7b4753f324d8068'
+modified: '2026-10-03'
+body_hash: 'sha256:58c6d3f01432b823408db704ee2324d51f79367730c0ea1f4b6cbb830ea95568'
 related: []
 ---
 
@@ -14,7 +14,7 @@ related: []
 
 The S105 review found that the Borrador backend delegates into the shared pdfplumber primitive, where path-based failures formatted raw `pdf_path` values into exception text. Missing files, invalid PDFs, scan-only PDFs, and concatenated extraction failures could expose operator-controlled basenames or full paths.
 
-Resolution: `src/aeat/adapters/inbound/pdf/_pdfplumber.py` now uses the stable `<input-pdf>` placeholder for path-based failure messages and reports only the upstream pdfplumber exception type name instead of interpolating third-party exception text.
+Resolution: the retired module now uses the stable `<input-pdf>` placeholder for path-based failure messages and reports only the upstream pdfplumber exception type name instead of interpolating third-party exception text.
 
 Status: closed.
 

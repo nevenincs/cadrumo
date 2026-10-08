@@ -3,14 +3,17 @@ tags:
   - '#reference'
   - '#assets-core'
 date: '2026-09-24'
-modified: '2026-09-24'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c45368419091a7a6881337cbab2e6fadcac6b0f122d212cca1a9ca9eec2cd51f'
-related:
-  - "[[2026-09-23-assets-core-plan]]"
+body_hash: 'sha256:fa415111814cee5ac190a23a1843373e1d39619328ea6e696c69803cc81f9c19'
+related: []
 ---
 
 # `assets-core` reference: `How indexed profile objects are written and read today`
+
+## Summary
+
+This reference traces indexed profile-object writes and reads, showing that irpf.plantilla_media is declared and validated but currently has no write path through the profile CLI or TUI.
 
 Schema version 7 declares `irpf.plantilla_media` as an indexed object on the
 non-repeatable `irpf` section (`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml:1312-1319`),

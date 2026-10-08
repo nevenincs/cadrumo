@@ -53,6 +53,8 @@ from ....adapters.persistence.storage.tests.profile_storage_root_fixture import 
 from ....core.config import load_settings
 from ....core.i18n.render import tr
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
+from ._profile_cli_support import invoke_protected_profile
 from ._profile_lifecycle_support import seed
 from .cli_runner import invoke_cached_cli
 
@@ -327,12 +329,12 @@ def test_config_login_emits_profile_activated_event() -> None:
     assert matching[-1].payload["active_profile"] == pointer.bucket_id
 
 
-def test_config_profile_view_emits_active_profile_facts() -> None:
-    # Registered and logged in rather than seeded: `seed` opens a session that
-    # closes with its context, so the verb runs with no active profile.
+@pytest.mark.windows_only
+def test_config_profile_view_emits_active_profile_facts(_isolated_backend: Path) -> None:
+    # Selection supplies the target; password proof authorizes its runtime read.
     register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00000000T"})
-    assert _login("operator").exit_code == 0
-    result = _invoke_profile(("view",))
+    with native_profile_view_server(_isolated_backend):
+        result = invoke_protected_profile("operator", "view")
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\toperator" in result.output
@@ -343,16 +345,13 @@ def test_config_profile_view_emits_active_profile_facts() -> None:
     assert "00000000T" not in result.output
 
 
-def test_config_profile_view_named_profile_includes_canonical_facts() -> None:
-    # Registered and logged in: `seed` opens a session that closes with its
-    # context, leaving the verb with no active profile.
+@pytest.mark.windows_only
+def test_config_profile_view_named_profile_includes_canonical_facts(_isolated_backend: Path) -> None:
+    # A named target is authenticated independently of ambient selection.
     register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00000001R"})
-    assert _login("operator").exit_code == 0
     register_cli_profile(log_in=False, label="spouse", facts={"identity.tax_id": "00000000T"})
-    # One process holds one bound session: the named profile is unlocked
-    # before its facts are read.
-    assert _login("spouse").exit_code == 0
-    result = _invoke_profile(("view", "spouse"))
+    with native_profile_view_server(_isolated_backend):
+        result = invoke_protected_profile("spouse", "view", "spouse")
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\tspouse" in result.output
@@ -445,19 +444,21 @@ def test_config_profile_view_refuses_a_deleted_profile_by_label_and_uuid() -> No
         assert 'failed_condition_id: "profile.selection.known"' in result.output
 
 
-def test_config_profile_view_runs_validation_inline() -> None:
+@pytest.mark.windows_only
+def test_config_profile_view_runs_validation_inline(_isolated_backend: Path) -> None:
     # Registered and logged in: `seed` opens a session that closes with its
     # context, leaving the verb with no active profile.
     register_cli_profile(log_in=False, label="operator")
-    assert _login("operator").exit_code == 0
-    result = _invoke_profile(("view",))
+    with native_profile_view_server(_isolated_backend):
+        result = invoke_protected_profile("operator", "view")
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\toperator" in result.output
     assert "record_validity\tvalid" in result.output
 
 
-def test_show_and_status_do_not_contradict_on_a_registered_profile() -> None:
+@pytest.mark.windows_only
+def test_show_and_status_do_not_contradict_on_a_registered_profile(_isolated_backend: Path) -> None:
     """``show`` and ``status`` report two distinct notions without colliding.
 
     A registered profile carries a schema-valid record but has not yet
@@ -488,8 +489,9 @@ def test_show_and_status_do_not_contradict_on_a_registered_profile() -> None:
         },
     )
 
-    show_result = _invoke_profile(("view", "maria"))
-    status_result = _invoke_profile(("status",))
+    with native_profile_view_server(_isolated_backend):
+        show_result = invoke_protected_profile("maria", "view", "maria")
+        status_result = invoke_protected_profile("maria", "status")
 
     assert show_result.exit_code == 0, show_result.output
     assert status_result.exit_code == 0, status_result.output
@@ -522,21 +524,15 @@ def test_config_profile_view_refuses_when_no_active_profile(_isolated_backend: P
     assert result.exit_code != 0
 
 
-def test_config_profile_edit_quiet_emits_updated_confirmation() -> None:
+@pytest.mark.windows_only
+def test_config_profile_edit_quiet_emits_updated_confirmation(_isolated_backend: Path) -> None:
     """``profile edit --quiet`` must emit a confirmation line with ``Status\\tupdated``."""
 
     register_cli_profile(log_in=False, label="editme")
-    assert _login("editme").exit_code == 0
-
-    # The labels are asserted in English, so the invocation asks for English.
-    result = invoke_cached_cli(
-        (
-            "--language",
-            "en",
-            "config",
-            "profile",
-            "edit",
+    with native_profile_view_server(_isolated_backend):
+        result = invoke_protected_profile(
             "editme",
+            "edit",
             "--quiet",
             "--tax-id",
             "12345678Z",
@@ -546,15 +542,16 @@ def test_config_profile_edit_quiet_emits_updated_confirmation() -> None:
             "Design",
             "--iva-regime",
             "GENERAL",
-        ),
-    )
+            language="en",
+        )
 
     assert result.exit_code == 0, result.output
     assert f"{_PROFILE_LABEL}\teditme" in result.output
     assert f"{_STATUS_LABEL}\t{_UPDATED}" in result.output
 
 
-def test_config_profile_edit_non_tty_recovery_hint_points_at_edit() -> None:
+@pytest.mark.windows_only
+def test_config_profile_edit_non_tty_recovery_hint_points_at_edit(_isolated_backend: Path) -> None:
     """A non-interactive ``profile edit`` (no flags) refuses with an edit-specific hint.
 
     The shared no-console message names ``profile create``, which reads
@@ -565,9 +562,8 @@ def test_config_profile_edit_non_tty_recovery_hint_points_at_edit() -> None:
     """
 
     register_cli_profile(log_in=False, label="editme")
-    assert _login("editme").exit_code == 0
-
-    result = _invoke_profile_app(("edit", "editme"))
+    with native_profile_view_server(_isolated_backend):
+        result = invoke_protected_profile("editme", "edit")
 
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output

@@ -58,6 +58,24 @@ modelo:
           de determinadas Loterías y Apuestas. Autoliquidación.
         title: Gravamen especial sobre los premios de determinadas loterías y apuestas.
           Autoliquidación
+      form:
+        page:
+          pag-1:
+            heading: Gravamen especial sobre los premios de determinadas loterías
+              y apuestas
+        section:
+          complementaria:
+            heading: Complementaria
+          declarante:
+            heading: Declarante
+          devengo:
+            heading: Devengo
+          ingreso:
+            heading: Ingreso
+          liquidacion:
+            heading: Liquidación
+          loteria:
+            heading: Lotería o apuesta premiada
       revision:
         2022-2025:
           construct:

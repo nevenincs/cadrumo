@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..compiler.loader import load_modelo_declarations, load_modelo_directory
-from ..edition_delta_migration import assess_migration_state
+from ..edition_delta_assessment import assess_migration_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

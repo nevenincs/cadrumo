@@ -26,9 +26,6 @@ when it is absent.
 
 from __future__ import annotations
 
-import hashlib
-import hmac
-from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
 from typing import Final
@@ -39,6 +36,7 @@ from .....core.classification.policies import SensitivityClass, default_policy_f
 from .....core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.identity.digest import ContentDigest
+from .....core.keyed_digest import keyed_digest_bytes
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -85,7 +83,7 @@ def _hkdf_hmac_digest(master_key: bytes, *, context: bytes, material: bytes) -> 
     as a shared crypto-package export.
     """
     sub_key = derive_key(key_material=master_key, salt=b"", context=context)
-    return hmac.new(sub_key, material, hashlib.sha256).digest()
+    return keyed_digest_bytes(key=sub_key, message=material)
 
 
 #: The only classes a record in this store may carry. The record model and
@@ -617,19 +615,6 @@ class SecretStore:
                 _log.debug("secret-store blob cleanup on delete skipped because blob is already absent")
             del index.entries[digest]
             self._write_index(index)
-
-    def list_digests(self) -> Iterable[str]:
-        """Yield every persisted lookup digest.
-
-        Plaintext keys are NOT recoverable from digests by design; this
-        method exists for inventory diagnostics (e.g. counting records,
-        rotating store-wide).
-
-        Returns:
-            A tuple of 64-character hex digests in iteration order.
-        """
-        index = self._read_index()
-        return tuple(index.entries.keys())
 
     def rotate(self, key: str, new_value: bytes, *, expires_at: datetime | None = None) -> BlobReference:
         """Replace the value of an existing secret and return the new blob reference.

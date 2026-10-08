@@ -21,7 +21,7 @@ from ...core.concepto_ingreso import ConceptoIngreso
 from ..calculations.registry.concepto_ingreso import resolve_concepto_ingreso_catalogue
 from ..calculations.registry.errors import RegistryError
 from ..calculations.registry.facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 from .errors import TransactionValidationError
 
@@ -37,11 +37,7 @@ def _excluded_concepts(
     effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> frozenset[ConceptoIngreso]:
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise TransactionValidationError(
-            "income-concept fact resolution requires an explicit authority operation or scope",
-        )
+    authority = require_governed_fact_authority(authority, subject="income-concept fact resolution")
     try:
         resolved = authority.resolve_governed_fact(
             EntitySetFactQuery(fact_id=fact_id, date_axis=DateAxis.FILING_PERIOD, effective_date=effective_date)

@@ -2,11 +2,7 @@
 
 The helper exposes :func:`exclusive_file_lock`, a context manager that
 acquires an OS-level exclusive lock on a sidecar file alongside a
-protected resource, and :func:`exclusive_file_lock_async`, its awaitable
-twin for callers running on an event loop. The two share one sidecar
-path, one OS primitive, one deadline and one refusal; they differ only
-in how they wait between attempts. Two operating-system primitives back
-the helper:
+protected resource. Two operating-system primitives back the helper:
 
 - POSIX (Linux, macOS): :func:`fcntl.flock` with ``LOCK_EX | LOCK_NB``.
 - Windows: :func:`msvcrt.locking` with ``LK_NBLCK`` against a one-byte
@@ -34,12 +30,11 @@ TTL semantics own those protocols above this OS-lock layer.
 
 from __future__ import annotations
 
-import asyncio
 import os
 import sys
 import time
-from collections.abc import AsyncGenerator, Generator
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import Generator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Final, override
 
@@ -256,56 +251,5 @@ def exclusive_file_lock(
         finally:
             _release_lock(fd)
             _log.debug("exclusive_file_lock: released %s", lock_path)
-    finally:
-        os.close(fd)
-
-
-@asynccontextmanager
-async def exclusive_file_lock_async(
-    target: Path,
-    *,
-    timeout: float | _DefaultLockTimeout = DEFAULT_LOCK_TIMEOUT,
-    retry_backoff: float | _DefaultLockTimeout = _DEFAULT_RETRY_BACKOFF,
-) -> AsyncGenerator[Path]:
-    """Acquire the same OS-level exclusive lock without blocking the event loop.
-
-    This is the awaitable twin of :func:`exclusive_file_lock`, not a
-    replacement for it: identical sidecar path, identical OS primitive,
-    identical deadline and refusal. The only difference is that the wait
-    between non-blocking attempts is :func:`asyncio.sleep` rather than
-    :func:`time.sleep`, so a coroutine waiting on a contended lock yields
-    to the loop instead of stalling every other task on it.
-
-    Use this from a coroutine. Use the synchronous form everywhere else —
-    a synchronous caller has no loop to block and gains nothing here.
-
-    Cancellation: the wait is a cancellation point, so a cancelled task
-    stops waiting promptly and the descriptor is closed on the way out.
-    The synchronous form cannot be cancelled at all, which is what makes
-    it unsuitable for a polling UI worker.
-
-    An executor hop (:func:`asyncio.to_thread`, ``run_in_executor``) is
-    deliberately NOT the mechanism here. It pays a thread hop per call,
-    and it drops the :mod:`contextvars` context that carries the active
-    run id, so an offloaded read that records an observability event
-    raises instead of recording it.
-
-    Args and refusals are exactly those of :func:`exclusive_file_lock`.
-
-    Yields:
-        The :class:`Path` of the acquired lock sidecar.
-    """
-    timeout, retry_backoff = _resolved_lock_budget(timeout, retry_backoff)
-    fd, lock_path = _open_lock_fd(target)
-    try:
-        deadline = time.monotonic() + timeout
-        while not _lock_acquired_before_deadline(fd, lock_path, deadline=deadline, timeout=timeout):
-            await asyncio.sleep(retry_backoff)
-        _log.debug("exclusive_file_lock_async: acquired %s", lock_path)
-        try:
-            yield lock_path
-        finally:
-            _release_lock(fd)
-            _log.debug("exclusive_file_lock_async: released %s", lock_path)
     finally:
         os.close(fd)

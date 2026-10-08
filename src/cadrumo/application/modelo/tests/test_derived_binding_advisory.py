@@ -187,8 +187,6 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
     assert {str(d.binding_id) for d in fired} == {
         "renta-profile-anualidades-sin-minimo-descendientes",
         "renta-profile-deduccion-maternidad",
-        "renta-profile-descendientes-guarderia",
-        "renta-profile-guarderia-gastos-reales",
         "renta-profile-incremento-guarderia",
         "renta-profile-minimo-descendientes-autonomico",
         "renta-profile-minimo-descendientes-estatal",
@@ -223,12 +221,11 @@ def test_every_derived_binding_actually_resolves_for_an_ordinary_profile(
         "renta-profile-minimo-descendientes-estatal",
         "renta-profile-minimo-descendientes-autonomico",
         "renta-profile-anualidades-sin-minimo-descendientes",
-        "renta-profile-descendientes-guarderia",
-        "renta-profile-guarderia-gastos-reales",
+        "renta-profile-incremento-guarderia",
     ):
         assert binding_id in resolved, f"{binding_id} was not resolved at all"
 
-    # The guardería aggregate is the one that legitimately lands on zero for
-    # this profile, and it must be a real zero rather than an absence.
-    assert resolved["renta-profile-guarderia-gastos-reales"] == Decimal("0")
-    assert resolved["renta-profile-descendientes-guarderia"] == Decimal("1")
+    # The guardería increment is the one that legitimately lands on zero for
+    # this profile, which declares no guardería spend, and it must be a real
+    # zero rather than an absence.
+    assert resolved["renta-profile-incremento-guarderia"] == Decimal("0")

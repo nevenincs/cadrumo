@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#bindings-architecture-unification'
 date: '2026-06-26'
-modified: '2026-07-17'
-body_hash: 'sha256:6e8df703f281fa80c46429e22f0cb315ae64a64990a12983648a92ae0d0eafa3'
+modified: '2026-10-03'
+body_hash: 'sha256:9341b1a6c0430de73c35216dfa8e08b5e62f0cb3191ead06a0e94646dca147d3'
 related:
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
   - '[[2026-06-15-bindings-interface-hardening-audit]]'
@@ -66,7 +66,7 @@ here (those are tracked under their own campaigns).
 
 #### F1 — The source-kind closed set is fractured across four+ typed enums plus a parallel bare-string vocabulary; the registry is typed, the mesh is stringly-typed, and neither set contains the other
 
-`src/aeat/core/aggregation.py` declares **three** source-kind enums describing one
+The retired module declared **three** source-kind enums describing one
 problem at different altitudes: `AggregationSourceKind` (4 members, lines 85-102),
 `RowSetGroupingKind` (5 members, lines 151-179), and the declared-canonical
 `BindingSourceKind` (19 members, lines 182-250) which *partially reuses* the other

@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#size-budget-refactor'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:816464dfd906454b99987d3ce25b225c7b2a944e13607c2d368b7c14fc605ffd'
+body_hash: 'sha256:2eaa300316362d390526067704ef4c7ae6e9f65d78aefacf75922a848a867ac2'
 related:
   - '[[2026-07-09-size-budget-refactor-adr]]'
-  - '[[2026-07-09-size-budget-refactor-ledger]]'
-  - '[[2026-07-09-size-budget-refactor-plan]]'
   - '[[2026-07-10-size-budget-refactor-research]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#size-budget-refactor`.
 ### adr
 
 - `2026-07-09-size-budget-refactor-adr` - `size-budget-refactor` adr: `Size-budget offender extraction approach` | (**status:** `accepted`)
-
-### exec
-
-- `2026-07-09-size-budget-refactor-ledger` - `size-budget-refactor` ledger
-
-### plan
-
-- `2026-07-09-size-budget-refactor-plan` - `size-budget-refactor` plan
 
 ### research
 

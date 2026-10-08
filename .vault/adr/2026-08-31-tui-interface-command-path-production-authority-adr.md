@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#tui-interface'
 date: '2026-08-31'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:fe160f9ec4948400020516fd319309887ffa4aa4996b87a0eba5a141f0a916ee'
 related:
-  - "[[2026-08-11-tui-interface-plan]]"
   - '[[2026-08-31-tui-interface-command-path-population-measurements-reference]]'
 ---
 

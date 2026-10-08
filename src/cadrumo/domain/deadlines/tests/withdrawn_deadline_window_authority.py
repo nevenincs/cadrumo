@@ -25,13 +25,14 @@ from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 
 from ....core.hashing import content_hash_hex
-from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_authority_descriptor_path
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.authority_artifact import (
     AuthorityComponentQuery,
     AuthorityGenerationPin,
     ModeloDirectoryComponentQuery,
     ModeloRevisionComponentQuery,
 )
+from ...calculations.registry.authority_location import bundled_authority_descriptor_path
 from ...calculations.registry.authority_store import SQLiteAuthorityReader
 from ...calculations.registry.errors import RegistrySnapshotError
 from ...calculations.registry.governed_fact_scope import validating_governed_facts

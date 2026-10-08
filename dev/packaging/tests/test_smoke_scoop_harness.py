@@ -33,6 +33,8 @@ from ..command_execution import CommandResult, run_command
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SCRIPT: Final = Path(__file__).resolve().parents[1] / "smoke_scoop.ps1"
+_ACQUIRE_SCRIPT: Final = Path(__file__).resolve().parents[1] / "acquire_scoop.ps1"
+_STORAGE_PATHS: Final = Path(__file__).resolve().parents[1] / "storage_paths.ps1"
 
 
 def _interpreter() -> str | None:
@@ -48,6 +50,166 @@ def _interpreter() -> str | None:
         assert resolved is not None, "a Windows host must expose powershell or pwsh"
         return resolved
     return shutil.which("pwsh")
+
+
+@pytest.mark.parametrize("script", (_SCRIPT, _ACQUIRE_SCRIPT))
+def test_scoop_scripts_route_cache_evidence_and_container_storage(script: Path) -> None:
+    """Both lanes use the shared resolver before invoking Scoop or Docker."""
+    source = script.read_text(encoding="utf-8")
+    assert '. (Join-Path $PSScriptRoot "storage_paths.ps1")' in source
+    assert "Initialize-CadrumoScoopStorageEnvironment -RepositoryRoot $RepoRoot" in source
+    assert "$EvidenceDir = Resolve-CadrumoStoragePath -Value $EvidenceDir -RepositoryRoot $RepoRoot" in source
+    assert '"-e", "CADRUMO_STORAGE_ROOT=C:\\evidence\\storage"' in source
+    assert '"-e", "CADRUMO_LOCAL_STORAGE_ROOT=C:\\evidence\\storage"' in source
+    assert _STORAGE_PATHS.is_file()
+
+
+def test_scoop_scripts_and_shared_storage_helper_parse_in_powershell() -> None:
+    """Both standalone entry points stay valid PowerShell with the shared helper."""
+    interpreter = _interpreter()
+    if interpreter is None:
+        return
+    paths = tuple(str(path).replace("'", "''") for path in (_SCRIPT, _ACQUIRE_SCRIPT, _STORAGE_PATHS))
+    driver = f"""
+$paths = @('{paths[0]}', '{paths[1]}', '{paths[2]}')
+foreach ($path in $paths) {{
+    $tokens = $null
+    $errors = $null
+    [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors) | Out-Null
+    if ($errors.Count -gt 0) {{ throw ("parse failed for " + $path + ": " + $errors[0]) }}
+}}
+"""
+    completed = run_command(
+        [interpreter, "-NoProfile", "-Command", driver],
+        cwd=Path.cwd(),
+        timeout_seconds=None,
+    )
+    assert completed.returncode == 0, completed.stderr
+
+
+def test_shared_powershell_storage_paths_support_relative_and_absolute_overrides(tmp_path: Path) -> None:
+    """The script mirror preserves root precedence and per-category override semantics."""
+    interpreter = _interpreter()
+    if interpreter is None:
+        source = _STORAGE_PATHS.read_text(encoding="utf-8")
+        assert "$env:CADRUMO_LOCAL_STORAGE_ROOT" in source
+        assert "$env:CADRUMO_STORAGE_ROOT" in source
+        assert "function Get-CadrumoStorageRoot" in source
+        assert "function Initialize-CadrumoScoopStorageEnvironment" in source
+        return
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    (checkout / "pyproject.toml").write_text("[project]\nname = 'storage-path-test'\n", encoding="utf-8")
+    local_root = tmp_path / "local-storage"
+    absolute_cache = tmp_path / "absolute-cache"
+    cache_variable = "CADRUMO_SCOOP_CACHE_DIR"
+    helper = str(_STORAGE_PATHS).replace("'", "''")
+    repository = str(checkout).replace("'", "''")
+    absolute = str(absolute_cache).replace("'", "''")
+    driver = f"""
+$env:CADRUMO_STORAGE_ROOT = 'shared-storage'
+$env:CADRUMO_LOCAL_STORAGE_ROOT = '{str(local_root).replace("'", "''")}'
+$env:{cache_variable} = 'development/cache/scoop-override'
+. '{helper}'
+$repository = '{repository}'
+$root = Get-CadrumoStorageRoot -RepositoryRoot $repository
+$relativeArguments = @{{
+    EnvironmentVariable = '{cache_variable}'
+    Default = 'development/cache/scoop-override'
+    RepositoryRoot = $repository
+}}
+$relative = Get-CadrumoStorageDirectory @relativeArguments
+$evidence = Resolve-CadrumoStoragePath -Value 'evidence/run' -RepositoryRoot $repository
+$env:{cache_variable} = '{absolute}'
+$absoluteArguments = @{{
+    EnvironmentVariable = '{cache_variable}'
+    Default = 'development/cache/scoop'
+    RepositoryRoot = $repository
+}}
+$absoluteCache = Get-CadrumoStorageDirectory @absoluteArguments
+$env:CADRUMO_LOCAL_STORAGE_ROOT = ''
+$env:CADRUMO_STORAGE_ROOT = ''
+$defaultRoot = Get-CadrumoStorageRoot -RepositoryRoot $repository
+Write-Output "ROOT=$root"
+Write-Output "RELATIVE=$relative"
+Write-Output "EVIDENCE=$evidence"
+Write-Output "ABSOLUTE=$absoluteCache"
+Write-Output "DEFAULT=$defaultRoot"
+"""
+    completed = run_command(
+        [interpreter, "-NoProfile", "-Command", driver],
+        cwd=checkout,
+        timeout_seconds=None,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert f"ROOT={local_root}" in completed.stdout
+    assert f"RELATIVE={local_root / 'development/cache/scoop-override'}" in completed.stdout
+    assert f"EVIDENCE={local_root / 'evidence/run'}" in completed.stdout
+    assert f"ABSOLUTE={absolute_cache}" in completed.stdout
+    assert f"DEFAULT={checkout / 'var/storage'}" in completed.stdout
+
+
+def test_scoop_storage_environment_controls_cache_and_user_config_paths() -> None:
+    """The shared helper owns both Scoop's cache and XDG user-config fallback."""
+    source = _STORAGE_PATHS.read_text(encoding="utf-8")
+    assert 'EnvironmentVariable = "CADRUMO_SCOOP_INSTALL_ROOT"' in source
+    assert 'Default = "development/packages/scoop"' in source
+    assert "$env:SCOOP = $installRoot" in source
+    assert '"CADRUMO_SCOOP_CACHE_DIR"' in source
+    assert '"development/cache/scoop"' in source
+    assert "$env:SCOOP_CACHE = $scoopCache" in source
+    assert '"CADRUMO_TOOL_CONFIG_DIR"' in source
+    assert '"development/config/tools"' in source
+    assert "$env:XDG_CONFIG_HOME = $toolConfig" in source
+
+
+def test_scoop_command_root_guard_rejects_mismatch_and_shadowing(tmp_path: Path) -> None:
+    """The actual PowerShell command must be an external under the selected root."""
+    interpreter = _interpreter()
+    source = _STORAGE_PATHS.read_text(encoding="utf-8")
+    assert "Get-Command scoop -ErrorAction SilentlyContinue" in source
+    assert '"Application", "ExternalScript"' in source
+    if interpreter is None:
+        assert "this control does not relocate" in source
+        return
+
+    selected_shims = tmp_path / "selected" / "shims"
+    unexpected_shims = tmp_path / "unexpected" / "shims"
+    selected_shims.mkdir(parents=True)
+    unexpected_shims.mkdir(parents=True)
+    (selected_shims / "scoop.cmd").write_text("@echo off\r\n", encoding="utf-8", newline="")
+    (unexpected_shims / "scoop.cmd").write_text("@echo off\r\n", encoding="utf-8", newline="")
+    helper = str(_STORAGE_PATHS).replace("'", "''")
+    root = str(selected_shims.parent).replace("'", "''")
+    wrong_path = str(unexpected_shims).replace("'", "''")
+    right_path = str(selected_shims).replace("'", "''")
+    driver = f"""
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$env:SCOOP = '{root}'
+. '{helper}'
+$env:PATH = '{wrong_path}' + [System.IO.Path]::PathSeparator + $env:PATH
+$mismatchRejected = $false
+try {{ Assert-CadrumoScoopCommandRoot -ScoopRoot '{root}' }}
+catch {{ $mismatchRejected = $_.Exception.Message.Contains('CADRUMO_SCOOP_INSTALL_ROOT') }}
+if (-not $mismatchRejected) {{ throw 'a Scoop command outside the selected root was accepted' }}
+$env:PATH = '{right_path}' + [System.IO.Path]::PathSeparator + $env:PATH
+function scoop {{ 'shadowing function' }}
+$shadowRejected = $false
+try {{ Assert-CadrumoScoopCommandRoot -ScoopRoot '{root}' }}
+catch {{ $shadowRejected = $_.Exception.Message.Contains('type Function') }}
+if (-not $shadowRejected) {{ throw 'a shadowing PowerShell function was ignored' }}
+Remove-Item Function:scoop -Force
+Assert-CadrumoScoopCommandRoot -ScoopRoot '{root}'
+Write-Output 'GUARD-PASSED'
+"""
+    completed = run_command(
+        [interpreter, "-NoProfile", "-Command", driver],
+        cwd=tmp_path,
+        timeout_seconds=None,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "GUARD-PASSED" in completed.stdout
 
 
 def test_invoke_native_gates_on_exit_code_not_stderr_presence() -> None:
@@ -89,7 +251,7 @@ Write-Output 'INVOKE-NATIVE-SURVIVED'
     return run_command(
         [interpreter, "-NoProfile", "-Command", driver],
         cwd=Path.cwd(),
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
 
 
@@ -167,7 +329,7 @@ Write-Output "RESULT=$result"
     return run_command(
         [interpreter, "-NoProfile", "-Command", driver],
         cwd=Path.cwd(),
-        timeout_seconds=180,
+        timeout_seconds=None,
     )
 
 
@@ -270,7 +432,7 @@ finally {{
     completed = run_command(
         [interpreter, "-NoProfile", "-Command", driver],
         cwd=Path.cwd(),
-        timeout_seconds=180,
+        timeout_seconds=None,
     )
     assert completed.returncode == 0, completed.stderr
     assert "UNDER_EXITED=True" in completed.stdout

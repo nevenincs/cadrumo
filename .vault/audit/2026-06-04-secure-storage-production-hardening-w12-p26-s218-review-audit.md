@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:c92ad3d04c75f66e2114666421541ee22d82dbd6b43022c541f3c3eadc37868d'
+modified: '2026-10-03'
+body_hash: 'sha256:a0a377405d0b755401f967f84dd09547e59dc0d920eb2f5d452190a39145796d'
 related: []
 ---
 
@@ -28,8 +28,8 @@ silently reading the wrong encrypted catalogue and emitting an empty resolution.
 
 ## S218-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/invoices/_source_resolver.py src/aeat/application/invoices/test_source_resolver.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/invoices/test_source_resolver.py` passed.
+- the historical check passed.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for S218.

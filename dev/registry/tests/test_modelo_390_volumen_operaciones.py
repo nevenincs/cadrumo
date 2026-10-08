@@ -10,8 +10,8 @@ is the number AEAT's own record design prints against that description, read
 from the bundled Diseno de Registros workbooks rather than restated here. That
 the population each box draws is the one the law puts in it -- and, for [103],
 that the box's own widened title is not authority to widen the selector. And
-that neither box reaches any total, which is what keeps them disclosure
-restatements rather than addends.
+that neither box reaches the tax liquidation, while both feed the separate
+turnover subtotal printed on the form.
 
 External authority: the box identities are asserted against the bundled AEAT
 workbooks under ``corpus/aeat_official/disenos_registro/modelo_390/files``,
@@ -45,13 +45,15 @@ from openpyxl import load_workbook
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.binding_selector_utils import provider_member
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
-    iva_ledger_selector,
+    LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.m390_formula_support import liquidation_operands
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -237,36 +239,25 @@ def test_a_b2b_eu_service_supply_never_reaches_the_intracomunitarias_box() -> No
     assert resolved["modelo-390-volumen-entregas-intracomunitarias-base"] != (_ENTREGAS_BASE + _SERVICE_SUPPLY_BASE)
 
 
-def test_neither_volumen_box_feeds_any_total() -> None:
-    """Volumen de operaciones is a restatement, never an addend.
+def test_volumen_disclosures_feed_only_the_turnover_subtotal() -> None:
+    """Turnover disclosures feed their own subtotal without changing tax.
 
     These boxes disclose turnover; they must not enter the liquidacion. The
     guard matters because box [104] and the Reg. ordinario 0 % rate box can
     legitimately see the same exempt-export rows -- that is only safe while no
-    total takes both, so a later change wiring either into a formula would
+    total takes both, so a later change wiring either into the tax calculation would
     create a double-count that files clean.
     """
     revision = _m390_revision()
     volumen_ids = {casilla_id for casilla_id, _number, _phrase in _BOXES}
-    seen_operands: set[str] = set()
-    for formula in revision.formulas:
-        operands = set(expression_casilla_refs(formula.expression))
-        seen_operands |= operands
-        assert not (operands & volumen_ids), (
-            f"formula {formula.id!r} takes volumen casilla(s) {sorted(operands & volumen_ids)} as an operand"
-        )
-        assert formula.target_casilla_id not in volumen_ids
-    # Anti-vacuity: the assertions above are satisfied by an operand set that is
-    # merely EMPTY, so an extraction that silently returns nothing would pass
-    # them while checking nothing. An earlier revision of this test did exactly
-    # that -- it scraped operands from repr() with a pattern matching a mapping
-    # form the loaded schema does not use -- so it could never fail. Pin that the
-    # walk actually reached the graph, and reached a known operand.
-    assert len(seen_operands) >= len(revision.formulas), (
-        f"operand walk returned {len(seen_operands)} refs across {len(revision.formulas)} formulas; "
-        "the extraction is not reaching the expression graph"
+    operands = liquidation_operands(revision)
+    assert not (operands & volumen_ids), (
+        f"annual liquidation consumes turnover disclosures {sorted(operands & volumen_ids)}"
     )
-    assert "iva.anual.repercutido.general" in seen_operands
+    # The printed turnover subtotal must still include both disclosures. It is
+    # separate from the tax graph, so its existence cannot create double tax.
+    turnover = next(formula for formula in revision.formulas if formula.target_casilla_id == "iva.anual.volumen.total")
+    assert volumen_ids <= set(expression_casilla_refs(turnover.expression))
 
 
 def test_the_volumen_boxes_select_what_the_quarterly_return_selects() -> None:
@@ -284,6 +275,6 @@ def test_the_volumen_boxes_select_what_the_quarterly_return_selects() -> None:
         ("modelo-390-volumen-exportaciones-exentas-base", "modelo-303-casilla-60-exportaciones-base"),
     )
     for annual_id, quarterly_id in pairs:
-        annual_selector = iva_ledger_selector(annual[annual_id])
-        quarterly_selector = iva_ledger_selector(quarterly[quarterly_id])
+        annual_selector = provider_member(annual[annual_id], LedgerIvaProvider)
+        quarterly_selector = provider_member(quarterly[quarterly_id], LedgerIvaProvider)
         assert set(annual_selector.categories) == set(quarterly_selector.categories)

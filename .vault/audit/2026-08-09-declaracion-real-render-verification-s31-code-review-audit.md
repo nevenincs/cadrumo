@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#declaracion-real-render-verification'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:952029200562e357701747379548e440290540e23cd937dc7c00c2d33fa993bf'
-related:
-  - "[[2026-07-26-declaracion-real-render-verification-plan]]"
+related: []
 ---
 # `declaracion-real-render-verification` audit: `s31 code review`
 

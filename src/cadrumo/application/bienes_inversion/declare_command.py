@@ -118,25 +118,13 @@ def resolve_bien_inversion_disposal(
     return BienInversionDisposal(year=disposal_year, regime=disposal_regime)
 
 
-def declare_bien_inversion(
-    command: BienInversionDeclarationCommand,
-    *,
-    service: BienesInversionRegisterService,
-) -> BienInversionDeclarationResultV1:
-    """Build one register record from operator intent and persist it.
+def build_bien_inversion_record(command: BienInversionDeclarationCommand) -> BienInversionIvaRecord:
+    """Validate operator intent into a complete record before persistence.
 
-    Args:
-        command: The operator's declaration.
-        service: Required register service composed for the target profile.
-
-    Returns:
-        The record as persisted, with the updated register.
-
-    Raises:
-        BienInversionDisposalIncompleteError: When only one half of a disposal
-            was supplied.
+    Keeping record construction separate lets registered operations distinguish
+    known validation refusals from failures after a durable write has begun.
     """
-    record = BienInversionIvaRecord(
+    return BienInversionIvaRecord(
         identifier=command.identifier,
         description=command.description,
         acquisition_year=command.acquisition_year,
@@ -151,6 +139,14 @@ def declare_bien_inversion(
             disposal_regime=command.disposal_regime,
         ),
     )
+
+
+def persist_bien_inversion_record(
+    record: BienInversionIvaRecord,
+    *,
+    service: BienesInversionRegisterService,
+) -> BienInversionDeclarationResultV1:
+    """Persist one already validated record and return its canonical result."""
     register = service.declare(record)
     return BienInversionDeclarationResultV1(record=record, updated_register=register)
 
@@ -159,6 +155,7 @@ __all__ = [
     "BienInversionDeclarationCommand",
     "BienInversionDeclarationResultV1",
     "BienInversionDisposalIncompleteError",
-    "declare_bien_inversion",
+    "build_bien_inversion_record",
+    "persist_bien_inversion_record",
     "resolve_bien_inversion_disposal",
 ]

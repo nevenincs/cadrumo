@@ -26,7 +26,7 @@ So every case here runs in the configuration where the guards are inert, and
 that they are. What survives is the selection alone.
 
 See Also:
-    :func:`~application.ledger.invoice_confirmation.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_confirmation.prepare_invoice_confirmation_from_evidence`
         The confirm step whose side selection these cases pin.
     :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         Carries the two printed parties the selection chooses between.
@@ -43,7 +43,6 @@ import pytest
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
-from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from cadrumo.application.ledger.preconditions import LedgerPreconditionCondition
 from cadrumo.core.config import Settings
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -60,6 +59,7 @@ from ._invoice_confirmation_test_support import (
     serving_a_loopback_reader,
 )
 from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]

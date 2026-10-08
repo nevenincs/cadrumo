@@ -94,7 +94,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\t0cd656fe8ae4c7387bef5c335a4fcec3e8ffe314d34269147920f60a72052eec\nDate\t2026-03-10\nAmount\t121\nDescription\tMaterial de oficina\nReview status\tpending\n"
+      "text": "ID\t0cd656fe8ae4c7387bef5c335a4fcec3e8ffe314d34269147920f60a72052eec\nDate\t2026-03-10\nAmount\t121\nDescription\tMaterial de oficina\nReview status\tpending\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -110,7 +110,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "review_status": "pending",
@@ -155,7 +163,7 @@
           "transaction_id": "0cd656fe8ae4c7387bef5c335a4fcec3e8ffe314d34269147920f60a72052eec"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename'
 date: '2026-07-15'
-modified: '2026-07-15'
-body_hash: 'sha256:066ccd8433f30af4fcc46db4797834f103f597c2fdb208bc2ecc1b174e5e39dc'
+modified: '2026-10-03'
+body_hash: 'sha256:182b7426ddaa834311151c450359b342627486b7b3f9db670be6016828503058'
 related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-14-cadrumo-product-rename-s76-residue-audit]]"
 ---
 
@@ -76,7 +75,7 @@ voided by a status note. Coherent at HEAD; not a defect.
 ### aeat-settings-mixin-residue | medium | Deferred and tracked: `Aeat*Settings` mixin chain carries majority-app-owned fields
 
 `AeatTimeoutSettings` / `AeatRuntimeSettings` / `AeatIntegrationSettings`
-(`src/cadrumo/core/_config_timeouts.py`, `_config_runtime_fields.py`,
+(the retired module, `_config_runtime_fields.py`,
 `_config_integration_fields.py`, inherited by `Settings` in
 `core/config.py`) mix AEAT-scoped fields with fields that have no AEAT
 relationship (LLM endpoints, file-lock timeouts, log rotation); per the

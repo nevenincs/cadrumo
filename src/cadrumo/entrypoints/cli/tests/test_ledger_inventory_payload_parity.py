@@ -1,32 +1,8 @@
-"""Inventory transport rows must refuse what the canonical inventory models refuse.
+"""Registered inventory projections preserve the legacy CLI envelope bounds.
 
-The inventory CLI envelope is built by dumping a canonical
-:class:`~domain.contribuyente.inventory.InventoryLedger` to JSON text and
-re-validating that text (``_ledger_inventory_cli.py``: ``payload =
-json.loads(ledger.model_dump_json())``, merge in ``bucket_event_ids``, then
-``model_validate_json(json.dumps(payload))``). The wire representation renders
-every ``Decimal`` as a string, every ``StrEnum`` as its bare value, and the
-movement date as an ISO string, so the transport rows declare them as plain
-``str``/``int`` and carry the canonical bound on the text: a blank SKU, a zero
-quantity, a bogus valuation method, an IVA rate of 101, a deductible ratio of
-2, and year 1800 all cross the envelope otherwise.
-
-The rows stay plain ``str``/``int`` by wire-format choice (every value renders
-as canonical text on this transport), not because a typed field is
-unreachable: a genuine JSON-text round trip (``model_validate_json``) does
-coerce a bare ``'fifo'`` string into an enum-typed field or an ISO string into
-a ``date`` field. An earlier version of this bridge round-tripped through
-``model_validate(dict)`` over a ``model_dump(mode="json")`` payload, which
-could NOT accept a typed field this way -- pydantic v2 strict mode only
-relaxes ``StrEnum``/``datetime``/``tuple`` coercion for genuine JSON text, never
-for an already-constructed Python dict. That was the reason typed rows were
-never attempted here, and it is the same round-trip landmine every
-``model_validate(x.model_dump(mode="json"))`` call site in this codebase
-shared; the mechanism is now the safe JSON-text form everywhere.
-
-:meth:`TestCanonicalBridge.test_real_dump_bridge_round_trips` is the load-bearing
-test: it drives the exact construction the CLI performs, so a regression that
-re-breaks the bridge fails here rather than at an operator's terminal.
+The application now emits a typed, evidence-redacted ledger projection. The
+CLI bridge unwraps its tagged decimal scalars and validates the established
+transport payload through JSON text, preserving the existing envelope shape.
 """
 
 from __future__ import annotations
@@ -38,6 +14,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....application.inventory.registered_projections import InventoryLedgerProjection
 from ....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
     InventoryLedger,
@@ -46,13 +23,13 @@ from ....domain.contribuyente.inventory.records import (
     StockLayer,
     ValuationMethod,
 )
-from .._ledger_inventory_cli import _safe_inventory_ledger_payload
 from ..ledger_business_payloads import (
     InventoryCreateResult,
     InventoryLedgerPayload,
     InventoryMovementPayload,
     InventoryStockLayerPayload,
 )
+from ..runtime_ledger_inventory import _ledger_payload_json
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -174,11 +151,12 @@ def _ledger_row(**overrides: object) -> InventoryLedgerPayload:
 
 
 class TestCanonicalBridge:
-    """The production dump/validate bridge must keep working."""
+    """The registered projection and production dump/validate bridge agree."""
 
     def test_real_dump_bridge_round_trips(self) -> None:
-        """Drive the exact construction ``_ledger_inventory_cli`` performs."""
-        payload = _safe_inventory_ledger_payload(_canonical_ledger())
+        """Drive the exact construction ``runtime_ledger_inventory`` performs."""
+        ledger = InventoryLedgerProjection.from_ledger(_canonical_ledger())
+        payload = json.loads(_ledger_payload_json(ledger))
         payload["bucket_event_ids"] = ["evt-1"]
 
         result = InventoryCreateResult.model_validate_json(json.dumps(payload))
@@ -190,7 +168,8 @@ class TestCanonicalBridge:
 
     def test_bridge_output_is_wire_identical(self) -> None:
         """Validation must not reshape the JSON the operator receives."""
-        payload = _safe_inventory_ledger_payload(_canonical_ledger())
+        ledger = InventoryLedgerProjection.from_ledger(_canonical_ledger())
+        payload = json.loads(_ledger_payload_json(ledger))
         payload["bucket_event_ids"] = []
 
         rendered = InventoryCreateResult.model_validate_json(json.dumps(payload)).model_dump(mode="json")

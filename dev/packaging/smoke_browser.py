@@ -8,16 +8,15 @@ from pathlib import Path
 
 from dev._paths import REPO_ROOT
 
+from .dependency_contract import requirement_name, wheel_metadata
 from .lane_verification_core import (
     install_wheel,
     relative_manifest_path,
     require_executable,
-    requirement_name,
     resolve_work_dir,
     run_checked,
     run_checked_marker,
     venv_python_path,
-    wheel_metadata,
     write_smoke_manifest,
 )
 from .proof_ledger import record_proof
@@ -53,7 +52,6 @@ def _browser_env(work_dir: Path) -> dict[str, str]:
     storage_root.mkdir(parents=True, exist_ok=True)
     return {
         **os.environ,
-        "CADRUMO_BROWSER_CHANNEL": "chromium",
         "CADRUMO_BROWSER_HEADLESS": "true",
         "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
         "CADRUMO_OUTPUT_LANGUAGE": "en",
@@ -109,10 +107,9 @@ thread.start()
 
 async def main():
     settings = load_settings()
-    if settings.cadrumo_browser_channel != "chromium" or settings.cadrumo_browser_headless is not True:
+    if settings.cadrumo_browser_headless is not True:
         raise SystemExit(
-            "browser smoke did not resolve canonical Chromium/headless settings: "
-            f"channel={settings.cadrumo_browser_channel!r} headless={settings.cadrumo_browser_headless!r}"
+            f"browser smoke did not resolve canonical headless settings: headless={settings.cadrumo_browser_headless!r}"
         )
     browser_session = await default_browser_session_factory(settings)
     try:
@@ -206,6 +203,7 @@ def main(argv: list[str] | None = None) -> int:
             "wheel": relative_manifest_path(work_dir, wheel),
             "data_wheel_manuals": relative_manifest_path(work_dir, cohort.manuals_wheel),
             "data_wheel_official": relative_manifest_path(work_dir, cohort.official_wheel),
+            "data_wheel_normatives": relative_manifest_path(work_dir, cohort.normatives_wheel),
             "venv": relative_manifest_path(work_dir, venv),
             "playwright_browsers": relative_manifest_path(work_dir, Path(env["PLAYWRIGHT_BROWSERS_PATH"])),
         },

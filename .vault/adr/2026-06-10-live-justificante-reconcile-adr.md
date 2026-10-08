@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#live-justificante-reconcile'
 date: '2026-06-10'
-modified: '2026-09-02'
-body_hash: 'sha256:783673e345d923e76e3a2e0e5e7f0b4ce249153791272766264dd727c3ee5178'
+modified: '2026-10-04'
+body_hash: 'sha256:baa6b542001bf18f4469c7d2fc1ca21e6a16469ab81539e18f502e9c315d3c25'
 related:
   - '[[2026-06-10-live-justificante-reconcile-research]]'
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
@@ -152,6 +152,10 @@ landed: the stamp lives in `application/live/justificante.py`, alongside the
 capture it annotates. The `application/live/_verify.py` path named here never
 existed under that name; the module is `application/live/verify.py`, and it is
 scoped to NIF-IVA and TGVI, so it was not a safe home for this.
+
+### Receipt selection correction (2026-10-04)
+
+Live verification established that a period-bearing declaration-register row can expose its authentic receipt while having no counterpart in the separate procedure tree. The tree cross-reference described above is replaced by selecting the exact modelo/year/period register row, preferring its accepted/latest presentation, then reopening and validating that row before following its guarded receipt control. A missing row or receipt still refuses; another period is never substituted. Encrypted persistence, content-addressed identity, CSV authenticity and parsed receipt validation remain unchanged. This correction restores the authorized live reconciliation flow without changing its read-only or persist-before-consume boundaries.
 
 ## Rationale
 

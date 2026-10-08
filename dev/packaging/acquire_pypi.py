@@ -19,10 +19,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from dev._paths import UTF_8
 
 from .acquire_common import (
-    PYTHON_COHORT_WHEEL_NAMES,
     AcquisitionError,
     require_command_succeeded,
     run_installed_cli_oracle,
@@ -77,7 +77,7 @@ def _download_cohort_wheels(
     serve the promoted version for any distribution.
     """
     download_dir.mkdir(parents=True, exist_ok=True)
-    for distribution in PYTHON_COHORT_WHEEL_NAMES:
+    for distribution in PRODUCT_IDENTITY.cohort_distributions:
         version = cohort.version
         completed = _run(
             [
@@ -190,6 +190,7 @@ def run_pypi_acquisition(
             f"cadrumo=={cohort.version}",
             f"cadrumo-data-manuals=={cohort.version}",
             f"cadrumo-data-official=={cohort.version}",
+            f"cadrumo-data-normatives=={cohort.version}",
         ],
         cwd=run_root,
         log=logs / "uv-pip-install.log",
@@ -220,7 +221,7 @@ def run_pypi_acquisition(
         "cohort": {
             "source_digest": cohort.source_digest,
             "version": cohort.version,
-            "sha256": {name: cohort.sha256[name] for name in PYTHON_COHORT_WHEEL_NAMES},
+            "sha256": {name: cohort.sha256[name] for name in PRODUCT_IDENTITY.cohort_distributions},
         },
         "verified_wheels": {name: str(path) for name, path in verified.items()},
         "installed_tax_oracle": tax_evidence.to_jsonable(),

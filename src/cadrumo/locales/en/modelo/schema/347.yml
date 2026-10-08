@@ -1,6 +1,23 @@
 modelo:
   schema:
     '347':
+      binding:
+        modelo-347-declarante-importe-total-anual-operaciones:
+          help: Field declared on modelo 347, the annual return of transactions with
+            third parties.
+          label: TOTAL ANNUAL AMOUNT OF THE TRANSACTIONS
+        modelo-347-declarante-importe-total-arrendamiento-locales:
+          help: Field declared on modelo 347, the annual return of transactions with
+            third parties.
+          label: TOTAL AMOUNT OF BUSINESS PREMISES LEASE TRANSACTIONS
+        modelo-347-declarante-numero-inmuebles:
+          help: Field declared on modelo 347, the annual return of transactions with
+            third parties.
+          label: TOTAL NUMBER OF PROPERTIES
+        modelo-347-declarante-numero-personas-entidades:
+          help: Field declared on modelo 347, the annual return of transactions with
+            third parties.
+          label: TOTAL NUMBER OF PERSONS AND ENTITIES
       casilla:
         continuidad:
           arrendamiento-local-negocio:
@@ -24,8 +41,7 @@ modelo:
               with third parties.
             label: SUPPLEMENTARY OR REPLACEMENT RETURN
           contraparte-clave-operacion:
-            label: Transaction code with the counterparty (A=supplies, B=acquisitions,
-              ...)
+            label: 'Transaction code (A: purchases; B: supplies of goods and services)'
           contraparte-importe-q1:
             label: Amount of transactions with the counterparty in the first quarter
           contraparte-importe-q2:
@@ -70,14 +86,6 @@ modelo:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
             label: AMOUNT RECEIVED IN CASH
-          importe-total-anual-operaciones:
-            help: Field declared on modelo 347, the annual return of transactions
-              with third parties.
-            label: TOTAL ANNUAL AMOUNT OF THE TRANSACTIONS
-          importe-total-arrendamiento-locales:
-            help: Field declared on modelo 347, the annual return of transactions
-              with third parties.
-            label: TOTAL AMOUNT OF BUSINESS PREMISES LEASE TRANSACTIONS
           importe-transmisiones-inmuebles:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
@@ -114,6 +122,12 @@ modelo:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
             label: INSURANCE TRANSACTION
+          papel-firma-cargo:
+            label: Position or job title
+          papel-firma-fecha:
+            label: Date
+          papel-firma-nombre:
+            label: Signatory name
           persona-con-quien-relacionarse:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
@@ -136,18 +150,6 @@ modelo:
             label: LOCATION OF THE PROPERTY
           tipo-declaracion:
             label: Return type (original / substitute / supplementary)
-          tipo-soporte:
-            help: Field declared on modelo 347, the annual return of transactions
-              with third parties.
-            label: MEDIUM TYPE
-          total-inmuebles:
-            help: Field declared on modelo 347, the annual return of transactions
-              with third parties.
-            label: TOTAL NUMBER OF PROPERTIES
-          total-personas-entidades:
-            help: Field declared on modelo 347, the annual return of transactions
-              with third parties.
-            label: TOTAL NUMBER OF PERSONS AND ENTITIES
       construct:
         modelo-347-informative:
           field:
@@ -155,6 +157,62 @@ modelo:
       field:
         official_name: Modelo 347. Annual return of transactions with third parties.
         title: Transactions with third parties (annual informative return)
+      form:
+        column:
+          operaciones:
+            heading: Transaction amount
+          transmisiones:
+            heading: Property transfers subject to VAT
+        context:
+          anterior:
+            heading: Previous declaration receipt number
+          nif:
+            heading: Declarant tax ID
+          nombre:
+            heading: Full name or legal name
+        page:
+          m347-declarado:
+            heading: Persons and entities
+          m347-declarante:
+            heading: Summary page
+          m347-inmueble:
+            heading: Business premises rentals
+        row:
+          trimestre-1:
+            heading: Q1
+          trimestre-2:
+            heading: Q2
+          trimestre-3:
+            heading: Q3
+          trimestre-4:
+            heading: Q4
+        section:
+          contacto:
+            heading: Contact person
+          declaracion:
+            heading: Declaration details
+          firma:
+            heading: Date and signature
+          identificacion:
+            heading: Declarant identification
+          resumen:
+            heading: Declaration summary
+        signature:
+          administracion:
+            heading: Space reserved for the administration
+          paper:
+            heading: Paper form space
+          space:
+            heading: Handwritten signature
+        summary:
+          arrendamientos:
+            heading: Total business premises rental amount
+          inmuebles:
+            heading: Total properties
+          operaciones:
+            heading: Total annual transaction amount
+          personas:
+            heading: Total persons and entities
       revision:
         2011-2024:
           casilla:

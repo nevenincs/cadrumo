@@ -1,21 +1,11 @@
-"""One observation-fold helper for cross-filing fold-ins.
+"""Match source filings and fold their values for canonical relation requirements.
 
-The single gather-and-fold primitive shared by both relation fold paths (the
-application-layer relation prefill and the domain-layer
-:func:`domain.calculations.registry.relations.resolve_relation_values_from_observations`).
-It matches the source filings a
-:class:`~domain.calculations.registry.relations.RegistryFoldRequirement` declares and
-extracts the source casilla value per period, then folds the gathered values
-through the requirement's declared ``copy`` / ``sum`` aggregation to one
-:class:`~decimal.Decimal`.
-
-Lives in the domain registry package (not the application source mesh) because
-the domain relation resolver consumes it and the hexagonal direction forbids a
-domain module importing the application layer.
+The registry-declared source casillas, periods and aggregation determine the
+values supplied to relation prefill and previous-filing binding resolution.
 
 See Also:
     :mod:`domain.calculations.registry.relations`
-        Domain relation resolver that gathers and folds requirements here.
+        Registry requirements describing the source-filing folds.
     :mod:`domain.calculations.registry.bindings_previous_filing`
         Previous-filing binding resolver that reuses :func:`fold_sum_or_copy`.
 """

@@ -34,6 +34,47 @@ modelo:
           e IRNR establecimientos permanentes. Determinados rendimientos del capital
           mobiliario o determinadas rentas.
         title: Retenciones sobre capital mobiliario
+      form:
+        column:
+          base: Base de retenciones e ingresos a cuenta
+          dividendos: Dividendos y otras rentas de participación en fondos propios
+            de entidades
+          ingresos-anteriores: Ingresos de ejercicios anteriores
+          numero-perceptores: Número de perceptores
+          otras-rentas: Resto de rentas
+          regularizacion: Regularización
+          retenciones: Retenciones e ingresos a cuenta
+          totales: Totales
+        context:
+          apellidos: Apellidos o razón social
+          declaracion-complementaria: Autoliquidación complementaria
+          ejercicio: Ejercicio
+          iban: Código IBAN
+          justificante-anterior: N.º de justificante de la autoliquidación anterior
+          nif: NIF
+          nombre: Nombre
+          nombre-completo: Apellidos y nombre o razón social
+          periodo: Período
+        page:
+          dr-12301:
+            heading: Retenciones sobre rendimientos del capital mobiliario y determinadas
+              rentas
+        row:
+          base: Base de retenciones e ingresos a cuenta
+          numero-rentas: Número de rentas
+          periodificacion: Periodificación
+          retenciones: Retenciones e ingresos a cuenta
+        section:
+          complementaria:
+            heading: Complementaria (6)
+          devengo:
+            heading: Devengo (2)
+          identificacion:
+            heading: Identificación (1)
+          ingreso:
+            heading: Ingreso (4)
+          liquidacion:
+            heading: Liquidación (3)
       revision:
         2019-2023:
           casilla:

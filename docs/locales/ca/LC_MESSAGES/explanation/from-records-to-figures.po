@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 21:27+0200\n"
+"POT-Creation-Date: 2026-10-02 00:43+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -25,36 +25,36 @@ msgstr "Com els teus registres es converteixen en xifres tributàries"
 #: ../../explanation/from-records-to-figures.md:3
 msgid ""
 "This page covers where the numbers on your tax form come from: how a "
-"plain bank movement turns into a figure for each numbered box on an "
+"plain bank transaction turns into a figure for each numbered box on an "
 "official form, and why the tool is built to let you explain every figure "
 "later. It walks through the idea, not the buttons - the how-to guides "
 "linked from each section carry the commands."
 msgstr ""
-"Aquesta pàgina tracta d'on provenen els números del teu formulari "
-"tributari: com una simple transacció bancària es converteix en una xifra "
-"per a cada casilla numerada d'un formulari oficial, i per què l'eina està"
-" construïda perquè puguis explicar cada xifra més endavant. Recorre la "
-"idea, no els botons: les guies pràctiques enllaçades des de cada secció "
-"porten les ordres."
+"Aquesta pàgina tracta d'on provenen els números del teu model tributari: "
+"com un simple moviment bancari es converteix en una xifra per a cada "
+"casella numerada d'un model oficial, i per què l'eina està construïda "
+"perquè puguis explicar cada xifra més endavant. Recorre la idea, no els "
+"botons: les guies pràctiques enllaçades des de cada secció porten les "
+"ordres."
 
 #: ../../explanation/from-records-to-figures.md:9
 #, python-brace-format
 msgid ""
-"The forms in question are modelos that you file with the {term}`AEAT`. "
-"Each modelo is made of {term}`casillas <casilla>`. Your job, with the "
+"The forms in question are modelos that you send to the {term}`AEAT`. Each"
+" modelo is made of numbered {term}`boxes <casilla>`. Your job, with the "
 "tool's help, is to put the right figure in each box and to keep the "
-"evidence behind it."
+"supporting documents behind it."
 msgstr ""
-"Els formularis en qüestió són modelos que presentes a l'{term}`AEAT`. "
-"Cada modelo està fet de {term}`casillas <casilla>`. La teva feina, amb "
-"l'ajuda de l'eina, és posar la xifra correcta a cada casilla i conservar "
-"la prova que hi ha al darrere."
+"Es tracta de models que presentes a l'{term}`AEAT`. Cada model està fet "
+"de {term}`caselles <casilla>` numerades. La teva feina, amb l'ajuda de "
+"l'eina, és posar la xifra correcta a cada casella i conservar els "
+"justificants que hi ha al darrere."
 
-#: ../../explanation/from-records-to-figures.md:11
-msgid "A bank movement means nothing on its own"
-msgstr "Una transacció bancària no significa res per si sola"
+#: ../../explanation/from-records-to-figures.md:12
+msgid "A bank transaction means nothing on its own"
+msgstr "Un moviment bancari no significa res per si sola"
 
-#: ../../explanation/from-records-to-figures.md:13
+#: ../../explanation/from-records-to-figures.md:14
 msgid ""
 "A line on a bank statement is just a date and an amount. The money moved,"
 " but the statement doesn't know whether it was a customer paying you, a "
@@ -66,37 +66,37 @@ msgstr ""
 "proveïdor a qui pagaves, la compra setmanal o una transferència entre els"
 " teus propis comptes."
 
-#: ../../explanation/from-records-to-figures.md:15
+#: ../../explanation/from-records-to-figures.md:16
 msgid ""
 "Tax meaning isn't in the bank data. You add it. Until you do, a movement "
 "can't count toward any box on any form."
 msgstr ""
 "El significat tributari no és a les dades bancàries. L'hi afegeixes tu. "
-"Fins que no ho fas, una transacció no pot comptar per a cap casilla de "
-"cap formulari."
+"Fins que no ho fas, un moviment no pot comptar per a cap casella de cap "
+"model."
 
-#: ../../explanation/from-records-to-figures.md:17
+#: ../../explanation/from-records-to-figures.md:18
 msgid "Making a record tax-ready"
 msgstr "Preparar un registre per a efectes tributaris"
 
-#: ../../explanation/from-records-to-figures.md:19
+#: ../../explanation/from-records-to-figures.md:20
 msgid ""
 "To give a movement tax meaning, you turn it into a sorted, categorized "
 "record. A tax-ready record carries three things:"
 msgstr ""
-"Per donar significat tributari a una transacció, la converteixes en un "
+"Per donar significat tributari a un moviment, la converteixes en un "
 "registre classificat i categoritzat. Un registre preparat per a efectes "
 "tributaris porta tres coses:"
 
-#: ../../explanation/from-records-to-figures.md:21
+#: ../../explanation/from-records-to-figures.md:22
 msgid "a business, personal, or mixed decision;"
 msgstr "una decisió d'activitat, personal o mixta;"
 
-#: ../../explanation/from-records-to-figures.md:22
+#: ../../explanation/from-records-to-figures.md:23
 msgid "a category, such as customer sales or office supplies;"
 msgstr "una categoria, com ara vendes a clients o material d'oficina;"
 
-#: ../../explanation/from-records-to-figures.md:23
+#: ../../explanation/from-records-to-figures.md:24
 msgid ""
 "and, for a mixed cost, the business-versus-personal split, so only the "
 "business share counts."
@@ -104,21 +104,21 @@ msgstr ""
 "i, per a una despesa mixta, la proporció entre activitat i ús personal, "
 "de manera que només compti la part afecta a l'activitat."
 
-#: ../../explanation/from-records-to-figures.md:25
+#: ../../explanation/from-records-to-figures.md:26
 msgid ""
 "A record that has all of this is ready to feed into a calculation. To do "
 "this for your own movements, see [Classify transactions](../how-to"
 "/classify-transactions.md)."
 msgstr ""
 "Un registre que té tot això està a punt per alimentar un càlcul. Per fer-"
-"ho amb les teves pròpies transaccions, consulta [Classifica les "
-"transaccions](../how-to/classify-transactions.md)."
+"ho amb les teves pròpies moviments, consulta [Classifica els moviments"
+"](../how-to/classify-transactions.md)."
 
-#: ../../explanation/from-records-to-figures.md:27
+#: ../../explanation/from-records-to-figures.md:28
 msgid "Splitting a mixed cost, and checking readiness"
 msgstr "Repartir una despesa mixta, i comprovar la preparació"
 
-#: ../../explanation/from-records-to-figures.md:29
+#: ../../explanation/from-records-to-figures.md:30
 msgid ""
 "Some costs serve both your business and your private life - a phone bill,"
 " home internet, a home office. Only the business share counts, and the "
@@ -135,7 +135,7 @@ msgstr ""
 "registrades; consulta [el flux d'ús mixt](../how-to/classify-"
 "transactions.md#classify-mixed-use-transactions)."
 
-#: ../../explanation/from-records-to-figures.md:35
+#: ../../explanation/from-records-to-figures.md:36
 msgid ""
 "Before the tool adds anything up, a readiness check flags each record in "
 "the period that is still missing a decision, a category, a tax figure, a "
@@ -149,22 +149,22 @@ msgstr ""
 "una xifra tributària, una referència de repartiment o una moneda "
 "convertible. La comprovació no canvia res; t'indica quins registres no "
 "estan a punt perquè arreglis la matèria primera abans de confiar en cap "
-"total; consulta la secció de preparació de [Importa i gestiona les "
-"transaccions](../how-to/import-bank-statements.md)."
+"total; consulta la secció de preparació de [Importa i gestiona els "
+"moviments](../how-to/import-bank-statements.md)."
 
-#: ../../explanation/from-records-to-figures.md:42
+#: ../../explanation/from-records-to-figures.md:43
 msgid "Which form, and which period"
-msgstr "Quin formulari, i quin període"
+msgstr "Quin model, i quin període"
 
-#: ../../explanation/from-records-to-figures.md:44
+#: ../../explanation/from-records-to-figures.md:45
 msgid ""
 "A calculation is always for one form, one year, and one period. The "
 "period decides which of your records count."
 msgstr ""
-"Un càlcul sempre és per a un formulari, un any i un període. El període "
+"Un càlcul sempre és per a un model, un any i un període. El període "
 "decideix quins dels teus registres compten."
 
-#: ../../explanation/from-records-to-figures.md:46
+#: ../../explanation/from-records-to-figures.md:47
 msgid ""
 "A period is a quarter, a single month, or a whole year. The tool turns it"
 " into a start and end date, then keeps only the records whose date falls "
@@ -177,28 +177,29 @@ msgstr ""
 " en una data d'inici i una de fi, i després conserva només els registres "
 "la data dels quals cau dins d'aquesta finestra. Una presentació del "
 "primer trimestre veu de gener a març; una presentació de març només veu "
-"març. Alguns formularis compten de manera acumulada: un pagament "
-"fraccionat del Modelo 130 llegeix l'any fins a la data, de manera que la "
-"presentació del segon trimestre veu de gener a juny."
+"març. Alguns models compten de manera acumulada: un pagament fraccionat "
+"del Modelo 130 llegeix l'any fins a la data, de manera que la presentació"
+" del segon trimestre veu de gener a juny."
 
-#: ../../explanation/from-records-to-figures.md:48
+#: ../../explanation/from-records-to-figures.md:49
+#, python-brace-format
 msgid ""
 "Choosing the right form for your activity is its own decision - see [Find"
 " out which modelos apply to you](../how-to/choose-modelo.md). For how "
-"quarters, months, and annual periods map to dates, see [Period tokens and"
-" dates](../how-to/filing-calendar.md#period-tokens-and-dates)."
+"quarters, months, and annual periods map to dates, see {ref}`Period codes"
+" and dates <period-tokens-and-dates>`."
 msgstr ""
-"Triar el formulari adequat per a la teva activitat és una decisió a part;"
-" consulta [Descobreix quins modelos t'apliquen](../how-to/choose-"
+"Triar el model adequat per a la teva activitat és una decisió a part; "
+"consulta [Descobreix quins models t'apliquen](../how-to/choose-"
 "modelo.md). Per veure com els trimestres, els mesos i els períodes anuals"
-" es corresponen amb dates, consulta [Tokens de període i dates](../how-to"
-"/filing-calendar.md#period-tokens-and-dates)."
+" es corresponen amb dates, consulta {ref}`Codis de període i dates "
+"<period-tokens-and-dates>`."
 
-#: ../../explanation/from-records-to-figures.md:50
+#: ../../explanation/from-records-to-figures.md:51
 msgid "From records to numbered boxes"
-msgstr "Dels registres a les casillas numerades"
+msgstr "Dels registres a les caselles numerades"
 
-#: ../../explanation/from-records-to-figures.md:52
+#: ../../explanation/from-records-to-figures.md:53
 msgid ""
 "Here's where the figures appear. The tool reads two things: your tax-"
 "ready records for the period, and your profile - who you are and what you"
@@ -208,7 +209,7 @@ msgstr ""
 "registres preparats per a efectes tributaris del període, i el teu "
 "perfil: qui ets i què fas."
 
-#: ../../explanation/from-records-to-figures.md:54
+#: ../../explanation/from-records-to-figures.md:55
 msgid ""
 "It then applies the rules the agency publishes for that form. Those rules"
 " decide which input feeds which box, and how the boxes relate to each "
@@ -218,16 +219,16 @@ msgid ""
 "a net figure, a rate applied to reach the tax due - until every box on "
 "the form holds a figure."
 msgstr ""
-"Després aplica les regles que l'agència publica per a aquell formulari. "
-"Aquestes regles decideixen quina entrada alimenta quina casilla, i com es"
-" relacionen les casillas entre si. Una despesa que has marcat com a "
-"material d'oficina va a parar a la casilla per a aquell tipus de despesa."
-" Els ingressos van a la seva pròpia casilla. A partir d'aquí, les regles "
+"Després aplica les regles que l'agència publica per a aquell model. "
+"Aquestes regles decideixen quina entrada alimenta quina casella, i com es"
+" relacionen les caselles entre si. Una despesa que has marcat com a "
+"material d'oficina va a parar a la casella per a aquell tipus de despesa."
+" Els ingressos van a la seva pròpia casella. A partir d'aquí, les regles "
 "sumen, resten i apliquen tipus (ingressos totals menys despeses deduïbles"
 " per arribar a una xifra neta, un tipus aplicat per arribar a l'impost a "
-"pagar) fins que cada casilla del formulari conté una xifra."
+"pagar) fins que cada casella del model conté una xifra."
 
-#: ../../explanation/from-records-to-figures.md:56
+#: ../../explanation/from-records-to-figures.md:57
 msgid ""
 "You don't wire any of this by hand. You make your records tax-ready and "
 "keep your profile current; the published rules do the routing and the "
@@ -237,11 +238,11 @@ msgstr ""
 "tributaris i mantens el teu perfil actualitzat; les regles publicades fan"
 " l'encaminament i l'aritmètica."
 
-#: ../../explanation/from-records-to-figures.md:58
+#: ../../explanation/from-records-to-figures.md:59
 msgid "Tracing a number back to the law"
 msgstr "Traçar un número fins a la llei"
 
-#: ../../explanation/from-records-to-figures.md:60
+#: ../../explanation/from-records-to-figures.md:61
 msgid ""
 "Every figure the tool produces keeps three things attached: the rule that"
 " produced it, the law article behind that rule, and the official source "
@@ -250,11 +251,11 @@ msgid ""
 msgstr ""
 "Cada xifra que produeix l'eina manté tres coses associades: la regla que "
 "la va produir, l'article de llei que hi ha darrere d'aquesta regla, i la "
-"font oficial que l'explica, com ara un manual de l'AEAT o el formulari "
-"del BOE. Les xifres d'entrada que has introduït tu mateix porten el "
-"mateix rastre fins a la seva font."
+"font oficial que l'explica, com ara un manual de l'AEAT o el model del "
+"BOE. Les xifres d'entrada que has introduït tu mateix porten el mateix "
+"rastre fins al seu origen."
 
-#: ../../explanation/from-records-to-figures.md:62
+#: ../../explanation/from-records-to-figures.md:63
 msgid ""
 "This is the point of the whole design. Spanish tax filing expects you to "
 "justify every number. If an inspector asks why a box holds a certain "
@@ -263,31 +264,30 @@ msgid ""
 msgstr ""
 "Aquest és el sentit de tot el disseny. La presentació tributària "
 "espanyola espera que justifiquis cada número. Si un inspector pregunta "
-"per què una casilla conté una xifra determinada, pots mostrar els "
+"per què una casella conté una xifra determinada, pots mostrar els "
 "registres que hi ha al darrere i la regla i la llei que van convertir "
 "aquells registres en aquella xifra. Res no és una caixa negra."
 
-#: ../../explanation/from-records-to-figures.md:64
+#: ../../explanation/from-records-to-figures.md:65
 msgid "Where this sits in the journey"
 msgstr "On se situa això dins del recorregut"
 
-#: ../../explanation/from-records-to-figures.md:66
+#: ../../explanation/from-records-to-figures.md:67
 msgid ""
 "This page is part of understanding the AEAT pipeline - how your data "
-"flows from bank statement to filed form."
+"flows from bank statement to the form you file."
 msgstr ""
 "Aquesta pàgina forma part de la comprensió del flux de l'AEAT: com les "
-"teves dades flueixen de l'extracte bancari al formulari presentat."
+"teves dades flueixen de l'extracte bancari al model que presentes."
 
-#: ../../explanation/from-records-to-figures.md:68
+#: ../../explanation/from-records-to-figures.md:69
 msgid "Start at the [how-it-works overview](index.md)."
 msgstr "Comença per la [visió general del funcionament](index.md)."
 
-#: ../../explanation/from-records-to-figures.md:69
+#: ../../explanation/from-records-to-figures.md:70
 msgid ""
-"Continue to the next stage: [Editing and verifying a calculation"
-"](editing-and-verifying.md)."
+"Continue to the next stage: [Editing and checking a calculation](editing-"
+"and-verifying.md)."
 msgstr ""
-"Continua amb l'etapa següent: [Editar i verificar un càlcul](editing-and-"
+"Continua amb l'etapa següent: [Editar i comprovar un càlcul](editing-and-"
 "verifying.md)."
-

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:bdf769d29eccefe3c17d0397c3722c8c22bda5c8b70db61ffb1437b9ba868f2a'
+body_hash: 'sha256:0d41c73751701d6472de3eef4761bdf76c0d8319f2b0ba0bfef029a0723a58d9'
 related: []
 ---
-
 # `calculation-correctness-campaign` audit: the M303-to-M390 handoff test cluster
 
 ## Scope
@@ -23,7 +22,9 @@ quarterly-IVA-folds-into-the-annual-return chain, sharing three causes.
 No production defect was found. Every refusal below is a guard behaving as
 designed; what is stale is the tests' picture of the filing contract.
 
-## Cause 1 -- a caller zero over a source-owned liability (FIXED)
+## Findings
+
+### Cause 1 -- a caller zero over a source-owned liability (FIXED)
 
 `_reject_caller_overrides_of_source_bindings` refuses caller casilla inputs that
 collide with casillas the bucket aggregation owns. The colliding casilla is
@@ -41,7 +42,7 @@ supply, so the ledger resolver supplies the same zero.
 The binding predates every commit in this campaign; `git log -S` on the binding id
 attributes it to earlier registry work.
 
-## Cause 2 -- a Modelo 303 filing needs its resolved result disposition (FIXED)
+### Cause 2 -- a Modelo 303 filing needs its resolved result disposition (FIXED)
 
 `require_filing_result_disposition` refuses an M303 filing whose
 `result_disposition` is `None`. Its docstring is explicit that this is "a PRESENCE
@@ -53,7 +54,7 @@ The test called `persist_filed_revision_observation` without one. Fixed in
 `resolve_modelo_result_disposition` against the seeded profile projected by
 `active_taxpayer_profile`, rather than asserting a value in the test.
 
-## Cause 3 -- the annual handoff requires genuinely FILED quarters (OPEN)
+### Cause 3 -- the annual handoff requires genuinely FILED quarters (OPEN)
 
 With the first two cleared, the test reaches
 `M303RegimenSimplificadoAnnualSummaryHandoffError`: "requires the current
@@ -71,7 +72,7 @@ an annual return. That is the conservative direction and harms no taxpayer -- it
 is the guard protecting the M390 from being built on quarters that were never
 filed.
 
-## Why this was not finished here
+### Why this was not finished here
 
 Completing cause 3 is not a fixture edit. It means building the verify-and-file
 chain across four quarters in a test this campaign does not own, and the same
@@ -83,7 +84,9 @@ The two fixed layers are independently correct and stand on their own. The third
 is recorded with its exact guard, its file and line, and the production action
 that satisfies it.
 
-## For an owner
+## Recommendations
+
+### For an owner
 
 Decide whether these five tests should drive the real calculate → verify → file
 chain, or whether the M303→M390 handoff deserves a shared test helper that

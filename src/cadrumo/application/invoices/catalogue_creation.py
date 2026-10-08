@@ -42,6 +42,7 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.currency.service import resolve_fx_conversion_stamp
+from ...domain.invoices.business_premises import BusinessPremisesLease
 from ...domain.invoices.enums import (
     InvoiceClass,
     IvaRate,
@@ -265,13 +266,7 @@ def _resolve_invoice_line_totals(
     of the one operator-supplied rate line.
     """
     if lines is not None:
-        if not lines:
-            raise InvoiceValidationError("lines must not be empty")
-        if not all(isinstance(item, InvoiceLine) for item in lines):
-            raise InvoiceValidationError("lines must be InvoiceLine records")
-        base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
-        iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
-        return base_total, iva_total, [item.model_dump(mode="json") for item in lines]
+        return _totals_from_supplied_invoice_lines(lines)
 
     if taxable_base is None:
         raise InvoiceValidationError("taxable_base is required when lines are not supplied")
@@ -291,6 +286,18 @@ def _resolve_invoice_line_totals(
             },
         ],
     )
+
+
+def _totals_from_supplied_invoice_lines(
+    lines: Sequence[InvoiceLine],
+) -> tuple[Decimal, Decimal, list[dict[str, object]]]:
+    if not lines:
+        raise InvoiceValidationError("lines must not be empty")
+    if not all(isinstance(item, InvoiceLine) for item in lines):
+        raise InvoiceValidationError("lines must be InvoiceLine records")
+    base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
+    iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
+    return base_total, iva_total, [item.model_dump(mode="json") for item in lines]
 
 
 def _apply_operator_asserted_invoice_facts(
@@ -352,6 +359,8 @@ def _apply_fx_conversion_stamp(
         invoice_payload["fx_rate"] = format(fx_stamp.rate, "f")
         invoice_payload["fx_rate_date"] = fx_stamp.rate_date.isoformat()
         invoice_payload["fx_rate_source"] = fx_stamp.source
+        if fx_stamp.observation_date is not None:
+            invoice_payload["fx_rate_observation_date"] = fx_stamp.observation_date.isoformat()
 
 
 def build_catalogue_invoice(
@@ -377,6 +386,7 @@ def build_catalogue_invoice(
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
     recargo_amount: Decimal | None = None,
+    business_premises_lease: BusinessPremisesLease | None = None,
     lines: Sequence[InvoiceLine] | None = None,
     rate_provider: CatalogueInvoiceRateProviderPort,
     operation: PinnedAuthorityOperation | None = None,
@@ -423,6 +433,11 @@ def build_catalogue_invoice(
     is settled outside it, which is why only the recargo enters the totals
     identity. The model re-checks that identity exactly, so a stated recargo
     the lines do not support refuses rather than being balanced silently.
+
+    ``business_premises_lease`` states that an issued invoice documents the
+    lease of a local de negocio and, when known, the premises' situación and
+    referencia catastral (RD 1065/2007 art. 34.1.d), which Modelo 347 relates
+    in its own declarado and inmueble records.
     """
     from ...domain.invoices.enums import iva_rate_percentage
 
@@ -450,6 +465,7 @@ def build_catalogue_invoice(
                 series=series,
                 rectifies_invoice_number=rectifies_invoice_number,
                 recargo_amount=recargo_amount,
+                business_premises_lease=business_premises_lease,
                 lines=lines,
                 rate_provider=rate_provider,
                 operation=indexed_operation,
@@ -526,6 +542,7 @@ def build_catalogue_invoice(
             effective_date=devengo_date,
             operation=operation,
         )
+        invoice_payload["business_premises_lease"] = business_premises_lease
         # The euro-conversion stamp. ``currency`` is already the canonical uppercase
         # ISO 4217 token (normalised once above), so the provider is queried with the
         # same token the record stores. WHICH date the rate is taken at, and when a

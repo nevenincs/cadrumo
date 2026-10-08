@@ -107,11 +107,8 @@ def _build_binding(
 
 # The row grouping each row-emitting family declares on its value contract.
 _ROW_GROUPING_BY_SOURCE: dict[str, str | None] = {
-    "related_party_operation": "related_party",
     "foreign_asset": "foreign_asset",
     "atribucion_member": "atribucion",
-    "refund_operation": "refund",
-    "donativo_donor": "donativo",
     "withholding": "withholding",
     "inventory": None,
 }
@@ -166,19 +163,11 @@ _FAMILY_CASES: tuple[
         BindingAggregationOp.COPY,
     ),
     (
-        "related_party_operation",
-        "related_party_operation",
-        {"fact": "row_field", "row_field": "amount"},
-        BindingAggregationOp.ROWS,
-        # row_field fact without a row_field selector key.
-        {"fact": "row_field"},
-        BindingAggregationOp.ROWS,
-    ),
-    (
         "foreign_asset",
         "foreign_asset",
         {"fact": "row_field", "row_field": "valuation_amount"},
         BindingAggregationOp.ROWS,
+        # row_field fact without a row_field selector key.
         {"fact": "row_field"},
         BindingAggregationOp.ROWS,
     ),
@@ -186,22 +175,6 @@ _FAMILY_CASES: tuple[
         "atribucion_member",
         "atribucion_member",
         {"fact": "row_field", "row_field": "base_imponible_assigned"},
-        BindingAggregationOp.ROWS,
-        {"fact": "row_field"},
-        BindingAggregationOp.ROWS,
-    ),
-    (
-        "refund_operation",
-        "refund_operation",
-        {"fact": "row_field", "row_field": "refund_amount"},
-        BindingAggregationOp.ROWS,
-        {"fact": "row_field"},
-        BindingAggregationOp.ROWS,
-    ),
-    (
-        "donativo_donor",
-        "donativo_donor",
-        {"fact": "row_field", "row_field": "amount_donated"},
         BindingAggregationOp.ROWS,
         {"fact": "row_field"},
         BindingAggregationOp.ROWS,

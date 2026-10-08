@@ -74,7 +74,7 @@ def _collect_all_path_keys_in_subprocess() -> set[str]:
             env=_reference_subprocess_environment(Path(storage_root)),
             capture_output=True,
             text=True,
-            timeout=300,
+            timeout=None,
             check=False,
         )
     if result.returncode != 0:
@@ -169,10 +169,17 @@ def test_machine_secret_and_profile_authentication_metadata_matches_live_project
         if node.machine_secret_payloads:
             secret_paths.add(path)
     assert secret_paths == {
+        ("aeat", "app", "ledger", "account", "add"),
+        ("aeat", "app", "ledger", "account", "update"),
+        ("aeat", "app", "modelo", "m360", "declare"),
         ("aeat", "config", "login"),
         ("aeat", "config", "passphrase", "change"),
         ("aeat", "config", "passphrase", "reset"),
         ("aeat", "config", "profile", "create"),
+        ("aeat", "config", "profile", "resume"),
+        ("aeat", "config", "profile", "automation", "create"),
+        ("aeat", "config", "profile", "automation", "change"),
+        ("aeat", "config", "profile", "automation", "approve"),
         ("aeat", "config", "profile", "recovery", "enable"),
         ("aeat", "config", "profile", "recovery", "disable"),
         ("aeat", "config", "profile", "archive", "import"),

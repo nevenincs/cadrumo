@@ -35,6 +35,10 @@ from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, 
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.period import Period
 
+from ...storage.envelope.tests.record_set_authoring import replace_records
+from ...storage.sql.tests.raw_key_writer import save_with_raw_key
+from .retencion_observation_authoring import replace_retencion_observations, save_retencion_observation
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
@@ -59,7 +63,8 @@ def test_retencion_observation_survives_encrypted_storage_roundtrip(tmp_path: Pa
         )
         captured_at = datetime.now(UTC).replace(microsecond=0)
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        repo.save_observation(
+        save_retencion_observation(
+            repo,
             modelo="180",
             filing_year=2024,
             period=Period.from_year_and_code(2024, "0A"),
@@ -85,7 +90,8 @@ def test_distinct_nifs_and_schemes_persist_as_distinct_rows(tmp_path: Path) -> N
             _observation(nif="11111111H", scheme=RetencionScheme("rendimientos_trabajo"), retencion=Decimal("300")),
         )
         for record in records:
-            repo.save_observation(
+            save_retencion_observation(
+                repo,
                 modelo="180",
                 filing_year=2024,
                 period=period,
@@ -125,7 +131,8 @@ def test_period_scoping_excludes_other_windows(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
         obs = _observation(nif="33333333P", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("50"))
-        repo.save_observation(
+        save_retencion_observation(
+            repo,
             modelo="180",
             filing_year=2023,
             period=Period.from_year_and_code(2023, "0A"),
@@ -169,7 +176,8 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
             _observation(nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
             _observation(nif="33333333P", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("300")),
         )
-        repo.replace_observations(
+        replace_retencion_observations(
+            repo,
             modelo="180",
             filing_year=2024,
             period=period,
@@ -178,7 +186,8 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
         )
         assert len({o.perceptor_nif for o in repo.load_observations("180", period)}) == 3
         # Re-pull dropped 33333333P.
-        repo.replace_observations(
+        replace_retencion_observations(
+            repo,
             modelo="180",
             filing_year=2024,
             period=period,
@@ -208,7 +217,8 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
             _observation(nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
             _observation(nif="33333333P", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("300")),
         )
-        repo.replace_observations(
+        replace_retencion_observations(
+            repo,
             modelo="180",
             filing_year=2024,
             period=period,
@@ -229,7 +239,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
         )
         stale_identifiers = tuple(repo.extract_identifier(row) for row in repo.iter_records())
         with pytest.raises(PathContainmentError):
-            repo.replace_records((replacement,), (*stale_identifiers, "180:2024:0A:../escape:x"))
+            replace_records(repo, (replacement,), (*stale_identifiers, "180:2024:0A:../escape:x"))
 
         survived = repo.load_observations("180", period)
         assert set(survived) == set(declared)
@@ -246,7 +256,8 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
         period = Period.from_year_and_code(2024, "0A")
-        repo.replace_observations(
+        replace_retencion_observations(
+            repo,
             modelo="180",
             filing_year=2024,
             period=period,
@@ -263,7 +274,8 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
         carried = _observation(
             nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("175")
         )
-        repo.replace_observations(
+        replace_retencion_observations(
+            repo,
             modelo="180",
             filing_year=2024,
             period=period,
@@ -285,14 +297,16 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
             scheme=RetencionScheme("actividades_economicas"),
             retencion=Decimal("900"),
         )
-        repo.replace_observations(
+        replace_retencion_observations(
+            repo,
             modelo="180",
             filing_year=2023,
             period=neighbour,
             observations=(neighbour_row,),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
-        repo.replace_observations(
+        replace_retencion_observations(
+            repo,
             modelo="180",
             filing_year=2024,
             period=target,
@@ -340,7 +354,8 @@ def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(tmp_
         assert aggregation.total_perceptors == 1
         assert len(aggregation.rollups) == 1
 
-        repo.replace_observations(
+        replace_retencion_observations(
+            repo,
             modelo="180",
             filing_year=2024,
             period=period,
@@ -383,7 +398,8 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
         row_b = _observation(
             nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")
         )
-        repo.replace_observations(
+        replace_retencion_observations(
+            repo,
             modelo="180",
             filing_year=2024,
             period=period,
@@ -412,7 +428,8 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
                 source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             ),
         )
-        repo.secure_object_repository.save_with_raw_key(
+        save_with_raw_key(
+            repo.secure_object_repository,
             namespace=repo.namespace,
             hashed_object_key=secure_object_key_digest(key_a),
             classification=repo.sensitivity,
@@ -445,14 +462,13 @@ def test_repository_refuses_a_capture_instant_without_utc(captured_at: datetime,
     now use the one canonical UtcInstant.
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, pytest.raises(ValidationError):
-        RetencionObservationRepositoryAdapter(objects=profile.repository).save_observation(
+        save_retencion_observation(
+            RetencionObservationRepositoryAdapter(objects=profile.repository),
             modelo="180",
             filing_year=2024,
             period=Period.from_year_and_code(2024, "0A"),
             observation=_observation(
-                nif="11111111H",
-                scheme=RetencionScheme("actividades_economicas"),
-                retencion=Decimal("100"),
+                nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
             ),
             captured_at=captured_at,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -468,7 +484,8 @@ def test_repository_accepts_a_utc_capture_instant(tmp_path: Path) -> None:
     )
     period = Period.from_year_and_code(2024, "0A")
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        RetencionObservationRepositoryAdapter(objects=profile.repository).save_observation(
+        save_retencion_observation(
+            RetencionObservationRepositoryAdapter(objects=profile.repository),
             modelo="180",
             filing_year=2024,
             period=period,
@@ -536,7 +553,8 @@ def test_a_stored_envelope_missing_the_capture_kind_refuses_to_load(tmp_path: Pa
         assert corrupted["payload"].pop("source_kind", None) is not None, (
             "the persisted payload does not carry source_kind, so deleting it proves nothing"
         )
-        repo.secure_object_repository.save_with_raw_key(
+        save_with_raw_key(
+            repo.secure_object_repository,
             namespace=repo.namespace,
             hashed_object_key=secure_object_key_digest(repo.extract_identifier(built)),
             classification=repo.sensitivity,

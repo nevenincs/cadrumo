@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#ledger-modelo-crossref'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:b2ccb5be1fdea748a48cda19a58c60bdac1e8554c0427dd18e205f2ed29dbf2a'
+modified: '2026-10-03'
+body_hash: 'sha256:c26a4691fd86281d3f7225057b75dbe4e588bdcd81ba6bf1f15e2186c2fa61db'
 related: []
 ---
 
@@ -27,7 +27,7 @@ time but left *which filings a given row fed* unaddressed.
 
 ### Forward link is complete and persisted
 
-`CalculationRevision.source_transaction_ids` (`src/aeat/domain/modelos/_calculation_revision.py`,
+`CalculationRevision.source_transaction_ids` (the former source file,
 the field is a `tuple[...]` defaulting to `()`) records the contributing ledger
 rows of a revision. It is fed at calculate time by `persist_calculation_revision`
 and threaded into the content-addressed `derive_calculation_revision_id`. On top
@@ -35,7 +35,7 @@ of it the snapshot/evidence layer adds two optional typed envelopes:
 `LedgerFilingSnapshot` (per-contributor `LedgerRowFingerprint` + aggregate
 `snapshot_fingerprint`, for staleness) and `LedgerFilingEvidence`
 (`LedgerEvidenceRow` per contributor + `ManualFactBasisEntry`, the reconstructable
-fact basis), both in `src/aeat/domain/modelos/_ledger_filing_snapshot.py`,
+fact basis), both ,
 captured at verify/file time and pegged by `snapshot_fingerprint`. Neither
 snapshot nor evidence is threaded into the revision-id hash. So from a *revision*
 the path down to its rows is fully modelled.
@@ -43,8 +43,7 @@ the path down to its rows is fully modelled.
 ### Inverse link is derived only, never persisted, never surfaced
 
 The only inverse traversal is `_blocking_modelo_references` (and its batch
-sibling `_blockers_by_source_transaction_id`) in
-`src/aeat/application/ledger/_actions_common.py`. Both load the *entire*
+sibling `_blockers_by_source_transaction_id`) . Both load the *entire*
 `CalculationRevisionCatalogueRepository`, keep only revisions in the finalized
 states `{VERIFICADO_COMPLETO, PRESENTADO, PRESENTADO_SUPERSEDIDO}`
 (`_REMOVAL_BLOCKING_REVISION_STATES`), restrict to the active bucket via the
@@ -56,18 +55,18 @@ transient refusal, not a stored fact.
 
 Confirmed gaps:
 
-- `Transaction` (`src/aeat/domain/transactions/_models.py`) carries zero revision
+- `Transaction`  carries zero revision
   or filing references. It is frozen and content-addressed; adding a mutable
   participation set to it would break its content addressing and is the wrong
   home for the inverse link.
-- `LedgerRemovalBlocker` (`src/aeat/application/ledger/_models.py`) is constructed
+- `LedgerRemovalBlocker`  is constructed
   in-memory per scan and is never persisted on or beside the transaction.
 - The inverse scan is O(all revisions) per query because it has no index — fine
   for a one-shot write-guard, but a poor read-path primitive for audit.
 
 ### Transaction to filing is a two-hop traversal with no denormalised shortcut
 
-`ModeloRecord` (the filing receipt, `src/aeat/domain/modelos/_filing_record.py`)
+`ModeloRecord` (the filing receipt, the former source file)
 holds only `calculation_revision_id`; it carries no `source_transaction_ids`. So
 "which filings consumed this row" is transaction → revision (via the inverse scan
 above) → filing (via `calculation_revision_id`), a two-hop join with no one-hop
@@ -80,7 +79,7 @@ from the revision-id hash.
 
 ### The read CLI shows lineage, not participation
 
-`ledger track` (`src/aeat/entrypoints/cli/_ledger_read_cli.py`,
+`ledger track` (the former source file,
 `_register_ledger_track_command`) renders a transaction's *edit/import lineage*
 (`LedgerTrackResult` over the uniform output envelope) but says nothing about
 which modelos the row participated in. There is no `participated_in` section and
@@ -98,12 +97,12 @@ warning is not derivable from today's scan and would need draft states included.
 ### The atomic multi-object write template already exists
 
 `save_with_secure_object_writes` on the `TransactionCatalogueRepository`
-(`src/aeat/domain/transactions/_repository.py`) and the application helpers
+ and the application helpers
 `_save_transaction_catalogue_and_events` /
 `_save_transaction_catalogue_invoices_and_events`
-(`src/aeat/application/ledger/_actions_common.py`) show the pattern: build the
+ show the pattern: build the
 extra secure-object writes, then commit them together via the substrate's
-`save_many` (`src/aeat/adapters/persistence/storage/sql/secure_objects.py`),
+`save_many` ,
 which is a single SQL unit of work and enforces a *registered-write policy* —
 an unregistered namespace cannot be written. This is the template a new
 participation index must reuse so the index update co-emits in the same atomic
@@ -113,7 +112,7 @@ write as the revision/filing save, never as a parallel write path.
 
 Every persisted, encrypted, bucket-scoped artefact is a
 `SecureObjectNamespaceDefinition` registered in `STORAGE_NAMESPACE_REGISTRY`
-(`src/aeat/adapters/persistence/storage/_namespace_registry.py`), carrying a
+, carrying a
 `SensitivityClass` (governs at-rest encryption), a `StorageNamespaceScope`, an
 `object_key_grammar`, and a `schema_version`. The existing modelo catalogues
 (`modelo_calculation_revision_catalogue`, `modelo_filing_record_catalogue`) are
@@ -139,7 +138,7 @@ write entry point (mirroring the transaction repository's
 
 - C5 (uniform output contract): the read verb must ride the
   `SchemaEnvelope`/`OutputSchema` contract. Every ledger read result is already an
-  `OutputSchema` (e.g. `LedgerTrackResult`, `src/aeat/entrypoints/cli/_ledger_payloads.py`),
+  `OutputSchema` (e.g. `LedgerTrackResult`, the former source file),
   registered via `@register_schema`. The participation payload is a typed
   `OutputSchema`, not a bare dict.
 - C6 (period-filter consistency): the participation entry derives from the same

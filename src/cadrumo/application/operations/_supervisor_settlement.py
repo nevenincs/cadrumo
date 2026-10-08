@@ -11,6 +11,7 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import (
     LIFECYCLES_BEFORE_EXECUTOR_ENTRY,
     OperationCancellation,
+    OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
@@ -24,6 +25,7 @@ from .persistence.events import (
 )
 from .persistence.journal import OperationPersistedSnapshot
 from .persistence.leases import OperationOwnerLease
+from .settlement_snapshot import settlement_successor
 
 if TYPE_CHECKING:
     pass
@@ -77,6 +79,20 @@ class SupervisorSettlementMixin(SupervisorHost):
         snapshot = await self.inspect(operation_id)
         if expected_revision is not None and snapshot.revision != expected_revision:
             raise ValueError("operation cancellation expected revision is stale")
+        if snapshot.financial_requirement is not None and snapshot.lifecycle is OperationLifecycle.CREATED:
+            broker = self._typed_financial_operands
+            if broker is not None and await broker.cancel(snapshot.financial_requirement):
+                current = await self.inspect(operation_id)
+                return await self.settle(
+                    operation_id,
+                    OperationTerminalReceipt(
+                        identity=current.identity,
+                        revision=current.revision + 1,
+                        condition=OperationTerminalCondition.CANCELLED,
+                        effect=OperationEffect.NONE,
+                        settled_at=self._clock(),
+                    ),
+                )
         pre_entry = await self._cancel_pre_entry_secret(snapshot)
         if pre_entry is not None:
             return pre_entry
@@ -192,27 +208,6 @@ class SupervisorSettlementMixin(SupervisorHost):
         )
         return (diagnostic_event, terminal_event) if diagnostic_event is not None else (terminal_event,)
 
-    @staticmethod
-    def _settlement_successor(
-        snapshot: OperationPersistedSnapshot,
-        receipt: OperationTerminalReceipt,
-        events: tuple[OperationEvent, ...],
-    ) -> OperationPersistedSnapshot:
-        """Materialize the terminal snapshot from the committed receipt events."""
-        return snapshot.model_copy(
-            update={
-                "revision": receipt.revision,
-                "lifecycle": OperationLifecycle.TERMINAL,
-                "terminal_condition": receipt.condition,
-                "effect": receipt.effect,
-                "updated_at": receipt.settled_at,
-                "event_cursor": events[-1].sequence,
-                "events": events,
-                "terminal_receipt": receipt,
-                "pending_interaction": None,
-            }
-        )
-
     async def _commit_settlement(
         self,
         operation_id: OperationId,
@@ -231,7 +226,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         except TimeoutError:
             return None, True
         events = self._settlement_events(snapshot, receipt, receipt.settled_at)
-        successor = self._settlement_successor(snapshot, receipt, events)
+        successor = settlement_successor(snapshot, receipt, events)
         await self._journal.commit_settlement(successor, expected_revision=snapshot.revision, lease=lease)
         self._leases_by_operation.pop(operation_id, None)
         self._ephemeral_secrets.discard(operation_id)
@@ -286,6 +281,12 @@ class SupervisorSettlementMixin(SupervisorHost):
     @override
     def _validate_cancelled_settlement(self, snapshot: OperationPersistedSnapshot) -> None:
         """Reject a cancellation terminal claim until the executor's safe stop is proven."""
+        if (
+            snapshot.financial_requirement is not None
+            and snapshot.executor_entered_at is None
+            and snapshot.lifecycle is OperationLifecycle.CREATED
+        ):
+            return
         if snapshot.cancellation_acknowledged_at is None:
             raise ValueError("cancelled settlement requires durable executor acknowledgement")
         cleanup_deadline = snapshot.cleanup_deadline

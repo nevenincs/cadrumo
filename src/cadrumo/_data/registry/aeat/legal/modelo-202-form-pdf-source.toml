@@ -1,0 +1,38 @@
+[sources."boe-2025-5407-modelo-202-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2025-5407-modelos-202-222.pdf"
+sha256 = "f14e0b40478d5c0a6ec66d05d74bbbe7191de5978b4ef24cf35366721b48e517"
+bytes = 719796
+retrieved_at = 2026-10-06
+published_at = 2025-03-19
+applies_from = 2025-03-20
+source_url = "https://www.boe.es/boe/dias/2025/03/19/pdfs/BOE-A-2025-5407.pdf"
+review_status = "pending_review"
+
+[sources."boe-2023-8120-modelo-202-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2023-8120-modelos-202-222.pdf"
+sha256 = "826304a374caf88485fb8e15d62a51a4f2c7ddf059d5ca181ccbfa75e6e3e7a1"
+bytes = 5094990
+retrieved_at = 2026-10-06
+published_at = 2023-03-31
+applies_from = 2023-04-01
+source_url = "https://www.boe.es/boe/dias/2023/03/31/pdfs/BOE-A-2023-8120.pdf"
+review_status = "pending_review"
+
+[sources."boe-2018-12515-modelo-202-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2018-12515-modelos-202-222.pdf"
+sha256 = "8ca22ddbe8f1812e7bf175dba00dac9d83f72a8dd83d1765f598c832f4b9cd8f"
+bytes = 558599
+retrieved_at = 2026-10-06
+published_at = 2018-09-14
+applies_from = 2018-09-15
+source_url = "https://www.boe.es/boe/dias/2018/09/14/pdfs/BOE-A-2018-12515.pdf"
+review_status = "pending_review"

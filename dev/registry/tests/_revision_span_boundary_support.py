@@ -98,6 +98,20 @@ def _partial_edge_years(revision: ModeloRevision) -> frozenset[int]:
         years.add(valid_from.year)
     if valid_to is not None and (valid_to.month, valid_to.day) != (12, 31):
         years.add(valid_to.year)
+    periods = {str(period) for period in revision.period_selector.periods}
+    if periods:
+        quarters = {"1T", "2T", "3T", "4T"}
+        months = {f"{month:02d}" for month in range(1, 13)}
+        # Effective dates can cover the full tax year while law selection admits
+        # only early quarters (M131's 2026 branch). The selector owns that claim.
+        if (periods <= quarters and periods != quarters) or (periods <= months and periods != months):
+            selector = revision.period_selector
+            if selector.years:
+                years.update(selector.years)
+            elif selector.year_from is not None and selector.year_to is not None:
+                years.update(range(selector.year_from, selector.year_to + 1))
+            elif valid_to is not None:
+                years.update(range(valid_from.year, valid_to.year + 1))
     return frozenset(years)
 
 

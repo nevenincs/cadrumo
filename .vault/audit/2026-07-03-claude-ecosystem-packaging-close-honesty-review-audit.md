@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
-modified: '2026-07-17'
-body_hash: 'sha256:99dab5c045c5f22d5cdb8517c7b7f2dd88eb8bb424b9769bda2e9745d8fb0419'
+modified: '2026-10-03'
+body_hash: 'sha256:5e3b86a7ed5dd05f21961ef2748801565e1e504d762fb20fbd035c40cff2e5ba'
 related:
-  - "[[2026-07-03-claude-ecosystem-packaging-plan]]"
   - '[[2026-07-03-claude-ecosystem-packaging-code-review-audit]]'
 ---
 
@@ -68,7 +67,7 @@ list alongside this audit's prose.
 ### peer-staged-deletion-live-in-shared-index | low | A peer-staged deletion of `test_registry_corpus_companion_guard.py` was live in the shared index at review time — reported, not resolved
 
 At review time the shared git index carried a staged deletion of
-`src/aeat/entrypoints/cli/tests/test_registry_corpus_companion_guard.py`, while the file
+The retired test, while the file
 itself remains committed and intact at HEAD. This is a live shared-worktree hazard, not a
 campaign defect: if a peer lands a no-pathspec commit, it would sweep that staged deletion
 along with it. The finding is reported for visibility, per the shared-worktree discipline;

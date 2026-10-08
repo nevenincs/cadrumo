@@ -3,9 +3,9 @@
 This is the half of the operator contract that the declared transport locus was
 added to make checkable. Before the declaration existed, a spelling gate had to
 infer which parameters carry local paths from their type or their name — and
-both fail. ``app ledger classify --file`` and ``app ledger evidence pull-all
---folder`` are both ``str``; one is a file on the operator's disk and the other
-is a Drive identifier. Reading the name to decide whether the name is right
+both fail. ``app ledger classify --file`` and ``app modelo spreadsheet pull
+--spreadsheet-id`` are both ``str``; one is a file on the operator's disk and the
+other is a workbook identifier. Reading the name to decide whether the name is right
 proves nothing at all.
 
 So this module reads the declaration. Every assertion below keys on
@@ -40,7 +40,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ..command_spec import OptionSpec, ParameterSpec
+from ..command_parameter_contracts import OptionSpec, ParameterSpec
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -50,13 +50,7 @@ _FORBIDDEN_LOCAL_SPELLINGS = ("--source", "--path", "--from-file")
 
 #: Exemptions, keyed by the leaf path and the parameter they excuse, each with
 #: the reason it is not a defect. A stale entry fails below rather than lingering.
-_SPELLING_EXEMPTIONS: dict[tuple[str, str], str] = {
-    ("aeat config google register", "client_json"): (
-        "Credential enrolment is carved out of the transport grammar: the verb enrols a "
-        "credential rather than moving data, and `--client-json` names the specific artefact "
-        "Google issues. `--file` would be strictly less informative here."
-    ),
-}
+_SPELLING_EXEMPTIONS: dict[tuple[str, str], str] = {}
 
 
 def _local_parameters() -> list[tuple[str, ParameterSpec]]:
@@ -149,8 +143,8 @@ def test_no_local_parameter_uses_a_forbidden_spelling() -> None:
     """`--source`, `--path` and `--from-file` are refused on a local parameter.
 
     A parameter declaring locus ``none`` is outside this contract entirely,
-    which is what keeps `app ledger evidence pull --source` -- a closed enum
-    naming the link's source SYSTEM -- and `--from-year` out of scope.
+    which is what keeps `app modelo reconcile pull --source` -- a closed enum
+    naming the kind of evidence -- and `--from-year` out of scope.
     """
     offenders = []
     for path, parameter in _local_parameters():

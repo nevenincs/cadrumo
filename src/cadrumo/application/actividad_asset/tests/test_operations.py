@@ -19,6 +19,7 @@ from cadrumo.domain.renta.actividad_asset.election import (
     LowValueElection,
 )
 from cadrumo.domain.renta.actividad_asset.errors import (
+    ActividadAssetClaimConflictError,
     ActividadAssetIncompleteError,
     ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
@@ -68,7 +69,14 @@ class _MemoryRepository:
         self.history = self.history.append_revision(revision)
         return self.history
 
-    def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:
+    def record_claim(
+        self,
+        claim: AmortizationClaim,
+        *,
+        expected_history: ActivityAssetHistory | None = None,
+    ) -> ActivityAssetHistoryClaimResult:
+        if expected_history is not None and self.history != expected_history:
+            raise ActividadAssetClaimConflictError("activity asset history changed after the forecast; forecast again")
         result = self.history.record_claim(claim)
         self.history = result.history
         return result

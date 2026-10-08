@@ -12,11 +12,9 @@ succeeds while the advisory fires. The last hop -- diagnostic to typed envelope
 notice -- is pinned in the CLI package that owns it, in
 ``entrypoints/cli/tests/test_source_advisory_notice_channel.py``.
 
-What is NOT claimed: no registry revision in the tree declares a rate-specific
-binding yet, so no fixture here drives real ledger rows through a real Modelo
-390 split. The revision below is built to the shape the decision prescribes, and
-the derivation that recognises that shape from a revision is pinned separately
-in ``domain/calculations/registry/tests/test_rate_box_partition.py``.
+These focused cases construct a partition to test diagnostic content and
+coordinator behavior. Committed Modelo 390 coverage and real ledger aggregation
+are exercised in the domain registry rate-box tests.
 """
 
 from __future__ import annotations

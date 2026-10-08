@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a3aef9b07f5572dd6d8c7e528e545e90e28cd35d90a9ffba0b72eb90726d4f8'
+body_hash: 'sha256:cfe5487e127e6f3ecae93f7a67a7dab8559aba09cc8af483d473ad9a9a6e0325'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-source-enrollment-reference]]"
   - "[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-readiness-audit]]"
@@ -40,7 +40,7 @@ Selected model decoders consult governed vocabulary and tax-ID definitions. Thei
 
 ### Lazy semantic validation changes one existing runtime promise
 
-Complete publication validation can remain unchanged in strength: a clean reader must traverse every encoded component before cutover. Runtime can verify the complete database byte digest and global manifest/relationship inventory without reconstructing typed payloads. It then validates each requested component before use. An unused malformed component with all unsigned digests deliberately recomputed is not necessarily rejected at open; that is a deliberate timing change that the ADR must state. A digest is not a publisher signature. Evidence: `src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py:264` and the readiness audit.
+Complete publication validation can remain unchanged in strength: a clean reader must traverse every encoded component before cutover. Runtime can verify the complete database byte digest and global manifest/relationship inventory without reconstructing typed payloads. It then validates each requested component before use. An unused malformed component with all unsigned digests deliberately recomputed is not necessarily rejected at open; that is a deliberate timing change that the ADR must state. A digest is not a publisher signature. Evidence: the former source file and the readiness audit.
 
 SQLite integrity checks detect structural faults but do not substitute for domain schema or legal conformance; foreign-key checking is a separate operation: https://www.sqlite.org/pragma.html#pragma_integrity_check. Full-file hashing remains an O(file size) admission cost and must remain inside performance measurements.
 

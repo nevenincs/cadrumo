@@ -855,13 +855,9 @@ class M296PerceptorField(StrEnum):
 
     Modelo 296 is the IRNR annual withholding summary, and AEAT repeats the whole
     PERCEPTOR RECORD once per payee rather than repeating fields inside one record. The
-    row's data already exists in the registry as
-    :class:`~cadrumo.domain.calculations.registry.withholding296_bindings.Withholding296Observation` -- perceptor
-    tax id, legal name, naturaleza, clave, subclave, base and retención -- so these fields
-    are projected from that observation set rather than supplied as operator header facts.
-
-    Declaring them as header producers is what left every one of them rendering blank on a
-    filed 296 while the withholding substrate already held the values.
+    snapshot carries operator-supplied typed perceptor rows, and these fields address a
+    row through its render occurrence. They do not refer to declarant header facts or
+    an enrolled withholding observation store.
     """
 
     APELLIDOS_Y_NOMBRE_RAZON_SOCIAL_O_DENO = "apellidos_y_nombre_razon_social_o_deno"

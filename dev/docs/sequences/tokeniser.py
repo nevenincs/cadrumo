@@ -107,7 +107,7 @@ def command_path_key(path: Sequence[str]) -> str:
 @cache
 def _command_tree() -> Mapping[tuple[str, ...], _NodeInfo]:
     """Project the command graph once to a token-classification index."""
-    from cadrumo.entrypoints.cli.command_spec import OptionSpec
+    from cadrumo.entrypoints.cli.command_parameter_contracts import OptionSpec
     from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
     children: defaultdict[tuple[str, ...], set[str]] = defaultdict(set)
@@ -182,38 +182,63 @@ def tokenise_command(argv: Sequence[str]) -> tuple[CommandToken, ...]:
             continue
 
         if _is_option_token(token):
-            option_key = token.split("=", 1)[0]
-            has_inline_value = "=" in token
-            takes_value = bool(node and node.options.get(option_key, False))
-            tokens.append(
-                CommandToken(
-                    text=token,
-                    kind=TokenKind.OPTION,
-                    command_path=command_path_key(current_path),
-                    option_name=option_key,
-                ),
-            )
-            index += 1
-            if takes_value and not has_inline_value and index < len(argv):
-                value = argv[index]
-                if _PLACEHOLDER_RE.match(value):
-                    tokens.append(CommandToken(text=value, kind=TokenKind.PLACEHOLDER, option_name=option_key))
-                else:
-                    tokens.append(CommandToken(text=value, kind=TokenKind.OPTION_VALUE, option_name=option_key))
-                index += 1
+            index = _tokenise_option(token, index, argv, node, current_path, tokens)
             continue
 
-        if node is not None and node.is_group and token in node.children:
-            child_path_parts: list[str] = []
-            child_path_parts.extend(current_path)
-            child_path_parts.append(token)
-            child_path: tuple[str, ...] = tuple(child_path_parts)
-            child = tree.get(child_path)
-            kind = TokenKind.GROUP if (child is not None and child.is_group) else TokenKind.LEAF
-            tokens.append(CommandToken(text=token, kind=kind, command_path=command_path_key(child_path)))
-            current_path = child_path
-        else:
-            tokens.append(CommandToken(text=token, kind=TokenKind.ARGUMENT))
+        current_path = _tokenise_bare_token(token, node, current_path, tree, tokens)
         index += 1
 
     return tuple(tokens)
+
+
+def _tokenise_option(
+    token: str,
+    index: int,
+    argv: Sequence[str],
+    node: _NodeInfo | None,
+    current_path: tuple[str, ...],
+    tokens: list[CommandToken],
+) -> int:
+    """Tokenise option."""
+    option_key = token.split("=", 1)[0]
+    has_inline_value = "=" in token
+    takes_value = bool(node and node.options.get(option_key, False))
+    tokens.append(
+        CommandToken(
+            text=token,
+            kind=TokenKind.OPTION,
+            command_path=command_path_key(current_path),
+            option_name=option_key,
+        ),
+    )
+    index += 1
+    if takes_value and not has_inline_value and index < len(argv):
+        value = argv[index]
+        if _PLACEHOLDER_RE.match(value):
+            tokens.append(CommandToken(text=value, kind=TokenKind.PLACEHOLDER, option_name=option_key))
+        else:
+            tokens.append(CommandToken(text=value, kind=TokenKind.OPTION_VALUE, option_name=option_key))
+        index += 1
+    return index
+
+
+def _tokenise_bare_token(
+    token: str,
+    node: _NodeInfo | None,
+    current_path: tuple[str, ...],
+    tree: Mapping[tuple[str, ...], _NodeInfo],
+    tokens: list[CommandToken],
+) -> tuple[str, ...]:
+    """Tokenise bare token."""
+    if node is not None and node.is_group and token in node.children:
+        child_path_parts: list[str] = []
+        child_path_parts.extend(current_path)
+        child_path_parts.append(token)
+        child_path: tuple[str, ...] = tuple(child_path_parts)
+        child = tree.get(child_path)
+        kind = TokenKind.GROUP if (child is not None and child.is_group) else TokenKind.LEAF
+        tokens.append(CommandToken(text=token, kind=kind, command_path=command_path_key(child_path)))
+        current_path = child_path
+    else:
+        tokens.append(CommandToken(text=token, kind=TokenKind.ARGUMENT))
+    return current_path

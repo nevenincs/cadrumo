@@ -20,8 +20,10 @@ from __future__ import annotations
 
 import os
 import stat
+import sys
 from collections.abc import Callable
 from pathlib import Path
+from types import FrameType
 
 import pytest
 
@@ -45,7 +47,7 @@ def _icacls(path: Path, *args: str) -> tuple[int, str]:
         text=True,
         encoding="utf-8",
         errors="replace",
-        timeout=30,
+        timeout=None,
     )
     return completed.returncode, f"{completed.stdout!s}{completed.stderr!s}"
 
@@ -164,3 +166,32 @@ def test_directory_hardening_matches_icacls(tmp_path: Path, shape: str) -> None:
     assert all(not flags & win32security.INHERITED_ACE for _type, flags, _mask, _sid in hardened[2]), (
         "no inherited ACE may survive"
     )
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows DACL propagation contract")
+def test_already_hardened_directory_performs_no_native_acl_write(tmp_path: Path) -> None:
+    """Observe the real native write on first hardening and none on a repeat."""
+    import win32security
+
+    directory = tmp_path / "repeat"
+    directory.mkdir()
+    assert not _dacl_shape(directory)[0]
+    writes: list[object] = []
+
+    def observe(_frame: FrameType, event: str, argument: object) -> None:
+        if event == "c_call" and argument is win32security.SetNamedSecurityInfo:
+            writes.append(argument)
+
+    previous = sys.getprofile()
+    try:
+        sys.setprofile(observe)
+        restrict_directory_permissions(directory)
+        assert writes, "the observer must see a real native hardening write"
+        first = _dacl_shape(directory)
+        assert first[0]
+        writes.clear()
+        restrict_directory_permissions(directory)
+        assert _dacl_shape(directory) == first
+        assert not writes, "an unchanged protected DACL must not propagate another write"
+    finally:
+        sys.setprofile(previous)

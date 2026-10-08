@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a5d9c7398a411bfe41dc32151498570ea09a0b76fc96259842fa9db5efcf6049'
+body_hash: 'sha256:930e82d5b0cfa9ff9bbaf7e2da05187bafcf8fbd079c49b798cc947c542527b2'
 related:
   - "[[2026-08-28-registry-relation-and-export-integrity-computed-casilla-dormancy-export-refs-trap-audit]]"
 ---
@@ -14,9 +14,15 @@ related:
 
 ## Scope
 
+Map computed non-negative constraints across the registry and inspect how the calculation surface refuses computed values that violate them.
+
 ## Findings
 
+The census found 88 constrained computed boxes and 21 formula roots that can be negative; the restriction is an explicit refusal boundary for computed values.
+
 ## Recommendations
+
+Keep the computed-value refusal behavior explicit and validate its covered surface from declarations rather than broad heuristics.
 
 ## What enforcement actually does
 

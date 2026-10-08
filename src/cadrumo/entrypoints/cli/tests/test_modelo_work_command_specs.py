@@ -17,12 +17,13 @@ from typing import get_args, get_origin
 import pytest
 from typer.main import get_command
 
-from .._command_runtime import build_command_subtree
 from .._modelo_audit_command_specs import MODELO_ROOT_COMMAND_SPEC
 from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_spec import BindingState, CommandSpecGraph, DefaultKind, SchemaState
+from ..command_graph import CommandSpecGraph
+from ..command_shared_contracts import BindingState, DefaultKind, SchemaState
 from ..modelo_work_command_specs import MODELO_WORK_COMMAND_SPECS
+from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

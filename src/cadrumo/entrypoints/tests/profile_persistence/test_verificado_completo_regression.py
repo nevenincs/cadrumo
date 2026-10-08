@@ -52,7 +52,7 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_p
 from ....application.calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.external_import_actions import import_external_filing_evidence
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -367,7 +367,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(
                 clock=_T1,
             )
 
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator-test",
@@ -377,7 +377,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(
             clock=_T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
-        )
+        ).report
 
         missing_finding_casillas = {
             f.casilla_id for f in report.findings if f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
@@ -447,7 +447,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(
             operation=operation,
         )
 
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator-test",
@@ -460,7 +460,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(
             clock=_T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
-        )
+        ).report
 
         assert report.granted_verificado_completo is True
         assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
@@ -481,7 +481,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(
 def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
     """The public verify action is refused on a content-address drift.
 
-    contract regression: verify_modelo_revision calls the content-integrity gate
+    contract regression: verify_modelo_revision_with_preconditions calls the content-integrity gate
     before granting VERIFICADO_COMPLETO.  The check is exercised by constructing a
     tampered revision with a casilla_values mapping that does not match the stored
     calculation_revision_id and routing it through the public verify action.
@@ -560,7 +560,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: Pinne
         # catalogue no longer decodes, because its content address is checked
         # on every load.
         with pytest.raises(CalculationRevisionPersistenceError) as refusal:
-            verify_modelo_revision(
+            verify_modelo_revision_with_preconditions(
                 tampered.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 actor="operator-test",

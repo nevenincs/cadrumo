@@ -16,17 +16,16 @@ from ..cohort_attestation import (
     add_test_source_archive,
     make_test_command_spec_attestation,
 )
-from ..hashing import sha256_path
-from ..python_cohort import (
+from ..command_spec_attestation import (
     _artifact_command_projection,
     _assert_probe_reads_are_wheel_members,
     _cached_artifact_command_projection,
     _command_spec_attestation,
     _install_relative_probe_reads,
     _validate_command_spec_attestation,
-    digest_install_target,
-    load_python_cohort,
 )
+from ..hashing import sha256_path
+from ..python_cohort import digest_install_target, load_python_cohort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -44,7 +43,9 @@ def _write_placeholder_cohort(root: Path) -> dict[str, str]:
         "cadrumo-data-manuals": "cadrumo_data_manuals-1.0.0-py3-none-any.whl",
         "cadrumo-data-manuals-sdist": "cadrumo_data_manuals-1.0.0.tar.gz",
         "cadrumo-data-official": "cadrumo_data_official-1.0.0-py3-none-any.whl",
+        "cadrumo-data-normatives": "cadrumo_data_normatives-1.0.0-py3-none-any.whl",
         "cadrumo-data-official-sdist": "cadrumo_data_official-1.0.0.tar.gz",
+        "cadrumo-data-normatives-sdist": "cadrumo_data_normatives-1.0.0.tar.gz",
     }
     sha256: dict[str, str] = {}
     for label, filename in names.items():
@@ -107,7 +108,9 @@ def test_load_python_cohort_rejects_digest_drift_before_metadata_parsing(
         "cadrumo-data-manuals": "cadrumo_data_manuals-1.0.0-py3-none-any.whl",
         "cadrumo-data-manuals-sdist": "cadrumo_data_manuals-1.0.0.tar.gz",
         "cadrumo-data-official": "cadrumo_data_official-1.0.0-py3-none-any.whl",
+        "cadrumo-data-normatives": "cadrumo_data_normatives-1.0.0-py3-none-any.whl",
         "cadrumo-data-official-sdist": "cadrumo_data_official-1.0.0.tar.gz",
+        "cadrumo-data-normatives-sdist": "cadrumo_data_normatives-1.0.0.tar.gz",
     }
     sha256: dict[str, str] = {}
     for label, filename in names.items():

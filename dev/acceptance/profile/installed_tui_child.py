@@ -64,6 +64,120 @@ class ProfileTuiChildEvidence:
         return cast("dict[str, object]", asdict(self))
 
 
+@dataclass(slots=True)
+class _VisibleProfileState:
+    """Value-free observations accumulated by one visible child operation."""
+
+    row_key: str | None
+    clear_absent: bool = False
+    row_visible: bool = False
+    selector_visible: bool = False
+    no_op_observed: bool = False
+
+
+async def _drive_added_profile_row(
+    *, pilot: Any, scenario: ProfileRowLifecycleScenario, state: _VisibleProfileState
+) -> None:
+    """Observe the visible added profile row outcome."""
+    state.row_key = await _add_activity_row(pilot=pilot, scenario=scenario)
+    added_row = _required_row_key(state.row_key)
+    state.row_visible = True
+    state.selector_visible = _field_is_present(
+        pilot=pilot,
+        path=scenario.path(added_row, scenario.selector_field),
+    )
+    if not state.selector_visible:
+        raise ProfileTuiChildAcceptanceError("added_selector_fact_not_visible")
+
+
+async def _drive_edited_profile_row(
+    *, pilot: Any, scenario: ProfileRowLifecycleScenario, row_key: str | None, state: _VisibleProfileState
+) -> None:
+    """Observe the visible edited profile row outcome."""
+    target_row = _required_row_key(row_key)
+    await _edit_clearable_field(pilot=pilot, row_key=target_row, scenario=scenario)
+    state.row_visible = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
+    state.selector_visible = _field_is_present(
+        pilot=pilot,
+        path=scenario.path(target_row, scenario.selector_field),
+    )
+
+
+async def _drive_profile_no_op(
+    *, pilot: Any, scenario: ProfileRowLifecycleScenario, row_key: str | None, state: _VisibleProfileState
+) -> None:
+    """Observe the visible profile no op outcome."""
+    target_row = _required_row_key(row_key)
+    state.no_op_observed = await _submit_visible_no_op(pilot=pilot, row_key=target_row, scenario=scenario)
+    state.row_visible = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
+    state.selector_visible = _field_is_present(
+        pilot=pilot,
+        path=scenario.path(target_row, scenario.selector_field),
+    )
+    if not state.no_op_observed or not state.row_visible or not state.selector_visible:
+        raise ProfileTuiChildAcceptanceError("visible_no_op_outcome_mismatch")
+
+
+async def _drive_cleared_profile_row(
+    *, pilot: Any, scenario: ProfileRowLifecycleScenario, row_key: str | None, state: _VisibleProfileState
+) -> None:
+    """Observe the visible cleared profile row outcome."""
+    target_row = _required_row_key(row_key)
+    await _clear_clearable_field(pilot=pilot, row_key=target_row, scenario=scenario)
+    state.row_visible = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
+    state.clear_absent = not _field_is_present(
+        pilot=pilot,
+        path=scenario.path(target_row, scenario.clearable_field),
+    )
+    state.selector_visible = _field_is_present(
+        pilot=pilot,
+        path=scenario.path(target_row, scenario.selector_field),
+    )
+    if not state.clear_absent:
+        raise ProfileTuiChildAcceptanceError("cleared_field_still_visible")
+    if not state.selector_visible:
+        raise ProfileTuiChildAcceptanceError("clear_lost_selector_fact")
+
+
+async def _drive_removed_profile_row(
+    *, pilot: Any, scenario: ProfileRowLifecycleScenario, row_key: str | None, state: _VisibleProfileState
+) -> None:
+    """Observe the visible removed profile row outcome."""
+    target_row = _required_row_key(row_key)
+    await _remove_activity_row(pilot=pilot, row_key=target_row, scenario=scenario)
+    state.row_visible = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
+    if state.row_visible:
+        raise ProfileTuiChildAcceptanceError("removed_row_still_visible")
+
+
+async def _observe_reopened_profile_clear(
+    *, pilot: Any, scenario: ProfileRowLifecycleScenario, row_key: str | None, state: _VisibleProfileState
+) -> None:
+    """Observe the visible reopened profile clear outcome."""
+    target_row = _required_row_key(row_key)
+    state.row_visible = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
+    state.clear_absent = not _field_is_present(
+        pilot=pilot,
+        path=scenario.path(target_row, scenario.clearable_field),
+    )
+    state.selector_visible = _field_is_present(
+        pilot=pilot,
+        path=scenario.path(target_row, scenario.selector_field),
+    )
+    if not state.row_visible or not state.clear_absent or not state.selector_visible:
+        raise ProfileTuiChildAcceptanceError("fresh_reopen_clear_state_mismatch")
+
+
+async def _observe_reopened_profile_absence(
+    *, pilot: Any, scenario: ProfileRowLifecycleScenario, row_key: str | None, state: _VisibleProfileState
+) -> None:
+    """Observe the visible reopened profile absence outcome."""
+    target_row = _required_row_key(row_key)
+    state.row_visible = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
+    if state.row_visible:
+        raise ProfileTuiChildAcceptanceError("fresh_reopen_removed_row_visible")
+
+
 def run_profile_tui_operation(
     *,
     workspace_root: Path,
@@ -84,90 +198,26 @@ def run_profile_tui_operation(
     product = installed_product_evidence(workspace_root=workspace_root)
     if operation == "create-add":
         _register_profile_through_visible_tui(profile_label=profile_label, passphrase=passphrase)
-    else:
-        from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-        from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
 
-        with live_exchange_rate_composition(), profile_adapter_composition():
-            asyncio.run(_admit_existing_profile_session(passphrase=passphrase))
-
-    observed_row: list[str | None] = [row_key]
-    clear_absent: list[bool] = [False]
-    row_visible: list[bool] = [False]
-    selector_visible: list[bool] = [False]
-    no_op_observed: list[bool] = [False]
+    state = _VisibleProfileState(row_key=row_key)
 
     async def drive_after_home(pilot: Any) -> None:
         await pilot.press("f4")
         await wait_for_public_selector(pilot, "#manager-status", polls=180)
         if operation in {"create-add", "add"}:
-            observed_row[0] = await _add_activity_row(pilot=pilot, scenario=scenario)
-            added_row = _required_row_key(observed_row[0])
-            row_visible[0] = True
-            selector_visible[0] = _field_is_present(
-                pilot=pilot,
-                path=scenario.path(added_row, scenario.selector_field),
-            )
-            if not selector_visible[0]:
-                raise ProfileTuiChildAcceptanceError("added_selector_fact_not_visible")
+            await _drive_added_profile_row(pilot=pilot, scenario=scenario, state=state)
         elif operation == "edit":
-            target_row = _required_row_key(row_key)
-            await _edit_clearable_field(pilot=pilot, row_key=target_row, scenario=scenario)
-            row_visible[0] = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
-            selector_visible[0] = _field_is_present(
-                pilot=pilot,
-                path=scenario.path(target_row, scenario.selector_field),
-            )
+            await _drive_edited_profile_row(pilot=pilot, scenario=scenario, row_key=row_key, state=state)
         elif operation == "no-op":
-            target_row = _required_row_key(row_key)
-            no_op_observed[0] = await _submit_visible_no_op(pilot=pilot, row_key=target_row, scenario=scenario)
-            row_visible[0] = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
-            selector_visible[0] = _field_is_present(
-                pilot=pilot,
-                path=scenario.path(target_row, scenario.selector_field),
-            )
-            if not no_op_observed[0] or not row_visible[0] or not selector_visible[0]:
-                raise ProfileTuiChildAcceptanceError("visible_no_op_outcome_mismatch")
+            await _drive_profile_no_op(pilot=pilot, scenario=scenario, row_key=row_key, state=state)
         elif operation == "clear":
-            target_row = _required_row_key(row_key)
-            await _clear_clearable_field(pilot=pilot, row_key=target_row, scenario=scenario)
-            row_visible[0] = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
-            clear_absent[0] = not _field_is_present(
-                pilot=pilot,
-                path=scenario.path(target_row, scenario.clearable_field),
-            )
-            selector_visible[0] = _field_is_present(
-                pilot=pilot,
-                path=scenario.path(target_row, scenario.selector_field),
-            )
-            if not clear_absent[0]:
-                raise ProfileTuiChildAcceptanceError("cleared_field_still_visible")
-            if not selector_visible[0]:
-                raise ProfileTuiChildAcceptanceError("clear_lost_selector_fact")
+            await _drive_cleared_profile_row(pilot=pilot, scenario=scenario, row_key=row_key, state=state)
         elif operation == "remove":
-            target_row = _required_row_key(row_key)
-            await _remove_activity_row(pilot=pilot, row_key=target_row, scenario=scenario)
-            row_visible[0] = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
-            if row_visible[0]:
-                raise ProfileTuiChildAcceptanceError("removed_row_still_visible")
+            await _drive_removed_profile_row(pilot=pilot, scenario=scenario, row_key=row_key, state=state)
         elif operation == "assert-clear":
-            target_row = _required_row_key(row_key)
-            row_visible[0] = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
-            clear_absent[0] = not _field_is_present(
-                pilot=pilot,
-                path=scenario.path(target_row, scenario.clearable_field),
-            )
-            selector_visible[0] = _field_is_present(
-                pilot=pilot,
-                path=scenario.path(target_row, scenario.selector_field),
-            )
-            if not row_visible[0] or not clear_absent[0] or not selector_visible[0]:
-                raise ProfileTuiChildAcceptanceError("fresh_reopen_clear_state_mismatch")
+            await _observe_reopened_profile_clear(pilot=pilot, scenario=scenario, row_key=row_key, state=state)
         else:
-            target_row = _required_row_key(row_key)
-            row_visible[0] = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
-            if row_visible[0]:
-                raise ProfileTuiChildAcceptanceError("fresh_reopen_removed_row_visible")
+            await _observe_reopened_profile_absence(pilot=pilot, scenario=scenario, row_key=row_key, state=state)
         pilot.app.exit()
 
     from cadrumo.entrypoints.tui.launcher import main
@@ -184,11 +234,11 @@ def run_profile_tui_operation(
         operation=operation,
         product_origin=product.product_origin,
         product_init_sha256=product.product_init_sha256,
-        row_key=observed_row[0],
-        row_visible=row_visible[0],
-        clear_visible_absent=clear_absent[0],
-        selector_fact_visible=selector_visible[0],
-        no_op_observed=no_op_observed[0],
+        row_key=state.row_key,
+        row_visible=state.row_visible,
+        clear_visible_absent=state.clear_absent,
+        selector_fact_visible=state.selector_visible,
+        no_op_observed=state.no_op_observed,
     )
 
 
@@ -199,45 +249,6 @@ def _register_profile_through_visible_tui(*, profile_label: str, passphrase: str
 
     with live_exchange_rate_composition(), profile_adapter_composition():
         asyncio.run(register_profile_through_installed_tui(profile_label=profile_label, passphrase=passphrase))
-
-
-async def _admit_existing_profile_session(*, passphrase: str) -> None:
-    """Unlock an existing profile through the shipped visible Login screen."""
-    from textual.widgets import Input
-
-    from cadrumo.application.user_profile.login_interaction import (
-        ProfileLoginInventoryState,
-        attempt_profile_login,
-        observe_profile_login_inventory,
-    )
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-    from cadrumo.entrypoints.tui.secret.login import LoginScreen
-
-    inventory = observe_profile_login_inventory()
-    if inventory.state is not ProfileLoginInventoryState.RECOGNIZED:
-        raise ProfileTuiChildAcceptanceError("existing_profile_not_recognized")
-    with bundled_indexed_authority().operation() as operation:
-        screen = LoginScreen(
-            choices=inventory.choices,
-            authenticate=lambda candidate_profile_id, candidate_passphrase: attempt_profile_login(
-                candidate_profile_id,
-                candidate_passphrase,
-                profile_decode_context=operation.profile_decode_context(),
-            ),
-            preselected=inventory.preselected_profile_id,
-        )
-        async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
-            await wait_for_public_selector(pilot, "#field-passphrase")
-            field = query_public_selector(pilot, "#field-passphrase", Input)
-            if not isinstance(field, Input):
-                raise ProfileTuiChildAcceptanceError("login_passphrase_control_invalid")
-            field.value = passphrase
-            await pilot.click("#btn-unlock")
-            await pilot.app.workers.wait_for_complete()
-            await pilot.pause()
-    if screen.outcome is None:
-        raise ProfileTuiChildAcceptanceError("login_not_admitted")
 
 
 async def _add_activity_row(*, pilot: Any, scenario: ProfileRowLifecycleScenario) -> str:

@@ -1,0 +1,146 @@
+# Authored form structure; automatic generation preserves this declaration.
+# Reconcile source changes explicitly. Authorship does not imply completed review.
+
+[[revisions.2017-y-siguientes.form_layouts]]
+id = "form-layout"
+revision_id = "2017-y-siguientes"
+seed_source = "authored"
+review = { state = "generated", notes = "Grouping follows BOE-A-2018-10064 annex II and the enrolled AEAT record design. The original 2017 form and repeated dependent detail still require reconciliation; this is not completed historical fidelity review." }
+generator_version = 1
+source_state_digest = "ca9af503bbf046f5f9174970a2e152677bc9c4cf384278b8a3dfc0556b9ff3b3"
+design_sources = [
+    { source_ref = "aeat-dr-122-2016", sha256 = "4cd27a598e3d7130c423e2ab24dbfdd71b155569826bdf8ea25d9e12d1bcf1f9" },
+    { source_ref = "boe-modelo-122-form-2018", sha256 = "f289b0072c5cdc71b91f82bee9535abbdcd68c720e6b4cc051e0f228e83036ad" },
+]
+placements = [
+    { casilla_id = "ascendiente-dos-hijos.abono-anticipado", kind = "on_form", box_number = "591" },
+    { casilla_id = "ascendiente-dos-hijos.deduccion", kind = "on_form", box_number = "590" },
+    { casilla_id = "ascendientes.abono-anticipado", kind = "on_form", box_number = "573" },
+    { casilla_id = "ascendientes.deduccion", kind = "on_form", box_number = "572" },
+    { casilla_id = "ascendientes.nif", kind = "on_form", box_number = "561" },
+    { casilla_id = "ascendientes.nombre", kind = "on_form", box_number = "562" },
+    { casilla_id = "conyuge.abono-anticipado", kind = "on_form", box_number = "575" },
+    { casilla_id = "conyuge.deduccion", kind = "on_form", box_number = "574" },
+    { casilla_id = "decl.ejercicio", kind = "on_form" },
+    { casilla_id = "decl.pagina-complementaria", kind = "working_figure", workbook_exclusion = "transport_control", workbook_exclusion_reason = "AEAT record design Pag. 1 campo 5, position 12: C or blank is a file-page marker, not a printed tax box or calculation operand." },
+    { casilla_id = "decl.tipo-declaracion", kind = "working_figure", workbook_exclusion = "transport_control", workbook_exclusion_reason = "AEAT record design Pag. 1 campo 6, position 13: I is the literal payment-result code, not an operator financial input." },
+    { casilla_id = "descendientes.abono-anticipado", kind = "on_form", box_number = "558" },
+    { casilla_id = "descendientes.deduccion", kind = "on_form", box_number = "557" },
+    { casilla_id = "descendientes.nif", kind = "on_form", box_number = "548" },
+    { casilla_id = "descendientes.nombre", kind = "on_form", box_number = "549" },
+    { casilla_id = "familia-numerosa.abono-anticipado", kind = "on_form", box_number = "589" },
+    { casilla_id = "familia-numerosa.deduccion", kind = "on_form", box_number = "588" },
+    { casilla_id = "familia-numerosa.titulo", kind = "on_form", box_number = "576" },
+    { casilla_id = "repr.apellidos-razon-social", kind = "on_form" },
+    { casilla_id = "repr.nif", kind = "on_form" },
+    { casilla_id = "repr.nombre", kind = "on_form" },
+    { casilla_id = "resultado.a-ingresar", kind = "on_form", box_number = "595" },
+]
+
+[[revisions.2017-y-siguientes.form_layouts.pages]]
+id = "pag-1"
+official_ref = "BOE-A-2018-10064, anexo II, pág. 72109 (PDF pág. 8)"
+heading_key = "modelo.schema.122.form.page.pag-1.heading"
+
+[[revisions.2017-y-siguientes.form_layouts.pages.sections]]
+id = "ejercicio"
+heading_key = "modelo.schema.122.form.section.ejercicio.heading"
+official_heading = "Ejercicio"
+blocks = [
+    { kind = "field", id = "campo-decl-ejercicio", casilla_id = "decl.ejercicio" },
+]
+
+[[revisions.2017-y-siguientes.form_layouts.pages.sections]]
+id = "contribuyente"
+heading_key = "modelo.schema.122.form.section.contribuyente.heading"
+official_heading = "1. Contribuyente no obligado a presentar declaración"
+blocks = [
+    { kind = "context_field", id = "contexto-contribuyente-nif", export_layout_id = "generated-modelo-122-2017-y-siguientes-fichero", export_record_id = "modelo-122-pagina-01", export_field_id = "modelo-122-p1-contribuyente-nif", heading_key = "modelo.schema.122.form.context.contribuyente-nif.heading", official_heading = "N.º de identificación fiscal (NIF)" },
+    { kind = "context_field", id = "contexto-contribuyente-apellidos", export_layout_id = "generated-modelo-122-2017-y-siguientes-fichero", export_record_id = "modelo-122-pagina-01", export_field_id = "modelo-122-p1-contribuyente-apellidos", heading_key = "modelo.schema.122.form.context.contribuyente-apellidos.heading", official_heading = "Apellidos" },
+    { kind = "context_field", id = "contexto-contribuyente-nombre", export_layout_id = "generated-modelo-122-2017-y-siguientes-fichero", export_record_id = "modelo-122-pagina-01", export_field_id = "modelo-122-p1-contribuyente-nombre", heading_key = "modelo.schema.122.form.context.contribuyente-nombre.heading", official_heading = "Nombre" },
+]
+
+[[revisions.2017-y-siguientes.form_layouts.pages.sections]]
+id = "descendientes"
+heading_key = "modelo.schema.122.form.section.descendientes.heading"
+official_heading = "2. Regularización por percepción indebida del abono anticipado de las deducciones"
+blocks = [
+    { kind = "field", id = "campo-descendientes-nif", casilla_id = "descendientes.nif" },
+    { kind = "field", id = "campo-descendientes-nombre", casilla_id = "descendientes.nombre" },
+    { kind = "field", id = "campo-descendientes-deduccion", casilla_id = "descendientes.deduccion" },
+    { kind = "field", id = "campo-descendientes-abono-anticipado", casilla_id = "descendientes.abono-anticipado" },
+]
+
+[[revisions.2017-y-siguientes.form_layouts.pages.sections]]
+id = "ascendientes"
+heading_key = "modelo.schema.122.form.section.ascendientes.heading"
+official_heading = "Deducción por ascendientes con discapacidad a cargo"
+blocks = [
+    { kind = "field", id = "campo-ascendientes-nif", casilla_id = "ascendientes.nif" },
+    { kind = "field", id = "campo-ascendientes-nombre", casilla_id = "ascendientes.nombre" },
+    { kind = "field", id = "campo-ascendientes-deduccion", casilla_id = "ascendientes.deduccion" },
+    { kind = "field", id = "campo-ascendientes-abono-anticipado", casilla_id = "ascendientes.abono-anticipado" },
+]
+
+[[revisions.2017-y-siguientes.form_layouts.pages.sections]]
+id = "conyuge"
+heading_key = "modelo.schema.122.form.section.conyuge.heading"
+official_heading = "Deducción por cónyuge no separado con discapacidad"
+blocks = [
+    { kind = "field", id = "campo-conyuge-deduccion", casilla_id = "conyuge.deduccion" },
+    { kind = "field", id = "campo-conyuge-abono-anticipado", casilla_id = "conyuge.abono-anticipado" },
+]
+
+[[revisions.2017-y-siguientes.form_layouts.pages.sections]]
+id = "familia-numerosa"
+heading_key = "modelo.schema.122.form.section.familia-numerosa.heading"
+official_heading = "Deducción por familia numerosa"
+blocks = [
+    { kind = "field", id = "campo-familia-numerosa-titulo", casilla_id = "familia-numerosa.titulo" },
+    { kind = "field", id = "campo-familia-numerosa-deduccion", casilla_id = "familia-numerosa.deduccion" },
+    { kind = "field", id = "campo-familia-numerosa-abono-anticipado", casilla_id = "familia-numerosa.abono-anticipado" },
+]
+
+[[revisions.2017-y-siguientes.form_layouts.pages.sections]]
+id = "ascendiente-dos-hijos"
+heading_key = "modelo.schema.122.form.section.ascendiente-dos-hijos.heading"
+official_heading = "Deducción por ascendiente, separado legalmente o sin vínculo matrimonial, con dos hijos sin derecho a percibir anualidades por alimentos"
+blocks = [
+    { kind = "field", id = "campo-ascendiente-dos-hijos-deduccion", casilla_id = "ascendiente-dos-hijos.deduccion" },
+    { kind = "field", id = "campo-ascendiente-dos-hijos-abono-anticipado", casilla_id = "ascendiente-dos-hijos.abono-anticipado" },
+]
+
+[[revisions.2017-y-siguientes.form_layouts.pages.sections]]
+id = "liquidacion"
+heading_key = "modelo.schema.122.form.section.liquidacion.heading"
+official_heading = "3. Liquidación"
+blocks = [
+    { kind = "field", id = "campo-resultado-a-ingresar", casilla_id = "resultado.a-ingresar" },
+]
+
+[[revisions.2017-y-siguientes.form_layouts.pages.sections]]
+id = "ingreso"
+heading_key = "modelo.schema.122.form.section.ingreso.heading"
+official_heading = "4. Ingreso"
+blocks = [
+    { kind = "context_field", id = "contexto-ingreso-iban", export_layout_id = "generated-modelo-122-2017-y-siguientes-fichero", export_record_id = "modelo-122-pagina-01", export_field_id = "modelo-122-p1-ingreso-iban", heading_key = "modelo.schema.122.form.context.ingreso-iban.heading", official_heading = "Número de cuenta (IBAN)" },
+]
+
+[[revisions.2017-y-siguientes.form_layouts.pages.sections]]
+id = "complementaria"
+heading_key = "modelo.schema.122.form.section.complementaria.heading"
+official_heading = "5. Autoliquidación complementaria"
+blocks = [
+    { kind = "context_field", id = "contexto-complementaria-marca", export_layout_id = "generated-modelo-122-2017-y-siguientes-fichero", export_record_id = "modelo-122-pagina-01", export_field_id = "modelo-122-p1-complementaria-marca", heading_key = "modelo.schema.122.form.context.complementaria-marca.heading", official_heading = "Autoliquidación complementaria" },
+    { kind = "context_field", id = "contexto-complementaria-justificante", export_layout_id = "generated-modelo-122-2017-y-siguientes-fichero", export_record_id = "modelo-122-pagina-01", export_field_id = "modelo-122-p1-complementaria-justificante", heading_key = "modelo.schema.122.form.context.complementaria-justificante.heading", official_heading = "N.º de justificante" },
+]
+
+[[revisions.2017-y-siguientes.form_layouts.pages.sections]]
+id = "representante"
+heading_key = "modelo.schema.122.form.section.representante.heading"
+official_heading = "6. Representante"
+blocks = [
+    { kind = "field", id = "campo-repr-nif", casilla_id = "repr.nif" },
+    { kind = "field", id = "campo-repr-apellidos-razon-social", casilla_id = "repr.apellidos-razon-social" },
+    { kind = "field", id = "campo-repr-nombre", casilla_id = "repr.nombre" },
+]

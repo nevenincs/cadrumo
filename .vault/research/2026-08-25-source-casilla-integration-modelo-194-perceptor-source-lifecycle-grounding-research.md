@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:f90d21bd0294ea9419611e8aac9ed55a44a15888a49c3e26b7b2fc4458a4855c'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+body_hash: 'sha256:aaaa19813481f5aea398bae12323380e65382e6fe931b9364eb84440627766f3'
+related: []
 ---
 # `source-casilla-integration` research: `modelo 194 perceptor source lifecycle grounding`
 
@@ -58,7 +57,6 @@ A later source step can revisit M194 only after evidence identifies those acquis
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_194/files/02-194-diseno-de-registro-actualizado-en-2023.pdf.extracted.md`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_194/files/01-194-diseno-de-registro-actualizado-en-2024.pdf.extracted.md`
 - `src/cadrumo/_data/registry/aeat/modelos/194/`
-- `src/cadrumo/domain/calculations/registry/_withholding_bindings.py`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_187_188_194_registry.py`
+
 - `.vault/reference/2026-08-24-registry-completeness-closure-modelo-194-design-era-coverage-reference.md`
 - `.vault/audit/2026-08-25-registry-temporal-coverage-s47-m194-era-review-audit.md`

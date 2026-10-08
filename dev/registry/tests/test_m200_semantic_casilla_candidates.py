@@ -12,6 +12,8 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 
 from ..analysis import m200_semantic_casilla_candidates as subject
+from ..analysis import m200_target_identity_worklist as identity_subject
+from ..analysis.m200_record_design_support import record_design_source
 from ..compiler.loader import load_catalogue_file, load_modelo_directory
 from ..pipeline.record_design_intermediate import RecordDesignIntermediateField, load_record_design_intermediate
 from ..pipeline.semantic_map import load_semantic_map
@@ -26,7 +28,7 @@ def target_identity_inputs():
     modelo = load_modelo_directory(registry_root / "modelos" / "200")
     target = modelo.revisions["2024"]
     catalogues = load_catalogue_file(registry_root / "legal" / "is.toml")
-    source_ref = subject._record_design_source(target.source_refs, catalogues.sources)
+    source_ref = record_design_source(target.source_refs, catalogues.sources)
     epoch = catalogues.sources[source_ref].record_design_epoch
     assert epoch is not None
     return (
@@ -46,7 +48,7 @@ def target_identity_inputs():
 @pytest.fixture(scope="module")
 def target_identity_worklist(target_identity_inputs):
     target_map, target_design, declarations, candidates = target_identity_inputs
-    return subject.classify_m200_target_identities(
+    return identity_subject.classify_m200_target_identities(
         target_map,
         target_design,
         target_declarations=declarations,
@@ -96,9 +98,11 @@ def test_cli_stdout_exports_the_complete_proposal_only_target_identity_worklist(
     monkeypatch,
     target_identity_worklist,
 ) -> None:
-    monkeypatch.setattr(subject, "load_bundled_m200_target_identity_worklist", lambda: target_identity_worklist)
+    monkeypatch.setattr(
+        identity_subject, "load_bundled_m200_target_identity_worklist", lambda: target_identity_worklist
+    )
 
-    assert subject.main([]) == 0
+    assert identity_subject.main([]) == 0
     document = rtoml.loads(capsys.readouterr().out)
 
     assert document["authority_status"] == "proposal_only"
@@ -122,14 +126,14 @@ def test_cli_stdout_exports_the_complete_proposal_only_target_identity_worklist(
 
 def test_cli_rejects_retired_output_arguments_before_loading_worklist(monkeypatch) -> None:
     monkeypatch.setattr(
-        subject,
+        identity_subject,
         "load_bundled_m200_target_identity_worklist",
         lambda: pytest.fail("retired output arguments must fail during parsing"),
     )
 
     for arguments in (("--output", "review.toml"), ("--check",)):
         with pytest.raises(SystemExit) as error:
-            subject.main(list(arguments))
+            identity_subject.main(list(arguments))
         assert error.value.code == 2
 
 
@@ -169,7 +173,7 @@ def test_identity_cli_has_no_filesystem_write_surface() -> None:
     describes had stopped existing, so the surface is counted before the
     absences are believed.
     """
-    tree = ast.parse(inspect.getsource(subject))
+    tree = ast.parse(inspect.getsource(identity_subject))
     filesystem_writes = {
         "mkdir",
         "open",
@@ -191,8 +195,8 @@ def test_identity_cli_has_no_filesystem_write_surface() -> None:
         "spellings among the forbidden names are only visible in this set"
     )
     assert filesystem_writes.isdisjoint(called_attributes | called_bare)
-    assert not hasattr(subject, "_write_review_output")
-    assert not hasattr(subject, "_resolve_review_output_path")
+    assert not hasattr(identity_subject, "_write_review_output")
+    assert not hasattr(identity_subject, "_resolve_review_output_path")
 
 
 def _record_design_field(
@@ -250,10 +254,10 @@ def test_target_identity_worklist_classifies_every_noncanonical_owner_and_true_o
     dispositions = Counter(row.disposition for row in worklist.map_owner_mismatches)
 
     assert worklist.map_owner_mismatches
-    assert set(dispositions) == {subject.M200MapOwnerIdentityDisposition.ZERO_PADDING_PROPOSAL}
+    assert set(dispositions) == {identity_subject.M200MapOwnerIdentityDisposition.ZERO_PADDING_PROPOSAL}
     assert all(row.proposed_identity_origin == "declared" for row in worklist.map_owner_mismatches)
     assert all(
-        row.printed_identity_state is subject.M200PrintedIdentityState.MATCHES_IDENTITY_PROPOSAL
+        row.printed_identity_state is identity_subject.M200PrintedIdentityState.MATCHES_IDENTITY_PROPOSAL
         for row in worklist.map_owner_mismatches
     )
     # These two were the whole orphan set when this test was written and are now
@@ -263,7 +267,7 @@ def test_target_identity_worklist_classifies_every_noncanonical_owner_and_true_o
     orphans = {row.casilla_id for row in worklist.orphaned_declarations}
     assert {"DP200014:SAL_RESERVA_DOTACION", "DP200014:bin-aplicada-maxima"} <= orphans
     assert {row.disposition for row in worklist.orphaned_declarations} == {
-        subject.M200OrphanDisposition.UNMAPPED_DECLARATION
+        identity_subject.M200OrphanDisposition.UNMAPPED_DECLARATION
     }
 
 
@@ -272,13 +276,13 @@ def test_target_identity_worklist_keeps_printed_diagnostics_separate_from_map_ow
 
     assert len(worklist.printed_identity_diagnostics) == 11
     assert Counter(row.state for row in worklist.printed_identity_diagnostics) == {
-        subject.M200PrintedIdentityState.MISSING_OFFICIAL_PRINTED_IDENTITY: 11,
+        identity_subject.M200PrintedIdentityState.MISSING_OFFICIAL_PRINTED_IDENTITY: 11,
     }
     assert {row.export_field_id for row in worklist.printed_identity_diagnostics}.isdisjoint(
         row.export_field_id for row in worklist.map_owner_mismatches
     )
-    rendered = subject.render_m200_target_identity_worklist_toml(worklist)
-    assert rendered == subject.render_m200_target_identity_worklist_toml(worklist)
+    rendered = identity_subject.render_m200_target_identity_worklist_toml(worklist)
+    assert rendered == identity_subject.render_m200_target_identity_worklist_toml(worklist)
     assert "proposed_target_identity_non_authoritative" in rendered
     assert "[[entries]]" not in rendered
 
@@ -296,36 +300,36 @@ def test_target_identity_classifier_refuses_source_anchor_omission_noncasilla_ow
     # construction and reaches the classifier unresolved.
     omitted = target_map.model_copy(update={"entries": target_map.entries[1:]})
     with pytest.raises(ValueError, match="omits"):
-        subject.classify_m200_target_identities(omitted, target_design, **kwargs)
+        identity_subject.classify_m200_target_identities(omitted, target_design, **kwargs)
 
     first_casilla = next(entry for entry in target_map.entries if entry.kind is CasillaFieldKind.CASILLA)
     noncasilla_owner = first_casilla.model_copy(update={"kind": CasillaFieldKind.FILLER})
     invalid_entries = tuple(noncasilla_owner if entry is first_casilla else entry for entry in target_map.entries)
     invalid_map = target_map.model_copy(update={"entries": invalid_entries})
     with pytest.raises(ValueError, match="non-casilla"):
-        subject.classify_m200_target_identities(invalid_map, target_design, **kwargs)
+        identity_subject.classify_m200_target_identities(invalid_map, target_design, **kwargs)
 
     missing_owner = first_casilla.model_copy(update={"casilla_id": None})
     missing_owner_entries = tuple(missing_owner if entry is first_casilla else entry for entry in target_map.entries)
     missing_owner_map = target_map.model_copy(update={"entries": missing_owner_entries})
     with pytest.raises(ValueError, match="omits its owner"):
-        subject.classify_m200_target_identities(missing_owner_map, target_design, **kwargs)
+        identity_subject.classify_m200_target_identities(missing_owner_map, target_design, **kwargs)
 
     drifted = target_map.model_copy(update={"source_sha256": "0" * 64})
     with pytest.raises(ValueError, match="source identity drifted"):
-        subject.classify_m200_target_identities(drifted, target_design, **kwargs)
+        identity_subject.classify_m200_target_identities(drifted, target_design, **kwargs)
 
 
 def test_target_identity_classifier_refuses_ambiguous_or_wrong_segment_proposals() -> None:
     field = _record_design_field(normalized_description="Importe", record_identity="DP200018")
     with pytest.raises(ValueError, match="ambiguous"):
-        subject._classify_noncanonical_map_owner(
+        identity_subject._classify_noncanonical_map_owner(
             "588",
             field=field,
             known_ids=frozenset({"00588", "DP200018:00588"}),
         )
     with pytest.raises(ValueError, match="ambiguous"):
-        subject._classify_noncanonical_map_owner(
+        identity_subject._classify_noncanonical_map_owner(
             "588",
             field=field,
             known_ids=frozenset({"DP200014B:00588"}),

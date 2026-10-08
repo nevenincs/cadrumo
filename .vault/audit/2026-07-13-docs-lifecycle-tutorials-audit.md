@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#docs-lifecycle-tutorials'
 date: '2026-07-13'
-modified: '2026-07-13'
-body_hash: 'sha256:62a9f3dce878b21fe8e77615efe9f80550b9d851e25b8abdac31f2865c0e5ad8'
+modified: '2026-10-03'
+body_hash: 'sha256:d36274726ed6b8140a76b29a85bc04fdb984d85c2048c300ad4d955aed3622f4'
 related:
-  - "[[2026-07-13-docs-lifecycle-tutorials-plan]]"
   - "[[2026-07-13-docs-lifecycle-tutorials-adr]]"
 ---
 
@@ -48,7 +47,7 @@ the campaign closes with this step named as the follow-up.
 
 ### stray-process-files-in-docs-root | medium | three project-management files shipped in the docs tree
 
-`docs/ADRS.md` and the two `*KICKOFF-BRIEF.md` files violated the
+The retired document and the two `*KICKOFF-BRIEF.md` files violated the
 docs-architecture ADR clause 3a (no project-management metadata in the docs
 tree); the research flagged them twice without converting the flag into a
 step. RESOLVED in the same session: provenance and reference checks run

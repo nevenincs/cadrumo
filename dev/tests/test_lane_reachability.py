@@ -75,22 +75,18 @@ from pathlib import Path
 import pytest
 
 from dev._paths import REPO_ROOT
-from dev.ci.lane_reachability import (
-    Lane,
-    analyse_directory_coverage,
-    analyse_reachability,
-    ci_invoked_lanes,
-    ci_invoked_recipes,
-    configured_testpaths,
-    declared_lanes,
+from dev.ci.lane_configuration import configured_testpaths
+from dev.ci.lane_contracts import Lane
+from dev.ci.lane_marker_inventory import (
     discover_test_directories,
     discover_test_files,
     expression_selects,
     marker_sets_in,
     tracked_test_directories,
     tracked_test_files,
-    workflow_triggers,
 )
+from dev.ci.lane_reachability import analyse_directory_coverage, analyse_reachability, ci_invoked_lanes, declared_lanes
+from dev.ci.lane_workflow_graph import ci_invoked_recipes, workflow_triggers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -135,6 +131,10 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-registry-conformance",
         "test-test-policy",
         "test-repository-contracts",
+        # The documentation build's tests compile the whole site, so they have
+        # the one owner CI runs once, not the repository contracts it runs on
+        # every supported interpreter.
+        "docs-check",
         # `test-ci-contracts` itself holds no pytest invocation: it is the
         # local aggregate over these two, which own the population between
         # them. The release proof runs each as its own step and the merge gate
@@ -145,8 +145,8 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-packaging-serial",
         "test-installed-oracles",
         "test-channel-artifacts",
-        "test-packaging-ci",
         "test-windows",
+        "test-native-host-facilities",
         "test-os-keychain",
         "test-resident-service",
         "test-registry-live",
@@ -914,7 +914,7 @@ def test_an_unresolved_template_residue_does_not_silently_widen_a_lanes_paths() 
       construct. Its correct behaviour is to inherit `configured_testpaths`;
       this pins that the residue does not accidentally produce a non-empty (and
       therefore narrower-than-correct) or a wrong path list.
-    - `docs-check` carries three real explicit paths sitting next to an
+    - `docs-check` carries two real explicit paths sitting next to an
       unresolved `{{workers}}` reference. `workers` is a RECIPE PARAMETER
       (`docs-check workers="auto":`), not a top-level justfile variable, so
       `just --evaluate` structurally cannot resolve it -- it will never appear
@@ -937,7 +937,6 @@ def test_an_unresolved_template_residue_does_not_silently_widen_a_lanes_paths() 
         assert lane.paths == (
             "dev/docs/tests",
             "dev/docs/apidocs/tests",
-            "src/cadrumo/tests/test_docstring_core_struct_links.py",
         ), f"docs-check's unresolved `workers` template residue must not swallow its real paths; got {lane.paths!r}"
 
 

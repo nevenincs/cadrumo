@@ -3,14 +3,14 @@ tags:
   - '#reference'
   - '#invoice-canonical-structure'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6bd520a114c40299acbe9ec525f79bdce1150ad39a64c7cc901e15a3f01a3cfd'
+body_hash: 'sha256:ea1c8f2e46b65bc4e44fc25b7d9897a3f4103d2fb579a7777b5a749ec6d25b20'
 related:
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
-  - "[[2026-08-06-invoice-canonical-structure-plan]]"
   - "[[2026-08-06-invoice-canonical-structure-audit]]"
 ---
+
 # `invoice-canonical-structure` reference: `Canonical verdict, conflation map, capability and custody grounding`
 
 The implementation grounding a coding team needs to execute this campaign: which of the two
@@ -50,7 +50,6 @@ them is not a proof:
 Confirmed absent from `src/cadrumo/domain/invoices/` by targeted search at `246d9a11f4`:
 
 - **`eu_iva_id`** - load-bearing, not cosmetic. `_business_invoice_party_tax_id`
-  (`src/cadrumo/application/invoices/_source_resolver.py:675-679`) reads
   `(invoice.eu_iva_id or invoice.counterparty_nif)`, **preferring the EU VAT ID** as the
   declared M349 party id, and `_business_invoice_country_code` (`:682-689`) derives the M349
   country prefix from it, including the EL-to-GR mapping. The canonical projection
@@ -104,17 +103,14 @@ A relayed claim that the canonical catalogue is excluded from profile backup is 
 Measured at `246d9a11f4`:
 
 - `INVOICE_CATALOGUE_NAMESPACE`
-  (`src/cadrumo/adapters/persistence/storage/_namespace_registry.py:906-916`) declares
   `custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY` and a
   `default_object_key`.
 - The registry that appeared to be missing an entry is a **natural-key resolver** map, not an
-  inclusion list. `src/cadrumo/application/user_profile/_custody_carry.py:468-471` falls back
   for exactly this case - single-document and catalogue stores resolve through a fixed key.
   The slim repository has an explicit resolver because it is a per-record bound repository.
 - A namespace with neither a resolver nor a default key raises `ProfileExportError`
   (`:472-476`). Custody failure is loud, not silent.
 - End-to-end coverage already exists:
-  `src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py:1001` enrols the
   canonical namespace with a seed that builds a real invoice with lines.
 
 **The real custody defect is weaker and different.** The verification at `:319-320` asserts
@@ -160,7 +156,6 @@ and merge them into storage*.
   the two originally swept: `import_invoices_from_path`, `merge_invoice_import`,
   `parse_invoice_payload` and `InvoiceImportResult`. All four are production-consumer-free, so
   the deletion still stands — but `parse_invoice_payload` carries a test in a **different
-  package** (`src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py:243`) reaching it
   through the package facade. Deleting the module and its own test directory would leave that
   file importing a deleted symbol, surfacing as a collection error in an unrelated package.
 - **"Exactly one `Invoice` writer" was literally false.** Five production modules instantiate
@@ -202,7 +197,7 @@ Read-only investigation. No commits, no staging, no destructive git.
 
 ### 1. The grounded canonical verdict
 
-**The rich `Invoice` aggregate at `src/cadrumo/domain/invoices/_models.py:500` is canonical — but the collapse is NOT a pure deletion. Three fields live only on the slim store and must be added to the rich aggregate first, or the collapse regresses Modelo 349 declaration fidelity.**
+Three fields live only on the slim store and must be added to the rich aggregate first, or the collapse regresses Modelo 349 declaration fidelity.**
 
 #### Two genuine structural schemas exist
 

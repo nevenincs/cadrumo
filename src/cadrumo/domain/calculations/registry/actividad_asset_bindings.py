@@ -24,6 +24,7 @@ from ...renta.actividad_asset.election import (
     AmortizationMethod,
     DirectEstimationRegime,
     RenewableInstallationPurpose,
+    RenewableSelfConsumptionEvidence,
     SmallEnterpriseEvidence,
 )
 from ...renta.actividad_asset.errors import (
@@ -358,33 +359,10 @@ def _resolve_method(
     workforce: tuple[PlantillaMediaYear, ...],
 ) -> _Resolution:
     method = asset_revision.amortization.method
-    if method is AmortizationMethod.LINEAR:
-        return _resolve_linear(parameters, asset_revision)
-    if method is AmortizationMethod.CONSTANT_PERCENTAGE:
-        return _resolve_constant_percentage(parameters, asset_revision)
-    if method is AmortizationMethod.SUM_OF_DIGITS:
-        return _resolve_sum_of_digits(parameters, asset_revision)
-    if method is AmortizationMethod.APPROVED_PLAN:
-        return _resolve_approved_plan(parameters, asset_revision)
-    if method is AmortizationMethod.INTANGIBLE_USEFUL_LIFE:
-        return _resolve_useful_life(asset_revision)
-    if method in {AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE, AmortizationMethod.GOODWILL}:
-        return _resolve_twentieth_limit(parameters, asset_revision)
-    if method is AmortizationMethod.LOW_VALUE_FREE:
-        return _resolve_low_value(parameters, asset_revision)
-    if method is AmortizationMethod.RESEARCH_DEVELOPMENT_FREE:
-        return _resolve_research_development_free(parameters, asset_revision)
-    if method is AmortizationMethod.RESEARCH_DEVELOPMENT_BUILDING:
-        return _resolve_research_development_building(parameters, asset_revision)
-    if method is AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE:
-        return _resolve_charging_infrastructure(parameters, asset_revision)
-    if method is AmortizationMethod.ELECTRIC_VEHICLE_FREE:
-        return _resolve_electric_vehicle(parameters, asset_revision)
-    if method is AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE:
-        return _resolve_employment_free(parameters, asset_revision, workforce)
-    if method is AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE:
-        return _resolve_renewable_free(parameters, asset_revision, workforce)
-    raise ActividadAssetUnsupportedError(f"{method.value} has no enrolled authority resolver")
+    resolver = _METHOD_RESOLVERS.get(method)
+    if resolver is None:
+        raise ActividadAssetUnsupportedError(f"{method.value} has no enrolled authority resolver")
+    return resolver(parameters, asset_revision, workforce)
 
 
 @dataclass(frozen=True, slots=True)
@@ -838,30 +816,8 @@ def _resolve_renewable_free(
     An amount not taken in that period cannot be taken freely later, so the
     entry year must be the tax year as well as a year the period enrols.
     """
-    election = asset_revision.amortization
-    evidence = election.renewable_self_consumption
-    class_key = election.authority_class_key
-    if evidence is None or class_key is None:  # defensive: election validation proves unreachable
-        raise ActividadAssetIncompleteError("renewable free depreciation requires its table class and evidence")
-    if _class_flag(parameters, _BUILDING_CLASS_ID, class_key):
-        raise ActividadAssetUnsupportedError("buildings cannot use renewable free depreciation (LIS DA 17a.1)")
-    if evidence.purpose is RenewableInstallationPurpose.THERMAL_OWN_USE and not evidence.replaces_fossil_installation:
-        raise ActividadAssetUnsupportedError(
-            "a thermal installation qualifies only when it replaces one using fossil energy (LIS DA 17a.1)",
-        )
-    if evidence.required_by_building_code:
-        raise ActividadAssetUnsupportedError(
-            "an installation the Codigo Tecnico de la Edificacion makes mandatory qualifies only for the cost "
-            "share above the mandatory power (LIS DA 17a.5), and charging that share is not supported",
-        )
-    if evidence.made_available_on > asset_revision.in_service_date:
-        raise ActividadAssetValidationError("an asset cannot enter service before it is made available")
-    if parameters.on_date(_RENEWABLE_AVAILABILITY_ID, DateAxis.TRANSACTION_DATE, evidence.made_available_on) != Decimal(
-        "1",
-    ):
-        raise ActividadAssetUnsupportedError(
-            "the installation was made available before the date LIS DA 17a.1 admits installations from",
-        )
+    evidence, class_key = _renewable_support(asset_revision)
+    _validate_renewable_installation(parameters, asset_revision, evidence, class_key)
     entry_year = asset_revision.in_service_date.year
     first_year = parameters.value(_RENEWABLE_FIRST_YEAR_ID)
     last_year = parameters.value(_RENEWABLE_LAST_YEAR_ID)
@@ -886,5 +842,76 @@ def _resolve_renewable_free(
         ),
     )
 
+
+def _renewable_support(
+    asset_revision: ActivityAssetRevision,
+) -> tuple[RenewableSelfConsumptionEvidence, str]:
+    evidence = asset_revision.amortization.renewable_self_consumption
+    class_key = asset_revision.amortization.authority_class_key
+    if evidence is None or class_key is None:  # defensive: election validation proves unreachable
+        raise ActividadAssetIncompleteError("renewable free depreciation requires its table class and evidence")
+    return evidence, class_key
+
+
+def _validate_renewable_installation(
+    parameters: _Parameters,
+    asset_revision: ActivityAssetRevision,
+    evidence: RenewableSelfConsumptionEvidence,
+    class_key: str,
+) -> None:
+    if _class_flag(parameters, _BUILDING_CLASS_ID, class_key):
+        raise ActividadAssetUnsupportedError("buildings cannot use renewable free depreciation (LIS DA 17a.1)")
+    if evidence.purpose is RenewableInstallationPurpose.THERMAL_OWN_USE and not evidence.replaces_fossil_installation:
+        raise ActividadAssetUnsupportedError(
+            "a thermal installation qualifies only when it replaces one using fossil energy (LIS DA 17a.1)",
+        )
+    if evidence.required_by_building_code:
+        raise ActividadAssetUnsupportedError(
+            "an installation the Codigo Tecnico de la Edificacion makes mandatory qualifies only for the cost "
+            "share above the mandatory power (LIS DA 17a.5), and charging that share is not supported",
+        )
+    if evidence.made_available_on > asset_revision.in_service_date:
+        raise ActividadAssetValidationError("an asset cannot enter service before it is made available")
+    if parameters.on_date(_RENEWABLE_AVAILABILITY_ID, DateAxis.TRANSACTION_DATE, evidence.made_available_on) != Decimal(
+        "1",
+    ):
+        raise ActividadAssetUnsupportedError(
+            "the installation was made available before the date LIS DA 17a.1 admits installations from",
+        )
+
+
+_MethodResolver = Callable[[_Parameters, ActivityAssetRevision, tuple[PlantillaMediaYear, ...]], _Resolution]
+_METHOD_RESOLVERS: dict[AmortizationMethod, _MethodResolver] = {
+    AmortizationMethod.LINEAR: lambda parameters, revision, _: _resolve_linear(parameters, revision),
+    AmortizationMethod.CONSTANT_PERCENTAGE: lambda parameters, revision, _: _resolve_constant_percentage(
+        parameters, revision
+    ),
+    AmortizationMethod.SUM_OF_DIGITS: lambda parameters, revision, _: _resolve_sum_of_digits(parameters, revision),
+    AmortizationMethod.APPROVED_PLAN: lambda parameters, revision, _: _resolve_approved_plan(parameters, revision),
+    AmortizationMethod.INTANGIBLE_USEFUL_LIFE: lambda _, revision, __: _resolve_useful_life(revision),
+    AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE: lambda parameters, revision, _: _resolve_twentieth_limit(
+        parameters, revision
+    ),
+    AmortizationMethod.GOODWILL: lambda parameters, revision, _: _resolve_twentieth_limit(parameters, revision),
+    AmortizationMethod.LOW_VALUE_FREE: lambda parameters, revision, _: _resolve_low_value(parameters, revision),
+    AmortizationMethod.RESEARCH_DEVELOPMENT_FREE: lambda parameters, revision, _: _resolve_research_development_free(
+        parameters, revision
+    ),
+    AmortizationMethod.RESEARCH_DEVELOPMENT_BUILDING: lambda parameters, revision, _: (
+        _resolve_research_development_building(parameters, revision)
+    ),
+    AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE: lambda parameters, revision, _: _resolve_charging_infrastructure(
+        parameters, revision
+    ),
+    AmortizationMethod.ELECTRIC_VEHICLE_FREE: lambda parameters, revision, _: _resolve_electric_vehicle(
+        parameters, revision
+    ),
+    AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE: lambda parameters, revision, workforce: (
+        _resolve_employment_free(parameters, revision, workforce)
+    ),
+    AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE: lambda parameters, revision, workforce: _resolve_renewable_free(
+        parameters, revision, workforce
+    ),
+}
 
 __all__ = ["ACTIVITY_ASSET_PARAMETER_IDS", "resolve_activity_asset_schedule_authority"]

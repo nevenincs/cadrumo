@@ -29,29 +29,17 @@ from pathlib import Path
 
 import pytest
 
-from dev.audit.unreachable_code import EntryPoint, ShippedTreeSpec
+from dev.audit.unreachable_tree import EntryPoint, ShippedTreeSpec
+from dev.exit_codes import FAILED, OK, TOOL_BROKEN, advisory_result
 from dev.quality.write_path_coverage import (
     PersistenceSurfaceSpec,
     WritePathOutcome,
+    main,
     run_gate,
     scan_write_path_coverage,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.timeout(600)]
-"""The 600-second budget is contention, not a slow test.
-
-Measured at 207.31s under the repository's default `-n auto`
-parallelism - 69% of the 300-second ceiling - for
-``test_the_live_shipped_tree_has_no_writerless_persistence_surface``.
-
-The ceiling is wall clock and its expiry does not fail the test: the
-thread method kills the worker, and every sibling scheduled on it is
-reported as never having run. `--dist=loadfile` puts this whole module on
-one worker, so the margin here is shared, not per-case.
-
-The walk itself stays real; resolving the live first-party graph is what
-costs the minutes.
-"""
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _EXCLUDES = ("src/pkg/tests", "src/pkg/tests/**", "src/pkg/**/tests", "src/pkg/**/tests/**")
 
@@ -130,13 +118,13 @@ _NAMESAKE = '''"""A different subject that also has a capture verb."""
 from __future__ import annotations
 
 
-class TelemetrySink:
+class MetricsSink:
     def capture(self, event: object) -> None:
         self._events = event
 
 
 def record(event: object) -> None:
-    TelemetrySink().capture(event)
+    MetricsSink().capture(event)
 '''
 
 
@@ -152,7 +140,7 @@ def _planted_tree(root: Path, *, with_writer: bool, with_namesake: bool = False)
     if with_writer:
         imports.append("from . import writer")
     if with_namesake:
-        imports.append("from . import telemetry")
+        imports.append("from . import metrics")
     _write(root, "src/pkg/__init__.py")
     _write(root, "src/pkg/cli.py", "\n".join(imports) + "\n\n\ndef main() -> None:\n    del reader\n")
     _write(root, "src/pkg/snapshot_base.py", _BASE)
@@ -161,7 +149,7 @@ def _planted_tree(root: Path, *, with_writer: bool, with_namesake: bool = False)
     if with_writer:
         _write(root, "src/pkg/writer.py", _WRITER)
     if with_namesake:
-        _write(root, "src/pkg/telemetry.py", _NAMESAKE)
+        _write(root, "src/pkg/metrics.py", _NAMESAKE)
     return ShippedTreeSpec(
         repo_root=root,
         src_root=root / "src",
@@ -169,6 +157,40 @@ def _planted_tree(root: Path, *, with_writer: bool, with_namesake: bool = False)
         entry_points=(EntryPoint("pkg.cli", "main"),),
         exclude_globs=_EXCLUDES,
     )
+
+
+def _repository_cli_tree(root: Path, *, with_writer: bool) -> None:
+    """Build a miniature packaged repository for exercising the CLI boundary."""
+    _write(
+        root,
+        "pyproject.toml",
+        '[project]\nname = "cadrumo"\nversion = "0"\n'
+        '[project.scripts]\ncadrumo = "cadrumo.cli:main"\n'
+        "[tool.hatch.build.targets.wheel]\nexclude = []\n",
+    )
+    _write(root, "src/cadrumo/__init__.py")
+    _write(root, "src/cadrumo/application/__init__.py")
+    _write(root, "src/cadrumo/application/live/__init__.py")
+    _write(
+        root,
+        "src/cadrumo/application/live/snapshot_base.py",
+        _BASE + "\n\nclass StatelessSnapshotService:\n    pass\n",
+    )
+    _write(root, "src/cadrumo/application/live/store.py", _SERVICE)
+    _write(
+        root,
+        "src/cadrumo/reader.py",
+        _READER.replace("from .store import", "from .application.live.store import"),
+    )
+    imports = ["from . import reader"]
+    if with_writer:
+        _write(
+            root,
+            "src/cadrumo/writer.py",
+            _WRITER.replace("from .store import", "from .application.live.store import"),
+        )
+        imports.append("from . import writer")
+    _write(root, "src/cadrumo/cli.py", "\n".join(imports) + "\n\n\ndef main() -> None:\n    return None\n")
 
 
 def test_a_readable_surface_with_no_production_writer_is_reported(tmp_path: Path) -> None:
@@ -254,6 +276,57 @@ def test_a_lost_anchor_refuses_rather_than_reporting_clean(tmp_path: Path) -> No
     assert result.outcome is WritePathOutcome.ERROR
     assert not result.is_green
     assert "Renamed" in result.reason
+
+
+def test_cli_uses_canonical_finding_exit_and_advisories_suppress_only_findings(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The real planted finding fails the gate but remains suppressible as an advisory."""
+    _repository_cli_tree(tmp_path, with_writer=False)
+
+    exit_code = main([], repo_root=tmp_path)
+
+    captured = capsys.readouterr()
+    assert exit_code == FAILED
+    assert "LedgerService" in captured.out
+    assert advisory_result(exit_code) == OK
+
+
+def test_cli_returns_ok_for_the_same_tree_with_a_real_writer(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The same packaged tree turns green only when its production writer exists."""
+    _repository_cli_tree(tmp_path, with_writer=True)
+
+    exit_code = main([], repo_root=tmp_path)
+
+    captured = capsys.readouterr()
+    assert exit_code == OK
+    assert "every readable persistence surface still has a production writer" in captured.out
+    assert advisory_result(exit_code) == OK
+
+
+@pytest.mark.parametrize("unavailable", ["malformed-module", "lost-anchor"])
+def test_cli_reports_tool_broken_without_advisory_suppression(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], unavailable: str
+) -> None:
+    """Malformed input and a lost anchor are unavailable scans, never clean results."""
+    _repository_cli_tree(tmp_path, with_writer=False)
+    if unavailable == "malformed-module":
+        _write(tmp_path, "src/cadrumo/cli.py", "def main(:\n")
+    else:
+        _write(
+            tmp_path,
+            "src/cadrumo/application/live/snapshot_base.py",
+            "class RenamedSnapshotService:\n    pass\n",
+        )
+
+    exit_code = main([], repo_root=tmp_path)
+
+    captured = capsys.readouterr()
+    assert exit_code == TOOL_BROKEN
+    assert "write-path scan unavailable" in captured.err
+    assert advisory_result(exit_code) == TOOL_BROKEN
 
 
 def test_an_unscannable_tree_refuses_rather_than_reporting_clean(tmp_path: Path) -> None:

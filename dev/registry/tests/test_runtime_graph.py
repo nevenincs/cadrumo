@@ -239,6 +239,24 @@ def test_enum_consumed_binding_ids_ignores_retired_irnr_six_arg_country_arg() ->
     assert enum_consumed_binding_ids(retired_revision) == frozenset()
 
 
+def test_text_comparison_routes_both_nested_binding_operands_without_routing_numeric_leaves() -> None:
+    """A text comparison's bindings use strings while the amount branch stays decimal."""
+    revision = _m210_2025_revision()
+    formula = _m210_rate_formula(revision)
+    expression = FormulaExpression.model_validate(
+        {
+            "op": "if_then_else",
+            "args": [
+                {"op": "text_equal", "args": [{"binding": "country-one"}, {"binding": "country-two"}]},
+                {"binding": "numeric-amount"},
+                {"literal": "0"},
+            ],
+        }
+    )
+    changed = revision.model_copy(update={"formulas": (formula.model_copy(update={"expression": expression}),)})
+    assert enum_consumed_binding_ids(changed) == frozenset({"country-one", "country-two"})
+
+
 def test_walkers_return_empty_for_unrelated_leaf_kinds() -> None:
     """A literal-only leaf yields no refs across every helper."""
     literal_leaf = _leaf(literal=Decimal("100"))

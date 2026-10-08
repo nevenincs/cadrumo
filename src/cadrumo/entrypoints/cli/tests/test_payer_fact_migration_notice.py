@@ -28,7 +28,7 @@ from cadrumo.core.json_contract import ResolvedNoticeAction
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.user_profile.values import UserProfileFact
-from .._payer_fact_migration_notice import (
+from ...payer_fact_migration_notices import (
     NOTICE_CODE,
     drain_payer_fact_migration_notices,
     payer_fact_cleared_notices,
@@ -68,7 +68,7 @@ def test_the_notice_names_the_cleared_fact_and_both_edit_flags(
     assert f"--{_FLAG}" in notice.message
     assert f"--no-{_FLAG}" in notice.message
     assert isinstance(notice.action, ResolvedNoticeAction)
-    assert notice.action.action.cli_path == ("config", "profile", "edit")
+    assert notice.action.action.target_command_key == "config.profile.edit"
     if language != "en":
         with override_settings(cadrumo_output_language="en"):
             english = tr(

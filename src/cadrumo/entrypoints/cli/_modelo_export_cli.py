@@ -2,54 +2,31 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import typer
 
-from ...application.modelo.action_errors import (
-    CalculationRevisionNotFoundError,
-    CalculationRevisionStateError,
-    ModeloPaymentElectionCapabilityRefusedError,
-    ModeloPaymentElectionIncompatibleError,
-    ModeloPriorDomiciliationElectionRefusedError,
-    ModeloRefundElectionNotEligibleError,
-    WorkUnitNotFoundError,
-)
-from ...application.modelo.export import (
-    ModeloExportCommand,
-    ModeloExportCrossBucketRefusedError,
-    ModeloExportNoActiveBucketError,
-    ModeloExportResult,
-    export_modelo_revision,
-)
-from ...application.modelo.export_ports import ModeloExportPorts
-from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ...application.modelo.export import ModeloExportResult
+from ...application.modelo.export_projection import ModeloExportPublicResultV3
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
-from ...application.workflow.persistence import workflow_state_repository
+from ...application.modelo.work_export_contracts import ModeloExportRequest
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.payment_election import PaymentElection
-from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.refund_election import RefundElection
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
-from ._modelo_behavior_support import resolve_exportable_revision_for_cli
 from ._modelo_cli_support import (
-    bad_parameter_from_error,
+    parse_revision_selector,
     resolve_default_actor,
-    resolve_explicit_or_active_bucket_id,
 )
 from ._modelo_payloads import ModeloExportPayload
-from .common import emit_envelope, filing_taxpayer_or_refuse
-from .state_projection_support import authority_operation, calculation_action_ports_factory, modelo_export_ports_factory
+from .common import emit_envelope
+from .runtime_modelo_export import run_modelo_export
+from .runtime_modelo_verification import select_modelo_work_revision_for_cli
 
 
 def _local_export_evidence_notice(result: ModeloExportResult) -> Notice:
     return Notice(
         severity=NoticeSeverity.WARNING,
         code="modelo.export.local_export_not_official_evidence",
-        message="The local export is not official filing evidence.",
+        message=tr("cli.app.modelo.export.local_file_not_receipt"),
         context={
             "evidence_status": result.local_evidence_status,
             "modelo": str(result.modelo),
@@ -77,10 +54,7 @@ def _development_software_identity_notice(result: ModeloExportResult) -> Notice:
     return Notice(
         severity=NoticeSeverity.WARNING,
         code="modelo.export.development_software_identity",
-        message=(
-            "The file header carries Cadrumo's all-zero development software identity; "
-            "AEAT will not accept this file for presentation."
-        ),
+        message=tr("cli.app.modelo.export.development_file_not_accepted"),
         context={
             "software_identity_grade": str(result.software_identity_grade),
             "modelo": str(result.modelo),
@@ -119,66 +93,7 @@ def _export_text_lines(result: ModeloExportResult) -> list[str]:
     ]
 
 
-def export_modelo_revision_for_cli(
-    *,
-    calculation_revision_id: str,
-    output_path: Path,
-    actor: str,
-    refund_election: RefundElection,
-    payment_election: PaymentElection,
-    prior_domiciliation_election: PriorDomiciliationElection,
-    replace_existing: bool,
-    operation: PinnedAuthorityOperation,
-    workflow_profile: TaxpayerProfile,
-    export_ports: ModeloExportPorts,
-) -> ModeloExportResult:
-    """Run the canonical export service and translate its CLI-owned refusals.
-
-    Both the standalone export and review-package builder create a fichero-BOE
-    draft through this boundary. Their output contracts remain separate.
-
-    ``ModeloExportOutputPathError`` is deliberately not among the refusals
-    translated to ``typer.BadParameter`` below: it already carries a
-    registered error code and a typed ``context`` (``output_path``, a stable
-    ``reason`` token such as ``"parent directory does not exist"``), and
-    ``typer.BadParameter`` has no context slot to carry that into. Left to
-    propagate, the command error boundary forwards it verbatim so the
-    operator sees the specific reason instead of a contextless refusal.
-
-    Core types:
-    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
-    """
-    try:
-        return export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=calculation_revision_id,
-                output_path=output_path,
-                actor=actor,
-                refund_election=refund_election,
-                payment_election=payment_election,
-                prior_domiciliation_election=prior_domiciliation_election,
-                replace_existing=replace_existing,
-            ),
-            workflow_profile=workflow_profile,
-            export_ports=export_ports,
-            operation=operation,
-        )
-    except (
-        CalculationRevisionNotFoundError,
-        CalculationRevisionStateError,
-        WorkUnitNotFoundError,
-        ModeloExportCrossBucketRefusedError,
-        ModeloExportNoActiveBucketError,
-        ModeloIvaWalletReconciliationBlocked,
-        ModeloPaymentElectionCapabilityRefusedError,
-        ModeloPaymentElectionIncompatibleError,
-        ModeloPriorDomiciliationElectionRefusedError,
-        ModeloRefundElectionNotEligibleError,
-    ) as exc:
-        raise bad_parameter_from_error(exc) from exc
-
-
-__all__ = ["export_modelo_revision_for_cli", "modelo_export_verb"]
+__all__ = ["modelo_export_verb"]
 
 
 def modelo_export_verb(
@@ -187,9 +102,6 @@ def modelo_export_verb(
 ) -> None:
     """Export a verified-complete or filed modelo revision to disk."""
     operator_input = ModeloExportOperatorInput.model_validate(input_values)
-    workflow_state = workflow_state_repository().load()
-    workflow_profile = filing_taxpayer_or_refuse(workflow_state)
-    resolved_bucket_id = resolve_explicit_or_active_bucket_id(operator_input.bucket_id)
     if (
         operator_input.output is None
         or not str(operator_input.output).strip()
@@ -200,36 +112,38 @@ def modelo_export_verb(
                 "cli.app.modelo.export.errors.output_required",
             )
         )
-    selected_revision = resolve_exportable_revision_for_cli(
-        revision=operator_input.revision,
+    client, selected_revision = select_modelo_work_revision_for_cli(
+        ctx,
+        calculation_revision_id=operator_input.revision,
         work_unit_id=operator_input.work_unit_id,
         modelo=operator_input.modelo,
         year=operator_input.year,
         period=operator_input.period,
-        registry_revision=operator_input.registry_revision,
+        revision=operator_input.registry_revision,
         bucket_id=operator_input.bucket_id,
-        select=operator_input.select,
-        calculation_ports=calculation_action_ports_factory(ctx)(
-            bucket_id=resolved_bucket_id,
-            operation=authority_operation(ctx),
-        ),
+        selector=parse_revision_selector(operator_input.select),
+        default_for="export",
     )
     target_revision_id = selected_revision.calculation_revision_id
-    result = export_modelo_revision_for_cli(
-        calculation_revision_id=target_revision_id,
-        output_path=operator_input.output,
-        actor=operator_input.actor or resolve_default_actor(),
-        refund_election=operator_input.refund_election,
-        payment_election=operator_input.payment_election,
-        prior_domiciliation_election=operator_input.prior_domiciliation_election,
-        replace_existing=operator_input.replace_existing,
-        operation=authority_operation(ctx),
-        workflow_profile=workflow_profile,
-        export_ports=modelo_export_ports_factory(ctx)(
-            bucket_id=resolved_bucket_id,
-            m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
+    completed = run_modelo_export(
+        client,
+        ModeloExportRequest(
+            calculation_revision_id=target_revision_id,
+            output_path=str(operator_input.output.resolve()),
+            actor=operator_input.actor or resolve_default_actor(),
+            refund_election=operator_input.refund_election,
+            payment_election=operator_input.payment_election,
+            prior_domiciliation_election=operator_input.prior_domiciliation_election,
+            replace_existing=operator_input.replace_existing,
         ),
+        work_unit_id=selected_revision.unit.work_unit_id,
     )
+    if not isinstance(completed.projection, ModeloExportPublicResultV3):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    receipt = completed.projection.fichero_boe
+    if receipt is None:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    result = receipt.to_result()
     export_result = ModeloExportPayload.from_result(result)
     emit_envelope(
         ctx,

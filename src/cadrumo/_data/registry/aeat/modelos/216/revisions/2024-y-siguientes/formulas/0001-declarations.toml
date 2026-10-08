@@ -20,16 +20,6 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
 source_ref = "aeat-modelo-216-procedure"
 required_text = ["el importe total de las retenciones e ingresos a cuenta declaradas en las casillas 11 y 12"]
 
-[[revisions."2024-y-siguientes".formulas]]
-id = "modelo-216-resultado"
-target_casilla_id = "21"
-expression = { op = "subtract", args = [ { casilla_id = "13" }, { casilla_id = "20" } ] }
-rounding = "money-2"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
-
-[[revisions."2024-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-216-procedure"
-required_text = ["el importe correspondiente a la resta de las casillas 13 y 20"]
 # The three "Totales" rows the bundled diseño `aeat-dr-216-2024` adds beside
 # the already-declared base and retenciones totals. Each is the sum of the two
 # rows AEAT prints directly above it in the same block, exactly as

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#review-workflow-cycle-break'
 date: '2026-07-03'
-modified: '2026-07-17'
-body_hash: 'sha256:2f3e9440eee130d34b71f666c0fa2b3fee2daf50833d3f58c83ba84348305e5b'
+modified: '2026-10-03'
+body_hash: 'sha256:9a6d24dff3868a461678dd53d4f6f8956d81833b85f4bff7c3d66c6ab28ba5c9'
 related:
   - "[[2026-07-01-import-centralization-adr]]"
   - "[[2026-07-02-import-centralization-audit]]"
@@ -125,8 +125,8 @@ could not reach.
 
 - Production Family-1 cross-package private imports for the
   `application.review` <-> `application.workflow` pair drop from 5 to 0; the
-  `dev/import_hygiene_baseline.json` `sites` list for this exception is now
-  permanently `[]`, and `src/cadrumo/tests/test_import_hygiene_gate.py` pins that.
+  the former source file `sites` list for this exception is now
+  permanently `[]`, and the former source file pins that.
 - The two packages no longer import each other's private submodules at all;
   `import cadrumo.application.review` and `import cadrumo.application.workflow` each
   succeed cleanly and independently, in either order, with no partial-init

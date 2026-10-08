@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:98d8917f037c5725374128abaae3c6e02a39105b57d6ea26016b7f58728d113e'
-related:
-  - '[[2026-09-02-object-name-declustering-plan]]'
+related: []
 ---
 
 # `object-name-declustering` audit: `s18 recipe tests review`

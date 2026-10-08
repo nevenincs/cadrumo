@@ -152,6 +152,15 @@ def _guaranteed_facts(module: ast.Module, call: ast.Call, facts: ast.expr) -> se
     return keys
 
 
+def _literal_locale_keys(node: ast.expr | None) -> tuple[str, ...]:
+    """Inspect every conditional branch and refuse dynamically computed keys."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return (node.value,)
+    if isinstance(node, ast.IfExp):
+        return tuple(dict.fromkeys((*_literal_locale_keys(node.body), *_literal_locale_keys(node.orelse))))
+    raise _UnresolvedFactsError("message_locale_key is not a literal string or conditional of literal strings")
+
+
 def _producer_sites() -> list[tuple[str, set[str], str]]:
     """Return (locale_key, guaranteed_facts, source_locator) for every producer."""
     sites: list[tuple[str, set[str], str]] = []
@@ -162,32 +171,37 @@ def _producer_sites() -> list[tuple[str, set[str], str]]:
         for node in ast.walk(module):
             if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == _FINDING_CLASS):
                 continue
-            locale_key: str | None = None
+            locale_key_node: ast.expr | None = None
             facts: ast.expr | None = None
             for keyword in node.keywords:
-                if (
-                    keyword.arg == "message_locale_key"
-                    and isinstance(keyword.value, ast.Constant)
-                    and isinstance(keyword.value.value, str)
-                ):
-                    locale_key = keyword.value.value
+                if keyword.arg == "message_locale_key":
+                    locale_key_node = keyword.value
                 if keyword.arg == "message_facts":
                     facts = keyword.value
             locator = f"{path.relative_to(SRC_DIR).as_posix()}:{node.lineno}"
-            if locale_key is None:
-                pytest.fail(f"{locator}: {_FINDING_CLASS} built without a literal message_locale_key")
-            if facts is None:
-                sites.append((locale_key, set(), locator))
-                continue
             try:
-                sites.append((locale_key, _guaranteed_facts(module, node, facts), locator))
+                locale_keys = _literal_locale_keys(locale_key_node)
+                guaranteed = set() if facts is None else _guaranteed_facts(module, node, facts)
             except _UnresolvedFactsError as exc:
                 pytest.fail(
-                    f"{locator}: cannot resolve the facts guaranteed for {locale_key!r} ({exc}). "
+                    f"{locator}: cannot resolve the finding's key or guaranteed facts ({exc}). "
                     "This gate must not skip a construction it cannot read: an unreadable one is "
                     "indistinguishable from a clean one.",
                 )
+            sites.extend((locale_key, guaranteed, locator) for locale_key in locale_keys)
     return sites
+
+
+def test_conditional_locale_keys_include_every_nested_branch() -> None:
+    node = ast.parse("'first' if a else ('second' if b else 'first')", mode="eval").body
+
+    assert _literal_locale_keys(node) == ("first", "second")
+
+
+@pytest.mark.parametrize("expression", ["dynamic_key", "None", "42", "'first' if a else dynamic_key"])
+def test_locale_key_discovery_refuses_unreadable_branches(expression: str) -> None:
+    with pytest.raises(_UnresolvedFactsError, match="not a literal string"):
+        _literal_locale_keys(ast.parse(expression, mode="eval").body)
 
 
 def test_the_gate_reaches_the_live_producers() -> None:

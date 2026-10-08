@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#profile-registration-password-policy'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9851bafbf3d7c8d9b743777d810f5db9ae565e0e208859ec926e32a7f09dd3b9'
+body_hash: 'sha256:13a0c9f3b482cbc217468eb857d0226eeaf27c7bb99fbb618009a98e78a84669'
 related:
   - "[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]"
   - "[[2026-08-22-profile-registration-password-policy-plan]]"
@@ -30,9 +30,6 @@ reports, and the honest S13 repository-gate transcript. No production file was e
 
 | Requirement | Current evidence | Result |
 | --- | --- | --- |
-| One core password authority: 15-256 Unicode scalars, at most 1,024 strict UTF-8 bytes, surrogates refused, exact sequence, typed safe facts, advisory-only strength | `src/cadrumo/core/_credentials.py`; fresh unit lane; boundary, result-shape, immutability and composed/decomposed tests in `src/cadrumo/core/tests/test_credentials.py` | Proven |
-| Custody repeats the canonical assessment without owning policy limits or operator prose | `src/cadrumo/adapters/persistence/storage/custody/_records.py`; focused record error-bite and exact-unlock tests; obsolete custody symbols absent except negative assertions | Proven |
-| Registration and rotation refuse before KDF, locks, identity randomness, staging, journaling, re-heading or publication and leave all storage state unchanged | `src/cadrumo/application/user_profile/_registration.py`, `_passphrase_rotation.py`; collaborator bite tests and exact path/kind/byte snapshots in their integration suites | Proven |
 | Malformed and incorrect existing proofs are publicly indistinguishable while integrity, corruption, transaction, resource, supervision and keyring failures remain distinct | `ProfileAuthenticationRefusedError`; the five-operation mapping matrix; real login, password restore, recovery export/restore and rotation tests | Proven |
 | Recovery secrets use a separate exact parent/worker codec, preserve mnemonic/envelope semantics and never call profile-password assessment | `_recovery_secret_codec.py`, supervised worker paths, recovery roundtrips and negative source scan; wrong and surrogate recovery proofs have the same localized refusal and identical before/after storage snapshots | Proven |
 | Direct application, live Textual feedback/submission and scripted CLI agree at 14/15/256/257 scalars, 1,024/1,025 bytes and surrogate boundaries | Fresh 67-test unit lane and 103-test real integration lane; live Pilot matrix includes the original Spanish fourteen-scalar crash and the upper/byte/surrogate cases | Proven |

@@ -18,16 +18,30 @@ from __future__ import annotations
 
 import os
 import stat
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ..config import load_settings, override_settings
+from ...tests.env_scope import isolated_aeat_env
+from ..config import Settings, load_settings, override_settings, settings_override
 from ..directory_scan import iter_directory
 from ..errors.hierarchy import CoreValidationError
+from ..storage_environment import STORAGE_ROOT
 from ..storage_materialization import ensure_storage_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.fixture(autouse=True)
+def unoverridden_settings(tmp_path: Path) -> Iterator[None]:
+    """Exercise unset category settings independently of the runner's explicit paths."""
+    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "state")):
+        token = settings_override.set(Settings(cadrumo_profile_kdf_measure_calibration=False))
+        try:
+            yield
+        finally:
+            settings_override.reset(token)
 
 
 def test_settings_and_derived_path_reads_do_not_materialise_storage(tmp_path: Path) -> None:
@@ -126,6 +140,55 @@ def test_existing_explicit_directory_is_preserved_while_defaults_are_created(tmp
 
     assert sentinel.read_text(encoding="utf-8") == "kept"
     assert (root / "cache" / "llm-cache").is_dir()
+
+
+def test_missing_explicit_runtime_namespace_is_not_provisioned(tmp_path: Path) -> None:
+    """The private default policy does not take ownership of an operator override."""
+    root = tmp_path / "state"
+    namespace = tmp_path / "operator-runtime"
+    with (
+        override_settings(cadrumo_local_storage_root=root, cadrumo_runtime_socket_dir=namespace),
+        pytest.raises(CoreValidationError) as refusal,
+    ):
+        ensure_storage_tree()
+    assert refusal.value.context is not None
+    assert refusal.value.context["state_directory_target"] == str(namespace)
+    assert refusal.value.context["explicit_override"] is True
+    assert not namespace.exists()
+    assert not root.exists()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX directory permission contract")
+def test_fresh_runtime_namespace_is_private_and_existing_permissions_are_preserved(tmp_path: Path) -> None:
+    """Fresh defaults admit a private endpoint; old insecure state stays visible to its guard."""
+    root = tmp_path / "state"
+    with override_settings(cadrumo_local_storage_root=root):
+        ensure_storage_tree()
+        namespace = root / "runtime"
+        assert stat.S_IMODE(namespace.stat().st_mode) == 0o700
+        namespace.chmod(0o755)
+        sentinel = namespace / "sentinel"
+        sentinel.write_bytes(b"operator state")
+        ensure_storage_tree()
+        assert stat.S_IMODE(namespace.stat().st_mode) == 0o755
+        assert sentinel.read_bytes() == b"operator state"
+
+
+def test_the_root_mode_is_the_declared_owner_only_mode() -> None:
+    assert STORAGE_ROOT.posix_directory_mode == 0o700
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX directory permission contract")
+def test_a_created_root_takes_the_declared_mode_under_a_permissive_umask(tmp_path: Path) -> None:
+    """The root is created owner-only, so it is never briefly readable by others."""
+    root = tmp_path / "fresh" / "state"
+    previous = os.umask(0o022)
+    try:
+        with override_settings(cadrumo_local_storage_root=root):
+            ensure_storage_tree()
+    finally:
+        os.umask(previous)
+    assert stat.S_IMODE(root.stat().st_mode) == 0o700
 
 
 def test_a_file_valued_setting_gets_its_parent_not_a_directory(tmp_path: Path) -> None:

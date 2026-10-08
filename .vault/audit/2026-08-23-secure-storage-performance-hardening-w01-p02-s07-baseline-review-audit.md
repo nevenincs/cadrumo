@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#secure-storage-performance-hardening'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:04479cca578c21dffaa430da36c802ad3355262635d510195186d0aa3a4334bd'
-related:
-  - "[[2026-08-22-secure-storage-performance-hardening-plan]]"
+body_hash: 'sha256:a1f38a794201439f9dcdc151ec2e05fc734406e9ae45a55dcb7dc26433683c78'
+related: []
 ---
 
 # `secure-storage-performance-hardening` audit: `W01.P02.S07 frozen complete-CLI baseline review`
@@ -35,19 +34,7 @@ withheld while the high-severity findings remain open.
 
 ### source-staleness | high | The frozen capture is not bound to the source being checked
 
-`dev/benchmarks/cli/baseline.json` records source snapshot digest
-`c14753ffe15c79f7c4d9636302d7b77d1d046030f618b84d9be3583b1989e4ca`,
-while the current digest of `src/cadrumo` is
-`fff44ea57924e487240f38e2e5b9474ad33ce586d5361bd90fff343289e110c7`.
-The artifact originated at Git revision `b08acf6e115d17cdefe1b55ab43916971a7c92af`,
-while the reviewed tree is at `fe97c2fa16ce5e934762666fa4a8a4b5f4fe2bca`.
-`check_baseline` nevertheless passes because it checks only that each digest is
-a 64-character string and compares current command metadata, not the measured
-source identity. Replacing `source_snapshot_digest` with 64 zeroes also passes.
-Consequently arbitrary handler, import-graph, profiler, or storage changes can
-leave the performance evidence green as long as the live path metadata is
-unchanged. This defeats the artifact-staleness gate required for actionable
-baseline evidence.
+The artifact originated at Git revision `b08acf6e115d17cdefe1b55ab43916971a7c92af`, while the reviewed tree is at `fe97c2fa16ce5e934762666fa4a8a4b5f4fe2bca`. `check_baseline` nevertheless passes because it checks only that each digest is a 64-character string and compares current command metadata, not the measured source identity. Replacing `source_snapshot_digest` with 64 zeroes also passes. Consequently arbitrary handler, import-graph, profiler, or storage changes can leave the performance evidence green as long as the live path metadata is unchanged. This defeats the artifact-staleness gate required for actionable baseline evidence.
 
 ### derived-statistics-integrity | high | Stored distributions and controls are not verified from raw samples
 
@@ -71,7 +58,7 @@ baseline proves that `aeat config profile list` loaded 230 storage-family
 modules and invoked 223 distinct storage symbols in each sampled phase, yet it
 cannot identify the imported modules and omits 203 invoked symbols. This is not
 the “import-family membership” and complete “storage-call counts” promised by
-`dev/benchmarks/cli/README.md`, and it prevents a reviewer or S40 worker from
+the retired benchmark guide, and it prevents a reviewer or S40 worker from
 attributing many observed costs without rerunning a historical, now-mismatched
 source snapshot. The accepted baseline must retain actionable raw membership,
 or publish a separate content-addressed raw artifact that the compact summary
@@ -79,7 +66,7 @@ can be verified against.
 
 ### rejected-run-evidence | medium | The rejected mutable-tree diagnosis is no longer independently verifiable
 
-`dev/benchmarks/cli/rejected-mutable-tree-diagnostic.md` makes precise claims
+The retired mutable-tree diagnostic made precise claims
 about 48 measured nodes and four paths whose resolution and help samples all
 failed, but the raw JSON was deleted and no content digest or sanitized raw
 attachment remains. The narrative is plausible and explicitly excluded from

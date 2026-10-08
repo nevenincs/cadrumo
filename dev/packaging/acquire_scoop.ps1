@@ -65,6 +65,7 @@ if ($InsideContainer -and $Mode -ne "Host") {
 }
 
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+. (Join-Path $PSScriptRoot "storage_paths.ps1")
 
 function Invoke-Native {
     param(
@@ -110,8 +111,8 @@ function Invoke-Native {
 }
 
 function Get-ScoopRoot {
-    if ($env:SCOOP) { return [System.IO.Path]::GetFullPath($env:SCOOP) }
-    return Join-Path ([Environment]::GetFolderPath("UserProfile")) "scoop"
+    if (-not $env:SCOOP) { throw "controlled Scoop storage environment is not initialized" }
+    return [System.IO.Path]::GetFullPath($env:SCOOP)
 }
 
 function Install-ScoopIfRequested {
@@ -120,13 +121,13 @@ function Install-ScoopIfRequested {
         [Parameter(Mandatory = $true)][string]$InstallerDir,
         [Parameter(Mandatory = $true)][bool]$Elevated
     )
+    $scoopRoot = Get-ScoopRoot
+    Set-CadrumoScoopShimsFirst -ScoopRoot $scoopRoot
     if (-not $Requested) {
-        if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
-            throw "scoop is not installed; use -BootstrapScoop only in a disposable Windows container"
-        }
+        Assert-CadrumoScoopCommandRoot -ScoopRoot $scoopRoot
         return
     }
-    if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+    if (-not (Test-CadrumoScoopCommandRoot -ScoopRoot $scoopRoot)) {
         # The container child already launches with -ExecutionPolicy Bypass, so
         # only widen at Process scope; a CurrentUser/machine scope write is
         # rejected by the Windows container's more-specific pinned policy and
@@ -146,13 +147,9 @@ function Install-ScoopIfRequested {
         if ($Elevated) { & $installer -RunAsAdmin } else { & $installer }
         if (-not $?) { throw "Scoop bootstrap failed" }
     }
-    $scoopShims = Join-Path (Get-ScoopRoot) "shims"
-    if (($env:PATH -split [System.IO.Path]::PathSeparator) -notcontains $scoopShims) {
-        $env:PATH = "$scoopShims$([System.IO.Path]::PathSeparator)$env:PATH"
-    }
-    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-        Invoke-Native -FilePath "scoop" -ArgumentList @("install", "git", "--no-update-scoop")
-    }
+    Set-CadrumoScoopShimsFirst -ScoopRoot $scoopRoot
+    Assert-CadrumoScoopCommandRoot -ScoopRoot $scoopRoot
+
 }
 
 function Get-ScoopCommandPath {
@@ -337,10 +334,6 @@ function Invoke-HostAcquisition {
         verified_artifact_digests = $verifiedDigests
         installed_prefix = $prefix
         installed_tax_oracle = (Get-Content -LiteralPath $oracle.tax_evidence -Raw | ConvertFrom-Json)
-        # The Scoop manifest is CLI-only by scope: its bin block shims aeat
-        # alone, so the cadrumo-mcp console script the same distribution
-        # declares is never exposed for this lane to drive.
-        installed_mcp_oracle = $null
     }
     $evidence | ConvertTo-Json -Depth 20 |
         Set-Content -LiteralPath (Join-Path $resolvedEvidence "acquire-scoop-evidence.json") -Encoding UTF8
@@ -386,6 +379,9 @@ function Invoke-ContainerAcquisition {
         "-v", "${RepoRoot}:C:\repo:ro",
         "-v", "${resolvedCohort}:C:\cohort:ro",
         "-v", "${resolvedEvidence}:C:\evidence",
+        "-e", "CADRUMO_STORAGE_ROOT=C:\evidence\storage",
+        "-e", "CADRUMO_LOCAL_STORAGE_ROOT=C:\evidence\storage",
+        "-e", "CADRUMO_SCOOP_INSTALL_ROOT=development/packages/scoop",
         "--workdir", "C:\repo",
         $Image,
         "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
@@ -426,6 +422,8 @@ function Invoke-ContainerAcquisition {
     }
 }
 
+$EvidenceDir = Resolve-CadrumoStoragePath -Value $EvidenceDir -RepositoryRoot $RepoRoot
+Initialize-CadrumoScoopStorageEnvironment -RepositoryRoot $RepoRoot
 New-Item -ItemType Directory -Force -Path $EvidenceDir | Out-Null
 $resolvedTopLevelEvidence = (Resolve-Path $EvidenceDir).Path
 foreach ($resultName in ("acquire-scoop-evidence.json", "acquire-scoop-failure.json")) {

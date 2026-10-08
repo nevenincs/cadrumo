@@ -34,37 +34,6 @@ class DescendantMaternityMixin(DescendantRecordBase):
             authority=context.authority,
         )
 
-    def maternidad_eligible_meses(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
-        """Months of *filing_year* the Art. 81.1 deducción may reach for this descendant.
-
-        The whole eligible window, not one limb of it: the under-three months
-        and the adopción/acogimiento entry months together, clipped so that no
-        month precedes the entry event.
-
-        The clip is load-bearing. The under-three limb runs from the BIRTH month
-        for every relación, including an adopted one, so an unclipped union
-        reaches the months before the child was the taxpayer's: a child born in
-        January and adopted in October yields a full twelve where three are due.
-
-        An unclipped union is defensible only on a case that does not
-        discriminate — an infant adopted in October, argued from the claim that
-        neither limb alone reaches twelve. That infant's under-three limb IS
-        twelve, so the union merely equals the wider limb there. The union
-        exceeds the wider limb only in a year containing both the entry month
-        and the third-birthday month, and the single month distinguishing them
-        falls before the entry event.
-
-        Clipping is written as a clip rather than as "return the entry window",
-        which is what it currently reduces to: with the anchor never earlier than
-        the birth, the two are algebraically identical today. Expressing the RULE
-        — no month before the child was yours — keeps this correct if either limb
-        is later widened, where the shortcut silently would not.
-
-        A descendant with no entry date is unclipped, so an ordinary child is
-        unaffected and the method degenerates to the under-three limb.
-        """
-        return len(self._maternidad_eligible_months(filing_year, context=context))
-
     def _maternidad_eligible_months(self, filing_year: int, *, context: FamilyFactResolutionContext) -> frozenset[int]:
         """The Art. 81.1 eligible months: both limbs, clipped to the entry anchor."""
         months = self._maternidad_edad_months(filing_year, context=context) | self._maternidad_entry_window_months(
@@ -92,46 +61,6 @@ class DescendantMaternityMixin(DescendantRecordBase):
             (self.birth_date.year + context.integer("lirpf-art-58-under-three-maximum-age"), self.birth_date.month),
             filing_year,
         )
-
-    def art_81_1_entry_window_meses(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
-        """Months of *filing_year* inside the Art. 81.1 adopción/acogimiento window.
-
-        A SEPARATE window from the Art. 58.2 one, and separate because the two
-        statutes measure differently for the same child. Art. 58.2 counts whole
-        tax PERIODS — "en el período impositivo en que se inscriba en el Registro
-        Civil y en los dos siguientes" — so annual granularity suffices there.
-        Art. 81.1 instead runs "durante los tres años siguientes a la FECHA de la
-        inscripción en el Registro Civil", and where no inscription is required,
-        "durante los tres años posteriores a la fecha de la resolución judicial o
-        administrativa que la declare". That is a date, so the window opens and
-        closes mid-year and the two disagree in BOTH directions for the same
-        child: the entry period is granted whole by Art. 58.2 while its months
-        before the inscription fall outside this one, and the fourth calendar
-        year is inside this one while Art. 58.2 has already closed.
-
-        The window is age-independent — "con independencia de la edad del menor"
-        — which is the whole point of the limb: it reaches a child adopted well
-        after their third birthday, for whom the ordinary limb grants nothing.
-
-        Anchors on :meth:`art_58_2_entry_date`, the FIRST entitling event, rather
-        than on whichever date the record happens to carry. A fostered-then-
-        adopted child anchored on the adoption would draw a second three-year
-        window after the first, granting up to six years where the statute allows
-        three. Sharing the anchor keeps the cap intact.
-
-        The entitling relación set is shared with Art. 58.2 as well, and that is
-        a reading rather than an assumption. The two statutes enumerate
-        differently on their face — Art. 58.2 says "acogimiento, tanto
-        preadoptivo como permanente" while Art. 81.1 says "acogimiento
-        permanente o delegación de guarda para la convivencia" — but the
-        delegación de guarda IS the successor figure to the abolished acogimiento
-        preadoptivo, so the two enumerations cover the same placements under
-        their respective vocabularies.
-
-        Returns ``0`` for a relación the statutes exclude and for an entitling
-        relación whose entry date is not yet recorded.
-        """
-        return len(self._maternidad_entry_window_months(filing_year, context=context))
 
     def _maternidad_entry_window_months(
         self, filing_year: int, *, context: FamilyFactResolutionContext

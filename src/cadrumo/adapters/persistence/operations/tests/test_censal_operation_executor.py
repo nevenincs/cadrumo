@@ -25,17 +25,24 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
+from cadrumo.application.operations.frontend_requests import (
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
+    OperationReviewProjectionRequestV1,
+    OperationReviewProjectionSuccessV1,
+)
 from cadrumo.application.operations.interactions import (
     OperationApplyResponse,
     OperationRejectResponse,
 )
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationRegistry,
-    operation_public_schema_reference,
+from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from cadrumo.application.operations.projection_services import (
+    OperationResultProjectionService,
+    OperationReviewProjectionService,
 )
+from cadrumo.application.operations.registry import OperationRegistry, operation_public_schema_reference
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore
 from cadrumo.application.user_profile.censal_observation import (
@@ -45,22 +52,23 @@ from cadrumo.application.user_profile.censal_observation import (
 )
 from cadrumo.application.user_profile.censal_operation import (
     CENSAL_PHASE_SETTLEMENT,
+    CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING,
     CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
     CensalFieldIntent,
     CensalOperationExecutor,
+    CensalOperationOutcome,
     CensalOperationRequest,
+    CensalOperationResult,
     CensalProfileBaseline,
     CensalReviewedFieldIntent,
     CensalReviewedOperand,
+    CensalReviewProjectionV1,
     build_censal_operation_definition,
     build_censal_operation_registration,
 )
 from cadrumo.application.user_profile.cotejo_apply import apply_cotejo
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
-from cadrumo.application.user_profile.profile_record_repository import (
-    ProfileRecordRepository,
-    bound_profile_record_session,
-)
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
@@ -69,6 +77,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import governed_fa
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
+from .....application.user_profile.tests.record_session_scope import bound_profile_record_session
 from .supervision_support import run_to_settlement
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -87,6 +96,7 @@ def _test_censal_operation_definition() -> OperationDefinition:
         browser_session_factory=default_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         censal_fetch_port=fetch_censal_datos,
+        provider_preflight=lambda _profile_id, _operation: None,
     )
 
 
@@ -223,6 +233,36 @@ async def start(supervisor: OperationSupervisor, operation_id: str):
     return await run_to_settlement(supervisor, operation_id)
 
 
+async def resolved_result(
+    supervisor: OperationSupervisor,
+    *,
+    root: Path,
+    objects: SecureObjectRepository,
+    operation_id: str,
+) -> CensalOperationResult:
+    terminal = await supervisor.await_terminal(operation_id)
+    contract = supervisor.registry.lookup_public_contract(_test_censal_operation_definition_id())
+    assert contract.result_schema is not None
+    released = await OperationResultProjectionService(
+        reader=OperationJournalRepository(storage_root=root),
+        registry=supervisor.registry,
+        operands=operation_secure_reference_repository(objects=objects),
+    ).resolve(
+        OperationResultProjectionRequestV1(
+            operation_id=operation_id,
+            terminal_revision=terminal.revision,
+            definition_contract_digest=contract.definition_contract_digest,
+            result_schema=contract.result_schema,
+        ),
+        CensalOperationResult,
+    )
+    assert isinstance(released, OperationResultProjectionSuccessV1)
+    assert isinstance(released.projection, CensalOperationResult)
+    assert released.result_schema == contract.result_schema
+    assert released.definition_contract_digest == contract.definition_contract_digest
+    return released.projection
+
+
 def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand(tmp_path: Path) -> None:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     acquisitions = 0
@@ -239,6 +279,7 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
             browser_session_factory=default_browser_session_factory,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             censal_fetch_port=fetch_censal_datos,
+            provider_preflight=lambda _profile_id, _operation: None,
             acquire=acquire,
         )
         owner = censal_supervisor(
@@ -283,6 +324,28 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
             assert recovered_pending is not None
             assert recovered_pending.baseline_digest is not None
             assert recovered_pending.proposed_effect_digest is not None
+            review = await OperationReviewProjectionService(
+                reader=OperationJournalRepository(storage_root=durable_root),
+                registry=recovery.registry,
+                operands=operation_secure_reference_repository(objects=objects),
+                clock=lambda: NOW + timedelta(minutes=2),
+            ).resolve(
+                OperationReviewProjectionRequestV1(
+                    reference=OperationReviewProjectionReferenceV1(
+                        operation_id=operation_id,
+                        interaction_id=recovered_pending.request.interaction_id,
+                        revision=recovered_pending.request.revision,
+                        review_projection_schema=CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING.identity,
+                        definition_contract_digest=recovery.registry.lookup_public_contract(
+                            _test_censal_operation_definition_id()
+                        ).definition_contract_digest,
+                        expires_at=recovered_pending.request.expires_at,
+                    )
+                ),
+                CensalReviewProjectionV1,
+            )
+            assert isinstance(review, OperationReviewProjectionSuccessV1)
+            assert review.projection.reviewed_proposal_digest == recovered_pending.reviewed_proposal_digest
 
             await recovery.respond(
                 OperationApplyResponse(
@@ -301,6 +364,11 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
             applied = await wait_for_phase(recovery, operation_id, CENSAL_PHASE_SETTLEMENT)
             assert applied.effect is OperationEffect.UPDATED
             assert acquisitions == 1
+            result = await resolved_result(recovery, root=durable_root, objects=objects, operation_id=operation_id)
+            assert result == CensalOperationResult(
+                outcome=CensalOperationOutcome.APPLIED,
+                reviewed_proposal_digest=recovered_pending.reviewed_proposal_digest,
+            )
 
         asyncio.run(run())
         assert all(
@@ -333,6 +401,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                     browser_session_factory=default_browser_session_factory,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     censal_fetch_port=fetch_censal_datos,
+                    provider_preflight=lambda _profile_id, _operation: None,
                     acquire=acquire,
                 ),
                 owner="6" * 64,
@@ -368,7 +437,11 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
             assert rejected.effect is OperationEffect.NONE
             assert rejected.terminal_receipt is not None
             assert rejected.terminal_receipt.result_ref is not None
-            assert rejected.terminal_receipt.result_ref.endswith(":rejected")
+            result = await resolved_result(supervisor, root=durable_root, objects=objects, operation_id=operation_id)
+            assert result == CensalOperationResult(
+                outcome=CensalOperationOutcome.REJECTED,
+                reviewed_proposal_digest=pending.reviewed_proposal_digest,
+            )
 
         asyncio.run(reject_run())
         assert (
@@ -402,6 +475,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                     browser_session_factory=default_browser_session_factory,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     censal_fetch_port=fetch_censal_datos,
+                    provider_preflight=lambda _profile_id, _operation: None,
                     acquire=acquire,
                     apply=competing_write_then_stale,
                 ),
@@ -460,6 +534,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                     browser_session_factory=default_browser_session_factory,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     censal_fetch_port=fetch_censal_datos,
+                    provider_preflight=lambda _profile_id, _operation: None,
                     acquire=acquire,
                     apply=commit_then_fail,
                 ),
@@ -527,6 +602,7 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
                 browser_session_factory=default_browser_session_factory,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 censal_fetch_port=fetch_censal_datos,
+                provider_preflight=lambda _profile_id, _operation: None,
                 acquire=acquire,
                 before_irreversible_section=hold_before_entry,
             ),

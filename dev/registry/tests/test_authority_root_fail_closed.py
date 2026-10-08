@@ -14,7 +14,7 @@ import pytest
 
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry import authority as authority_module
-from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.errors import (
     AuthorityDescriptorUnavailableError,
     RegistryValidationError,

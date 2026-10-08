@@ -3,13 +3,13 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:562a35ac4ff1b9bb61faee72982de46da48f89015db0664ccc5d319e9301fa23'
+body_hash: 'sha256:2a906bd6f4fb253aa97e6d0ba1737554847fcc2adbdeb1121751782528a95e83'
 related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-25-registry-completeness-closure-s33-two-channel-export-proof-adr]]"
 ---
+
 # `registry-completeness-closure` audit: `S84 independent two-channel proof review`
 
 ## Scope
@@ -20,15 +20,15 @@ Read-only independent review of commits `b7852e8196` and `f5af07f91f` against th
 
 ### secure-replay-self-attestation | high | A caller-built public receipt can satisfy the secure channel without custody
 
-`CanonicalTwoChannelFilingExportProofAuthority.assess_for` in `dev/registry/filing_export_proof.py:185` selects a member of the caller-supplied `secure_replay_receipts` tuple and checks only freshness and public provenance before returning a complete proof. `FilingExportSecureReplayReceipt` in `src/cadrumo/application/filing/_export_proof.py:286` is directly constructible, with every substantive outcome claim defaulting to `True`; the contract test constructs one directly. Whole-tree confirmation finds no concrete `resolve_secure_replay` or `persist_secure_replay` implementation, only the protocols at `src/cadrumo/application/filing/_export_proof.py:231` and `:273`. Once S85 supplies conformance, a fabricated fresh provenance-matching receipt can therefore satisfy secure replay without approved source resolution or encrypted custody, contrary to S33.
+Once S85 supplies conformance, a fabricated fresh provenance-matching receipt can therefore satisfy secure replay without approved source resolution or encrypted custody, contrary to S33.
 
 ### public-vector-self-classification | high | The value-independent channel admits taxpayer-capable models on its public vector
 
-`FilingExportConformanceRequest` at `src/cadrumo/application/filing/_export_proof.py:120` carries `ModeloDraft`, `FilingProducerSnapshot`, and arbitrary dictionary values; those models contain taxpayer tax identifiers, identity facts, accounts, and casilla values. The asserted public classification at `:130` is only the required literal `non_sensitive_mechanism_vector`, and `STRICT_FROZEN_HIDDEN_INPUT_CONFIG` only suppresses invalid input in validation errors. `FilingExportConformanceVector` at `dev/registry/filing_export_proof.py:148` adds no independent classifier, provenance source, or serialization guard. The type boundary therefore cannot prevent a real taxpayer draft or producer snapshot from becoming a committed S85 vector, violating S33's value-independent and secret-free conformance constraint.
+The asserted public classification at `:130` is only the required literal `non_sensitive_mechanism_vector`, and `STRICT_FROZEN_HIDDEN_INPUT_CONFIG` only suppresses invalid input in validation errors. The type boundary therefore cannot prevent a real taxpayer draft or producer snapshot from becoming a committed S85 vector, violating S33's value-independent and secret-free conformance constraint.
 
 ### legacy-proof-temp-output | medium | The remaining live-proof route will write an enrolled source-owned payload to plaintext temp storage
 
-`FilingExportLiveProofEntry` in `dev/registry/filing_export_proof.py:103` accepts a draft, producer snapshot, and accepted payload digest, while `_execute_export` at `:481` writes the rendered result through `TemporaryDirectory`. Its canonical entry tuple is currently empty, so no current secret is exposed, and S84's new consumer route itself avoids a file. Nevertheless this is still the live closure authority's export path; enrolling a source-owned entry there would violate secure-storage-only custody rather than refusing or routing via encrypted in-memory replay.
+Its canonical entry tuple is currently empty, so no current secret is exposed, and S84's new consumer route itself avoids a file. Nevertheless this is still the live closure authority's export path; enrolling a source-owned entry there would violate secure-storage-only custody rather than refusing or routing via encrypted in-memory replay.
 
 ## Recommendations
 
@@ -104,7 +104,6 @@ registry regression, and contract test.
   found one canonical `export_draft` writer path, no accepted
   `secure_replay_receipts` input, one encrypted custody implementation, and
   no competing proof authority.
-- `uv run --no-sync pytest -n 0 -q src/cadrumo/application/filing/tests/test_export_proof_contracts.py src/cadrumo/adapters/persistence/profile/tests/test_filing_export_replay_custody.py dev/registry/tests/test_filing_export_two_channel_proof.py` - `8 passed, 2 deselected` by the unit lane.
 - `uv run --no-sync pytest -n 0 -q -m integration dev/registry/tests/test_filing_export_two_channel_proof.py` - `2 passed`.
 - Focused Ruff over the committed S84 proof, adapter, storage, registry, and
   test surfaces passed.

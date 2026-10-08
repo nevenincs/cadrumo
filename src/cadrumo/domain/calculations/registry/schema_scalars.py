@@ -14,8 +14,9 @@ from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ....core.decimal.coercion import coerce_decimal
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
-from ....core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
+from ....core.iban import BIC_SHAPE_RE, IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, IdentityError, SpanishTaxIdFormat
+from ....core.identity.nif_iva import normalise_nif_iva
 from ....core.identity.tax_id import validate_spanish_tax_id
 from ....core.period import StandardPeriodCode
 from ....core.spanish_postcode import SPANISH_POSTCODE_PATTERN, SPANISH_PROVINCE_CODE_PATTERN
@@ -233,9 +234,9 @@ def _validate_iban_string(value: object) -> object:
     if not canonical:
         raise RegistryValidationError("iban value must not be blank")
     if not IBAN_SHAPE_RE.match(canonical):
-        raise RegistryValidationError(f"iban value {value!r} does not match the ISO 13616 shape")
+        raise RegistryValidationError("iban value does not match the ISO 13616 shape")
     if iban_mod_97(canonical) != 1:
-        raise RegistryValidationError(f"iban value {value!r} fails the mod-97 check")
+        raise RegistryValidationError("iban value fails the mod-97 check")
     return canonical
 
 
@@ -265,7 +266,7 @@ PersonOrEntityName = Annotated[str, BeforeValidator(_validate_name_string)]
 """Personal or entity name for the registry boundary."""
 
 
-_NIF_IVA_RE = re.compile(r"^[A-Z]{2}[A-Z0-9]{2,12}$")
+_NIF_IVA_RE = re.compile(r"[A-Z]{2}[A-Z0-9]{2,12}")
 
 
 @pydantic_validation_boundary
@@ -273,8 +274,8 @@ def _validate_nif_iva_string(value: object) -> object:
     """Validate an intracomunitario NIF-IVA: ISO country prefix plus identifier body."""
     if not isinstance(value, str):
         raise RegistryValidationError(f"nif_iva value must be a string, got {type(value).__name__}")
-    canonical = value.replace(" ", "").replace("-", "").upper()
-    if not _NIF_IVA_RE.match(canonical):
+    canonical = normalise_nif_iva(value)
+    if _NIF_IVA_RE.fullmatch(canonical) is None:
         raise RegistryValidationError(
             f"nif_iva value {value!r} must start with a two-letter country code "
             "followed by 2-12 alphanumeric characters",
@@ -409,16 +410,13 @@ MunicipalityCode = Annotated[str, BeforeValidator(_validate_municipality_code)]
 """Five-digit INE municipality code for the registry boundary."""
 
 
-_BIC_RE = re.compile(r"^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$")
-
-
 @pydantic_validation_boundary
 def _validate_bic_string(value: object) -> object:
     """Validate a SWIFT BIC (ISO 9362): 8 or 11 characters."""
     if not isinstance(value, str):
         raise RegistryValidationError(f"bic value must be a string, got {type(value).__name__}")
     canonical = value.replace(" ", "").upper()
-    if not _BIC_RE.match(canonical):
+    if not BIC_SHAPE_RE.match(canonical):
         raise RegistryValidationError(f"bic value {value!r} must be 8 or 11 alphanumeric characters per ISO 9362")
     return canonical
 

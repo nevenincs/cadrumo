@@ -77,7 +77,7 @@ def test_the_shared_primitive_requires_an_explicit_payload_version() -> None:
 
 def test_profile_lifecycle_events_persist_version_one(tmp_path: Path) -> None:
     """Registering a profile writes the profile-lifecycle payload contract."""
-    from cadrumo.application.user_profile.login_session import login_profile
+    from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
     from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
     label = "Payload version probe"
@@ -94,7 +94,7 @@ def test_profile_lifecycle_events_persist_version_one(tmp_path: Path) -> None:
             # an authenticated session. Reading the event this test is about needs
             # the profile open, and the storage runtime says so rather than
             # returning an empty catalogue.
-            login_profile(
+            authenticate_profile_for_invocation(
                 name=label,
                 passphrase_callback=lambda: _PROFILE_MARKER,
                 profile_decode_context=operation.profile_decode_context(),

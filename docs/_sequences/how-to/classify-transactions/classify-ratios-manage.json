@@ -16,7 +16,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\ntelefonia_movil\t0.5\n"
+      "text": "bucket\t<profile-id>\ntelefonia_movil\t0.5\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -32,7 +32,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\ncount\t1\ntelefonia_movil\t0.5\n"
+      "text": "bucket\t<profile-id>\ncount\t1\ntelefonia_movil\t0.5\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -48,7 +48,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.ratios.validate",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "eligible_count": 15,
@@ -58,7 +66,7 @@
           "profile_present": true
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

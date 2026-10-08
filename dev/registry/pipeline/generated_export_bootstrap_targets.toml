@@ -1,2 +1,2 @@
-# A target's bootstrap authorization is retired once its generated tree is published.
+# No reviewed generated export targets currently await first publication.
 targets = []

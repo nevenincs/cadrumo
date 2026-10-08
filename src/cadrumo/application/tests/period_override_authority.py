@@ -17,13 +17,14 @@ from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from typing import Final
 
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_authority_descriptor_path
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.authority_artifact import (
     AuthorityComponentQuery,
     AuthorityGenerationPin,
     ModeloDirectoryComponentQuery,
     ModeloRevisionComponentQuery,
 )
+from ...domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from ...domain.calculations.registry.authority_store import SQLiteAuthorityReader
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts

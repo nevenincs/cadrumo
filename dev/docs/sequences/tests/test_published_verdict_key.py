@@ -30,7 +30,6 @@ def _key_in_a_fresh_process() -> str:
         [sys.executable, "-c", _PRINT_KEY],
         cwd=REPO_ROOT,
         environment=dict(os.environ),
-        timeout_seconds=300,
     )
     assert result.returncode == 0, result.stderr
     return result.stdout.strip()

@@ -55,7 +55,7 @@ if TYPE_CHECKING:
     from ....application.provisioning_runtime import RuntimeResident
     from ...persistence.llm.cache import LLMCache
     from ...persistence.llm.consent_ledger import EvidenceConsentLedger
-    from ...persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+    from ...persistence.llm.run_records import LLMRunRecorder
     from ...persistence.llm.usage import UsageRecorder
 from ....core.config_support import LLMProvider
 from .models import LLMRequest, LLMResponse, PromptRegistry
@@ -325,8 +325,8 @@ class LLMClient:
             implementation override.
         usage_recorder: Optional
             :class:`~adapters.persistence.llm.usage.UsageRecorder` override.
-        run_telemetry_recorder: Optional
-            :class:`~adapters.persistence.llm.run_telemetry.LLMRunTelemetryRecorder` override.
+        run_record_recorder: Optional
+            :class:`~adapters.persistence.llm.run_records.LLMRunRecorder` override.
         prompt_registry: Optional
             :class:`~llm.PromptRegistry` override.
         retry_policy: Optional :class:`LLMRetryPolicy` override governing how
@@ -356,7 +356,7 @@ class LLMClient:
         settings: Settings | None = None,
         cache: LLMCache | None = None,
         usage_recorder: UsageRecorder | None = None,
-        run_telemetry_recorder: LLMRunTelemetryRecorder | None = None,
+        run_record_recorder: LLMRunRecorder | None = None,
         consent_ledger: EvidenceConsentLedger | None = None,
         prompt_registry: PromptRegistry | None = None,
         retry_policy: LLMRetryPolicy | None = None,
@@ -373,14 +373,14 @@ class LLMClient:
         # each class from its defining module here, at construction time.
         from ...persistence.llm.cache import LLMCache
         from ...persistence.llm.consent_ledger import EvidenceConsentLedger
-        from ...persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+        from ...persistence.llm.run_records import LLMRunRecorder
         from ...persistence.llm.usage import UsageRecorder
 
         self.settings = settings or Settings()
         self.cache = cache or LLMCache(root_dir=self.settings.cadrumo_llm_cache_dir)
         self.usage_recorder = usage_recorder or UsageRecorder(root_dir=self.settings.cadrumo_llm_usage_dir)
-        self.run_telemetry_recorder = run_telemetry_recorder or LLMRunTelemetryRecorder(
-            root_dir=self.settings.cadrumo_llm_run_telemetry_dir,
+        self.run_record_recorder = run_record_recorder or LLMRunRecorder(
+            root_dir=self.settings.cadrumo_llm_run_record_dir,
         )
         # Not swept by _sweep_retention_stores below, and deliberately so: the
         # consent ledger is an audit trail a withdrawal reads, not a diagnostic
@@ -400,7 +400,7 @@ class LLMClient:
 
         Building an :class:`LLMClient` is the once-per-run production entry point
         into the LLM surface, so pruning the response cache, usage records, and
-        run-telemetry here bounds their growth without a separate scheduler and
+        run-record here bounds their growth without a separate scheduler and
         without pruning on every append (which would rescan the whole encrypted
         store per call). Each prune is best-effort and independent: a failure of
         one (or an absent active bucket at construction time) is logged and never
@@ -409,7 +409,7 @@ class LLMClient:
         for label, prune in (
             ("cache", self.cache.prune),
             ("usage", self.usage_recorder.prune),
-            ("run_telemetry", self.run_telemetry_recorder.prune),
+            ("run_record", self.run_record_recorder.prune),
         ):
             try:
                 prune()
@@ -480,7 +480,7 @@ class LLMClient:
                 request_id,
                 exc_info=True,
             )
-            self._record_run_telemetry(
+            self._record_run_record(
                 provider=provider.value,
                 model=model,
                 started_at=run_started_at,
@@ -489,7 +489,7 @@ class LLMClient:
                 error_kind=type(exc).__name__,
             )
             raise
-        self._record_run_telemetry(
+        self._record_run_record(
             provider=provider.value,
             model=completion.model,
             started_at=run_started_at,
@@ -881,7 +881,7 @@ class LLMClient:
             ),
         )
 
-    def _record_run_telemetry(
+    def _record_run_record(
         self,
         *,
         provider: str,
@@ -893,14 +893,14 @@ class LLMClient:
     ) -> None:
         """Best-effort append of one local run-timing record.
 
-        A run-telemetry write failure must never mask the real completion
+        A run-record write failure must never mask the real completion
         result or a real provider error, so this swallows
         :exc:`~llm.LLMCacheError` (the recorder's only
         declared failure mode) after a debug log; the completion call's own
         return or exception always wins.
         """
         try:
-            self.run_telemetry_recorder.record(
+            self.run_record_recorder.record(
                 _llm_run_record()(
                     run_id=uuid4().hex,
                     caller=self.caller,
@@ -913,7 +913,7 @@ class LLMClient:
                 ),
             )
         except LLMCacheError:
-            _LOGGER.debug("llm run-telemetry write failed; continuing without it", exc_info=True)
+            _LOGGER.debug("llm run-record write failed; continuing without it", exc_info=True)
 
     def _default_provider(self) -> LLMProvider:
         raw_provider = self.settings.cadrumo_llm_provider
@@ -994,12 +994,12 @@ class LLMClient:
 
 
 def _llm_run_record() -> type:
-    """Resolve ``LLMRunRecord`` from the core-side telemetry store, deferred.
+    """Resolve ``LLMRunRecord`` from the core-side run-record store, deferred.
 
     The record type lives with the store that persists it. Importing its
     defining module at call time prevents the cycle from closing at module load
     (see the TYPE_CHECKING block above for why the edge exists at all).
     """
-    from ...persistence.llm.run_telemetry import LLMRunRecord
+    from ...persistence.llm.run_records import LLMRunRecord
 
     return LLMRunRecord

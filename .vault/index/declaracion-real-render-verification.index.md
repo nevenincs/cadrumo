@@ -4,16 +4,14 @@ tags:
   - '#index'
   - '#declaracion-real-render-verification'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b2e2f0873bbaa4bbd20e5dda5f11234a520328a7deccaf5657ca7abf0c1addd'
+body_hash: 'sha256:7fb29826e7500eaea9e9d5006bf7e12ea7ff1fc724e511bf72ed1888764bcd18'
 related:
   - '[[2026-07-26-declaracion-real-render-verification-adr]]'
   - '[[2026-07-26-declaracion-real-render-verification-adversarial-verification-of-campaign-claims-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-campaign-close-honesty-review-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-form-number-sourcing-negative-result-audit]]'
-  - '[[2026-07-26-declaracion-real-render-verification-ledger]]'
-  - '[[2026-07-26-declaracion-real-render-verification-plan]]'
   - '[[2026-07-26-declaracion-real-render-verification-r8-arbitration-enrollment-readiness-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-specimen-less-static-route-audit-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-verify-declaracion-disposition-audit]]'
@@ -52,14 +50,6 @@ Auto-generated index of all documents tagged with `#declaracion-real-render-veri
 - `2026-07-27-declaracion-real-render-verification-ledger-safe-fix-mechanisms-for-modelo-100-audit` - `declaracion-real-render-verification` audit: `which mechanism spares the ledger path while fixing Modelo 100`
 - `2026-07-27-declaracion-real-render-verification-modelo-100-manifest-reconciliation-gap-audit` - `declaracion-real-render-verification` audit: `the Modelo 100 manifest reconciliation gap, explained exactly`
 - `2026-08-09-declaracion-real-render-verification-s31-code-review-audit` - `declaracion-real-render-verification` audit: `s31 code review`
-
-### exec
-
-- `2026-07-26-declaracion-real-render-verification-ledger` - `declaracion-real-render-verification` ledger
-
-### plan
-
-- `2026-07-26-declaracion-real-render-verification-plan` - `declaracion-real-render-verification` plan
 
 ### research
 

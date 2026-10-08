@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:15fe9a90e7e6c13e137ee0b871c99c2bcbc3d903a67fb56cfcddf910b72dae55'
-related:
-  - "[[2026-09-10-registry-temporal-coverage-plan]]"
+related: []
 ---
 # `registry-temporal-coverage` audit: `Corpus provenance classifier review`
 

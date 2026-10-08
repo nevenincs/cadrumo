@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#fichero-boe-export-layouts'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:868f504b7d7ebaecdbd7f922467521eafd090f51fb048aab71407a00e9b4087a'
+body_hash: 'sha256:2bb11b9d13a840a7b9e96b8d030010a5da2c50ee8e6f8978d700523c3f417022'
 related:
-  - '[[2026-06-04-fichero-boe-export-layouts-adr]]'
   - '[[2026-06-04-fichero-boe-export-layouts-research]]'
 ---
 
@@ -17,10 +16,6 @@ related:
 Auto-generated index of all documents tagged with `#fichero-boe-export-layouts`.
 
 ## Documents
-
-### adr
-
-- `2026-06-04-fichero-boe-export-layouts-adr` - `fichero-boe-export-layouts` adr: `warning closeout authority alignment` | (**status:** `accepted`)
 
 ### research
 

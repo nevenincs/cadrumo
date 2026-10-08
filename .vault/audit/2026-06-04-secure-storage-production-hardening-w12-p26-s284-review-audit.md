@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:d6ae9199c0d52a2b1e01d91e4b0fa9e9bb9e03b713baf8d67241420ddf09511a'
+modified: '2026-10-03'
+body_hash: 'sha256:531f15666ef644c32a951a3aec91ddf1dd2aac825f9082d6a58d8b549819b8d4'
 related: []
 ---
 
@@ -36,6 +36,6 @@ required because the module has no user-facing render strings.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/application/workflow/_profile_bucket_scan.py src/aeat/application/workflow/test_profile_bucket_scan.py src/aeat/application/workflow/test_active_profile_resolution.py`
-- `uv run --no-sync pytest -q src/aeat/application/workflow/test_profile_bucket_scan.py src/aeat/application/workflow/test_active_profile_resolution.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`

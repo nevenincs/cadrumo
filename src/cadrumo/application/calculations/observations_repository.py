@@ -54,6 +54,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
+from ...core.repository_id import repository_id_violation
 from ...core.result_disposition import ResultDisposition
 from ...core.secure_object_write import SecureObjectWrite
 from ...core.time.utc import UtcInstant
@@ -461,20 +462,11 @@ def require_observation_period(period: Period) -> Period:
 
 def _validate_repository_component(token: str, *, context: str) -> str:
     """Validate a key component without coupling application code to storage paths."""
-    if not token:
+    violation = repository_id_violation(token)
+    if violation is not None:
         raise ObservationKeyError(
-            f"{context} must be non-empty",
-            context={"path_context": context, "violation": "empty_repository_id"},
-        )
-    if "/" in token or "\\" in token:
-        raise ObservationKeyError(
-            f"{context} must not contain path separators",
-            context={"path_context": context, "violation": "repository_id_separator"},
-        )
-    if token in {".", ".."} or token.startswith("."):
-        raise ObservationKeyError(
-            f"{context} must not be a relative-path token",
-            context={"path_context": context, "violation": "repository_id_dot_token"},
+            f"{context} {violation.requirement}",
+            context={"path_context": context, "violation": violation.value},
         )
     return token
 
@@ -792,14 +784,6 @@ class IvaWalletDecisionRepositoryProtocol(Protocol):
 
     def list_decisions(self) -> tuple[IvaCompensationReconciliationDecision, ...]:
         """List latest decisions in deterministic order."""
-        ...
-
-    def load_decision_history(
-        self,
-        taxpayer_nif: str,
-        target_period: Period,
-    ) -> tuple[IvaCompensationReconciliationDecision, ...]:
-        """Load immutable decision history for one period."""
         ...
 
     def save_decision(self, decision: IvaCompensationReconciliationDecision) -> None:

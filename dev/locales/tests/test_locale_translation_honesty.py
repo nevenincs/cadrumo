@@ -17,7 +17,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 
 from .._paths import LOCALES_DIR, SRC_DIR
-from ..manager import LocaleManager, locale_catalogue_source
+from ..locale_yaml import locale_catalogue_source
+from ..manager import LocaleManager
 from ..modelo_casilla_catalogue import ModeloCasillaCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -520,13 +521,6 @@ _LEGITIMATE_IDENTICAL_TRANSLATIONS: dict[tuple[str, str], IdenticalTranslation] 
             "footnote number is kept as in the Spanish."
         ),
     ),
-    ("en", "Modelo"): IdenticalTranslation(
-        IdenticalTranslationClass.SHARED_WORD,
-        (
-            "The product keeps the AEAT form designation “Modelo” untranslated as an established domain"
-            " term, matching usage elsewhere in the English schema (e.g. “Modelo 190”)."
-        ),
-    ),
     ("en", "SOCIMI [00012]"): IdenticalTranslation(
         IdenticalTranslationClass.ACRONYM,
         (
@@ -542,13 +536,6 @@ _LEGITIMATE_IDENTICAL_TRANSLATIONS: dict[tuple[str, str], IdenticalTranslation] 
         (
             "IBAN is a universal international banking acronym, unchanged across languages; the "
             "footnote number is kept as in the Spanish."
-        ),
-    ),
-    ("hu", "Modelo"): IdenticalTranslation(
-        IdenticalTranslationClass.SHARED_WORD,
-        (
-            "The product keeps the AEAT form designation “Modelo” untranslated as an established domain"
-            " term, matching usage elsewhere in the Hungarian schema (e.g. “Modelo 190 adóév 2024”)."
         ),
     ),
 }

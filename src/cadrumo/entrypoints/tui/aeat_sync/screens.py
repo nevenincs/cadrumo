@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from enum import Enum
 from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast, override
 
@@ -29,16 +30,22 @@ from ....application.aeat_sync.workspace import (
     AeatSyncWorkspaceSource,
     AeatSyncWorkspaceZone,
 )
+from ....application.live.notifications_read_operation import NotificationsListPublicResultV1
+from ....application.operations.frontend_projection import OperationPublicProjectionV1
 from ....application.operations.models import OperationDefinitionId
 from ....application.operator_actions.models import ActionReference
 from ....core.filing_year import FilingYear
 from ....core.i18n.render import tr
+from ....core.operations import OperationTerminalCondition
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ..components.account_chrome import AccountChromeScreen
+from ..components.cell_text import ellipsize
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..components.workspace_host import replace_workspace_body
+from ..operations.controller_port import OperationControllerPort
+from ..operations.modal import OperationModal, OperationModalOutcomeV1, OperationModalSettledOutcomeV1
 from .controller import AeatSyncWorkspaceController
 from .models import AeatSyncOperationRequestV1, AeatSyncRouteTargetV1
 
@@ -70,32 +77,21 @@ _LABEL_PREFIXES: Final[Mapping[type[Enum], str]] = {
     AeatSyncDocumentCustodyState: "tui.aeat_sync.document_custody_state",
     AeatSyncReconciliationState: "tui.aeat_sync.reconciliation_state",
 }
-_OPERATION_LABEL_KEYS: Final = {
+_OPERATION_LABEL_LOCALE_KEYS: Final = {
     ("operator.profile.edit", "user-profile.censo-review"): "tui.aeat_sync.action.review_census",
     ("operator.live.filed.pull_all", "live.filed-history.pull"): "tui.aeat_sync.action.pull_filed_all",
+    ("operator.live.notifications.list", "live.notifications.list"): "tui.search.action.list_notifications",
 }
-
-
-def aeat_sync_copy(key: str, **values: object) -> str:
-    """Resolve every operator-facing AEAT Sync string through one boundary."""
-    return tr(key, **values)
 
 
 def _label(value: Enum | None) -> str:
     """Render a public enum through its authored semantic catalogue key."""
     if value is None:
-        return aeat_sync_copy("tui.aeat_sync.value.none")
+        return tr("tui.aeat_sync.value.none")
     prefix = _LABEL_PREFIXES.get(type(value))
     if prefix is None:
         raise ValueError("unsupported AEAT Sync operator label")
-    return aeat_sync_copy(f"{prefix}.{value.value}")
-
-
-def _compact(value: str, width: int) -> str:
-    """Keep safe labels inside the fixed terminal content column."""
-    if len(value) <= width:
-        return value
-    return f"{value[: width - 1]}…"
+    return tr(f"{prefix}.{value.value}")
 
 
 def _fit_columns(
@@ -118,7 +114,7 @@ def _fit_columns(
     used = 0
 
     def _sized(column: tuple[str, str, int]) -> tuple[str, str, int, int]:
-        header = aeat_sync_copy(column[1])
+        header = tr(column[1])
         size = max(column[2], len(header))
         return column[0], header, size, size + 2
 
@@ -138,8 +134,8 @@ def _fit_columns(
 def _census_value(value: str | None) -> str:
     """Render one side of a census comparison, naming an unobserved side."""
     if value is None:
-        return aeat_sync_copy("tui.aeat_sync.value.unobserved")
-    return _compact(value, 24)
+        return tr("tui.aeat_sync.value.unobserved")
+    return ellipsize(value, 24)
 
 
 def _census_identity(path: str) -> str:
@@ -166,6 +162,16 @@ class _OperationRow(Protocol):
     supported_operations: tuple[OperationDefinitionId, ...]
 
 
+class _NotificationsListResultReader(Protocol):
+    """Typed public result door offered by the installed runtime handoff."""
+
+    async def read_notifications_list_result(
+        self, projection: OperationPublicProjectionV1, /
+    ) -> NotificationsListPublicResultV1:
+        """Read the exact settled notifications-list result."""
+        ...
+
+
 class _NaturalRow(Protocol):
     """Public declaration coordinate needed for a safe display label."""
 
@@ -176,7 +182,7 @@ class _NaturalRow(Protocol):
 
 def _address(row: _NaturalRow) -> str:
     """Render only the public Modelo/year/period natural coordinate."""
-    return aeat_sync_copy(
+    return tr(
         "tui.aeat_sync.address.declaration",
         modelo=row.modelo,
         filing_year=row.filing_year,
@@ -219,6 +225,10 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         super().__init__(id=id)
         self.controller = controller
         self._requests: dict[str, AeatSyncOperationRequestV1] = {}
+        self._unoffered_operations: set[str] = set()
+        self._active_operation_request: AeatSyncOperationRequestV1 | None = None
+        self._active_operation_controller: OperationControllerPort | None = None
+        self._operation_button_epoch = 0
         self._consumed_request_ids: set[str] = set()
         self._consumed_notification_ids: set[str] = set()
         self._in_flight_id: str | None = None
@@ -227,31 +237,37 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(aeat_sync_copy(self.heading), classes="cadrumo-banner", markup=False)
+        yield Static(tr(self.heading), classes="cadrumo-banner", markup=False)
         with ContentScroll(id="aeat-sync-page", classes="cadrumo-scroll"):
             yield Static(
-                aeat_sync_copy("tui.aeat_sync.section.areas"),
+                tr("tui.aeat_sync.section.areas"),
                 classes="cadrumo-heading",
                 markup=False,
             )
             yield ContentDataTable[str](id="aeat-sync-navigation", cursor_type="row", zebra_stripes=True)
             yield Static(
-                aeat_sync_copy("tui.aeat_sync.section.detail"),
+                tr("tui.aeat_sync.section.detail"),
                 classes="cadrumo-heading",
                 markup=False,
             )
             yield ContentDataTable[str](id="aeat-sync-rows", cursor_type="row", zebra_stripes=True)
             yield Static(id="aeat-sync-status", markup=False)
+            yield from self.compose_evidence()
+
+    def compose_evidence(self) -> ComposeResult:
+        """Allow a zone to render its existing captured evidence below comparison rows."""
+        return ()
 
     def on_mount(self) -> None:
         """Render all six independent source states and this screen's safe rows."""
         navigation = cast("DataTable[str]", self.query_one("#aeat-sync-navigation", DataTable))
-        navigation.add_column(aeat_sync_copy("tui.aeat_sync.column.area"), width=16)
-        navigation.add_column(aeat_sync_copy("tui.aeat_sync.column.availability"), width=12)
-        navigation.add_column(aeat_sync_copy("tui.aeat_sync.column.sources"), width=38)
+        navigation.add_column(tr("tui.aeat_sync.column.area"), width=16)
+        navigation.add_column(tr("tui.aeat_sync.column.availability"), width=12)
+        navigation.add_column(tr("tui.aeat_sync.column.sources"), width=38)
         self._render_navigation(navigation)
         rows = cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable))
         self.populate_rows(rows)
+        self._render_operation_refusal()
         self._render_zone_status(rows)
         self._restore_focus(
             navigation,
@@ -262,15 +278,16 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         """State known-empty and unobservable zones in non-colour text."""
         state = self.controller.state_for(self.zone)
         count = state.item_count
-        if count is not None and count != rows.row_count:
+        rendered_count = count
+        if self.zone is AeatSyncWorkspaceZone.RECONCILIATION:
+            rendered_count = sum(max(1, len(row.diffs)) for row in self.controller.projection.reconciliation)
+        if count is not None and rendered_count != rows.row_count:
             raise ValueError("AEAT Sync zone count and rendered rows disagree")
         status = self.query_one("#aeat-sync-status", Static)
         if str(status.render()).strip():
             return
         rendered_count = (
-            aeat_sync_copy("tui.aeat_sync.status.items", count=count)
-            if count is not None
-            else aeat_sync_copy("tui.aeat_sync.value.none")
+            tr("tui.aeat_sync.status.items", count=count) if count is not None else tr("tui.aeat_sync.value.none")
         )
         status.update(f"{_label(self.zone)} · {_label(state.availability)} · {rendered_count}")
 
@@ -282,11 +299,11 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             navigation.add_row(
                 _label(zone),
                 _label(state.availability),
-                aeat_sync_copy(
+                tr(
                     "tui.aeat_sync.sources.joined",
                     entries=", ".join(
-                        _compact(
-                            aeat_sync_copy(
+                        ellipsize(
+                            tr(
                                 "tui.aeat_sync.sources.entry",
                                 source=_label(source.source),
                                 availability=_label(source.availability),
@@ -320,12 +337,18 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         rows = cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable))
         for button in tuple(self.query(".aeat-sync-operation")):
             button.remove()
+        self._operation_button_epoch += 1
         self._requests.clear()
+        self._unoffered_operations.clear()
+        self._consumed_request_ids.clear()
+        self._consumed_notification_ids.clear()
         self._notification_rows.clear()
         navigation.clear(columns=False)
         rows.clear(columns=True)
+        self.query_one("#aeat-sync-status", Static).update("")
         self._render_navigation(navigation)
         self.populate_rows(rows)
+        self._render_operation_refusal()
         self._render_zone_status(rows)
         self._restore_focus(navigation, rows)
 
@@ -334,32 +357,40 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         raise NotImplementedError
 
     def add_operation(self, row: _OperationRow) -> None:
-        """Render an explicit mutation button only for a closed admitted pair."""
+        """Render an explicit mutation button only for a closed admitted pair.
+
+        One admitted operation gets one door however many areas declare it.
+        An operation no door offers is recorded, and the refusal is stated
+        once the screen's rows are in; catalogue actions that start no
+        operation are not handoff candidates and refuse nothing.
+        """
         request = self.controller.admitted_operation(row.supported_actions, row.supported_operations)
-        if request is None:
-            if (
-                tuple(str(action.action_id) for action in row.supported_actions)
-                == ("operator.live.notifications.list",)
-                and not row.supported_operations
-            ):
-                return
-            if row.supported_actions or row.supported_operations:
-                self.query_one("#aeat-sync-status", Static).update(
-                    aeat_sync_copy("tui.aeat_sync.refusal.operation_handoff")
-                )
-            return
-        label_key = _OPERATION_LABEL_KEYS.get((str(request.action.action_id), str(request.operation)))
+        label_key = (
+            None
+            if request is None
+            else _OPERATION_LABEL_LOCALE_KEYS.get((str(request.action.action_id), str(request.operation)))
+        )
         # Without a host door the button could only refuse; say so once instead.
-        if label_key is None or self.controller.operation_handoff is None:
-            self.query_one("#aeat-sync-status", Static).update(
-                aeat_sync_copy("tui.aeat_sync.refusal.operation_handoff")
-            )
+        if request is None or label_key is None or self.controller.operation_handoff is None:
+            self._unoffered_operations.update(str(operation) for operation in row.supported_operations)
             return
-        button_id = f"aeat-sync-operation-{len(self._requests)}"
+        if request in self._requests.values():
+            return
+        button_id = (
+            f"aeat-sync-operation-{len(self._requests)}"
+            if self._operation_button_epoch == 0
+            else f"aeat-sync-operation-{self._operation_button_epoch}-{len(self._requests)}"
+        )
         self._requests[button_id] = request
         self.query_one("#aeat-sync-page", ContentScroll).mount(
-            Button(aeat_sync_copy(label_key), id=button_id, classes="aeat-sync-operation")
+            Button(tr(label_key), id=button_id, classes="aeat-sync-operation")
         )
+
+    def _render_operation_refusal(self) -> None:
+        """State the handoff refusal only for an operation no rendered door offers."""
+        offered = {str(request.operation) for request in self._requests.values()}
+        if self._unoffered_operations - offered:
+            self.query_one("#aeat-sync-status", Static).update(tr("tui.aeat_sync.refusal.operation_handoff"))
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Hand the exact admitted request to the optional owning host door."""
@@ -370,28 +401,106 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         handoff = self.controller.operation_handoff
         status = self.query_one("#aeat-sync-status", Static)
         if request_id in self._consumed_request_ids:
-            status.update(aeat_sync_copy("tui.aeat_sync.operation.already_handled"))
+            status.update(tr("tui.aeat_sync.operation.already_handled"))
             return
         if self._in_flight_id is not None:
-            status.update(aeat_sync_copy("tui.aeat_sync.operation.in_flight"))
+            status.update(tr("tui.aeat_sync.operation.in_flight"))
             return
         self._consumed_request_ids.add(request_id)
         if handoff is None:
-            status.update(aeat_sync_copy("tui.aeat_sync.refusal.operation_handoff"))
+            status.update(tr("tui.aeat_sync.refusal.operation_handoff"))
             return
         self._in_flight_id = request_id
         self._set_operation_buttons_disabled(True)
-        status.update(aeat_sync_copy("tui.aeat_sync.operation.in_flight"))
+        status.update(tr("tui.aeat_sync.operation.in_flight"))
         try:
-            await handoff(request)
+            controller = await handoff(request)
+            self._active_operation_request = request
+            self._active_operation_controller = controller
+            self._show_operation_modal(controller)
         except Exception:  # host boundary must not disclose protected diagnostics
-            status.update(aeat_sync_copy("tui.aeat_sync.operation.failed"))
+            self._active_operation_request = None
+            self._active_operation_controller = None
+            status.update(tr("tui.aeat_sync.operation.failed"))
         else:
-            status.update(aeat_sync_copy("tui.aeat_sync.operation.handed_off"))
+            status.update(tr("tui.aeat_sync.operation.handed_off"))
         finally:
             self._in_flight_id = None
             self._set_operation_buttons_disabled(False)
             event.button.disabled = True
+
+    def _show_operation_modal(self, controller: OperationControllerPort) -> None:
+        """Mount the canonical progress surface for a host-started operation."""
+        self.app.push_screen(OperationModal(controller), self._on_operation_settled)
+
+    def _on_operation_settled(self, outcome: OperationModalOutcomeV1 | None) -> None:
+        """Project an exact notifications-list result and refresh after success."""
+        request, operation_controller = self._active_operation_request, self._active_operation_controller
+        self._active_operation_request = None
+        self._active_operation_controller = None
+        if not isinstance(outcome, OperationModalSettledOutcomeV1):
+            return
+        projection = outcome.view_model.projection
+        if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
+            return
+        self.run_worker(
+            self._refresh_after_success(
+                projection,
+                request=request,
+                operation_controller=operation_controller,
+            ),
+            group="aeat-sync-refresh",
+            exclusive=True,
+        )
+
+    async def _refresh_after_success(
+        self,
+        operation_projection: OperationPublicProjectionV1,
+        *,
+        request: AeatSyncOperationRequestV1 | None,
+        operation_controller: OperationControllerPort | None,
+    ) -> None:
+        """Read the safe list summaries before rebuilding the workspace snapshot."""
+        refresh = self.controller.refresh_snapshot
+        notification_list = request is not None and (
+            request.action.action_id == "operator.live.notifications.list"
+            and request.operation == "live.notifications.list"
+        )
+        notification_summary: str | None = None
+        result_failed = False
+        if notification_list:
+            if operation_controller is None:
+                result_failed = True
+            else:
+                try:
+                    result = await cast(
+                        _NotificationsListResultReader, operation_controller
+                    ).read_notifications_list_result(operation_projection)
+                    notification_summary = self._notifications_list_summary(result)
+                except Exception:  # do not disclose protected operation result details
+                    result_failed = True
+
+        if refresh is not None:
+            try:
+                refreshed = await asyncio.to_thread(refresh)
+                self.refresh_projection(refreshed)
+            except Exception:  # The installed host may lose the bound session during refresh.
+                self.query_one("#aeat-sync-status", Static).update(tr("tui.aeat_sync.operation.failed"))
+                return
+        if result_failed:
+            self.query_one("#aeat-sync-status", Static).update(tr("tui.aeat_sync.operation.failed"))
+        elif notification_summary is not None:
+            self.query_one("#aeat-sync-status", Static).update(notification_summary)
+
+    @staticmethod
+    def _notifications_list_summary(result: NotificationsListPublicResultV1) -> str:
+        """Render only snapshot capture times and public notification-row counts."""
+        lines = [f"{tr('tui.aeat_sync.notifications.title')} · {tr('tui.aeat_sync.status.items', count=result.count)}"]
+        lines.extend(
+            f"{row.captured_at.isoformat()} · {tr('tui.aeat_sync.status.items', count=row.row_count)}"
+            for row in result.rows
+        )
+        return "\n".join(lines)
 
     def _set_operation_buttons_disabled(self, disabled: bool) -> None:
         """Make the one-shot operation guard visible during a host handoff."""
@@ -405,29 +514,29 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         if row is None:
             return
         if row.read_state is not AeatSyncNotificationReadState.READ:
-            status.update(aeat_sync_copy("tui.aeat_sync.refusal.unread_notification"))
+            status.update(tr("tui.aeat_sync.refusal.unread_notification"))
             return
         if self._in_flight_id is not None:
-            status.update(aeat_sync_copy("tui.aeat_sync.operation.in_flight"))
+            status.update(tr("tui.aeat_sync.operation.in_flight"))
             return
         if row_key in self._consumed_notification_ids:
-            status.update(aeat_sync_copy("tui.aeat_sync.notification.already_handled"))
+            status.update(tr("tui.aeat_sync.notification.already_handled"))
             return
         self._consumed_notification_ids.add(row_key)
         if self.controller.notification_document_handoff is None:
-            status.update(aeat_sync_copy("tui.aeat_sync.refusal.notification_handoff"))
+            status.update(tr("tui.aeat_sync.refusal.notification_handoff"))
             return
         self._in_flight_id = row_key
-        status.update(aeat_sync_copy("tui.aeat_sync.operation.in_flight"))
+        status.update(tr("tui.aeat_sync.operation.in_flight"))
         try:
             opened = await self.controller.retrieve_notification_document(row)
         except Exception:  # host boundary must not disclose protected diagnostics
-            status.update(aeat_sync_copy("tui.aeat_sync.operation.failed"))
+            status.update(tr("tui.aeat_sync.operation.failed"))
         else:
             status.update(
-                aeat_sync_copy("tui.aeat_sync.notification.document_handed_off")
+                tr("tui.aeat_sync.notification.document_handed_off")
                 if opened
-                else aeat_sync_copy("tui.aeat_sync.refusal.notification_handoff")
+                else tr("tui.aeat_sync.refusal.notification_handoff")
             )
         finally:
             self._in_flight_id = None
@@ -454,7 +563,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         know: which data has to arrive before the area can open.
         """
         missing = [
-            aeat_sync_copy(
+            tr(
                 "tui.aeat_sync.sources.entry",
                 source=_label(source.source),
                 availability=_label(source.availability),
@@ -463,8 +572,8 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             if source.availability not in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}
         ]
         if not missing:
-            return aeat_sync_copy("tui.aeat_sync.refusal.source")
-        return aeat_sync_copy("tui.aeat_sync.refusal.sources_missing", sources=", ".join(missing))
+            return tr("tui.aeat_sync.refusal.source")
+        return tr("tui.aeat_sync.refusal.sources_missing", sources=", ".join(missing))
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """Track semantic identity instead of a mutable row position."""
@@ -502,10 +611,10 @@ class AeatSyncOverviewScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render public overview states without collapsing either source."""
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.area"), width=15)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local"), width=13)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=13)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.difference"), width=16)
+        table.add_column(tr("tui.aeat_sync.column.area"), width=15)
+        table.add_column(tr("tui.aeat_sync.column.local"), width=13)
+        table.add_column(tr("tui.aeat_sync.column.aeat"), width=13)
+        table.add_column(tr("tui.aeat_sync.column.difference"), width=16)
         for row in self.controller.projection.overview:
             table.add_row(
                 _label(row.area),
@@ -518,7 +627,7 @@ class AeatSyncOverviewScreen(AeatSyncWorkspaceScreen):
 
 
 class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
-    """Census comparison without taxpayer values."""
+    """Local census comparison and complete persisted AEAT evidence."""
 
     zone = AeatSyncWorkspaceZone.CENSUS
     heading = "tui.aeat_sync.census.title"
@@ -526,6 +635,59 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
     def __init__(self, controller: AeatSyncWorkspaceController) -> None:
         """Build the census body."""
         super().__init__(controller, id="aeat-sync-census-screen")
+
+    @override
+    def compose_evidence(self) -> ComposeResult:
+        yield Static(id="aeat-sync-census-captured", markup=False)
+        yield ContentDataTable[str](id="aeat-sync-census-evidence", cursor_type="row", zebra_stripes=True)
+        yield Static(id="aeat-sync-census-value", markup=False)
+
+    def _populate_evidence(self) -> None:
+        observation = self.controller.projection.census_observation
+        table = cast("DataTable[str]", self.query_one("#aeat-sync-census-evidence", DataTable))
+        table.clear(columns=True)
+        self.query_one("#aeat-sync-census-value", Static).update("")
+        captured = self.query_one("#aeat-sync-census-captured", Static)
+        table.display = observation is not None
+        if observation is None:
+            captured.update("")
+            return
+        captured.update(f"{observation.captured_at.isoformat()} · {observation.source_url}")
+        available = max(18, self.app.size.width - 18)
+        area_width, field_width = available // 4, available // 3
+        table.add_column(tr("tui.aeat_sync.column.area"), width=area_width)
+        table.add_column(tr("tui.aeat_sync.column.field"), width=field_width)
+        table.add_column(tr("tui.aeat_sync.column.aeat_value"), width=available - area_width - field_width)
+        for group, record in (
+            ("Datos Identificativos", observation.identity),
+            ("Domicilio Fiscal", observation.domicilio_fiscal),
+            ("Domicilio de Notificación", observation.domicilio_notificacion),
+        ):
+            for field, value in record.model_dump(mode="json").items():
+                table.add_row(group, field.replace("_", " "), "" if value is None else str(value))
+        for consultation in observation.consultations:
+            for section in consultation.sections:
+                area = section.title
+                if consultation.activity_row_index is not None:
+                    area = f"{area} · Actividad {consultation.activity_row_index + 1}"
+                if not section.rows:
+                    table.add_row(area, "", "")
+                for index, row in enumerate(section.rows, start=1):
+                    for cell in row.cells:
+                        role = "Casilla" if cell.role == "casilla" else None
+                        field = " · ".join(filter(None, (str(index), row.label, cell.column, role)))
+                        table.add_row(area, field, cell.text or "")
+
+    @override
+    async def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        table = cast("DataTable[str]", event.data_table)
+        if table.id == "aeat-sync-census-evidence":
+            event.stop()
+            self.query_one("#aeat-sync-census-value", Static).update(
+                "\n".join(str(value) for value in table.get_row(event.row_key))
+            )
+            return
+        await super().on_data_table_row_selected(event)
 
     _COLUMNS: ClassVar[tuple[tuple[str, str, int], ...]] = (
         ("field", "tui.aeat_sync.column.field", 26),
@@ -560,7 +722,7 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
             table.add_column(header, key=name, width=size)
         for row in self.controller.projection.census:
             cells = {
-                "field": _compact(row.path, 32),
+                "field": ellipsize(row.path, 32),
                 "category": _label(row.category),
                 "status": _label(row.status),
                 # An unobserved side is WORDED. A blank cell beside a populated
@@ -574,6 +736,7 @@ class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
                 *(cells[name] for name, _, _ in taken),
                 key=_census_identity(row.path),
             )
+        self._populate_evidence()
 
 
 class AeatSyncFiledDeclarationsScreen(AeatSyncWorkspaceScreen):
@@ -589,10 +752,10 @@ class AeatSyncFiledDeclarationsScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render only public filing and receipt state."""
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.declaration"), width=22)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.local_filing"), width=14)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.aeat"), width=14)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.receipt"), width=14)
+        table.add_column(tr("tui.aeat_sync.column.declaration"), width=22)
+        table.add_column(tr("tui.aeat_sync.column.local_filing"), width=14)
+        table.add_column(tr("tui.aeat_sync.column.aeat"), width=14)
+        table.add_column(tr("tui.aeat_sync.column.receipt"), width=14)
         for row in self.controller.projection.filed_declarations:
             table.add_row(
                 _address(row),
@@ -619,10 +782,10 @@ class AeatSyncNotificationsScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render dates and public read/custody metadata only."""
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.issued"), width=12)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.read"), width=12)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.category"), width=16)
-        table.add_column(aeat_sync_copy("tui.aeat_sync.column.document_custody"), width=18)
+        table.add_column(tr("tui.aeat_sync.column.issued"), width=12)
+        table.add_column(tr("tui.aeat_sync.column.read"), width=12)
+        table.add_column(tr("tui.aeat_sync.column.category"), width=16)
+        table.add_column(tr("tui.aeat_sync.column.document_custody"), width=18)
         self._notification_rows.clear()
         for row in self.controller.projection.notifications:
             key = _notification_identity(row)
@@ -693,6 +856,9 @@ class AeatSyncReconciliationScreen(AeatSyncWorkspaceScreen):
     @override
     def populate_rows(self, table: DataTable[str]) -> None:
         """Render source states, discrepancy, and application-set resolution."""
+        if any(row.evidence_kind is not None for row in self.controller.projection.reconciliation):
+            self._populate_comparisons(table)
+            return
         taken = _fit_columns(
             self.app.size.width,
             (
@@ -725,6 +891,84 @@ class AeatSyncReconciliationScreen(AeatSyncWorkspaceScreen):
                 *(cells[name] for name, _, _ in taken),
                 key=_natural_identity(row, prefix="reconciliation"),
             )
+
+    @override
+    def compose_evidence(self) -> ComposeResult:
+        yield Static(id="aeat-sync-reconciliation-detail", markup=False)
+
+    @override
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        super().on_data_table_row_highlighted(event)
+        table = cast("DataTable[str]", event.data_table)
+        if table.id == "aeat-sync-rows" and hasattr(self, "_comparison_details"):
+            self.query_one("#aeat-sync-reconciliation-detail", Static).update(
+                self._comparison_details.get(str(event.row_key.value), "")
+            )
+
+    def _populate_comparisons(self, table: DataTable[str]) -> None:
+        """Show every diff with both values and the selected row's full provenance."""
+        columns = _fit_columns(
+            self.app.size.width,
+            (("declaration", "tui.aeat_sync.column.declaration", 18), ("field", "tui.aeat_sync.column.field", 16)),
+            (
+                ("local_value", "tui.aeat_sync.column.local_value", 14),
+                ("aeat_value", "tui.aeat_sync.column.aeat_value", 14),
+            ),
+        )
+        for name, header, width in columns:
+            table.add_column(header, key=name, width=width)
+        self._comparison_details: dict[str, str] = {}
+        for row in self.controller.projection.reconciliation:
+            evidence = (
+                tr("tui.aeat_sync.reconciliation.evidence.justificante")
+                if row.evidence_kind is not None and row.evidence_kind.value == "justificante"
+                else tr("tui.aeat_sync.reconciliation.evidence.declaration")
+            )
+            advisory = (
+                tr("tui.aeat_sync.reconciliation.advisories_withheld", count=row.advisory_count)
+                if row.advisory_count
+                else "0"
+            )
+            for index, diff in enumerate(row.diffs or (None,)):
+                cells = {
+                    "declaration": _address(row),
+                    "field": (
+                        diff.field_name
+                        if diff is not None
+                        else tr("tui.aeat_sync.reconciliation.incomplete")
+                        if row.advisory_count
+                        else tr("tui.aeat_sync.reconciliation.matches")
+                    ),
+                    "local_value": _census_value(row.local_value if diff is None else diff.work_unit_value),
+                    "aeat_value": _census_value(row.aeat_value if diff is None else diff.evidence_value),
+                }
+                key = f"{_natural_identity(row, prefix='reconciliation')}:{row.comparison_id or 'legacy'}:{index}"
+                table.add_row(*(cells[name] for name, _, _ in columns), key=key)
+                details = [
+                    f"{cells['declaration']} | {evidence} | {row.local_observed_at}",
+                    cells["field"],
+                    f"{tr('tui.aeat_sync.column.local_value')}: {cells['local_value']}",
+                    f"{tr('tui.aeat_sync.column.aeat_value')}: {cells['aeat_value']}",
+                ]
+                if row.historical:
+                    details.insert(0, tr("tui.aeat_sync.reconciliation.historical"))
+                details.append(
+                    tr("tui.aeat_sync.reconciliation.calculation_revision", revision=row.calculation_revision_id)
+                    if row.calculation_revision_id is not None
+                    else tr("tui.aeat_sync.reconciliation.calculation_revision_unknown")
+                )
+                if row.work_unit_id is not None and row.evidence_id is not None:
+                    details.append(
+                        tr("tui.aeat_sync.reconciliation.identity", work=row.work_unit_id, evidence=row.evidence_id)
+                    )
+                if diff is not None:
+                    details.extend((f"{diff.diff_kind.value}: {diff.kind}", *diff.legal_refs, *diff.source_refs))
+                if row.advisory_count:
+                    details.append(advisory)
+                self._comparison_details[key] = "\n".join(details)
+        self.query_one("#aeat-sync-reconciliation-detail", Static).update(
+            next(iter(self._comparison_details.values()), "")
+        )
 
 
 __all__ = [

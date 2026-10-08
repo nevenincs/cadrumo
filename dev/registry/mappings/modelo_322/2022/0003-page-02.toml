@@ -253,8 +253,8 @@ record_identity = "DR32202"
 
 [[entries]]
 export_field_id = "m322-2022.page-02.f020"
-kind = "computed"
-computed_key = "m303_no_activity_marker"
+kind = "casilla"
+casilla_id = "decl.sin-actividad"
 legal_refs = ["orden-eha-3434-2007:art-1"]
 source_refs = ["aeat-dr-322-2022"]
 [entries.anchor]

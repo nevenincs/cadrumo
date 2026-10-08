@@ -93,8 +93,8 @@ fields = {closes_on = 2027-01-30, filing_year = 2026, opens_on = 2027-01-01, per
 [[revisions."2026".family_overrides]]
 family = "constructs"
 selector = {revision = "2025", id = "modelo-390-iva-resumen-anual"}
-sequence_additions = {casilla_ids = ["iva.anual.pago-cuenta-carburantes-deposito-fiscal"], deadline_windows = ["modelo-390-2026-0a"], legal_refs = ["orden-hac-27-2026:art-tercero"], source_refs = ["boe-modelo-390-2026-form"]}
-sequence_removals = {application_links = [2, 9], deadline_windows = [0], export_layouts = [0], extraction_profiles = [0], workbook_parity_refs = [0]}
+sequence_additions = {casilla_ids = ["iva.anual.pago-cuenta-carburantes-deposito-fiscal"], deadline_windows = ["modelo-390-2026-0a"], legal_refs = ["orden-hac-27-2026:art-tercero"], source_refs = ["boe-modelo-390-2026-form", "boe-modelo-390-2026-printed-calculations"]}
+sequence_removals = {application_links = [2, 9], deadline_windows = [0], export_layouts = [0], extraction_profiles = [0], workbook_parity_refs = [0],source_refs = [2]}
 
 # Box [86] gains the new deduction exactly as the form prints it: "Resultado de
 # la liquidacion (84 + 659 - 85 - 112)".
@@ -116,6 +116,157 @@ sequence_removals = {source_refs = [0]}
 
 # The export and extractor surfaces go with the families that back them: this
 # edition carries no export layout and no declaracion-PDF profile.
+[[revisions."2026".family_overrides]]
+family = "formulas"
+
+[revisions."2026".family_overrides.selector]
+revision = "2025"
+id = "modelo-390-iva-anual-cuota-devengada-total"
+
+[revisions."2026".family_overrides.fields]
+source_refs = ["boe-modelo-390-2026-printed-calculations"]
+
+[[revisions."2026".family_overrides.fields.source_citations]]
+source_ref = "boe-modelo-390-2026-printed-calculations"
+required_text = ["Total cuotas IVA y recargo de equivalencia"]
+[[revisions."2026".family_overrides]]
+family = "formulas"
+
+[revisions."2026".family_overrides.selector]
+revision = "2025"
+id = "modelo-390-iva-anual-cuota-deducible-total"
+
+[revisions."2026".family_overrides.fields]
+source_refs = ["boe-modelo-390-2026-printed-calculations"]
+
+[[revisions."2026".family_overrides.fields.source_citations]]
+source_ref = "boe-modelo-390-2026-printed-calculations"
+required_text = ["49 + 513 + 51 + 521"]
+[[revisions."2026".family_overrides]]
+family = "formulas"
+
+[revisions."2026".family_overrides.selector]
+revision = "2025"
+id = "modelo-390-iva-anual-total-bases-cuotas-iva"
+
+[revisions."2026".family_overrides.fields]
+source_refs = ["boe-modelo-390-2026-printed-calculations"]
+
+[[revisions."2026".family_overrides.fields.source_citations]]
+source_ref = "boe-modelo-390-2026-printed-calculations"
+required_text = ["Total bases y cuotas IVA"]
+
+[[revisions."2026".family_overrides]]
+family = "formulas"
+
+[revisions."2026".family_overrides.selector]
+revision = "2025"
+id = "modelo-390-deduction-group-1"
+
+[revisions."2026".family_overrides.fields]
+source_refs = ["boe-modelo-390-2026-printed-calculations"]
+
+[[revisions."2026".family_overrides.fields.source_citations]]
+source_ref = "boe-modelo-390-2026-printed-calculations"
+required_text = ["Suma de deducciones", "140 + 142"]
+[[revisions."2026".family_overrides]]
+family = "formulas"
+
+[revisions."2026".family_overrides.selector]
+revision = "2025"
+id = "modelo-390-deduction-group-2"
+
+[revisions."2026".family_overrides.fields]
+source_refs = ["boe-modelo-390-2026-printed-calculations"]
+
+[[revisions."2026".family_overrides.fields.source_citations]]
+source_ref = "boe-modelo-390-2026-printed-calculations"
+required_text = ["Suma de deducciones", "157 + 159"]
+[[revisions."2026".family_overrides]]
+family = "formulas"
+
+[revisions."2026".family_overrides.selector]
+revision = "2025"
+id = "modelo-390-deduction-group-3"
+
+[revisions."2026".family_overrides.fields]
+source_refs = ["boe-modelo-390-2026-printed-calculations"]
+
+[[revisions."2026".family_overrides.fields.source_citations]]
+source_ref = "boe-modelo-390-2026-printed-calculations"
+required_text = ["Suma de deducciones", "174 + 176"]
+[[revisions."2026".family_overrides]]
+family = "formulas"
+
+[revisions."2026".family_overrides.selector]
+revision = "2025"
+id = "modelo-390-territorial-allocation"
+
+[revisions."2026".family_overrides.fields]
+source_refs = ["boe-modelo-390-2026-printed-calculations"]
+
+[[revisions."2026".family_overrides.fields.source_citations]]
+source_ref = "boe-modelo-390-2026-printed-calculations"
+required_text = ["Resultado atribuible a territorio"]
+[[revisions."2026".family_overrides]]
+family = "formulas"
+
+[revisions."2026".family_overrides.selector]
+revision = "2025"
+id = "modelo-390-territorial-settlement"
+
+[revisions."2026".family_overrides.fields]
+source_refs = ["boe-modelo-390-2026-printed-calculations"]
+
+[[revisions."2026".family_overrides.fields.source_citations]]
+source_ref = "boe-modelo-390-2026-printed-calculations"
+required_text = ["92 + 659 - 93 - 112"]
+
+[revisions."2026".family_overrides.fields.expression]
+
+[[revisions."2026".family_overrides.fields.expression.args]]
+op = "add"
+
+[[revisions."2026".family_overrides.fields.expression.args.args]]
+casilla_id = "iva.anual.territorio.resultado-atribuible-comun"
+
+[[revisions."2026".family_overrides.fields.expression.args.args]]
+casilla_id = "iva.anual.iva-importacion-diferimiento"
+
+[[revisions."2026".family_overrides.fields.expression.args]]
+op = "add"
+
+[[revisions."2026".family_overrides.fields.expression.args.args]]
+casilla_id = "iva.anual.territorio.compensacion-atribuible-comun"
+
+[[revisions."2026".family_overrides.fields.expression.args.args]]
+casilla_id = "iva.anual.pago-cuenta-carburantes-deposito-fiscal"
+[[revisions."2026".family_overrides]]
+family = "formulas"
+
+[revisions."2026".family_overrides.selector]
+revision = "2025"
+id = "modelo-390-annual-volume"
+
+[revisions."2026".family_overrides.fields]
+source_refs = ["boe-modelo-390-2026-printed-calculations"]
+
+[[revisions."2026".family_overrides.fields.source_citations]]
+source_ref = "boe-modelo-390-2026-printed-calculations"
+required_text = ["Total volumen de operaciones"]
+[[revisions."2026".family_overrides]]
+family = "formulas"
+
+[revisions."2026".family_overrides.selector]
+revision = "2025"
+id = "modelo-390-iva-anual-total-bases-iva"
+
+[revisions."2026".family_overrides.fields]
+source_refs = ["boe-modelo-390-2026-printed-calculations"]
+
+[[revisions."2026".family_overrides.fields.source_citations]]
+source_ref = "boe-modelo-390-2026-printed-calculations"
+required_text = ["Total bases y cuotas IVA"]
 [[revisions."2026".family_removals]]
 family = "application_links"
 selector = {revision = "2025", id = "modelo-390-export"}
@@ -124,6 +275,9 @@ selector = {revision = "2025", id = "modelo-390-export"}
 family = "application_links"
 selector = {revision = "2025", id = "modelo-390-extractor"}
 
+[[revisions."2026".family_removals]]
+family = "constructs"
+selector = {revision = "2025", id = "modelo-390-printed-disclosure-arithmetic-2025"}
 [[revisions."2026".lineage_attestations]]
 family = "casillas"
 continuidad_id = "iva-anual-repercutido-recargo-tipo-0-26-base"
@@ -173,3 +327,5 @@ origin = "grounded"
 evidence = "corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf page 20 (sha256 0552f1b8b0e3) prints box [693] at the 1 recargo rate in the Recargo de equivalencia block of apartado 5 (pagina 2 bis), the same box and rate the 2025 edition carries"
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["boe-modelo-390-2026-form"]
+
+# Replace the earlier source-scoped disclosure owner.

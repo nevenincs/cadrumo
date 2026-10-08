@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
+import asyncio
+import sys
 from collections.abc import AsyncGenerator, Awaitable, Callable
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 from datetime import datetime
 
 from ...core.async_cleanup import AsyncCloseable
+from ...core.diagnostic_log import diagnostic_timing_event
+from ...core.errors.hierarchy import InternalInvariantError
+from ...core.logging import get_logger
 from ...core.operations import OperationEffect, OperationLifecycle
+from ...core.operator_progress import OperatorDisplayCode
+from ..user_profile.access_contracts import AccessAction
+from .authorization import OperationExecutionAuthority
 from .capabilities import OperationOwnedResource
 from .errors import OperationDeclarationError
 from .events import OperationEventCode, OperationLogSeverity
@@ -26,6 +34,8 @@ from .persistence.events import (
 from .persistence.journal import OperationPersistedSnapshot, OperationSecureReferenceStore
 from .registry import OperationRegistry
 
+_LOGGER = get_logger(__name__)
+
 
 class _Cancellation:
     def __init__(
@@ -39,6 +49,8 @@ class _Cancellation:
         self._acknowledge = acknowledge
         self._set_deferred = set_deferred
         self._irreversible_section_depth = 0
+        self._irreversible_owner: asyncio.Task[object] | None = None
+        self._irreversible_lock = asyncio.Lock()
 
     @property
     def cancellation_requested(self) -> bool:
@@ -57,20 +69,52 @@ class _Cancellation:
             raise ValueError("cancellation request identity does not match executor context")
         self._context.snapshot = snapshot
 
+    def _commit_phase(self, stage: str) -> None:
+        if self._context.execution_authority is not None:
+            diagnostic_timing_event(
+                _LOGGER,
+                "operation_commit_phase",
+                fields={"stage": stage, "transition": AccessAction.COMMIT.value},
+                primary_error=sys.exception(),
+            )
+
     @asynccontextmanager
     async def irreversible_section(self) -> AsyncGenerator[None]:
         """Protect one executor-owned mutation boundary from an unsafe stop."""
-        if self.cancellation_requested:
-            raise ValueError("cancellation was requested before the irreversible section began")
-        if self._irreversible_section_depth == 0:
-            self._context.snapshot = await self._set_deferred(self._context.snapshot, True)
-        self._irreversible_section_depth += 1
-        try:
-            yield
-        finally:
-            self._irreversible_section_depth -= 1
+        task = asyncio.current_task()
+        if task is None:
+            raise InternalInvariantError("irreversible section requires an owning async task")
+        async with AsyncExitStack() as authority:
+            if task is not self._irreversible_owner:
+                await authority.enter_async_context(self._irreversible_lock)
+            if self.cancellation_requested:
+                raise ValueError("cancellation was requested before the irreversible section began")
             if self._irreversible_section_depth == 0:
-                self._context.snapshot = await self._set_deferred(self._context.snapshot, False)
+                if self._context.execution_authority is not None:
+                    await authority.enter_async_context(
+                        self._context.execution_authority.commit_guard(self._context.identity)
+                    )
+                self._commit_phase("deferred_true_begin")
+                self._context.snapshot = await self._set_deferred(self._context.snapshot, True)
+                self._irreversible_owner = task
+            self._irreversible_section_depth += 1
+            try:
+                if self._irreversible_section_depth == 1:
+                    self._commit_phase("deferred_true_end")
+                    self._commit_phase("body_enter")
+                yield
+            finally:
+                self._irreversible_section_depth -= 1
+                if self._irreversible_section_depth == 0:
+                    try:
+                        try:
+                            self._commit_phase("body_exit")
+                            self._commit_phase("deferred_false_begin")
+                        finally:
+                            self._context.snapshot = await self._set_deferred(self._context.snapshot, False)
+                        self._commit_phase("deferred_false_end")
+                    finally:
+                        self._irreversible_owner = None
 
 
 class _Deadlines:
@@ -100,6 +144,7 @@ class DefinitionBoundContext:
         advance: Callable[..., Awaitable[OperationPersistedSnapshot]],
         acknowledge_cancellation: Callable[[OperationPersistedSnapshot], Awaitable[OperationPersistedSnapshot]],
         set_cancellation_deferred: Callable[[OperationPersistedSnapshot, bool], Awaitable[OperationPersistedSnapshot]],
+        execution_authority: OperationExecutionAuthority | None = None,
     ) -> None:
         self.registry = registry
         self.clock = clock
@@ -107,6 +152,7 @@ class DefinitionBoundContext:
         self.advance_transition = advance
         self.snapshot = snapshot
         self.identity = snapshot.identity
+        self.execution_authority = execution_authority
         self.cancellation = _Cancellation(
             context=self,
             acknowledge=acknowledge_cancellation,
@@ -198,7 +244,12 @@ class _DefinitionBoundEvents:
         )
         await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,), effect=effect)
 
-    async def notice(self, notice_code: OperationEventCode) -> None:
+    async def notice(
+        self,
+        notice_code: OperationEventCode,
+        *,
+        display_code: OperatorDisplayCode | None = None,
+    ) -> None:
         event = OperationNoticeEvent(
             identity=self._context.identity,
             revision=0,
@@ -206,6 +257,7 @@ class _DefinitionBoundEvents:
             timestamp=self._context.clock(),
             code=notice_code,
             notice_code=notice_code,
+            display_code=display_code,
         )
         await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
 

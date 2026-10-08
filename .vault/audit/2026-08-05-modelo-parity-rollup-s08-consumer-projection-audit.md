@@ -3,14 +3,14 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:f1a73b65bde25f876063f699a6cc9d3468d03cb4c17b7b3d30acf92b004d4e78'
+body_hash: 'sha256:00a20262148d1e58f0428b20dd78e1d46b62c90ea36a08414d52fdb6674224b5'
 related:
-  - "[[2026-08-05-modelo-parity-rollup-plan]]"
   - "[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]"
   - "[[2026-08-05-modelo-parity-rollup-s08-review-audit]]"
 ---
+
 ## Scope
 
 Reviewed the dev-side projection of the application conformance axes added by S08. The projection consumes the existing typed `RevisionConformanceRow.construct_evidence` and `casilla_provenance` fields; it does not recompute evidence or alter registry declarations.
@@ -41,8 +41,8 @@ The delegated `vaultspec-code-reviewer` was invoked with RAG-grounded scope but 
 
 ## Verification
 
-- `uv run --no-sync pytest -q -n 0 src/cadrumo/application/registry/tests/test_conformance_provenance_projection.py` â€” 2 passed.
+- the historical check â€” 2 passed.
 - New dev consumer tests for validated JSON, degraded JSON, and text summaries â€” 3 passed.
-- `uv run --no-sync basedpyright src/cadrumo/application/registry/__init__.py dev/registry/conformance/manager.py` â€” 0 errors, 0 warnings, 0 notes.
+- the historical check â€” 0 errors, 0 warnings, 0 notes.
 - Ruff check, Ruff format check, and `git diff --check` on the authorized consumer files â€” clean.
 - Full legacy CLI failures remain bounded to the pre-existing peer `localization_key` schema drift and the known shared locale ratchet; no baseline weakening was made.

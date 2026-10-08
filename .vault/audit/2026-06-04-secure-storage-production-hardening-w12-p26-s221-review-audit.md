@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:845b4d21181e72c40ea702e3c1880855c6218dea69ffe3fc2f1ea8c0920ee0bc'
+modified: '2026-10-03'
+body_hash: 'sha256:c080a94ac9277f2ca2b6ccb475a4fbfe616860614fce235cb8b1f9dce0c3eec0'
 related: []
 ---
 
@@ -26,8 +26,8 @@ time; default event history resolves per mutating operation through
 
 ## S221-003 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/ledger/_evidence.py src/aeat/application/ledger/test_evidence.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/ledger/test_evidence.py` passed.
+- the historical check passed.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 
 Reviewer note: no critical, high, medium, or low findings remain for S221.

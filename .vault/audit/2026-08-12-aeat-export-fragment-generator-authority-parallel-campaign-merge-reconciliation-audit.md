@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:4cfb4b9a624f5edfa0f1eb41899ad89c4235d10282d072c2a6af4abcb0be76ae'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
-  - "[[2026-08-10-casilla-schema-plan]]"
+related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `parallel campaign merge reconciliation`

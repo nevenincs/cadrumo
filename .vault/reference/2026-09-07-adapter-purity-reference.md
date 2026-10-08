@@ -3,16 +3,16 @@ tags:
   - '#reference'
   - '#adapter-purity'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:b6e11fc88c110fe78cf2ed024b71856067f1503c39b17e87e1437f477b31fe58'
+body_hash: 'sha256:aa4a659b251d31d2342aec47f2bb85b2a1dc1d2b7937477e4b38ea5d021cbc8c'
 related:
   - "[[2026-09-07-tuimodelo-adapter-migration-adr]]"
 ---
 
 # `adapter-purity` reference: `the residual adapter-boundary violations and their ownership`
 
-## Overview
+## Summary
 
 This feature exists because a sibling campaign took a defined slice of the adapter-boundary
 inventory and refused to leave the rest as an unstated remainder. The migration decision that

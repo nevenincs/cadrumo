@@ -1,10 +1,9 @@
 ---
 tags: ['#audit', '#modelo-locales-cli']
 date: '2026-06-11'
-modified: '2026-07-17'
-body_hash: 'sha256:ffe0c90f955a51a1d26bf13fb77f5c299100b58102366ee1e769bc5e9fdf5eb7'
+modified: '2026-10-03'
+body_hash: 'sha256:1b3bb2a30a668c56f5a3413fab8f4ecbab5aeec883524a0ecf4f51b9227ed786'
 related:
-  - '[[2026-06-11-modelo-locales-cli-plan]]'
   - '[[2026-06-11-modelo-locales-cli-adr]]'
   - '[[2026-06-11-modelo-locales-cli-research]]'
 ---
@@ -35,13 +34,13 @@ Residual verification note: a fresh top-level `python -m aeat.locales scaffold -
 
 Reviewed the first manager test slice. The new scaffold preservation test found that `scaffold_revision` wrote an empty modelo-level locale TOML file when the selected revision had no modelo-scope expected keys and no existing modelo-level locale file. The manager now creates missing files only for targets with expected translation leaves while still rewriting existing files when stale keys need cleanup.
 
-Focused evidence reviewed after the fix: `ruff check` passed for the manager and manager tests, and `pytest src/aeat/locales/tests/test_modelo_manager.py -q` passed with real copied M130 registry data.
+Focused evidence reviewed after the fix: `ruff check` passed for the manager and manager tests, and the historical check passed with real copied M130 registry data.
 
 ## MODELCLI-004 | LOW | No actionable findings in P03.S14
 
 Reviewed the modelo CLI integration test slice covering coverage, audit drift, scaffold check, scaffold write, set, remove, and invalid-key refusal. The tests invoke the real Typer app against copied bundled M130 registry data and verify non-writing check mode plus the empty modelo-scope file regression from S13.
 
-Focused evidence reviewed: `ruff check` passed for the touched locale CLI, manager, and tests; `pytest src/aeat/locales/tests/test_modelo_cli.py -q -m integration` passed; and the combined `pytest src/aeat/locales/tests/test_modelo_manager.py src/aeat/locales/tests/test_modelo_cli.py -q -m "unit or integration"` run passed.
+Focused evidence reviewed: `ruff check` passed for the touched locale CLI, manager, and tests; the historical check passed; and the combined the historical check run passed.
 
 Residual verification note: the repository default pytest marker is `-m unit`, so integration-marked CLI tests are deselected unless the focused command overrides the marker expression.
 
@@ -49,13 +48,13 @@ Residual verification note: the repository default pytest marker is `-m unit`, s
 
 Reviewed the catalogue isolation regression tests. The new assertions hash eager locale YAML catalogues before and after modelo-local CLI writes and reload the copied registry to prove `CasillaDefinition.label` stays the official Spanish value while `get_label("en")` reflects the schema-local override.
 
-Focused evidence reviewed: `ruff check` passed for the touched CLI, manager, and CLI tests, and `pytest src/aeat/locales/tests/test_modelo_cli.py -q -m integration` passed.
+Focused evidence reviewed: `ruff check` passed for the touched CLI, manager, and CLI tests, and the historical check passed.
 
 ## MODELCLI-006 | LOW | No actionable findings in P03.S16
 
 Reviewed the registry-loader roundtrip coverage. The new test writes a schema-local translation through `ModeloLocaleManager` and loads the copied real Modelo 130 registry directory through `load_modelo_directory`, proving manager-written TOML is accepted by the runtime loader while the official Spanish schema label is unchanged.
 
-Focused evidence reviewed: `ruff check` passed for the registry locale loader test; `pytest src/aeat/domain/calculations/registry/tests/test_registry_locales_loader.py -q -m unit` passed; and the combined registry/locale focused run passed.
+Focused evidence reviewed: `ruff check` passed for the registry locale loader test; the historical check passed; and the combined registry/locale focused run passed.
 
 Residual verification note: an attempted full real-M130 pydantic JSON roundtrip exposed unrelated strict validation gaps for serialized formula expression tuples and deadline `Period` values, so this step intentionally verifies the loader roundtrip rather than changing registry serialization behavior.
 

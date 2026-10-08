@@ -32,15 +32,12 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Generator, Mapping, Sequence
-from contextlib import contextmanager
-from contextvars import ContextVar
-from typing import Protocol, Self
+from collections.abc import Mapping, Sequence
+from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.config import Settings
-from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from ...core.hashing import content_hash_hex
@@ -50,17 +47,18 @@ from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
+from . import confirmation_record_repository
 from .confirmation_gate import ConfirmationBlocker, FindingResolution
 from .invoice_draft_records import FieldProvenance, InvoiceDraft
 
+if TYPE_CHECKING:
+    from ...core.config import Settings
+
 __all__ = [
     "ConfirmationRecordDocument",
-    "ConfirmationRecordRepositoryFactory",
-    "ConfirmationRecordRepositoryProtocol",
     "FieldAssertion",
     "InvoiceConfirmationRecord",
     "ResolvedFinding",
-    "bind_confirmation_record_repository_factory",
     "build_confirmation_record",
     "confirmation_record_object_key",
     "derive_confirmation_id",
@@ -246,59 +244,9 @@ def confirmation_record_object_key(document: ConfirmationRecordDocument) -> str:
     return document.bucket_id
 
 
-class ConfirmationRecordRepositoryProtocol(Protocol):
-    """Persistence operations required by confirmation-record policy."""
-
-    def load(self, identifier: str) -> ConfirmationRecordDocument | None:
-        """Load the document stored under ``identifier``, when present."""
-        ...
-
-    def save(self, payload: ConfirmationRecordDocument) -> None:
-        """Persist one complete confirmation-record document."""
-        ...
-
-
-class ConfirmationRecordRepositoryFactory(Protocol):
-    """Construct a confirmation repository for one bucket and storage configuration."""
-
-    def __call__(
-        self,
-        *,
-        bucket_id: str,
-        settings: Settings | None,
-    ) -> ConfirmationRecordRepositoryProtocol:
-        """Return the encrypted repository bound to ``bucket_id``."""
-        ...
-
-
-_BOUND_CONFIRMATION_RECORD_REPOSITORY_FACTORY: ContextVar[ConfirmationRecordRepositoryFactory] = ContextVar(
-    "cadrumo_confirmation_record_repository_factory"
-)
-
-
-@contextmanager
-def bind_confirmation_record_repository_factory(
-    factory: ConfirmationRecordRepositoryFactory,
-) -> Generator[ConfirmationRecordRepositoryFactory]:
-    """Bind one outward-composed confirmation repository factory."""
-    token = _BOUND_CONFIRMATION_RECORD_REPOSITORY_FACTORY.set(factory)
-    try:
-        yield factory
-    finally:
-        _BOUND_CONFIRMATION_RECORD_REPOSITORY_FACTORY.reset(token)
-
-
-def _repository(bucket_id: str, settings: Settings | None) -> ConfirmationRecordRepositoryProtocol:
-    try:
-        factory = _BOUND_CONFIRMATION_RECORD_REPOSITORY_FACTORY.get()
-    except LookupError as error:
-        raise InternalInvariantError("confirmation-record persistence has not been composed") from error
-    return factory(bucket_id=bucket_id, settings=settings)
-
-
 def load_confirmation_records(bucket_id: str, settings: Settings | None = None) -> ConfirmationRecordDocument:
     """Load a bucket's confirmation records, or an empty document when none exist."""
-    document = _repository(bucket_id, settings).load(bucket_id)
+    document = confirmation_record_repository.confirmation_record_repository(bucket_id, settings).load(bucket_id)
     return document if document is not None else ConfirmationRecordDocument(bucket_id=bucket_id)
 
 
@@ -322,7 +270,7 @@ def write_confirmation_record(
         bucket_id=record.bucket_id,
         records=(*document.records, record),
     )
-    _repository(record.bucket_id, settings).save(updated)
+    confirmation_record_repository.confirmation_record_repository(record.bucket_id, settings).save(updated)
     return record
 
 

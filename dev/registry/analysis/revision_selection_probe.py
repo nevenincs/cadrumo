@@ -38,10 +38,13 @@ from __future__ import annotations
 import argparse
 import sys
 from dataclasses import dataclass
+from datetime import date
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
+from cadrumo.domain.calculations.registry.ids import RevisionId
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.authority import admitted_revision_id, compiled_bundled_authority
 from ..maintenance_support import (
@@ -93,6 +96,102 @@ def declared_period_codes(revision: object) -> tuple[str, ...]:
     return tuple(str(code) for code in getattr(selector, "periods", ()) or ())
 
 
+def _probe_year(
+    *,
+    filing_year: int | None,
+    coordinates: tuple[tuple[int, str], ...],
+) -> int | None:
+    """Choose the requested year or the earliest supported coordinate."""
+    if filing_year is not None:
+        return filing_year
+    if not coordinates:
+        return None
+    return min(item[0] for item in coordinates)
+
+
+def _resolve_declared_period(
+    authority: ValidatedRegistryAuthority,
+    modelo_id: str,
+    *,
+    filing_year: int,
+    period: str,
+    on: date | None = None,
+    stop_on_ambiguity: bool,
+) -> tuple[str | None, str | None]:
+    """Try authority grades in declaration order, retaining the last refusal."""
+    resolved: str | None = None
+    refusal: str | None = None
+    for grade in _GRADES:
+        try:
+            if on is None:
+                resolved = str(
+                    admitted_revision_id(
+                        authority,
+                        modelo_id,
+                        filing_year=filing_year,
+                        period=period,
+                        grade=grade,
+                    )
+                )
+            else:
+                resolved = str(
+                    admitted_revision_id(
+                        authority,
+                        modelo_id,
+                        filing_year=filing_year,
+                        period=period,
+                        on=on,
+                        grade=grade,
+                    )
+                )
+            break
+        except AmbiguousRevisionSelectionError:
+            refusal = AmbiguousRevisionSelectionError.__name__
+            if stop_on_ambiguity:
+                break
+        except Exception as error:
+            refusal = type(error).__name__
+    return resolved, refusal
+
+
+def _probe_declared_period(
+    authority: ValidatedRegistryAuthority,
+    modelo_id: str,
+    revision_id: RevisionId,
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    period: str,
+) -> SelectionProbe:
+    """Probe one declared period and retry only an ambiguous year with a date."""
+    resolved, refusal = _resolve_declared_period(
+        authority,
+        modelo_id,
+        filing_year=filing_year,
+        period=period,
+        stop_on_ambiguity=True,
+    )
+    year_alone_ambiguous = refusal == AmbiguousRevisionSelectionError.__name__
+    if year_alone_ambiguous:
+        resolved, refusal = _resolve_declared_period(
+            authority,
+            modelo_id,
+            filing_year=filing_year,
+            period=period,
+            on=revision.valid_from,
+            stop_on_ambiguity=False,
+        )
+    return SelectionProbe(
+        modelo=modelo_id,
+        revision=str(revision_id),
+        period=period,
+        filing_year=filing_year,
+        resolved=resolved,
+        refusal=None if resolved else refusal,
+        year_alone_ambiguous=year_alone_ambiguous,
+    )
+
+
 def probe_modelo(
     authority: ValidatedRegistryAuthority, modelo_id: str, *, filing_year: int | None = None
 ) -> tuple[SelectionProbe, ...]:
@@ -118,61 +217,20 @@ def probe_modelo(
         # reported that as the revision failing to resolve itself. A revision
         # lying wholly below the floor has no coordinate to be asked about.
         coordinates = revision_selection_coordinates(revision, assessment_horizon=horizon, assessment_floor=floor)
-        if filing_year is None and not coordinates:
+        year = _probe_year(filing_year=filing_year, coordinates=coordinates)
+        if year is None:
             continue
-        year = filing_year if filing_year is not None else min(item[0] for item in coordinates)
         for code in declared_period_codes(revision):
-            resolved: str | None = None
-            refusal: str | None = None
-            # Two revisions may split inside one year - modelo 308 changes at the
-            # end of June 2011 - and then the year alone cannot choose between
-            # them. That refusal is the registry being right, so the probe asks
-            # again with a date inside the revision's own window rather than
-            # reporting its own under-specified question as a finding.
-            for grade in _GRADES:
-                try:
-                    resolved = str(
-                        admitted_revision_id(authority, modelo_id, filing_year=year, period=code, grade=grade)
-                    )
-                    break
-                except AmbiguousRevisionSelectionError:
-                    refusal = AmbiguousRevisionSelectionError.__name__
-                    break
-                except Exception as error:
-                    refusal = type(error).__name__
-
-            # Only an ambiguity is worth asking again: it means the year did not
-            # decide between windows splitting inside it, which a date does
-            # decide. Any other refusal is the revision's own answer, and
-            # retrying it with a date doubles the work to hear the same thing.
-            year_alone_ambiguous = refusal == AmbiguousRevisionSelectionError.__name__
-            if year_alone_ambiguous:
-                for grade in _GRADES:
-                    try:
-                        resolved = str(
-                            admitted_revision_id(
-                                authority,
-                                modelo_id,
-                                filing_year=year,
-                                period=code,
-                                on=revision.valid_from,
-                                grade=grade,
-                            )
-                        )
-                        refusal = None
-                        break
-                    except Exception as error:
-                        refusal = type(error).__name__
-
+            # Two revisions may split inside one year. Only an ambiguous year
+            # is retried with a date inside the current revision's own window.
             probes.append(
-                SelectionProbe(
-                    modelo=modelo_id,
-                    revision=str(revision_id),
-                    period=code,
+                _probe_declared_period(
+                    authority,
+                    modelo_id,
+                    revision_id,
+                    revision,
                     filing_year=year,
-                    resolved=resolved,
-                    refusal=None if resolved else refusal,
-                    year_alone_ambiguous=year_alone_ambiguous,
+                    period=code,
                 )
             )
     return tuple(probes)

@@ -24,7 +24,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
@@ -55,7 +55,7 @@ def _live_overview(label: str = "Manager Subject"):
         # record. Logging in with the passphrase derives the SAME DEK the capsule was
         # sealed under; synthesising a session instead gives a different key and the
         # capsule refuses it as a row addressed to another object key.
-        login_profile(
+        authenticate_profile_for_invocation(
             name=label,
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
@@ -394,7 +394,7 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
 
 
 def _edit_screen(field):
-    from ..profile.overview import FieldEditScreen
+    from ..profile.edit_screens import FieldEditScreen
 
     return FieldEditScreen(field)
 
@@ -408,7 +408,7 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
     a row of bullets.
     """
     from ....application.user_profile.overview import MASKED_PLACEHOLDER, ProfileFieldView
-    from ..profile.overview import FieldEditScreen
+    from ..profile.edit_screens import FieldEditScreen
 
     masked = ProfileFieldView(
         path="access.token",

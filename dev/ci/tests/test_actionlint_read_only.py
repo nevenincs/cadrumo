@@ -28,3 +28,13 @@ def test_check_path_reports_remediation_without_calling_installer(
     assert actionlint.main([]) == actionlint.TOOL_MISSING
     assert installer_called is False
     assert "python -m dev.actionlint --install" in capsys.readouterr().err
+
+
+def test_actionlint_cache_uses_cadrumo_storage_override(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    storage = tmp_path / "storage"
+    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(storage))
+    monkeypatch.setenv("CADRUMO_ACTIONLINT_DIR", "tools/actionlint")
+    monkeypatch.setenv("RUNNER_TOOL_CACHE", str(tmp_path / "runner-tool-cache"))
+
+    assert actionlint._cache_root() == storage / "tools" / "actionlint" / actionlint.VERSION

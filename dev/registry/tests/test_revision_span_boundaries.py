@@ -679,7 +679,11 @@ def test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio()
             continue
         year = revision.valid_from.year
         widened = revision.model_copy(
-            update={"valid_from": date(year, 1, 1), "valid_to": date(year, 12, 31)},
+            update={
+                "valid_from": date(year, 1, 1),
+                "valid_to": date(year, 12, 31),
+                "period_selector": revision.period_selector.model_copy(update={"periods": ()}),
+            },
         )
         widened_reported.extend(
             f"modelo {modelo.id} revision {revision_id!r} ejercicio {earlier}"

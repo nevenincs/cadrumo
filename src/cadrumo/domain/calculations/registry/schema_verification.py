@@ -738,19 +738,21 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         "at_most_one_positive",
         "any_nonzero",
         "cap_le_when_positive",
+        # A positive elective application requires an actually present stock value.
+        "positive_application_le_present_stock",
         # casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
         # "consequent_casilla_id"]) — categorical-conditional material
         # implication: when the operator-entered raw text value of the named
         # TEXT antecedent casilla equals the literal, the named consequent
-        # (Decimal) casilla must be non-zero. ADVISORY-only (no BLOCKING_RULE
-        # branch is implemented), mirroring the advisory_when_ratio_ge
-        # (ADVISORY-only) asymmetry. Authored for the
+        # (Decimal) casilla must be non-zero. Supports ADVISORY and BLOCKING_RULE;
+        # the declaration chooses whether a violation warns or blocks. Authored for the
         # M210 IRNR inmobiliaria branch (tipo_renta == "inmobiliaria" implies a
         # non-zero base_imponible), the one shape implies_nonzero cannot
         # express because its trigger is a categorical equality, not a
         # numeric antecedent. See the casilla_equals_implies_nonzero branch in
         # _evaluate_advisory_predicate_fires.
         "casilla_equals_implies_nonzero",
+        "casilla_equals_implies_zero",
         # casilla_equals_implies_profile_flag(["antecedent_casilla_id", "literal",
         # "profile_field"]) — categorical-antecedent / profile-state-consequent
         # conditional advisory: FIRES (ADVISORY shown) when the operator-entered
@@ -829,6 +831,15 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # equals branches in _evaluate_predicate_expression and
         # _evaluate_advisory_predicate_fires.
         "equals",
+        # equals_sum(["total_id", "addend_id", "addend_id", ...]) — printed-total
+        # invariant: the first casilla must equal the sum of every casilla after
+        # it, exactly. Authored for a total box the official record design
+        # defines as the sum of other printed boxes (Modelo 303 [27]), so the
+        # fichero refuses a total carrying an amount no printed box shows. Its
+        # BLOCKING finding names the total box and the printed sum. As an
+        # ADVISORY it fires when the two differ. See the equals_sum branches in
+        # _evaluate_predicate_expression and _evaluate_advisory_predicate_fires.
+        "equals_sum",
         "implies_any_nonzero",
         "implies_nonzero",
         "profile_field_required",
@@ -863,12 +874,15 @@ class VerificationPredicateOperator(StrEnum):
     AT_MOST_ONE_POSITIVE = "at_most_one_positive"
     ANY_NONZERO = "any_nonzero"
     CAP_LE_WHEN_POSITIVE = "cap_le_when_positive"
+    POSITIVE_APPLICATION_LE_PRESENT_STOCK = "positive_application_le_present_stock"
     CASILLA_EQUALS_IMPLIES_DIVERGES = "casilla_equals_implies_diverges"
     CASILLA_EQUALS_IMPLIES_NONZERO = "casilla_equals_implies_nonzero"
+    CASILLA_EQUALS_IMPLIES_ZERO = "casilla_equals_implies_zero"
     CASILLA_EQUALS_IMPLIES_PROFILE_FLAG = "casilla_equals_implies_profile_flag"
     DEDUCCION_REQUIRES_ADQUISICION_BEFORE = "deduccion_requires_adquisicion_before"
     ADVISORY_WHEN_COMPUTED_DIVERGES = "advisory_when_computed_diverges"
     EQUALS = "equals"
+    EQUALS_SUM = "equals_sum"
     IMPLIES_ANY_NONZERO = "implies_any_nonzero"
     IMPLIES_NONZERO = "implies_nonzero"
     PROFILE_FIELD_REQUIRED = "profile_field_required"
@@ -970,6 +984,12 @@ VERIFICATION_PREDICATE_SPECIFICATIONS: Mapping[
             minimum_casilla_ids=2,
             maximum_casilla_ids=2,
         ),
+        VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK: _predicate_specification(
+            VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=2,
+            maximum_casilla_ids=2,
+        ),
         VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_DIVERGES: _predicate_specification(
             VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_DIVERGES,
             VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA_PAIR,
@@ -978,6 +998,12 @@ VERIFICATION_PREDICATE_SPECIFICATIONS: Mapping[
         ),
         VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO: _predicate_specification(
             VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_NONZERO,
+            VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA,
+            minimum_casilla_ids=2,
+            maximum_casilla_ids=2,
+        ),
+        VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO: _predicate_specification(
+            VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_ZERO,
             VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA,
             minimum_casilla_ids=2,
             maximum_casilla_ids=2,
@@ -1005,6 +1031,12 @@ VERIFICATION_PREDICATE_SPECIFICATIONS: Mapping[
             VerificationPredicateSyntax.CASILLA_LIST,
             minimum_casilla_ids=2,
             maximum_casilla_ids=2,
+        ),
+        # A total and at least two addends: one addend is the binary equals.
+        VerificationPredicateOperator.EQUALS_SUM: _predicate_specification(
+            VerificationPredicateOperator.EQUALS_SUM,
+            VerificationPredicateSyntax.CASILLA_LIST,
+            minimum_casilla_ids=3,
         ),
         VerificationPredicateOperator.IMPLIES_ANY_NONZERO: _predicate_specification(
             VerificationPredicateOperator.IMPLIES_ANY_NONZERO,
@@ -1257,6 +1289,12 @@ class VerificationPredicateDefinition(RegistryModel):
       figurar... un importe superior a la cantidad positiva consignada").
       Predicate holds when ceiling ≤ 0; the cap applies only when the
       operator's gross liability is positive.
+    - positive_application_le_present_stock(["application_id", "stock_id"]) —
+      an omitted or non-positive elective application holds without
+      requiring a stock value. A positive application requires the stock
+      casilla to be present and must not exceed its actual value. Missing
+      stock is not interpreted as zero; this predicate does not validate
+      either operand's sign outside that comparison.
     - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
       implication with a strictly-positive antecedent test: predicate
       holds iff ``casilla_values[antecedent] <= 0`` OR
@@ -1283,6 +1321,14 @@ class VerificationPredicateDefinition(RegistryModel):
       non-blocking alert rather than a refusal). The first consequent
       slot onward is the constituent set; a single consequent reduces to
       ``implies_nonzero``.
+    - ``equals_sum(["total_id", "addend_id", "addend_id", ...])`` — the
+      printed-total invariant: predicate holds iff the first casilla equals
+      the exact sum of every casilla after it, missing values reading as
+      zero. Authored for a box the official record design defines as the sum
+      of other printed boxes, such as Modelo 303 [27]: a total that also
+      carries an amount no printed box shows produces a fichero that does not
+      add up, whatever the source of that amount. Its BLOCKING finding names
+      the total box and the sum of the printed boxes.
     - ``profile_field_required("profile_field_name", "applicability_filter")``
       — profile-state-aware conditional non-zero requirement. Returns
       ``True`` (predicate holds) when the named ``applicability_filter``
@@ -1306,13 +1352,18 @@ class VerificationPredicateDefinition(RegistryModel):
       raw text value of the named antecedent (TEXT) casilla equals the
       literal AND the named consequent (Decimal) casilla is zero. A missing
       or differing antecedent value holds trivially (no advisory), same
-      convention as the numeric-antecedent operators. ADVISORY-only: no
-      ``BLOCKING_RULE`` branch is implemented, mirroring the existing
-      ``equals`` (BLOCKING-only) / ``advisory_when_ratio_ge`` (ADVISORY-only)
-      asymmetry. Authored for the M210 IRNR inmobiliaria branch, the one
+      convention as the numeric-antecedent operators. A BLOCKING_RULE instead
+      fails when that same violation is present. The declaration determines
+      severity; existing advisory declarations retain their behavior.
+      Authored for the M210 IRNR inmobiliaria branch, the one
       shape ``implies_nonzero`` cannot express because its trigger is a
       categorical equality (``tipo_renta == "inmobiliaria"``) rather than
       a numeric antecedent, guarding against a silent under-declaration.
+    - ``casilla_equals_implies_zero(["antecedent_casilla_id", "literal",
+      "consequent_casilla_id"])`` requires an explicitly supplied numeric zero
+      when the raw text antecedent exactly matches the literal. Missing numbers
+      violate the requirement; missing or different antecedents do not trigger
+      it. Supports BLOCKING_RULE and ADVISORY with the same violation condition.
     - ``deduccion_requires_adquisicion_before(["amount_casilla_id",
       "acquisition_date_casilla_id", "construction_date_casilla_id",
       "cutoff_iso"])`` — eligibility-conditional advisory: FIRES (ADVISORY
@@ -1323,8 +1374,7 @@ class VerificationPredicateDefinition(RegistryModel):
       claimed amount with a pre-cutoff acquisition date, a non-empty
       construction date, or a zero/absent amount holds trivially (no advisory).
       ADVISORY-only: no ``BLOCKING_RULE`` branch is implemented, mirroring the
-      ``casilla_equals_implies_nonzero`` / ``advisory_when_ratio_ge``
-      ADVISORY-only convention. Authored for the Modelo 100 deducción por
+      ``advisory_when_ratio_ge`` ADVISORY-only convention. Authored for the Modelo 100 deducción por
       inversión en vivienda habitual, whose transitional régimen (LIRPF DT 18ª)
       admits only dwellings acquired before 01-01-2013 (or pre-2013
       construction); a post-2013 acquirer claiming the abolished deducción

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-campaign-sequencing'
 date: '2026-08-19'
-modified: '2026-08-19'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c43a286f5ad1d9f0e8976f16664345513d6dd5cedafe4aa7fed7f7e6bdb26322'
+body_hash: 'sha256:b2d6525b57ed816d649e68af1b6431f99cb6a1d704e4f46bd3a940d0564c73dc'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-export-layout-authoring-backlog-audit]]"
 ---
@@ -90,3 +90,9 @@ its grounding, and restoring the grounding reds the gate. A third shape is
 needed, and the narrow one wins because it keeps both properties that matter --
 every deadline date traceable to the calendar that published it, and every cited
 source justified by something the revision actually declares.
+
+## Consequences
+
+If adopted, a calendar source is admissible only when a declared deadline window closes within that source's period. A stale design citation still fails because no declared window supports it, while the following-year calendar needed by a forward-reaching deadline can be cited.
+
+The rule affects registry validation for every modelo. The sixty-one observed windows remain evidence of current practice, not proof of intent; the forward-reach convention still needs owner confirmation before rollout.

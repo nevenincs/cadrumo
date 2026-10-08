@@ -57,7 +57,7 @@ _DOCS = _REPO_ROOT / "docs"
 _QUERY_TERM = "zzhowtoapitoken"
 
 # A built page shaped like the real Furo output: content lives in
-# ``article[role=main]`` (what pagefind.yml scopes indexing to), so the page is
+# ``article[role=main]``, the part of a page its record keeps, so the page is
 # full-text indexed and the page-meta stamping tags its <body>.
 _PAGE = """<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><title>{title}</title></head>
@@ -129,7 +129,6 @@ def _build_fulltext_site(build: Path) -> None:
     static.mkdir(parents=True, exist_ok=True)
     for name in ("cadrumo-docs.js", "cadrumo-docs.css"):
         (static / name).write_bytes((_DOCS / "_static" / name).read_bytes())
-    (build / "pagefind.yml").write_bytes((_DOCS / "pagefind.yml").read_bytes())
     (build / "palette.html").write_text(_TRIGGER_PAGE, encoding="utf-8")
 
 

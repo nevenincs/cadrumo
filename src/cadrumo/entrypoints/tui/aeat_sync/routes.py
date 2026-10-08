@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final, get_args
+from typing import Final
 
 from textual.screen import Screen
 
 from ....application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1, AeatSyncWorkspaceZone
 from ....application.operations.registry import OperationPublicContractSetV1
+from ..destination_alias import closed_destination_ids
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .controller import AeatSyncWorkspaceController
 from .models import (
@@ -56,12 +57,7 @@ AEAT_SYNC_ROUTES: Final = (
 _ROUTES_BY_ID: Final = {route.destination: route for route in AEAT_SYNC_ROUTES}
 
 
-def declared_aeat_sync_destination_ids() -> frozenset[str]:
-    """Read the closed internal destination catalogue from its literal type."""
-    return frozenset(item for item in get_args(AeatSyncDestinationIdV1.__value__) if isinstance(item, str))
-
-
-if frozenset(_ROUTES_BY_ID) != declared_aeat_sync_destination_ids() or tuple(
+if frozenset(_ROUTES_BY_ID) != closed_destination_ids(AeatSyncDestinationIdV1) or tuple(
     route.zone for route in AEAT_SYNC_ROUTES
 ) != tuple(AeatSyncWorkspaceZone):
     raise ValueError("AEAT Sync routes must cover the closed zone catalogue exactly once and in order")
@@ -89,6 +85,7 @@ def aeat_sync_screen_factory(
     projection: AeatSyncWorkspaceProjectionV1,
     *,
     operation_handoff: AeatSyncOperationHandoffV1 | None = None,
+    refresh_snapshot: Callable[[], AeatSyncWorkspaceProjectionV1] | None = None,
     notification_document_handoff: AeatSyncNotificationDocumentHandoffV1 | None = None,
     operation_contracts: OperationPublicContractSetV1 | None = None,
 ) -> TuiScreenFactoryV1:
@@ -99,6 +96,7 @@ def aeat_sync_screen_factory(
             context,
             projection,
             operation_handoff=operation_handoff,
+            refresh_snapshot=refresh_snapshot,
             notification_document_handoff=notification_document_handoff,
             operation_contracts=operation_contracts,
         )
@@ -111,6 +109,5 @@ __all__ = [
     "AEAT_SYNC_ROUTES",
     "AeatSyncRouteV1",
     "aeat_sync_screen_factory",
-    "declared_aeat_sync_destination_ids",
     "resolve_aeat_sync_screen",
 ]

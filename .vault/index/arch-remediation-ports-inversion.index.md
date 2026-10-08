@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#arch-remediation-ports-inversion'
 date: '2026-08-16'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1fbb68a0846b5eb9d51190d98e6ac806fa1ebafef2bead8c63e4ae154f73b0a5'
+body_hash: 'sha256:80020710958aa7363a03bb8636ab164bfa5e0a075e605447d7fe31f1facfefb1'
 related:
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'
-  - '[[2026-07-02-arch-remediation-ports-inversion-ledger]]'
-  - '[[2026-07-02-arch-remediation-ports-inversion-plan]]'
   - '[[2026-07-03-arch-remediation-ports-inversion-audit]]'
   - '[[2026-07-06-arch-remediation-ports-inversion-research]]'
   - '[[2026-09-02-arch-remediation-ports-inversion-layered-pin-provenance-reference]]'
@@ -31,14 +29,6 @@ Auto-generated index of all documents tagged with `#arch-remediation-ports-inver
 ### audit
 
 - `2026-07-03-arch-remediation-ports-inversion-audit` - `arch-remediation-ports-inversion` audit: `ports-inversion campaign close honesty review`
-
-### exec
-
-- `2026-07-02-arch-remediation-ports-inversion-ledger` - `arch-remediation-ports-inversion` ledger
-
-### plan
-
-- `2026-07-02-arch-remediation-ports-inversion-plan` - `arch-remediation-ports-inversion` plan
 
 ### reference
 

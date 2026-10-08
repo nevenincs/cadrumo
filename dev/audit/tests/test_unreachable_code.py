@@ -19,22 +19,11 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..unreachable_code import (
-    Confidence,
-    EntryPoint,
-    ModuleReach,
-    OutsideCorpus,
-    ShippedTreeSpec,
-    SymbolKind,
-    UnreachableCodeOutcome,
-    UnreachableCodeResult,
-    assembled_reference_names,
-    filter_by_confidence,
-    forward_reference_names,
-    render_console_report,
-    result_as_json,
-    scan_unreachable_code,
-)
+from ..unreachable_code import scan_unreachable_code
+from ..unreachable_models import Confidence, ModuleReach, SymbolKind, UnreachableCodeOutcome, UnreachableCodeResult
+from ..unreachable_references import assembled_reference_names, forward_reference_names
+from ..unreachable_reporting import filter_by_confidence, render_console_report, result_as_json
+from ..unreachable_tree import EntryPoint, OutsideCorpus, ShippedTreeSpec
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -299,7 +288,7 @@ def test_repository_discovers_its_module_execution_roots() -> None:
 
 def test_module_execution_surface_requires_a_file_role_or_top_level_exact_guard(tmp_path: Path) -> None:
     """Prose and nested comparisons cannot promote an ordinary module to a root."""
-    from ..unreachable_code import is_module_execution_surface
+    from ..unreachable_tree import is_module_execution_surface
 
     package_main = tmp_path / "__main__.py"
     guarded = tmp_path / "guarded.py"
@@ -360,6 +349,7 @@ def test_symbol_layer_reports_only_definitions_shipped_code_never_references(res
         "Config.PROSE_ONLY",
         "Widget.hidden_field",
         "Widget.hidden",
+        "Widget.on_mount",
         "COINCIDENTAL_CONST",
         "orphan_fn",
     }
@@ -644,9 +634,10 @@ def test_filtering_to_one_tier_keeps_the_counts_and_drops_the_rest(result: Unrea
 
     assert narrowed.modules == ()
     assert narrowed.tests == ()
-    assert {finding.qualname for finding in narrowed.symbols} == {"Widget.hidden"}
+    assert {finding.qualname for finding in narrowed.symbols} == {"Widget.hidden", "Widget.on_mount"}
     assert narrowed.shipped_modules == result.shipped_modules
     assert narrowed.reachable_modules == result.reachable_modules
+    assert narrowed.dev_cleared == result.dev_cleared == 1
 
 
 def test_filtering_away_every_finding_returns_a_clean_result(result: UnreachableCodeResult) -> None:
@@ -688,7 +679,26 @@ def test_clean_tree_is_green(tmp_path: Path) -> None:
     assert outcome.outcome is UnreachableCodeOutcome.CLEAN
     assert outcome.is_green
     assert outcome.reachable_modules == outcome.shipped_modules == 3
-    assert "every shipped module and symbol is reachable" in outcome.headline()
+    assert "no reachability findings" in outcome.headline()
+
+
+def test_development_tests_cannot_clear_a_product_member(tmp_path: Path) -> None:
+    _write(tmp_path, "src/pkg/__init__.py")
+    _write(tmp_path, "src/pkg/cli.py", "class Record:\n    def orphan(self): ...\n\ndef main(): ...\n")
+    _write(tmp_path, "dev/tests/test_record.py", "from pkg.cli import Record\nRecord().orphan()\n")
+    spec = ShippedTreeSpec(
+        repo_root=tmp_path,
+        src_root=tmp_path / "src",
+        package="pkg",
+        entry_points=(EntryPoint("pkg.cli", "main"),),
+        outside=(OutsideCorpus(label="dev", root=tmp_path / "dev"),),
+    )
+
+    result = scan_unreachable_code(spec)
+
+    orphan = next(finding for finding in result.symbols if finding.qualname == "Record.orphan")
+    assert orphan.used_by == ("tests",)
+    assert result.dev_cleared == 0
 
 
 def test_outside_relative_import_is_credited_at_every_nesting_depth(tmp_path: Path) -> None:
@@ -777,7 +787,7 @@ def test_console_report_and_json_carry_the_same_findings(result: UnreachableCode
 
     assert report.startswith(
         "unreachable code: 4 unreachable module(s), 3 module-exec-only, 1 type-only module(s), "
-        "9 unused symbol(s) in reachable modules, 2 orphaned test module(s)"
+        "10 unused-symbol candidate(s) in reachable modules, 2 orphaned test module(s)"
     )
     assert "roots: pkg.cli:main" in report
     assert "4 data-shaped member(s) cleared" in report
@@ -811,7 +821,7 @@ def test_console_report_caps_each_section_unless_full(result: UnreachableCodeRes
     capped = render_console_report(result, cap=1)
 
     assert "... 1 more (--full for all)" in capped
-    assert "... 8 more (--full for all)" in capped
+    assert "... 9 more (--full for all)" in capped
     assert "more (--full for all)" not in render_console_report(result, full=True, cap=1)
 
 
@@ -970,7 +980,7 @@ def test_the_reference_walk_records_what_it_could_not_read() -> None:
     over an incomplete corpus with nothing saying so. Any deletion list derived
     from that corpus could name a symbol that is used.
     """
-    from ..unreachable_code import _OutsideUse
+    from ..unreachable_models import _OutsideUse
 
     fresh = _OutsideUse()
 
@@ -990,7 +1000,7 @@ def test_the_test_walk_refuses_a_module_that_does_not_parse(tmp_path: Path) -> N
     could read. Measured: 3325 test modules walked, none unparsable, so the
     defect is proven here on a constructed one.
     """
-    from ..unreachable_code import parse_module
+    from ..unreachable_memo import parse_module
 
     broken = tmp_path / "test_broken.py"
     broken.write_text("def (:" + chr(10), encoding="utf-8")
@@ -1006,13 +1016,15 @@ def test_the_live_test_walk_read_every_module() -> None:
     of quietly reporting one fewer test-of-dead-code finding.
     """
     from dev._paths import REPO_ROOT
+    from dev.first_party_source import is_test_source
 
-    from ..unreachable_code import is_test_path, iter_python_files, parse_module
+    from ..unreachable_memo import parse_module
+    from ..unreachable_tree import iter_python_files
 
     src_root = REPO_ROOT / "src"
     walked = 0
     for path in iter_python_files(src_root / "cadrumo"):
-        if not is_test_path(path, src_root) or not path.name.startswith("test_"):
+        if not is_test_source(path, root=src_root) or not path.name.startswith("test_"):
             continue
         walked += 1
         parse_module(path)
@@ -1034,7 +1046,8 @@ def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(
     candidates. The lenient decode was worse than the skip - a replaced byte can
     split a token so it never matches, with nothing said either way.
     """
-    from ..unreachable_code import ShippedTreeSpec, _data_tokens
+    from ..unreachable_references import _data_tokens
+    from ..unreachable_tree import ShippedTreeSpec
 
     package = tmp_path / "src" / "cadrumo" / "_data" / "registry"
     package.mkdir(parents=True)
@@ -1048,12 +1061,9 @@ def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(
         entry_points=(),
         data_globs=("_data/registry/**/*.json",),
     )
-    tokens = _data_tokens(spec)
-
-    assert "readable_token" in tokens
-    error = capsys.readouterr().err
-    assert "deletion candidate" in error
-    assert "undecodable.json" in error
+    with pytest.raises(OSError, match=r"undecodable\.json") as failure:
+        _data_tokens(spec)
+    assert "coverage is unproven" in str(failure.value)
 
 
 def test_an_absent_root_is_announced_while_an_empty_one_is_not(
@@ -1067,7 +1077,7 @@ def test_an_absent_root_is_announced_while_an_empty_one_is_not(
     analysed an empty corpus - the reference walk seeing no references reports
     live code dead, the test walk seeing no tests reports none.
     """
-    from ..unreachable_code import iter_python_files
+    from ..unreachable_tree import iter_python_files
 
     empty = tmp_path / "empty"
     empty.mkdir()
@@ -1075,8 +1085,8 @@ def test_an_absent_root_is_announced_while_an_empty_one_is_not(
     assert list(iter_python_files(empty)) == []
     assert capsys.readouterr().err == "", "an empty directory is a true answer, not a defect"
 
-    assert list(iter_python_files(tmp_path / "never-created")) == []
-    assert "does not exist" in capsys.readouterr().err
+    with pytest.raises(FileNotFoundError, match="does not exist"):
+        list(iter_python_files(tmp_path / "never-created"))
 
 
 def test_a_single_file_root_is_still_enumerated(tmp_path: Path) -> None:
@@ -1085,7 +1095,7 @@ def test_a_single_file_root_is_still_enumerated(tmp_path: Path) -> None:
     The absent-root branch must not swallow that case, which the live spec
     exercises today.
     """
-    from ..unreachable_code import iter_python_files
+    from ..unreachable_tree import iter_python_files
 
     module = tmp_path / "solo.py"
     module.write_text("VALUE = 1" + chr(10), encoding="utf-8")

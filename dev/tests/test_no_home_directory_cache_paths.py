@@ -63,8 +63,8 @@ _HOME_ATTRIBUTE: Final[str] = "home"
 #: state owned by something OUTSIDE this project, which is the only reason the
 #: home directory is the right place to look.
 _HOME_IS_CORRECT: Final[dict[str, str]] = {
-    "src/cadrumo/application/provisioning_browser.py": (
-        "Playwright's own browser cache, whose location Playwright defines and this project only reads"
+    "dev/packaging/native/tests/test_desktop_rust_environment.py": (
+        "finds the explicitly pinned toolchain installed and owned by external Rustup, never creates a project cache"
     ),
     "src/cadrumo/application/provisioning_host.py": (
         "where each platform's official Ollama installer places the runtime binary, which that "
@@ -82,6 +82,9 @@ _HOME_IS_CORRECT: Final[dict[str, str]] = {
 #: asserting the reverse -- that the path must never leave this machine. Listing
 #: a redactor there would record a reason that is not its reason.
 _HOME_IS_REDACTED: Final[dict[str, str]] = {
+    "src/cadrumo/core/tests/test_diagnostic_log.py": (
+        "uses the real home spelling in an opaque extra to prove it cannot be promoted into exported diagnostic text"
+    ),
     "src/cadrumo/core/logging.py": "derives every spelling of the home directory so log output can be scrubbed of it",
     "src/cadrumo/core/tests/test_logging_private_helpers.py": (
         "exercises that scrubbing, so it must build the paths the redaction is meant to remove"

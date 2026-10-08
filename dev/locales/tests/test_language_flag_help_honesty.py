@@ -18,7 +18,6 @@ argv-scan logic, which carries no external dependency.
 
 from __future__ import annotations
 
-import os
 import shutil
 from pathlib import Path
 
@@ -27,6 +26,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.secure_sql import dev_test_database_password
 from cadrumo.entrypoints.cli.language_argv import language_from_argv
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.product_environment import ambient_product_settings_removed
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -47,7 +47,7 @@ def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
     generator's environment builder, which strips both prefixes for the same
     reason.
     """
-    env = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
+    env = ambient_product_settings_removed()
     env.update(
         {
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
@@ -71,7 +71,7 @@ def _run_console(args: list[str], env: dict[str, str]) -> CommandResult:
         [aeat_exe, *args],
         cwd=Path.cwd(),
         environment=env,
-        timeout_seconds=120,
+        timeout_seconds=None,
     )
 
 

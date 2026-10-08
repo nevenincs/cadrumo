@@ -3,17 +3,13 @@ tags:
   - '#adr'
   - '#docs-tooling-separation'
 date: '2026-06-14'
-modified: '2026-07-17'
-body_hash: 'sha256:a906af7b9d3884e947261aa7fcdb985084c2987f9166f6dbe8da72843363c493'
+modified: '2026-10-03'
+body_hash: 'sha256:5577f6db3e45941db2e79a18a42a4bfde697b6507d9926f85503b915be82ddee'
 related:
   - "[[2026-06-14-docs-tooling-separation-research]]"
 ---
 
 # `docs-tooling-separation` ADR: `terminology package separation from production` | (**status:** `accepted`)
-
-## Status
-
-Accepted.
 
 ## Context
 

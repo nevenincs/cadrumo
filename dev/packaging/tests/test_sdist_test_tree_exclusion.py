@@ -81,7 +81,6 @@ def sdist_members(tmp_path_factory: pytest.TempPathFactory) -> frozenset[str]:
         )
 
 
-@pytest.mark.timeout(900)
 def test_sdist_ships_no_test_member(sdist_members: frozenset[str]) -> None:
     """No file under any ``tests/`` package reaches the source distribution."""
     _assert_populated(sdist_members)

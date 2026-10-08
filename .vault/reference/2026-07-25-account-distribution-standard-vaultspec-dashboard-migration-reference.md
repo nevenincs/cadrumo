@@ -3,12 +3,11 @@ tags:
   - '#reference'
   - '#account-distribution-standard'
 date: '2026-07-25'
-modified: '2026-07-26'
+modified: '2026-10-03'
 body_hash: 'sha256:9b3bf3ff8bd3327f1872f7cde9309a4241961ae30d6898423dfd68975ac3817e'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-25-shared-distribution-repository-adr]]"
-  - "[[2026-07-25-account-distribution-standard-plan]]"
 ---
 
 # `account-distribution-standard` reference: `Migration instructions for vaultspec-dashboard`

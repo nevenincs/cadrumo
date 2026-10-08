@@ -23,12 +23,11 @@ from cadrumo.application.operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationSecureReferenceStore
 from cadrumo.application.operations.persistence.replay import OperationReplayPage, OperationReplayStatus
 from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,

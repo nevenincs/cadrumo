@@ -77,12 +77,13 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final, NamedTuple, TypeGuard
+from typing import TYPE_CHECKING, Final, NamedTuple
 
 from ...core.identity.nif_iva import normalise_nif_iva
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
+from ...core.spanish_postcode import is_spanish_postcode
+from ...core.type_guards import is_object_mapping
 from ..calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from ..calculations.registry.nif_iva_catalogue import resolve_nif_iva_catalogue
 from . import country_vocabulary as _country_vocabulary
@@ -119,11 +120,6 @@ Named rather than inlined because two things depend on agreeing about it: the
 resolver's refusal, and the gate that proves the refusal holds. A literal spelled
 twice is the drift this codebase keeps closing.
 """
-
-
-def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
-    """Narrow one runtime component to an object-keyed mapping before validation."""
-    return isinstance(value, Mapping)
 
 
 def _eu_member_codes(*, operation: PinnedAuthorityOperation) -> frozenset[str]:
@@ -268,7 +264,7 @@ def _territory_carve_outs(
     from ..calculations.registry.runtime_catalogues import TerritoryCarveOut
 
     loaded = operation.runtime_catalogue("territory_carve_outs")
-    if not _is_object_mapping(loaded):
+    if not is_object_mapping(loaded):
         from .errors import IvaCatalogueError
 
         raise IvaCatalogueError("indexed authority territory component has an invalid shape")
@@ -548,7 +544,6 @@ def country_code_for_printed_tax_identifier(
 
 
 _POSTAL_PREFIX_LENGTH: Final[int] = 2
-_POSTAL_CODE_LENGTH: Final[int] = 5
 
 
 def _excluded_territories_by_prefix(
@@ -574,7 +569,7 @@ def _excluded_territories_by_prefix(
     from ..calculations.registry.runtime_catalogues import SpanishPostalTerritory
 
     loaded = operation.runtime_catalogue("spanish_postal_territories")
-    if not _is_object_mapping(loaded):
+    if not is_object_mapping(loaded):
         from .errors import IvaCatalogueError
 
         raise IvaCatalogueError("indexed authority postal-territory component has an invalid shape")
@@ -603,7 +598,8 @@ def territorial_scope_for_spanish_postal_code(
 
     Args:
         postal_code: The postal code as printed. Surrounding whitespace is
-            normalised; anything that is not five digits is treated as absent
+            normalised; anything that is not a well-formed Spanish postcode
+            (five ASCII digits led by a province code in 01..52) is treated as absent
             rather than coerced, because a document prints what it prints and
             unreadable evidence is a normal outcome of reading.
         operation: The pinned authority operation supplying the territorial registry.
@@ -627,7 +623,9 @@ def territorial_scope_for_spanish_postal_code(
     if postal_code is None:
         return None
     candidate = postal_code.strip()
-    if len(candidate) != _POSTAL_CODE_LENGTH or not candidate.isdigit():
+    # A province prefix outside 01..52 names no territory, so it is unreadable
+    # evidence rather than a mainland code.
+    if not is_spanish_postcode(candidate):
         return None
     excluded = _excluded_territories_by_prefix(operation=operation)
     return excluded.get(

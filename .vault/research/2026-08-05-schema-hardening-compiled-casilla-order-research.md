@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-08-05'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:0cd1b6c3a1f0958368875169a846c78aaa7c3db1a4eac35229984bea683574d8'
+body_hash: 'sha256:66c8006502ce8222539855781f666d524fa91ea64dac8071bb1d75582960175d'
 related: []
 ---
 
@@ -31,7 +31,7 @@ closed by a different mechanism.
 
 ### The one genuine sequence consumer is the workbook layout, and it is presentation
 
-`plan_layout` in `src/cadrumo/application/storage/calc_sheets/_layout.py:365` assigns
+`plan_layout`  assigns
 Entradas/Cálculos rows by iterating `revision.casillas`, so a permutation relocates
 every cell. That relocation is internally consistent: the emitted formulas reference
 the permuted layout's own addresses. This was measured and pinned by a peer in commit
@@ -55,9 +55,9 @@ registry section, so the result generalises by construction rather than by sampl
 
 ### The remaining named suspects are order-free by construction
 
-The locale key scanner (`src/cadrumo/locales/_registry_scanner.py:74`) accumulates into
+The locale key scanner  accumulates into
 a `set`, so iteration order cannot reach its output. The docs casilla projection
-(`dev/docs/terminology/_casilla_projection.py:170`) streams casillas but emits through
+ streams casillas but emits through
 `for key in sorted(by_key)` at lines 111 and 149, with per-key sources sorted by
 `(valid_from, revision_id)`; the compiled sequence is discarded before the record
 tuple is built. The completeness manifest is its own declared revision section, not a
@@ -92,7 +92,7 @@ Order-free. The rename can proceed under `--allow-reorder` without a correctness
 consumer blocking it. The tooling is staged in `tmp/schema_verification_cli/` (`plan
 --policy content` then `apply --allow-reorder`), and landing it additionally requires
 updating the naming gate
-`src/cadrumo/domain/calculations/registry/tests/test_casilla_fragment_naming.py` to the
+the former source file to the
 ordinal-less convention and sweeping filename references across `src/` and `dev/`. What
 the ADR must settle is whether the presentation churn — every workbook row moving once,
 for every modelo — is worth removing the stem drift, and whether the row order should
@@ -101,9 +101,6 @@ stops depending on filenames at all.
 
 ## Sources
 
-- `src/cadrumo/application/storage/calc_sheets/_layout.py:365`
 - `src/cadrumo/application/storage/calc_sheets/tests/test_casilla_order_invariance.py`
-- `src/cadrumo/locales/_registry_scanner.py:74`
-- `dev/docs/terminology/_casilla_projection.py:111`, `:149`, `:170`
-- `src/cadrumo/domain/calculations/registry/tests/test_casilla_fragment_naming.py`
+
 - commit `bff1bc9f0c`

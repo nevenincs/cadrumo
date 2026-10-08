@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#agent-harness-close'
 date: '2026-07-02'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:d3def351b36f019f6c6abe11b381cd38a6dca013986382b8c501598b49b682a1'
 related:
-  - "[[2026-07-02-agent-harness-plan]]"
   - "[[2026-07-02-agent-harness-audit]]"
   - "[[2026-07-02-agent-harness-content-review-audit]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"

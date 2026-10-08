@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-17'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:f759a67631bb60f2429be24a4a58b08fb1ee3756b88bf4d7162db50d2c28390f'
 related:
-  - "[[2026-09-04-reachability-burndown-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
 ---
 

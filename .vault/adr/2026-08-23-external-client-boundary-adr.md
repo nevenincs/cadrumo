@@ -5,9 +5,9 @@ tags:
 date: '2026-08-23'
 related:
   - "[[2026-08-23-external-client-boundary-research]]"
-modified: '2026-08-23'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:3b2f3485603ee238b90fabf70095650d86ae79ac2bef7013558c7df8183b4165'
+body_hash: 'sha256:db65afc4b8defdf59855cacf95cc980129d3a4b51921491ae201649b43127872'
 ---
 # `external-client-boundary` adr: `base product is client-blind` | (**status:** `rejected`)
 
@@ -42,7 +42,7 @@ Rejected where behavior remains client policy. Neutral vocabulary is valid only 
 
 ### Make the base product client-blind
 
-Accepted. The base owns protocol-neutral commands, result schemas, application services, and stable public contracts. Each external client owns its adapter, policies, configuration, telemetry, documentation, packaging, and release lifecycle.
+Accepted. The base owns protocol-neutral commands, result schemas, application services, and stable public contracts. Each external client owns its adapter, policies, configuration, documentation, packaging, and release lifecycle.
 
 ## Constraints
 
@@ -54,7 +54,7 @@ Accepted. The base owns protocol-neutral commands, result schemas, application s
 
 ## Implementation
 
-Delete stale executable documentation and add a live grammar refusal for `app agent`. Move capability-manifest exposure policy into the harness package while the base retains only generic command and schema contracts. Remove client identity from base configuration, telemetry taxonomy, source prose, package metadata, distribution descriptors, cohorts, workflows, and release instructions. The separate client supplies its own documentation, installation, artifacts, destinations, and release authority.
+Delete stale executable documentation and add a live grammar refusal for `app agent`. Move capability-manifest exposure policy into the harness package while the base retains only generic command and schema contracts. Remove client identity from base configuration, source prose, package metadata, distribution descriptors, cohorts, workflows, and release instructions. The separate client supplies its own documentation, installation, artifacts, destinations, and release authority.
 
 ## Rationale
 

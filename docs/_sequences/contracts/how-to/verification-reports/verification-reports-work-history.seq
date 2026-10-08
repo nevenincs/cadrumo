@@ -1,11 +1,11 @@
 :seed: autonomo-irpf-2026
-@step Open the work unit whose persisted history you will inspect.
+@step Open the declaration whose persisted history you will inspect.
 aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @capture history_work_unit_id result.work_unit_id
-@step Show the work unit's current state.
+@step Show the declaration's current state.
 aeat --format json app modelo work status {history_work_unit_id}
 @expect result.work_unit_id == "{history_work_unit_id}"
-@step Show the actions taken on the work unit.
+@step Show the actions taken on the declaration.
 @result aeat --format json app modelo work history {history_work_unit_id}
 @expect result.operation == "modelo.work.history"
 @expect result.work_unit_id == "{history_work_unit_id}"

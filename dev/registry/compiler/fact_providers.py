@@ -20,8 +20,8 @@ from typing import TYPE_CHECKING, Protocol, cast
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.payloads import EntitySetFactPayload
 from cadrumo.domain.calculations.registry.facts.schema import (
-    EntitySetFactPayload,
     GovernedFact,
     GovernedFactCatalogue,
 )
@@ -202,51 +202,81 @@ def validate_fact_provider_registrations(
     provider_ids: set[str] = set()
     ownership: list[tuple[PurePosixPath, str]] = []
     for registration in frozen:
-        if _PROVIDER_ID.fullmatch(registration.provider_id) is None:
-            raise RegistryValidationError(f"invalid governed fact provider id {registration.provider_id!r}")
-        if registration.provider_id in provider_ids:
-            raise RegistryValidationError(f"duplicate governed fact provider id {registration.provider_id!r}")
-        provider_ids.add(registration.provider_id)
-        if not registration.owned_directories and registration.project_modelos is None:
-            raise RegistryValidationError(
-                f"governed fact provider {registration.provider_id!r} must own at least one directory",
-            )
-        if registration.project_modelos is not None and not registration.inherited_identity_domains:
-            raise RegistryValidationError(
-                f"projection provider {registration.provider_id!r} must declare its inherited identity domains",
-            )
-        unknown_domains = sorted(set(registration.inherited_identity_domains) - _CAPTURED_IDENTITY_DOMAINS)
-        if unknown_domains:
-            raise RegistryValidationError(
-                f"governed fact provider {registration.provider_id!r} declares unknown identity domains "
-                f"{unknown_domains!r}"
-            )
-        if len(set(registration.inherited_identity_domains)) != len(registration.inherited_identity_domains):
-            raise RegistryValidationError(
-                f"governed fact provider {registration.provider_id!r} repeats an inherited identity domain"
-            )
-        unknown_components = sorted(set(registration.lifecycle_components) - _LIFECYCLE_COMPONENTS)
-        if unknown_components:
-            raise RegistryValidationError(
-                f"governed fact provider {registration.provider_id!r} declares unknown lifecycle components "
-                f"{unknown_components!r}"
-            )
-        local_directories: set[PurePosixPath] = set()
-        for raw_directory in registration.owned_directories:
-            directory = _validated_owned_directory(registration.provider_id, raw_directory)
-            if directory in local_directories:
-                raise RegistryValidationError(
-                    f"governed fact provider {registration.provider_id!r} repeats directory {raw_directory!r}",
-                )
-            for existing, existing_provider_id in ownership:
-                if directory == existing or directory.is_relative_to(existing) or existing.is_relative_to(directory):
-                    raise RegistryValidationError(
-                        f"governed fact directory {directory.as_posix()!r} owned by {registration.provider_id!r} "
-                        f"overlaps {existing.as_posix()!r} owned by {existing_provider_id!r}",
-                    )
-            local_directories.add(directory)
-            ownership.append((directory, registration.provider_id))
+        _register_provider_identity(registration, provider_ids)
+        _validate_provider_shape(registration)
+        _validate_provider_identity_domains(registration)
+        _validate_provider_lifecycle_components(registration)
+        _register_provider_directories(registration, ownership)
     return frozen
+
+
+def _register_provider_identity(registration: FactProviderRegistration, provider_ids: set[str]) -> None:
+    if _PROVIDER_ID.fullmatch(registration.provider_id) is None:
+        raise RegistryValidationError(f"invalid governed fact provider id {registration.provider_id!r}")
+    if registration.provider_id in provider_ids:
+        raise RegistryValidationError(f"duplicate governed fact provider id {registration.provider_id!r}")
+    provider_ids.add(registration.provider_id)
+
+
+def _validate_provider_shape(registration: FactProviderRegistration) -> None:
+    if not registration.owned_directories and registration.project_modelos is None:
+        raise RegistryValidationError(
+            f"governed fact provider {registration.provider_id!r} must own at least one directory",
+        )
+    if registration.project_modelos is not None and not registration.inherited_identity_domains:
+        raise RegistryValidationError(
+            f"projection provider {registration.provider_id!r} must declare its inherited identity domains",
+        )
+
+
+def _validate_provider_identity_domains(registration: FactProviderRegistration) -> None:
+    unknown_domains = sorted(set(registration.inherited_identity_domains) - _CAPTURED_IDENTITY_DOMAINS)
+    if unknown_domains:
+        raise RegistryValidationError(
+            f"governed fact provider {registration.provider_id!r} declares unknown identity domains {unknown_domains!r}"
+        )
+    if len(set(registration.inherited_identity_domains)) != len(registration.inherited_identity_domains):
+        raise RegistryValidationError(
+            f"governed fact provider {registration.provider_id!r} repeats an inherited identity domain"
+        )
+
+
+def _validate_provider_lifecycle_components(registration: FactProviderRegistration) -> None:
+    unknown_components = sorted(set(registration.lifecycle_components) - _LIFECYCLE_COMPONENTS)
+    if unknown_components:
+        raise RegistryValidationError(
+            f"governed fact provider {registration.provider_id!r} declares unknown lifecycle components "
+            f"{unknown_components!r}"
+        )
+
+
+def _require_directory_unowned_overlap(
+    directory: PurePosixPath,
+    provider_id: str,
+    ownership: list[tuple[PurePosixPath, str]],
+) -> None:
+    for existing, existing_provider_id in ownership:
+        if directory == existing or directory.is_relative_to(existing) or existing.is_relative_to(directory):
+            raise RegistryValidationError(
+                f"governed fact directory {directory.as_posix()!r} owned by {provider_id!r} "
+                f"overlaps {existing.as_posix()!r} owned by {existing_provider_id!r}",
+            )
+
+
+def _register_provider_directories(
+    registration: FactProviderRegistration,
+    ownership: list[tuple[PurePosixPath, str]],
+) -> None:
+    local_directories: set[PurePosixPath] = set()
+    for raw_directory in registration.owned_directories:
+        directory = _validated_owned_directory(registration.provider_id, raw_directory)
+        if directory in local_directories:
+            raise RegistryValidationError(
+                f"governed fact provider {registration.provider_id!r} repeats directory {raw_directory!r}",
+            )
+        _require_directory_unowned_overlap(directory, registration.provider_id, ownership)
+        local_directories.add(directory)
+        ownership.append((directory, registration.provider_id))
 
 
 def registered_fact_provider_directories() -> dict[str, FactProviderRegistration]:
@@ -269,26 +299,41 @@ def compile_registered_fact_providers(
     facts: dict[str, GovernedFact] = {}
     owner_by_fact_id: dict[str, str] = {}
     for registration in FACT_PROVIDER_REGISTRATIONS:
-        compiled = registration.compile(registry_root)
-        if compiled_modelos is not None and registration.project_modelos is not None:
-            compiled = (*compiled, *registration.project_modelos(compiled_modelos))
+        compiled = _compile_provider_facts(registration, registry_root, compiled_modelos)
         for fact in compiled:
-            required_modelo = _MODELO_SCOPED_AUTHORED_FACTS.get(fact.fact_id)
-            if (
-                required_modelo is not None
-                and present_modelo_ids is not None
-                and required_modelo not in present_modelo_ids
-            ):
-                continue
-            previous_owner = owner_by_fact_id.get(fact.fact_id)
-            if previous_owner is not None:
-                raise RegistryValidationError(
-                    f"governed fact {fact.fact_id!r} from provider {registration.provider_id!r} "
-                    f"is already owned by provider {previous_owner!r}",
-                )
-            owner_by_fact_id[fact.fact_id] = registration.provider_id
-            facts[fact.fact_id] = fact.model_copy(update={"provider_id": registration.provider_id})
+            _record_provider_fact(fact, registration, owner_by_fact_id, facts, present_modelo_ids)
     return GovernedFactCatalogue(facts=deterministic_fact_index(facts))
+
+
+def _compile_provider_facts(
+    registration: FactProviderRegistration,
+    registry_root: Path,
+    modelos: tuple[ModeloDefinition, ...] | None,
+) -> tuple[GovernedFact, ...]:
+    compiled = registration.compile(registry_root)
+    if modelos is not None and registration.project_modelos is not None:
+        compiled = (*compiled, *registration.project_modelos(modelos))
+    return compiled
+
+
+def _record_provider_fact(
+    fact: GovernedFact,
+    registration: FactProviderRegistration,
+    owner_by_fact_id: dict[str, str],
+    facts: dict[str, GovernedFact],
+    present_modelo_ids: set[str] | None,
+) -> None:
+    required_modelo = _MODELO_SCOPED_AUTHORED_FACTS.get(fact.fact_id)
+    if required_modelo is not None and present_modelo_ids is not None and required_modelo not in present_modelo_ids:
+        return
+    previous_owner = owner_by_fact_id.get(fact.fact_id)
+    if previous_owner is not None:
+        raise RegistryValidationError(
+            f"governed fact {fact.fact_id!r} from provider {registration.provider_id!r} "
+            f"is already owned by provider {previous_owner!r}",
+        )
+    owner_by_fact_id[fact.fact_id] = registration.provider_id
+    facts[fact.fact_id] = fact.model_copy(update={"provider_id": registration.provider_id})
 
 
 def collect_registered_fact_provider_fingerprints(registry_root: Path) -> RegistryPathFingerprints:

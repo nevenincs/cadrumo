@@ -162,7 +162,14 @@ class ActivityAssetOperations:
         history, authority and profile reproduces it exactly.  An exact replay
         of an already recorded claim returns that claim unchanged.
         """
-        revision = self.inspect(forecast.asset_id)[-1]
+        current_history = self._service.reopen()
+        revision = max(
+            (item for item in current_history.revisions if item.asset_id == forecast.asset_id),
+            key=lambda item: item.revision_number,
+            default=None,
+        )
+        if revision is None:
+            raise ActividadAssetValidationError("activity asset does not exist")
         if revision.revision_id != forecast.asset_revision_id:
             raise ActividadAssetValidationError("forecast does not reference the current asset revision")
         claim = AmortizationClaim.from_schedule(
@@ -171,20 +178,27 @@ class ActivityAssetOperations:
             creating_operation=creating_operation,
             supersedes_claim_id=supersedes_claim_id,
         )
-        if any(existing.claim_id == claim.claim_id for existing in self._service.reopen().claims):
+        if any(existing.claim_id == claim.claim_id for existing in current_history.claims):
             return self._service.record_claim(claim)
-        recomputed = self._forecast(
-            asset_id=forecast.asset_id,
+        _require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
+        recomputed = self._forecast_operation(
+            revision,
             covered_from=forecast.covered_from,
             covered_until=forecast.covered_until,
-            requested_free_amount=forecast.amount if forecast.method in FREE_AMOUNT_METHODS else None,
-            excluding_claim_id=supersedes_claim_id,
+            history=asset_schedule_history(
+                current_history.claims,
+                current_history.revisions,
+                asset_id=forecast.asset_id,
+                tax_year=forecast.covered_from.year,
+                excluding_claim_id=supersedes_claim_id,
+            ),
+            requested_free_amount=(forecast.amount if forecast.method in FREE_AMOUNT_METHODS else None),
         )
         if recomputed != forecast:
             raise ActividadAssetValidationError(
                 "the forecast no longer matches the schedule under current history and authority; forecast again",
             )
-        return self._service.record_claim(claim)
+        return self._service.record_claim(claim, expected_history=current_history)
 
     def filing_handoff(self, *, tax_year: int, m130_period: Period) -> ActivityAssetFilingHandoff:
         """Project effective claims to M100 and M130 without recording new claims."""

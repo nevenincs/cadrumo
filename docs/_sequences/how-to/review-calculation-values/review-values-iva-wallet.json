@@ -16,7 +16,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.iva-wallet.balance\nas_of_year\t2026\ntotal_balance\t0\nactive_balance\t0\nexpired_balance\t0\nlot_count\t0\nnext_expiry_year\tNone\nunallocated_applied_amount\t0\n"
+      "text": "operation\tmodelo.iva-wallet.balance\nas_of_year\t2026\ntotal_balance\t0\nactive_balance\t0\nexpired_balance\t0\nlot_count\t0\nnext_expiry_year\tNone\nunallocated_applied_amount\t0\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -39,7 +39,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.iva-wallet.seed\nfiling_year\t2024\nperiod\t4T\ntaxpayer_nif\tsha256:1c9f9632\namount\t0\nprovenance\toperator_seed\nregister_status\t\n"
+      "text": "operation\tmodelo.iva-wallet.seed\nfiling_year\t2024\nperiod\t4T\ntaxpayer_nif\tsha256:1c9f9632\namount\t0\nprovenance\toperator_seed\nregister_status\t\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -64,7 +64,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.iva_wallet.correct",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "amount": "1200.50",
           "filing_year": 2024,
@@ -80,7 +88,7 @@
           "taxpayer_nif": "sha256:1c9f9632"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

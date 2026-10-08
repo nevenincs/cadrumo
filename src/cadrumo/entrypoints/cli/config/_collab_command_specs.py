@@ -4,19 +4,17 @@ from __future__ import annotations
 
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
-from ..command_spec import (
+from ..command_parameter_contracts import ArgumentSpec, OptionSpec
+from ..command_shared_contracts import (
     TEXT_VALUE,
-    ArgumentSpec,
-    CommandSpec,
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
 )
+from ..command_spec import CommandSpec, InvocationSpec
 from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, STATE_FREE
 
 _RECIPIENT_ID = ArgumentSpec(

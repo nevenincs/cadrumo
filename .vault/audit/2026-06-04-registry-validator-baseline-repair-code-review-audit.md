@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-validator-baseline-repair'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:81764fc15d75fb058084f07830aa5853f1409da1b41642fbb715c5a740e966b9'
-related:
-  - '[[2026-06-04-registry-validator-baseline-repair-plan]]'
+related: []
 ---
 
 # `registry-validator-baseline-repair` Code Review

@@ -1,0 +1,9 @@
+[[revisions.2023-2025.export_layouts]]
+id = 'modelo-165-fichero'
+format = 'fixed_width'
+source_refs = ['aeat-dr-165-2026']
+legal_refs = [
+    'ley-58-2003:art-93',
+    'orden-hap-2455-2013:art-1',
+]
+dictionary_path_overrides = []

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tuimodelo'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:7e2624fdd4e52559c45e235eac40dd6f58f9804d17763e6b1a4b0f3cb3ebd481'
+body_hash: 'sha256:ee46ddc1116ed76b60ecfcbd6fe468782f7cd78a6c897060ebc7c3697c43c01e'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-05-arch-remediation-registry-format-casilla-section-order-adr]]"
@@ -15,6 +15,7 @@ related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-09-07-tuimodelo-adapter-migration-adr]]"
   - "[[2026-09-07-tuimodelo-reconcile-verify-adr]]"
+  - '[[2026-09-30-modelo-editor-workbench-adr]]'
 ---
 
 # `tuimodelo` adr: `declared form projection for schema-derived declaration surfaces` | (**status:** `accepted`)
@@ -274,3 +275,7 @@ edit and not several.
 The registry still cannot say which pages apply to a taxpayer. Until it can, the projection
 shows the whole declared form and relies on the operator to skip inapplicable pages, which is
 a real usability gap on the largest modelos and a candidate for a later decision.
+
+## Amendment 2026-09-30: generate for every revision, review to promote
+
+`2026-09-30-modelo-editor-workbench-adr` (D1) amends the review clause of this record. A generated declaration now ships and is editable with a visible disclosure that it has not been reviewed; review promotes it. Inspection-only remains only for a revision whose generation fails. Edits address a casilla or binding by id and the official box number is always shown, so an unreviewed grouping cannot misfile a value. Every other clause of this record stands: the declared family, the unplaced arm, declared row groups, the stability gate and the source discriminator.

@@ -18,6 +18,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -129,7 +130,8 @@ def test_m111_professional_retencion_observation_calculates_activity_boxes(
         objects: SecureObjectRepository = profile.repository
         _seed_ready_profile(objects)
         period = Period.from_year_and_code(2026, "1T")
-        RetencionObservationRepositoryAdapter(objects=objects).replace_observations(
+        replace_retencion_observations(
+            RetencionObservationRepositoryAdapter(objects=objects),
             modelo="111",
             filing_year=2026,
             period=period,
@@ -185,7 +187,8 @@ def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(
         objects: SecureObjectRepository = profile.repository
         _seed_ready_profile(objects)
         period = Period.from_year_and_code(2026, "1T")
-        RetencionObservationRepositoryAdapter(objects=objects).replace_observations(
+        replace_retencion_observations(
+            RetencionObservationRepositoryAdapter(objects=objects),
             modelo="111",
             filing_year=2026,
             period=period,
@@ -243,7 +246,8 @@ def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(
         objects: SecureObjectRepository = profile.repository
         _seed_ready_profile(objects)
         period = Period.from_year_and_code(2026, "1T")
-        RetencionObservationRepositoryAdapter(objects=objects).replace_observations(
+        replace_retencion_observations(
+            RetencionObservationRepositoryAdapter(objects=objects),
             modelo="111",
             filing_year=2026,
             period=period,

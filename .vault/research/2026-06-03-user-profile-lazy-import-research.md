@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#user-profile-lazy-import'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:c55eb5fd68ef9910249e8ec73717f0e4e09e521278800047b98c19c41fa2725d'
+modified: '2026-10-03'
+body_hash: 'sha256:654f9ff0e56fa8ca4f44bfd9577bdfadf7100955e084f09b07ad2bc600b717b9'
 related:
   - '[[2026-06-03-bare-invocation-bucket-session-gate-adr]]'
 ---
@@ -13,7 +13,7 @@ related:
 
 ## Context
 
-Task #165 surfaced five red tests in `src/aeat/entrypoints/cli/test_lazy_command_tree.py`: `test_version_cold_start_completes_under_budget`, `test_importing_cli_package_does_not_import_registry`, and three parameterised instances of `test_state_free_surface_does_not_import_registry`. The test module is the structural enforcement gate for the lazy-loading discipline that was put in place to keep `aeat --version`, `aeat --help`, and the bare invocation surface registry-free.
+Task #165 surfaced five red tests : `test_version_cold_start_completes_under_budget`, `test_importing_cli_package_does_not_import_registry`, and three parameterised instances of `test_state_free_surface_does_not_import_registry`. The test module is the structural enforcement gate for the lazy-loading discipline that was put in place to keep `aeat --version`, `aeat --help`, and the bare invocation surface registry-free.
 
 A runtime import probe confirmed the regression vector: importing `aeat.application.user_profile` pulls 69 submodules under `aeat.domain.calculations.registry` transitively. The CLI bootstrap touches `aeat.application.user_profile` symbols at module-import time for shared utilities consumed by both state-free and state-bound surfaces, so any state-free CLI surface that crosses that package boundary now drags the registry along.
 

@@ -3,18 +3,17 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b87e9594c0fcf56ef61e3923d83bee6a2586725ca2635e80d50acc965845d1c4'
+body_hash: 'sha256:845baf4e2c77f6d033d519a2e9e6a78666a01692dcc3949a17b9e6d3a434fe24'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-canonical-derivations-adr]]"
 ---
 # `casilla-schema` audit: `W05.P11.S37 export exemption docstring review`
 
 ## Scope
 
-Formal read-only review of the S37 documentation-only change in `src/cadrumo/domain/calculations/registry/_validate_export_exemption.py` and its execution record, grounded in the accepted canonical-derivations ADR, the raw M720 registry declarations, the binding-owned fixed-width selectors, and the production derivation path.
+Formal read-only review of the S37 documentation-only change in the retired module and its execution record, grounded in the accepted canonical-derivations ADR, the raw M720 registry declarations, the binding-owned fixed-width selectors, and the production derivation path.
 
 ## Findings
 

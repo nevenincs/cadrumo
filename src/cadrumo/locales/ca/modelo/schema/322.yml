@@ -563,6 +563,18 @@ modelo:
           m322-operaciones-sujetas-y-acogidas-a-los-regimenes-especiales-de-ventanilla-unica:
             label: Operacions subjectes i acollides als règims especials de finestreta
               única [124]
+          m322-papel-actividad-otras-1-descripcion:
+            label: Descripció d’una altra activitat 1
+          m322-papel-actividad-otras-2-descripcion:
+            label: Descripció d’una altra activitat 2
+          m322-papel-actividad-otras-3-descripcion:
+            label: Descripció d’una altra activitat 3
+          m322-papel-actividad-otras-4-descripcion:
+            label: Descripció d’una altra activitat 4
+          m322-papel-actividad-otras-5-descripcion:
+            label: Descripció d’una altra activitat 5
+          m322-papel-actividad-principal-descripcion:
+            label: Descripció de l’activitat principal
           m322-prorratas-1-codigo-cnae:
             label: Prorrata - 1 - Codi CNAE [500]
           m322-prorratas-1-importe-operaciones:
@@ -615,14 +627,148 @@ modelo:
             label: Prorrata - 5 - Tipus de prorrata [523]
           m322-regularizacion-cuotas-art-80-cinco-5-liva:
             label: Regularització de quotes art. 80.Cinco.5ª LIVA [76]
+          m322-sin-actividad:
+            label: Sense activitat (X si no has meritat ni suportat IVA durant el
+              període)
       construct:
         modelo-322-iva-grupo-individual:
           field:
             title: Model 322 IVA grup d'entitats, model individual
+        modelo-322-papel-actividades:
+          field:
+            title: Activitats
       field:
         official_name: Modelo 322. Impost sobre el Valor Afegit. Grup d'entitats.
           Model individual. Autoliquidació mensual.
         title: IVA. Grup d'entitats. Model individual. Autoliquidació mensual
+      form:
+        authored:
+          actividad:
+            heading: Activitat
+          actividades:
+            heading: Activitats de més a menys importància per volum d’operacions
+          adicional:
+            heading: Informació addicional
+          aib:
+            heading: Adquisicions intracomunitàries de béns i serveis
+          aib-corriente:
+            heading: 'Adquisicions intracomunitàries: béns i serveis corrents'
+          aib-inversion:
+            heading: 'Adquisicions intracomunitàries: béns d’inversió'
+          anuales:
+            heading: Operacions realitzades durant l’exercici
+          caja:
+            heading: Adquisicions afectades pel criteri de caixa
+          clave-actividad:
+            heading: Clau
+          cnae:
+            heading: CNAE
+          codigo:
+            heading: Codi d’activitat
+          compensacion:
+            heading: Compensacions del règim d’agricultura, ramaderia i pesca
+          complementaria:
+            heading: Autoliquidació complementària
+          deducible:
+            heading: IVA deduïble
+          dependiente:
+            heading: Dependent
+          derecho:
+            heading: Operacions amb dret a deducció
+          descripcion:
+            heading: Descripció de l’activitat
+          devengado:
+            heading: IVA meritat
+          devengo:
+            heading: Meritació
+          dominante:
+            heading: Dominant
+          general:
+            heading: Resta d’operacions en règim general
+          grupo-1:
+            heading: 'IVA deduïble: Grup 1'
+          grupo-2:
+            heading: 'IVA deduïble: Grup 2'
+          iae:
+            heading: Epígraf IAE
+          identificacion:
+            heading: Identificació
+          importacion-corriente:
+            heading: 'Importacions: béns corrents'
+          importacion-inversion:
+            heading: 'Importacions: béns d’inversió'
+          importe:
+            heading: Import total de les operacions
+          interiores-corriente:
+            heading: 'Operacions interiors: béns i serveis corrents'
+          interiores-inversion:
+            heading: 'Operacions interiors: béns d’inversió'
+          intra:
+            heading: Operacions intragrup
+          intra-corriente:
+            heading: Operacions intragrup corrents
+          intra-inversion:
+            heading: Operacions intragrup amb béns d’inversió
+          inversion:
+            heading: Altres operacions amb inversió del subjecte passiu
+          justificante:
+            heading: Número de justificant de l’autoliquidació anterior
+          marca-complementaria:
+            heading: Autoliquidació complementària
+          mod-general:
+            heading: Modificació de bases i quotes en règim general
+          mod-intra:
+            heading: Modificació de bases i quotes intragrup
+          mod-recargo:
+            heading: Modificació de bases i quotes del recàrrec d’equivalència
+          nif:
+            heading: NIF del subjecte passiu
+          ninguna:
+            heading: Ni opció ni revocació
+          'no':
+            heading: 'No'
+          nombre:
+            heading: Raó o denominació social
+          opcion:
+            heading: Opció per la prorrata especial
+          otras:
+            heading: Altres activitats
+          page-1:
+            heading: Identificació i liquidació
+          page-2:
+            heading: Resultat i informació addicional
+          page-3:
+            heading: 'Últim període: activitats i operacions anuals'
+          page-4:
+            heading: Prorrata i règims de deducció diferenciats
+          porcentaje:
+            heading: Percentatge de prorrata
+          principal:
+            heading: Principal
+          prorrata:
+            heading: Prorrata
+          recargo:
+            heading: Recàrrec d’equivalència
+          rect-intra:
+            heading: Rectificació de deduccions intragrup
+          rect-otras:
+            heading: Rectificació de deduccions no intragrup
+          rectificacion:
+            heading: Rectificació de deduccions
+          resultado:
+            heading: Liquidació (continuació)
+          revocacion:
+            heading: Revocació de l’opció
+          si:
+            heading: Sí
+          sin-actividad:
+            heading: Sense activitat
+          sin-marca:
+            heading: Sense marcar
+          territorio:
+            heading: Tributació per raó de territori
+          tipo-prorrata:
+            heading: Tipus de prorrata
       revision:
         2008-2022:
           casilla:

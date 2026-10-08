@@ -3,24 +3,17 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f064383e3ec7ad1d05c527308e820388d554b45fa5dff3431795546462fd1299'
-related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
+body_hash: 'sha256:dd22c38d41f36d9505847f9b82fd4bedd34baa32cb509864fb7171f2e625bdac'
+related: []
 ---
 
 # `object-name-declustering` audit: `s01 inventory review`
 
 ## Scope
 
-Reviewed the `W01.P01.S01` changes in `dev/audit/object_names.py` against the
-accepted inventory contract, its research and repository reference, and the
-current focused tests. The review covered complete declaration serialization,
-line-independent qualified binding locators, schema-qualified finding IDs, raw
-source-byte hashes, the canonical inventory digest, deterministic ordering,
-identity collision safety, and compatibility of the existing text and JSON
-surfaces. No implementation or test file was changed by this review.
+The review covered complete declaration serialization, line-independent qualified binding locators, schema-qualified finding IDs, raw source-byte hashes, the canonical inventory digest, deterministic ordering, identity collision safety, and compatibility of the existing text and JSON surfaces. No implementation or test file was changed by this review.
 
 The live repository inventory emitted 61,453 declaration records and 2,288
 findings. Its 2,288 finding IDs were unique. The focused suite completed with 22

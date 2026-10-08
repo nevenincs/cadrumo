@@ -12,58 +12,36 @@ detailed :class:`CasillaObservation` data on command output.
 from __future__ import annotations
 
 from decimal import Decimal
+from uuid import UUID
 
 import typer
 
-from ...application.modelo.action_errors import (
-    AmendmentComplementariaLiabilityDecreaseError,
-    AmendmentDetailRowsRequiredError,
-    AmendmentEvidenceMissingError,
-    AmendmentKindNotPermittedError,
-    AmendmentTargetStateError,
-    CalculationRevisionNotFoundError,
-    CalculationRevisionStateError,
-    ModeloRecordNotFoundError,
-    WorkUnitNotFoundError,
+from ...application.modelo.amendment_projection import ModeloWorkAmendPublicResultV2
+from ...application.modelo.edit_apply_row_contracts import ModeloDetailRowWireV1
+from ...application.modelo.filing_selection_operation import (
+    ModeloWorkFilingRecordProjection,
+    ModeloWorkFilingRecordRequest,
 )
-from ...application.modelo.amendment_actions import amend_modelo_revision
-from ...application.modelo.work_addressing import (
-    ModeloWorkAddressNotFoundError,
-    ModeloWorkRevisionConflictError,
-    ModeloWorkSelectorContradictionError,
-    ModeloWorkUnitNotFoundError,
-    ModeloWorkVisibleTargetAmbiguousError,
+from ...application.modelo.work_amend_contracts import (
+    ModeloWorkAmendBaseline,
+    ModeloWorkAmendOverride,
+    ModeloWorkAmendRequest,
 )
 from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_history
-from ...core.bucket_pointer import require_active_bucket_id
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.modelo import Modelo
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
-from ...domain.modelos.row_models import ModeloDetailRow
-from ._modelo_behavior_support import (
-    require_active_profile as _require_active_profile,
-)
-from ._modelo_behavior_support import (
-    resolve_work_unit_for_cli as _resolve_work_unit_for_cli,
-)
-from ._modelo_behavior_support import (
-    work_address_for_cli as _work_address_for_cli,
-)
 from ._modelo_cli_support import (
-    bad_parameter_from_error as _bad_parameter_from_error,
+    parse_calculation_wire_row_spec,
+    resolve_actor_option,
 )
 from ._modelo_cli_support import (
     parse_kv_spec as _parse_kv_spec,
-)
-from ._modelo_cli_support import (
-    parse_row_spec,
-)
-from ._modelo_cli_support import resolve_default_actor as _resolve_default_actor
-from ._modelo_cli_support import (
-    selector_bad_parameter as _selector_bad_parameter,
 )
 from ._modelo_cli_support import (
     validate_casilla_key as _validate_casilla_key,
@@ -80,8 +58,12 @@ from ._modelo_rendering import (
 from ._modelo_rendering import (
     verification_report_payload as _verification_report_payload,
 )
-from .common import activate_subcommand_output_language
-from .state_projection_support import amendment_action_ports_factory, authority_operation, modelo_history_ports_factory
+from .common import activate_subcommand_output_language, no_active_profile_refusal
+from .runtime_modelo_amendment import read_modelo_work_filing_record, run_modelo_work_amendment
+from .runtime_modelo_metadata import read_modelo_work_unit
+from .runtime_modelo_taxation_comparison import compare_modelo_taxation
+from .runtime_modelo_work_history import read_modelo_work_history
+from .runtime_profile_binding import require_profile_client
 
 
 def work_compare_taxation(
@@ -104,51 +86,21 @@ def work_compare_taxation(
     and cuota diferencial (0610) for each mode plus the delta and a
     recommendation.
 
-    This is an ephemeral operation: no revision is persisted.
+    The registered operation records its receipt but persists no calculation revision.
     """
     from .common import activate_subcommand_output_language, emit_envelope
 
     activate_subcommand_output_language(ctx, output_language)
 
-    from ...adapters.persistence.profile.taxation_comparison import build_taxation_comparison_ports
-    from ...application.modelo.action_errors import WorkUnitNotFoundError
-    from ...application.modelo.taxation_comparison import TaxationComparisonError, compare_taxation_for_work_address
-
-    try:
-        address = _work_address_for_cli(
-            work_unit_id=work_unit_id,
-            modelo=modelo,
-            year=year,
-            period=period,
-            revision=revision,
-            bucket_id=bucket_id,
-        )
-        comparison = compare_taxation_for_work_address(
-            address,
-            ports=build_taxation_comparison_ports(bucket_id=bucket_id or require_active_bucket_id()),
-        )
-    except (
-        ModeloWorkAddressNotFoundError,
-        ModeloWorkVisibleTargetAmbiguousError,
-        ModeloWorkRevisionConflictError,
-        ModeloWorkSelectorContradictionError,
-        ModeloWorkUnitNotFoundError,
-    ) as exc:
-        raise _selector_bad_parameter(exc) from exc
-    except WorkUnitNotFoundError as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.compare_taxation_work_unit_not_found",
-                work_unit_id=work_unit_id or "",
-            ),
-        ) from exc
-    except TaxationComparisonError as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.compare_taxation_error",
-                detail=str(exc),
-            ),
-        ) from exc
+    comparison = compare_modelo_taxation(
+        ctx,
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+    )
 
     from ._payloads_modelo_reconcile import WorkCompareTaxationResult
 
@@ -171,14 +123,10 @@ def work_compare_taxation(
     # a single-earner unidad familiar. Surface it on the typed notices channel so
     # an operator is never misled into trusting a two-earner individual figure the
     # comparator cannot compute.
-    caveat_notice = (
-        advisory_notice(
-            "modelo.work.compare_taxation.individual_single_earner_only",
-            comparison.individual_branch_caveat,
-            context={"individual_branch_single_earner_only": "true"},
-        )
-        if comparison.individual_branch_single_earner_only
-        else None
+    caveat_notice = advisory_notice(
+        "modelo.work.compare_taxation.individual_single_earner_only",
+        comparison.individual_branch_caveat,
+        context={"individual_branch_single_earner_only": "true"},
     )
 
     lines = [
@@ -198,14 +146,13 @@ def work_compare_taxation(
             reason=comparison.recommendation_reason,
         ),
     ]
-    if caveat_notice is not None:
-        lines.append(f"WARNING\t{comparison.individual_branch_caveat}")
+    lines.append(f"WARNING\t{comparison.individual_branch_caveat}")
     emit_envelope(
         ctx,
         command="modelo.work.compare_taxation",
         result=result,
         lines=lines,
-        notices=[caveat_notice] if caveat_notice is not None else None,
+        notices=[caveat_notice],
     )
 
 
@@ -226,10 +173,8 @@ def work_history(
     report, filing record). Emits no bucket event.
     """
     activate_subcommand_output_language(ctx, output_language)
-    from ...application.modelo.history import assemble_work_unit_history
-
-    _require_active_profile()
-    unit = _resolve_work_unit_for_cli(
+    unit = read_modelo_work_unit(
+        ctx,
         work_unit_id=work_unit_id,
         modelo=modelo,
         year=year,
@@ -237,11 +182,7 @@ def work_history(
         revision=revision,
         bucket_id=bucket_id,
     )
-    history = assemble_work_unit_history(
-        unit.work_unit_id,
-        ports=modelo_history_ports_factory(ctx)(bucket_id=unit.bucket_id),
-        operation=authority_operation(ctx),
-    )
+    history = read_modelo_work_history(ctx, unit=unit)
     from .common import emit_envelope, resolve_lifecycle_continuation_notice
     from .modelo_aux_payloads import WorkHistoryResult, WorkUnitHistoryEventPayload
 
@@ -354,7 +295,7 @@ def _resolve_amendment_detail_rows(
     row_specs: tuple[str, ...],
     *,
     declared_none: bool,
-) -> tuple[ModeloDetailRow, ...] | None:
+) -> tuple[ModeloDetailRowWireV1, ...] | None:
     """Translate the two row flags into the three states the authority reads.
 
     An amendment to an M184, M232, M347 or M349 is a statement about which
@@ -376,7 +317,7 @@ def _resolve_amendment_detail_rows(
         return ()
     if not row_specs:
         return None
-    return tuple(parse_row_spec(spec) for spec in row_specs)
+    return tuple(parse_calculation_wire_row_spec(spec) for spec in row_specs)
 
 
 def _parse_amendment_overrides(set_overrides: tuple[str, ...]) -> dict[CasillaId, Decimal]:
@@ -401,7 +342,7 @@ def work_amend(
     row: list[str] | None = None,
     no_detail_rows: bool = False,
 ) -> None:
-    """Build a complementaria amendment over an externally-filed return.
+    """Record an amendment to the selected filing through worker custody.
 
     The four required inputs (``--from-filing-record``, ``--kind``,
     ``--reason``, and at least one ``--set``) are batch-validated so a
@@ -409,15 +350,13 @@ def work_amend(
     refusal instead of forcing the operator to rediscover them one
     invocation at a time. The command then parses the requested
     :class:`CalculationRevisionAmendmentKind`, validates each override as a
-    ``CasillaId`` decimal, delegates to
-    :func:`amend_modelo_revision`, and emits a
+    ``CasillaId`` decimal, delegates to the profile-bound registered
+    amendment operation, and emits a
     :class:`WorkAmendResult`.
 
-    The application service requires the source
-    :class:`ModeloRecord` to carry
-    :class:`ExternalEvidence`; locally filed records cannot
-    enter this path. The new record is an internal filing envelope and does not
-    submit anything to AEAT.
+    The authority resolves the actual AEAT-confirmed baseline, including when
+    the selected in-force source is pending. The new record is an internal
+    filing envelope and does not submit anything to AEAT.
     """
     from_filing_record_id, kind, reason, set_specs = _required_amendment_inputs(
         from_filing_record_id=from_filing_record_id,
@@ -425,53 +364,51 @@ def work_amend(
         reason=reason,
         set_overrides=set_overrides,
     )
-    _require_active_profile()
     overrides = _parse_amendment_overrides(set_specs)
     detail_rows = _resolve_amendment_detail_rows(tuple(row or ()), declared_none=no_detail_rows)
-
-    try:
-        record = amend_modelo_revision(
-            from_filing_record_id=from_filing_record_id,
-            overrides=overrides,
-            amendment_kind=kind,
-            m303_rectificativa_motive=m303_rectificativa_motive,
-            detail_rows=detail_rows,
-            reason=reason,
-            actor=actor or _resolve_default_actor(),
-            ports=amendment_action_ports_factory(ctx)(
-                bucket_id=require_active_bucket_id(),
-                operation=authority_operation(ctx),
-            ),
-        )
-    except (
-        ModeloRecordNotFoundError,
-        AmendmentEvidenceMissingError,
-        AmendmentTargetStateError,
-        AmendmentKindNotPermittedError,
-        AmendmentComplementariaLiabilityDecreaseError,
-        AmendmentDetailRowsRequiredError,
-        CalculationRevisionNotFoundError,
-        CalculationRevisionStateError,
-        WorkUnitNotFoundError,
-    ) as exc:
-        raise _bad_parameter_from_error(exc) from exc
+    target = resolve_active_bucket_id()
+    if target is None:
+        raise no_active_profile_refusal()
+    client = require_profile_client(ctx, expected_profile_id=UUID(target))
+    selected = read_modelo_work_filing_record(
+        client,
+        ModeloWorkFilingRecordRequest(profile_id=client.profile_id, filing_record_id=from_filing_record_id),
+    ).projection
+    if not isinstance(selected, ModeloWorkFilingRecordProjection):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    request = ModeloWorkAmendRequest(
+        baseline=ModeloWorkAmendBaseline(from_filing_record_id=from_filing_record_id),
+        amendment_kind=kind,
+        overrides=tuple(
+            ModeloWorkAmendOverride(casilla_id=str(casilla_id), value=str(value))
+            for casilla_id, value in overrides.items()
+        ),
+        reason=reason,
+        m303_rectificativa_motive=m303_rectificativa_motive,
+        detail_rows=detail_rows,
+        actor=resolve_actor_option(actor),
+    )
+    amended = run_modelo_work_amendment(client, request, work_unit_id=selected.unit.work_unit_id).projection
+    if not isinstance(amended, ModeloWorkAmendPublicResultV2):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    record = amended.record.to_record()
 
     from ._modelo_payloads import WorkAmendResult
     from .common import emit_envelope
 
     result = WorkAmendResult.model_validate(
         {
-            "amendment_kind": kind.value,
-            "m303_rectificativa_motive": m303_rectificativa_motive,
-            "amends_filing_record_id": from_filing_record_id,
+            "amendment_kind": amended.amendment_kind.value,
+            "m303_rectificativa_motive": amended.m303_rectificativa_motive,
             **_filing_record_payload(record).model_dump(mode="python"),
         },
     )
     lines = [
         "operation\tmodelo.work.amend",
-        f"amendment_kind\t{kind.value}",
-        f"m303_rectificativa_motive\t{m303_rectificativa_motive.value if m303_rectificativa_motive else ''}",
-        f"amends_filing_record_id\t{from_filing_record_id}",
+        f"amendment_kind\t{amended.amendment_kind.value}",
+        "m303_rectificativa_motive\t"
+        f"{amended.m303_rectificativa_motive.value if amended.m303_rectificativa_motive else ''}",
+        f"amends_filing_record_id\t{amended.amended_from_filing_record_id}",
         *_filing_record_lines(record),
     ]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
@@ -490,16 +427,11 @@ def modelo_history(
     period: str | None = None,
 ) -> None:
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
-    from ...application.modelo.history import assemble_modelo_lifecycle_history
     from ._modelo_payloads import ModeloHistoryResult, ModeloLifecycleEventPayload
     from .common import emit_envelope
+    from .runtime_modelo_history import read_modelo_history
 
-    matches = assemble_modelo_lifecycle_history(
-        modelo,
-        filing_year=year,
-        period=period,
-        ports=modelo_history_ports_factory(ctx)(bucket_id=require_active_bucket_id()),
-    ).events
+    matches = tuple(row.to_event() for row in read_modelo_history(ctx, modelo=modelo, year=year, period=period).events)
 
     history_result = ModeloHistoryResult(
         modelo=modelo,

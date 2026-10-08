@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 18:34+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -93,16 +93,12 @@ msgid "`cadrumo-mcp`"
 msgstr "`cadrumo-mcp`"
 
 #: ../../reference/identity-and-naming.md
-msgid "MCP tool prefix"
-msgstr "MCP-eszközelőtag"
+msgid "MCP tool naming"
+msgstr "MCP-eszközök elnevezése"
 
 #: ../../reference/identity-and-naming.md
-msgid "`cadrumo_`"
-msgstr "`cadrumo_`"
-
-#: ../../reference/identity-and-naming.md
-msgid "MCP resource scheme"
-msgstr "MCP-erőforrásséma"
+msgid "Unprefixed names advertised by `tools/list`"
+msgstr "A `tools/list` által hirdetett előtag nélküli nevek"
 
 #: ../../reference/identity-and-naming.md
 msgid "Plugin identifier"
@@ -132,7 +128,7 @@ msgstr "Kísérő Python-névtér"
 msgid "`cadrumo_data`"
 msgstr "`cadrumo_data`"
 
-#: ../../reference/identity-and-naming.md:24
+#: ../../reference/identity-and-naming.md:23
 msgid ""
 "These values identify one product. There is no alternate human CLI "
 "spelling or Python import alias."
@@ -140,7 +136,7 @@ msgstr ""
 "Ezek az értékek egyetlen terméket azonosítanak. Nincs alternatív emberi "
 "CLI-írásmód vagy Python-importalias."
 
-#: ../../reference/identity-and-naming.md:27
+#: ../../reference/identity-and-naming.md:26
 msgid "Product and authority names"
 msgstr "Termék- és hivatali nevek"
 
@@ -188,7 +184,7 @@ msgstr ""
 "AEAT-portál, AEAT-hitelesítő adatok, AEAT hivatalos fájl, AEAT jogforrás,"
 " AEAT-taxonómia"
 
-#: ../../reference/identity-and-naming.md:34
+#: ../../reference/identity-and-naming.md:33
 msgid ""
 "AEAT is an external authority and counterparty, not the application name."
 " Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
@@ -199,4 +195,3 @@ msgstr ""
 "tulajdonában lévő fogalmak, mint a *modelo*, a *casilla*, a "
 "*justificante*, valamint a hivatalos időszak- vagy osztályozási jelölők a"
 " Cadrumón belül megtartják AEAT-jelentésüket."
-

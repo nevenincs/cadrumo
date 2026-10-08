@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:9bb098a12857429095c4c016191065ee2d5130c158e8ad8ab45c09f6bd17709b'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-architecture-command-enrollment-parity-reference]]"
 ---
 

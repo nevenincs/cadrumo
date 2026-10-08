@@ -5,6 +5,7 @@ family = "mapping"
 [[fact.variants]]
 variant_id = "modelo-303-carry-disposition-verification-mapping:2022"
 date_axis = "filing_period"
+period_selector = { year_from = 2022, year_to = 2022, periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
 # The first declaration reaches the registry support floor; 2022 is also the
 # floor year, so this variant governs exactly the 2022 revision.
 valid_to = 2022-12-31
@@ -27,7 +28,9 @@ kind = "mapping"
 entries = [
   { key = "modelo", value = "303" },
   { key = "revision", value = "2022" },
-  { key = "disposition.header_key", value = "declaration_type" },
+  { key = "disposition.header_key", value = "filing.result_disposition" },
+  # Preserve the original key on already-captured header evidence.
+  { key = "disposition.legacy_header_key", value = "declaration_type" },
   # The 2022 record design declares C/D/G/I/N/V only; U and X arrived later.
   { key = "disposition.code.C", value = "compensacion" },
   { key = "disposition.code.D", value = "devolucion" },
@@ -51,6 +54,7 @@ entries = [
 [[fact.variants]]
 variant_id = "modelo-303-carry-disposition-verification-mapping:2023"
 date_axis = "filing_period"
+period_selector = { year_from = 2023, year_to = 2023, periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
 valid_from = 2023-01-01
 valid_to = 2023-12-31
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "rd-1624-1992:art-71"]
@@ -73,7 +77,9 @@ kind = "mapping"
 entries = [
   { key = "modelo", value = "303" },
   { key = "revision", value = "2023" },
-  { key = "disposition.header_key", value = "declaration_type" },
+  { key = "disposition.header_key", value = "filing.result_disposition" },
+  # Preserve the original key on already-captured header evidence.
+  { key = "disposition.legacy_header_key", value = "declaration_type" },
   { key = "disposition.code.C", value = "compensacion" },
   { key = "disposition.code.D", value = "devolucion" },
   { key = "disposition.code.G", value = "cuenta_corriente_ingreso" },
@@ -98,6 +104,7 @@ entries = [
 [[fact.variants]]
 variant_id = "modelo-303-carry-disposition-verification-mapping:2024-hasta-08-y-2t"
 date_axis = "filing_period"
+period_selector = { year_from = 2024, year_to = 2024, periods = ["1T", "2T", "01", "02", "03", "04", "05", "06", "07", "08"] }
 valid_from = 2024-01-01
 # Carry lookups date by period end, so 2T (06-30) and 08 (08-31) land here and
 # 3T/09 (09-30) land on the successor, matching the two 2024 revisions.
@@ -122,7 +129,9 @@ kind = "mapping"
 entries = [
   { key = "modelo", value = "303" },
   { key = "revision", value = "2024-hasta-08-y-2t" },
-  { key = "disposition.header_key", value = "declaration_type" },
+  { key = "disposition.header_key", value = "filing.result_disposition" },
+  # Preserve the original key on already-captured header evidence.
+  { key = "disposition.legacy_header_key", value = "declaration_type" },
   { key = "disposition.code.C", value = "compensacion" },
   { key = "disposition.code.D", value = "devolucion" },
   { key = "disposition.code.G", value = "cuenta_corriente_ingreso" },
@@ -147,6 +156,7 @@ entries = [
 [[fact.variants]]
 variant_id = "modelo-303-carry-disposition-verification-mapping:2024-desde-09-y-3t"
 date_axis = "filing_period"
+period_selector = { year_from = 2024, year_to = 2024, periods = ["3T", "4T", "09", "10", "11", "12"] }
 valid_from = 2024-09-01
 valid_to = 2024-12-31
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "rd-1624-1992:art-71"]
@@ -169,7 +179,9 @@ kind = "mapping"
 entries = [
   { key = "modelo", value = "303" },
   { key = "revision", value = "2024-desde-09-y-3t" },
-  { key = "disposition.header_key", value = "declaration_type" },
+  { key = "disposition.header_key", value = "filing.result_disposition" },
+  # Preserve the original key on already-captured header evidence.
+  { key = "disposition.legacy_header_key", value = "declaration_type" },
   { key = "disposition.code.C", value = "compensacion" },
   { key = "disposition.code.D", value = "devolucion" },
   { key = "disposition.code.G", value = "cuenta_corriente_ingreso" },
@@ -194,6 +206,7 @@ entries = [
 [[fact.variants]]
 variant_id = "modelo-303-carry-disposition-verification-mapping:2025"
 date_axis = "filing_period"
+period_selector = { year_from = 2025, year_to = 2025, periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
 valid_from = 2025-01-01
 # Closed with its record design aeat-dr-303-2025 (applies_to 2025-12-31).
 valid_to = 2025-12-31
@@ -217,7 +230,9 @@ kind = "mapping"
 entries = [
   { key = "modelo", value = "303" },
   { key = "revision", value = "2025" },
-  { key = "disposition.header_key", value = "declaration_type" },
+  { key = "disposition.header_key", value = "filing.result_disposition" },
+  # Preserve the original key on already-captured header evidence.
+  { key = "disposition.legacy_header_key", value = "declaration_type" },
   # Explicit C/D/G/I/N/V/U/X code-to-semantic projection, grounded by the
   # ResultDisposition enum/source history and the AEAT citation above.
   { key = "disposition.code.C", value = "compensacion" },
@@ -244,7 +259,8 @@ entries = [
 [[fact.variants]]
 variant_id = "modelo-303-carry-disposition-verification-mapping:2026"
 date_axis = "filing_period"
-valid_from = 2026-01-01
+period_selector = { year_from = 2026, periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"], period_overrides = [{ year = 2026, periods = ["02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "2T", "3T", "4T"] }] }
+valid_from = 2026-02-01
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "rd-1624-1992:art-71"]
 source_refs = ["aeat-modelo-303-procedure", "aeat-dr-303-2026"]
 # Verified against the 2026 record design: the declaration-type codes below
@@ -268,7 +284,62 @@ kind = "mapping"
 entries = [
   { key = "modelo", value = "303" },
   { key = "revision", value = "2026-y-siguientes" },
-  { key = "disposition.header_key", value = "declaration_type" },
+  { key = "disposition.header_key", value = "filing.result_disposition" },
+  # Preserve the original key on already-captured header evidence.
+  { key = "disposition.legacy_header_key", value = "declaration_type" },
+  { key = "disposition.code.C", value = "compensacion" },
+  { key = "disposition.code.D", value = "devolucion" },
+  { key = "disposition.code.G", value = "cuenta_corriente_ingreso" },
+  { key = "disposition.code.I", value = "ingreso" },
+  { key = "disposition.code.N", value = "negativa" },
+  { key = "disposition.code.V", value = "cuenta_corriente_devolucion" },
+  { key = "disposition.code.U", value = "domiciliacion" },
+  { key = "disposition.code.X", value = "devolucion_transferencia_extranjero" },
+  { key = "disposition.admissible", value = "compensacion,devolucion,cuenta_corriente_ingreso,ingreso,negativa,cuenta_corriente_devolucion,domiciliacion,devolucion_transferencia_extranjero" },
+  { key = "sign.negative", value = "compensacion,devolucion,cuenta_corriente_devolucion,devolucion_transferencia_extranjero" },
+  { key = "sign.positive", value = "cuenta_corriente_ingreso,ingreso,domiciliacion" },
+  { key = "sign.zero", value = "negativa" },
+  { key = "predicate", value = "selected_disposition_must_match_declared_result_sign" },
+  { key = "applicability.source", value = "selected_modelo_303_revision" },
+  { key = "source_kind", value = "filing_observation_header" },
+  { key = "casilla.posterior", value = "iva.compensacion-pendiente-periodos-posteriores" },
+  { key = "casilla.generated", value = "iva.compensacion-generada-periodo" },
+  { key = "casilla.available", value = "iva.compensacion-disponible-fin-periodo" },
+  { key = "casilla.result", value = "iva.resultado" },
+]
+
+[[fact.variants]]
+variant_id = "modelo-303-carry-disposition-verification-mapping:2026-hasta-01-y-1t"
+date_axis = "filing_period"
+period_selector = { years = [2026], periods = ["01", "1T"] }
+valid_from = 2026-01-01
+valid_to = 2026-03-31
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-dr-303-2026"]
+# January/Q1 selects the prior printed annex, while the same 2026 record
+# design governs the disposition and carry casillas in this filing scope.
+# The record design itself remains pending operator review.
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["Modelo 303"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2026"
+required_text = [
+  "El tipo de declaración puede ser: C (solicitud de compensación)",
+  "U (domiciliacion del ingreso en CCC) X (Devolución por transferencia al extranjero)",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelo", value = "303" },
+  { key = "revision", value = "2026-hasta-01-y-1t" },
+  { key = "disposition.header_key", value = "filing.result_disposition" },
+  # Preserve the original key on already-captured header evidence.
+  { key = "disposition.legacy_header_key", value = "declaration_type" },
   { key = "disposition.code.C", value = "compensacion" },
   { key = "disposition.code.D", value = "devolucion" },
   { key = "disposition.code.G", value = "cuenta_corriente_ingreso" },

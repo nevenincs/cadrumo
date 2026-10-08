@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#cli-distribution-consolidation'
 date: '2026-09-02'
-modified: '2026-09-04'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:58d8edd81695b242b632f21777678c9c043908fd8b0b31b19982abda6529de91'
+body_hash: 'sha256:6cfaf664e857b0ee7da98f11bf70d41cfa5a4c26ca072a8e848b4297c8626a58'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -41,7 +41,7 @@ Both sibling publish workflows run on `ubuntu-latest`. The reasoning recorded at
 call site is that the distributions are `py3-none-any`, so the build host cannot
 affect the artifact, and the repositories are public, so hosted minutes are free.
 
-Cadrumo's `dev/ci/tests/test_self_hosted_fleet.py` requires every job to be
+Cadrumo's the former source file requires every job to be
 self-hosted, with two enumerated polling jobs exempt. Its publication path therefore
 depends on runner availability. The fleet has one Linux x86-64 runner for this
 repository, and the fleet manifest records the macOS host as power-gated to AC.
@@ -79,7 +79,7 @@ owner name, referencing an `aeat-mcp` server.
 
 `--tui` is declared as a root `OptionSpec` in
 `src/cadrumo/entrypoints/cli/_root_command_specs.py`, and
-`src/cadrumo/entrypoints/cli/_tui_policy.py` routes it per command via
+the former source file routes it per command via
 `TuiCapability`. Five command-graph nodes declare `AVAILABLE`; eleven declare
 `NOT_IMPLEMENTED`.
 
@@ -104,7 +104,7 @@ The siblings prove an install with `uv run --isolated --no-project --with dist/*
 which needs no daemon.
 
 Cadrumo proves through nested containers over a mounted host socket, with WSL path
-translation, in `dev/packaging/smoke_docker.py`. The Linux arm64 runner is a colima
+translation, . The Linux arm64 runner is a colima
 guest whose docker client has no reachable daemon, so the leg backing
 `homebrew-linux-arm64` has never passed. The fleet manifest records cadrumo as the
 only repository in the account whose hygiene rules prune docker state on the host.
@@ -149,8 +149,7 @@ and the `[matrix]` booleans occur across sixteen files under `dev/`, `docs/`,
 BOE and Real Decreto references - which the calculation-grounding rule requires.
 
 `claimed_channels` reaches the sealed release record as a typed field on
-`ReleaseCandidate` in `dev/release/release_candidate.py`, filled by
-`dev/release/seal_candidate.py`.
+`ReleaseCandidate` , filled by
 
 ### Publication state and name reservations
 
@@ -248,8 +247,8 @@ metadata edit.
 ### Two cohort members are consumed only by surfaces the decision removes
 
 `cadrumo-runtime-wheelhouse` has four consumers: `packaging/mcpb/build.py`,
-`dev/packaging/smoke_mcpb.py`, `dev/packaging/smoke_plugin_install.py` and
-`src/cadrumo-harness/src/cadrumo_harness/_workspace.py`. All four are host-extension
+the former source file, the former source file and
+the former source file. All four are host-extension
 or harness surfaces. Neither installer generator reads it; `packaging/homebrew/generate.py`
 and `packaging/scoop/generate.py` resolve dependencies from the index.
 
@@ -849,16 +848,14 @@ Nothing outstanding for this decision.
 
 - `docs/_data/download_channels.toml`
 - `dev/packaging/python_cohort.py:286`
-- `dev/packaging/smoke_docker.py`
+
 - `dev/release/burned_versions.json`
-- `dev/release/release_candidate.py`
-- `dev/release/seal_candidate.py`
-- `dev/ci/tests/test_self_hosted_fleet.py`
+
 - `src/cadrumo/entrypoints/cli/_root_cli.py`
 - `src/cadrumo/entrypoints/cli/_root_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_tui_policy.py`
+
 - `src/cadrumo/entrypoints/cli/__init__.py`
-- `src/cadrumo-harness/pyproject.toml`
+
 - `pyproject.toml`
 - commit `c771bffe46`
 - https://pypi.org/pypi/vaultspec-core/json

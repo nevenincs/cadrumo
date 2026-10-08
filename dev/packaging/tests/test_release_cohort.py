@@ -191,7 +191,9 @@ def test_python_cohort_copy_checks_artifacts_without_reloading_metadata(
         "cadrumo-data-manuals": "cadrumo_data_manuals-1.0.0-py3-none-any.whl",
         "cadrumo-data-manuals-sdist": "cadrumo_data_manuals-1.0.0.tar.gz",
         "cadrumo-data-official": "cadrumo_data_official-1.0.0-py3-none-any.whl",
+        "cadrumo-data-normatives": "cadrumo_data_normatives-1.0.0-py3-none-any.whl",
         "cadrumo-data-official-sdist": "cadrumo_data_official-1.0.0.tar.gz",
+        "cadrumo-data-normatives-sdist": "cadrumo_data_normatives-1.0.0.tar.gz",
     }
     artifacts = {name: source / filename for name, filename in filenames.items()}
     for name, artifact in artifacts.items():
@@ -211,7 +213,9 @@ def test_python_cohort_copy_checks_artifacts_without_reloading_metadata(
         manuals_wheel=artifacts["cadrumo-data-manuals"],
         manuals_sdist=artifacts["cadrumo-data-manuals-sdist"],
         official_wheel=artifacts["cadrumo-data-official"],
+        normatives_wheel=artifacts["cadrumo-data-normatives"],
         official_sdist=artifacts["cadrumo-data-official-sdist"],
+        normatives_sdist=artifacts["cadrumo-data-normatives-sdist"],
         sha256={name: sha256_path(artifact) for name, artifact in artifacts.items()},
     )
 
@@ -353,13 +357,17 @@ def test_build_from_clean_source_refuses_a_digest_other_than_its_own_content(tmp
     assert not output.exists()
 
 
-def test_release_builder_identity_is_the_exact_checked_in_cpython_pin() -> None:
+def test_release_builder_identity_is_the_exact_checked_in_cpython_pin(monkeypatch: pytest.MonkeyPatch) -> None:
     """The release cohort's build identity remains separate from the open support floor."""
-    pin = (REPO_ROOT / ".python-version").read_text(encoding="utf-8").strip()
+    pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
+    development_minor = (REPO_ROOT / ".python-version").read_text(encoding="utf-8").strip()
 
     assert re.fullmatch(_EXACT_PYTHON, pin) is not None
     assert pin == REQUIRED_PYTHON_VERSION
+    assert pin.rsplit(".", 1)[0] == development_minor
 
+    monkeypatch.setattr(release_cohort_module.platform, "python_implementation", lambda: "CPython")
+    monkeypatch.setattr(release_cohort_module.platform, "python_version", lambda: pin)
     identity = release_cohort_module._build_identity(REPO_ROOT)
 
     assert identity.implementation == "dev.packaging.release_cohort"

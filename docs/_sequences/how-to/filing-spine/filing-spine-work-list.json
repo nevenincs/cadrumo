@@ -184,7 +184,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.list\ninclude_discarded\tFalse\nwork_unit_count\t1\nshort_work_unit_id\twork_unit_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname\naf6b2264dd9d\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\t303\t2026\t1T\t2026-y-siguientes\tdraft\t\t\t303-2026-1T\nnotice\tmodelo.work.list.next_action\tOne work unit is available for inspection.\nnext_action\taeat app modelo work status fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\n"
+      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.list\ninclude_discarded\tFalse\nwork_unit_count\t1\nshort_work_unit_id\twork_unit_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname\nb7a7592ccc53\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\t303\t2026\t1T\t2026-hasta-01-y-1t\tdraft\t\t\t303-2026-1T\nnotice\tmodelo.work.list.next_action\tOne declaration is available for inspection.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\nnext_action\taeat app modelo work status ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\n"
     },
     {
       "argv": [
@@ -226,18 +226,25 @@
                   "source_evidence_id": null,
                   "source_key": "work_unit_id",
                   "status": "resolved",
-                  "value": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+                  "value": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
                 }
               ]
             },
             "code": "modelo.work.status.next_action",
             "context": {
               "continuation_outcome": "action_available",
-              "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
+              "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53",
               "work_unit_state": "borrador"
             },
-            "message": "This active work unit can be calculated.",
+            "message": "This active declaration can be calculated.",
             "severity": "info"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
           }
         ],
         "result": {
@@ -258,16 +265,16 @@
             "code": "1T",
             "filing_year": 2026
           },
-          "revision_id": "2026-y-siguientes",
+          "revision_id": "2026-hasta-01-y-1t",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "af6b2264dd9d",
+          "short_work_unit_id": "b7a7592ccc53",
           "state": "borrador",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+          "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

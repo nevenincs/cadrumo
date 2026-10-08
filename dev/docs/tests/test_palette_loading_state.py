@@ -119,7 +119,6 @@ def _palette_site(out: Path, *, with_index: bool) -> Path:
     (build / "palette.html").write_text(_TRIGGER_PAGE, encoding="utf-8")
 
     if with_index:
-        (build / "pagefind.yml").write_bytes((_DOCS / "pagefind.yml").read_bytes())
         materialised = _approved_concept_records()
 
         async def inject(index: object) -> None:

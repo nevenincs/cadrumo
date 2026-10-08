@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:92571e5f91c2cda0a91b4860fd1f36015edc21000e24a24420283dc1f8030f7c'
 related:
-  - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-12-casilla-schema-s36-campaign-close-honesty-review-audit]]"
 ---
 

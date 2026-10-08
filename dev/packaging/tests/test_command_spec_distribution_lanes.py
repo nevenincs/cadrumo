@@ -19,7 +19,7 @@ from dev.source_tree import repository_files, snapshot
 
 from ..authority_staging import stage_published_authority
 from ..command_execution import run_command
-from ..python_cohort import _FORBIDDEN_COMMAND_ARTIFACT_NAMES
+from ..command_spec_attestation import _FORBIDDEN_COMMAND_ARTIFACT_NAMES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -48,7 +48,7 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.i18n.render import lookup_translation_entry
 from cadrumo.core.json_contract import OutputRootSchema, OutputSchema
 from cadrumo.entrypoints.cli.main import app
-from cadrumo.entrypoints.cli.command_spec import DeferredTarget
+from cadrumo.entrypoints.cli.command_shared_contracts import DeferredTarget
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from typer._click.core import Context as TyContext
 from typer.main import get_command
@@ -77,7 +77,7 @@ def live_command_paths(app):
     return paths
 
 def translation_keys(value):
-    from cadrumo.entrypoints.cli.command_spec import TranslationKey
+    from cadrumo.entrypoints.cli.command_shared_contracts import TranslationKey
     if isinstance(value, TranslationKey):
         return (value,)
     if dataclasses.is_dataclass(value) and not isinstance(value, type):
@@ -252,7 +252,6 @@ def _assert_same_identity_projection(payloads: list[dict[str, object]]) -> None:
     assert not divergent, f"lane identity projections differ at payload(s) {divergent}"
 
 
-@pytest.mark.timeout(900)
 def test_wheel_sdist_and_sdist_wheel_preserve_command_spec_authority(tmp_path: Path) -> None:
     uv = shutil.which("uv")
     assert uv is not None

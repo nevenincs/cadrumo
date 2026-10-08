@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:6057632dd18336e1a7a6ed63724d493f80745c1be93e241f4c70e5dda982c5a5'
+modified: '2026-10-03'
+body_hash: 'sha256:acd166f9a2d5915fc6dd6c8de6d3cf93c16dacbf9d1e5bdae2ee81c8567b6c70'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S342-001 | PASS | Invoice models are manifest records, not persistence authorities
 
-`src/aeat/domain/invoices/_models.py` defines strict frozen invoice records, catalogue
+The retired module defined strict frozen invoice records, catalogue
 mapping behavior, stable identity derivation, and validation. It performs no file IO,
 secure-object write, active-profile lookup, remote provider call, settings resolution,
 or environment access. The adjacent `InvoiceCatalogueRepository` remains the encrypted
@@ -36,9 +36,9 @@ plaintext exception behavior.
 
 ## S342-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/domain/invoices/_models.py src/aeat/domain/invoices/test_models.py src/aeat/domain/invoices/test_repository.py src/aeat/domain/invoices/_repository.py` passed.
-- `uv run --no-sync pytest -q src/aeat/domain/invoices/test_models.py src/aeat/domain/invoices/test_repository.py` passed with 34 tests.
-- `uv run --no-sync pytest -q src/aeat/domain/invoices/test_models.py src/aeat/domain/invoices/test_repository.py src/aeat/application/invoices/test_linking.py src/aeat/domain/calculations/registry/test_invoice_bindings.py` passed with 54 tests.
+- the historical check passed.
+- the historical check passed with 34 tests.
+- the historical check passed with 54 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-rag search "invoice models manifest bucket InvoiceCatalogue pydantic strict frozen secure object repository invoice catalogue no plaintext file" --type code --port 8766 --max-results 8` returned `_models.py` and `_repository.py` as the relevant split.
 - `uv run --no-sync vaultspec-rag search "InvoiceCatalogueRepository secure object financial classification invoice models manifest discovery active profile bucket" --type code --port 8766 --max-results 8` returned the secure-object repository and source-resolver surfaces.

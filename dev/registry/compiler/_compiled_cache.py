@@ -58,6 +58,7 @@ import cadrumo
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.paths import select_filesystem_retention_survivors
+from cadrumo.core.type_guards import is_object_tuple
 from cadrumo.domain.calculations.registry.governed_fact_scope import (
     CandidateFactAuthority,
     validating_governed_facts,
@@ -562,7 +563,7 @@ def _is_compiled_registry_payload(payload: object) -> TypeGuard[CompiledRegistry
     if not _is_two_object_tuple(payload):
         return False
     modelos_raw, catalogues_raw = payload
-    if not _is_object_tuple(modelos_raw):
+    if not is_object_tuple(modelos_raw):
         return False
     if not all(isinstance(modelo, ModeloDefinition) for modelo in modelos_raw) or not isinstance(
         catalogues_raw, RegistryCatalogues
@@ -658,11 +659,6 @@ def _has_current_pydantic_shape(values: Iterable[object]) -> bool:
         elif isinstance(value, (tuple, list, set, frozenset)):
             pending.extend(typing.cast("Iterable[object]", value))
     return True
-
-
-def _is_object_tuple(value: object) -> TypeGuard[tuple[object, ...]]:
-    """Narrow an untyped pickle tuple to an object-valued tuple."""
-    return isinstance(value, tuple)
 
 
 def _is_two_object_tuple(value: object) -> TypeGuard[tuple[object, object]]:

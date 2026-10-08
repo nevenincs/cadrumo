@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva_compensation.carry_forward import (
     IvaCompensationExpiryReviewState,
     build_iva_compensation_carry_forward_report,
@@ -34,7 +35,9 @@ _PRIOR_YEAR_390_CROSS_CHECK_CASES: tuple[
 )
 
 
-def test_year_end_carry_partition_carried_pending_satisfies_aeat_identity_no_double_count() -> None:
+def test_year_end_carry_partition_carried_pending_satisfies_aeat_identity_no_double_count(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Carried-pending FIFO scenario: box 97 + box 662 = total pending, counted once.
 
     The case both pre-fix relations get wrong. 1T generates 100 carried forward;
@@ -55,7 +58,7 @@ def test_year_end_carry_partition_carried_pending_satisfies_aeat_identity_no_dou
         _state(filing_year=2026, period="3T", available=Decimal("70.00")),
         _state(filing_year=2026, period="4T", generated=Decimal("50.00"), available=Decimal("120.00")),
     )
-    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026, operation=operation)
 
     partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=2026)
 
@@ -68,7 +71,9 @@ def test_year_end_carry_partition_carried_pending_satisfies_aeat_identity_no_dou
     assert partition.last_period_amount + partition.generated_not_in_last_amount != naive_per_period
 
 
-def test_year_end_carry_partition_uncarried_credit_lands_in_box_662() -> None:
+def test_year_end_carry_partition_uncarried_credit_lands_in_box_662(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A year credit NOT carried into the last period lands in box 662, not box 97.
 
     1T generates 40 that does NOT carry into the 4T autoliquidación (it left the
@@ -82,7 +87,7 @@ def test_year_end_carry_partition_uncarried_credit_lands_in_box_662() -> None:
         _state(filing_year=2026, period="1T", generated=Decimal("40.00"), available=Decimal("40.00")),
         _state(filing_year=2026, period="4T", generated=Decimal("100.00"), available=Decimal("100.00")),
     )
-    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026, operation=operation)
 
     partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=2026)
 

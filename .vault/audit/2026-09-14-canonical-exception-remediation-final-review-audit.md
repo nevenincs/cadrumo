@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#canonical-exception-remediation'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:c9b477c53bae07a24c9508d78efb18db5d25392ab77f33a9e424ebcb433ba0a4'
 related:
-  - "[[2026-09-14-canonical-exception-remediation-plan]]"
   - "[[2026-09-14-canonical-exception-remediation-adr]]"
 ---
 

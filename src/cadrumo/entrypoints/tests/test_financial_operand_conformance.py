@@ -26,24 +26,20 @@ def test_the_source_denominator_is_nonempty_and_reproducible() -> None:
     assert files == _source_files(), "the source-file denominator must be stable within one run"
 
 
-def test_no_two_production_definitions_declare_the_same_financial_operand_kind() -> None:
-    """Every declared operand_kind is a unique custody authority across the whole registry.
-
-    Two operations declaring the same operand_kind would mean either one is
-    redundant or the broker cannot tell which operation a mid-flight amount
-    belongs to - the exact ambiguity a declared, unique operand_kind exists
-    to rule out.
-    """
+def test_production_edit_operations_pin_the_same_complete_typed_batch() -> None:
+    """Apply and preflight consume the same canonical model without persisting its values."""
+    from ...application.modelo.edit_models import ModeloEditSubmissionV1
     from ..operation_composition import build_production_operation_registry
 
     registry = build_production_operation_registry()
-    kinds_by_definition: dict[str, list[str]] = {}
-    for definition in registry.definitions:
-        for declaration in definition.transient_financial_operands:
-            kinds_by_definition.setdefault(declaration.operand_kind, []).append(definition.definition_id)
-
-    duplicated = {kind: owners for kind, owners in kinds_by_definition.items() if len(owners) > 1}
-    assert not duplicated, f"one financial operand kind declared by more than one definition: {duplicated}"
+    declarations = [
+        definition.transient_financial_operand
+        for definition in registry.definitions
+        if definition.transient_financial_operand is not None
+    ]
+    assert declarations
+    assert all(declaration.operand_type is ModeloEditSubmissionV1 for declaration in declarations)
+    assert len({declaration.operand_schema for declaration in declarations}) == 1
 
 
 def test_exactly_one_production_definition_owns_the_edit_contract_apply_authority() -> None:

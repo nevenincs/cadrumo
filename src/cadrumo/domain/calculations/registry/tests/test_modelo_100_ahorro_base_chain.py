@@ -45,10 +45,11 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..binding_aggregation import binding_aggregation_op
 from ..formula_runtime import calculate_registry_snapshot
-from ..relations import relation_prefill_bindings_for_period, resolve_relation_values
+from ..relations import relation_prefill_bindings_for_period
 from ..schema import RegistrySnapshot
-from ._modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .authored_editions import newest_authored_edition
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .relation_fixture import resolve_relation_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -67,10 +68,8 @@ _BINDINGS_2024: dict[str, Decimal] = {
     "renta-profile-family-minor-children-in-unit": Decimal("0"),
     # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero default for
     # scenarios that do not exercise the maternidad-guarderia chain.
-    "renta-profile-guarderia-gastos-reales": Decimal("0"),
     "renta-profile-incremento-guarderia": Decimal("0"),
     "renta-profile-cotizaciones-ss-madre": Decimal("0"),
-    "renta-profile-descendientes-guarderia": Decimal("0"),
     **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
     "renta-profile-minimo-descendientes-estatal": Decimal("0"),
     "renta-profile-minimo-descendientes-autonomico": Decimal("0"),

@@ -106,7 +106,7 @@ def _settings(
         cadrumo_llm_openai_api_key=SecretStr("loopback-key"),
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
-        cadrumo_llm_run_telemetry_dir=tmp_path / "run-telemetry",
+        cadrumo_llm_run_record_dir=tmp_path / "run-record",
         cadrumo_evidence_cloud_upload_permitted=cloud_upload_permitted,
         cadrumo_evidence_gestor_mode=gestor_mode,
     )
@@ -612,7 +612,7 @@ def test_a_dispatch_whose_record_cannot_be_written_is_refused_not_degraded(tmp_p
     ended; only the endpoint's silence proves the document did not leave the
     host before the record failed.
     """
-    from ....persistence.storage.master_key.active_session import suspend_active_session
+    from ....persistence.storage.master_key.tests.session_scope import suspend_active_session
 
     settings = _settings(tmp_path, cloud_upload_permitted=True)
     with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):

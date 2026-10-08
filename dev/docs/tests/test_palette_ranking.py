@@ -180,7 +180,6 @@ def test_palette_ranks_exact_term_concept_first(tmp_path: Path) -> None:
     static.mkdir(parents=True, exist_ok=True)
     for name in ("cadrumo-docs.js", "cadrumo-docs.css"):
         (static / name).write_bytes((_DOCS / "_static" / name).read_bytes())
-    (build / "pagefind.yml").write_bytes((_DOCS / "pagefind.yml").read_bytes())
     (build / "palette.html").write_text(_TRIGGER_PAGE, encoding="utf-8")
 
     materialised = _approved_concept_records()
@@ -244,7 +243,6 @@ def test_palette_casilla_outranks_cli_and_renders_class_icon(tmp_path: Path) -> 
     static.mkdir(parents=True, exist_ok=True)
     for name in ("cadrumo-docs.js", "cadrumo-docs.css"):
         (static / name).write_bytes((_DOCS / "_static" / name).read_bytes())
-    (build / "pagefind.yml").write_bytes((_DOCS / "pagefind.yml").read_bytes())
     (build / "palette.html").write_text(_TRIGGER_PAGE, encoding="utf-8")
 
     materialised = _casilla_and_cli_records()

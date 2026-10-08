@@ -8,9 +8,11 @@ from typing import TYPE_CHECKING, TypeIs, override
 from pydantic import BaseModel
 
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ..user_profile.access_contracts import AccessAction
 from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_host import SupervisorHost
+from .authorization import invoke_authorized
 from .errors import OperationDeclarationError
 from .interactions import OperationConsumedInteraction, OperationPendingInteraction
 from .models import (
@@ -19,6 +21,7 @@ from .models import (
     OperationRequest,
     OperationTerminalReceipt,
 )
+from .operation_definition import OperationDefinition
 from .owner import OperationResumableExecutor
 from .persistence.events import OperationReconciliationEvent
 from .persistence.journal import OperationPersistedSnapshot
@@ -29,7 +32,7 @@ from .persistence.leases import (
     OperationOwnerLease,
     operation_conflict_scope_reference,
 )
-from .registry import OperationDefinition, OperationReconciliationPolicy
+from .registry import OperationReconciliationPolicy
 from .secret_submission import BoundEphemeralSecretAccess
 
 if TYPE_CHECKING:
@@ -112,6 +115,18 @@ class SupervisorReconciliationMixin(SupervisorHost):
     ) -> OperationPersistedSnapshot:
         """Take over an expired lease and classify the durable operation state."""
         resume_checkpoint = self._resume_checkpoint_for_reconciliation(snapshot, definition)
+        if resume_checkpoint is not None and self._execution_authority is not None:
+            payload = await self._resolve_request_payload(snapshot, definition)
+            await self._execution_authority.require(
+                identity=snapshot.identity,
+                request=OperationRequest(
+                    definition_id=snapshot.identity.definition_id,
+                    subject_ref=snapshot.identity.subject_ref,
+                    payload=payload,
+                    idempotency_key=None,
+                ),
+                action=AccessAction.RESUME,
+            )
         takeover = self._candidate(snapshot.identity, now)
         taken_over = await self._leases.compare_and_swap(predecessor, takeover, observed_at=now)
         if taken_over.disposition is not OperationLeaseDisposition.TAKEN_OVER or taken_over.current != takeover:
@@ -155,6 +170,12 @@ class SupervisorReconciliationMixin(SupervisorHost):
         lease_evidence_ref: str,
     ) -> OperationPersistedSnapshot:
         """Apply the lifecycle-specific recovery policy after durable takeover."""
+        if definition.transient_financial_operand is not None:
+            return await self._interrupt_reconciliation(
+                snapshot,
+                outcome=OperationReconciliationOutcome.INTERRUPTED,
+                lease_evidence_ref=lease_evidence_ref,
+            )
         if snapshot.lifecycle is OperationLifecycle.CREATED:
             if snapshot.secret_requirement is not None and snapshot.executor_entered_at is None:
                 return await self._interrupt_reconciliation(
@@ -179,6 +200,12 @@ class SupervisorReconciliationMixin(SupervisorHost):
             outcome=OperationReconciliationOutcome.RESUMED,
             lease_evidence_ref=lease_evidence_ref,
         )
+        if isinstance(resume_checkpoint, OperationConsumedInteraction):
+            # Recovery acknowledges durable takeover before an already-approved
+            # continuation waits on external input. The existing supervisor task
+            # owns execution, lease renewal, settlement and shutdown.
+            self._schedule_continuation(resumed, definition, resume_checkpoint)
+            return resumed
         return await self._resume_from_checkpoint(resumed, definition, resume_checkpoint)
 
     @staticmethod
@@ -242,7 +269,6 @@ class SupervisorReconciliationMixin(SupervisorHost):
                 broker=self._ephemeral_secrets,
                 clock=self._clock,
             ),
-            financial_operand=self._bound_financial_operand(snapshot.identity, definition),
             clock=self._clock,
             response_authority_issuer=self._response_authority_issuer,
             response_token_factory=self._response_token_factory,
@@ -252,7 +278,13 @@ class SupervisorReconciliationMixin(SupervisorHost):
             result_ref = await self._execute_with_deadlines(
                 identity=snapshot.identity,
                 context=context,
-                executor=resumable_executor.resume(request, checkpoint, executor_context),
+                executor=invoke_authorized(
+                    self._execution_authority,
+                    identity=snapshot.identity,
+                    request=request,
+                    action=AccessAction.RESUME,
+                    executor=lambda: resumable_executor.resume(request, checkpoint, executor_context),
+                ),
             )
         except OperationDeclarationError:
             raise
@@ -271,6 +303,7 @@ class SupervisorReconciliationMixin(SupervisorHost):
             advance=self._advance,
             acknowledge_cancellation=self._acknowledge_cancellation,
             set_cancellation_deferred=self._set_cancellation_deferred,
+            execution_authority=self._execution_authority,
         )
 
     async def _record_reconciliation(
@@ -309,6 +342,18 @@ class SupervisorReconciliationMixin(SupervisorHost):
         lease_evidence_ref: str,
         effect: OperationEffect = OperationEffect.UNKNOWN,
     ) -> OperationPersistedSnapshot:
+        definition = self._require_pinned_definition(snapshot)
+        if definition.transient_financial_operand is not None:
+            if snapshot.executor_entered_at is None:
+                effect = OperationEffect.NONE
+            elif snapshot.financial_requirement is not None and self._typed_financial_operands is not None:
+                proof = await self._typed_financial_operands.reconcile(
+                    snapshot.financial_requirement,
+                    definition.transient_financial_operand,
+                )
+                effect = proof.effect
+            else:
+                effect = OperationEffect.UNKNOWN
         classified = await self._record_reconciliation(
             snapshot,
             outcome=outcome,

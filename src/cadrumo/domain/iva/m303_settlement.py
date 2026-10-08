@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
 from ..calculations.registry.authority import PinnedAuthorityOperation
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
+
+if TYPE_CHECKING:
+    from ..calculations.registry.temporal import RevisionSelectionMetadata
 
 # Registry authority: M303 annual settlement ordering is resolved through the
 # generation-pinned revision directory; the authored revision remains external.
@@ -56,11 +61,10 @@ def _terminal_settlement_token(
     modelo = str(Modelo("303"))
     year = period.filing_year
     revision_for_context(modelo, filing_year=year, period=period.registry_token, on=period.end_date)
-    same_cadence = tuple(
-        candidate
-        for revision in modelo_directory(modelo).revisions
-        for token in revision.period_selector.periods_for_year(year)
-        if (candidate := Period.from_year_and_code(year, str(token))).kind is period.kind
+    same_cadence = _same_cadence_periods(
+        modelo_directory(modelo).revisions,
+        year=year,
+        kind=period.kind,
     )
     if not same_cadence:
         raise RegistryValidationError(
@@ -70,6 +74,20 @@ def _terminal_settlement_token(
     if terminal.registry_token != period.registry_token:
         revision_for_context(modelo, filing_year=year, period=terminal.registry_token, on=terminal.end_date)
     return terminal.registry_token
+
+
+def _same_cadence_periods(
+    revisions: Iterable[RevisionSelectionMetadata],
+    *,
+    year: int,
+    kind: PeriodKind,
+) -> tuple[Period, ...]:
+    return tuple(
+        candidate
+        for revision in revisions
+        for token in revision.period_selector.periods_for_year(year)
+        if (candidate := Period.from_year_and_code(year, str(token))).kind is kind
+    )
 
 
 def m303_annual_settlement_period_order(

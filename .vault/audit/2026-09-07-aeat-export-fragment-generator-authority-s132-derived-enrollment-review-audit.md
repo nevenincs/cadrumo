@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:c7b02938dfec909a3022c4d3e3c272763d3192c72e341621ef20c06293ead56e'
 related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-09-07-registry-temporal-coverage-enrolment-versus-declared-projection-research]]"
 ---
 

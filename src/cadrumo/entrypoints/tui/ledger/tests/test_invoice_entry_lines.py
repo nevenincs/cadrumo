@@ -1,4 +1,4 @@
-"""Multi-line invoice entry: typed lines reach the writer and read back in the detail view."""
+"""Multi-line invoice entry: typed lines reach the injected add door."""
 
 from __future__ import annotations
 
@@ -7,30 +7,25 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from pydantic import ValidationError
 from textual.widgets import Button, Input, Select, Static
 
-from .....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    DEFAULT_BUCKET_ID,
-    active_profile_isolated_backend_fixture,
-)
 from .....core.aggregation import IntracomOperationType
 from .....core.config import override_settings
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....core.i18n.render import lookup_translation
 from .....domain.iva.classification import InvoiceKind
 from ...components.host import ScreenHostApp
-from ...ledger_doors import LedgerRecordDoors, ledger_invoice_add_door
 from ..controller import LedgerWorkspaceController
 from ..invoice_entry import LedgerInvoiceEntryScreen
-from ..models import LedgerFlowState, LedgerInvoiceAddResultV1, LedgerInvoiceEntryV1, LedgerInvoiceLineEntryV1
-from ..record_views import LedgerInvoiceDetailScreen
+from ..models import (
+    LedgerFlowState,
+    LedgerInvoiceAddResultV1,
+    LedgerInvoiceEntryV1,
+    LedgerInvoiceLineEntryV1,
+)
 from ..workspace_injection import LedgerWorkspaceInjection
-from .test_ledger_selection_journey import _WorkspaceHostApp
 from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_isolated_backend = active_profile_isolated_backend_fixture()
 
 #: One invoice printed with two IVA rates: the case a single base and rate
 #: cannot represent without attributing the whole cuota to one rate.
@@ -62,23 +57,6 @@ def _typed(line: Mapping[str, str]) -> LedgerInvoiceLineEntryV1:
         subtotal=Decimal(line["subtotal"]),
         iva_rate=line["iva_rate"],
         iva_amount=Decimal(line["iva_amount"]),
-    )
-
-
-def _entry(*lines: Mapping[str, str]) -> LedgerInvoiceEntryV1:
-    return LedgerInvoiceEntryV1(
-        kind=InvoiceKind.RECEIVED,
-        counterparty_name="Papeleria Sol SL",
-        counterparty_nif="A58818501",
-        country_code="ES",
-        invoice_number="LINES-001",
-        invoice_date=date(2026, 3, 15),
-        taxable_base=None,
-        iva_rate=None,
-        lines=tuple(_typed(line) for line in lines),
-        operation_date=date(2026, 3, 14),
-        currency="EUR",
-        series="L",
     )
 
 
@@ -131,12 +109,12 @@ def _header(screen: LedgerInvoiceEntryScreen) -> None:
     )
 
 
-def _text(screen: LedgerInvoiceEntryScreen | LedgerInvoiceDetailScreen, selector: str) -> str:
+def _text(screen: LedgerInvoiceEntryScreen, selector: str) -> str:
     return str(screen.query_one(selector, Static).render())
 
 
 @pytest.mark.asyncio
-async def test_mixed_rate_lines_and_invoice_facts_reach_the_writer_as_typed() -> None:
+async def test_mixed_rate_lines_and_invoice_facts_reach_the_add_door_as_typed() -> None:
     door = _RecordingDoor()
     screen = _entry_screen(door)
     with override_settings(cadrumo_output_language="en"):
@@ -193,7 +171,9 @@ async def test_a_line_that_cannot_be_read_is_not_added_and_names_every_field() -
             await pilot.pause()
             refusal = _text(screen, "#ledger-refusal")
             assert "Quantity must be a number" in refusal
-            assert "Line IVA amount is required." in refusal
+            amount_label = lookup_translation("tui.ledger.invoice.line.field.iva_amount", locale="en")
+            assert amount_label is not None
+            assert f"{amount_label} is required." in refusal
             assert screen.lines == []
             assert "No lines entered" in _text(screen, "#ledger-invoice-lines")
             assert screen.query_one("#ledger-invoice-line-remove", Button).disabled
@@ -228,52 +208,105 @@ async def test_an_invoice_is_entered_by_lines_or_by_one_base_never_both_and_neve
 
 
 @pytest.mark.asyncio
-async def test_the_real_writer_keeps_every_line_and_the_detail_view_reads_them_back(
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """The per-rate breakdown survives the canonical writer and the canonical read."""
-    recorded = await ledger_invoice_add_door(DEFAULT_BUCKET_ID, operation)(_entry(*_LINES))
-
-    assert (recorded.base_total, recorded.iva_total, recorded.grand_total) == (
-        Decimal("15.00"),
-        Decimal("2.60"),
-        Decimal("17.60"),
-    )
-    doors = LedgerRecordDoors(bucket_id=DEFAULT_BUCKET_ID, operation=operation)
-    controller = LedgerWorkspaceController(
-        ledger_context(),
-        ledger_projection(),
-        LedgerWorkspaceInjection(review_action=ledger_review_action(), record_doors=doors),
-    )
+async def test_invoice_amounts_and_dates_refuse_every_shape_the_command_line_refuses() -> None:
+    door = _RecordingDoor()
+    screen = _entry_screen(door)
+    date_label = lookup_translation("tui.ledger.invoice.field.invoice_date", locale="en")
+    base_label = lookup_translation("tui.ledger.invoice.field.taxable_base", locale="en")
+    assert date_label is not None
+    assert base_label is not None
+    refused_dates = ("20260315", "2026-W11-7", "2026-03-32")
+    refused_amounts = ("1e3", "+5", "1_000", "NaN", "Infinity", "1.234", "10.005")
     with override_settings(cadrumo_output_language="en"):
-        detail = LedgerInvoiceDetailScreen(controller, doors, recorded.invoice_id)
-        async with _WorkspaceHostApp(detail).run_test(size=(110, 55)) as pilot:
-            await pilot.app.workers.wait_for_complete()
+        async with ScreenHostApp[None](screen).run_test(size=(110, 200)) as pilot:
             await pilot.pause()
-            rendered = _text(detail, "#ledger-record-detail")
-            refusal = _text(detail, "#ledger-refusal")
-    assert "1. Printer paper · 1 × 10.00 = 10.00 · IVA RATE_21 2.10" in rendered, refusal
-    assert "2. Reference book · 1 × 5.00 = 5.00 · IVA RATE_10 0.50" in rendered
-    assert "operation date 2026-03-14" in rendered
+            _header(screen)
+            for raw in refused_dates:
+                _fill(screen, invoice_date=raw, taxable_base="10.00", iva_rate="21")
+                screen.query_one("#ledger-invoice-review", Button).press()
+                await pilot.pause()
+                assert screen.flow_state is LedgerFlowState.EDITING, raw
+                assert f"{date_label} must be a date written YYYY-MM-DD." in _text(screen, "#ledger-refusal"), raw
+            for raw in refused_amounts:
+                _fill(screen, invoice_date="2026-03-15", taxable_base=raw, iva_rate="21")
+                screen.query_one("#ledger-invoice-review", Button).press()
+                await pilot.pause()
+                assert screen.flow_state is LedgerFlowState.EDITING, raw
+                assert f"{base_label} must be a number" in _text(screen, "#ledger-refusal"), raw
+    assert not door.entries
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ("line", "refusal"),
-    [
-        pytest.param(
-            {**_LINES[0], "subtotal": "11.00"},
-            "subtotal must equal quantity",
-            id="subtotal-disagrees-with-quantity-and-price",
-        ),
-        pytest.param({**_LINES[0], "iva_rate": "RATE_99"}, "IVA rate slot is not governed", id="ungoverned-rate-slot"),
-    ],
-)
-async def test_the_real_writer_refuses_a_line_the_domain_line_refuses_and_records_nothing(
-    line: Mapping[str, str],
-    refusal: str,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    with pytest.raises(ValidationError, match=refusal):
-        await ledger_invoice_add_door(DEFAULT_BUCKET_ID, operation)(_entry(line, _LINES[1]))
-    assert await LedgerRecordDoors(bucket_id=DEFAULT_BUCKET_ID, operation=operation).invoices() == ()
+async def test_a_line_number_outside_the_canonical_grammar_is_refused_but_sub_cent_precision_is_kept() -> None:
+    door = _RecordingDoor()
+    screen = _entry_screen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(110, 200)) as pilot:
+            await pilot.pause()
+            for raw in ("1e3", "+5", "1_000", "NaN", "-Infinity"):
+                _type_line(screen, {**_LINES[0], "quantity": raw})
+                await pilot.pause()
+                assert "Quantity must be a number" in _text(screen, "#ledger-refusal"), raw
+                assert screen.lines == [], raw
+            _type_line(screen, {**_LINES[0], "quantity": "8", "unit_price": "1.25", "subtotal": "10.00"})
+            await pilot.pause()
+            _type_line(screen, {**_LINES[1], "quantity": "40", "unit_price": "0.125", "subtotal": "5.00"})
+            await pilot.pause()
+            assert [line.unit_price for line in screen.lines] == [Decimal("1.25"), Decimal("0.125")]
+    assert not door.entries
+
+
+@pytest.mark.asyncio
+async def test_an_issued_business_premises_lease_reaches_the_add_door_with_its_premises() -> None:
+    """The form states the lessor's lease facts the add operation takes (RD 1065/2007 art. 34.1.d)."""
+    door = _RecordingDoor()
+    screen = _entry_screen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(110, 220)) as pilot:
+            await pilot.pause()
+            _header(screen)
+            screen.query_one("#ledger-invoice-kind", Select).value = InvoiceKind.ISSUED.value
+            screen.query_one("#ledger-invoice-lease", Select).value = str(True)
+            screen.query_one("#ledger-invoice-situacion-inmueble", Select).value = "1"
+            _fill(screen, referencia_catastral="9872023VH5797S0001WX")
+            _type_line(screen, _LINES[0])
+            await pilot.pause()
+
+            screen.query_one("#ledger-invoice-review", Button).press()
+            await pilot.pause()
+            assert screen.flow_state is LedgerFlowState.CONFIRMING, _text(screen, "#ledger-refusal")
+            assert "Business premises lease · situación 1 · referencia catastral 9872023VH5797S0001WX" in _text(
+                screen, "#ledger-invoice-summary"
+            )
+            screen.query_one("#ledger-invoice-confirm", Button).press()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+
+    (entry,) = door.entries
+    assert entry.kind is InvoiceKind.ISSUED
+    assert entry.arrendamiento_local_negocio is True
+    assert entry.situacion_inmueble == "1"
+    assert entry.referencia_catastral == "9872023VH5797S0001WX"
+
+
+@pytest.mark.asyncio
+async def test_an_invoice_entered_without_the_lease_choice_states_no_lease() -> None:
+    door = _RecordingDoor()
+    screen = _entry_screen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(110, 220)) as pilot:
+            await pilot.pause()
+            _header(screen)
+            _type_line(screen, _LINES[0])
+            await pilot.pause()
+            screen.query_one("#ledger-invoice-review", Button).press()
+            await pilot.pause()
+            assert "Business premises lease" not in _text(screen, "#ledger-invoice-summary")
+            screen.query_one("#ledger-invoice-confirm", Button).press()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+
+    (entry,) = door.entries
+    assert entry.arrendamiento_local_negocio is False
+    assert entry.situacion_inmueble is None
+    assert entry.referencia_catastral is None

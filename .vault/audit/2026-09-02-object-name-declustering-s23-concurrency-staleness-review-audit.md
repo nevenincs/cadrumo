@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2115db528115ef4d51bcc6571df2060bf3adda2d0e05191844df23b529d0faa3'
-related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
+body_hash: 'sha256:20d85f2cd257242e1889d897b2802b7a48b5b48142a4a05e1ec0f8dbbbc39be8'
+related: []
 ---
 
 # `object-name-declustering` audit: `S23 concurrency staleness review`
@@ -97,10 +96,7 @@ inventory digest across manifest, receipt, and replay.
 
 ## Final remediation re-review
 
-The committed replay detector now creates `dev/concurrent_helper.py` with the distinct
-singular declaration `helper_runtime`; the focused test passes and proves that the new Python
-file is preserved while the selected declaration is replayed. This improves the fixture from
-plain byte churn to a real source-census mutation.
+This improves the fixture from plain byte churn to a real source-census mutation.
 
 Open: `end-to-end-churn-teeth` remains medium. The test continues to call
 `replay_object_name_component` with the pre-mutation `inventory` and pre-mutation `component`

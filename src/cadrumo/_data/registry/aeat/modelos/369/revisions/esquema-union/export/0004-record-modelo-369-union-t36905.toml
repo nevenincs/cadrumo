@@ -1,0 +1,1388 @@
+[[revisions.esquema-union.export_layouts]]
+id = 'modelo-369-union-fichero'
+
+[[revisions.esquema-union.export_layouts.records]]
+id = 'modelo-369-union-t36905'
+record_type = 't36905-un'
+order = 2
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36905-1-inicio-del-identificador-de-modelo-y-pag'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36905-3-modelo'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '369'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36905-6-pagina'
+offset = 6
+length = 2
+kind = 'literal'
+literal = '05'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36905-8-fin-de-identificador-de-modelo'
+offset = 8
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'modelo-369-union-t36905-9-complementaria'
+offset = 9
+length = 1
+kind = 'header'
+producer_key = 'amendment_evidence.is_complementaria'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-10-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig'
+offset = 10
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-12-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo'
+offset = 12
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-17-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-2'
+offset = 17
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-18-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base'
+offset = 18
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-35-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota'
+offset = 35
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-52-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-2'
+offset = 52
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-54-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-3'
+offset = 54
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-59-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-4'
+offset = 59
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-60-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-2'
+offset = 60
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-77-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-2'
+offset = 77
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-94-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-3'
+offset = 94
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-96-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-5'
+offset = 96
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-5'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-101-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-6'
+offset = 101
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-102-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-3'
+offset = 102
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-119-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-3'
+offset = 119
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-136-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-4'
+offset = 136
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-138-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-7'
+offset = 138
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-7'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-143-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-8'
+offset = 143
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-8'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-144-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-4'
+offset = 144
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-4'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-161-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-4'
+offset = 161
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-4'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-178-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-5'
+offset = 178
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-180-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-9'
+offset = 180
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-9'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-185-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-10'
+offset = 185
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-10'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-186-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-5'
+offset = 186
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-5'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-203-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-5'
+offset = 203
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-5'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-220-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-6'
+offset = 220
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-222-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-11'
+offset = 222
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-11'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-227-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-12'
+offset = 227
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-12'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-228-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-6'
+offset = 228
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-6'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-245-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-6'
+offset = 245
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-6'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-262-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-7'
+offset = 262
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-7'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-264-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-13'
+offset = 264
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-13'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-269-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-14'
+offset = 269
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-14'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-270-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-7'
+offset = 270
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-7'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-287-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-7'
+offset = 287
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-7'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-304-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-8'
+offset = 304
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-8'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-306-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-15'
+offset = 306
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-15'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-311-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-16'
+offset = 311
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-16'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-312-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-8'
+offset = 312
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-8'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-329-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-8'
+offset = 329
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-8'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-346-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-9'
+offset = 346
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-9'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-348-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-17'
+offset = 348
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-17'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-353-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-18'
+offset = 353
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-18'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-354-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-9'
+offset = 354
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-9'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-371-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-9'
+offset = 371
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-9'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-388-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-10'
+offset = 388
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-10'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-390-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-19'
+offset = 390
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-19'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-395-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-20'
+offset = 395
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-20'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-396-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-10'
+offset = 396
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-10'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-413-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-10'
+offset = 413
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-10'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-430-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-11'
+offset = 430
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-11'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-432-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-21'
+offset = 432
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-21'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-437-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-22'
+offset = 437
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-22'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-438-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-11'
+offset = 438
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-11'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-455-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-11'
+offset = 455
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-11'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-472-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-12'
+offset = 472
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-12'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-474-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-23'
+offset = 474
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-23'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-479-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-24'
+offset = 479
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-24'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-480-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-12'
+offset = 480
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-12'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-497-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-12'
+offset = 497
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-12'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-514-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-13'
+offset = 514
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-13'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-516-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-25'
+offset = 516
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-25'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-521-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-26'
+offset = 521
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-26'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-522-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-13'
+offset = 522
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-13'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-539-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-13'
+offset = 539
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-13'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-556-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-14'
+offset = 556
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-14'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-558-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-27'
+offset = 558
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-27'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-563-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-28'
+offset = 563
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-28'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-564-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-14'
+offset = 564
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-14'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-581-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-14'
+offset = 581
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-14'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-598-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-15'
+offset = 598
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-15'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-600-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-29'
+offset = 600
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-29'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-605-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-30'
+offset = 605
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-30'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-606-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-15'
+offset = 606
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-15'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-623-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-15'
+offset = 623
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-15'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-640-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-16'
+offset = 640
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-16'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-642-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-31'
+offset = 642
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-31'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-647-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-32'
+offset = 647
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-32'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-648-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-16'
+offset = 648
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-16'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-665-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-16'
+offset = 665
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-16'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-682-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-17'
+offset = 682
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-17'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-684-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-33'
+offset = 684
+length = 5
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-33'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-689-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-34'
+offset = 689
+length = 1
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-tipo-34'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-690-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-17'
+offset = 690
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-base-17'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-707-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-17'
+offset = 707
+length = 17
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-cuota-17'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[[revisions.esquema-union.export_layouts.records.fields]]
+id = 'm369-union-05-724-4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-18'
+offset = 724
+length = 2
+kind = 'binding'
+binding = 'modelo-369-union-fichero.4-entregas-de-bienes-expedidos-o-transportados-desde-emid-espana-codig-18'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-610-2021:art-1']
+source_refs = ['aeat-dr-369-2021']
+
+[revisions.esquema-union.export_layouts.records.row_field_casilla_ids]

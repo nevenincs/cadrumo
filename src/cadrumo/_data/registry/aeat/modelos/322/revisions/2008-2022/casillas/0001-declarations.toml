@@ -393,6 +393,8 @@ number = "38"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_iva_devengado_total_cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+input_kind = "computed"
+formula = "modelo-322-printed-38"
 
 [[revisions."2008-2022".casillas]]
 id = "39"
@@ -795,6 +797,8 @@ number = "62"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "m322_liquidacion_iva_deducible_total_a_deducir"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+input_kind = "computed"
+formula = "modelo-322-printed-62"
 
 
 [[revisions."2008-2022".casillas]]
@@ -804,6 +808,8 @@ number = "63"
 section = ["iva", "regimen_general", "resultado"]
 semantic_role = "m322_liquidacion_continuacion_diferencia_total_cuota_devengada_menos_total_a_deducir"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+input_kind = "computed"
+formula = "modelo-322-printed-63"
 
 [[revisions."2008-2022".casillas]]
 id = "64"
@@ -821,6 +827,8 @@ number = "65"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "m322_liquidacion_atribuible_administracion_del_estado_cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+input_kind = "computed"
+formula = "modelo-322-printed-65"
 
 [[revisions."2008-2022".casillas]]
 id = "66"
@@ -845,6 +853,8 @@ number = "68"
 section = ["iva", "regimen_general", "resultado"]
 semantic_role = "m322_liquidacion_continuacion_resultado"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+input_kind = "computed"
+formula = "modelo-322-printed-68"
 
 [[revisions."2008-2022".casillas]]
 id = "69"
@@ -861,6 +871,8 @@ number = "70"
 section = ["iva", "regimen_general", "resultado"]
 semantic_role = "m322_resultado_autoliquidacion"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+input_kind = "computed"
+formula = "modelo-322-printed-70"
 
 [[revisions."2008-2022".casillas]]
 id = "700"
@@ -1013,6 +1025,8 @@ number = "717"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_1"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_1_suma_de_deducciones_cuota_deducible"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+input_kind = "computed"
+formula = "modelo-322-printed-717"
 
 [[revisions."2008-2022".casillas]]
 id = "718"
@@ -1165,6 +1179,8 @@ number = "735"
 section = ["iva", "deducciones", "sectores_diferenciados", "grupo_2"]
 semantic_role = "m322_actividades_con_regimenes_de_deduccion_diferenciados_iva_deducible_grupo_2_suma_de_deducciones_cuota_deducible"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+input_kind = "computed"
+formula = "modelo-322-printed-735"
 
 [[revisions."2008-2022".casillas]]
 # Box [73] is carried by the 2022 diseno and dropped by the 2023 one, so it
@@ -1266,6 +1282,8 @@ number = "88"
 section = ["iva", "resumen_anual", "operaciones"]
 semantic_role = "m322_operaciones_ejercicio_total_volumen_operaciones"
 legal_refs = ["ley-37-1992:art-121", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+input_kind = "computed"
+formula = "modelo-322-printed-88"
 
 [[revisions."2008-2022".casillas]]
 id = "89"
@@ -1495,6 +1513,11 @@ section = ["identificacion"]
 data_type = "text"
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
+[revisions."2008-2022".casillas.constraints]
+sign = "any"
+max_length = 1
+enum = ["1", "2"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 [[revisions."2008-2022".casillas]]
 id = "decl.grupo-numero"
 continuidad_id = "m322-identificacion-numero-grupo"
@@ -1522,6 +1545,11 @@ section = ["identificacion"]
 data_type = "text"
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-103"]
 
+[revisions."2008-2022".casillas.constraints]
+sign = "any"
+max_length = 1
+enum = ["0", "1", "2"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 [[revisions."2008-2022".casillas]]
 id = "decl.redeme-inscrito"
 continuidad_id = "m322-identificacion-redeme-inscrito"
@@ -1673,3 +1701,71 @@ input_kind = "computed"
 internal_only = true
 formula = "modelo-322-iva-resultado-regimen-general"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+[[revisions."2008-2022".casillas]]
+id = "decl.sin-actividad"
+number = "sin-actividad"
+continuidad_id = "m322-sin-actividad"
+section = ["sin_actividad"]
+data_type = "text"
+input_kind = "manual"
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-322-2021-form-pdf"]
+
+[revisions."2008-2022".casillas.constraints]
+max_length = 1
+enum = ["X", ""]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+[[revisions."2008-2022".casillas]]
+id = "actividad.principal.descripcion"
+number = "papel.actividad.principal.descripcion"
+continuidad_id = "m322-papel-actividad-principal-descripcion"
+section = ["actividades"]
+data_type = "text"
+input_kind = "informational"
+semantic_role = "m322_papel_actividad_descripcion"
+source_refs = ["boe-modelo-322-2021-form-pdf"]
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-1.descripcion"
+number = "papel.actividad.otras-1.descripcion"
+continuidad_id = "m322-papel-actividad-otras-1-descripcion"
+section = ["actividades"]
+data_type = "text"
+input_kind = "informational"
+semantic_role = "m322_papel_actividad_descripcion"
+source_refs = ["boe-modelo-322-2021-form-pdf"]
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-2.descripcion"
+number = "papel.actividad.otras-2.descripcion"
+continuidad_id = "m322-papel-actividad-otras-2-descripcion"
+section = ["actividades"]
+data_type = "text"
+input_kind = "informational"
+semantic_role = "m322_papel_actividad_descripcion"
+source_refs = ["boe-modelo-322-2021-form-pdf"]
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-3.descripcion"
+number = "papel.actividad.otras-3.descripcion"
+continuidad_id = "m322-papel-actividad-otras-3-descripcion"
+section = ["actividades"]
+data_type = "text"
+input_kind = "informational"
+semantic_role = "m322_papel_actividad_descripcion"
+source_refs = ["boe-modelo-322-2021-form-pdf"]
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-4.descripcion"
+number = "papel.actividad.otras-4.descripcion"
+continuidad_id = "m322-papel-actividad-otras-4-descripcion"
+section = ["actividades"]
+data_type = "text"
+input_kind = "informational"
+semantic_role = "m322_papel_actividad_descripcion"
+source_refs = ["boe-modelo-322-2021-form-pdf"]
+[[revisions."2008-2022".casillas]]
+id = "actividad.otras-5.descripcion"
+number = "papel.actividad.otras-5.descripcion"
+continuidad_id = "m322-papel-actividad-otras-5-descripcion"
+section = ["actividades"]
+data_type = "text"
+input_kind = "informational"
+semantic_role = "m322_papel_actividad_descripcion"
+source_refs = ["boe-modelo-322-2021-form-pdf"]

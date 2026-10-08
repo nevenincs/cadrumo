@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#bundled-data-consumers'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:1bfc0da2ca86af5f4dce1188f9ed1d201aa45b609c7d965cb9460871432b861c'
+body_hash: 'sha256:954d010c708de0506c62f1c38bd1d9628466989999da1a7ee163d5544e000e26'
 related: []
 ---
 
@@ -18,7 +18,7 @@ to an actual runtime consumer, to settle a concern that docs-generated or
 superseded material had been compiled into production. Five subtrees were
 audited: `registry/`, `corpus/`, `manual_corpus_text/`, `terminology/` and
 `agent/`. Consumption was traced through the three bundled-data seams in
-`src/cadrumo/core/resources/_boundary.py` (`bundled_path`, `packaged_data`,
+The retired module (`bundled_path`, `packaged_data`,
 `resolve_corpus_binary`), through registry `corpus_ref` grounding strings, and
 through directory-scanning loaders. Reference integrity was then verified
 programmatically rather than by inspection.
@@ -29,10 +29,10 @@ programmatically rather than by inspection.
 
 All five subtrees resolve to live readers. `registry/` is loaded whole by
 `ValidatedRegistryAuthority` from roughly twenty call sites. `terminology/concepts/`
-is read by `src/cadrumo/application/corpus_search/_terminology.py` and surfaced by
+is read by the retired module and surfaced by
 the MCP terminology search tool. `manual_corpus_text/` is read by
-`src/cadrumo/domain/calculations/registry/_validate_evidence.py`. `agent/` is
-scanned by `src/cadrumo/agent/__init__.py`. Within `corpus/`, `normatives/html` is
+The retired module. `agent/` is
+scanned by the retired module. Within `corpus/`, `normatives/html` is
 scanned by the lexical index, `aeat_official` backs the einvoice record schemas and
 several core code tables, `manuals` is catalogue-driven, and `manual_oracles` plus
 `parity_replays` back external grounding. No superseded or docs-generated tree was
@@ -62,22 +62,21 @@ the corpus sidecar-freshness suite, so they are not a gap.
 
 Five docstrings described the bundled harness root as `aeat/_data/agent/`. The
 Python package is `cadrumo`; `aeat` names only the CLI executable, so the path was
-never correct. Corrected in `src/cadrumo/agent/__init__.py`,
-`src/cadrumo/entrypoints/mcp/_resources.py`,
-`src/cadrumo/entrypoints/mcp/_harness_tools.py` and the agent harness test.
+never correct. Corrected in the retired module,
+The retired module and the agent harness test.
 
 ### bundled-data-consumers | low | Obsolete placeholder and build residue in the data tree
 
 `registry/aeat/authorization.d/.gitkeep` declared itself as keeping an empty
 directory tracked, but the directory now holds thirty per-modelo enrollment
 fragments. Its default-deny note is already the governing principle documented in
-`src/cadrumo/core/access_gate/_authorization.py`, so the file was removed without
+The retired module, so the file was removed without
 losing the statement. Four orphaned bytecode files from crashed parallel runs were
 also cleared from the corpus test cache directory.
 
 ### bundled-data-consumers | low | Shipped-tree test reached a private dev symbol
 
-`src/cadrumo/_data/corpus/tests/test_extraction_sidecar_freshness.py` imported the
+The retired test imported the
 private `_extract_raw_text` from `dev/corpus/extract_manual_corpus_text.py`. The
 gate legitimately needs that exact extraction to prove committed sidecars still
 equal current output, so the symbol was promoted to the public `extract_raw_text`

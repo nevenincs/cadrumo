@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#m349-legal-grounding-debt'
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:f0319d417ceb3e1c653e2b3996a6d8e654f12138786ac3dd3a4c6084052524ad'
+modified: '2026-10-03'
+body_hash: 'sha256:a1f130465c013818df07962995478bfd592e994845b6af4abd2595264acfc50c'
 related:
   - "[[2026-06-03-m349-payable-invoice-authoring-research]]"
 ---
@@ -30,9 +30,8 @@ Executable registry inventory over Modelo 349 `2020-y-siguientes` reports:
 
 The current invoice binding files are:
 
-- `src/aeat/_data/registry/aeat/modelos/349/revisions/2020-y-siguientes/bindings/0007-bindings.toml`
   for the 17 `collectible_invoice` bindings.
-- `src/aeat/_data/registry/aeat/modelos/349/revisions/2020-y-siguientes/bindings/0008-payable-bindings.toml`
+
   for the 17 `payable_invoice` mirror bindings.
 
 Both binding sets carry the substantive M349 ref set:
@@ -108,7 +107,7 @@ checked the required legal-ref subsets across all invoice bindings, the
 completeness manifest, and the legal catalogue.
 
 Focused registry test coverage for the same current state lives in
-`src/aeat/domain/calculations/registry/tests/test_modelo_349_registry.py`,
+
 including assertions that the revision has 17 `collectible_invoice` and
 17 `payable_invoice` invoice bindings.
 

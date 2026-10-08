@@ -63,6 +63,11 @@ _UNRESOLVED_ACTIVITY_STATES = frozenset(
 )
 
 
+def _is_art109_ratio_parameter(parameter: ParameterDefinition) -> bool:
+    """Keep the selected ratio's Art. 109 legal-reference filter."""
+    return parameter.data_type == "ratio" and any("109" in str(legal_ref) for legal_ref in parameter.legal_refs)
+
+
 def _art109_registry_declarations(
     *,
     filing_year: int,
@@ -75,11 +80,7 @@ def _art109_registry_declarations(
         filing_year=filing_year,
         period=period.registry_token,
     )
-    ratio_parameters = tuple(
-        parameter
-        for parameter in revision.parameters
-        if parameter.data_type == "ratio" and any("109" in str(legal_ref) for legal_ref in parameter.legal_refs)
-    )
+    ratio_parameters = tuple(parameter for parameter in revision.parameters if _is_art109_ratio_parameter(parameter))
     if len(ratio_parameters) != 1:
         raise RegistryValidationError(
             f"selected Modelo 130 revision {revision.id} does not declare one Art. 109 ratio parameter",

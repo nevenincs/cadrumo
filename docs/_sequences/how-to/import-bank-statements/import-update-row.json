@@ -55,7 +55,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.update",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_event_ids": [
             "51bb581f6eb1806a49fcd5105e639fc5aa44520bae30174e14209ac995f7d355"
@@ -103,7 +111,7 @@
           "transaction_id": "86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -137,7 +145,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.update",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_event_ids": [
             "6082dd1e06c1a8299d25b7bfa3ac07495b32841016b4dc538a50ccfc9a81744d"
@@ -185,7 +201,7 @@
           "transaction_id": "86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -209,7 +225,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\t86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629\nDate\t2026-03-21\nAmount\t121\nDescription\tCorrected description\nReview status\tpending\n"
+      "text": "ID\t86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629\nDate\t2026-03-21\nAmount\t121\nDescription\tCorrected description\nReview status\tpending\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -225,7 +241,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "review_status": "pending",
@@ -270,7 +294,7 @@
           "transaction_id": "86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

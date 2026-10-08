@@ -127,7 +127,10 @@ from cadrumo.domain.calculations.registry.formula_runtime import calculate_regis
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from cadrumo.domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -142,6 +145,7 @@ from cadrumo.entrypoints.adapter_composition import build_retencion_observation_
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -331,7 +335,8 @@ def _seed_115_retencion_observations(ports: RetencionObservationPorts) -> Decima
     for quarter, accrued_on, nif in zip(
         ("1T", "3T"), (f"{_YEAR}-03-15", f"{_YEAR}-09-15"), _M180_PERCEPTOR_NIFS, strict=True
     ):
-        ports.repository.replace_observations(
+        replace_retencion_observations(
+            ports.repository,
             modelo="115",
             filing_year=_YEAR,
             period=Period.from_year_and_code(_YEAR, quarter),
@@ -413,11 +418,20 @@ def _m303_wallet_decision() -> IvaCompensationReconciliationDecision:
         wallet_amount=Decimal("0.00"),
         local_recurrence_amount=None,
         override_amount=None,
-        divergence="match",
+        divergence="wallet_only",
         blocked=False,
         stale_wallet=False,
-        reason_identity="aeat_wallet_validated",
+        reason_identity="aeat_wallet_uncrosschecked",
         wallet_captured_at=_PRORRATA_T1,
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="aeat_wallet",
+                amount=Decimal("0.00"),
+                source_locator="aeat-wallet:prorrata-parity-synthetic-fixture",
+                captured_at=_PRORRATA_T1,
+                registry_snapshot_refs=(),
+            ),
+        ),
         decided_at=_PRORRATA_T1,
     )
 

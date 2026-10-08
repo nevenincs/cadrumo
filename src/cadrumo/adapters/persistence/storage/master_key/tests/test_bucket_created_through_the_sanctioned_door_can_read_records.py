@@ -38,7 +38,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 
-from ......application.user_profile.login_session import login_profile
+from ......application.user_profile.login_session import authenticate_profile_for_invocation
 from ......application.user_profile.profile_record_repository import close_active_profile_record_session
 from ......application.user_profile.registration import register_profile_with_credentials
 from ......application.workflow.persistence import workflow_state_repository
@@ -81,7 +81,7 @@ def test_bucket_created_through_the_sanctioned_door_can_read_records(tmp_path: P
         )
         assert outcome.setup_state is ProfileSetupState.INCOMPLETE
 
-        login_profile(
+        authenticate_profile_for_invocation(
             name=_LABEL,
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
@@ -164,7 +164,7 @@ def test_readback_depends_on_the_on_disk_custody_envelope(tmp_path: Path) -> Non
         # older one: a custody envelope that does not parse as the current
         # record is corruption now, not a shape to tolerate.
         with pytest.raises(ProfileCustodyRecordError, match="current-format record"):
-            login_profile(
+            authenticate_profile_for_invocation(
                 name=_LABEL,
                 passphrase_callback=lambda: _CREDENTIAL_INPUT,
                 profile_decode_context=_profile_decode_context_for_test,

@@ -7,7 +7,7 @@ import inspect
 
 import pytest
 
-from ...command_spec import DefaultKind, SchemaState
+from ...command_shared_contracts import DefaultKind, SchemaState
 from .._check_command_specs import CONFIG_CHECK_COMMAND_SPECS
 from .._collab_command_specs import CONFIG_COLLAB_COMMAND_SPECS
 from .._custody_command_specs import CONFIG_CUSTODY_COMMAND_SPECS
@@ -58,5 +58,5 @@ def test_misc_config_target_schemas_resolve_and_own_canonical_identities() -> No
         assert schema.state is SchemaState.TARGET
         assert schema.target is not None
         assert schema.identity is not None
-        assert schema.identity.replace(".", "_") == spec.key
+        assert schema.identity.replace(".", "_").replace("-", "_") == spec.key
         assert inspect.isclass(getattr(importlib.import_module(schema.target.module), schema.target.qualname))

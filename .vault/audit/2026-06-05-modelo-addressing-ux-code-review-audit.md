@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#modelo-addressing-ux'
 date: '2026-06-05'
-modified: '2026-07-17'
-body_hash: 'sha256:b6e8b963cf8d2032d936d2a3b6ce649a72dfc97e4cec896f6ca675beaf1e2be1'
+modified: '2026-10-03'
+body_hash: 'sha256:40b4183653202dacf017263409af3232b57e990c673c97697f66bc603541bf39'
 related:
-  - '[[2026-06-05-modelo-addressing-ux-plan]]'
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-research]]'
 ---
@@ -27,7 +26,7 @@ Recommended follow-up: continue with W02.P04.S14 by extracting registry discover
 
 ## MODELO-ADDR-003 | LOW | S41 contract slice review passed with no blocking findings
 
-Reviewed the `S41` addressing-contract diff against the accepted natural-key addressing ADR and the June 5 continuation plan. The slice is additive: it defines typed visible filing targets, exact work-unit targets, revision picks, resolved work projections, and resolved revision projections in `src/aeat/application/modelo/_work_addressing.py` without rewiring CLI behavior or changing persistence authority.
+Reviewed the `S41` addressing-contract diff against the accepted natural-key addressing ADR and the June 5 continuation plan. The slice is additive: it defines typed visible filing targets, exact work-unit targets, revision picks, resolved work projections, and resolved revision projections in the retired module without rewiring CLI behavior or changing persistence authority.
 
 One contract hardening point was addressed before closure: explicit revision picks now require a `calculation_revision_id`, and non-explicit picks reject exact revision IDs. Ruff, Python compilation, and focused selector tests passed after the correction.
 
@@ -35,7 +34,7 @@ No unresolved review finding blocks closing `W01.P11.S41`.
 
 ## MODELO-ADDR-004 | LOW | S42 private facade implementation review passed
 
-Reviewed the `S42` work-target facade functions in `src/aeat/application/modelo/_work_addressing.py`. The implementation keeps resolution behind the existing selector boundary: supported target shapes are coerced into `ModeloWorkAddress`, visible/exact targets resolve through `resolve_modelo_work_address`, and projection helpers expose visible metadata without changing persistence identity or creating a new storage path.
+Reviewed the `S42` work-target facade functions in the retired module. The implementation keeps resolution behind the existing selector boundary: supported target shapes are coerced into `ModeloWorkAddress`, visible/exact targets resolve through `resolve_modelo_work_address`, and projection helpers expose visible metadata without changing persistence identity or creating a new storage path.
 
 The remaining architectural requirement is public export through the top-level modelo application package before CLI or external consumers use these names. That is tracked by `W01.P12.S44` and should be executed immediately so consumers do not import private submodules.
 
@@ -43,7 +42,7 @@ No unresolved review finding blocks closing `W01.P12.S42`.
 
 ## MODELO-ADDR-005 | LOW | S44 public application facade export review passed
 
-Reviewed the `S44` export changes in `src/aeat/application/modelo/__init__.py`. The new addressing contracts and facade helpers are available from the top-level modelo application package, which preserves the hexagonal boundary for CLI and external application consumers. Consumers should import these names from `aeat.application.modelo`, not from private `_work_addressing` modules.
+Reviewed the `S44` export changes in the retired module. The new addressing contracts and facade helpers are available from the top-level modelo application package, which preserves the hexagonal boundary for CLI and external application consumers. Consumers should import these names from `aeat.application.modelo`, not from private `_work_addressing` modules.
 
 The same file also contains registry discovery exports from an existing concurrent slice; those were not reverted or reworked. Ruff, a public import smoke test, and focused selector tests passed.
 
@@ -93,7 +92,7 @@ Reviewed the workflow resume application boundary after the central resolver add
 
 Natural-key visible targets still refuse ambiguous workflow-run matches with candidate guidance. Legacy exact work-unit addressing preserves latest-run compatibility, while exact workflow run ids remain a direct resume escape hatch.
 
-Verification passed for scoped Ruff, `src/aeat/application/workflow/test_resume.py`, and a public import smoke test for the workflow resume facade. No unresolved review finding blocks closing `W04.P08.S28`.
+Verification passed for scoped Ruff, the retired test, and a public import smoke test for the workflow resume facade. No unresolved review finding blocks closing `W04.P08.S28`.
 
 ## MODELO-RESUME-010 | LOW | W04.P08 resume CLI and projection review passed
 
@@ -107,7 +106,7 @@ Verification passed for scoped Ruff, focused CLI/application resume tests, local
 
 Reviewed the new architecture-boundary guard for extracted modelo CLI modules. It blocks raw exact-id regex use outside `_modelo_cli_support.py` and blocks legacy selector calls such as direct work-unit lookup, direct calculation-revision lookup, latest workflow-run selection, and workflow-period conversion from extracted modules. The guard intentionally scopes to extracted modules so the remaining `_modelo.py` legacy root debt is still represented by open W05 rows rather than converted into an always-failing broad test.
 
-Verification passed for scoped Ruff and `src/aeat/entrypoints/cli/test_architecture_boundaries.py`. No unresolved review finding blocks closing `W05.P13.S49`.
+Verification passed for scoped Ruff and the retired test. No unresolved review finding blocks closing `W05.P13.S49`.
 
 ## MODELO-CENTRAL-012 | LOW | S50 exact audit and registry repair review passed
 

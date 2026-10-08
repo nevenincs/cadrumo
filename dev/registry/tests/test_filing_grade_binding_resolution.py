@@ -23,7 +23,6 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.binding_provider_registration import (
     RouteOwnership,
-    provider_model_for,
     registration_for,
 )
 from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
@@ -158,7 +157,7 @@ def test_every_filing_grade_binding_has_a_validated_selector_and_calculation_bou
 def _validate_selectors(records: tuple[_FilingGradeBinding, ...], violations: list[str]) -> None:
     """Collect the selector and provider-model violations of one binding corpus."""
     for record in records:
-        provider_model = provider_model_for(record.binding.source)
+        provider_model = registration_for(record.binding.source).provider_model
         if not isinstance(record.binding.provider, provider_model):
             violations.append(f"{record.modelo_id}/{record.revision_id}/{record.binding.id}: provider model mismatch")
         diagnostics = validate_binding_selector_shape(record.binding)
@@ -179,7 +178,7 @@ def test_selector_gate_bites_when_a_live_filing_binding_is_routed_to_the_wrong_f
     mutated_provider = target.provider.model_copy(update={"kind": BindingSourceKind.MANUAL_INPUT})
     mutated = target.model_copy(update={"provider": mutated_provider})
 
-    assert not isinstance(mutated.provider, provider_model_for(mutated.source))
+    assert not isinstance(mutated.provider, registration_for(mutated.source).provider_model)
 
 
 def test_every_filing_grade_binding_source_is_enrolled() -> None:

@@ -23,13 +23,14 @@ classifiers = [
 ]
 
 dependencies = [
-  # The command-bearing distribution is complete by default. The two data
+  # The command-bearing distribution is complete by default. The three data
   # companions are separate files only to stay below the package-index
   # per-file cap; they are exact-version runtime dependencies because the CLI
-  # cannot perform grounded tax work without both corpus slices.
+  # cannot perform grounded tax work without every corpus slice.
   "anyio>=4.5,<5",
   "cadrumo-data-manuals==0.6.0", # x-release-please-version
   "cadrumo-data-official==0.6.0", # x-release-please-version
+  "cadrumo-data-normatives==0.6.0", # x-release-please-version
   "mcp>=2,<3",
   # Rust-backed TOML parser behind the canonical `cadrumo.core.toml` boundary,
   # the only place TOML is parsed; several times faster than the stdlib parser.
@@ -67,6 +68,9 @@ dependencies = [
   # libsecret). Pure-Python, gracefully degrades when no usable backend
   # is detected; the substrate's file fallback covers headless / CI.
   "keyring>=25.6.0,<26",
+  # Native Secret Service protocol calls and encrypted session codec.
+  "jeepney>=0.9,<0.10; sys_platform == 'linux'",
+  "secretstorage>=3.5,<3.6; sys_platform == 'linux'",
   # The Windows ACL hardening path imports pywin32 directly. Keep it in the
   # base runtime on Windows rather than relying on mcp's transitive supply.
   "pywin32>=311 ; sys_platform == 'win32'",
@@ -77,7 +81,9 @@ dependencies = [
   # source-citation validation.
   "pypdfium2>=5.7.1,<6",
   # PDF sanitiser; content-stream rewriter for PII redaction.
-  "pikepdf>=10.0.0,<11",
+  # Upstream 10.14 wheels require macOS 15; retain the declared macOS 14 floor.
+  "pikepdf==10.13.0.post1; sys_platform == 'darwin'",
+  "pikepdf>=10.0.0,<11; sys_platform != 'darwin'",
   # Imaging primitive behind pypdfium2's `to_pil()` page rasterisation. Same
   # class as the `lxml` entry above and declared for the same reason: Pillow
   # DOES reach a default install today, but only as a transitive of pdfplumber
@@ -133,6 +139,7 @@ dependencies = [
 [project.scripts]
 aeat = "cadrumo.entrypoints.cli.bootstrap:main"
 cadrumo-mcp = "cadrumo_harness.mcp.main:main"
+cadrumo-runtime = "cadrumo.entrypoints.runtime.bootstrap:main"
 
 [project.urls]
 Homepage = "https://github.com/nevenincs/cadrumo"
@@ -389,7 +396,7 @@ exclude = [
   # Corpus source binaries (the AEAT/BOE manuals and workbooks) are 94% of the
   # wheel's compressed weight and serve only the always-on registry integrity
   # hash chain at runtime.
-  # They ship in the two `cadrumo-data-manuals` / `cadrumo-data-official` companion
+  # They ship in the three manuals, official, and normatives data companion
   # distributions (installed as mandatory base dependencies)
   # under a mirrored `cadrumo_data/_data/corpus` tree; the corpus locator resolves
   # either root. Every derived surface the
@@ -411,6 +418,7 @@ exclude = [
 include = [
   "src/cadrumo/py.typed",
   "src/cadrumo/core/external_constants.toml",
+  "src/cadrumo/_data/local_runtime/**",
   "src/cadrumo_harness/py.typed",
   "src/cadrumo_harness/_data/**",
 ]
@@ -437,17 +445,19 @@ path = "packaging/authority/hatch_build.py"
 
 # ── uv ───────────────────────────────────────────────────────────────────────
 # `cadrumo-data-manuals` (packaging/cadrumo_data_manuals/) and `cadrumo-data-official`
-# (packaging/cadrumo_data_official/) own NO source. Each is a project file plus a
+# (packaging/cadrumo_data_official/), plus `cadrumo-data-normatives`
+# (packaging/cadrumo_data_normatives/), own NO source. Each is a project file plus a
 # hatchling build hook that force-includes a disjoint slice of the ONE corpus tree at
 # `src/cadrumo/_data/corpus` under a mirrored `cadrumo_data` namespace. They author
 # nothing and only repackage the base product's mandatory corpus payload.
 [tool.uv.sources]
-# The two data companions are not yet on PyPI, so the development resolver builds
+# The three data companions are not yet on PyPI, so the development resolver builds
 # each from its in-repo project. These source overrides never reach published wheel
 # metadata, whose mandatory dependencies resolve the exact-version companion
 # distributions from the configured package index.
 cadrumo-data-manuals = { path = "packaging/cadrumo_data_manuals" }
 cadrumo-data-official = { path = "packaging/cadrumo_data_official" }
+cadrumo-data-normatives = { path = "packaging/cadrumo_data_normatives" }
 
 [dependency-groups]
 registry = [
@@ -636,10 +646,6 @@ ignore = [
   # the 47 N813 sites). The alias is the readable call form at every message
   # site; renaming it would churn the entire localized surface for no gain.
   "N813",
-  # AEAT record fields carry official mixed-case names (`importe_Q1`..`importe_Q4`
-  # are the quarterly-amount casillas). `aeat-naming` requires the official
-  # domain term over a lint-shaped respelling.
-  "N815",
   # Mutable class defaults on pydantic models are safe: pydantic deep-copies
   # field defaults per instance, so `list[str] = []` on a model attribute does
   # not exhibit the shared-state bug RUF012 warns about. Verified against the
@@ -930,11 +936,10 @@ convention = "google"
 # with a fixed, literal argv (no user/untrusted input), in an isolated
 # subprocess, exactly as the docs build gate above.
 "dev/docs/tests/test_built_site_resolvability_sweep.py" = ["S603"]
-# The cadrumo-data distribution gate builds the two companion wheels with the
+# The cadrumo-data distribution gate builds all three companion wheels with the
 # trusted `uv` build driver (resolved from PATH by design), mirroring the
 # src/cadrumo wheel-build gates. Corpus membership is enumerated in-process.
 "dev/packaging/tests/test_cadrumo_data_distribution.py" = ["S603", "S607"]
-"src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 # Cross-process custody-root exclusion is only provable against real spawned
 # processes killed abruptly; every argv is a fixed `sys.executable -c <script>`
@@ -1176,29 +1181,12 @@ python_files = ["test_*.py"]
 #
 # `--capture=sys` avoids pytest's fd-level dup2 capture, which dies silently
 # under Git Bash / MinTTY on this project's primary platform.
-addopts = "-n auto --dist=loadfile -ra --tb=short --durations=10 -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' --strict-markers --strict-config --capture=sys --max-worker-restart=0"
-# Per-test wall ceiling: a deadlocked test fails in minutes with a stack dump
-# instead of wedging the whole run for hours (the CI unit lane sat 3-5.5h
-# wedged with idle workers on every recent run). pytest-timeout picks the
-# signal method where available (Linux) and falls back to thread elsewhere.
-# 300 s is a ceiling, not a target; no legitimate unit test approaches it.
-#
-# The ceiling above bounds a hung TEST. It cannot bound a dead WORKER, and that
-# is the failure this repository actually kept hitting: a test whose thread is
-# blocked in `subprocess.wait()` is not interruptible by the thread timeout
-# method, so the worker exits uncleanly rather than reporting. xdist then
-# replaces the node, and the run either re-runs the test on the replacement --
-# observed reporting ONE test id as three separate failures -- or wedges the
-# loadscope scheduler outright (`KeyError: <WorkerController gw6>` in
-# `_assign_work_unit`, because a replacement node has no registered
-# collection). Both were reproduced here; the wedge sat 30 minutes with no
-# output on an otherwise idle box before it was killed.
-#
-# `--max-worker-restart=0` makes a worker death terminal and LOUD: the session
-# stops and names the test the worker died on, instead of silently retrying it
-# or hanging. A crashed worker is a defect to fix, never a transient to absorb
-# -- absorbing it is what turns one broken test into a corrupted result set.
-timeout = 300
+# Plain assertions preserve failures without rendering expensive comparison diffs.
+addopts = "-n auto --dist=loadfile -ra --tb=short --durations=10 -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' --strict-markers --strict-config --capture=sys --max-worker-restart=0 --assert=plain"
+# Correctness tests run to completion independently of host speed. Callers
+# can explicitly request a pytest-timeout deadline when investigating a hang.
+# `--max-worker-restart=0` keeps a crashed worker terminal and visible rather
+# than silently retrying its test.
 # Drop a test's `tmp_path` as soon as that test PASSES; keep it when it fails.
 # Measured on this box: `pytest-of-hello` reached 39.1 GB across 101 retained
 # session directories, 85% of it a dozen packaging-lane runs at up to 4.4 GB and
@@ -1228,7 +1216,7 @@ markers = [
   "hex_core: exercises core.* foundational cross-cutting utilities",
   "docs: documentation build, stubs, and docstring structure verification",
   "serial: isolation-sensitive tests that must run without xdist workers (-n0); they mutate or read process-global state (e.g. the active master-key-provider singleton) and flake under -n auto worker interleaving. Run via the serial pass of `just test-integration`.",
-  "perf: performance acceptance gates (CPU-time asserts, wall-clock advisory); excluded from every per-push lane and enrolled explicitly in the `test-ci-perf` recipe and in the packaging performance pass, both of which only a dispatch-triggered release run reaches, so a quiet machine makes the advisory wall numbers meaningful too. Named by selection rather than by workflow file: the workflow set has churned once already, and the previous wording here outlived the lane it named.",
+  "perf: performance acceptance gates (CPU-time asserts, wall-clock advisory); excluded from every per-push lane and enrolled explicitly in the `test-ci-perf` recipe, which only a dispatch-triggered release run reaches, so a quiet machine makes the advisory wall numbers meaningful too. Named by selection rather than by workflow file: the workflow set has churned once already, and the previous wording here outlived the lane it named.",
   "external_tool: tests requiring heavy external tooling or data the dependency set does not install (LibreOffice, for binary .xls conversion and formula recalculation; the npm-installed Hunspell dictionaries, for locale orthography; a real PowerShell, which a POSIX host has only if `pwsh` was installed; a stock OpenSSL, for the calculation summary signature recipe). Carried ALONGSIDE an execution marker, since the marker-integrity contract requires exactly one of {unit, integration, aeat_live}; the default lane selects `unit and not external_tool`, so this marker -- not the path --ignore beside it -- is what holds these tests out. Enrolled explicitly by `just test-workbook-parity`, `just test-locale-spelling`, `just test-powershell-literal` and `just test-calculation-summary-pdf`.",
   "os_keychain: tests whose assertion subject is the OS credential store itself (that a profile login custodies a session key there, and that a later process resumes the record by unwrapping its DEK under that key). Carried ALONGSIDE an execution marker, like `external_tool`. The capability is a property of the LOGON SESSION, not of the dependency set: a headless CI runner and an agent's SSH network logon reach a real backend that then refuses every credential call, so no keychain-custodied session key can exist there at all. Every lane excludes this marker; `just test-os-keychain` enrols it, and it is meaningful only in an interactive desktop session. Cases provable WITHOUT custody stay in the default lanes. A case belongs under this marker when it cannot reach its subject without a minted acceleration receipt, because `resume_profile_session` leaves the login PROCESS-SCOPED when the keychain is unavailable and mints no receipt at all. Apply the marker at the narrowest scope whose assertion actually requires custody.",
   "windows_only: tests whose assertion subject exists only on Windows -- today the two console-launcher stubs (`aeat.exe`, `cadrumo-mcp.exe`) that a Windows install materialises and no POSIX install has at all. Carried ALONGSIDE an execution marker, like `os_keychain`. The precondition is a property of the OPERATING SYSTEM, not of the dependency set: on Linux or macOS there is no stub to project, so the subject of the assertion does not exist and no amount of installed tooling conjures it. Every lane excludes this marker; `just test-windows` enrols it, and it is meaningful only on a Windows checkout. Cases provable WITHOUT a launcher stub stay in the default lanes.",
@@ -1316,10 +1304,16 @@ exclude = 'tests|test_'
 min_confidence = 80
 paths = ["src/cadrumo"]
 exclude = [
-  "*test_*.py",
   "*/tests/*",
   "*\\tests\\*",
-  "stubs",
+  "*/_data/*",
+  "*\\_data\\*",
+  "*/test_*.py",
+  "*\\test_*.py",
+  "*/_test_*.py",
+  "*\\_test_*.py",
+  "*/conftest.py",
+  "*\\conftest.py",
 ]
 ignore_decorators = [
   "@app.command",
@@ -1366,7 +1360,21 @@ ignore_names = [
 # pywin32 ships these modules across its distribution roots; deptry's package
 # metadata cannot discover all of them. Keep the direct Windows ACL and COM
 # dependencies visible to the declaration check.
-"pywin32" = ["ntsecuritycon", "pythoncom", "pywintypes", "win32security"]
+"pywin32" = [
+  "ntsecuritycon",
+  "pythoncom",
+  "pywintypes",
+  "win32api",
+  "win32com",
+  "win32con",
+  "win32event",
+  "win32file",
+  "win32job",
+  "win32pipe",
+  "win32process",
+  "win32security",
+  "win32ts",
+]
 # The NVML binding's distribution name and its import name differ, so the
 # mapping is stated rather than guessed: deptry's fallback would be
 # `nvidia_ml_py`, making the accelerator probe's `import pynvml` read as an
@@ -1378,7 +1386,8 @@ ignore_names = [
 [tool.deptry.per_rule_ignores]
 # `cadrumo`: the `all` convenience extra self-references the capability extras
 # (`cadrumo[google]` etc.); deptry reads the self-reference as an unused dependency.
-# `cadrumo-data-manuals` / `cadrumo-data-official`: two data-only companion
+# `cadrumo-data-manuals` / `cadrumo-data-official` / `cadrumo-data-normatives`:
+# three data-only companion
 # distributions with no importable code the scanner can see; the corpus locator
 # reaches their shared `cadrumo_data` namespace package dynamically through
 # `importlib.resources` (the corpus-binary resolution seam).
@@ -1396,6 +1405,7 @@ DEP002 = [
   "cadrumo",
   "cadrumo-data-manuals",
   "cadrumo-data-official",
+  "cadrumo-data-normatives",
   "pillow",
   "python-dotenv",
   # Typer imports Rich for runtime help/error rendering. The application

@@ -8,19 +8,39 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
     replace_test_profile_record,
 )
+from cadrumo.application.modelo.action_errors import CalculationRevisionNotFoundError, StoredCalculationDriftError
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.work_addressing import ModeloExactWorkUnitTarget
 from cadrumo.application.modelo.work_review import (
     ModeloWorkOriginAnomaly,
     ModeloWorkProgress,
     ModeloWorkProgressDenominator,
     ModeloWorkReview,
     build_modelo_work_review,
+    capture_modelo_work_review,
+    read_modelo_work_review_current_coordinate,
 )
+from cadrumo.application.modelo.workspace import resolve_graded_snapshot_result
+from cadrumo.application.modelo.workspace_models import (
+    ModeloWorkspaceCapabilityDisposition,
+    ModeloWorkspaceCapabilityName,
+    ModeloWorkspaceExactWorkUnitTargetV1,
+    ModeloWorkspaceGradedSnapshotResultV1,
+)
+from cadrumo.application.modelo.workspace_producers import (
+    MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
+    ModeloWorkspaceBoundedReviewPortV1,
+    ModeloWorkspaceContributorKindV1,
+)
+from cadrumo.application.producer_capture import ProducerCaptureError
 from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -36,6 +56,7 @@ from cadrumo.domain.modelos.calculation_repository import (
 )
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
+    CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
@@ -53,6 +74,7 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.entrypoints.adapter_composition import build_state_projection_read_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -135,6 +157,192 @@ def _persist_work_unit(
     )
     work_repo.save(upsert_work_unit(work_repo.load(), unit))
     return unit
+
+
+def test_a_work_review_capture_carries_exactly_the_built_review_and_stays_current(repos: Repos) -> None:
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    work_unit = _persist_work_unit(repos)
+    target = (work_unit.bucket_id, work_unit.modelo, work_unit.filing_year, work_unit.period)
+    stores = {
+        "work_unit_repository": work_repo,
+        "calculation_repository": calculation_repo,
+        "verification_repository": verification_repo,
+    }
+
+    with bundled_indexed_authority().operation() as operation:
+        built = build_modelo_work_review(
+            *target,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
+        captured = capture_modelo_work_review(*target, operation=operation, **stores)
+        again = capture_modelo_work_review(*target, operation=operation, **stores)
+        current = read_modelo_work_review_current_coordinate(*target, operation=operation, **stores)
+
+    assert captured.value == built
+    assert again.generation == captured.generation
+    assert captured.require_current(current) is captured
+
+
+def test_the_bounded_review_port_stamps_its_contract_over_the_captured_review(repos: Repos) -> None:
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    work_unit = _persist_work_unit(repos)
+
+    with bundled_indexed_authority().operation() as operation:
+        port = ModeloWorkspaceBoundedReviewPortV1(
+            bucket_id=work_unit.bucket_id,
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
+        contributed = port.capture_projection_with_epoch()
+        built = build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
+
+    assert contributed.projection == built
+    assert contributed.stamp.contributor_kind is ModeloWorkspaceContributorKindV1.BOUNDED_REVIEW
+    assert contributed.epoch.owner == MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1.contributor.owner
+
+
+def test_a_work_review_capture_refuses_as_not_current_after_an_interleaved_write(repos: Repos) -> None:
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    work_unit = _persist_work_unit(repos)
+    target = (work_unit.bucket_id, work_unit.modelo, work_unit.filing_year, work_unit.period)
+    stores = {
+        "work_unit_repository": work_repo,
+        "calculation_repository": calculation_repo,
+        "verification_repository": verification_repo,
+    }
+
+    with bundled_indexed_authority().operation() as operation:
+        captured = capture_modelo_work_review(*target, operation=operation, **stores)
+        _persist_work_unit(repos, period_code="2T")
+        moved = read_modelo_work_review_current_coordinate(*target, operation=operation, **stores)
+
+    with pytest.raises(ProducerCaptureError) as refusal:
+        captured.require_current(moved)
+    assert refusal.value.translated_message == "errors.refused.producer_capture_not_current"
+
+
+_M100 = ModeloCode("100")
+_M100_BOOLEAN_BINDING = "renta-profile-has-economic-activity"
+"""Declared on the boolean value channel by the Modelo 100 2025 registry revision."""
+
+
+def _persist_m100_revision_with_override(repos: Repos, raw_value: str) -> WorkUnit:
+    """Persist a Modelo 100 revision whose boolean-channel binding override holds ``raw_value``."""
+    work_repo, calculation_repo, _, _, _ = repos
+    unit = _persist_work_unit(repos, modelo=_M100, filing_year=2025, period_code="0A")
+    overrides = {_M100_BOOLEAN_BINDING: raw_value}
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides=overrides,
+        casilla_values={},
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=unit.modelo,
+            revision_id=unit.revision_id,
+            modelo_year=unit.filing_year,
+            period=unit.period.registry_token,
+        ),
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id={},
+        binding_overrides=overrides,
+        casilla_values={},
+        created_at=T0,
+        updated_at=T0,
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), revision))
+    pointed = unit.model_copy(update={"current_calculation_revision_id": revision_id})
+    work_repo.save(upsert_work_unit(work_repo.load(), pointed))
+    return pointed
+
+
+@pytest.mark.parametrize("truth", ["true", "false"])
+@pytest.mark.parametrize("supplied_catalogue", [False, True])
+def test_the_review_reads_a_persisted_boolean_binding_as_a_truth_value(
+    repos: Repos, truth: str, supplied_catalogue: bool
+) -> None:
+    """The replay writer stores a boolean-channel binding as a truth token, not a quantity."""
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    unit = _persist_m100_revision_with_override(repos, truth)
+
+    with bundled_indexed_authority().operation() as operation:
+        review = build_modelo_work_review(
+            unit.bucket_id,
+            unit.modelo,
+            unit.filing_year,
+            unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+            calculation_catalogue=calculation_repo.load(operation=operation) if supplied_catalogue else None,
+        )
+
+    assert review.calculation_revision_id == unit.current_calculation_revision_id
+
+
+@pytest.mark.parametrize("supplied_catalogue", [False, True])
+def test_a_boolean_binding_holding_no_truth_value_still_refuses_as_stored_drift(
+    repos: Repos, supplied_catalogue: bool
+) -> None:
+    """Skipping truth tokens must not let an unreadable stored value through."""
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    unit = _persist_m100_revision_with_override(repos, "maybe")
+
+    with bundled_indexed_authority().operation() as operation, pytest.raises(StoredCalculationDriftError):
+        build_modelo_work_review(
+            unit.bucket_id,
+            unit.modelo,
+            unit.filing_year,
+            unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+            calculation_catalogue=calculation_repo.load(operation=operation) if supplied_catalogue else None,
+        )
+
+
+def test_a_supplied_empty_catalogue_refuses_a_missing_head_without_reloading(repos: Repos) -> None:
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    unit = _persist_m100_revision_with_override(repos, "true")
+
+    with bundled_indexed_authority().operation() as operation, pytest.raises(CalculationRevisionNotFoundError):
+        build_modelo_work_review(
+            unit.bucket_id,
+            unit.modelo,
+            unit.filing_year,
+            unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+            calculation_catalogue=CalculationRevisionCatalogue(),
+        )
 
 
 def test_review_projects_resolvable_work_without_a_calculation_from_real_storage(repos: Repos) -> None:
@@ -383,6 +591,109 @@ def test_review_progress_fields_do_not_express_a_ratio() -> None:
     joined_names = " ".join(names).casefold()
     assert all(token not in joined_names for token in forbidden)
     assert all(field.annotation is not float for field in ModeloWorkProgress.model_fields.values())
+
+
+def _calculated_m130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
+    """Persist one Modelo 130 work unit and calculate it through the real action."""
+    work_repo, calculation_repo, _, _, bucket_event_repo = repos
+    work_unit = _persist_work_unit(repos)
+    profile = load_test_profile_record(_BUCKET_ID)
+    replace_test_profile_record(
+        profile.model_copy(
+            update={
+                "facts": (
+                    *profile.facts,
+                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                    UserProfileFact(path="iva.redeme_enrolled", value=False),
+                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                    UserProfileFact(
+                        path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+                        value=False,
+                    ),
+                ),
+            },
+        ),
+    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        bucket_event_repository=bucket_event_repo,
+    ) as ports:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("9000")},
+            ports=ports,
+        )
+    return work_unit, revision
+
+
+def test_graded_admission_carries_the_canonical_review_of_a_calculated_unit(repos: Repos) -> None:
+    work_repo, calculation_repo, _, verification_repo, bucket_event_repo = repos
+    work_unit, revision = _calculated_m130(repos)
+    stored_unit = work_repo.load().work_units[work_unit.work_unit_id]
+
+    with (
+        calculation_ports_for_test(
+            bucket_id=work_unit.bucket_id,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            bucket_event_repository=bucket_event_repo,
+        ) as ports,
+        bundled_indexed_authority().operation() as operation,
+    ):
+        result = resolve_graded_snapshot_result(
+            ModeloWorkspaceExactWorkUnitTargetV1(
+                target=ModeloExactWorkUnitTarget(work_unit_id=stored_unit.work_unit_id, bucket_id=stored_unit.bucket_id)
+            ),
+            required_grade=RegistryAuthorityGrade.CALCULATION,
+            bucket_id=stored_unit.bucket_id,
+            catalogue_repository=work_repo,
+            calculation_ports=ports,
+            verification_repository=verification_repo,
+            readiness_read_ports=build_state_projection_read_ports(
+                operation=operation,
+                objects=secure_object_repository_for_bucket(stored_unit.bucket_id),
+                bucket_id=stored_unit.bucket_id,
+            ),
+            operation=operation,
+            output_language=OutputLanguage.EN,
+        )
+        expected_review = build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
+
+    assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
+    projection = result.projection
+    assert projection.work_review.disposition is ModeloWorkspaceCapabilityDisposition.AVAILABLE
+    assert projection.work_review.review is not None
+    assert projection.work_review.review == expected_review
+    assert projection.work_review.review.calculation_revision_id == revision.calculation_revision_id
+    assert {contributor.owner for contributor in projection.contributors} >= {
+        MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1.contributor.owner
+    }
+    assert len(projection.contributors) == len(ModeloWorkspaceContributorKindV1)
+    computed = {
+        str(row.casilla_id) for row in projection.work_review.review.casillas if row.concrete_formula is not None
+    }
+    assert str(M130_NET_RESULT_CASILLA) in computed
+    verification = next(
+        capability
+        for capability in projection.capabilities
+        if capability.capability is ModeloWorkspaceCapabilityName.VERIFICATION_READINESS
+    )
+    bounded_review = MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1.contributor
+    assert (verification.producer_owner, verification.producer) == (bounded_review.owner, bounded_review.producer)
+    assert verification.disposition is ModeloWorkspaceCapabilityDisposition.UNMEASURED
 
 
 def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos) -> None:

@@ -56,16 +56,20 @@ def test_aggregation_config_error_round_trips_through_build_error_envelope() -> 
 
 def test_site5_command_rejects_cross_family_observations() -> None:
     """aggregate_per_modelo refuses observations outside the modelo's provider family."""
+    from ....domain.foreign_assets.valuation import M720ValuationEvent
     from ..foreign_assets import ForeignAssetIngestObservation
     from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = ForeignAssetIngestObservation(
         source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
         source_object_id="test-asset-1",
+        asset_ref="m720a_" + "0" * 32,
         asset_class=ForeignAssetClass.ACCOUNT,
         asset_external_id="test-account",
         country="AD",
-        valuation_eur=Decimal("50000.01"),
+        valuation_amount=Decimal("50000.01"),
+        currency_code="EUR",
+        valuation_event=M720ValuationEvent.YEAR_END,
         acquisition_date="2023-01-15",
     )
     command = PerModeloAggregationCommand(

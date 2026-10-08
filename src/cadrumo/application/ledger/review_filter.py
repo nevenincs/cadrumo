@@ -42,6 +42,7 @@ def ledger_review_query_for_spec(
         classification=spec.classification.value if spec.classification is not None else None,
         text=spec.text,
         direction=spec.direction.value if spec.direction is not None else None,
+        own_account_id=spec.account,
     )
 
 

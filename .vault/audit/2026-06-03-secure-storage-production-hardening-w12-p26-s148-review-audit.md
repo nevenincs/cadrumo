@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:9c93f392aa79e9b7d2375685ba8aaf9cea7c0f6e6990b0e358f4b17c0f18ca9f'
+modified: '2026-10-03'
+body_hash: 'sha256:4bcd3dc8fe79289a2e6da9b683540f472016df9fa69ebd3b841d2530a2f2c60e'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S148-001 | PASS | `retired` target was corrected
 
-The plan listed `src/aeat/adapters/persistence/profile/inventory.py` with target `retired`, but the file is active production code. `aeat.application.inventory._service` imports `InventoryLedgerRepository`, and runtime migration tests cover `load_inventory()` and `save_inventory()`.
+The plan listed the retired module with target `retired`, but the file is active production code. `aeat.application.inventory._service` imports `InventoryLedgerRepository`, and runtime migration tests cover `load_inventory()` and `save_inventory()`.
 
 Resolution: the plan target for `AFR-046` / `W12.P26.S148` is corrected to `runtime-default`. The file was hardened rather than deleted.
 
@@ -40,8 +40,8 @@ The added tests use the real isolated runtime and `InventoryLedgerRepository` / 
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/profile/test_inventory.py src/aeat/adapters/persistence/profile/test_inventory_roundtrip.py src/aeat/application/inventory/test_inventory.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "inventory"` passed with 30 selected tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/profile/inventory.py src/aeat/adapters/persistence/profile/test_inventory.py src/aeat/adapters/persistence/profile/test_inventory_roundtrip.py` passed.
+- The historical check passed with 30 selected tests.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed after locale updates through `python -m aeat.locales scaffold` and sequential `python -m aeat.locales set`.
 - The touched-file source scan found no direct settings construction, environment access, print/typer output, suppressing pragmas, fake/stub/monkeypatch markers, skipped/xfail tests, broad exception catches, raw UTF-8 literals, or local `Path("db://secure_objects")` construction.
 

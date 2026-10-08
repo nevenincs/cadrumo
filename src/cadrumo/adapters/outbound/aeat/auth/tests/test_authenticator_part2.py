@@ -48,6 +48,6 @@ async def test_concurrent_close_calls_complete_through_the_public_lifecycle() ->
 # intentionally retired in favour of real Playwright/process coverage and the
 # external live protected-resource oracle.
 test_authenticator_synchronous_surface = _support.test_authenticator_synchronous_surface
-test_reauthenticate_does_not_deadlock = _support.test_reauthenticate_does_not_deadlock
+test_close_then_authenticate_does_not_deadlock = _support.test_close_then_authenticate_does_not_deadlock
 test_verify_raises_on_stale_session = _support.test_verify_raises_on_stale_session
 test_verify_raises_without_context = _support.test_verify_raises_without_context

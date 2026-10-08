@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#m303-carry-reconciliation'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:1eb274724ff7ce1a02eb462d6858f6377e80de8a727b3a518a01588ad56d8bb5'
 related:
-  - "[[2026-08-07-m303-carry-reconciliation-plan]]"
   - "[[2026-06-21-m303-carry-reconciliation-adr]]"
 ---
 ## Scope

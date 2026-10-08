@@ -29,7 +29,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.domain.user_profile.values import ProfileSetupState
 
 from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
-from ....core.config import override_settings
+from ....core.config import Settings, override_settings
 from ...user_profile.preflight import build_profile_preflight_requirement
 from .. import sessions as _sessions
 from ..sessions import (
@@ -110,11 +110,11 @@ def test_profile_dni_nie_wins_over_settings_and_reaches_the_provider() -> None:
     assert bound.cadrumo_clave_movil_dni_nie.get_secret_value() == _TAX_ID
 
 
-def test_settings_remain_the_identity_fallback_when_the_profile_carries_the_required_route() -> None:
+def test_settings_remain_the_identity_fallback_when_the_profile_chooses_qr() -> None:
     """The environment-configured path must keep working untouched.
 
-    The route remains profile-owned while the identity can still come from
-    the current environment configuration.
+    An explicit profile route is honoured while the identity can still come
+    from the current environment configuration.
     """
 
     _register_profile(**{"auth.clave_movil_route": ClaveMovilRoute.QR.value})
@@ -131,16 +131,48 @@ def test_settings_remain_the_identity_fallback_when_the_profile_carries_the_requ
     assert bound.cadrumo_clave_prefer_non_qr is False
 
 
-def test_missing_profile_route_refuses_even_when_environment_selects_qr() -> None:
-    """The route has one authority: the encrypted profile field."""
+def test_a_profile_that_never_chose_a_route_signs_in_with_the_app_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unchosen route is the app request, never a QR code and never a refusal.
+
+    The settings are built with the route variable absent from the process
+    environment, so the model default is what decides; the DNI contraste is
+    on the profile so the default route can complete.
+    """
+    monkeypatch.delenv("CADRUMO_CLAVE_PREFER_NON_QR", raising=False)
+    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.fecha_validez": _FECHA_VALIDEZ})
+    settings = Settings(cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID), cadrumo_clave_movil_dni_fecha=None)
+    assert "cadrumo_clave_prefer_non_qr" not in settings.model_fields_set
+
+    bound, expected_identity = _prepare_clave_auth(
+        settings,
+        AuthProviderKind.CLAVE_MOVIL,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        profile_decode_context=leased_profile_decode_context(),
+    )
+
+    assert expected_identity == _TAX_ID
+    assert bound.cadrumo_clave_prefer_non_qr is True
+    assert bound.cadrumo_clave_movil_dni_fecha == _FECHA_VALIDEZ
+
+
+def test_an_unchosen_route_without_a_contraste_names_the_missing_contraste(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The default route needs the contraste, so its absence is the refusal.
+
+    The operator who never chose a route is not told to choose one; they
+    are told which document fact the default route still needs.
+    """
+    monkeypatch.delenv("CADRUMO_CLAVE_PREFER_NON_QR", raising=False)
     _register_profile(**{"auth.dni_nie": _TAX_ID})
-    with (
-        override_settings(
-            cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
-            cadrumo_clave_prefer_non_qr=False,
-        ) as settings,
-        pytest.raises(ClaveCredentialsIncompleteError) as raised,
-    ):
+    settings = Settings(
+        cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
+        cadrumo_clave_movil_nie_soporte=None,
+        cadrumo_clave_movil_dni_fecha=None,
+    )
+    with pytest.raises(ClaveCredentialsIncompleteError) as raised:
         _prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
@@ -148,13 +180,13 @@ def test_missing_profile_route_refuses_even_when_environment_selects_qr() -> Non
             profile_decode_context=leased_profile_decode_context(),
         )
 
-    expected_label = build_profile_preflight_requirement(
-        "auth.clave_movil_route",
-        schema=published_profile_schema(),
-    ).label
-    assert expected_label != "auth.clave_movil_route"
-    assert raised.value.translated_message == "application.auth.sessions.errors.clave_route_missing"
-    assert raised.value.context == {"provider": "clave_movil", "route_field": expected_label}
+    schema = published_profile_schema()
+    assert raised.value.translated_message == "application.auth.sessions.errors.clave_contraste_missing"
+    assert raised.value.context == {
+        "provider": "clave_movil",
+        "nie_field": build_profile_preflight_requirement("auth.numero_soporte", schema=schema).label,
+        "dni_field": build_profile_preflight_requirement("auth.fecha_validez", schema=schema).label,
+    }
 
 
 def test_profile_numero_soporte_reaches_the_non_qr_contraste_setting() -> None:
@@ -276,8 +308,9 @@ def test_non_qr_route_without_a_contraste_refuses_before_the_browser_opens() -> 
 def test_qr_route_is_not_refused_for_a_missing_contraste() -> None:
     """The QR route never types a contraste, so its absence is not a fault.
 
-    This is the guard against over-refusing: the default Cl@ve Móvil flow
-    has no soporte and no validity date configured and must still proceed.
+    This is the guard against over-refusing: an operator who explicitly
+    chose QR has no soporte and no validity date configured and must still
+    proceed.
     """
 
     _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})

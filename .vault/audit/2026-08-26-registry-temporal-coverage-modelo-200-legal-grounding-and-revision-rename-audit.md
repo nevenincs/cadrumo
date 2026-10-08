@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:9d2bddb2a779f6c42454064a4c642db7268d61120fc678bff08ee0b83a588c76'
-related:
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
+related: []
 ---
 
 # `registry-temporal-coverage` audit: `Modelo 200 legal grounding and the ejercicio-2024 revision rename`

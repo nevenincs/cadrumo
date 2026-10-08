@@ -35,16 +35,15 @@ from cadrumo.application.user_profile.censal_operation import (
     CensalReviewedOperand,
 )
 from cadrumo.application.user_profile.cotejo_apply import apply_cotejo
-from cadrumo.application.user_profile.profile_record_repository import (
-    ProfileRecordRepository,
-    bound_profile_record_session,
-)
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.workflow.state_models import WorkflowState
 from cadrumo.core.config import override_settings
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
+
+from ......application.user_profile.tests.record_session_scope import bound_profile_record_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

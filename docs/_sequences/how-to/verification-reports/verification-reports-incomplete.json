@@ -315,7 +315,7 @@
             {"casilla_id":"83","help_text":"Box 83 of modelo 303, tax year 2022.","input_kind":"manual","label":"Transactions carried out in the year - Exempt transactions with no right to deduct","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"83","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
             {"casilla_id":"84","help_text":"Box 84 of modelo 303, tax year 2022.","input_kind":"manual","label":"Transactions carried out in the year - Transactions not subject under place-of-supply rules (except those in box 126)","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"84","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
             {"casilla_id":"86","help_text":"Box 86 of modelo 303, tax year 2022.","input_kind":"manual","label":"Transactions carried out in the year - Transactions under the simplified regime","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"86","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
-            {"casilla_id":"88","help_text":"Box 88 of modelo 303, tax year 2022.","input_kind":"manual","label":"Transactions carried out in the year - Total turnover","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"88","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
+            {"casilla_id":"88","help_text":"Box 88 of modelo 303, tax year 2022.","input_kind":"computed","label":"Transactions carried out in the year - Total turnover","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"88","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
             {"casilla_id":"89","help_text":"Box 89 of modelo 303, tax year 2022.","input_kind":"manual","label":"Territorial taxation information: Álava","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"89","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
             {"casilla_id":"90","help_text":"Box 90 of modelo 303, tax year 2022.","input_kind":"manual","label":"Territorial taxation information: Gipuzkoa","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"90","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
             {"casilla_id":"91","help_text":"Box 91 of modelo 303, tax year 2022.","input_kind":"manual","label":"Territorial taxation information: Bizkaia","legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"91","required":false,"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"]},
@@ -384,9 +384,9 @@
             {"casilla_id":"13","help_text":"Box 13: amount of VAT accrued on other transactions subject to the reverse charge mechanism, excluding intra-Community transactions.","input_kind":"computed","label":"Accrued VAT on other reverse-charge transactions excluding intra-Community acquisitions - Tax amount","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"13","required":false,"source_refs":["aeat-dr-303-2026"]},
             {"casilla_id":"14","help_text":"Box 14: taxable base of the adjustment to bases and amounts of VAT accrued.","input_kind":"manual","label":"Adjustment of taxable bases and amounts, accrued VAT - Taxable base","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"14","required":false,"source_refs":["aeat-dr-303-2026"]},
             {"casilla_id":"15","help_text":"Box 15: amount of the adjustment to bases and amounts of VAT accrued.","input_kind":"manual","label":"Adjustment of taxable bases and amounts, accrued VAT - Tax amount","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"15","required":false,"source_refs":["aeat-dr-303-2026"]},
-            {"casilla_id":"16","help_text":"Box 16: taxable base of the equivalence surcharge at 1.0%.","input_kind":"manual","label":"Equivalence surcharge at 1.0% - Taxable base","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"16","required":false,"source_refs":["aeat-dr-303-2026"]},
-            {"casilla_id":"17","help_text":"Box 17: percentage rate of the equivalence surcharge at 1.0%.","input_kind":"manual","label":"Equivalence surcharge at 1.0% - Rate percentage","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"17","required":false,"source_refs":["aeat-dr-303-2026"]},
-            {"casilla_id":"18","help_text":"Box 18: amount of the equivalence surcharge at 1.0%.","input_kind":"manual","label":"Equivalence surcharge at 1.0% - Tax amount","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"18","required":false,"source_refs":["aeat-dr-303-2026"]},
+            {"casilla_id":"16","help_text":"Box 16: taxable base for the equivalence surcharge.","input_kind":"manual","label":"Equivalence surcharge - Taxable base","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"16","required":false,"source_refs":["aeat-dr-303-2026"]},
+            {"casilla_id":"17","help_text":"Box 17: rate percentage for the equivalence surcharge.","input_kind":"manual","label":"Equivalence surcharge - Rate (%)","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"17","required":false,"source_refs":["aeat-dr-303-2026"]},
+            {"casilla_id":"18","help_text":"Box 18: tax amount for the equivalence surcharge.","input_kind":"manual","label":"Equivalence surcharge - Tax amount","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"18","required":false,"source_refs":["aeat-dr-303-2026"]},
             {"casilla_id":"19","help_text":"Box 19: taxable base of the equivalence surcharge at 1.4%.","input_kind":"manual","label":"Equivalence surcharge at 1.4% - Taxable base","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"19","required":false,"source_refs":["aeat-dr-303-2026"]},
             {"casilla_id":"20","help_text":"Box 20: percentage rate of the equivalence surcharge at 1.4%.","input_kind":"manual","label":"Equivalence surcharge at 1.4% - Rate percentage","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"20","required":false,"source_refs":["aeat-dr-303-2026"]},
             {"casilla_id":"21","help_text":"Box 21: amount of the equivalence surcharge at 1.4%.","input_kind":"bound","label":"Equivalence surcharge at 1.4% - Tax amount","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"21","required":false,"source_refs":["aeat-dr-303-2026"]},
@@ -411,9 +411,9 @@
             {"casilla_id":"153","help_text":"Box 153: taxable base of VAT accrued under the general regime at the new rate, tier 2.","input_kind":"bound","label":"Accrued VAT, general regime new rate tier 2 - Taxable base","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"153","required":false,"source_refs":["aeat-dr-303-2026"]},
             {"casilla_id":"154","help_text":"Box 154: percentage rate of VAT accrued under the general regime at the new rate, tier 2.","input_kind":"computed","label":"Accrued VAT, general regime new rate tier 2 - Rate percentage","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"154","required":false,"source_refs":["aeat-dr-303-2026"]},
             {"casilla_id":"155","help_text":"Box 155: amount of VAT accrued under the general regime at the new rate, tier 2.","input_kind":"computed","label":"Accrued VAT, general regime new rate tier 2 - Tax amount","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"155","required":false,"source_refs":["aeat-dr-303-2026"]},
-            {"casilla_id":"156","help_text":"Box 156: taxable base of the equivalence surcharge at 0.5%.","input_kind":"manual","label":"Equivalence surcharge at 0.5% - Taxable base","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"156","required":false,"source_refs":["aeat-dr-303-2026"]},
-            {"casilla_id":"157","help_text":"Box 157: percentage rate of the equivalence surcharge at 0.5%.","input_kind":"manual","label":"Equivalence surcharge at 0.5% - Rate percentage","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"157","required":false,"source_refs":["aeat-dr-303-2026"]},
-            {"casilla_id":"158","help_text":"Box 158: amount of the equivalence surcharge at 0.5%.","input_kind":"manual","label":"Equivalence surcharge at 0.5% - Tax amount","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"158","required":false,"source_refs":["aeat-dr-303-2026"]},
+            {"casilla_id":"156","help_text":"Box 156: taxable base for the equivalence surcharge at 1.75%.","input_kind":"manual","label":"Equivalence surcharge at 1.75% - Taxable base","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"156","required":false,"source_refs":["aeat-dr-303-2026"]},
+            {"casilla_id":"157","help_text":"Box 157: rate percentage for the equivalence surcharge at 1.75%.","input_kind":"manual","label":"Equivalence surcharge at 1.75% - Rate (%)","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"157","required":false,"source_refs":["aeat-dr-303-2026"]},
+            {"casilla_id":"158","help_text":"Box 158: tax amount for the equivalence surcharge at 1.75%.","input_kind":"manual","label":"Equivalence surcharge at 1.75% - Tax amount","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-90","ley-37-1992:art-91","ley-37-1992:art-161","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"158","required":false,"source_refs":["aeat-dr-303-2026"]},
             {"casilla_id":"iva.repercutido.super-reducido.transitorio","help_text":"Transitional box under RD-ley 4/2024 for the super-reduced rate, coexisting with the ordinary 4% super-reduced rate.","input_kind":"bound","label":"Output VAT amount at the transitional super-reduced rate (2%)","legal_refs":["ley-37-1992:art-88","ley-37-1992:art-91","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"iva.repercutido.super-reducido.transitorio","required":false,"source_refs":["aeat-dr-303-2026"]},
             {"casilla_id":"108","help_text":"Box 108: other adjustments in an amending self-assessment for cases determined by a discrepancy in administrative interpretation.","input_kind":"manual","label":"Corrective return - other adjustments in cases determined by discrepancy with administrative criterion","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"108","required":false,"source_refs":["aeat-dr-303-2026"]},
             {"casilla_id":"111","help_text":"Box 111: amount of the correction declared in an amending self-assessment.","input_kind":"manual","label":"Corrective return - correction amount","legal_refs":["ley-37-1992:art-99","ley-37-1992:art-115","ley-37-1992:art-116","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"number":"111","required":false,"source_refs":["aeat-dr-303-2026"]},
@@ -463,12 +463,22 @@
             "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "box": "44",
               "casilla_id": "44",
+              "detail": "Casilla '44' was filed with the value you supplied (150.00), not the 0.00 this calculation derived. Your value wins by design, because you may hold facts the calculation cannot see. The derived figure was discarded",
+              "level": "check",
               "reason": "operator_override_diverges_from_computed",
               "remedy": "Confirm the supplied value is the one you intend to file; to file the derived figure instead, recalculate without setting this casilla.",
               "source_kind": "operator_casilla_input"
             },
-            "message": "Casilla '44' was filed with the value you supplied (150.00), not the 0.00 this calculation derived. Your value wins by design, because you may hold facts the calculation cannot see. The derived figure was discarded",
+            "message": "The value in box 44 is the one you entered, not the one Cadrumo worked out.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
@@ -527,7 +537,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "64a695258f472ca7437e1f26c4eb75d96cb3cb2557b4027c4e7bf3930956f6be",
+          "calculation_revision_id": "1c14782271e8d15e7bf07a12462ce0c2ab3b5683d0c1e2240484baefec4ae492",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -634,7 +644,7 @@
             "83": "0",
             "84": "0",
             "86": "0",
-            "88": "0",
+            "88": "0.00",
             "89": "0",
             "90": "0",
             "91": "0",
@@ -702,7 +712,9 @@
             "closes_on": "2026-04-20",
             "conditional_recargo_preview": null,
             "days_overdue": null,
-            "days_remaining": 19
+            "days_remaining": 19,
+            "holiday_coverage": "national_only",
+            "nominal_closes_on": "2026-04-20"
           },
           "detail_rows": [],
           "filed_at": null,
@@ -870,7 +882,7 @@
             {"absent_by_design":false,"casilla_id":"83","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"84","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"86","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"88","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"88","formula_id":"modelo-303-volumen-operaciones-anual","legal_refs":["ley-37-1992:art-121","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":"subtract","operand_casilla_refs":["80","81","93","94","83","84","125","126","127","128","86","95","96","97","98","79","99"],"operand_refs":["80","81","93","94","83","84","125","126","127","128","86","95","96","97","98","79","99"],"operand_values":["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],"source_refs":["boe-modelo-303-2024-form-pdf","aeat-dr-303-2026"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"89","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"90","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"91","formula_id":null,"legal_refs":["rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026","aeat-modelo-303-procedure"],"value":"0"},
@@ -1009,7 +1021,7 @@
             "modelo": "303",
             "modelo_year": 2026,
             "period": "1T",
-            "revision_id": "2026-y-siguientes"
+            "revision_id": "2026-hasta-01-y-1t"
           },
           "relation_overrides": {},
           "result_summary": [
@@ -1033,13 +1045,13 @@
             },
             {
               "casilla_id": "64",
-              "label": "Result - Sum of results ([46]+[58]+[76])",
+              "label": "Result. Sum of results",
               "role": "key_figure",
               "value": "-45.00"
             },
             {
               "casilla_id": "66",
-              "label": "Result - Amount attributable to the State Tax Administration ([64]×[65]/100)",
+              "label": "Result. Attributable to the State Administration",
               "role": "key_figure",
               "value": "-45.00"
             },
@@ -1057,13 +1069,13 @@
             },
             {
               "casilla_id": "iva.resultado",
-              "label": "Result of the self-assessment ([66]+[77]+[68]-[78])",
+              "label": "Self-assessment result",
               "role": "key_figure",
               "value": "-45.00"
             },
             {
               "casilla_id": "71",
-              "label": "Result final ([69]-[70]+[109])",
+              "label": "Result of the settlement",
               "role": "key_figure",
               "value": "-45.00"
             },
@@ -1093,7 +1105,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 64a695258f472ca7437e1f26c4eb75d96cb3cb2557b4027c4e7bf3930956f6be (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 1c14782271e8d15e7bf07a12462ce0c2ab3b5683d0c1e2240484baefec4ae492 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1134,7 +1146,7 @@
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+          "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
         },
         "schema_version": "2",
         "status": "warning"

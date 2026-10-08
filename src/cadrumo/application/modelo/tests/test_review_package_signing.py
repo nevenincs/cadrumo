@@ -45,10 +45,8 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ..review_package_signing import (
     ReviewPackageSigningKeypair,
-    ReviewPackageSigningPublicKey,
     SignedReviewPackage,
     ensure_review_package_signing_keypair,
-    review_package_signing_public_key,
     sign_review_package,
     verify_review_package_signature,
 )
@@ -71,7 +69,7 @@ _SIGNING_CAPABILITY = InMemoryReviewPackageSigningKeypairCapability()
 
 
 def _work_unit(*, bucket_id: str) -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(2026, "2T")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
@@ -86,7 +84,7 @@ def _work_unit(*, bucket_id: str) -> WorkUnit:
         filing_year=2026,
         period=period,
         revision_id="2026-y-siguientes",
-        name="303-2026-1T",
+        name="303-2026-2T",
         created_at=_NOW,
         updated_at=_NOW,
         state=WorkUnitState.BORRADOR,
@@ -155,18 +153,15 @@ def test_sign_then_verify_with_correct_public_key_passes(
     )
 
     signed = sign_review_package(package_path, keypair=keypair, signed_at=_NOW)
-    public_key = review_package_signing_public_key(keypair)
     round_tripped = SignedReviewPackage.model_validate_json(signed.model_dump_json())
 
     assert round_tripped == signed
     assert round_tripped.signed_at == _NOW
     assert round_tripped.bucket_id == bucket_id
-    assert round_tripped.public_key_hex == public_key.public_key_hex
+    assert round_tripped.public_key_hex == keypair.public_key_hex
     assert len(bytes.fromhex(round_tripped.signature_hex)) == 64
 
-    assert (
-        verify_review_package_signature(package_path, round_tripped, public_key_hex=public_key.public_key_hex) is True
-    )
+    assert verify_review_package_signature(package_path, round_tripped, public_key_hex=keypair.public_key_hex) is True
 
 
 @pytest.mark.parametrize(
@@ -280,24 +275,7 @@ def test_signing_keypair_refuses_a_non_utc_created_at(instant: datetime) -> None
         )
 
 
-@pytest.mark.parametrize(
-    "instant",
-    [
-        datetime(2026, 5, 3, 12, 0),  # naive: the shape under test
-        datetime(2026, 5, 3, 12, 0, tzinfo=timezone(timedelta(hours=1))),
-    ],
-)
-def test_signing_public_key_refuses_a_non_utc_created_at(instant: datetime) -> None:
-    """The exported half carries the same instant under the same contract."""
-    with pytest.raises(ValidationError):
-        ReviewPackageSigningPublicKey(
-            bucket_id="bucket",
-            public_key_hex="b" * 64,
-            created_at=instant,
-        )
-
-
-def test_signing_keys_accept_a_utc_created_at() -> None:
+def test_signing_keypair_accepts_a_utc_created_at() -> None:
     """Positive control: the UTC shape the mint path produces is still accepted."""
     minted_at = datetime(2026, 5, 3, 12, 0, tzinfo=UTC)
 
@@ -307,11 +285,5 @@ def test_signing_keys_accept_a_utc_created_at() -> None:
         public_key_hex="b" * 64,
         created_at=minted_at,
     )
-    public = ReviewPackageSigningPublicKey(
-        bucket_id="bucket",
-        public_key_hex="b" * 64,
-        created_at=minted_at,
-    )
 
     assert keypair.created_at == minted_at
-    assert public.created_at == minted_at

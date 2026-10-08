@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#docs-terminology-search'
 date: '2026-06-12'
-modified: '2026-08-26'
-body_hash: 'sha256:c03410f2253f4c84a2da6d57596f082876df6a12dd0f0118dec07b422c870c54'
+modified: '2026-10-03'
+body_hash: 'sha256:5a103efefd58da38104b1801ba5c42d03d1da3b9be33b54b1725edb4da22711c'
 related:
   - '[[2026-06-10-docs-terminology-search-adr]]'
-  - '[[2026-06-10-docs-terminology-search-plan]]'
 ---
 
 # `docs-terminology-search` audit: `rung-2 adjudication`
@@ -26,7 +25,7 @@ The 80.00% miss-rate is not clean evidence for the deferred rung-2 static term-e
 
 ## Evidence
 
-- Held-out corpus: `src/aeat/_data/terminology/evaluation/held-out-queries.json`.
+- Held-out corpus: the retired data file.
 - Harness: `dev/docs/terminology/_miss_rate.py`.
 - Test gate: `dev/docs/terminology/tests/test_miss_rate.py`.
 - Measurement command: `uv run python -c 'from dev.docs.terminology import adjudicate_rung2, evaluate_held_out_miss_rate; e=evaluate_held_out_miss_rate(); a=adjudicate_rung2(e); print(f"cases={e.case_count} hits={e.hit_count} misses={e.miss_count} miss_rate={e.miss_rate:.2%} failed_queries={e.compiled_failed_query_count} targeted_queries={e.compiled_targeted_query_count} decision={a.decision.value}")'`.

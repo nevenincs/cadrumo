@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#facts-registry'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:d3104d08b236a779d0900c9b2b7e8635935d6adf412787fa3b1ad756b69b950b'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+related: []
 ---
 # `facts-registry` reference: objective-estimation publication boundary
 

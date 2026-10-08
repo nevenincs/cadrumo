@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#semantic-consolidation'
 date: '2026-08-28'
-modified: '2026-08-28'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:581b36684c958c81d7284a372a33435faf870d6044a37decb84467fc4d5c56b4'
+body_hash: 'sha256:e305ad7b2da48ecdb49a0440c3cf415cf080bad00ee7f871dd67fd8dcb2004a1'
 related:
   - "[[2026-08-28-semantic-consolidation-research]]"
 ---
@@ -26,6 +26,12 @@ nested model to nested payload). Those are not the problem.
 The remaining ~46 diverge, and they diverge in both directions at once. Around 35 DROP
 a constraint the canonical model enforces. Around 11 ADD a constraint the canonical
 model lacks.
+
+## Considerations
+
+- CLI payloads still need wire-level type loosening and stable command output schemas.
+- Divergence has two directions: CLI-only constraints leave backend consumers unprotected, while omitted canonical constraints weaken operator validation.
+- Mechanical generation would copy under-constrained canonical models until the invariant migration is complete.
 
 ## Findings
 
@@ -190,6 +196,10 @@ CLI payload declares a `Field` constraint, `field_validator` or `model_validator
 its canonical counterpart does not. That makes "the CLI invented a rule" detectable
 instead of a matter of reviewer attention, and it must be mutation-proved by adding
 such a constraint and confirming the gate fires.
+
+## Rationale
+
+A projection preserves the CLI's transport needs while keeping validation authority in the canonical model. Moving real CLI-only rules into that model closes the consumer gap; restoring omitted rules by projection prevents a second, hand-maintained contract. Generation follows only after the canonical constraints are correct.
 
 ## Consequences
 

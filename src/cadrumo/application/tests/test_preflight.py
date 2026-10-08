@@ -150,8 +150,10 @@ def test_storage_root_healthy_when_ancestor_writable(tmp_path: Path) -> None:
 def test_storage_root_error_when_ancestor_is_a_file(tmp_path: Path) -> None:
     """A storage root whose nearest existing ancestor is a file is a red row."""
     blocker = tmp_path / "not-a-dir"
-    blocker.write_text("x", encoding="utf-8")
     with override_settings(cadrumo_local_storage_root=blocker / "sub"):
+        # Configuration admits the path before the filesystem changes; the
+        # doctor must report the obstruction that appears afterwards.
+        blocker.write_text("x", encoding="utf-8")
         rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
     storage = _row(rows, "storage:local-root")
     assert storage.healthy is False

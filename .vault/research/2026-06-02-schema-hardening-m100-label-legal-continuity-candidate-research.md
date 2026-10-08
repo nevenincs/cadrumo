@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:c6008243380ae2b2f4ce55fd0bae9ab2a7a9c4571ba71ea2cd96d76ce5e0b74b'
-related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
+modified: '2026-10-03'
+body_hash: 'sha256:5e69589b67a61af35dbb992877b4b4f6fea6717a724e08f147f883cf7b3a7218'
+related: []
 ---
 
 # `schema-hardening` research: `m100 label-and-legal-reference continuity candidate`
@@ -50,13 +49,6 @@ Revision labels:
 - `2025`: `Vivienda habitual en 2025`
 
 Source files:
-
-- `src/aeat/_data/registry/aeat/modelos/100/revisions/2020/casillas/0065-0070.toml`
-- `src/aeat/_data/registry/aeat/modelos/100/revisions/2021/casillas/0069-0070.toml`
-- `src/aeat/_data/registry/aeat/modelos/100/revisions/2022/casillas/0070-0070.toml`
-- `src/aeat/_data/registry/aeat/modelos/100/revisions/2023/casillas/0071-0070.toml`
-- `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/casillas/0071-0070.toml`
-- `src/aeat/_data/registry/aeat/modelos/100/revisions/2025/casillas/0225-0070.toml`
 
 Observed legal-reference signatures:
 

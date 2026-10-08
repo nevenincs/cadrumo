@@ -43,12 +43,14 @@ def _make_artifacts(tmp_path: Path) -> tuple[PythonCohort, Path]:
         "cadrumo-sdist": b"cadrumo sdist bytes",
         "cadrumo-data-manuals": b"manuals wheel bytes",
         "cadrumo-data-official": b"official wheel bytes",
+        "cadrumo-data-normatives": b"normatives wheel bytes",
     }
     paths: dict[str, Path] = {
         "cadrumo": tmp_path / f"cadrumo-{_VERSION}-py3-none-any.whl",
         "cadrumo-sdist": tmp_path / f"cadrumo-{_VERSION}.tar.gz",
         "cadrumo-data-manuals": tmp_path / f"cadrumo_data_manuals-{_VERSION}-py3-none-any.whl",
         "cadrumo-data-official": tmp_path / f"cadrumo_data_official-{_VERSION}-py3-none-any.whl",
+        "cadrumo-data-normatives": tmp_path / f"cadrumo_data_normatives-{_VERSION}-py3-none-any.whl",
     }
     sha256: dict[str, str] = {}
     for name, data in payloads.items():
@@ -68,7 +70,9 @@ def _make_artifacts(tmp_path: Path) -> tuple[PythonCohort, Path]:
         manuals_wheel=paths["cadrumo-data-manuals"],
         manuals_sdist=tmp_path / f"cadrumo_data_manuals-{_VERSION}.tar.gz",
         official_wheel=paths["cadrumo-data-official"],
+        normatives_wheel=paths["cadrumo-data-normatives"],
         official_sdist=tmp_path / f"cadrumo_data_official-{_VERSION}.tar.gz",
+        normatives_sdist=tmp_path / f"cadrumo_data_normatives-{_VERSION}.tar.gz",
         sha256=sha256,
     )
     return cohort, paths["cadrumo"]  # root_artifact = root wheel
@@ -90,6 +94,10 @@ def _uv_direct_urls(cohort: PythonCohort, root_artifact: Path) -> dict[str, dict
             "url": f"{cohort.official_wheel.as_uri()}#sha256={cohort.sha256['cadrumo-data-official']}",
             "archive_info": {},
         },
+        "cadrumo-data-normatives": {
+            "url": f"{cohort.normatives_wheel.as_uri()}#sha256={cohort.sha256['cadrumo-data-normatives']}",
+            "archive_info": {},
+        },
     }
 
 
@@ -108,6 +116,10 @@ def _pip_direct_urls(cohort: PythonCohort, root_artifact: Path) -> dict[str, dic
         "cadrumo-data-official": {
             "url": cohort.official_wheel.as_uri(),
             "archive_info": {"hashes": {"sha256": cohort.sha256["cadrumo-data-official"]}},
+        },
+        "cadrumo-data-normatives": {
+            "url": cohort.normatives_wheel.as_uri(),
+            "archive_info": {"hashes": {"sha256": cohort.sha256["cadrumo-data-normatives"]}},
         },
     }
 

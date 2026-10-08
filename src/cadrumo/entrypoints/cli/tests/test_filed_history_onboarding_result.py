@@ -45,6 +45,9 @@ def _populated() -> FiledHistoryOnboardingResult:
                 modelo="303",
                 ejercicio=2025,
                 signals=["profile_applicability"],
+                walk_attempted=True,
+                walk_completed=True,
+                reached_count=2,
                 row_count=2,
                 captured_count=1,
                 refused=False,
@@ -55,6 +58,9 @@ def _populated() -> FiledHistoryOnboardingResult:
                 modelo="100",
                 ejercicio=2024,
                 signals=["aeat_register_options"],
+                walk_attempted=True,
+                walk_completed=False,
+                reached_count=0,
                 row_count=0,
                 captured_count=0,
                 refused=True,
@@ -133,6 +139,7 @@ def test_the_reached_and_captured_tallies_are_separately_expressible() -> None:
             **_populated().model_dump(mode="json"),
             "captured_count": 0,
             "reached_count": 4,
+            "pairs": [{**pair.model_dump(mode="json"), "captured_count": 0} for pair in _populated().pairs],
         },
     )
     assert preview.captured_count == 0
@@ -184,7 +191,11 @@ def test_a_refused_pair_and_an_empty_pair_are_distinguishable() -> None:
         modelo="303",
         ejercicio=2025,
         signals=["profile_applicability"],
+        walk_attempted=True,
+        walk_completed=False,
+        reached_count=0,
         row_count=0,
+        captured_count=0,
         refused=True,
         failure_type="SedeParseError",
         failure_message="under-reported filing history",
@@ -193,20 +204,38 @@ def test_a_refused_pair_and_an_empty_pair_are_distinguishable() -> None:
         modelo="303",
         ejercicio=2024,
         signals=["profile_applicability"],
+        walk_attempted=True,
+        walk_completed=True,
+        reached_count=0,
         row_count=0,
+        captured_count=0,
         refused=False,
     )
     # Both have row_count 0, so row_count alone cannot tell them apart -- which is
     # exactly why the refusal is its own field rather than an inferred zero.
     assert refused.row_count == empty.row_count == 0
+    assert refused.walk_completed is False and empty.walk_completed is True
     assert refused.refused is not empty.refused
     assert refused.failure_message and not empty.failure_message
 
 
 def test_the_counts_separate_refusals_from_legitimate_empties() -> None:
-    result = _populated()
+    populated = _populated()
+    unvisited = populated.pairs[1].model_copy(
+        update={
+            "ejercicio": 2023,
+            "walk_attempted": False,
+            "walk_completed": False,
+            "refused": False,
+            "failure_type": None,
+            "failure_message": None,
+        }
+    )
+    result = populated.model_copy(update={"pairs": [*populated.pairs, unvisited], "pair_count": 3})
     assert result.refused_count == sum(1 for pair in result.pairs if pair.refused)
-    assert result.empty_count == sum(1 for pair in result.pairs if not pair.refused and pair.row_count == 0)
+    assert result.empty_count == sum(
+        1 for pair in result.pairs if pair.walk_completed and not pair.refused and pair.row_count == 0
+    )
     # A refused pair must NOT be counted as an empty one.
     assert result.refused_count + result.empty_count <= result.pair_count
 
@@ -232,3 +261,12 @@ def test_the_schema_carries_no_bespoke_notice_field() -> None:
     forbidden = re.compile(r"^(next|suggestion|suggestions|hint|hints|advisor(y|ies))$|_advisor(y|ies)$")
     offending = sorted(name for name in FiledHistoryOnboardingResult.model_fields if forbidden.search(name))
     assert offending == []
+
+
+@pytest.mark.parametrize("field", ["walk_attempted", "walk_completed", "reached_count"])
+def test_pair_accounting_refuses_omission_of_required_walk_facts(field: str) -> None:
+    payload = json.loads(_populated().model_dump_json())
+    assert field in payload["pairs"][0]
+    del payload["pairs"][0][field]
+    with pytest.raises(ValidationError, match=field):
+        FiledHistoryOnboardingResult.model_validate_json(json.dumps(payload))

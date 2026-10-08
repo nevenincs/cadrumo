@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-hardening-next-work'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:b84c86b82f8b823f73816ed4ae0c8251bd615e0684531c0e8199c57cf01ba2a2'
-related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
+related: []
 ---
 
 # `registry-hardening-next-work` audit: `M200 calculation completeness drift`

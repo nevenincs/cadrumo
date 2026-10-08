@@ -32,6 +32,10 @@ class ProfileCustodyRecordError(ProfileCustodyError):
     """Raised when a current-format custody record is malformed or altered."""
 
 
+class ProfileCustodyLockContendedError(ProfileCustodyRecordError):
+    """Another live holder retained a custody lock beyond the caller's budget."""
+
+
 class ProfileCustodyPathAbsentError(ProfileCustodyRecordError):
     """Raised when a directory on a custody path does not exist.
 

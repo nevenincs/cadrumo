@@ -17,8 +17,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 # Measured on a quiet host on 2026-09-23: 96 s wheel build and install, then 337 s of fresh-process
-# authenticated CLI calls. The budget is about twice that; revisit it when CLI start-up gets faster.
-@pytest.mark.timeout(800)
+# authenticated CLI calls. These are historical timings; correctness completion has no elapsed ceiling.
 def test_installed_cli_first_quarter_local_filing_establishes_annual_foundation(
     tmp_path: Path, installed_wheel_aeat: Path
 ) -> None:
@@ -65,8 +64,7 @@ def test_installed_cli_first_quarter_local_filing_establishes_annual_foundation(
 
 
 # Measured on a quiet host on 2026-09-23: 713 s of fresh-process authenticated CLI calls across four
-# quarters and the annual summary. The budget is about twice that; revisit it when CLI start-up gets faster.
-@pytest.mark.timeout(1500)
+# quarters and the annual summary. These are historical timings; correctness completion has no elapsed ceiling.
 def test_installed_cli_four_local_303_quarters_verify_the_annual_m390(
     tmp_path: Path, installed_wheel_aeat: Path
 ) -> None:

@@ -2,53 +2,44 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from datetime import UTC, date, datetime
-from typing import TypedDict
+from collections.abc import Iterable, Sequence
+from datetime import UTC, datetime
+from typing import TypedDict, cast
+from uuid import UUID
 
 import pytest
+import typer
 from click.testing import Result
 from pydantic import ValidationError
 
-from cadrumo.adapters.persistence.profile.tests.notification_document_support import (
-    build_service,
-    sancion_pdf_bytes,
-    served_document,
+from ....application.live.notification_document_capture_operation import NotificationDocumentCapturePublicResultV1
+from ....application.live.notification_document_read_operation import (
+    NotificationDocumentHistoryEntryPublicV1,
+    NotificationDocumentHistoryPublicResultV1,
+    NotificationDocumentSancionPublicV1,
+    NotificationDocumentViewPublicResultV1,
 )
-
-from ....adapters.outbound.aeat.sede.notifications import NotificationDocument, RemoteNotification
-from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
-from ....core.bucket_pointer import require_active_bucket_id
-from ....core.hashing import sha256_hex
+from ....core.json_contract import Notice, NoticeSeverity
+from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
-from ....tests.cli_envelope import unwrap_cli_result, unwrap_envelope_notices
+from .. import _app_live_notifications_cli as handler
+from .. import runtime_notification_document_capture as capture_bridge
+from .. import runtime_notification_document_read as bridge
+from .._app_live_notifications_payloads import (
+    NotificationDocumentHistoryResult,
+    NotificationDocumentPullResult,
+    NotificationDocumentViewResult,
+)
+from ..errors import CliRefusedBoundaryError
+from ..registered_operation_contracts import RegisteredOperationCompletion
+from ..registered_operation_errors import submitted_operation_error
 from .cli_runner import invoke_cached_cli
 
-# INTENTIONAL: integration because it exercises the notifications CLI surface against
-# isolated local storage without contacting AEAT.
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_isolated_backend = active_profile_isolated_backend_fixture(
-    bucket_id="00000000-0000-4000-8000-000000000000",
-    settings_overrides=lambda tmp_path: {"cadrumo_live_state_dir": tmp_path / "probe-live-state"},
-)
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _invoke_notifications(args: Sequence[str]) -> Result:
     return invoke_cached_cli(["app", "live", "notifications", *args])
-
-
-def test_notifications_list_is_empty_on_fresh_bucket() -> None:
-    result = _invoke_notifications(["list"])
-    assert result.exit_code == 0, result.output
-    assert "count\t0" in result.output
-
-
-def test_notifications_show_refuses_unknown_snapshot() -> None:
-    result = _invoke_notifications(["view", "no-such-snapshot"])
-    assert result.exit_code != 0
 
 
 def test_notification_snapshot_payloads_refuse_malformed_identity_time_url_and_count() -> None:
@@ -76,12 +67,14 @@ def test_notification_snapshot_payloads_refuse_malformed_identity_time_url_and_c
 
 # ── Notification document leaves ───────────────────────────────────────────
 #
-# The custody these tests read back is written through the real service, the
-# real encrypted attachment store and the real secure-object repository inside
-# an isolated profile root. Nothing is mocked: a stub returning what the
-# assertion wants would prove only that the assertion was written.
+# The registered operation and encrypted-service tests cover custody. These
+# handler tests inject its typed public result so the CLI projection can be
+# checked without trying to share in-process storage with a profile worker.
 
 _CERT = "2699101808461"
+_CERT2 = "2699101808462"
+_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
+_OPERATION_ID = "a" * 64
 _DETAIL_URL = f"{NOTIFICATION_DETALLE_SEDE_URL_FIXTURE}?ncc=2699101808461"
 
 
@@ -97,44 +90,108 @@ class _NotificationDocumentShared(TypedDict):
     fetched_at: datetime
 
 
-def _read_row() -> RemoteNotification:
-    """Build the notification row AEAT already reports as read."""
-    return RemoteNotification(
-        certificado_id=_CERT,
-        tipo="notificacion",
-        concepto="Acuerdo de imposicion de sancion",
-        titular_nif="12345678Z",
-        titular_nombre="Nombre Apellido",
-        destinatario_nif="12345678Z",
-        destinatario_nombre="Nombre Apellido",
-        fecha_emision=date(2026, 3, 2),
-        fecha_notificacion=date(2026, 3, 4),
-        modo_notificacion="Comparecencia electronica",
-        leida=True,
-        source_url=_DETAIL_URL,
+def _sancion(certificado_id: str) -> NotificationDocumentSancionPublicV1:
+    """Build a synthetic public projection with decimal scale preserved."""
+    return NotificationDocumentSancionPublicV1(
+        certificado_id=certificado_id,
+        clave_liquidacion="clv-001",
+        referencia="SANC-2025-001",
+        nif="12345678Z",
+        objeto_tributario="sancion",
+        base_sancion="1000.00",
+        porcentaje_minimo="50.00",
+        sancion_resultante="500.00",
+        reduccion_conformidad="50.00",
+        reduccion_pronto_pago=None,
+        diferencia="450.00",
+        importe_a_ingresar="450.00",
+        document_sha256="d" * 64,
     )
 
 
-def _take_custody_of_an_unreadable_document() -> str:
-    """Store one document the reader refuses, and return the owning bucket id.
+def _view_projection(*, parsed: bool = False) -> NotificationDocumentViewPublicResultV1:
+    return NotificationDocumentViewPublicResultV1(
+        bucket_id=str(_PROFILE),
+        certificado_id=_CERT,
+        attachment_id="d" * 64,
+        document_sha256="d" * 64,
+        byte_size=123,
+        source_url=_DETAIL_URL,
+        fetched_at=datetime(2025, 3, 6, 7, 8, tzinfo=UTC),
+        sancion_parsed=parsed,
+        sancion=_sancion(_CERT) if parsed else None,
+        parse_refusal=None if parsed else "No extractable text layer",
+        mode="read",
+    )
 
-    A document with no text layer is the honest fixture for the read-back leaf:
-    it exercises the refusal path the notice reports, and it does so without
-    putting a taxpayer's real sanción figures in this repository.
-    """
-    data = b"%PDF-1.4 this carries no extractable text layer"
-    bucket_id = require_active_bucket_id()
-    build_service(bucket_id=bucket_id).persist_document(
-        bucket_id=bucket_id,
-        row=_read_row(),
-        document=NotificationDocument(
+
+def _history_projection(*, count: int = 2) -> NotificationDocumentHistoryPublicResultV1:
+    rows = (
+        NotificationDocumentHistoryEntryPublicV1(
             certificado_id=_CERT,
-            pdf_bytes=data,
-            pdf_sha256=sha256_hex(data),
-            source_url=_DETAIL_URL,
+            fetched_at=datetime(2025, 3, 6, 7, 8, tzinfo=UTC),
+            sancion=_sancion(_CERT),
+        ),
+        NotificationDocumentHistoryEntryPublicV1(
+            certificado_id=_CERT2,
+            fetched_at=datetime(2025, 3, 5, 7, 8, tzinfo=UTC),
+            sancion=_sancion(_CERT2),
         ),
     )
-    return bucket_id
+    return NotificationDocumentHistoryPublicResultV1(
+        bucket_id=str(_PROFILE),
+        count=count,
+        documents=rows[:count],
+    )
+
+
+def _view_read(projection: NotificationDocumentViewPublicResultV1) -> bridge.NotificationDocumentViewRead:
+    completion = RegisteredOperationCompletion(
+        operation_id=_OPERATION_ID,
+        projection=projection,
+        effect=OperationEffect.NONE,
+    )
+    return bridge.NotificationDocumentViewRead(completion=completion, projection=projection)
+
+
+def _history_read(
+    projection: NotificationDocumentHistoryPublicResultV1,
+) -> bridge.NotificationDocumentHistoryRead:
+    completion = RegisteredOperationCompletion(
+        operation_id=_OPERATION_ID,
+        projection=projection,
+        effect=OperationEffect.NONE,
+    )
+    return bridge.NotificationDocumentHistoryRead(completion=completion, projection=projection)
+
+
+def _context() -> typer.Context:
+    return cast(typer.Context, cast(object, None))
+
+
+class _CapturedEnvelope(TypedDict):
+    result: object
+    lines: tuple[str, ...]
+    notices: tuple[Notice, ...]
+
+
+def _capture_envelope(monkeypatch: pytest.MonkeyPatch) -> list[_CapturedEnvelope]:
+    envelopes: list[_CapturedEnvelope] = []
+
+    def capture(
+        _ctx: typer.Context,
+        *,
+        command: str,
+        result: object,
+        lines: Iterable[str],
+        notices: Sequence[Notice] | None = None,
+    ) -> None:
+        del command
+        envelopes.append({"result": result, "lines": tuple(lines), "notices": tuple(notices or ())})
+
+    monkeypatch.setattr(handler, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
+    monkeypatch.setattr(handler, "emit_envelope", capture)
+    return envelopes
 
 
 def test_document_subgroup_offers_only_the_contract_named_verbs() -> None:
@@ -148,53 +205,125 @@ def test_document_subgroup_offers_only_the_contract_named_verbs() -> None:
         assert forbidden not in result.output, forbidden
 
 
-def test_document_view_reads_stored_custody_with_no_aeat_session_available() -> None:
-    """The read-back leaf completes against local custody alone.
+def test_document_view_reads_registered_projection_without_aeat_preflight(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The registered local read renders its typed result without auth preflight."""
+    envelopes = _capture_envelope(monkeypatch)
+    monkeypatch.setattr(
+        handler, "read_notification_document_view_for_cli", lambda *_args, **_kwargs: _view_read(_view_projection())
+    )
+    monkeypatch.setattr(handler, "emit_live_auth_preflight", lambda *_args: pytest.fail("view invoked auth preflight"))
 
-    The absence of the auth-preflight banner is the load-bearing assertion: it
-    is emitted by every leaf that reaches for an authenticated session, so its
-    absence is evidence this verb never went near one. There is no AEAT
-    provider configured in this environment either, so a leaf that did would
-    not have completed.
-    """
-    _take_custody_of_an_unreadable_document()
+    handler.notifications_document_view(_context(), _CERT)
 
-    result = _invoke_notifications(["document", "view", _CERT])
-
-    assert result.exit_code == 0, result.output
-    assert f"certificado_id\t{_CERT}" in result.output
-    assert "sancion_parsed\tFalse" in result.output
-    assert "auth_preflight" not in result.output
-
-
-def test_document_view_refuses_a_certificado_that_is_not_in_custody() -> None:
-    """A certificado with no stored document refuses rather than reporting an empty one."""
-    result = _invoke_notifications(["document", "view", "9999999999999"])
-    assert result.exit_code != 0
+    assert len(envelopes) == 1
+    result = envelopes[0]["result"]
+    assert isinstance(result, NotificationDocumentViewResult)
+    assert result.certificado_id == _CERT
+    assert result.sancion_parsed is False
+    assert "sancion_parsed\tFalse" in envelopes[0]["lines"]
+    assert "auth_preflight" not in envelopes[0]["lines"]
 
 
-def test_document_view_reports_an_unparsed_document_identically_in_json_and_text() -> None:
-    """One notice, two renderings, rebuilt from the same value so they cannot drift."""
-    _take_custody_of_an_unreadable_document()
+def test_document_view_refuses_a_certificado_that_is_not_in_custody(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A registered not-found refusal remains correlated at the CLI boundary."""
 
-    text = _invoke_notifications(["document", "view", _CERT])
-    emitted = invoke_cached_cli(["--format", "json", "app", "live", "notifications", "document", "view", _CERT])
+    def refuse(*_args: object, **_kwargs: object) -> bridge.NotificationDocumentViewRead:
+        raise submitted_operation_error(
+            _OPERATION_ID,
+            "notification_document_not_found",
+            terminal_condition=OperationTerminalCondition.REFUSED,
+            effect=OperationEffect.NONE,
+        )
 
-    assert text.exit_code == 0, text.output
-    assert emitted.exit_code == 0, emitted.output
-    notices = unwrap_envelope_notices(emitted.output)
-    unparsed = [notice for notice in notices if notice["code"] == "live.notifications.document.unparsed"]
-    assert len(unparsed) == 1, notices
-    assert unparsed[0]["severity"] == "info"
-    assert unparsed[0]["context"]["certificado_id"] == _CERT
-    assert unparsed[0]["context"]["parse_refusal"]
-    assert f"notice\tlive.notifications.document.unparsed\t{unparsed[0]['message']}" in text.output
+    monkeypatch.setattr(handler, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
+    monkeypatch.setattr(handler, "read_notification_document_view_for_cli", refuse)
 
-    result = unwrap_cli_result(emitted)
-    assert result["sancion"] is None
-    assert result["sancion_parsed"] is False
-    assert result["parse_refusal"]
-    assert result["document_sha256"] == result["attachment_id"]
+    with pytest.raises(CliRefusedBoundaryError) as refused:
+        handler.notifications_document_view(_context(), "9999999999999")
+
+    assert refused.value.context is not None
+    assert refused.value.context["operation_id"] == _OPERATION_ID
+    assert refused.value.context["reason"] == "notification_document_not_found"
+
+
+def test_document_view_reports_an_unparsed_document_identically_in_json_and_text(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The same unparsed notice value feeds the JSON envelope and text line."""
+    envelopes = _capture_envelope(monkeypatch)
+    monkeypatch.setattr(
+        handler, "read_notification_document_view_for_cli", lambda *_args, **_kwargs: _view_read(_view_projection())
+    )
+
+    handler.notifications_document_view(_context(), _CERT)
+
+    assert len(envelopes) == 1
+    emitted = envelopes[0]
+    result = emitted["result"]
+    assert isinstance(result, NotificationDocumentViewResult)
+    assert result.sancion is None
+    assert result.sancion_parsed is False
+    assert result.parse_refusal == "No extractable text layer"
+    assert result.document_sha256 == result.attachment_id
+    notices = emitted["notices"]
+    unparsed = [notice for notice in notices if notice.code == "live.notifications.document.unparsed"]
+    assert len(unparsed) == 1
+    assert unparsed[0].severity is NoticeSeverity.INFO
+    assert unparsed[0].context == {"certificado_id": _CERT, "parse_refusal": "No extractable text layer"}
+    assert f"notice\tlive.notifications.document.unparsed\t{unparsed[0].message}" in emitted["lines"]
+
+
+def test_document_pull_preserves_comparecencia_and_already_in_custody_notices(monkeypatch: pytest.MonkeyPatch) -> None:
+    projection = NotificationDocumentCapturePublicResultV1(
+        bucket_id=str(_PROFILE),
+        certificado_id=_CERT,
+        attachment_id="d" * 64,
+        document_sha256="d" * 64,
+        byte_size=123,
+        source_url=_DETAIL_URL,
+        fetched_at=datetime(2025, 3, 6, 7, 8, tzinfo=UTC),
+        sancion_parsed=False,
+        sancion=None,
+        parse_refusal="No extractable text layer",
+        mode="read",
+        already_in_custody=True,
+    )
+    completion = RegisteredOperationCompletion(
+        operation_id=_OPERATION_ID,
+        projection=projection,
+        effect=OperationEffect.NONE,
+    )
+    captured = capture_bridge.NotificationDocumentCapture(completion=completion, projection=projection)
+    envelopes = _capture_envelope(monkeypatch)
+    monkeypatch.setattr(handler, "emit_live_auth_preflight", lambda *_args: None)
+    monkeypatch.setattr(handler, "capture_notification_document_for_cli", lambda *_args, **_kwargs: captured)
+
+    handler.notifications_document_pull(_context(), _CERT)
+
+    assert len(envelopes) == 1
+    emitted = envelopes[0]
+    result = emitted["result"]
+    assert isinstance(result, NotificationDocumentPullResult)
+    assert result.already_in_custody is True
+    assert result.certificado_id == _CERT
+    assert "already_in_custody\tTrue" in emitted["lines"]
+    notices = emitted["notices"]
+    by_code = {notice.code: notice for notice in notices}
+    assert set(by_code) == {
+        "live.notifications.document.comparecencia_guarded",
+        "live.notifications.document.already_in_custody",
+        "live.notifications.document.unparsed",
+    }
+    assert by_code["live.notifications.document.comparecencia_guarded"].context == {
+        "certificado_id": _CERT,
+        "comparecencia_performed": "false",
+    }
+    assert by_code["live.notifications.document.already_in_custody"].context == {
+        "certificado_id": _CERT,
+        "document_sha256": "d" * 64,
+        "fetched_at": "2025-03-06T07:08:00+00:00",
+    }
+    assert any(line.startswith("notice\tlive.notifications.document.already_in_custody\t") for line in emitted["lines"])
 
 
 def test_a_document_payload_cannot_claim_a_reading_it_does_not_carry() -> None:
@@ -234,30 +363,29 @@ def test_a_document_payload_cannot_claim_a_reading_it_does_not_carry() -> None:
     assert refused.mode == "read"
 
 
-def test_document_history_lists_two_parsed_documents_without_a_total() -> None:
-    bucket_id = require_active_bucket_id()
-    service = build_service(bucket_id=bucket_id)
-    for certificado_id in ("2699101808461", "2699101808462"):
-        service.persist_document(
-            bucket_id=bucket_id,
-            row=_read_row().model_copy(update={"certificado_id": certificado_id}),
-            document=served_document(certificado_id=certificado_id, data=sancion_pdf_bytes()),
-        )
+def test_document_history_lists_registered_parsed_documents_without_a_total(monkeypatch: pytest.MonkeyPatch) -> None:
+    envelopes = _capture_envelope(monkeypatch)
+    monkeypatch.setattr(
+        handler,
+        "read_notification_document_history_for_cli",
+        lambda *_args, **_kwargs: _history_read(_history_projection()),
+    )
 
-    emitted = invoke_cached_cli(["--format", "json", "app", "live", "notifications", "document", "history"])
+    handler.notifications_document_history(_context())
 
-    assert emitted.exit_code == 0, emitted.output
-    result = unwrap_cli_result(emitted)
-    assert result["count"] == 2
-    assert {row["certificado_id"] for row in result["documents"]} == {"2699101808461", "2699101808462"}
-    assert not any("total" in key.casefold() or "balance" in key.casefold() for key in result)
-    notices = unwrap_envelope_notices(emitted.output)
-    history = [notice for notice in notices if notice["code"] == "live.notifications.document.history_not_balance"]
+    assert len(envelopes) == 1
+    emitted = envelopes[0]
+    result = emitted["result"]
+    assert isinstance(result, NotificationDocumentHistoryResult)
+    assert result.count == 2
+    assert {row.certificado_id for row in result.documents} == {_CERT, _CERT2}
+    dumped = result.model_dump(mode="json")
+    assert not any("total" in key.casefold() or "balance" in key.casefold() for key in dumped)
+    notices = emitted["notices"]
+    history = [notice for notice in notices if notice.code == "live.notifications.document.history_not_balance"]
     assert len(history) == 1
-    assert history[0]["context"] == {"document_count": "2", "total_computed": "false"}
-
-    text = _invoke_notifications(["document", "history"])
-    assert text.exit_code == 0, text.output
+    assert history[0].context == {"document_count": "2", "total_computed": "false"}
+    lines = emitted["lines"]
     for field in (
         "clave_liquidacion",
         "referencia",
@@ -270,14 +398,24 @@ def test_document_history_lists_two_parsed_documents_without_a_total() -> None:
         "diferencia",
         "importe_a_ingresar",
     ):
-        assert f"{field}\t" in text.output
+        assert any(line.startswith(f"{field}\t") for line in lines)
+    assert "base_sancion\t1000.00" in lines
 
 
-def test_empty_document_history_still_carries_the_no_balance_notice() -> None:
-    emitted = invoke_cached_cli(["--format", "json", "app", "live", "notifications", "document", "history"])
-    assert emitted.exit_code == 0, emitted.output
-    assert unwrap_cli_result(emitted)["documents"] == []
-    assert any(
-        notice["code"] == "live.notifications.document.history_not_balance"
-        for notice in unwrap_envelope_notices(emitted.output)
+def test_empty_document_history_still_carries_the_no_balance_notice(monkeypatch: pytest.MonkeyPatch) -> None:
+    envelopes = _capture_envelope(monkeypatch)
+    monkeypatch.setattr(
+        handler,
+        "read_notification_document_history_for_cli",
+        lambda *_args, **_kwargs: _history_read(_history_projection(count=0)),
     )
+
+    handler.notifications_document_history(_context())
+
+    assert len(envelopes) == 1
+    emitted = envelopes[0]
+    result = emitted["result"]
+    assert isinstance(result, NotificationDocumentHistoryResult)
+    assert result.documents == []
+    notices = emitted["notices"]
+    assert any(notice.code == "live.notifications.document.history_not_balance" for notice in notices)

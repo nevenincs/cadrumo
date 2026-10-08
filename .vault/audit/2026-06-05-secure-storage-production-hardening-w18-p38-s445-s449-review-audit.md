@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:4c7746a7cd54e11dc2d851c6be3f036d2edbd008f88e41030c5b928e4b03541d'
+modified: '2026-10-03'
+body_hash: 'sha256:a557c869d0d4c6d06338a37b48d60d1780130f07de9f9ce39cf636fbd88811ba'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S445-S449-001 | PASS | Split modules delegate runtime custody
 
-Reviewed `src/aeat/application/modelo/_work_create_policy.py`, `src/aeat/application/modelo/_work_plazo.py`, `src/aeat/application/modelo/_iva_wallet_seed.py`, `src/aeat/entrypoints/cli/_modelo_projection_cli.py`, and `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py`.
+Reviewed the retired module, the retired module, the retired module, the retired module, and the retired module.
 
 The work-create policy reads its feature switch through centralized settings and delegates profile applicability to workflow/profile services. The plazo module delegates deadline/recargo policy to domain services and logs recoverable deadline failures at debug level. The IVA wallet seed facade delegates taxpayer lookup and persistence to application services. The CLI registrars emit schema-backed payloads and localized errors without owning secure storage routing.
 

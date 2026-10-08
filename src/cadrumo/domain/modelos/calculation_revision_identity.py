@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
+from functools import partial
 from typing import TYPE_CHECKING
 
 from pydantic import TypeAdapter, ValidationError
@@ -16,14 +17,18 @@ from pydantic import TypeAdapter, ValidationError
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hashing import content_hash_hex
 from ...core.irnr import M210GrossIncomeSourceMode
+from ..calculations.record_row_membership import ClosedRecordRowSet, validate_closed_record_row_sets
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.ids import BindingId, RelationId
 from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ..calculations.row_coordinate import index_unique_row_coordinates
 from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ..identifiers import canonical_decimal_string as _canonical_decimal
 from .calculation_revision_m303_handoff import FilingInstanceEvidence, M303RegimenSimplificadoAnnualSummaryHandoff
+from .calculation_revision_operator_layer import OPERATOR_LAYER_IDENTITY_KEY, CalculationOperatorLayer
 from .errors import ModeloValidationError
+from .m156_rows import Modelo156AfiliadoRow
 from .row_models import Modelo210AgrupacionRentaRow, Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
 
 if TYPE_CHECKING:
@@ -75,6 +80,12 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
 
     def _row_payload(row: ModeloDetailRow) -> dict[str, object]:
         d: dict[str, object] = {}
+        if isinstance(row, Modelo156AfiliadoRow):
+            d.update(row_type=row.row_type, nif=row.nif, nombre=row.nombre, numero_afiliacion=row.numero_afiliacion)
+            for month in row.cotizaciones:
+                d[f"month_{month.month:02d}_status"] = month.status
+                d[f"month_{month.month:02d}_amount"] = None if month.amount is None else str(month.amount.normalize())
+            return dict(sorted(d.items()))
         for field_name, field_value in row.model_dump().items():
             if isinstance(field_value, Decimal):
                 d[field_name] = str(field_value.normalize())
@@ -83,6 +94,8 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
         return dict(sorted(d.items()))
 
     def _row_identity_key(row: ModeloDetailRow) -> str:
+        if isinstance(row, Modelo156AfiliadoRow):
+            return f"{row.nif}|{row.numero_afiliacion}"
         if isinstance(row, Modelo210AgrupacionRentaRow):
             return row.source_id
         if isinstance(row, (Modelo349OperadorRow, Modelo349RectificacionRow)):
@@ -109,6 +122,10 @@ def _validated_row_binding_index(value: object, *, surface: str) -> str:
     return str(index)
 
 
+def _duplicate_row_binding_index(row_index: str, *, surface: str, binding_id: BindingId) -> ModeloValidationError:
+    return ModeloValidationError(f"{surface} for binding {binding_id!r} contains duplicate row {row_index!r}")
+
+
 def canonical_row_binding_values(
     row_binding_values: Mapping[object, object],
     *,
@@ -121,14 +138,16 @@ def canonical_row_binding_values(
         if not isinstance(raw_rows, Mapping):
             raise ModeloValidationError(f"{surface} for binding {binding_id!r} must be a row-index mapping")
         typed_rows = TypeAdapter(dict[object, object]).validate_python(raw_rows)
-        rows: dict[str, str] = {}
-        for raw_row_index, raw_value in typed_rows.items():
-            row_index = _validated_row_binding_index(raw_row_index, surface=f"{surface}[{binding_id!r}]")
-            if row_index in rows:
-                raise ModeloValidationError(
-                    f"{surface} for binding {binding_id!r} contains duplicate row {row_index!r}",
+        rows = index_unique_row_coordinates(
+            (
+                (
+                    _validated_row_binding_index(raw_row_index, surface=f"{surface}[{binding_id!r}]"),
+                    str(raw_value).strip(),
                 )
-            rows[row_index] = str(raw_value).strip()
+                for raw_row_index, raw_value in typed_rows.items()
+            ),
+            duplicate=partial(_duplicate_row_binding_index, surface=surface, binding_id=binding_id),
+        )
         if rows:
             canonical[binding_id] = dict(sorted(rows.items(), key=lambda item: int(item[0])))
     return dict(sorted(canonical.items()))
@@ -224,6 +243,22 @@ def _cleared_casillas_revision_id_payload(
     return {}
 
 
+def _operator_layer_revision_id_payload(
+    operator_layer: CalculationOperatorLayer | None,
+) -> dict[str, object]:
+    """Build the optional operator-layer payload key.
+
+    Present only when the calculation recorded its caller tier. A revision
+    stored before the layer existed carries none and hashes exactly as it did,
+    so its content-addressed id is unchanged. A recorded layer joins identity
+    even when it is empty: "the operator authored nothing" is a known fact that
+    a revision whose layer is unknown does not assert.
+    """
+    if operator_layer is None:
+        return {}
+    return {OPERATOR_LAYER_IDENTITY_KEY: operator_layer.identity_payload()}
+
+
 def _m210_revision_id_payload(
     m210_official_tipo_renta_code: str | None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
@@ -266,14 +301,17 @@ def _source_issues_revision_id_payload(
     source_issues: Sequence[CalculationSourceIssue],
 ) -> dict[str, object]:
     """Build the optional unresolved-source-issue payload key."""
+    # A box is appended only when an issue names one, so every issue stored
+    # before issues could name a box keeps the identity it was stored under.
     canonical_source_issues = tuple(
         sorted(
             (
                 issue.reason,
-                issue.binding_source.value,
+                "" if issue.binding_source is None else issue.binding_source.value,
                 issue.source_ref or "",
                 issue.resolver_id or "",
                 issue.message,
+                *(() if issue.casilla_id is None else (str(issue.casilla_id),)),
             )
             for issue in source_issues
         )
@@ -347,10 +385,17 @@ def _relation_overrides_revision_id_payload(
     }
 
 
+def canonical_closed_record_row_sets(row_sets: Sequence[ClosedRecordRowSet]) -> list[dict[str, object]]:
+    """Preserve complete membership and all source/scope axes in content identity."""
+    validate_closed_record_row_sets(row_sets, supplied_binding_ids=set())
+    return [row_set.model_dump(mode="json") for row_set in sorted(row_sets, key=lambda value: value.record_id)]
+
+
 def _row_identity_revision_id_payload(
     *,
     row_binding_values: Mapping[BindingId, Mapping[str, str]] | None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity],
+    closed_record_row_sets: Sequence[ClosedRecordRowSet],
     row_casilla_values: Mapping[RowCasillaKey, Decimal],
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
 ) -> dict[str, object]:
@@ -368,6 +413,8 @@ def _row_identity_revision_id_payload(
     canonical_row_identities = canonical_row_source_identities(row_source_identities)
     if canonical_row_identities:
         payload["row_source_identities"] = canonical_row_identities
+    if closed_record_row_sets:
+        payload["closed_record_row_sets"] = canonical_closed_record_row_sets(closed_record_row_sets)
     canonical_casilla_values = canonical_row_casilla_values(row_casilla_values)
     if canonical_casilla_values:
         payload["row_casilla_values"] = canonical_casilla_values
@@ -427,6 +474,7 @@ def derive_calculation_revision_id_from_identity_inputs(
     binding_overrides = identity_inputs["binding_overrides"]
     row_binding_values = identity_inputs["row_binding_values"]
     row_source_identities = identity_inputs["row_source_identities"]
+    closed_record_row_sets = identity_inputs["closed_record_row_sets"]
     row_casilla_values = identity_inputs["row_casilla_values"]
     row_casilla_provenance = identity_inputs["row_casilla_provenance"]
     casilla_values = identity_inputs["casilla_values"]
@@ -445,6 +493,7 @@ def derive_calculation_revision_id_from_identity_inputs(
     ]
     amendment_identity = identity_inputs["amendment_identity"]
     cleared_casilla_ids = identity_inputs["cleared_casilla_ids"]
+    operator_layer = identity_inputs["operator_layer"]
     payload: dict[str, object] = _base_revision_id_payload(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
@@ -460,6 +509,7 @@ def derive_calculation_revision_id_from_identity_inputs(
         _row_identity_revision_id_payload(
             row_binding_values=row_binding_values,
             row_source_identities=row_source_identities,
+            closed_record_row_sets=closed_record_row_sets,
             row_casilla_values=row_casilla_values,
             row_casilla_provenance=row_casilla_provenance,
         ),
@@ -478,6 +528,14 @@ def derive_calculation_revision_id_from_identity_inputs(
     )
     payload.update(_amendment_revision_id_payload(amendment_identity))
     payload.update(_cleared_casillas_revision_id_payload(cleared_casilla_ids))
+    payload.update(_operator_layer_revision_id_payload(operator_layer))
+    rendering = identity_inputs["rendering_snapshot"]
+    if rendering is not None:
+        payload["rendering_snapshot"] = {
+            "authority_generation": rendering.authority_generation,
+            "registry_digest": rendering.registry_digest,
+            "rendering_digest": rendering.rendering_digest,
+        }
     return content_hash_hex(payload)
 
 

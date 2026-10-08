@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:2a7991f1b269d9accebf46444b6af28299125ecee023251538f421b8687df49a'
+body_hash: 'sha256:40794f0077e401c7c6a99936ad653b1129a3fe4bee523b16204a707d43dde26d'
 related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-25-tui-architecture-s160-approved-amendment-architecture-review-audit]]"
   - "[[2026-08-25-tui-architecture-s160-plan-amendment-review-audit]]"
 ---
@@ -83,7 +82,7 @@ The prior `config-reset-stale-absence` HIGH is closed. Resume now accepts only t
 
 ### Implementation traceability
 
-The historical LOW remains. The initial/public-move remediation commits contain broad unrelated shared-tree work, and `620f9f577a` accidentally includes an unrelated staged change to `dev/quality/modelo_branch_classification.toml`. This mixed provenance is not a pointer semantic defect and does not reopen any HIGH finding, but it prevents commit boundaries alone from serving as path-pure S168 evidence.
+The historical LOW remains. This mixed provenance is not a pointer semantic defect and does not reopen any HIGH finding, but it prevents commit boundaries alone from serving as path-pure S168 evidence.
 
 ### Validation and shared-tree isolation
 

@@ -229,3 +229,17 @@ def test_throttle_evaluation_record_is_strict_pydantic() -> None:
     invalid_remaining: int = -1
     with pytest.raises(ValueError):
         ThrottleEvaluation(throttled=True, remaining_seconds=invalid_remaining, consecutive_failures=1)
+
+
+def test_unreadable_sidecar_emits_bounded_diagnostic_without_path_or_payload(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    path = _path(tmp_path)
+    path.parent.mkdir(parents=True)
+    payload = "synthetic-private-sidecar-content"
+    path.write_text(payload, encoding="utf-8")
+    assert not _evaluate(tmp_path, _NOW).throttled
+    messages = [record.getMessage() for record in caplog.records if "sidecar unreadable" in record.getMessage()]
+    assert messages == ["login throttle sidecar unreadable; treating as cleared"]
+    assert str(path) not in messages[0] and payload not in messages[0]
+    assert path.read_text(encoding="utf-8") == payload

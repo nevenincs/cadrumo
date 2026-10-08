@@ -22,7 +22,7 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..filing_export_proof import (
+from ..filing_export_payload_acceptance import (
     FilingExportLiveProofEntry,
     FilingExportOfficialOffsetProbe,
     verify_filing_export_payload_acceptance,

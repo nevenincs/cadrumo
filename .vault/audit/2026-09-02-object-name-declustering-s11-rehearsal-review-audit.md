@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d304560ea051ebff28b014ffb6e0837e638ef7f522f04802379a0b1e873f427'
-related:
-  - "[[2026-09-02-object-name-declustering-plan]]"
+body_hash: 'sha256:ba1a018ee2aff08104f6f0a177e21256292a8f7dd44537624fe41b1e7ce1bc27'
+related: []
 ---
 # `object-name-declustering` audit: `s11 rehearsal review`
 
@@ -152,11 +151,7 @@ component ID, operation membership, affected paths, and hard edges while correct
 caller advisory risk. A disposable counterexample with a forged generator owner was rejected
 with `supplied component differs from the canonical repository graph`.
 
-Resolved: pre-generator containment now compares the transform result with the projected
-transform allowlist, while the post-generator filesystem comparison continues to require the
-full original allowlist. A disposable generator-backed rehearsal successfully changed exactly
-`dev/generated.txt` and `src/example/contracts.py`, recorded one successful generator outcome,
-and left the live source unchanged. This closes `generator-phase-unreachable`.
+Resolved: pre-generator containment now compares the transform result with the projected transform allowlist, while the post-generator filesystem comparison continues to require the full original allowlist. This closes `generator-phase-unreachable`.
 
 Ruff, Ruff-format, ty, and byte-compilation checks passed. The current focused suite produced
 19 passes and one stale expectation failure: its generated-artifact refusal case expects the

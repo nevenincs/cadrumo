@@ -58,7 +58,7 @@ from ._config_quarantine_payloads import QuarantineNamespacePayload
 # guard.
 
 if TYPE_CHECKING:
-    from ...application.auth.operator_results import AuthConfigureResult
+    from ...application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
     from ...application.config_reset_models import ConfigResetOperation
 
 # Shared nested models (not direct CommandSpec schema targets)
@@ -258,29 +258,6 @@ class RepairConnectivityResult(OutputSchema):
 # P06 — config and profile verb result schemas
 
 
-class ConfigLoginResult(OutputSchema):
-    """JSON envelope for ``aeat config login``.
-
-    Reports the authenticated profile's immutable identity, its operator
-    label and the two session deadlines. ``session_persisted`` is ``False`` on a host with no
-    usable OS keychain, where the login is process-scoped only.
-    ``already_authenticated`` marks the idempotent no-op that resumed a
-    still-valid session without re-prompting, and
-    ``closed_previous_profile`` names the profile a cross-profile handover
-    signed out. No passphrase, key material, or session-key bytes enter
-    this payload.
-    """
-
-    profile_id: BucketId
-    active_profile: str
-    authenticated_at: datetime
-    idle_deadline: datetime
-    absolute_deadline: datetime
-    session_persisted: bool
-    already_authenticated: bool
-    closed_previous_profile: str | None = None
-
-
 class ConfigPassphraseChangeResult(OutputSchema):
     """Non-secret outcome of one active-profile passphrase rotation."""
 
@@ -383,22 +360,12 @@ class ConfigPassphraseResetResult(OutputSchema):
 
     profile_id: BucketId
     changed: bool
+    human_receipt_revoked: bool
+    receipt_removed: bool
+    keychain_removed: bool
     password_generation: PostChangePasswordGeneration
     dek_epoch_preserved: bool
     recovery_enrollment_retained: bool
-
-
-class ConfigLogoutResult(OutputSchema):
-    """JSON envelope for ``aeat config logout``.
-
-    Reports which profile the strong close signed out, or ``None`` when
-    nothing was signed in. ``already_logged_out`` marks that idempotent
-    no-op, so a retry is distinguishable from a first close without
-    parsing prose.
-    """
-
-    logged_out_profile: str | None = None
-    already_logged_out: bool
 
 
 class ConfigProfileViewResult(OutputSchema):
@@ -685,37 +652,32 @@ class ConfigResetResumeResult(OutputSchema):
 class AuthConfigurePayload(OutputSchema):
     """JSON envelope for ``aeat config auth configure``.
 
-    Field set mirrors :class:`AuthConfigureResult` from
-    the application layer, whose fields are non-nullable with empty/false
-    defaults; this envelope reconciles to the same nullability.
-    ``status`` is the one CLI-only display field with no application
-    counterpart.
+    The input is the registered operation's safe public result. Private
+    certificate paths, identity values, and rendered backend prose cannot
+    enter this transport.
     """
 
     provider: str
-    file: str
+    changed: bool
+    certificate_file_provided: bool
     status: str | None = None
     complete: bool
-    incomplete_reason: str = ""
     profile_tax_id_present: bool = False
     provider_identity_present: bool = False
     identity_alignment: str = ""
-    identity_alignment_detail: str = ""
     precondition_action: ResolvedPreconditionAction | None = None
 
     @classmethod
     def from_result(
         cls,
-        result: AuthConfigureResult,
+        result: AuthConfigurePublicResultV2,
         *,
         precondition_action: ResolvedPreconditionAction | None,
     ) -> AuthConfigurePayload:
         """Project the application auth result into this CLI envelope.
 
-        Explicit field projection: the envelope derives its values from
-        the application :class:`AuthConfigureResult`
-        instead of the command handler re-declaring the field map inline.
-        ``status`` is a CLI-only display field left to its default.
+        The registered public result owns readiness and change facts; the
+        CLI adds only its canonical recovery-action projection.
 
         Returns:
             The projected
@@ -726,13 +688,12 @@ class AuthConfigurePayload(OutputSchema):
             raise ValueError("auth configuration precondition action must match the application verdict")
         return cls(
             provider=result.provider,
-            file=result.file,
+            changed=result.changed,
+            certificate_file_provided=result.certificate_file_provided,
             complete=result.complete,
-            incomplete_reason=result.incomplete_reason,
             profile_tax_id_present=result.profile_tax_id_present,
             provider_identity_present=result.provider_identity_present,
             identity_alignment=result.identity_alignment,
-            identity_alignment_detail=result.identity_alignment_detail,
             precondition_action=precondition_action,
         )
 

@@ -33,7 +33,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.overview import (
     MASKED_PLACEHOLDER,
     ProfileFieldChoice,
@@ -76,7 +76,7 @@ def _ensure_logged_in() -> None:
     session. Logging in derives the same DEK the capsule was sealed under.
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    login_profile(
+    authenticate_profile_for_invocation(
         name=_LABEL,
         passphrase_callback=lambda: _CREDENTIAL_INPUT,
         profile_decode_context=_profile_decode_context_for_test,
@@ -121,7 +121,7 @@ def _stored() -> dict[str, object | None]:
 
 def _open(app, field):
     """Open one field's dialog exactly as selecting its row does."""
-    from ..profile.overview import FieldEditScreen
+    from ..profile.edit_screens import FieldEditScreen
 
     app.app.push_screen(FieldEditScreen(field), app._apply_edit_for(field))
 
@@ -484,7 +484,7 @@ async def test_a_masked_enum_pre_selects_nothing_so_enter_cannot_overwrite_it(tm
     enter leaves the dialog standing rather than closing it on a value.
     That is the safer of the two outcomes and the one asserted here.
     """
-    from ..profile.overview import FieldEditScreen
+    from ..profile.edit_screens import FieldEditScreen
 
     masked_enum = ProfileFieldView(
         path="auth.contraste_method",

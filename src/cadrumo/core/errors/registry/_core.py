@@ -9,6 +9,16 @@ from ._core_part2 import DECLARED_ERROR_CODES as _CORE_PART2_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.core.errors.hierarchy.RecordedRegisteredError",
+        ErrorCode(
+            code="ERROR_RECORDED_REGISTERED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_cadrumo_core",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.core.output_rendering.OutputRenderingError",
         ErrorCode(
             code="INTERNAL_OUTPUT_RENDERING",
@@ -80,7 +90,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.corpus_text.CorpusAnchorResolutionError",
+        "cadrumo.core.errors.hierarchy.CorpusAnchorResolutionError",
         ErrorCode(
             code="INTEGRITY_CORPUS_ANCHOR_RESOLUTION",
             category=ErrorCategory.INTEGRITY,
@@ -375,16 +385,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="INTEGRITY_ACTIVE_PROFILE_POINTER",
             category=ErrorCategory.INTEGRITY,
             message_key="errors.integrity.integrity_active_profile_pointer",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.telemetry.errors.TelemetrySchemaError",
-        ErrorCode(
-            code="ERROR_TELEMETRY_SCHEMA",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_telemetry_schema",
             retryable=False,
             runbook_id=None,
         ),

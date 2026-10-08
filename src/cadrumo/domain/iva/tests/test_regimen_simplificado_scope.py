@@ -7,9 +7,7 @@ from pydantic import ValidationError
 
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
-from ...calculations.registry.iva_schema_vocabulary import (
-    m303_regime_composition_simplified_scope,
-)
+from ...calculations.registry.m303_schema_vocabulary import m303_regime_composition_simplified_scope
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..regimen_simplificado_rows import (
     M303RegimenSimplificadoScope,

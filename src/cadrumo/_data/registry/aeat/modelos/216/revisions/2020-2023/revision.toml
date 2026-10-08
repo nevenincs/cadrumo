@@ -3,12 +3,17 @@
 # prints the liquidacion as seven partidas without box numbers; the 2024
 # redesign that 2024-y-siguientes renders refuses a devengo year before 2024,
 # so it cannot answer these years. This edition states only what the design
-# prints. The form that numbered those partidas and the instructions tying
-# partidas 1-3 and 4-5 to their blocks are not held, so no formula, binding or
-# export layout is authored and the reach stays at applicability.
+# prints. On 2026-10-05 the original BOE-A-2008-18497 PDF was acquired:
+# annex I, PDF page 11, grounds the authored liquidation grid and printed
+# numbers 01-07. The review below records the earlier evidence state.
+# On 2026-10-05 the historical export was generated and validated, and exact
+# identity, period, payment and amendment fields were added to the form.
+# Annex I explicitly supplies 07 = 03 - 06. Calculation support is limited to
+# that equation over supplied amounts, with no upstream withholding-rate or
+# ledger binding claim. The historical review below is retained as recorded.
 casilla_source_refs = ["aeat-dr-216-2020-2023"]
 application_link_source_refs = ["aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023"]
-authority_grade = "applicability"
+authority_grade = "calculation"
 valid_from = 2020-01-01
 valid_to = 2023-12-31
 period_selector = { year_from = 2020, year_to = 2023, periods = ["1T", "2T", "3T", "4T"] }
@@ -21,6 +26,12 @@ source_refs = [
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
+agent: calculation-only addition on 2026-10-05, grounded in original \
+BOE-A-2008-18497 annex I, PDF page 11, BOE page 45593: 07 = 03 - 06. \
+The six other casillas remain supplied inputs; no withholding rate is inferred. \
+The historical export and eight form context bindings were generated and validated. \
+No filing-grade capability or live AEAT acceptance is claimed. \
+Historical review retained below:\n\
 agent: review on 2026-09-30 of the 2020-2023 edition. VERIFIED -- DESIGN: \
 aeat-dr-216-2020-2023 prints the liquidacion as seven 17-position partidas at positions \
 109-227 with neither box numbers nor block captions \
@@ -41,4 +52,4 @@ Orden HAC/56/2024 replaced its anexo I \
 block caption, so those rows keep no continuity. NOT CLAIMED -- no formula, binding or \
 export layout is declared; the grade stays applicability. NOT CLAIMED -- no independent \
 AEAT oracle checked any value. No human operator has countersigned this."""
-reviewed_at = 2026-09-30
+reviewed_at = 2026-10-05

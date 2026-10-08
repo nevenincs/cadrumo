@@ -57,19 +57,13 @@ _VALIDATION_CARRIER_TOTALITY: dict[str, _ValidationCarrier] = {
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "factory:_build_oauth_desktop_credentials:adapters.outbound.storage._factory.errors.google_client_missing": _ValidationCarrier(
-        "storage.factory.google_oauth_client.present",
-        {"backend": "google_drive", "field": "google_oauth_client", "valid": False},
-        ActionEvidenceProvenance.APPLICATION_STATE,
-        True,
-    ),
-    "factory:_build_oauth_desktop_credentials:adapters.outbound.storage._factory.errors.google_token_missing": _ValidationCarrier(
+    "factory:build_google_credentials:adapters.outbound.storage._factory.errors.google_token_missing": _ValidationCarrier(
         "storage.factory.google_oauth_token.present",
         {"backend": "google_drive", "field": "google_oauth_token", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "factory:get_storage_provider:adapters.outbound.storage._factory.errors.drive_root_missing": _ValidationCarrier(
+    "factory:resolve_required_drive_root_folder_id:adapters.outbound.storage._factory.errors.drive_root_missing": _ValidationCarrier(
         "storage.factory.google_drive_root_folder_id.present",
         {"backend": "google_drive", "field": "google_drive_root_folder_id", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,

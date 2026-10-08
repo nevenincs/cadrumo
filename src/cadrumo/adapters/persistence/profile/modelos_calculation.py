@@ -46,6 +46,7 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ....core.bucket_pointer import resolve_repository_bucket_id
+from ....core.diagnostic_log import diagnostic_timing_event
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
@@ -62,6 +63,10 @@ from ....domain.modelos.calculation_revision_aggregate import (
     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
     CalculationRevisionAggregateContext,
 )
+from ....domain.modelos.calculation_revision_rendering import (
+    CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY,
+    CalculationRenderingSerializerScope,
+)
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ..storage.runtime_repository import secure_object_repository_for_bucket
@@ -72,6 +77,13 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage.sql.secure_objects import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
+
+
+def _catalogue_phase(stage: str) -> None:
+    """Record bounded catalogue stages without coordinates or stored values."""
+    diagnostic_timing_event(_LOGGER, "calculation_catalogue_phase", fields={"stage": stage})
+
+
 _CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
 
 
@@ -181,6 +193,7 @@ class CalculationRevisionCatalogueRepository:
             inner_envelope_version_is_current,
         )
 
+        _catalogue_phase("load_store_begin")
         try:
             record = self._objects.load(
                 MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
@@ -196,8 +209,10 @@ class CalculationRevisionCatalogueRepository:
                 translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
                 logger=_LOGGER,
             )
+        _catalogue_phase("load_store_end")
         if record is None:
             return CalculationRevisionCatalogue()
+        _catalogue_phase("load_validation_begin")
         aggregate_context = self._calculation_revision_aggregate_context(operation=operation)
         envelope: Envelope[CalculationRevisionCatalogue] | None = None
         validation_failed = False
@@ -206,6 +221,7 @@ class CalculationRevisionCatalogueRepository:
                 record.payload.decode(UTF_8_ENCODING),
                 context={
                     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context,
+                    CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY: CalculationRenderingSerializerScope(),
                     "secure_calculation_revision": True,
                 },
             )
@@ -262,6 +278,7 @@ class CalculationRevisionCatalogueRepository:
         for revision in envelope.payload.values():
             assert_revision_snapshot_evidence_coverage(revision)
         self._require_parent_coordinates(envelope.payload, work_units=aggregate_context.work_units)
+        _catalogue_phase("load_validation_end")
         return envelope.payload
 
     def _require_parent_coordinates(
@@ -342,7 +359,10 @@ class CalculationRevisionCatalogueRepository:
                 store.
         """
         self._require_parent_coordinates(catalogue)
-        self._storage.save(catalogue)
+        self._storage.save(
+            catalogue,
+            serialization_context={CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY: CalculationRenderingSerializerScope()},
+        )
 
     def load_revisioned(
         self,
@@ -368,12 +388,14 @@ class CalculationRevisionCatalogueRepository:
                 return self.load_revisioned(operation=indexed_operation)
         # A stored rectificativa revalidates against its evidence chain, so the
         # guarded read carries the same aggregate context as :meth:`load`.
+        _catalogue_phase("revisioned_begin")
         aggregate_context = self._calculation_revision_aggregate_context(operation=operation)
         loaded: tuple[CalculationRevisionCatalogue, str] | None = None
         try:
             loaded = self._storage.load_revisioned(
                 validation_context={
                     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context,
+                    CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY: CalculationRenderingSerializerScope(),
                     "secure_calculation_revision": True,
                 },
             )
@@ -387,6 +409,7 @@ class CalculationRevisionCatalogueRepository:
             )
         catalogue, revision_id = loaded
         self._require_parent_coordinates(catalogue)
+        _catalogue_phase("revisioned_end")
         return catalogue, revision_id
 
     def to_secure_object_write(
@@ -408,8 +431,15 @@ class CalculationRevisionCatalogueRepository:
         catalogue was DERIVED from a read; omitting it writes the whole
         singleton row back unconditionally.
         """
+        _catalogue_phase("encode_begin")
         self._require_parent_coordinates(catalogue)
-        return self._storage.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id)
+        write = self._storage.to_secure_object_write(
+            catalogue,
+            expected_revision_id=expected_revision_id,
+            serialization_context={CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY: CalculationRenderingSerializerScope()},
+        )
+        _catalogue_phase("encode_end")
+        return write
 
     def save_with_secure_object_writes(
         self,

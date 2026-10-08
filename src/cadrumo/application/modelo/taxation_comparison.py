@@ -27,10 +27,9 @@ declared semantic roles, refuses ambiguous role matches before choosing a
 revision's ``profile-declaration-type`` binding so the stored profile value can
 be replaced independently for each run.
 
-:func:`compare_taxation_for_work_unit` is the high-level entry point for CLI
-use: it resolves the registry snapshot and profile bindings from an existing
-work unit, deliberately excludes the stored declaration-type value, and delegates
-to :func:`compare_taxation_modes`.
+:func:`compare_taxation_for_work_unit` resolves the registry snapshot and profile
+bindings from an exact-profile work unit, deliberately excludes the stored
+declaration-type value, and delegates to :func:`compare_taxation_modes`.
 
 See Also:
     :mod:`~cadrumo.application.modelo.semantic_role_resolution`:
@@ -38,8 +37,8 @@ See Also:
         refusal used for the cuota resultante and cuota diferencial roles.
     :mod:`~cadrumo.application.modelo.binding_resolution`:
         Supplies the profile-bound values used by the work-unit entry point.
-    :mod:`~cadrumo.application.modelo.work_addressing`:
-        Resolves natural or exact work addresses before CLI comparison.
+    :mod:`~cadrumo.application.modelo.work_selection`:
+        Resolves the exact work unit inside the authenticated profile.
 """
 
 from __future__ import annotations
@@ -53,7 +52,7 @@ from typing import TYPE_CHECKING, Literal
 from pydantic import BaseModel
 
 from ...core.casilla_id import CasillaId
-from ...core.decimal.constants import MONEY_ZERO, ONE
+from ...core.decimal.constants import ONE
 from ...core.errors.hierarchy import CoreError
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -75,6 +74,7 @@ from .work_selection import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ..aggregation.source_mesh import CalculationSourceResolution
 
 # ---------------------------------------------------------------------------
 # Output types
@@ -207,6 +207,19 @@ def _declaration_type_binding_id(snapshot: RegistrySnapshot) -> BindingId | None
 # ---------------------------------------------------------------------------
 
 
+def _require_taxation_result_casillas(
+    conjunta_values: Mapping[CasillaId, Decimal],
+    individual_values: Mapping[CasillaId, Decimal],
+    cuota_casilla: CasillaId,
+    resultado_casilla: CasillaId,
+) -> None:
+    """Require both result casillas after both independent engine runs finish."""
+    for mode, values in (("conjunta", conjunta_values), ("individual", individual_values)):
+        missing = [casilla for casilla in (cuota_casilla, resultado_casilla) if casilla not in values]
+        if missing:
+            raise TaxationComparisonError(f"{mode} calculation did not produce required result casillas: {missing!r}")
+
+
 def compare_taxation_modes(
     snapshot: RegistrySnapshot,
     *,
@@ -296,10 +309,11 @@ def compare_taxation_modes(
     conjunta_values = _run(2)
     individual_values = _run(1)
 
-    conjunta_cuota = conjunta_values.get(cuota_casilla, MONEY_ZERO)
-    individual_cuota = individual_values.get(cuota_casilla, MONEY_ZERO)
-    conjunta_resultado = conjunta_values.get(resultado_casilla, MONEY_ZERO)
-    individual_resultado = individual_values.get(resultado_casilla, MONEY_ZERO)
+    _require_taxation_result_casillas(conjunta_values, individual_values, cuota_casilla, resultado_casilla)
+    conjunta_cuota = conjunta_values[cuota_casilla]
+    individual_cuota = individual_values[cuota_casilla]
+    conjunta_resultado = conjunta_values[resultado_casilla]
+    individual_resultado = individual_values[resultado_casilla]
 
     # delta > 0 → conjunta is cheaper (individual is more expensive)
     delta = individual_resultado - conjunta_resultado
@@ -352,15 +366,46 @@ class TaxationComparisonError(CoreError):
 
 
 # ---------------------------------------------------------------------------
-# Work-unit entry point (CLI convenience)
+# Work-unit entry point for the registered runtime operation
 # ---------------------------------------------------------------------------
+
+
+def _require_taxation_input_basis(snapshot: RegistrySnapshot) -> None:
+    """Refuse unresolved manual or prior-period evidence before resolving a profile."""
+    from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
+
+    if any(
+        casilla.formula is None and casilla.binding is None and not casilla.alternate_bindings
+        for casilla in snapshot.revision.casillas
+    ) or relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period):
+        # This work-unit entry receives neither manual/ledger casilla evidence nor
+        # prior-period relation evidence. Formula evaluation would silently treat
+        # those absent facts as zero and could return a false recommendation.
+        raise TaxationComparisonError("comparison requires a complete resolved tax-input basis")
+
+
+def _require_resolved_taxation_bindings(
+    snapshot: RegistrySnapshot, decl_binding: BindingId | None, resolution: CalculationSourceResolution
+) -> None:
+    """Require every declared non-injected binding on one resolved scalar channel."""
+    resolved_binding_ids = (
+        set(resolution.binding_values)
+        | set(resolution.enum_binding_values)
+        | set(resolution.date_binding_values)
+        | set(resolution.boolean_binding_values)
+    )
+    if any(
+        binding.id != decl_binding and binding.id not in resolved_binding_ids for binding in snapshot.revision.bindings
+    ):
+        raise TaxationComparisonError("comparison has unresolved registry bindings")
 
 
 def compare_taxation_for_work_unit(
     work_unit_id: str,
     *,
+    bucket_id: str,
     ports: TaxationComparisonPorts,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> TaxationComparisonResult:
     """Run conjunta-vs-individual comparison for an existing Modelo 100 work unit.
 
@@ -384,7 +429,6 @@ def compare_taxation_for_work_unit(
             Performs the pure snapshot comparison after this function resolves
             work-unit state.
     """
-    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
     from ...domain.calculations.registry.errors import RegistrySnapshotError
     from ...domain.modelos.filing_record import FilingDeclarationKind
@@ -392,17 +436,9 @@ def compare_taxation_for_work_unit(
     from ..aggregation.source_profile import ProfileSourceResolver
     from .action_errors import WorkUnitNotFoundError
     from .binding_resolution import resolve_declaration_period_inputs
-    from .work_selection import ModeloWorkSelectorState, resolve_modelo_work_bucket
+    from .work_selection import ModeloWorkSelectorState
 
-    request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return compare_taxation_for_work_unit(
-                work_unit_id,
-                ports=ports,
-                operation=indexed_operation,
-            )
-    bucket_id = resolve_modelo_work_bucket(request)
+    request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id, bucket_id=bucket_id)
     catalogue = ports.work_unit_reader.load()
     resolution = _select_taxation_work_unit(
         request,
@@ -415,6 +451,8 @@ def compare_taxation_for_work_unit(
             context={"work_unit_id": work_unit_id},
         )
     work_unit = resolution.work_unit
+    if str(work_unit.modelo) != "100":
+        raise TaxationComparisonError("taxation comparison requires Modelo 100")
 
     try:
         snapshot = operation.snapshot(
@@ -426,6 +464,9 @@ def compare_taxation_for_work_unit(
         raise TaxationComparisonError(
             f"registry snapshot unavailable for trabajo unit {work_unit_id!r}: {exc}",
         ) from exc
+    if snapshot.revision.id != work_unit.revision_id:
+        raise TaxationComparisonError("work unit registry revision is no longer the published revision")
+    _require_taxation_input_basis(snapshot)
 
     # Resolve profile bindings — exclude declaration_type so the comparison
     # engine can inject 1 or 2 independently for each run.
@@ -443,6 +484,7 @@ def compare_taxation_for_work_unit(
             revision=snapshot.revision,
         ),
     )
+    _require_resolved_taxation_bindings(snapshot, decl_binding, resolution)
 
     from ...domain.period import calculation_filing_date
 
@@ -476,35 +518,3 @@ def compare_taxation_for_work_unit(
         boolean_binding_values=resolution.boolean_binding_values or None,
         date_context={"filing_period": period_date},
     )
-
-
-def compare_taxation_for_work_address(
-    address: object,
-    *,
-    ports: TaxationComparisonPorts,
-) -> TaxationComparisonResult:
-    """Run conjunta-vs-individual comparison for a natural or exact work address.
-
-    Args:
-        address: The :class:`~cadrumo.application.modelo.work_addressing.ModeloWorkAddress`
-            selected by CLI work-address parsing.
-        ports: Read capability used to resolve the addressed work unit.
-
-    Returns:
-        A :class:`TaxationComparisonResult` for the resolved work unit.
-    """
-    from .work_addressing import ModeloWorkAddress, resolve_modelo_work_address_unit
-    from .work_selection import (
-        ModeloWorkSelectorRequest,
-        resolve_modelo_work_bucket,
-    )
-
-    if not isinstance(address, ModeloWorkAddress):
-        raise TypeError(f"expected ModeloWorkAddress, got {type(address).__name__}")
-    bucket_id = address.bucket_id or resolve_modelo_work_bucket(ModeloWorkSelectorRequest())
-    work_unit = resolve_modelo_work_address_unit(
-        address,
-        catalogue=ports.work_unit_reader.load(),
-        bucket_id=bucket_id,
-    )
-    return compare_taxation_for_work_unit(work_unit.work_unit_id, ports=ports)

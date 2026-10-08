@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:e37607df74e0660c93f1ebf028a86aa78d9054ca14b98911903d2641a55deadb'
+modified: '2026-10-03'
+body_hash: 'sha256:17a9875cb3b0fd1cf2624bb79b041a032d98a36d9afff95688ce0cef228bd503'
 related: []
 ---
 
@@ -18,7 +18,7 @@ The secure-object and remote-provider signals are data-shape concerns only: `OAu
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/outbound/google/test_records.py src/aeat/adapters/outbound/google/test_package_module_allowlist.py` passed.
+- the historical check passed.
 - The broader focused Google adapter suite passed with 131 tests.
 - `uv run --no-sync ruff check` over the Google adapter production/test slice passed.
 

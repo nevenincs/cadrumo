@@ -72,10 +72,9 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
-from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.modelo.filing_action_ports import FilingActionPorts
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -101,7 +100,10 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
-from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from cadrumo.domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
@@ -124,6 +126,7 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 from cadrumo.tests.env_scope import ready_clave_settings
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -159,7 +162,7 @@ _YEAR = 2025
 _TAX_ID = "12345678Z"
 # Irene SL files the exercise whose Modelo 303 design the registry splits mid-year, so
 # the annual Modelo 390 folds quarters calculated under both designs.
-_IRENE_YEAR = split_exercise_revisions("303")[0].valid_from.year
+_IRENE_YEAR = split_exercise_revisions("303", early_period="2T", late_period="3T")[0].valid_from.year
 _IRENE_TAX_ID = "B12345674"
 _T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)
@@ -254,6 +257,7 @@ _QUARTER_MONTH: dict[str, int] = {"1T": 2, "2T": 5, "3T": 8, "4T": 11}
 
 def _verification_ports(
     *,
+    operation: PinnedAuthorityOperation,
     work_repo: WorkUnitCatalogueRepository,
     calc_repo: CalculationRevisionCatalogueRepository,
     filing_repo: ModeloRecordCatalogueRepository,
@@ -263,7 +267,7 @@ def _verification_ports(
 ) -> VerificationRepositoryBundle:
     """Compose complete verification ports over the isolated repositories."""
     return replace(
-        build_verification_repository_bundle(_BUCKET_ID),
+        build_verification_repository_bundle(_BUCKET_ID, operation=operation),
         work_unit=work_repo,
         calculation=calc_repo,
         filing=filing_repo,
@@ -282,10 +286,11 @@ def _filing_ports(
     event_repo: BucketEventHistoryRepository,
     wallet_repo: IvaWalletDecisionRepository,
     observation_repo: CalculationObservationRepository,
+    operation: PinnedAuthorityOperation,
 ) -> FilingActionPorts:
     """Compose complete filing ports over the isolated repositories."""
     return replace(
-        build_filing_action_ports(bucket_id=_BUCKET_ID),
+        build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         filing_repository=filing_repo,
@@ -516,6 +521,15 @@ def _wallet_decision(
         stale_wallet=False,
         reason_identity="aeat_wallet_validated",
         wallet_captured_at=decided_at,
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="aeat_wallet",
+                amount=Decimal("0.00"),
+                source_locator=f"test://wallet/{filing_year}/{period}",
+                captured_at=decided_at,
+                registry_snapshot_refs=(),
+            ),
+        ),
         decided_at=decided_at,
     )
 
@@ -728,10 +742,11 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
     assert Decimal(revision.casilla_values[_DEDUCIBLE_TOTAL]) == stored["1T"]["deducible"]
 
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=_verification_ports(
+                operation=operation,
                 work_repo=wu_repo,
                 calc_repo=cr_repo,
                 filing_repo=filing_repo,
@@ -745,7 +760,7 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
             clock=_FILE_AT,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
 
     assert report.granted_verificado_completo is True
     assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
@@ -873,10 +888,11 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
         }
 
         with bundled_indexed_authority().operation() as operation:
-            report = verify_modelo_revision(
+            report = verify_modelo_revision_with_preconditions(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=_verification_ports(
+                    operation=operation,
                     work_repo=wu_repo,
                     calc_repo=cr_repo,
                     filing_repo=filing_repo,
@@ -890,12 +906,13 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
                 clock=_IRENE_FILE_AT,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).report
         assert report.granted_verificado_completo is True, report.findings
 
         with bundled_indexed_authority().operation() as operation:
             filing = file_modelo_revision(
                 revision.calculation_revision_id,
+                approved_verification_report_id=report.verification_report_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 actor="irene",
                 workflow_profile=workflow_profile,
@@ -907,11 +924,12 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
                     event_repo=event_repo,
                     wallet_repo=wallet_repo,
                     observation_repo=observation_repo,
+                    operation=operation,
                 ),
                 clock=_IRENE_FILE_AT,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).record
         assert filing.aeat_accepted is False
         assert filing.external_evidence is None
         stored_observation = observation_repo.load_observation("303", Period.from_year_and_code(_IRENE_YEAR, period))
@@ -931,10 +949,11 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
     assert Decimal(annual.casilla_values[_M390_RESULTADO]) == _IRENE_ANNUAL_EXPECTED["resultado"]
 
     with bundled_indexed_authority().operation() as operation:
-        annual_report = verify_modelo_revision(
+        annual_report = verify_modelo_revision_with_preconditions(
             annual.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=_verification_ports(
+                operation=operation,
                 work_repo=wu_repo,
                 calc_repo=cr_repo,
                 filing_repo=filing_repo,
@@ -948,7 +967,7 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
             clock=_IRENE_FILE_AT,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).report
     assert annual_report.granted_verificado_completo is True, annual_report.findings
     assert _non_official_local_chain_advisory_periods(annual_report) == set(_QUARTER_ORDER), annual_report.findings
 

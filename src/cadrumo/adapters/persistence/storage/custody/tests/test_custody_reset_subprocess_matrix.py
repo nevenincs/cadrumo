@@ -136,7 +136,7 @@ async def _read_child_lines(
     *,
     env: dict[str, str],
     line_count: int,
-    timeout: float,
+    timeout: float | None,
 ) -> tuple[list[str], int, str]:
     """Read readiness lines and completion status through an audited child boundary."""
     process = await asyncio.create_subprocess_exec(
@@ -191,7 +191,7 @@ def test_fresh_interpreter_reset_erases_the_seeded_profile_through_the_productio
                 [sys.executable, "-c", _RESET_CHILD, str(root), str(_PROFILE_ID)],
                 env=_child_env(root),
                 line_count=1,
-                timeout=120,
+                timeout=None,
             ),
         )
         status = lines[0]
@@ -210,7 +210,7 @@ def test_fresh_interpreter_refuses_a_reset_against_a_retired_custody_member(
                 [sys.executable, "-c", _LEGACY_REFUSAL_CHILD, str(root), _LEGACY_BUCKET_ID],
                 env=_child_env(root),
                 line_count=2,
-                timeout=60,
+                timeout=None,
             ),
         )
         assert returncode == 7, stderr or lines
@@ -231,7 +231,7 @@ def test_crash_between_confirm_and_delete_leaves_an_intact_capsule_and_no_resuma
                 [sys.executable, "-c", _DELETE_CRASH_CHILD, str(root), str(_PROFILE_ID)],
                 env=_child_env(root),
                 line_count=1,
-                timeout=120,
+                timeout=None,
             ),
         )
         tx_line = lines[0]

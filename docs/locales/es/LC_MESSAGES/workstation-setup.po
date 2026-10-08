@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 22:18+0200\n"
+"POT-Creation-Date: 2026-10-07 04:04+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
@@ -293,9 +293,8 @@ msgid ""
 "llm.md#set-up-the-local-reader)."
 msgstr ""
 "La clasificación con un LLM se ejecuta solo en este lector local; no "
-"interviene ningún proveedor en la nube. Consulta [Clasificar "
-"transacciones con un LLM](how-to/classify-with-llm.md#set-up-the-local-"
-"reader)."
+"interviene ningún proveedor en la nube. Consulta [Clasificar movimientos "
+"con un LLM](how-to/classify-with-llm.md#set-up-the-local-reader)."
 
 #: ../../workstation-setup.md:120
 msgid ""
@@ -311,26 +310,32 @@ msgstr "Conectar un asistente de IA"
 
 #: ../../workstation-setup.md:124
 msgid ""
-"The Cadrumo package includes `cadrumo-mcp`, the Model Context Protocol "
-"(MCP) server that lets an AI assistant operate the same gated commands as"
-" the CLI. It needs no separate install. Run `cadrumo-mcp --help` to "
-"confirm it is on your path, then follow [Connect an agent](how-to"
-"/connect-an-agent.md) to register it with your assistant. On Windows, "
-"install with `pip` or `uv tool install` to get the command on your path."
+"Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an "
+"agent to registered operations through the local runtime and binds each "
+"connection to an explicit profile ID. Run `cadrumo-mcp --help` to confirm"
+" it is on your path. In a source checkout, check the installed entrypoint"
+" with:"
 msgstr ""
-"El paquete de Cadrumo incluye `cadrumo-mcp`, el servidor del Model "
-"Context Protocol (MCP) que permite a un asistente de IA operar los mismos"
-" comandos con control de acceso que la CLI. No necesita instalación "
-"aparte. Ejecuta `cadrumo-mcp --help` para confirmar que está en tu PATH y"
-" sigue después [Conectar un agente](how-to/connect-an-agent.md) para "
-"registrarlo en tu asistente. En Windows, instala con `pip` o `uv tool "
-"install` para que el comando quede en tu PATH."
+"Cadrumo instala `cadrumo-mcp` junto con `aeat`. El servidor conecta un "
+"agente con las operaciones registradas a través del entorno de ejecución "
+"local y vincula cada conexión a un ID de perfil explícito. Ejecuta "
+"`cadrumo-mcp --help` para confirmar que está en tu ruta de búsqueda. En "
+"una copia de trabajo del código fuente, comprueba el punto de entrada "
+"instalado con:"
 
-#: ../../workstation-setup.md:131
+#: ../../workstation-setup.md:134
+msgid ""
+"[Connect an agent](how-to/connect-an-agent.md) shows profile-bound "
+"registration and the grant request flow."
+msgstr ""
+"[Conectar un agente](how-to/connect-an-agent.md) muestra el registro "
+"vinculado a un perfil y el flujo de solicitud de autorizaciones."
+
+#: ../../workstation-setup.md:137
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../workstation-setup.md:133
+#: ../../workstation-setup.md:139
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -338,7 +343,7 @@ msgstr ""
 "[Guía rápida](how-to/quickstart.md): de un perfil vacío a un fichero de "
 "modelo exportado."
 
-#: ../../workstation-setup.md:135
+#: ../../workstation-setup.md:141
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -347,11 +352,10 @@ msgstr ""
 "capacidades de servicio por perfil (exportación a Google, visión LLM, "
 "subida de evidencias a la nube)."
 
-#: ../../workstation-setup.md:137
+#: ../../workstation-setup.md:143
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Conectar un agente](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:138
+#: ../../workstation-setup.md:144
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolución de problemas](how-to/troubleshooting.md)"
-

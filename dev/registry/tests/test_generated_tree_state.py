@@ -8,12 +8,16 @@ has its own case.
 
 from __future__ import annotations
 
+import shutil
+from pathlib import Path
+
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..analysis import generated_tree_state as _generated_tree_state_module
-from ..analysis.generated_tree_state import STATES, classify_comparison, tree_states
+from ..analysis.generated_tree_state import STATES, classify_comparison, generated_state_inventory, tree_states
 from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -97,7 +101,7 @@ def test_a_comparison_failure_is_excluded_not_reported_reproducible(
         ).is_file()
     )
 
-    def _broken_compare(authority: object, *, modelo: str, revision: str) -> object:
+    def _broken_compare(authority: object, *, modelo: str, revision: str, **_roots: object) -> object:
         raise ValueError(f"synthetic comparison failure for {modelo}/{revision}")
 
     monkeypatch.setattr(_generated_tree_state_module, "compare_revision_against_committed", _broken_compare)
@@ -109,3 +113,41 @@ def test_a_comparison_failure_is_excluded_not_reported_reproducible(
     warning = capsys.readouterr().err
     assert "generated_tree_state:" in warning
     assert "could not be re-rendered for comparison and were excluded" in warning
+
+
+def test_selected_candidate_record_drift_cannot_borrow_bundled_currentness(tmp_path: Path) -> None:
+    """A candidate with altered record bytes fails despite the healthy bundled target."""
+    authority = compiled_bundled_authority()
+    candidate = tmp_path / "registry" / "aeat"
+    shutil.copytree(bundled_path("registry", "aeat", "modelos", "111"), candidate / "modelos" / "111")
+    record = (
+        candidate
+        / "modelos"
+        / "111"
+        / "revisions"
+        / "2019-y-siguientes"
+        / "export"
+        / "0001-record-modelo-111-page-01.toml"
+    )
+    original = record.read_text(encoding="utf-8")
+    altered = original.replace("id = 'modelo-111-page-01'", "id = 'modelo-111-page-01-corrupt'", 1)
+    assert altered != original
+    record.write_text(altered, encoding="utf-8")
+    states, excluded = generated_state_inventory(
+        authority, ("111",), registry_root=candidate, source_root=bundled_path()
+    )
+    assert excluded == ()
+    assert len(states) == 1
+    assert states[0].state == "record_drift"
+    assert record.name in states[0].differing
+
+
+def test_selected_missing_corpus_cannot_borrow_bundled_source_bytes(tmp_path: Path) -> None:
+    """An explicit source root without its official artifact stays refused."""
+    authority = compiled_bundled_authority()
+    missing_source = tmp_path / "missing-corpus"
+    missing_source.mkdir()
+    with pytest.raises(RegistryValidationError, match="missing-corpus"):
+        generated_state_inventory(
+            authority, ("111",), registry_root=bundled_path("registry", "aeat"), source_root=missing_source
+        )

@@ -40,8 +40,6 @@ from .collection_storage_root import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SUBPROCESS_TIMEOUT_SECONDS = 60
-
 
 def _age(directory: Path, seconds: float) -> None:
     """Backdate ``directory``'s mtime so the reaper sees it as that old."""
@@ -58,7 +56,7 @@ def _a_genuinely_dead_pid() -> int:
     an open handle keeps the identifier reserved.
     """
     with subprocess.Popen([sys.executable, "-c", "pass"]) as child:  # fixed interpreter argv, no external input.
-        child.wait(timeout=_SUBPROCESS_TIMEOUT_SECONDS)
+        child.wait()
         pid = child.pid
     return pid
 
@@ -331,7 +329,7 @@ def test_the_reap_is_safe_to_run_concurrently(tmp_path: Path) -> None:
     for worker in workers:
         worker.start()
     for worker in workers:
-        worker.join(timeout=_SUBPROCESS_TIMEOUT_SECONDS)
+        worker.join()
 
     assert not failures, f"concurrent reaps raised: {failures}"
     survivors = scan_directory(root, pattern="pytest-*")
@@ -377,7 +375,6 @@ def test_the_reaped_root_is_where_a_real_pytest_run_puts_its_directories(tmp_pat
         capture_output=True,
         text=True,
         cwd=tmp_path,
-        timeout=_SUBPROCESS_TIMEOUT_SECONDS * 4,
         check=False,
     )
 

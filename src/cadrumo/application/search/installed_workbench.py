@@ -20,7 +20,7 @@ from ..aeat_sync.workspace import (
     AeatSyncWorkspaceProjectionV1,
 )
 from ..ledger.workspace import LedgerWorkspaceProjectionV1
-from ..modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
+from ..modelo.declarations_workspace_contracts import DeclarationsWorkspaceProjectionV1
 from ..modelo.workspace_models import ModeloWorkspaceCapabilityDisposition, ModeloWorkspaceProjectionV1
 from ..review.filter import LedgerReviewStatus
 from .workbench import (
@@ -52,31 +52,6 @@ class InstalledWorkbenchSearchSnapshotV1:
         """Refuse Python serialization of the ephemeral identity seed set."""
         del protocol
         raise TypeError("installed workbench search snapshots are memory-only")
-
-
-@dataclass(frozen=True, slots=True)
-class InstalledWorkbenchSearchInputsV1:
-    """One already-loaded, coherent input set owned by the session root."""
-
-    ledger: LedgerWorkspaceProjectionV1
-    declarations: DeclarationsWorkspaceProjectionV1
-    aeat_sync: AeatSyncWorkspaceProjectionV1
-    modelo: tuple[ModeloWorkspaceProjectionV1, ...]
-    ledger_admission: WorkbenchDestinationAdmission
-    declarations_admission: WorkbenchDestinationAdmission
-    aeat_sync_admission: WorkbenchDestinationAdmission
-
-    def snapshot(self) -> InstalledWorkbenchSearchSnapshotV1:
-        """Assemble this exact preloaded generation through the application door."""
-        return assemble_installed_workbench_search_snapshot(
-            ledger=self.ledger,
-            declarations=self.declarations,
-            aeat_sync=self.aeat_sync,
-            modelo=self.modelo,
-            ledger_admission=self.ledger_admission,
-            declarations_admission=self.declarations_admission,
-            aeat_sync_admission=self.aeat_sync_admission,
-        )
 
 
 def assemble_installed_workbench_search_snapshot(
@@ -283,7 +258,19 @@ def _aeat_sync_documents(
                 ),
                 label_key=WorkbenchSearchLabelKey.RECONCILIATION,
                 admission=admission,
-                identity_basis=SecretStr("|".join((str(row.modelo), str(row.filing_year), row.period.registry_token))),
+                identity_basis=SecretStr(
+                    "|".join(
+                        (
+                            str(row.modelo),
+                            str(row.filing_year),
+                            row.period.registry_token,
+                            row.work_unit_id or "",
+                            row.evidence_kind.value if row.evidence_kind is not None else "",
+                            row.evidence_id or "",
+                            row.calculation_revision_id or row.comparison_id or "",
+                        )
+                    )
+                ),
             )
         )
     for row in projection.notifications:
@@ -337,7 +324,6 @@ def _modelo_documents(
 
 
 __all__ = [
-    "InstalledWorkbenchSearchInputsV1",
     "InstalledWorkbenchSearchSnapshotV1",
     "assemble_installed_workbench_search_snapshot",
 ]

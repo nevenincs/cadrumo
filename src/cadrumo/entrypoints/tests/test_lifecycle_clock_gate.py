@@ -26,7 +26,7 @@ from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle,
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.lifecycle_clock_gate import ModeloLifecycleClockPrecedesError
-from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit, discard_work_unit, rename_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.errors.error_codes import get_registered_error_code
@@ -164,7 +164,7 @@ def _workflow_profile() -> TaxpayerProfile:
 def _verify(
     revision_id: CalculationRevisionId, *, clock: datetime, operation: PinnedAuthorityOperation
 ) -> VerificationReport:
-    return verify_modelo_revision(
+    return verify_modelo_revision_with_preconditions(
         revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         operator_scope_ports=build_operator_scope_ports(),
@@ -173,15 +173,23 @@ def _verify(
         verification_repositories=build_test_verification_repository_bundle(),
         clock=clock,
         operation=operation,
-    )
+    ).report
 
 
 def _file(revision_id: CalculationRevisionId, *, clock: datetime, operation: PinnedAuthorityOperation) -> None:
+    ports = build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation)
+    granting = tuple(
+        report
+        for report in ports.verification_repository.load().reports.values()
+        if report.calculation_revision_id == revision_id and report.granted_verificado_completo
+    )
+    assert len(granting) == 1
     file_modelo_revision(
         revision_id,
+        approved_verification_report_id=granting[0].verification_report_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         operator_scope_ports=build_operator_scope_ports(),
-        ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+        ports=ports,
         actor="test",
         workflow_profile=_workflow_profile(),
         clock=clock,

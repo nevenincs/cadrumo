@@ -14,7 +14,7 @@ That refusal is deliberate. Filing a tax return is a legal act with your name on
 
 ## Read-only access is the only connection
 
-When you connect the tool to the agency, you grant it one thing: the ability to read your own data from AEAT, view-only. It can look at the returns you've already filed, the receipts on record, and the facts the agency holds about you. It reads this so it can show it to you and compare it against your local work.
+When you connect the tool to the agency, you grant it one thing: the ability to read your own data from AEAT, view-only. It can look at the returns you've already filed, the AEAT receipts on record, and the facts the agency holds about you. It reads this so it can show it to you and compare it against your local work.
 
 Nothing flows the other way. The connection has no path that writes, edits, or registers. Reading your data, view-only, is the whole of what it can do at the agency.
 
@@ -26,17 +26,18 @@ For the steps, see [File your modelo at the AEAT portal](../how-to/file-at-aeat.
 
 ## Recording a filing in your own records
 
-After you've uploaded the return yourself, you come back and mark that saved version as final in your own history. This is recording that you've filed - a local note in your own records, like writing "sent" next to an invoice in your ledger.
+After you've uploaded the return yourself, you come back and record that saved version as filed in your own history. This is Record filing - a local note in your own records, like writing "sent" next to an invoice.
 
 It changes nothing at the agency. It does not submit, re-send, or confirm anything with AEAT. It marks one version as the answer you actually filed, so that later, when you look back, you know which numbers went out and when.
 
-## Checking your record against the agency's receipt
+(checking-your-record-against-the-agencys-receipt)=
+## Checking your record against the AEAT receipt
 
-When you file, the agency gives you a justificante - the official receipt confirming what it received. The tool can compare your local figures against that receipt to catch any disagreement. This is checking your record against the agency's receipt.
+When you file, the agency gives you an AEAT receipt (a justificante) - the official confirmation of what it received. The tool can compare your local figures against that receipt to catch any disagreement. This is checking your record against the AEAT receipt.
 
 You supply the justificante as a PDF, or let the tool fetch it from the agency with a read-only request. Either way, the tool reports whether your record matches or mismatches, and names each field that differs.
 
-For the steps, see [Reconcile a filed modelo against its justificante](../how-to/reconcile.md).
+For the steps, see [Reconcile a filed modelo against its AEAT receipt](../how-to/reconcile.md).
 
 ## What this comparison can and can't tell you
 
@@ -47,10 +48,10 @@ disagrees. It does not compare individual box values, unless you reconcile
 against the filed declaration for a modelo that supports it. It is not a live
 re-check of your maths against the agency: none of these steps re-derives your
 tax; they confirm what was filed and keep proof of it. The precise scope and the mismatch-handling steps are in
-[Reconcile a filed modelo against its justificante](../how-to/reconcile.md).
+[Reconcile a filed modelo against its AEAT receipt](../how-to/reconcile.md).
 
 ## Where this sits in the journey
 
 This is the end of the pipeline that the [overview](index.md) lays out. Everything before it - building the modelo, checking it, recording the result - is yours to do locally; this page is where that local work meets the real agency, across a line the tool will not cross.
 
-If a comparison turns up a mismatch, correct the filed return with an amendment, which [Editing and verifying a calculation](editing-and-verifying.md) explains. And once a filing is recorded, it becomes evidence the tool can lean on for later returns, which [How filings build on earlier ones](building-on-earlier-filings.md) explains.
+If a comparison turns up a mismatch, fix the filed return with a correction, which [Editing and checking a calculation](editing-and-verifying.md) explains. And once a filing is recorded, it becomes proof the tool can lean on for later returns, which [How filings build on earlier ones](building-on-earlier-filings.md) explains.

@@ -24,7 +24,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
@@ -48,8 +47,12 @@ from ...domain.bienes_inversion.regularizacion_parameters import (
     resolve_bienes_inversion_regularizacion_parameters,
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId, LegalRefId, SourceRefId
+from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
+    prorrata_definitive_percentage_source_casilla_id,
+)
 from ...domain.calculations.registry.schema import ModeloRevision
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
@@ -153,14 +156,6 @@ def _casilla_legal_refs(revision: ModeloRevision, casilla_id: CasillaId | None) 
     return tuple(dict.fromkeys((*casilla.legal_refs, *binding_refs)))
 
 
-def _prorrata_casilla_id(revision: ModeloRevision) -> CasillaId | None:
-    for casilla in revision.casillas:
-        tokens = str(casilla.id).casefold().replace(".", "-").split("-")
-        if "prorrata" in tokens and "porcentaje" in tokens:
-            return casilla.id
-    return None
-
-
 def _settlement_period_tokens(revision: ModeloRevision) -> tuple[str, ...]:
     tokens: list[str] = []
     for binding in revision.bindings:
@@ -172,15 +167,18 @@ def _settlement_period_tokens(revision: ModeloRevision) -> tuple[str, ...]:
 
 def _unresolved_binding_diagnostics(
     *,
+    revision: ModeloRevision,
     binding_ids: tuple[BindingId, ...],
     resolver_id: str,
     message: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
+    """One diagnostic per unresolved binding, naming the box the binding fills when it fills one."""
     return tuple(
         CalculationSourceDiagnostic(
             reason="unresolved_binding",
             source_kind=_REGISTER_SOURCE.value,
             binding_id=binding_id,
+            casilla_id=sole_bound_casilla(revision, binding_id),
             resolver_id=resolver_id,
             message=message,
         )
@@ -218,7 +216,7 @@ def _current_year_prorrata_from_m303_observation(
     revision: ModeloRevision,
     operation: PinnedAuthorityOperation,
 ) -> Decimal | None:
-    prorrata_id = _prorrata_casilla_id(revision)
+    prorrata_id = prorrata_definitive_percentage_source_casilla_id(revision.bindings)
     if prorrata_id is None:
         return None
     for token in reversed(_settlement_period_tokens(revision)):
@@ -250,7 +248,7 @@ def _resolve_regularizacion_parameters(
         return resolve_bienes_inversion_regularizacion_parameters(
             context.revision,
             modelo_id=context.modelo,
-            filing_period_date=date(context.filing_year, 12, 31),
+            filing_period_date=context.period.end_date,
         )
     except BienesInversionParameterResolutionError as exc:
         # Modelo 390 revisions declare the parameter family NOT APPLICABLE,
@@ -266,6 +264,7 @@ def _resolve_regularizacion_parameters(
             owned_sources=owned_sources,
             unresolved_binding_ids=binding_ids,
             diagnostics=_unresolved_binding_diagnostics(
+                revision=context.revision,
                 binding_ids=binding_ids,
                 resolver_id=resolver_id,
                 message=str(exc),
@@ -303,7 +302,7 @@ def _current_year_values_for_context(
 ) -> dict[CasillaId, Decimal]:
     """Combine injected current-year values with the M390 stamped M303 fallback."""
     values = dict(current_year_values)
-    prorrata_id = _prorrata_casilla_id(revision)
+    prorrata_id = prorrata_definitive_percentage_source_casilla_id(revision.bindings)
     if prorrata_id is not None and prorrata_id not in values and modelo == Modelo("390").value:
         observed_pct = _current_year_prorrata_from_m303_observation(
             observation_repository,
@@ -336,6 +335,7 @@ def _current_year_prorrata_is_missing(
 def _pending_prorrata_resolution(
     binding_ids: tuple[BindingId, ...],
     *,
+    revision: ModeloRevision,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
     prorrata_id: CasillaId | None,
@@ -346,6 +346,7 @@ def _pending_prorrata_resolution(
         owned_sources=owned_sources,
         unresolved_binding_ids=binding_ids,
         diagnostics=_unresolved_binding_diagnostics(
+            revision=revision,
             binding_ids=binding_ids,
             resolver_id=resolver_id,
             message=(
@@ -361,6 +362,7 @@ def _project_regularizaciones(
     register: BienesInversionIvaRegister,
     parameters: BienesInversionRegularizacionParameters,
     *,
+    revision: ModeloRevision,
     filing_year: int,
     current_year_values: Mapping[CasillaId, Decimal],
     missing_casilla_ids: tuple[CasillaId, ...],
@@ -396,6 +398,7 @@ def _project_regularizaciones(
     if annual_projection.pending_percentage_count:
         return _pending_prorrata_resolution(
             binding_ids,
+            revision=revision,
             resolver_id=resolver_id,
             owned_sources=owned_sources,
             prorrata_id=prorrata_id,
@@ -442,6 +445,7 @@ def _resolved_regularizacion_resolution(
         ),
         unresolved_binding_ids=unresolved,
         diagnostics=_unresolved_binding_diagnostics(
+            revision=context.revision,
             binding_ids=unresolved,
             resolver_id=resolver_id,
             message="bienes_inversion_regularizacion binding selector did not map to a resolver output",
@@ -638,6 +642,7 @@ class BienesInversionRegularizacionSourceResolver:
                 owned_sources=self.owned_sources,
                 unresolved_binding_ids=declared_binding_ids,
                 diagnostics=_unresolved_binding_diagnostics(
+                    revision=context.revision,
                     binding_ids=declared_binding_ids,
                     resolver_id=self.resolver_id,
                     message=(
@@ -694,10 +699,11 @@ class BienesInversionRegularizacionSourceResolver:
             revision=context.revision,
             operation=self._operation,
         )
-        prorrata_id = _prorrata_casilla_id(context.revision)
+        prorrata_id = prorrata_definitive_percentage_source_casilla_id(context.revision.bindings)
         projections = _project_regularizaciones(
             register,
             parameters=parameters,
+            revision=context.revision,
             filing_year=context.filing_year,
             current_year_values=current_year_values,
             missing_casilla_ids=self._missing_current_year_casilla_ids,

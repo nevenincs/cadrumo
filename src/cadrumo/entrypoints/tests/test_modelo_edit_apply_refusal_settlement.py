@@ -20,6 +20,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...application.modelo.calculation_actions import calculate_modelo_revision
+from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ...application.modelo.edit_contract import ModeloEditMutationFamily
 from ...application.modelo.edit_models import (
     ModeloEditScalarAddressV1,
@@ -27,11 +28,8 @@ from ...application.modelo.edit_models import (
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
+from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2
 from ...application.modelo.edit_services import writable_scalar_entry
-from ...application.modelo.operation_definitions import (
-    ModeloEditApplyOperationRequestV1,
-    ModeloEditApplySubmissionV1,
-)
 from ...core.casilla_id import validated_casilla_id
 from ...core.errors.error_codes import get_registered_error_code_by_code
 from ...core.hashing import content_hash_hex
@@ -39,12 +37,14 @@ from ...core.i18n.render import tr
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..adapter_composition import build_calculation_action_ports
+from .modelo_operation_test_support import (
+    FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
+    MODELO_OPERATION_TEST_ACTOR,
+)
 from .test_registered_executor_conformance import (
-    _ACTOR,
-    _FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
     _CloseWitness,
     _runtime,
-    _seeded_modelo_edit_submission,
+    seeded_modelo_edit_submission,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -68,11 +68,11 @@ def _recalculate_after_the_baseline(submission: ModeloEditSubmissionV1) -> Model
         calculate_modelo_revision(
             baseline.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=baseline.bucket_id, operation=operation),
-            actor=_ACTOR,
+            actor=MODELO_OPERATION_TEST_ACTOR,
             # The same free casilla the seeded revision was calculated from,
             # now with another amount, so a new revision supersedes it.
             casilla_inputs={validated_casilla_id("06"): Decimal("7")},
-            binding_values=_FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
+            binding_values=FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
         )
     return submission
 
@@ -116,7 +116,6 @@ def _address_a_casilla_outside_the_surface(submission: ModeloEditSubmissionV1) -
     ],
     ids=["stale-baseline", "unsupported-intent", "disallowed-intent"],
 )
-@pytest.mark.timeout(90)
 def test_a_refused_edit_settles_refused_with_its_family_code_and_writes_nothing(
     tmp_path: Path,
     variant: Callable[[ModeloEditSubmissionV1], ModeloEditSubmissionV1],
@@ -125,13 +124,11 @@ def test_a_refused_edit_settles_refused_with_its_family_code_and_writes_nothing(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """The operator sees a localized refusal naming the family, and no catalogue changed."""
-    with _runtime(tmp_path / "runtime", cleanup=_CloseWitness()) as (driver, registry, profile_id):
-        definition = registry.lookup(_EDIT_APPLY)
-        work_unit_id, wire = _seeded_modelo_edit_submission(profile_id, operation=operation)
+    with _runtime(tmp_path / "runtime", cleanup=_CloseWitness()) as (driver, _registry, profile_id):
+        work_unit_id, wire = seeded_modelo_edit_submission(profile_id, operation=operation)
         assert isinstance(wire, ModeloEditApplySubmissionV1)
         refused = ModeloEditApplySubmissionV1.from_submission(variant(wire.to_submission()))
-        payload = definition.request_type.model_validate({"submission": refused}, strict=True)
-        assert isinstance(payload, ModeloEditApplyOperationRequestV1)
+        payload = ModeloEditOperatorInputV2(submission=refused)
         catalogues_before = _catalogue_digests()
 
         _submitted, observed = asyncio.run(

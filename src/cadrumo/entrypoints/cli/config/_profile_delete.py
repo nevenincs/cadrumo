@@ -12,10 +12,9 @@ behind a durable journal, a typed confirmation and an explicit acknowledgement:
   ``--yes`` the verb reports the label, the observed content fingerprint and
   the legal retention position, exits successfully, and writes no bytes. The
   operator sees exactly what would be destroyed before authorising it.
-- **The active profile is refused outright.** Deleting the capsule a live
-  session is bound to would leave the pointer aimed at nothing and the session
-  material orphaned. The refusal names the session verbs rather than reaching a
-  path that cannot complete.
+- **The selected profile is refused outright.** Human sign-out preserves the
+  selected login target. The operator must select another profile through
+  its supported login before deleting the original capsule.
 - **The legal retention floor is enforced here, at the point bytes are
   destroyed.** The assessment comes from the one sessionless authority that
   computes it (:meth:`BucketMaintenanceService.assess_deletion`), and the
@@ -52,15 +51,8 @@ if TYPE_CHECKING:
 
 
 def _refuse_deleting_the_active_profile(*, bucket_id: str, label: str) -> None:
-    """Refuse a target the current session is bound to.
-
-    The pointer and the session artefacts are written by the login authority
-    and cleared by the logout authority; destroying the capsule underneath them
-    would leave both aimed at a bucket that no longer exists. Refusing is not a
-    limitation of this verb so much as a statement that closing a session is a
-    separate, already-owned operation the operator must perform first.
-    """
-    from ....application.profile_preconditions import profile_deletion_requires_logout_verdict
+    """Preserve the selected-target guard independently of authentication state."""
+    from ....application.profile_preconditions import profile_deletion_requires_other_selection_verdict
     from ....core.bucket_pointer import resolve_active_bucket_id
     from ..common import attach_cli_policy_verdict
 
@@ -71,7 +63,7 @@ def _refuse_deleting_the_active_profile(*, bucket_id: str, label: str) -> None:
             translated_message="cli.config.profile.delete.refusal.active_profile",
             context={"name": label, "profile_id": bucket_id},
         ),
-        verdict=profile_deletion_requires_logout_verdict(requested_profile=label),
+        verdict=profile_deletion_requires_other_selection_verdict(requested_profile=label),
     )
 
 
@@ -125,36 +117,30 @@ def _refuse_erase_inside_the_retention_floor(assessment: BucketDeletionAssessmen
     )
 
 
-def _destroy(bucket_id: str, *, label: str) -> str:
-    """Destroy one capsule through the journalled custody owner.
-
-    Delegates to the journalled, crash-resumable custody primitives rather than
-    re-implementing a write path: ``prepare_delete`` opens the transaction,
-    ``confirm_delete`` produces the confirmation it will only accept, and
-    ``delete`` executes it. Each custody transition holds the canonical external
-    transaction lock and revalidates the immutable inventory witness. Do not
-    hold the bucket's own ``.lock`` across execution: on Windows that live file
-    handle makes the authenticated capsule directory impossible to rename to
-    its transaction-owned deletion tombstone.
-    """
+def _destroy(assessment: BucketDeletionAssessment) -> str:
+    """Delegate the complete existing transaction without holding client locks."""
     from uuid import UUID
 
-    from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
-    from ....application.user_profile.profile_pointer import active_profile_pointer_transaction
+    from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+    from .passphrase import _open_rotation_client
 
-    with active_profile_pointer_transaction():
-        # Revalidate under the canonical root/pointer lock and retain it until
-        # every journalled owner effect completes. A concurrent login cannot
-        # activate the target between this decision and tombstone removal.
-        _refuse_deleting_the_active_profile(bucket_id=bucket_id, label=label)
-        lifecycle = ProfileCapsuleLifecycle()
-        journal = lifecycle.prepare_delete(
-            profile_id=UUID(bucket_id),
-            requires_inactive_target=True,
-        )
-        confirmation = lifecycle.confirm_delete(journal)
-        receipt = lifecycle.delete(confirmation)
-    return receipt.completed_at.isoformat()
+    if assessment.fingerprint is None:
+        raise CliRefusedBoundaryError("custody_changed")
+    client = _open_rotation_client(UUID(assessment.bucket_id))
+    try:
+        try:
+            completed = client.delete_profile(assessment.fingerprint)
+        except RuntimeFrontendRefusedError as error:
+            raise CliRefusedBoundaryError(error.reason, context=error.context) from error
+    except BaseException as primary:
+        try:
+            client.close()
+        except Exception:
+            primary.add_note("Runtime connection cleanup did not complete.")
+        raise
+    else:
+        client.close()
+    return completed.receipt.completed_at.isoformat()
 
 
 def _result_and_lines(
@@ -206,16 +192,16 @@ def config_profile_delete(
     yes: bool = False,
     output_language: OutputLanguage | None = None,
 ) -> None:
+    """Destroy one named profile capsule, after a preflight the operator confirms."""
     from ..state_projection_support import bucket_storage
     from ._profile_support import resolve_profile_by_label
 
-    """Destroy one named profile capsule, after a preflight the operator confirms."""
     _activate_subcommand_output_language(ctx, output_language)
     pointer = resolve_profile_by_label(name)
     _refuse_deleting_the_active_profile(bucket_id=pointer.bucket_id, label=pointer.label)
     assessment = _assess(pointer.bucket_id, bucket_storage=bucket_storage(ctx))
     _refuse_erase_inside_the_retention_floor(assessment)
-    completed_at = _destroy(pointer.bucket_id, label=pointer.label) if yes else None
+    completed_at = _destroy(assessment) if yes else None
     result, lines, notices = _result_and_lines(
         assessment,
         label=pointer.label,

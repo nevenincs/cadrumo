@@ -3,19 +3,18 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:91fb8fdbdf0e03ed738dad1690fc9b503a63bc3cea49824f8da7a9435bd006e5'
+body_hash: 'sha256:17cfe1ce77b054f2678190ca28a408e91d55965f6b871af86279295a3905bfb7'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-s08-authority-gap-research]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `S31 render profile formal review`
 
 ## Scope
 
-This independent formal review covered only `dev/registry/_render_profile.py`, `dev/registry/tests/test_render_profile.py`, and the 128 authored fragments under `dev/registry/render_profiles/modelo_200/2025/`. It evaluated the accepted generator-authority ADR, plan step `W01.P02.S31`, the S08 authority-gap research, and the applicable fail-closed registry, no-legacy, quality-gate, RAG-discovery, and shared-worktree rules. The review was read-only for all implementation, test, and profile files.
+This independent formal review covered only the retired module, the retired test, and the 128 authored fragments under `dev/registry/render_profiles/modelo_200/2025/`. It evaluated the accepted generator-authority ADR, plan step `W01.P02.S31`, the S08 authority-gap research, and the applicable fail-closed registry, no-legacy, quality-gate, RAG-discovery, and shared-worktree rules. The review was read-only for all implementation, test, and profile files.
 
 The review specifically checked exhaustive literal membership; exact modelo, design-epoch, source-ref, and source-SHA identity; truthful separation of binary-resolved official-source evidence from exact-anchor reviewed policy; the 38 official smaller-field classifications; the 86 checkbox rules and their explicit `{0, 1}` selected/unselected policy; the `DP200DID` row 17 and row 20 final-two-digits year policy; semantic-kind and wire-shape consistency; dynamic exact-set proof; `DP200000` exclusion; absence of a legacy-tree oracle; absence of S32 renderer/provenance integration; test independence; and fragment reviewability.
 

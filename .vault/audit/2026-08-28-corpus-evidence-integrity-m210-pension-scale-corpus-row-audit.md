@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#corpus-evidence-integrity'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:c000b9ba686eeb729c99b551724a7b66bc40a6c46764c1dca26b65e98a00edd3'
+body_hash: 'sha256:90a5acac09ac63621b70dbe92a844727f1ead1886f215182a1dbc1f2bff9610c'
 related:
   - "[[2026-08-28-registry-legal-grounding-windows-m303-transitional-rate-citation-audit]]"
 ---
@@ -14,12 +14,9 @@ related:
 
 ## Scope
 
+Review the corpus excerpt for the M210 pension scale against the official schedule and test whether its legal evidence distinguishes the applicable rungs.
+
 ## Findings
-
-## Recommendations
-
-## Finding
-
 `m210-pension-tarifa-2025` encodes the TRLIRNR art. 25.1.b scale for pensions
 paid to non-residents, and its first bracket is:
 
@@ -42,6 +39,17 @@ excerpt, not a citation choice: the catalogue entry's own `notes` state the
 complete tariff — "8 percent up to 12,000 euros, 960 euros plus 30 percent over
 12,000 up to 18,700, and 2,970 euros plus 40 percent above 18,700".
 
+## Recommendations
+Restore the missing first row to the excerpt from the BOE consolidated text, and
+add a `required_text` phrase pinning the 8 % rung once the text carries it.
+
+**I did not author the correction.** The rule against writing a corpus excerpt
+from a secondary source binds even where the missing content is arithmetically
+provable, and this file is already a hand-assembled "snippet de catalogo" rather
+than a verbatim BOE capture — which is plausibly how the row was lost. The
+replacement wording must come from BOE.
+
+No production code, registry data, corpus text or test was changed by this audit.
 ## The excerpt proves its own omission
 
 No external source is needed to establish that a row is missing. The bundled text
@@ -91,16 +99,3 @@ So the concrete over-payment above would red two tests before it shipped. What i
 unguarded is the *evidence*: nothing compares the scale in the corpus against the
 scale in the registry, which is why a two-row transcription of a three-row statute
 has sat behind a green `required_text` check.
-
-## Remediation — owner's decision, not taken here
-
-Restore the missing first row to the excerpt from the BOE consolidated text, and
-add a `required_text` phrase pinning the 8 % rung once the text carries it.
-
-**I did not author the correction.** The rule against writing a corpus excerpt
-from a secondary source binds even where the missing content is arithmetically
-provable, and this file is already a hand-assembled "snippet de catalogo" rather
-than a verbatim BOE capture — which is plausibly how the row was lost. The
-replacement wording must come from BOE.
-
-No production code, registry data, corpus text or test was changed by this audit.

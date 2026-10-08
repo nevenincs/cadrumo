@@ -97,9 +97,7 @@ def read_diseno_evidence(modelo_id: str, root: Path | None = None) -> DisenoDisp
     scanned = 0
     unread: list[str] = []
     best = ""
-    for path in sorted(base.rglob("*")):
-        if not path.is_file() or path.suffix.casefold() not in _TEXT_SUFFIXES:
-            continue
+    for path in _diseno_text_files(base):
         try:
             text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError) as error:
@@ -111,15 +109,7 @@ def read_diseno_evidence(modelo_id: str, root: Path | None = None) -> DisenoDisp
             unread.append(f"{path}: {type(error).__name__}: {error}")
             continue
         scanned += 1
-        cursor = 0
-        while True:
-            cursor = text.find(_FIELD_ANCHOR, cursor)
-            if cursor < 0:
-                break
-            candidate = " ".join(text[cursor : cursor + 320].split())
-            cursor += len(_FIELD_ANCHOR)
-            if _CODE_IN_NOTE.search(candidate) and len(candidate) > len(best):
-                best = candidate
+        best = _best_field_note(text, best)
     report_unread(
         "diseno disposition evidence",
         "evidence in one of them is absent and the scanned count would have over-stated the corpus",
@@ -131,6 +121,26 @@ def read_diseno_evidence(modelo_id: str, root: Path | None = None) -> DisenoDisp
         note=best,
         corpus_files_scanned=scanned,
     )
+
+
+def _diseno_text_files(base: Path) -> tuple[Path, ...]:
+    """Return supported corpus text files in the original deterministic order."""
+    return tuple(
+        path for path in sorted(base.rglob("*")) if path.is_file() and path.suffix.casefold() in _TEXT_SUFFIXES
+    )
+
+
+def _best_field_note(text: str, best: str) -> str:
+    """Select the longest anchored field note from one source file."""
+    cursor = 0
+    while True:
+        cursor = text.find(_FIELD_ANCHOR, cursor)
+        if cursor < 0:
+            return best
+        candidate = " ".join(text[cursor : cursor + 320].split())
+        cursor += len(_FIELD_ANCHOR)
+        if _CODE_IN_NOTE.search(candidate) and len(candidate) > len(best):
+            best = candidate
 
 
 def core_table_expectations() -> dict[str, str]:

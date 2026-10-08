@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#locale-key-resolution'
 date: '2026-07-21'
-modified: '2026-08-15'
-body_hash: 'sha256:a10ca27b051045f99fb3b27c82e98f306f5c9dab29184e0db453c9aec4edb830'
+modified: '2026-10-03'
+body_hash: 'sha256:96b7a02cf60f87bb6a8e1980c862541685475fba0003499ffa6afbe8834c16dc'
 related:
   - "[[2026-06-11-modelo-locales-cli-adr]]"
 ---
@@ -24,9 +24,9 @@ the registry and closing the discovery + gate gap; the ADR settles that ruling.
 ### Inventory: 167 dangling keys, never present in any catalogue
 
 167 locale keys matching `categories.registry.*` are declared across
-`src/cadrumo/_data/registry/aeat/categories/profiles/2024.toml`,
-`src/cadrumo/_data/registry/aeat/categories/profiles/2025.toml`, and
-`src/cadrumo/_data/registry/aeat/categories/profiles/trabajador_del_mar.toml`. None
+
+the former source file, and
+the former source file. None
 resolve in any of `src/cadrumo/locales/{en,es,ca,hu}.yml`: the `categories:` root of
 each catalogue contains exactly one leaf, the test fixture
 `categories.test_profile.display_label_851219`. Git history shows the keys were never
@@ -38,10 +38,9 @@ Partition of the 167: 81 are `.citations.*.quote` keys (verbatim AEAT excerpts),
 
 ### Root cause 1: renderer shadowed by a mandated type alias
 
-`src/cadrumo/domain/categories/_registry.py:21` and
-`src/cadrumo/domain/transactions/_llm.py:44` both import
-`from ...core.i18n import Translatable as tr`. The `tr(...)` call at
-`src/cadrumo/domain/categories/_registry.py:147` therefore invokes the `Translatable`
+the former source file and
+the former source file both import
+`from ...core.i18n import Translatable as tr`. The `tr(...)` call  therefore invokes the `Translatable`
 TYPE — a no-op string wrap — not the renderer. The renderer is never invoked on the
 categories path; `resolve_category_profiles(2025)` returns
 `display_label='categories.registry.cuotas_colegiales'`, the raw key. The aliasing is
@@ -50,21 +49,21 @@ which fails any `Translatable` import without `as tr`.
 
 ### Root cause 2: silent humanize fallback makes dangling keys invisible
 
-The real renderer `tr()` (`src/cadrumo/core/i18n/_render.py:212`) answers ANY missing
+The real renderer `tr()`  answers ANY missing
 key by humanizing its final segment: `tr('zzz.nonexistent.namespace.foo_bar_baz')`
 returns `'Foo bar baz'`. The fallback is owned by `_lookup_translation`
-(`src/cadrumo/core/i18n/_render.py:401-416`) via `_humanise_key`
-(`src/cadrumo/core/i18n/_render.py:419-434`). The output is plausible enough to
+ via `_humanise_key`
+. The output is plausible enough to
 survive review; `categories.registry.home_office_luz` renders as `'Home office luz'` —
 half English, half Spanish — identically in all four locales.
 
 ### Why the gates never fired
 
-`src/cadrumo/tests/test_parity.py` and `test_locale_translation_honesty.py` pass 34/34
+the former source file and `test_locale_translation_honesty.py` pass 34/34
 with all 167 keys dangling: parity compares the catalogues against each other and
 against codebase-scanned keys, and the registry TOML is not one of the discovery
 sources in `LocaleManager.get_codebase_keys()`
-(`src/cadrumo/locales/manager.py:130-164` — regex, AST, and f-string sources only).
+(the former source file — regex, AST, and f-string sources only).
 Any check of the form "did `tr()` return something?" passes trivially against the
 humanize fallback.
 
@@ -72,16 +71,15 @@ humanize fallback.
 
 A first gate attempt (commit `3997e39cdf`) asserted catalogue MEMBERSHIP. `scaffold`
 inserts a missing key with its own dotted path as the value
-(`src/cadrumo/locales/manager.py:455`:
+
 `resolved[key] = leaf if leaf is not None else key`), so running scaffold would make
 all 86 keys members and turn all 344 test cases green while
-`src/cadrumo/core/i18n/_render.py:414-416` still treats `value == key` as a miss and
+the former source file still treats `value == key` as a miss and
 operators still receive the humanized fallback. Proven on live data:
 `aggregation.source_mesh.errors.ambiguous_source_disposition` has MEMBERSHIP=True,
 RESOLUTION=UNRESOLVED, and renders as `'Ambiguous source disposition'`; 36 such
 key-echo members exist in `en.yml` alone, 167 fleet-wide. The proven idiom for
 asserting resolution through the real renderer is a sentinel `default`
-(`src/cadrumo/application/wizard/_translations.py:69`).
 
 ### The 81 quote keys have no Spanish source text anywhere in git
 
@@ -96,14 +94,14 @@ publications) bear directly on how these keys may be populated.
 ### Load-time resolution would poison the shared cache
 
 `_load_category_profile_file_cached` is `@lru_cache`
-(`src/cadrumo/domain/categories/_registry.py:52`). Resolving labels at load time would
+. Resolving labels at load time would
 bake one operator's locale into the shared cached profile and serve it to the next
 operator in a different locale — a cross-locale data bug worse than the missing
 translations. This constrains any fix to read-time resolution.
 
 ### The LLM category hint deliberately reads Spanish
 
-`_category_hint` in `src/cadrumo/domain/transactions/_llm.py` feeds the transaction
+`_category_hint`  feeds the transaction
 classifier, which reasons over Spanish AEAT invoices. Following the operator locale
 would silently degrade classification accuracy for an operator working in en/ca/hu;
 the evidence favors pinning that call site to `locale='es'`.
@@ -114,11 +112,10 @@ the evidence favors pinning that call site to `locale='es'`.
   `_ast_scanner.py`'s contract is Python-AST walking; mixing TOML discovery in is the
   aggregator accretion the `registry-resolver-family-extraction` rule forbids.
 - A dev-time locale tool importing a loader from the registry package facade has
-  precedent at `src/cadrumo/locales/_modelo_manager.py:22-28`;
+  precedent ;
   `aeat-registry-authority-flow` governs PRODUCTION consumption, not dev tooling.
 - A strict-mode ContextVar with a package-scoped autouse test fixture has precedent in
-  `_I18N_STRICT_PLACEHOLDERS` (`src/cadrumo/core/i18n/_render.py:38`, fires at
-  `src/cadrumo/core/i18n/_render.py:241`, enabled by
+  `_I18N_STRICT_PLACEHOLDERS` (the former source file, fires , enabled by
   `src/cadrumo/core/i18n/conftest.py:18-23`).
 - No CLI verb writes `_intentional_identical.json` while the `aeat-locales-cli` rule
   forbids hand-editing it — a real tooling gap that strands localizers on the first
@@ -140,25 +137,9 @@ pass.
 
 ## Sources
 
-- `src/cadrumo/_data/registry/aeat/categories/profiles/2024.toml`,
-  `src/cadrumo/_data/registry/aeat/categories/profiles/2025.toml`,
-  `src/cadrumo/_data/registry/aeat/categories/profiles/trabajador_del_mar.toml`
-- `src/cadrumo/locales/en.yml`, `src/cadrumo/locales/es.yml`,
-  `src/cadrumo/locales/ca.yml`, `src/cadrumo/locales/hu.yml`
-- `src/cadrumo/domain/categories/_registry.py:21`,
-  `src/cadrumo/domain/categories/_registry.py:52`,
-  `src/cadrumo/domain/categories/_registry.py:147`
-- `src/cadrumo/domain/transactions/_llm.py:44`
-- `src/cadrumo/core/i18n/_render.py:38`, `src/cadrumo/core/i18n/_render.py:212`,
-  `src/cadrumo/core/i18n/_render.py:241`, `src/cadrumo/core/i18n/_render.py:401-416`,
-  `src/cadrumo/core/i18n/_render.py:414-416`, `src/cadrumo/core/i18n/_render.py:419-434`
 - `src/cadrumo/core/i18n/tests/test_translatable_contract.py:73-78`
 - `src/cadrumo/core/i18n/conftest.py:18-23`
-- `src/cadrumo/locales/manager.py:130-164`, `src/cadrumo/locales/manager.py:455`
-- `src/cadrumo/locales/_modelo_manager.py:22-28`
-- `src/cadrumo/application/wizard/_translations.py:69`
-- `src/cadrumo/tests/test_parity.py`,
-  `src/cadrumo/tests/test_locale_translation_honesty.py`
+
 - commits `3dfd17a398` (quote keys born key-shaped), `3997e39cdf` (membership-only
   first gate)
 

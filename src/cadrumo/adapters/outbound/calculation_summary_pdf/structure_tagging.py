@@ -16,7 +16,7 @@ the wrong heading to anyone using assistive technology.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from typing import Final
 
@@ -116,23 +116,7 @@ def _rewrite_page(
             while str(instructions[end].operator) != "ET":
                 end += 1
             block = instructions[index : end + 1]
-            if any(str(item.operator) in _TEXT_SHOWING for item in block):
-                try:
-                    tag = next(remaining)
-                except StopIteration:
-                    raise _plan_mismatch(page_index, "more text objects than planned entries") from None
-                if tag is None:
-                    rewritten.append(_instruction([Name.Artifact, Dictionary(Type=Name.Pagination)], "BDC"))
-                else:
-                    leaf = builder.leaf_for(tag)
-                    mcid = len(owners)
-                    rewritten.append(_instruction([Name("/" + builder.nodes[leaf].role), Dictionary(MCID=mcid)], "BDC"))
-                    builder.add_content(leaf, page_index=page_index, mcid=mcid)
-                    owners.append(leaf)
-                rewritten.extend(block)
-                rewritten.append(_instruction([], "EMC"))
-            else:
-                rewritten.extend(block)
+            _append_summary_text_block(block, remaining, rewritten, owners, page_index=page_index, builder=builder)
             index = end + 1
             continue
         if operator in _PATH_CONSTRUCTION:
@@ -225,3 +209,32 @@ def tag_summary_pages(
 
 
 __all__ = ["StructNode", "StructPath", "SummaryTagPlanMismatchError", "tag_summary_pages"]
+
+
+def _append_summary_text_block(
+    block: Sequence[_Instruction],
+    remaining: Iterator[StructPath | None],
+    rewritten: list[_Instruction],
+    owners: list[str],
+    *,
+    page_index: int,
+    builder: _StructureBuilder,
+) -> None:
+    """Pair one text object with its planned tag or preserve its undecorated content."""
+    if any(str(item.operator) in _TEXT_SHOWING for item in block):
+        try:
+            tag = next(remaining)
+        except StopIteration:
+            raise _plan_mismatch(page_index, "more text objects than planned entries") from None
+        if tag is None:
+            rewritten.append(_instruction([Name.Artifact, Dictionary(Type=Name.Pagination)], "BDC"))
+        else:
+            leaf = builder.leaf_for(tag)
+            mcid = len(owners)
+            rewritten.append(_instruction([Name("/" + builder.nodes[leaf].role), Dictionary(MCID=mcid)], "BDC"))
+            builder.add_content(leaf, page_index=page_index, mcid=mcid)
+            owners.append(leaf)
+        rewritten.extend(block)
+        rewritten.append(_instruction([], "EMC"))
+    else:
+        rewritten.extend(block)

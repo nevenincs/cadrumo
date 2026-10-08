@@ -1,0 +1,39 @@
+schema_version = 1
+fragment_id = "singletons"
+width_17_rules = []
+
+[design_identity]
+modelo = "122"
+design_epoch = "2016"
+source_ref = "aeat-dr-122-2016"
+source_sha256 = "2b7c2bb3472cde1faba997f777aa88290e707a3773a3dc88348f74caeee0a4c7"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pag. 1"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "Pag. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m122-2016-field-10-year-yyyy"
+decision_statement = "The four-position Periodo Impositivo. Ejercicio is the unsigned four-digit filing year."
+justification = "The design labels ordinal 10 as the taxable period and exercise/year, gives it four Num positions, and leaves its content blank; the reviewed policy writes it as year yyyy."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pag. 1"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "Pag. 1"

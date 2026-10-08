@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
@@ -15,8 +16,9 @@ from ....core.errors.severity import BaseSeverity
 from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.errors import CasillaConstraintViolationError
 from ....domain.filing.errors import ModeloBuilderError, ModeloDraftError
-from ....domain.filing.protocols import CasillaSchemaProvider
+from ....domain.filing.protocols import CasillaCollection, CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding, ModeloValueKind, compute_modelo_draft_id
 from ....domain.filing.validator import ModeloValidator
 from ....domain.submission.models import ModeloDraftStatus
@@ -26,7 +28,7 @@ from ..draft_review import (
     approve_draft,
     refresh_review_status,
 )
-from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from ..runtime import ModeloOperatorProfile, RegistryCasillaCollection, build_runtime_schema_provider
 from .filing_support import empty_prior_filing_observations_fingerprint, empty_profile_activity_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -195,14 +197,14 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
     assert values[_M130_CASILLA_19].formula_trace_casilla_ids == _M130_RESULT_TRACE
 
 
-def test_build_draft_blocks_negative_modelo_130_retenciones() -> None:
-    """Registry C06 non-negativity prevents a filing-ready Modelo 130 draft."""
-    draft = _draft(retenciones=Decimal("-100"))
+def test_build_draft_refuses_negative_modelo_130_retenciones() -> None:
+    """Registry C06 non-negativity refuses the input before any Modelo 130 draft exists."""
+    with pytest.raises(CasillaConstraintViolationError) as refused:
+        _draft(retenciones=Decimal("-100"))
 
-    assert draft.status is ModeloDraftStatus.BORRADOR
-    assert any(
-        finding.code == "casilla-out-of-range" and finding.casilla_id == _M130_CASILLA_06 for finding in draft.findings
-    )
+    assert refused.value.context is not None
+    assert refused.value.context["casilla_id"] == _M130_CASILLA_06
+    assert refused.value.context["value"] == "-100"
 
 
 def test_binding_provenance_rejects_empty_registry_refs() -> None:
@@ -256,31 +258,31 @@ def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
     assert values[_M111_CASILLA_30].formula_trace_casilla_ids == _M111_CASILLA_30_TRACE
 
 
-def test_build_draft_blocks_negative_modelo_111_retenciones() -> None:
-    """Registry C06 non-negativity prevents a filing-ready Modelo 111 draft."""
-    draft = build_draft(
-        modelo="111",
-        period=_PERIOD,
-        profile=_profile(),
-        inputs={
-            _M111_CASILLA_03: Decimal("180.25"),
-            _M111_CASILLA_06: Decimal("-12.10"),
-            _M111_CASILLA_09: Decimal("300.00"),
-            _M111_CASILLA_12: Decimal("14.40"),
-            _M111_CASILLA_15: Decimal("25.00"),
-            _M111_CASILLA_18: Decimal("0.50"),
-            _M111_CASILLA_21: Decimal("7.00"),
-            _M111_CASILLA_24: Decimal("8.00"),
-            _M111_CASILLA_27: Decimal("9.00"),
-            _M111_CASILLA_29: Decimal("40.00"),
-        },
-        schema_provider=_unscoped_schema_provider(),
-    )
+def test_build_draft_refuses_negative_modelo_111_retenciones() -> None:
+    """Registry C06 non-negativity refuses the input before any Modelo 111 draft exists."""
+    with pytest.raises(CasillaConstraintViolationError) as refused:
+        build_draft(
+            modelo="111",
+            period=_PERIOD,
+            profile=_profile(),
+            inputs={
+                _M111_CASILLA_03: Decimal("180.25"),
+                _M111_CASILLA_06: Decimal("-12.10"),
+                _M111_CASILLA_09: Decimal("300.00"),
+                _M111_CASILLA_12: Decimal("14.40"),
+                _M111_CASILLA_15: Decimal("25.00"),
+                _M111_CASILLA_18: Decimal("0.50"),
+                _M111_CASILLA_21: Decimal("7.00"),
+                _M111_CASILLA_24: Decimal("8.00"),
+                _M111_CASILLA_27: Decimal("9.00"),
+                _M111_CASILLA_29: Decimal("40.00"),
+            },
+            schema_provider=_unscoped_schema_provider(),
+        )
 
-    assert draft.status is ModeloDraftStatus.BORRADOR
-    assert any(
-        finding.code == "casilla-out-of-range" and finding.casilla_id == _M111_CASILLA_06 for finding in draft.findings
-    )
+    assert refused.value.context is not None
+    assert refused.value.context["casilla_id"] == _M111_CASILLA_06
+    assert refused.value.context["value"] == "-12.10"
 
 
 def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
@@ -746,3 +748,58 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
     assert refreshed.approved_at is None
     assert refreshed.approved_by is None
     assert refreshed.review_checksum is None
+
+
+@pytest.mark.parametrize(
+    ("required", "kind"),
+    [(False, ModeloValueKind.EMPTY), (True, ModeloValueKind.EMPTY), (False, ModeloValueKind.LITERAL)],
+)
+def test_formula_validation_distinguishes_optional_absence_required_absence_and_false_provenance(
+    required: bool, kind: ModeloValueKind
+) -> None:
+    provider = _schema_provider()
+    draft = _draft(provider)
+    collection = provider.get_collection("130")
+    assert isinstance(collection, RegistryCasillaCollection)
+    collection = replace(
+        collection,
+        casillas=tuple(
+            casilla.model_copy(update={"required": required}) if casilla.casilla_id == _M130_CASILLA_19 else casilla
+            for casilla in collection.casillas
+        ),
+    )
+
+    class Provider:
+        def get_collection(self, modelo: str) -> CasillaCollection:
+            assert modelo == "130"
+            return collection
+
+    mutated = draft.model_copy(
+        update={
+            "values": tuple(
+                value.model_copy(
+                    update={
+                        "kind": kind,
+                        "value": None if kind is ModeloValueKind.EMPTY else Decimal("0"),
+                        "formula_trace_casilla_ids": None,
+                    }
+                )
+                if value.casilla_id == _M130_CASILLA_19
+                else value
+                for value in draft.values
+            )
+        }
+    )
+    findings = [
+        finding
+        for finding in ModeloValidator(schema_provider=Provider()).validate(mutated)
+        if finding.casilla_id == _M130_CASILLA_19
+    ]
+    if kind is ModeloValueKind.LITERAL:
+        assert any(finding.code == "formula-divergence" for finding in findings)
+    elif required:
+        assert any(finding.severity is BaseSeverity.ERROR for finding in findings)
+    else:
+        assert findings == []
+        absent = next(value for value in mutated.values if value.casilla_id == _M130_CASILLA_19)
+        assert absent.value is None and absent.formula_trace_casilla_ids is None

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-relation-and-export-integrity'
 date: '2026-08-26'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:82a17474072354227f8f3c8dd34a3f8733921665563d860aaa8f0baf63297b36'
+body_hash: 'sha256:8a451c4e2988cc18a1c392829fb5bbe550c3c87186b590f833f6bbc0a273314a'
 related: []
 ---
 
@@ -13,9 +13,15 @@ related: []
 
 ## Scope
 
+Review whether Modelos 184, 185, and 347 can represent repeated type-2 detail rows and compare those declarations with the official layouts and existing Modelo 296 design.
+
 ## Findings
 
+The layouts model each type-2 detail as a single occurrence even though the official designs permit multiple rows, so declarations with multiple partners, declared parties, or properties cannot be represented.
+
 ## Recommendations
+
+Keep the plan row open for projection-row redesign and correct the cited examples; do not close the gap by adding a repetition marker alone.
 
 ## Ruling
 

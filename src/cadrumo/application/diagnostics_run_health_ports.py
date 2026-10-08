@@ -1,7 +1,7 @@
-"""Application-owned contract for local diagnostic run telemetry.
+"""Application-owned contract for local diagnostic run record.
 
 The run-health use cases aggregate timing and outcome facts, but they do not
-choose where those facts are stored.  ``DiagnosticRunTelemetryPort`` keeps the
+choose where those facts are stored.  ``DiagnosticRunRecordPort`` keeps the
 application independent of the outbound LLM recorder while
 ``DiagnosticRunRecord`` gives every diagnostic projection one validated shape.
 The outbound adapter translates its storage record and failures at the
@@ -35,8 +35,8 @@ class DiagnosticRunRecord(BaseModel):
     started_at: UtcInstant
 
 
-class DiagnosticRunTelemetryError(CadrumoError):
-    """A diagnostic telemetry read failed at the outbound boundary."""
+class DiagnosticRunRecordError(CadrumoError):
+    """A diagnostic run record read failed at the outbound boundary."""
 
 
 class DiagnosticAuthProbeResult(BaseModel):
@@ -60,8 +60,8 @@ class DiagnosticAuthProbePort(Protocol):
         ...
 
 
-class DiagnosticRunTelemetryPort(Protocol):
-    """Read-only local run telemetry required by diagnostic projections."""
+class DiagnosticRunRecordPort(Protocol):
+    """Read-only local run record required by diagnostic projections."""
 
     def load_records(
         self,
@@ -77,6 +77,6 @@ __all__ = [
     "DiagnosticAuthProbePort",
     "DiagnosticAuthProbeResult",
     "DiagnosticRunRecord",
-    "DiagnosticRunTelemetryError",
-    "DiagnosticRunTelemetryPort",
+    "DiagnosticRunRecordError",
+    "DiagnosticRunRecordPort",
 ]

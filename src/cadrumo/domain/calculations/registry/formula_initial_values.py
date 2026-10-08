@@ -32,14 +32,15 @@ from decimal import Decimal
 
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ....core.casilla_id import CasillaId
+from ....core.casilla_value_absence import AbsentCasillaReading
 from ....core.decimal.constants import ZERO
 from .binding_selector_utils import provider_member
-from .binding_targets import bound_casilla_binding_ids
+from .binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from .binding_temporal import SameTargetContext
 from .bindings import CasillaObservation, CasillaObservationValueKind, resolve_bound_casilla_binding_value
 from .bindings_previous_filing import PreviousFilingProvider
 from .casilla_membership import casillas_by_id, text_family_casilla_ids
-from .errors import RegistryValidationError
+from .errors import CasillaConstraintViolationError, RegistryValidationError
 from .ids import BindingId
 from .schema import BindingDefinition, ModeloRevision
 from .schema_input_kind import InputKind
@@ -141,7 +142,7 @@ def initial_values(
     _reject_non_input_kind_inputs(inputs, casillas, {formula.target_casilla_id for formula in revision.formulas})
     _reject_numeric_inputs_for_text_casillas(inputs, casillas)
 
-    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id = revision_bindings_by_id(revision)
     _reject_smuggled_previous_filing_inputs(
         inputs,
         casillas=casillas,
@@ -155,6 +156,8 @@ def initial_values(
         binding_values=binding_values,
     )
 
+    _reject_numeric_input_constraint_violations(inputs, casillas)
+
     return _initial_values_for_casillas(
         revision.casillas,
         inputs=inputs,
@@ -162,6 +165,32 @@ def initial_values(
         binding_values=binding_values,
         target_period=target_period,
     )
+
+
+def _reject_numeric_input_constraint_violations(
+    inputs: Mapping[CasillaId, Decimal],
+    casillas: Mapping[CasillaId, CasillaDefinition],
+) -> None:
+    """Enforce the selected revision's declared ranges on admitted numeric inputs."""
+    for casilla_id, value in inputs.items():
+        casilla = casillas[casilla_id]
+        constraints = casilla.constraints
+        if constraints is None:
+            continue
+        violation = constraints.violates(value)
+        if violation is not None:
+            raise CasillaConstraintViolationError(
+                f"input casilla {casilla.number!r} violates declared constraint: {violation}",
+                translated_message="errors.calc.casilla_constraint_violation",
+                context={
+                    "casilla_id": casilla_id,
+                    "display_number": casilla.number,
+                    "value": str(value),
+                    "violation": violation,
+                    "legal_refs": ",".join(constraints.legal_refs),
+                    "source_refs": ",".join(constraints.source_refs),
+                },
+            )
 
 
 def initial_value_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
@@ -420,7 +449,7 @@ def _initial_value_for_casilla(
     """Resolve one manual or observation-backed initial casilla value."""
     bindings = _observation_backed_bindings_for_bound_casilla(casilla, bindings_by_id)
     if not bindings:
-        return inputs.get(casilla.id, ZERO), False
+        return AbsentCasillaReading.UNSUPPLIED_INPUT.read(inputs, casilla.id), False
     value, _present_binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
     if value is not None:
         return value, False

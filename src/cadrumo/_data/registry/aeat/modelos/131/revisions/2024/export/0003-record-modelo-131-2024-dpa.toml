@@ -1,0 +1,47 @@
+[[revisions.2024.export_layouts]]
+id = 'modelo-131-fichero-boe'
+
+[[revisions.2024.export_layouts.records]]
+id = 'modelo-131-2024-dpa'
+record_type = 'DPA'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+repeat = 'binding_rows'
+binding_record = 'DPA'
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-131-2024-dpa-reservado-398'
+offset = 398
+length = 189
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-131-2024-dpa-close'
+offset = 587
+length = 12
+kind = 'literal'
+literal = '</T131DPA00>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'rd-439-2007:art-110',
+    'rd-439-2007:art-95',
+]
+source_refs = ['aeat-dr-131-2024']
+
+[revisions.2024.export_layouts.records.row_field_casilla_ids]

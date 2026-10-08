@@ -94,7 +94,8 @@ def collect_official_box_unpopulated_diagnostics(
             continue
         antecedent_id = ids[0]
         consequent_ids = ids[1:]
-        antecedent = casilla_values.get(antecedent_id, Decimal(0))
+        # The predicate fires only on a positive antecedent, so the value is stated.
+        antecedent = casilla_values[antecedent_id]
         diagnostics.append(
             CalculationSourceDiagnostic(
                 reason="official_box_unpopulated",

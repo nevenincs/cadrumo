@@ -11,10 +11,12 @@ from .....core.period import Period
 from .....core.resources.bundled_data import bundled_path
 from ....period import calculation_filing_date
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
+from ..errors import CasillaConstraintViolationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ..schema import ModeloRevision
 from ..schema_verification import VerificationFindingKind
+from ..temporal import select_revision
 from ._modelo_303_registry_support import load_modelo_303
 from .snapshot_support import build_snapshot
 
@@ -42,12 +44,18 @@ def _revisions() -> tuple[ModeloRevision, ...]:
 
 
 def _calculate(
-    revision: ModeloRevision, *, profile_base: Decimal, row_bases: dict[str, Decimal]
+    revision: ModeloRevision,
+    *,
+    profile_base: Decimal,
+    row_bases: dict[str, Decimal],
+    period: str | None = None,
+    manual_inputs: dict[str, Decimal] | None = None,
 ) -> dict[CasillaId, Decimal]:
     """Calculate one edition with an empty ledger and the promotor's autoconsumo as stated."""
     modelo, catalogues = load_modelo_303()
     assert revision.period_selector is not None
-    period = revision.period_selector.periods[0]
+    if period is None:
+        period = revision.period_selector.periods_for_year(revision.valid_from.year)[0]
     snapshot = build_snapshot(
         modelo,
         catalogues,
@@ -70,6 +78,7 @@ def _calculate(
     inputs: dict[CasillaId, Decimal] = {
         **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         **{validated_casilla_id(_RATE_ROWS[row][0]): base for row, base in row_bases.items()},
+        **{validated_casilla_id(name): value for name, value in (manual_inputs or {}).items()},
     }
     filing_period = calculation_filing_date(Period.from_year_and_code(revision.valid_from.year, period))
     result = calculate_registry_snapshot(
@@ -196,3 +205,63 @@ def test_modelo_303_four_digit_cnae_width_has_a_distinct_authority_role() -> Non
 # two-revision gate now owns the claim: measured by mutation, breaking the
 # branch on either live revision reds that gate. Its distinct mid-year axis was
 # carried across before this test was removed.
+
+
+@pytest.mark.parametrize("period", ["01", "1T"])
+def test_early_2026_112_zero_preserves_prior_result_and_nonzero_is_refused(period: str) -> None:
+    """Official 2026 transport retains112 while the early-period deduction is inapplicable."""
+    modelo, _ = load_modelo_303()
+    revision = select_revision(modelo, filing_year=2026, period=period)
+    assert revision.id == "2026-hasta-01-y-1t"
+    assert len(revision.casillas) == 229
+    actual = _calculate(
+        revision,
+        profile_base=Decimal("0"),
+        row_bases={},
+        period=period,
+        manual_inputs={"112": Decimal("0")},
+    )
+    assert _box(actual, "112") == Decimal("0")
+    assert _box(actual, "71") == _box(actual, "iva.resultado") - _box(actual, "70") + _box(actual, "109")
+    with pytest.raises(CasillaConstraintViolationError) as refused:
+        _calculate(
+            revision,
+            profile_base=Decimal("0"),
+            row_bases={},
+            period=period,
+            manual_inputs={"112": Decimal("1")},
+        )
+    context = refused.value.context
+    assert context is not None
+    assert context["casilla_id"] == "112"
+    source_refs = context["source_refs"]
+    assert isinstance(source_refs, str)
+    assert "aeat-dr-303-2026" in source_refs
+    assert "boe-modelo-303-2026-form-pdf" in source_refs
+
+
+@pytest.mark.parametrize("period", ["02", "2T"])
+def test_later_2026_112_payment_deduction_uses_current_result_formula(period: str) -> None:
+    """The actual amended monthly/quarterly branches allow a positive112 payment."""
+    modelo, _ = load_modelo_303()
+    revision = select_revision(modelo, filing_year=2026, period=period)
+    assert revision.id == "2026-y-siguientes"
+    actual = _calculate(
+        revision,
+        profile_base=Decimal("0"),
+        row_bases={},
+        period=period,
+        manual_inputs={"112": Decimal("1")},
+    )
+    assert _box(actual, "112") == Decimal("1")
+    assert _box(actual, "71") == _box(actual, "iva.resultado") - _box(actual, "70") + _box(actual, "109") - Decimal("1")
+
+
+def test_historical_2025_contract_keeps_its_prior_casillas_and_result() -> None:
+    modelo, _ = load_modelo_303()
+    revision = select_revision(modelo, filing_year=2025, period="1T")
+    assert revision.id == "2025"
+    assert len(revision.casillas) == 228
+    assert not any(casilla.id == "112" for casilla in revision.casillas)
+    actual = _calculate(revision, profile_base=Decimal("0"), row_bases={}, period="1T")
+    assert _box(actual, "71") == _box(actual, "iva.resultado") - _box(actual, "70") + _box(actual, "109")

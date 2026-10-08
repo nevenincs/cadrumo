@@ -407,7 +407,7 @@ def test_every_bundled_revision_projects_a_coherent_manifest() -> None:
 
 def test_the_family_models_are_registry_models_under_the_strict_config() -> None:
     """The declaration rides the same strict frozen base as the rest of the schema."""
-    from cadrumo.domain.calculations.registry.schema import SchemaFamilyDispositionDeclaration
+    from cadrumo.domain.calculations.registry.schema_overrides import SchemaFamilyDispositionDeclaration
 
     assert issubclass(SchemaFamilyDispositionDeclaration, RegistryModel)
     assert issubclass(SchemaFamilyDispositionDeclaration, BaseModel)

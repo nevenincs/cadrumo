@@ -10,13 +10,47 @@ modelo:
           intézményeknél vezetett bármely számla ellenértékéből származó tőkejövedelmek.
         title: Adóelőleg-levonások és -befizetések - pénzügyi intézményeknél vezetett
           számlák tőkejövedelmei
+      form:
+        column:
+          base: A levont adó és az adóelőleg alapja
+          ingresos-anteriores: Korábbi adóévek befizetései
+          regularizacion: Korrekció
+          retenciones: Levont adó és adóelőleg
+        context:
+          apellidos: Vezetéknév vagy cégnév
+          declaracion-complementaria: Kiegészítő önadózási bevallás
+          ejercicio: Adóév
+          iban: IBAN
+          justificante-anterior: Az előző önadózási bevallás igazolásszáma
+          nif: Adóazonosító szám (NIF)
+          nombre: Utónév
+          periodo: Időszak
+        page:
+          modelo-126-page-01:
+            heading: Pénzügyi intézményeknél vezetett számlák jövedelméből levont
+              adó
+        row:
+          periodificacion-1: Időbeli elhatárolás · első sor
+          periodificacion-2: Időbeli elhatárolás · második sor
+          retenciones: Levont adó és adóelőleg
+        section:
+          complementaria:
+            heading: Kiegészítő bevallás (6)
+          devengo:
+            heading: Adómegállapítási időszak (2)
+          identificacion:
+            heading: Azonosítás (1)
+          ingreso:
+            heading: Befizetés (4)
+          liquidacion:
+            heading: Adóelszámolás (3)
       revision:
         2019-y-siguientes:
           casilla:
             '01':
-              label: A levonások és előlegfizetések alapja
+              label: A levonások és adóelőlegek alapja
             '02':
-              label: Forrásadó és részletfizetés
+              label: Levonások és adóelőlegek
             '03':
               label: 'Időbeli elhatárolás: a levonások és előlegfizetések alapja'
             '04':

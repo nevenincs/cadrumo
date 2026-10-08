@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 import ctypes
 import json
 import os
@@ -12,6 +11,8 @@ import sys
 from contextlib import suppress
 from typing import Final, cast
 
+from .....core.base64_codec import b64_decode_canonical
+from .....core.descriptor_write import write_all
 from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 
 KDF_TRANSPORT_ENCODING: Final = "utf-8"
@@ -66,15 +67,13 @@ def canonical_frame_digest(payload: object) -> str:
 
 def decode_canonical_b64(value: str, *, field_name: str, expected_bytes: int | None) -> bytes:
     try:
-        decoded = base64.b64decode(value.encode("ascii"), validate=True)
-    except (UnicodeEncodeError, ValueError) as exc:
+        decoded = b64_decode_canonical(value)
+    except ValueError as exc:
         raise ValueError(f"{field_name} must be canonical base64") from exc
     if expected_bytes is not None and len(decoded) != expected_bytes:
         raise ValueError(f"{field_name} has an invalid byte length")
     if expected_bytes is None and not decoded:
         raise ValueError(f"{field_name} must not be empty")
-    if base64.b64encode(decoded).decode("ascii") != value:
-        raise ValueError(f"{field_name} must be canonical base64")
     return decoded
 
 
@@ -102,7 +101,7 @@ def write_kdf_frame(fd: int, value: bytes, *, kind: int) -> None:
         raise ValueError("profile KDF frame exceeds its bounded transport")
     if kind not in {KDF_FRAME_CONTROL, KDF_FRAME_DEK}:
         raise ValueError("profile KDF frame kind is invalid")
-    _write_all(fd, KDF_FRAME_HEADER.pack(KDF_FRAME_MAGIC, KDF_FRAME_VERSION, kind, 0, len(value)) + value)
+    write_all(fd, KDF_FRAME_HEADER.pack(KDF_FRAME_MAGIC, KDF_FRAME_VERSION, kind, 0, len(value)) + value)
 
 
 def _read_exact(fd: int, length: int) -> bytes:
@@ -115,12 +114,6 @@ def _read_exact(fd: int, length: int) -> bytes:
         chunks.append(chunk)
         remaining -= len(chunk)
     return b"".join(chunks)
-
-
-def _write_all(fd: int, value: bytes) -> None:
-    offset = 0
-    while offset < len(value):
-        offset += os.write(fd, value[offset:])
 
 
 def close_fd(fd: int | None) -> None:

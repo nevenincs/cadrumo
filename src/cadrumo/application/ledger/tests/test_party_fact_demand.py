@@ -34,9 +34,10 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
 from cadrumo.domain.iva.classification import CustomerTaxStatus, IvaTerritorialScope, TransactionKind
-from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
+from cadrumo.domain.iva.schema import IvaRateKind
 
 from ....core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
+from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ....domain.iva.classification import (
     InvoiceKind,
     IvaInvoiceClassificationCriteria,

@@ -67,7 +67,7 @@ def _stored_layer(envelope: dict[str, Any]) -> dict[str, Any]:
 def _m303_declaration_header(code: str = "I") -> tuple[ObservedHeaderFact, ...]:
     return (
         ObservedHeaderFact(
-            header_key="declaration_type",
+            header_key="filing.result_disposition",
             value=code,
             source_artefact_kind="submitted_file",
             source_locator="revision-stamp-roundtrip:declaration-type",

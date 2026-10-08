@@ -8,19 +8,16 @@ from pathlib import Path
 
 from dev._paths import REPO_ROOT
 
+from .dependency_contract import assert_wheel_metadata_matches_pyproject, validate_frozen_exports
 from .lane_verification_core import (
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,
     assert_installed_data,
-    assert_wheel_contains_source_data,
-    assert_wheel_metadata_matches_pyproject,
     create_pip_venv,
-    expected_wheel_data_paths,
     install_targets_with_pip,
     relative_manifest_path,
     require_executable,
     resolve_work_dir,
-    validate_frozen_exports,
     venv_python_path,
     write_smoke_manifest,
 )
@@ -29,6 +26,7 @@ from .python_cohort import (
     install_targets,
     load_python_cohort,
 )
+from .source_data_contract import assert_wheel_contains_source_data, expected_wheel_data_paths
 
 
 def _install_target_with_pip(work_dir: Path, target: str, venv_path: Path) -> None:
@@ -138,6 +136,7 @@ def main(argv: list[str] | None = None) -> int:
             "wheel": relative_manifest_path(work_dir, wheel),
             "data_wheel_manuals": relative_manifest_path(work_dir, cohort.manuals_wheel),
             "data_wheel_official": relative_manifest_path(work_dir, cohort.official_wheel),
+            "data_wheel_normatives": relative_manifest_path(work_dir, cohort.normatives_wheel),
             "venv": relative_manifest_path(work_dir, venv_path),
         },
         declared=tuple(declared),

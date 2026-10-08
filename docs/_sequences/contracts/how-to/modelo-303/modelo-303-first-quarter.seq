@@ -2,16 +2,16 @@
 @step Open a Modelo 303 draft for the first quarter.
 aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @capture work_unit_id result.work_unit_id
-@step Calculate the quarter's IVA from the classified ledger.
+@step Calculate the quarter's VAT from the classified records.
 aeat --format json app modelo work calculate {work_unit_id} --no-joint-return-elected
 @capture calculation_revision_id result.calculation_revision_id
 @expect result.casilla_values.71 == "105.00"
-@step Verify the draft; verification captures the evidence over the contributing rows.
+@step Check the draft; the check captures the supporting documents for the entries it used.
 aeat --format json app modelo work verify {calculation_revision_id}
 @expect result.granted_verificado_completo == true
-@step Record the local filed marker after you present the figures at the AEAT portal yourself.
+@step Record the filing in Cadrumo after you present the figures at the AEAT portal yourself.
 aeat app modelo work file --modelo 303 --year 2026 --period 1T
-@step Export the filed revision; its envelope carries Cadrumo's all-zero development software identity.
+@step Export the filed calculation; its envelope carries Cadrumo's all-zero development software identity.
 @result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output modelo-303-1t.boe
 @expect exit_code == 0
 @expect result.software_identity_grade == "development_mock"

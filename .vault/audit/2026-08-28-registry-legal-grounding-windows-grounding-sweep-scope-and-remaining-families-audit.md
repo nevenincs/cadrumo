@@ -3,13 +3,41 @@ tags:
   - '#audit'
   - '#registry-legal-grounding-windows'
 date: '2026-08-28'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:cfd348c79bd22fa59d16019a1cb5fcbe47d295b5cae27220bddeacbf17b9ac35'
+body_hash: 'sha256:279dbba9177cba9f7a5bb6cd9996fcb16a3ed6ee3515a04ee890e3b91b6523d1'
 related: []
 ---
 
 # `registry-legal-grounding-windows` audit: the last families are grounded, and the sweep's real scope
+
+## Scope
+
+Audit the declared grounding sweep, its actual source-tree coverage, and the remaining families requiring evidence checks.
+
+## Findings
+Every grounding claim this campaign has made — "structural clean across all 458
+numeric parameters", "335 every-number-stated" — was produced by probes that walk
+`registry/aeat/modelos/**` and `registry/aeat/legal/**` **only**.
+
+`registry/aeat/` also contains `iva/`, `categories/`, `treaties/`, `calendars/`,
+`apoderamientos/`, `authorization.d/`, `m303_orden_anual/`, `territories` and
+`topics/`. None was ever scanned. The IVA rate tables — among the most-consumed
+values in the product — were invisible to the sweep until this pass went looking
+for them by name.
+
+They also use a different shape: `[[rates]]` rows keyed on `pct`, not
+`[parameters]` tables keyed on `value`. A probe keyed to one shape cannot see the
+other, so the omission was silent in both directions.
+
+So the earlier counts are accurate for what they measured and must not be read as
+registry-wide. Anyone citing them should say "of the modelo and legal subtrees".
+
+## Recommendations
+Sweep the eight unscanned subtrees for regulatory values, starting with
+`categories/` and `treaties/` (treaty withholding caps are rate-shaped and
+liability-bearing). A shape-agnostic probe is needed: collect any row carrying a
+percentage or money field, whatever the table is called.
 
 ## The families are sound
 
@@ -38,25 +66,6 @@ That is the correct channel — a Spanish BOE provision does not establish anoth
 member state's VAT rate. Checking only `legal_refs` reported them as unverified;
 that was the probe's error, not the registry's.
 
-## The correction that matters: my sweep covered two subtrees of ten
-
-Every grounding claim this campaign has made — "structural clean across all 458
-numeric parameters", "335 every-number-stated" — was produced by probes that walk
-`registry/aeat/modelos/**` and `registry/aeat/legal/**` **only**.
-
-`registry/aeat/` also contains `iva/`, `categories/`, `treaties/`, `calendars/`,
-`apoderamientos/`, `authorization.d/`, `m303_orden_anual/`, `territories` and
-`topics/`. None was ever scanned. The IVA rate tables — among the most-consumed
-values in the product — were invisible to the sweep until this pass went looking
-for them by name.
-
-They also use a different shape: `[[rates]]` rows keyed on `pct`, not
-`[parameters]` tables keyed on `value`. A probe keyed to one shape cannot see the
-other, so the omission was silent in both directions.
-
-So the earlier counts are accurate for what they measured and must not be read as
-registry-wide. Anyone citing them should say "of the modelo and legal subtrees".
-
 ## A residual the file declares about itself
 
 `iva/rates.toml` documents, in its own comments, that it does not date-bound the
@@ -64,13 +73,6 @@ zero rate and that nothing downstream does so either. It explains the trade-off:
 the flat `kind = "zero"` axis cannot express LIVA art. 91.Cuatro's donativos-only
 zero rate, and the IVA domain does not model `donativo` at all, so the case is
 unreachable today. Recorded as the author's declared residual, not a finding.
-
-## Next
-
-Sweep the eight unscanned subtrees for regulatory values, starting with
-`categories/` and `treaties/` (treaty withholding caps are rate-shaped and
-liability-bearing). A shape-agnostic probe is needed: collect any row carrying a
-percentage or money field, whatever the table is called.
 
 ## Follow-up: the unscanned subtrees are grounded
 

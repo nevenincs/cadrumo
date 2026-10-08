@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:40e7190f1c3b0670919357624302631703926428e84434887849da58b4e62876'
+body_hash: 'sha256:5e66263829f948a07d66d180affc0124f743e25e421ba03f5d81776ec7a2c9b1'
 related: []
 ---
 # `tui-architecture` audit: `W08.P27.S393 Declarations calendar projection review`
@@ -32,6 +32,6 @@ Rows sort deterministically by adjusted deadline and natural identity. Recovery 
 
 Initial gates: all 14 focused tests passed; Ruff and ty passed. Final re-probe inspected the exact entry-year, evidence-year, orphan-address guards and their expanded adversarial matrix, including the original two reproduced states. No open finding remains.
 
-## Recommendation
+## Recommendations
 
 CLOSE. The high natural-address and evidence-join coherence finding is closed. W08.P27.S393 is safe to mark complete.

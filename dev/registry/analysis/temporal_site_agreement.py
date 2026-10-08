@@ -104,17 +104,30 @@ def unserved_interior_years(spans: tuple[tuple[int, int | None], ...]) -> tuple[
     caught. A gate over a corpus with no instance of its condition proves the
     corpus clean and says nothing about the gate.
     """
-    closed = [(start, end) for start, end in spans if end is not None]
+    closed = _closed_revision_spans(spans)
     if not closed:
         return ()
-    open_starts = [start for start, end in spans if end is None]
+    open_starts = _open_revision_starts(spans)
+    served = _served_revision_years(closed, open_starts)
+    return tuple(year for year in range(min(served), max(served) + 1) if year not in served)
+
+
+def _closed_revision_spans(spans: tuple[tuple[int, int | None], ...]) -> list[tuple[int, int]]:
+    return [(start, end) for start, end in spans if end is not None]
+
+
+def _open_revision_starts(spans: tuple[tuple[int, int | None], ...]) -> list[int]:
+    return [start for start, end in spans if end is None]
+
+
+def _served_revision_years(closed: list[tuple[int, int]], open_starts: list[int]) -> set[int]:
     horizon = max(max(end for _, end in closed), *(open_starts or [0]))
     served: set[int] = set()
     for start, end in closed:
         served |= set(range(start, end + 1))
     for start in open_starts:
         served |= set(range(start, horizon + 1))
-    return tuple(year for year in range(min(served), max(served) + 1) if year not in served)
+    return served
 
 
 def ambiguously_claimed_periods(
@@ -172,20 +185,10 @@ def undated_window_years(revision: ModeloRevision) -> tuple[int, ...]:
 
 def site_agreement_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[TemporalSiteFinding, ...]:
     """Compare one revision's window, period selector and deadline windows."""
-    findings: list[TemporalSiteFinding] = []
+    findings = _selector_dual_form_findings(revision, modelo_id)
     selector = revision.period_selector
     opening = revision.valid_from.year
     closing = revision.valid_to.year if revision.valid_to is not None else selector.year_to
-
-    if selector.years and selector.year_from is not None:
-        findings.append(
-            TemporalSiteFinding(
-                modelo=modelo_id,
-                revision=str(revision.id),
-                kind="selector_dual_form",
-                detail=f"years={list(selector.years)} and year_from={selector.year_from}",
-            )
-        )
 
     deadline_years = sorted({window.filing_year for window in revision.deadline_windows})
     if not deadline_years:
@@ -199,16 +202,7 @@ def site_agreement_findings(revision: ModeloRevision, *, modelo_id: str) -> tupl
         )
         return tuple(findings)
 
-    for year in deadline_years:
-        if year < opening or (closing is not None and year > closing):
-            findings.append(
-                TemporalSiteFinding(
-                    modelo=modelo_id,
-                    revision=str(revision.id),
-                    kind="deadline_year_outside_window",
-                    detail=f"deadline filing_year={year} outside window {opening}..{closing}",
-                )
-            )
+    findings.extend(_deadline_year_outside_findings(revision, modelo_id, deadline_years, opening, closing))
 
     if closing is not None:
         missing = list(undated_window_years(revision))
@@ -222,6 +216,39 @@ def site_agreement_findings(revision: ModeloRevision, *, modelo_id: str) -> tupl
                 )
             )
     return tuple(findings)
+
+
+def _selector_dual_form_findings(revision: ModeloRevision, modelo_id: str) -> list[TemporalSiteFinding]:
+    selector = revision.period_selector
+    if not selector.years or selector.year_from is None:
+        return []
+    return [
+        TemporalSiteFinding(
+            modelo=modelo_id,
+            revision=str(revision.id),
+            kind="selector_dual_form",
+            detail=f"years={list(selector.years)} and year_from={selector.year_from}",
+        )
+    ]
+
+
+def _deadline_year_outside_findings(
+    revision: ModeloRevision,
+    modelo_id: str,
+    deadline_years: list[int],
+    opening: int,
+    closing: int | None,
+) -> list[TemporalSiteFinding]:
+    return [
+        TemporalSiteFinding(
+            modelo=modelo_id,
+            revision=str(revision.id),
+            kind="deadline_year_outside_window",
+            detail=f"deadline filing_year={year} outside window {opening}..{closing}",
+        )
+        for year in deadline_years
+        if year < opening or (closing is not None and year > closing)
+    ]
 
 
 def screen_authority(

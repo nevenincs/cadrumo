@@ -18,8 +18,8 @@ from __future__ import annotations
 
 from typing import Final
 
-from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
+from ..action_target import require_action_target
 
 #: Injected action attribute -> the command key it must resolve to. All three
 #: are mandatory: the Declarations workspace offers no partial read surface, so
@@ -55,8 +55,7 @@ def require_canonical_declarations_actions(
         "filing_action": filing_action,
     }
     for attribute, command_key in REQUIRED_DECLARATIONS_TARGETS:
-        if lookup_action(supplied[attribute].action_id).target_command_key != command_key:
-            raise ValueError(_REFUSAL)
+        require_action_target(supplied[attribute], command_key, _REFUSAL)
 
 
 __all__ = ["REQUIRED_DECLARATIONS_TARGETS", "require_canonical_declarations_actions"]

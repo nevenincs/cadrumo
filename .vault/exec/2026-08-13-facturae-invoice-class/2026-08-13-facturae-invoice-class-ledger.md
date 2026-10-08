@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#facturae-invoice-class'
 date: '2026-08-13'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a42ce1dbba2e2ee9397b932a999148f703f27e27152faeef5cc5806584eab977'
+body_hash: 'sha256:b23438004848a433e204a429e8d9c8fc85cd0a59eb300191ed5fc2457935db3b'
 related:
   - "[[2026-08-13-facturae-invoice-class-plan]]"
 ---
@@ -15,7 +15,7 @@ related:
 ## Changes
 
 - `S01` `T` `src/cadrumo/adapters/inbound/einvoice/`
-- `S02` `T` `src/cadrumo/adapters/inbound/einvoice/_parsers.py`
-- `S03` `T` `src/cadrumo/application/ledger/_evidence_draft.py`
-- `S04` `T` `src/cadrumo/application/ledger/_evidence_draft.py`
+- `S02` `T`
+- `S03` `T`
+- `S04` `T`
 - `S05` `T` `src/cadrumo/application/ledger/tests/`

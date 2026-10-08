@@ -10,6 +10,9 @@ import pytest
 from sqlalchemy import delete, select
 
 from .....core.errors.error_codes import get_registered_error_code
+from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from .....domain.iva.schema import IvaCategory, IvaRateKind
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.errors import LedgerNoActiveBucketError, LedgerStorageError
 from .....domain.transactions.models import Transaction, TransactionCatalogue
@@ -18,6 +21,7 @@ from ...storage.sql import orm as _orm
 from ...storage.sql.session import session_scope
 from ...storage.tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from ..transaction_iva_migration import MigratedIvaDeductionFact, migrated_iva_rate_kind
 from ..transactions import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -58,6 +62,31 @@ def _transaction(provider_id: str, filing_date: date, amount: Decimal) -> Transa
             "group_label": None,
         },
     )
+
+
+def _migrated_iva_fact(rate: Decimal) -> MigratedIvaDeductionFact:
+    return MigratedIvaDeductionFact(
+        kind=IvaDeductionFactKind.from_registry("domestic_current"),
+        provenance=IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
+            source_locator="synthetic:migrated-rate-resolution",
+            evidence_digest="a" * 64,
+        ),
+        taxable_base=Decimal("100"),
+        iva_rate=rate,
+        iva_amount=Decimal("2") if rate == Decimal("0.02") else Decimal("21"),
+        category=IvaCategory("domestic_super_reduced") if rate == Decimal("0.02") else IvaCategory("domestic_general"),
+    )
+
+
+def test_migrated_iva_rate_requires_one_published_tier_on_the_transaction_date() -> None:
+    fact = _migrated_iva_fact(Decimal("0.02"))
+    valid = _transaction("historical-two-percent", date(2024, 10, 1), Decimal("102"))
+    withdrawn = _transaction("withdrawn-two-percent", date(2025, 1, 1), Decimal("102"))
+
+    assert migrated_iva_rate_kind(valid, fact) == IvaRateKind("super_reduced")
+    with pytest.raises(LedgerStorageError, match="does not resolve to exactly one legal tier"):
+        migrated_iva_rate_kind(withdrawn, fact)
 
 
 def test_transaction_repository_rejects_blank_bucket_with_ledger_storage_error() -> None:

@@ -52,8 +52,8 @@ def python_files_under(root: Path, *, include_data: bool = True) -> tuple[Path, 
     check rather than a full subtree walk -- which is what makes excluding
     ``_data`` cheap rather than merely correct.
 
-    The result is memoised for the process. That is sound for the repository
-    tree, which does not change while a test session runs, and is NOT sound for
+    The result is memoised within a test module and released at its boundary.
+    That requires a stable repository tree while the module runs, and is NOT sound for
     a directory a test is writing to: callers working under ``tmp_path`` must
     walk it themselves.
     """
@@ -166,7 +166,7 @@ def read_source(path: Path) -> str:
     byte; a ratchet that needs strict decoding should read the file itself.
 
     Same immutability premise as :func:`python_files_under`: sound for the
-    repository tree during a session, never for a file the caller writes.
+    repository tree during one test module, never for a file the caller writes.
     """
     return path.read_text(encoding="utf-8", errors="replace")
 
@@ -334,7 +334,7 @@ def releases_parsed_sources[CacheT: _ClearableCache](cached: CacheT) -> CacheT:
 
 
 def release_parsed_sources() -> None:
-    """Empty every process-level cache that holds parsed or read source text.
+    """Empty source text and candidate inventories at a test-module boundary.
 
     The structural ratchets share one parse per file, which is what makes a gate
     that walks the whole package fast across its own tests. Kept for the whole
@@ -343,10 +343,20 @@ def release_parsed_sources() -> None:
     such workers on one host summed to more than twenty gigabytes of resident
     memory that nothing reclaimed. Called at each test module's boundary, the
     caches keep their purpose within the module that fills them, and the next
-    gate re-reads only the files it actually reads.
+    gate re-reads only the files it actually reads. Candidate lists must expire
+    with their parsed sources: retaining an earlier list while re-reading its
+    paths can address modules removed by a concurrent edit and omit new ones.
+    Missing files discovered within a module remain errors for strict readers;
+    this release never filters missing paths from an existing scan.
     """
     _AST_CACHE.clear()
     read_source.cache_clear()
+    python_files_under.cache_clear()
+    package_python_files.cache_clear()
+    production_python_files.cache_clear()
+    discover_test_modules.cache_clear()
+    discover_test_control_modules.cache_clear()
+    modules_declaring_class.cache_clear()
     for cached in _PARSED_SOURCE_CACHES:
         cached.cache_clear()
 

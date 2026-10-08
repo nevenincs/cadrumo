@@ -2,20 +2,27 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from types import MappingProxyType
 from typing import Final
 
 from ....core.time.clock import today_madrid
 from ...contribuyente.entity_type import EntityType, LegalEntityForm
 from .errors import RegistryValidationError
-from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    BooleanTokenCase,
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+    required_mapping_boolean,
+    unique_mapping_legal_refs,
+)
 from .governed_fact_scope import (
     GovernedFactSource,
     cache_governed_projection,
     governed_facts_in_scope,
+    require_governed_fact_authority,
     validating_governed_facts,
 )
 from .schema_base import DateAxis
@@ -108,56 +115,10 @@ class EntityVocabulary:
         return token
 
 
-def _refs(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
-    values = tuple(
-        token.strip()
-        for token in required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).split(",")
-        if token.strip()
-    )
-    if not values or len(values) != len(set(values)):
-        raise RegistryValidationError(f"taxpayer entity vocabulary {key!r} must contain unique legal references")
-    return values
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-def _boolean(entries: Mapping[str, str], key: str) -> bool:
-    value = required_mapping_entry(entries, key, subject=_ENTRY_SUBJECT).lower()
-    if value not in {"true", "false"}:
-        raise RegistryValidationError(f"taxpayer entity vocabulary {key!r} must be true or false")
-    return value == "true"
-
-
-def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
-    entries: dict[str, str] = {}
-    for entry in resolved.payload.entries:
-        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
-            raise RegistryValidationError("taxpayer entity vocabulary entries must be string-to-string")
-        if entry.key in entries:
-            raise RegistryValidationError(f"duplicate taxpayer entity vocabulary key {entry.key!r}")
-        entries[entry.key] = entry.value
-    return MappingProxyType(entries)
-
-
-def _resolve_mapping_entries(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource,
-) -> Mapping[str, str]:
-    resolved = authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError("taxpayer entity vocabulary must resolve as a mapping fact")
-    return _mapping_entries(resolved)
-
-
-@cache_governed_projection(maxsize=64)
-def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
-    del effective_date
-    raise RegistryValidationError("entity vocabulary requires an explicit authority operation or scope")
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
 def resolve_entity_vocabulary(
@@ -167,10 +128,7 @@ def resolve_entity_vocabulary(
 ) -> EntityVocabulary:
     """Resolve and validate all entity types and legal forms from fact 0124."""
     coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        _bundled_mapping_entries(coordinate)
-        raise RegistryValidationError("the unscoped vocabulary path must refuse")
+    selected = require_governed_fact_authority(authority, subject=_ENTRY_SUBJECT)
     if selected is governed_facts_in_scope():
         return _scoped_entity_vocabulary(coordinate)
     with validating_governed_facts(selected):
@@ -180,10 +138,7 @@ def resolve_entity_vocabulary(
 @cache_governed_projection(maxsize=64)
 def _scoped_entity_vocabulary(effective_date: date) -> EntityVocabulary:
     """Build the vocabulary once per scoped authority generation and coordinate."""
-    selected = governed_facts_in_scope()
-    if selected is None:
-        raise RegistryValidationError("a scoped vocabulary projection ran without its scope")
-    entries = _resolve_mapping_entries(effective_date=effective_date, authority=selected)
+    entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=None)
     entity_types: list[EntityTypeDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _ENTITY_TYPE_ORDER_KEY, subject=_ENTRY_SUBJECT):
         token = EntityType.from_registry(raw_token)
@@ -195,7 +150,7 @@ def _scoped_entity_vocabulary(effective_date: date) -> EntityVocabulary:
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 tax_regime=required_mapping_entry(entries, f"{prefix}tax_regime", subject=_ENTRY_SUBJECT),
-                legal_refs=_refs(entries, f"{prefix}legal_refs"),
+                legal_refs=unique_mapping_legal_refs(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
             ),
         )
     vocabulary = EntityVocabulary(entity_types=tuple(entity_types), legal_entity_forms=())
@@ -217,8 +172,13 @@ def _scoped_entity_vocabulary(effective_date: date) -> EntityVocabulary:
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}description", subject=_ENTRY_SUBJECT),
                 entity_type=entity_type,
-                legal_refs=_refs(entries, f"{prefix}legal_refs"),
-                choice_description=_boolean(entries, f"{prefix}choice_description"),
+                legal_refs=unique_mapping_legal_refs(entries, f"{prefix}legal_refs", subject=_ENTRY_SUBJECT),
+                choice_description=required_mapping_boolean(
+                    entries,
+                    f"{prefix}choice_description",
+                    subject=_ENTRY_SUBJECT,
+                    case=BooleanTokenCase.CASE_INSENSITIVE,
+                ),
             ),
         )
     return EntityVocabulary(entity_types=vocabulary.entity_types, legal_entity_forms=tuple(legal_entity_forms))

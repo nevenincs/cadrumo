@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#codebase-monolith-decomposition'
 date: '2026-06-05'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:ad571fb22ec620eab4198c88eaa6aef73913d6681f6874bcbc88c41addf283a6'
 related:
-  - '[[2026-06-05-codebase-monolith-decomposition-plan]]'
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'
 ---
 

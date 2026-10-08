@@ -2,7 +2,7 @@
 
 Every executed frame reads the published registry authority the runner
 resolves through
-:func:`~cadrumo.domain.calculations.registry.authority.bundled_authority_descriptor_path`.
+:func:`~cadrumo.domain.calculations.registry.authority_location.bundled_authority_descriptor_path`.
 When that generation no longer records the live legal sources, an execution
 yields values the current tree would not produce: a check reports
 divergences that are not real, and a refresh commits them into the goldens as
@@ -84,7 +84,7 @@ def require_current_authority() -> None:
             generation it names is not current; the message names
             :data:`PUBLISH_AUTHORITY_REMEDY`.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+    from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
     from cadrumo.domain.calculations.registry.errors import AuthorityDescriptorUnavailableError
 
     try:

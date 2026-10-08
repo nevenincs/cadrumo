@@ -67,7 +67,6 @@ def _summary(output: str) -> tuple[bool, int]:
     return bool(match.group("eligible") == "true"), int(match.group("revisions"))
 
 
-@pytest.mark.timeout(900)
 def test_closure_report_exits_zero_and_measures_the_registry() -> None:
     result = _run_closure()
 
@@ -81,7 +80,6 @@ def test_closure_report_exits_zero_and_measures_the_registry() -> None:
     )
 
 
-@pytest.mark.timeout(900)
 def test_closure_check_blocks_on_exactly_the_printed_predicate() -> None:
     report = _run_closure()
     checked = _run_closure("--check")

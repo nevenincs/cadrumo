@@ -34,18 +34,16 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import (
     ExportEncoding,
-    parse_fixed_width_export_field,
     render_fixed_width_export_field,
 )
+from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ...compiler.loader import load_registry_tree
-from .._export_tree import (
-    ExportTreeTransportProfile,
-    _literal_derivation,
-    _numeric_derivation,
-    render_complete_export_tree,
-)
+from .._export_tree import render_complete_export_tree
+from ..export_field_literal_derivation import _literal_derivation
+from ..export_field_numeric_derivation import _numeric_derivation
+from ..export_tree_models import ExportTreeTransportProfile
 from ..joined_record_design import JoinedRecordDesignField, join_record_design_semantics
 from ..record_design_intermediate import (
     RecordDesignIntermediate,
@@ -53,14 +51,14 @@ from ..record_design_intermediate import (
     RecordDesignWorkbookFormat,
     load_record_design_intermediate,
 )
-from ..render_profile import (
-    load_render_profile,
-    load_render_profile_source_evidence,
-)
 from ..render_profile_eligibility import (
     _states_no_wire_fact,
     project_render_profile_eligibility,
 )
+from ..render_profile_loading import load_render_profile
+from ..render_profile_model import RenderProfile
+from ..render_profile_model_base import RenderProfileDesignIdentity
+from ..render_profile_source_reader import load_render_profile_source_evidence
 from ..semantic_map import (
     SemanticMapEntry,
     load_semantic_map,
@@ -274,14 +272,30 @@ class TestTheDeclarationMustBePinnedToTheParsedSource:
             _declaration(evidence="")
 
 
+def _literal_render_profile() -> RenderProfile:
+    return RenderProfile(
+        schema_version=1,
+        design_identity=RenderProfileDesignIdentity(
+            modelo="390",
+            design_epoch="2022",
+            source_ref="aeat-dr-390-2022",
+            source_sha256=_SHA,
+        ),
+        fragment_ids=(),
+        width_17_rules=(),
+        singleton_rules=(),
+    )
+
+
 class TestTheAdjudicationCannotLaunderGeometry:
     """The substitution runs BEFORE the byte and slot-width checks, not instead of them."""
 
     def test_the_adjudicated_literal_satisfies_the_slot_and_renders(self) -> None:
         derivation = _literal_derivation(
             _joined_literal_field(),
-            _profile(),
+            encoding=_profile().encoding,
             export_record_id="modelo-390-page-07",
+            render_profile=_literal_render_profile(),
             source_defects=(_declaration(),),
         )
 
@@ -292,8 +306,9 @@ class TestTheAdjudicationCannotLaunderGeometry:
         with pytest.raises(RegistryValidationError, match="does not agree byte-for-byte"):
             _literal_derivation(
                 _joined_literal_field(),
-                _profile(),
+                encoding=_profile().encoding,
                 export_record_id="modelo-390-page-07",
+                render_profile=_literal_render_profile(),
             )
 
     def test_an_adjudicated_literal_that_does_not_fill_the_slot_is_still_refused(self) -> None:
@@ -308,8 +323,9 @@ class TestTheAdjudicationCannotLaunderGeometry:
         with pytest.raises(RegistryValidationError, match="but the official slot is"):
             _literal_derivation(
                 _joined_literal_field(literal=_PUBLISHED),
-                _profile(),
+                encoding=_profile().encoding,
                 export_record_id="modelo-390-page-07",
+                render_profile=_literal_render_profile(),
                 source_defects=(_declaration(adjudicated_literal=_PUBLISHED),),
             )
 

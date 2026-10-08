@@ -167,6 +167,115 @@ modelo:
           and income-attribution entities incorporated abroad with a presence in Spanish
           territory). Instalment payment.
         title: IS instalment payment
+      form:
+        authored-historical:
+          context:
+            reducida-dimension:
+              heading: Small enterprise · Article 101 LIS and rate in the first paragraph
+                of Article 29.1 LIS
+        authored2025:
+          column:
+            base:
+              heading: Base
+            importe:
+              heading: Instalment amount
+            porcentaje:
+              heading: Percentage
+          context:
+            capital-riesgo:
+              heading: Venture capital · special regime under Article 50 LIS
+            cnae:
+              heading: Main activity classification
+            complementaria:
+              heading: Supplementary return
+            comunicacion-adicional:
+              heading: Additional information communication
+            cooperativa:
+              heading: Tax-protected cooperative
+            datos-adicionales:
+              heading: Additional details
+            denominacion:
+              heading: Surnames or legal name
+            ejercicio:
+              heading: Tax year
+            iban:
+              heading: IBAN
+            justificante:
+              heading: Previous return receipt number
+            multiples-tipos:
+              heading: Other entities eligible for more than one tax rate
+            navieras:
+              heading: Shipping entities · tonnage regime
+            negocios-millon:
+              heading: 'Previous tax period turnover: below €1,000,000'
+            negocios-seis-millones:
+              heading: 'Turnover in the 12 months before the tax period began: above
+                €6,000,000'
+            nif:
+              heading: Tax ID
+            nombre:
+              heading: Given name
+            nrs:
+              heading: Corporate reference number
+            periodo:
+              heading: Period
+            reducida-dimension:
+              heading: Small enterprise · Article 101 LIS and specific tax rate
+            sin-fines-lucrativos:
+              heading: Non-profit entity regime · Law 49/2002
+            socimi:
+              heading: SOCIMI regime · Law 11/2009
+            tipo-gravamen:
+              heading: Corporate income tax rate for the current year
+          page:
+            '1':
+              heading: Instalment · page 1
+            '2':
+              heading: Instalment · page 2
+          row:
+            amortizacion:
+              heading: Reversal of 30% of accounting depreciation
+            ic:
+              heading: Top-up tax
+            is:
+              heading: Corporate income tax
+            reserva:
+              heading: Tax base equalisation reserve
+            reserva-cuotas:
+              heading: Tax base equalisation reserve
+            resto:
+              heading: Other adjustments, excluding prior tax losses
+            tipo-1:
+              heading: Rate 1
+            tipo-2:
+              heading: Rate 2
+            tipo-3:
+              heading: Rate 3
+            tipo-4:
+              heading: Rate 4
+            total:
+              heading: Total adjustments
+          section:
+            b1:
+              heading: B.1) General case · single percentage
+            b2:
+              heading: B.2) Specific cases · multiple percentages
+            base-imponible:
+              heading: B) Instalment based on taxable income · Article 40.3
+            complementaria:
+              heading: Supplementary return
+            devengo:
+              heading: Tax period
+            identificacion:
+              heading: Identification
+            informacion:
+              heading: Additional information
+            ingreso:
+              heading: Payment
+            modalidad-cuota:
+              heading: A) Instalment based on prior tax · Article 40.2
+            resultado:
+              heading: Result and amount payable
       revision:
         2019-2022:
           casilla:

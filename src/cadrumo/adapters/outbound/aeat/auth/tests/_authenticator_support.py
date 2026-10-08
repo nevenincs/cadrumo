@@ -285,36 +285,14 @@ async def test_verify_raises_without_context(tmp_path: Path, _settings_factory) 
 
 
 @pytest.mark.asyncio
-async def test_reauthenticate_does_not_deadlock(tmp_path: Path, _settings_factory) -> None:
-    """Regression test: reauthenticate must not deadlock on self._lock.
-
-    The method was rewritten to delegate teardown to ``close()``
-    (itself lock-protected) rather than holding ``self._lock``
-    across the subsequent ``authenticate()`` call. Proves the
-    single-lock invariant by reauthenticating and confirming no
-    timeout. It intentionally does not claim successful external
-    authentication; that remains the credential-gated live oracle.
-    """
+async def test_close_then_authenticate_does_not_deadlock(tmp_path: Path, _settings_factory) -> None:
+    """Closing releases the authentication lock before a fresh attempt."""
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
     async with AeatAuthenticator(
         settings,
         credentials=unnamed_certificate_credentials(settings),
     ) as auth:
-        # Build a session to pass to reauthenticate. The call will fail
-        # at the network-free browser-session resolution step, so we
-        # assert that reauthenticate completes without deadlocking
-        # regardless of the authenticate outcome.
-        now = datetime.now(UTC)
-        session = _certificate_session(
-            authenticated_at=now,
-            idle_deadline=now + AEAT_SESSION_IDLE_TTL,
-            thumbprint="abc",
-            subject="CN=x",
-        )
-        # authenticate() without an injected browser_session_factory
-        # raises AuthConfigurationError (missing-factory taxonomy, per
-        # AeatAuthenticator._resolve_browser_session); we only care that
-        # the call returns in bounded time (no deadlock).
+        await asyncio.wait_for(auth.close(), timeout=5.0)
         with pytest.raises(AuthConfigurationError, match=r"browser.*session factory"):
-            await asyncio.wait_for(auth.reauthenticate(session), timeout=5.0)
+            await asyncio.wait_for(auth.authenticate(), timeout=5.0)

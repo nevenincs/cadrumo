@@ -82,6 +82,12 @@ _ALLOWED_SDIST_FILES = frozenset(
         "SECURITY.md",
         "THIRD_PARTY_NOTICES.md",
         "pyproject.toml",
+        # The source distribution must rebuild publisher OAuth provisioning
+        # without borrowing the editable checkout. These exact inert package
+        # modules supply the hook's build helper; none belongs in a wheel.
+        "dev/__init__.py",
+        "dev/packaging/__init__.py",
+        "dev/packaging/google_oauth.py",
     }
 )
 _ALLOWED_SDIST_PREFIXES = ("src/cadrumo/", "src/cadrumo_harness/", "packaging/authority/")
@@ -422,6 +428,15 @@ def test_distributions_ship_only_the_product_package(
         assert not offenders, f"{archive_kind} delivers members outside the fixed product policy: {offenders[:10]!r}"
 
 
+def test_oauth_build_source_admission_does_not_admit_other_development_modules() -> None:
+    """The three rebuild dependencies cannot turn into a development package allowance."""
+    helpers = frozenset({"dev/__init__.py", "dev/packaging/__init__.py", "dev/packaging/google_oauth.py"})
+    assert _unexpected_sdist_members(helpers) == []
+    stranger = "dev/packaging/release_cohort.py"
+    assert _unexpected_sdist_members(helpers | {stranger}) == [stranger]
+    assert _unexpected_wheel_members(helpers) == sorted(helpers)
+
+
 def test_distribution_allowlist_rejects_policy_widening() -> None:
     """Representative new package and source roots cannot expand the oracle."""
 
@@ -495,6 +510,37 @@ def test_wheel_ships_every_calculation_summary_pdf_asset(wheel_members: frozense
     assert any(member.endswith(".icc") for member in expected), expected
     missing = sorted(expected - wheel_members)
     assert not missing, f"the wheel is missing calculation-summary PDF asset(s) the renderer embeds: {missing!r}"
+
+
+def test_wheel_ships_exact_local_runtime_assets(wheel_archive: Path, wheel_members: frozenset[str]) -> None:
+    """Ship every live native runtime asset byte-for-byte, with no stale siblings.
+
+    GNOME producer installation and verification consume both files in the
+    current asset contract. The complete expected set comes from the source
+    tree, so future assets are covered without a maintained inventory.
+    """
+
+    source_root = "src/cadrumo/_data/local_runtime"
+    source_paths = repository_files(REPO_ROOT, under=(source_root,))
+    expected = {f"{_WHEEL_PREFIX}/{path.removeprefix('src/cadrumo/')}": path for path in source_paths}
+    expected_members = frozenset(expected)
+    producer_prefix = f"{_WHEEL_DATA_PREFIX}/local_runtime/gnome_login/"
+    required = {f"{producer_prefix}extension.js", f"{producer_prefix}metadata.json"}
+    assert required <= expected_members, f"the source tree is missing a required GNOME producer asset: {required!r}"
+
+    asset_prefix = f"{_WHEEL_DATA_PREFIX}/local_runtime/"
+    actual = {member for member in wheel_members if member.startswith(asset_prefix) and not member.endswith("/")}
+    assert actual == expected_members, (
+        "the wheel's local runtime assets must match the live source set exactly; "
+        f"missing={sorted(expected_members - actual)!r}, foreign_or_stale={sorted(actual - expected_members)!r}"
+    )
+    with zipfile.ZipFile(wheel_archive) as archive:
+        mismatched = [
+            member
+            for member, source_path in expected.items()
+            if archive.read(member) != (REPO_ROOT / source_path).read_bytes()
+        ]
+    assert not mismatched, f"the wheel contains local runtime asset bytes that differ from source: {mismatched!r}"
 
 
 def test_wheel_ships_no_corpus_source_binaries(wheel_members: frozenset[str]) -> None:

@@ -23,6 +23,7 @@ from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationValidationIssueKind,
     create_m145_communication_record,
+    export_m145_communication_record,
     validate_m145_communication_record,
 )
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -30,6 +31,7 @@ from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from .....domain.calculations.registry.temporal import select_revision
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..m145_communication_records import build_m145_communication_records_ports
 
@@ -97,6 +99,108 @@ def test_validate_m145_communication_record_accepts_registry_backed_required_fie
     assert result.revision_id == revision.id
     assert result.legal_refs == tuple(sorted(str(ref) for ref in revision.legal_refs))
     assert result.source_refs == tuple(sorted(str(ref) for ref in revision.source_refs))
+
+
+@pytest.mark.parametrize(
+    ("casilla_id", "expected_issue"),
+    (
+        ("comunicacion.pagina-complementaria", None),
+        ("perceptor.primer-apellido", M145CommunicationValidationIssueKind.MISSING_REQUIRED),
+        ("perceptor.segundo-apellido", M145CommunicationValidationIssueKind.MISSING_REQUIRED),
+        ("perceptor.nombre", M145CommunicationValidationIssueKind.MISSING_REQUIRED),
+        ("perceptor.situacion-familiar", M145CommunicationValidationIssueKind.INVALID_VALUE),
+        ("perceptor.anio-nacimiento", M145CommunicationValidationIssueKind.MISSING_REQUIRED),
+        ("descendiente-1.anio-nacimiento", M145CommunicationValidationIssueKind.INVALID_VALUE),
+    ),
+)
+def test_explicit_ordinary_page_blank_preserves_required_and_grounded_value_guards(
+    tmp_path: Path,
+    casilla_id: str,
+    expected_issue: M145CommunicationValidationIssueKind | None,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """DR145 row 2 permits a blank; required names, dated family tokens and years do not."""
+    values = _field_values()
+    values["comunicacion.pagina-complementaria"] = " "
+    values[casilla_id] = " "
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            bucket_id=runtime.bucket_id,
+            ports=ports,
+            operation=operation,
+        )
+        assert record.field_values[casilla_id] == " "
+        result = validate_m145_communication_record(
+            record.communication_record_id, bucket_id=runtime.bucket_id, ports=ports, operation=operation
+        )
+    if expected_issue is None:
+        assert result.valid and result.issues == ()
+    else:
+        assert not result.valid
+        assert any(issue.casilla_id == casilla_id and issue.kind is expected_issue for issue in result.issues)
+
+
+@pytest.mark.parametrize(("value", "expected_slot"), (("", b" "), (" ", b" "), ("C", b"C")))
+def test_page_indicator_accepts_only_the_official_blank_or_c_wire_tokens(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    value: str,
+    expected_slot: bytes,
+) -> None:
+    """The persisted token must validate and render DR145 row 2 at byte position 10."""
+    values = _field_values()
+    values["comunicacion.pagina-complementaria"] = value
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            bucket_id=runtime.bucket_id,
+            ports=ports,
+            operation=operation,
+        )
+        assert record.field_values["comunicacion.pagina-complementaria"] == value
+        validation = validate_m145_communication_record(
+            record.communication_record_id, bucket_id=runtime.bucket_id, ports=ports, operation=operation
+        )
+        exported = export_m145_communication_record(
+            record.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            renderer=RegistryFixedWidthRecordRenderer(),
+            ports=ports,
+            operation=operation,
+        )
+
+    assert validation.valid and validation.issues == ()
+    assert exported.payload[9:10] == expected_slot
+
+
+@pytest.mark.parametrize("value", ("X", "c", "CC", " C ", "  ", "\t", "\n"))
+def test_page_indicator_rejects_noncanonical_markers_and_blank_representations(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    value: str,
+) -> None:
+    values = _field_values()
+    values["comunicacion.pagina-complementaria"] = value
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            bucket_id=runtime.bucket_id,
+            ports=ports,
+            operation=operation,
+        )
+        validation = validate_m145_communication_record(
+            record.communication_record_id, bucket_id=runtime.bucket_id, ports=ports, operation=operation
+        )
+
+    assert not validation.valid
+    assert [(issue.kind, issue.casilla_id) for issue in validation.issues] == [
+        (M145CommunicationValidationIssueKind.INVALID_VALUE, "comunicacion.pagina-complementaria"),
+    ]
+    assert "not in enum ('C',)" in validation.issues[0].message
 
 
 @pytest.mark.parametrize("value", ("familia_1", "familia_2", "familia_3"))

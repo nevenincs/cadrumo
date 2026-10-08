@@ -1,9 +1,9 @@
 :seed: quickstart-ledger
-@step Open, calculate, and verify the first-quarter Modelo 130 draft.
+@step Open, calculate, and check the first-quarter Modelo 130 draft.
 @setup aeat app modelo work create --modelo 130 --year 2026 --period 1T
 @setup aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
 @setup aeat app modelo work verify --modelo 130 --year 2026 --period 1T
-@step Export the verified draft to the registry-backed fichero-BOE layout.
+@step Export the checked draft to the official record layout.
 @result aeat --format json app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130-2026-1T.boe
 @expect exit_code == 0
 @expect result.modelo == "130"

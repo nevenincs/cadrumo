@@ -1,43 +1,8 @@
-"""Hatchling build hook: force-include the ``manuals`` corpus source binaries.
+"""Hatchling build hook for the manuals corpus companion.
 
-The ``cadrumo-data-manuals`` companion ships exactly the corpus source binaries
-under ``_data/corpus/manuals`` — the AEAT/BOE práctico manuals (``*.pdf``) — read
-from the ONE source tree at ``src/cadrumo/_data/corpus`` and mapped to the mirrored
-``cadrumo_data/_data/corpus`` layout the runtime corpus-locator seam resolves. It is
-one of two disjoint sub-cap companions (the other, ``cadrumo-data-official``, ships
-``corpus/aeat_official``, ``corpus/eu_official``, and ``corpus/normatives``); together
-they cover every corpus source binary the compact ``cadrumo`` wheel excludes, each
-staying under PyPI's 100 MB per-file cap so no size grant is needed.
-
-Both companions ship subtrees of the SAME ``cadrumo_data`` PEP 420 implicit
-namespace package (NEITHER ships ``cadrumo_data/__init__.py``, which would collide
-on a joint install), so ``importlib.resources.files("cadrumo_data")`` resolves a
-``MultiplexedPath`` spanning both installed portions.
-
-Filtering to this companion's owned subtree and to the binary suffixes is why
-this is a build hook rather than a static ``force-include``: a whole-directory
-force-include cannot drop the derived surfaces (extracted text, normative html,
-json) that stay in the ``cadrumo`` wheel, nor the sibling companion's subtree.
-
-The hook targets a source-tree build (``uv build`` run from
-``packaging/cadrumo_data_manuals/``), where the corpus tree is reachable two levels
-up. When the wheel is instead built from an extracted sdist, the binaries are
-already embedded under ``cadrumo_data/_data/corpus`` and the hook force-includes
-them from there.
-
-See Also:
-    :class:`CustomBuildHook`
-        Hatchling hook that injects this companion's owned corpus binaries into
-        the build ``force_include`` map.
-    :func:`_corpus_root`
-        Source-tree versus embedded-sdist resolver used before scanning owned
-        binaries.
-    :mod:`~core.resources`
-        Runtime corpus locator seam that reads the mirrored ``cadrumo_data`` tree
-        produced by this hook.
-    :mod:`~dev.packaging.smoke_split_install`
-        Three-wheel cohort lane proving the command-bearing wheel declares and
-        installs both mandatory companion portions.
+The manuals, official and normatives companions preserve the complete corpus
+source bytes under disjoint portions of the implicit ``cadrumo_data`` namespace.
+This hook packages only ``corpus/manuals`` for source-tree and embedded-sdist builds.
 """
 
 from __future__ import annotations
@@ -52,10 +17,7 @@ from hatchling.plugin.manager import PluginManager
 _CORPUS_BINARY_SUFFIXES = frozenset({".pdf", ".xls", ".xlsm", ".xlsx"})
 _TARGET_PREFIX = "cadrumo_data/_data/corpus"
 
-# The corpus top-level subtrees this companion owns. The sibling
-# ``cadrumo-data-official`` owns ``aeat_official``, ``eu_official``, and ``normatives``;
-# the two sets
-# are disjoint and their union is every corpus subtree carrying source binaries.
+# The three companions own disjoint corpus subtrees.
 _OWNED_SUBDIRS = frozenset({"manuals"})
 
 
@@ -109,7 +71,7 @@ def _runtime_build_hook_base() -> Any:
 if TYPE_CHECKING:
 
     class _CustomBuildHookBase(BuildHookInterface[BuilderConfig]):
-        """Static view of the installed Hatchling 1.32.4 hook protocol."""
+        """Static view of the installed Hatchling hook protocol."""
 else:
     _CustomBuildHookBase = _runtime_build_hook_base()
 

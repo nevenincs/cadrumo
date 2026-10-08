@@ -1,0 +1,141 @@
+# Authored form structure; automatic generation preserves this declaration.
+# Reconcile source changes explicitly. Authorship does not imply completed review.
+
+[[revisions.2023.form_layouts]]
+id = "form-layout"
+revision_id = "2023"
+seed_source = "authored"
+review = { state = "generated", notes = "Official BOE-A-1999-22309 PDF pages 79 and 81 visually inspected. All 29 registered fields and exact taxpayer/year context are placed. Recipient sections follow official identity, issuer, account and amounts; obsolete reductions at positions 144-156 are reserved zeros in the 2023 electronic design and are not editable. Summary counts refer to records; negative and zero bases remain separate from positive bases. Summary counts and totals derive from the declared recipient records. Native workbook recalculation, signature controls and pixel-level visual review remain unfinished; this is not a complete filing implementation." }
+generator_version = 1
+source_state_digest = "f65e3f9c5a47ce8b801e15b709ec4e051cc122645d463f55bc2f10535a8ade4a"
+design_sources = [
+    { source_ref = "boe-modelo-194-form-layout", sha256 = "ad0a39e35f516f5424149e1e2ff6d395a30bd9a9869d81b97e7899a9f1200078" },
+    { source_ref = "aeat-dr-194-2023", sha256 = "83cd9a332e0016607e87332bea8c3e5d33f0b0f8373ec56f820d82414ca76a7b" },
+]
+placements = [
+    { casilla_id = "01", kind = "on_form", box_number = "01" },
+    { casilla_id = "02", kind = "on_form", box_number = "02" },
+    { casilla_id = "03", kind = "on_form", box_number = "03" },
+    { casilla_id = "04", kind = "on_form", box_number = "04" },
+    { casilla_id = "05", kind = "on_form", box_number = "05" },
+    { casilla_id = "decl.persona-contacto-telefono", kind = "on_form" },
+    { casilla_id = "decl.persona-contacto-nombre", kind = "on_form" },
+    { casilla_id = "decl.num-identificativo", kind = "on_form" },
+    { casilla_id = "decl.complementaria", kind = "on_form" },
+    { casilla_id = "decl.sustitutiva", kind = "on_form" },
+    { casilla_id = "decl.num-identificativo-anterior", kind = "on_form" },
+    { casilla_id = "perc.nif", kind = "on_form" },
+    { casilla_id = "perc.nif-representante", kind = "on_form" },
+    { casilla_id = "perc.nombre", kind = "on_form" },
+    { casilla_id = "perc.provincia", kind = "on_form" },
+    { casilla_id = "perc.origen", kind = "on_form" },
+    { casilla_id = "perc.clave-codigo", kind = "on_form" },
+    { casilla_id = "perc.codigo-emisor", kind = "on_form" },
+    { casilla_id = "perc.tipo-codigo", kind = "on_form" },
+    { casilla_id = "perc.codigo-cuenta", kind = "on_form" },
+    { casilla_id = "perc.pendiente", kind = "on_form" },
+    { casilla_id = "perc.ejercicio-devengo", kind = "on_form" },
+    { casilla_id = "perc.valor-adquisicion", kind = "on_form" },
+    { casilla_id = "perc.valor-transmision", kind = "on_form" },
+    { casilla_id = "perc.base", kind = "on_form" },
+    { casilla_id = "perc.porcentaje", kind = "on_form" },
+    { casilla_id = "perc.retenciones", kind = "on_form" },
+    { casilla_id = "perc.vinculacion", kind = "on_form" },
+    { casilla_id = "perc.ceuta-melilla", kind = "on_form" },
+]
+
+[[revisions.2023.form_layouts.pages]]
+id = "resumen"
+official_ref = "BOE-A-1999-22309, anexo VIII, hoja resumen en euros"
+heading_key = "modelo.schema.194.form.page.resumen.heading"
+official_heading = "Hoja-resumen"
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "identificacion"
+heading_key = "modelo.schema.194.form.section.identificacion.heading"
+official_heading = "IdentificaciÃ³n del declarante"
+blocks = [
+    { kind = "context_field", id = "nif", export_layout_id = "generated-modelo-194-2023-fichero", export_record_id = "modelo-194-declarante", export_field_id = "modelo-194-decl-nif", heading_key = "modelo.schema.194.form.context.nif.heading", official_heading = "NIF del declarante" },
+    { kind = "context_field", id = "nombre", export_layout_id = "generated-modelo-194-2023-fichero", export_record_id = "modelo-194-declarante", export_field_id = "modelo-194-decl-nombre", heading_key = "modelo.schema.194.form.context.nombre.heading", official_heading = "Apellidos y nombre o razÃ³n social" },
+    { kind = "context_field", id = "ejercicio", export_layout_id = "generated-modelo-194-2023-fichero", export_record_id = "modelo-194-declarante", export_field_id = "modelo-194-decl-year", heading_key = "modelo.schema.194.form.context.ejercicio.heading", official_heading = "Ejercicio" },
+]
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "contacto"
+heading_key = "modelo.schema.194.form.section.contacto.heading"
+official_heading = "Persona de contacto"
+blocks = [
+    { kind = "field", id = "persona-contacto-telefono", casilla_id = "decl.persona-contacto-telefono" },
+    { kind = "field", id = "persona-contacto-nombre", casilla_id = "decl.persona-contacto-nombre" },
+]
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "declaracion"
+heading_key = "modelo.schema.194.form.section.declaracion.heading"
+official_heading = "IdentificaciÃ³n y tipo de declaraciÃ³n"
+blocks = [
+    { kind = "field", id = "num-identificativo", casilla_id = "decl.num-identificativo" },
+    { kind = "field", id = "complementaria", casilla_id = "decl.complementaria" },
+    { kind = "field", id = "sustitutiva", casilla_id = "decl.sustitutiva" },
+    { kind = "field", id = "num-identificativo-anterior", casilla_id = "decl.num-identificativo-anterior" },
+]
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "resumen"
+heading_key = "modelo.schema.194.form.section.resumen.heading"
+official_heading = "Resumen de los datos incluidos en la declaraciÃ³n"
+blocks = [
+    { kind = "grid", id = "resumen", columns = [{ key = "perceptores", heading_key = "modelo.schema.194.form.column.perceptores.heading", official_heading = "NÃºmero de perceptores" }, { key = "base", heading_key = "modelo.schema.194.form.column.base.heading", official_heading = "Base de retenciones e ingresos a cuenta" }, { key = "retenciones", heading_key = "modelo.schema.194.form.column.retenciones.heading", official_heading = "Retenciones e ingresos a cuenta" }], rows = [{ key = "positiva", heading_key = "modelo.schema.194.form.row.positiva.heading", official_heading = "Base positiva", cells = [{ kind = "casilla", casilla_id = "01" }, { kind = "casilla", casilla_id = "02" }, { kind = "casilla", casilla_id = "03" }] }, { key = "negativa", heading_key = "modelo.schema.194.form.row.negativa.heading", official_heading = "Base negativa o cero", cells = [{ kind = "casilla", casilla_id = "04" }, { kind = "casilla", casilla_id = "05" }, { kind = "blank" }] }] },
+]
+
+[[revisions.2023.form_layouts.pages]]
+id = "perceptores"
+official_ref = "BOE-A-1999-22309, anexo VIII, relaciÃ³n de perceptores; diseÃ±o electrÃ³nico 2023"
+heading_key = "modelo.schema.194.form.page.perceptores.heading"
+official_heading = "RelaciÃ³n de perceptores"
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "perceptores"
+heading_key = "modelo.schema.194.form.section.perceptores.heading"
+official_heading = "IdentificaciÃ³n del perceptor"
+blocks = [
+    { kind = "repeating", id = "perceptores", row_source = "export_record", export_record_id = "modelo-194-perceptor", columns = [{ key = "perc-nif", heading_key = "modelo.schema.194.form.column.perc-nif.heading", casilla_id = "perc.nif" }, { key = "perc-nif-representante", heading_key = "modelo.schema.194.form.column.perc-nif-representante.heading", casilla_id = "perc.nif-representante" }, { key = "perc-nombre", heading_key = "modelo.schema.194.form.column.perc-nombre.heading", casilla_id = "perc.nombre" }, { key = "perc-provincia", heading_key = "modelo.schema.194.form.column.perc-provincia.heading", casilla_id = "perc.provincia" }] },
+]
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "emisor"
+heading_key = "modelo.schema.194.form.section.emisor.heading"
+official_heading = "OperaciÃ³n y emisor"
+blocks = [
+    { kind = "repeating", id = "emisor", row_source = "export_record", export_record_id = "modelo-194-perceptor", columns = [{ key = "perc-origen", heading_key = "modelo.schema.194.form.column.perc-origen.heading", casilla_id = "perc.origen" }, { key = "perc-clave-codigo", heading_key = "modelo.schema.194.form.column.perc-clave-codigo.heading", casilla_id = "perc.clave-codigo" }, { key = "perc-codigo-emisor", heading_key = "modelo.schema.194.form.column.perc-codigo-emisor.heading", casilla_id = "perc.codigo-emisor" }] },
+]
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "cuenta"
+heading_key = "modelo.schema.194.form.section.cuenta.heading"
+official_heading = "Cuenta de valores y devengo"
+blocks = [
+    { kind = "repeating", id = "cuenta", row_source = "export_record", export_record_id = "modelo-194-perceptor", columns = [{ key = "perc-tipo-codigo", heading_key = "modelo.schema.194.form.column.perc-tipo-codigo.heading", casilla_id = "perc.tipo-codigo" }, { key = "perc-codigo-cuenta", heading_key = "modelo.schema.194.form.column.perc-codigo-cuenta.heading", casilla_id = "perc.codigo-cuenta" }, { key = "perc-pendiente", heading_key = "modelo.schema.194.form.column.perc-pendiente.heading", casilla_id = "perc.pendiente" }, { key = "perc-ejercicio-devengo", heading_key = "modelo.schema.194.form.column.perc-ejercicio-devengo.heading", casilla_id = "perc.ejercicio-devengo" }] },
+]
+
+[[revisions.2023.form_layouts.pages]]
+id = "importes"
+official_ref = "BOE-A-1999-22309, anexo VIII; diseÃ±o electrÃ³nico 2023, posiciones 118-187"
+heading_key = "modelo.schema.194.form.page.importes.heading"
+official_heading = "Importes y retenciones"
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "valores"
+heading_key = "modelo.schema.194.form.section.valores.heading"
+official_heading = "AdquisiciÃ³n y transmisiÃ³n"
+blocks = [
+    { kind = "repeating", id = "valores", row_source = "export_record", export_record_id = "modelo-194-perceptor", columns = [{ key = "perc-valor-adquisicion", heading_key = "modelo.schema.194.form.column.perc-valor-adquisicion.heading", casilla_id = "perc.valor-adquisicion" }, { key = "perc-valor-transmision", heading_key = "modelo.schema.194.form.column.perc-valor-transmision.heading", casilla_id = "perc.valor-transmision" }, { key = "perc-vinculacion", heading_key = "modelo.schema.194.form.column.perc-vinculacion.heading", casilla_id = "perc.vinculacion" }] },
+]
+
+[[revisions.2023.form_layouts.pages.sections]]
+id = "retenciones"
+heading_key = "modelo.schema.194.form.section.retenciones.heading"
+official_heading = "Base y retenciones"
+blocks = [
+    { kind = "repeating", id = "retenciones", row_source = "export_record", export_record_id = "modelo-194-perceptor", columns = [{ key = "perc-base", heading_key = "modelo.schema.194.form.column.perc-base.heading", casilla_id = "perc.base" }, { key = "perc-porcentaje", heading_key = "modelo.schema.194.form.column.perc-porcentaje.heading", casilla_id = "perc.porcentaje" }, { key = "perc-retenciones", heading_key = "modelo.schema.194.form.column.perc-retenciones.heading", casilla_id = "perc.retenciones" }, { key = "perc-ceuta-melilla", heading_key = "modelo.schema.194.form.column.perc-ceuta-melilla.heading", casilla_id = "perc.ceuta-melilla" }] },
+]

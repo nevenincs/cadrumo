@@ -31,7 +31,7 @@ from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCert
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
-from cadrumo.entrypoints.adapter_composition import build_draft_review_ports
+from cadrumo.entrypoints.adapter_composition import build_draft_review_ports, build_ledger_membership_ports
 
 
 def build_test_verification_repository_bundle() -> VerificationRepositoryBundle:
@@ -40,11 +40,12 @@ def build_test_verification_repository_bundle() -> VerificationRepositoryBundle:
     if bucket_id is None:
         raise AssertionError("verification tests require an active profile bucket")
     objects = secure_object_repository_for_active_bucket()
+    transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
     return VerificationRepositoryBundle(
         calculation=CalculationRevisionCatalogueRepository(bucket_id=bucket_id, objects=objects),
         work_unit=WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects),
         filing=ModeloRecordCatalogueRepository(bucket_id=bucket_id, objects=objects),
-        transaction=TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
+        transaction=transaction_repository,
         verification=VerificationReportCatalogueRepository(bucket_id=bucket_id, objects=objects),
         bucket_event=BucketEventHistoryRepository(objects=objects),
         observation=CalculationObservationRepository(objects=objects),
@@ -57,6 +58,9 @@ def build_test_verification_repository_bundle() -> VerificationRepositoryBundle:
         workflow_gate_ports=build_workflow_gate_ports(bucket_id=bucket_id),
         retencion_observation_ports=RetencionObservationPorts(
             repository=RetencionObservationRepositoryAdapter(objects=objects),
+        ),
+        ledger_membership_ports=build_ledger_membership_ports(
+            bucket_id=bucket_id, transaction_repository=transaction_repository
         ),
     )
 

@@ -3,18 +3,21 @@ tags:
   - '#audit'
   - '#tui-interface'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:7e62ac303b43979859f371abe1859f650289b7cd228b55acfe011697e7d73eed'
-related:
-  - "[[2026-08-11-tui-interface-plan]]"
+body_hash: 'sha256:25ff62c3df3183017dd25d0fc0b3cc238d58033452f292a3fab85b0ed61e5da4'
+related: []
 ---
 
 # `tui-interface` audit: `Open rows whose deliverables an accepted decision retired`
 
 ## Scope
 
+Review the TUI interface plan's receipt rows against current plan status and the action-denominator contract.
+
 ## Findings
+
+Three plan rows remain open. Two receipt rows are retired as superseded; the action-denominator row is live and its current gate passes.
 
 ## Recommendations
 
@@ -27,16 +30,7 @@ deliverables that were later removed on purpose.
 
 **Pathway:** plan rows `W01.P01.S01` and `W05.P10.S38`, tui-interface plan.
 
-Both rows record a "C1 governance fact" as a receipt, and both execution
-records list an added `.vault/reference/` receipt artefact. Neither artefact
-exists. Commit `51023bdad2` (2026-08-30 10:00), `refactor(quality): retire the
-modelo workspace exit receipt family`, states the position plainly: the
-accepted interface decision "retired the C1-C5 exit receipt schemas, their five
-validators and the shared discriminated proof type outright -- not renamed, not
-relocated", and `dev/quality/modelo_workspace_receipts.py` together with its
-test was deleted. Only a stale `__pycache__/modelo_workspace_receipts.pyc`
-remains, which is why an import of that module still looks plausible from a
-directory listing.
+Both rows record a "C1 governance fact" as a receipt, and both execution records list an added `.vault/reference/` receipt artefact. Neither artefact exists. Only a stale `__pycache__/modelo_workspace_receipts.pyc` remains, which is why an import of that module still looks plausible from a directory listing.
 
 What is lost is the distinction between three states that wear the same open
 checkbox: work not started, work done and unmarked, and work whose SUBJECT a
@@ -55,15 +49,7 @@ records nothing and a completed row lies.
 
 **Pathway:** plan row `W01.P01.S37`, tui-interface plan.
 
-This row is NOT of the same kind and must not be swept with the other two. The
-same retirement commit states "the action denominator survives untouched: it
-asserts implementation shape, which the same decision explicitly retained".
-Measured at HEAD: `dev/quality/modelo_workspace_action_denominator.py` exists,
-`build_modelo_workspace_action_denominator()` and
-`validate_modelo_workspace_action_denominator()` both resolve, the validator
-returns zero violations, and `dev/tests/test_modelo_workspace_action_denominator.py`
-holds it as a standing gate at 9 passing tests. The row's substance -- keep the
-denominator as a standing conformance gate -- is satisfied.
+This row is NOT of the same kind and must not be swept with the other two. The same retirement commit states "the action denominator survives untouched: it asserts implementation shape, which the same decision explicitly retained". The row's substance -- keep the denominator as a standing conformance gate -- is satisfied.
 
 Its execution record cites a deleted 1,132-line reference document, and that
 deletion is defensible on inspection: the artefact was a SNAPSHOT of generated

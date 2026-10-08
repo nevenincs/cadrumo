@@ -56,7 +56,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.create",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "applicability_guard_bypassed": false,
           "bucket_id": "<bucket-id>",
@@ -83,12 +91,12 @@
           "short_work_unit_id": "cdafd119d9fd",
           "state": "borrador",
           "status": "created",
-          "status_message": "New work unit created.",
+          "status_message": "New declaration created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
           "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -117,7 +125,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "6a5e470235d89993eb16b7b6f0f9e10f8cb11ba6814607e7c7f577b8fcdab90c"
+          "value": "a40b082dc3746a6247bdfa43a3efaaa9b5e34df98a084d50210e583ab6e67fdd"
         }
       ],
       "envelope": {
@@ -128,64 +136,23 @@
             "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
-              "binding_source": "inventory",
-              "reason": "source_domain_not_ready",
-              "resolver_id": "inventory",
-              "source_kind": "inventory"
-            },
-            "message": "inventory source missing_activity_ledgers: no complete 2025 inventory activity ledger is available",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "renta-inventory-activity-closing-increase-0177",
-              "binding_source": "inventory",
-              "casilla_id": "0177",
-              "reason": "unresolved_binding",
-              "source_kind": "inventory"
-            },
-            "message": "binding 'renta-inventory-activity-closing-increase-0177' (casilla '0177') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "renta-inventory-activity-acquisition-cost-0181",
-              "binding_source": "inventory",
-              "casilla_id": "0181",
-              "reason": "unresolved_binding",
-              "source_kind": "inventory"
-            },
-            "message": "binding 'renta-inventory-activity-acquisition-cost-0181' (casilla '0181') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
-              "binding_id": "renta-inventory-activity-closing-decrease-0182",
-              "binding_source": "inventory",
-              "casilla_id": "0182",
-              "reason": "unresolved_binding",
-              "source_kind": "inventory"
-            },
-            "message": "binding 'renta-inventory-activity-closing-decrease-0182' (casilla '0182') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
+              "box": "0513",
               "casilla_id": "0513",
+              "detail": "casilla '0513' (mínimo por descendientes, parte estatal) resolved to zero and the active profile declares no descendant facts",
               "legal_refs": "ley-35-2006:art-56, ley-35-2006:art-58, ley-35-2006:art-61, orden-hac-277-2026:art-3",
+              "level": "missing",
               "reason": "source_issue",
               "remedy": "Declare the family situation with `descendiente add --descendiente NACIMIENTO=YYYY-MM-DD`.",
               "source_kind": "minimo_descendientes_undeclared"
             },
-            "message": "casilla '0513' (mínimo por descendientes, parte estatal) resolved to zero and the active profile declares no descendant facts",
+            "message": "Some information this figure depends on is missing or could not be used.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
@@ -229,7 +196,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "6a5e470235d89993eb16b7b6f0f9e10f8cb11ba6814607e7c7f577b8fcdab90c",
+          "calculation_revision_id": "a40b082dc3746a6247bdfa43a3efaaa9b5e34df98a084d50210e583ab6e67fdd",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -2050,7 +2017,9 @@
             "closes_on": "2026-06-30",
             "conditional_recargo_preview": null,
             "days_overdue": null,
-            "days_remaining": 90
+            "days_remaining": 90,
+            "holiday_coverage": "national_only",
+            "nominal_closes_on": "2026-06-30"
           },
           "detail_rows": [],
           "filed_at": null,
@@ -4160,7 +4129,7 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1616.62"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 6a5e470235d89993eb16b7b6f0f9e10f8cb11ba6814607e7c7f577b8fcdab90c (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision a40b082dc3746a6247bdfa43a3efaaa9b5e34df98a084d50210e583ab6e67fdd (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "relation_prefill",
@@ -4210,7 +4179,7 @@
         "modelo",
         "work",
         "verify",
-        "6a5e470235d89993eb16b7b6f0f9e10f8cb11ba6814607e7c7f577b8fcdab90c"
+        "a40b082dc3746a6247bdfa43a3efaaa9b5e34df98a084d50210e583ab6e67fdd"
       ],
       "captures": [],
       "envelope": {
@@ -4230,7 +4199,7 @@
               "severity": "warning",
               "source_refs": "aeat-renta-2025-manual-parte1, boe-lirpf-statutory-facts"
             },
-            "message": "Casilla 0003 declares 24000 EUR of trabajo income above the DT 12ª threshold, so casilla 0011 may qualify for a reduction it currently declares as zero.",
+            "message": "Box [0003] shows 24000 EUR of employment income (rendimientos del trabajo), above the DT 12ª threshold, so box [0011] may give you a reduction you are not using yet. Check whether it applies to you.",
             "severity": "warning"
           },
           {
@@ -4249,7 +4218,7 @@
               "target_modelo": "100",
               "target_period": "0A"
             },
-            "message": "Modelo 100 2024 0A carries a zero value into 100 2025 0A.",
+            "message": "Modelo 100 for 2024, period 0A, carried a zero into this declaration (modelo 100 for 2025, period 0A). Check that the zero is right.",
             "severity": "warning"
           },
           {
@@ -4263,12 +4232,19 @@
               "source_modelos": "130|131",
               "source_refs": "aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form"
             },
-            "message": "2 source modelo(s) are not applicable to this taxpayer: 130|131.",
+            "message": "2 modelos were not used, because they do not apply to you.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
         "result": {
-          "calculation_revision_id": "6a5e470235d89993eb16b7b6f0f9e10f8cb11ba6814607e7c7f577b8fcdab90c",
+          "calculation_revision_id": "a40b082dc3746a6247bdfa43a3efaaa9b5e34df98a084d50210e583ab6e67fdd",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4279,7 +4255,7 @@
               "legal_refs": [
                 "ley-35-2006:dt-12"
               ],
-              "message": "Casilla 0003 declares 24000 EUR of trabajo income above the DT 12ª threshold, so casilla 0011 may qualify for a reduction it currently declares as zero.",
+              "message": "Box [0003] shows 24000 EUR of employment income (rendimientos del trabajo), above the DT 12ª threshold, so box [0011] may give you a reduction you are not using yet. Check whether it applies to you.",
               "severity": "warning",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1",
@@ -4298,7 +4274,7 @@
                 "ley-35-2006:art-50",
                 "orden-hac-277-2026:art-3"
               ],
-              "message": "Modelo 100 2024 0A carries a zero value into 100 2025 0A.",
+              "message": "Modelo 100 for 2024, period 0A, carried a zero into this declaration (modelo 100 for 2025, period 0A). Check that the zero is right.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-100-2025-dictionary",
@@ -4319,7 +4295,7 @@
                 "rd-439-2007:art-109",
                 "orden-eha-672-2007:art-3"
               ],
-              "message": "2 source modelo(s) are not applicable to this taxpayer: 130|131.",
+              "message": "2 modelos were not used, because they do not apply to you.",
               "severity": "warning",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1",
@@ -4338,7 +4314,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "55d685dfb5bbb730db69ac30de98d2c6a4207ba65561ebe1a5d907078aeb40b6",
+          "verification_report_id": "2e7ddf01803d8361507002519b609d08380f2d2359928900ef9e72314ca3d8a8",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

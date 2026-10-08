@@ -31,22 +31,21 @@ from typing import Annotated
 
 from pydantic import Field
 
+from .afiliado_contribution_bindings import AfiliadoContributionProvider
 from .bienes_inversion_regularizacion_bindings import BienesInversionRegularizacionProvider
 from .bindings_previous_filing import PreviousFilingProvider
 from .design_constant_bindings import DesignConstantProvider
 from .detail_record_bindings import (
     AtribucionMemberProvider,
     ForeignAssetProvider,
-    RefundOperationProvider,
-    RelatedPartyOperationProvider,
 )
-from .donativo_bindings import DonativoDonorProvider
 from .gasto193_bindings import Gasto193ContributorProvider
 from .inventory_bindings import InventoryProvider
 from .invoice_bindings import (
     CollectibleInvoiceProvider,
     LedgerTransactionProvider,
     M347ThirdPartyOperationProvider,
+    M349IntracommunityOperationProvider,
     PayableInvoiceProvider,
     PurchaseInvoiceEvidenceProvider,
 )
@@ -71,7 +70,8 @@ __all__ = ["BindingProvider"]
 
 
 BindingProvider = Annotated[
-    ManualInputProvider
+    AfiliadoContributionProvider
+    | ManualInputProvider
     | DesignConstantProvider
     | ProfileProvider
     | PreviousFilingProvider
@@ -95,11 +95,9 @@ BindingProvider = Annotated[
     | PayableInvoiceProvider
     | CollectibleInvoiceProvider
     | M347ThirdPartyOperationProvider
+    | M349IntracommunityOperationProvider
     | ForeignAssetProvider
-    | RelatedPartyOperationProvider
     | AtribucionMemberProvider
-    | RefundOperationProvider
-    | DonativoDonorProvider
     | Gasto193ContributorProvider
     | InventoryProvider,
     Field(discriminator="kind"),

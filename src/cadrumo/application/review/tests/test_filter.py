@@ -207,6 +207,21 @@ def test_ledger_spec_rejects_invalid_keys_and_values(
         assert exc.value.context == expected_context
 
 
+def test_ledger_spec_accepts_an_own_account_register_id() -> None:
+    spec = LedgerReviewFilterSpec.from_strings(["account=acc-03"])
+    assert spec.account == "acc-03"
+
+
+@pytest.mark.parametrize("value", ("ES9121000418450200051332", "acc-1", "ACC-01", "acc-x9"))
+def test_ledger_spec_refuses_an_account_value_that_is_not_a_register_id(value: str) -> None:
+    """Only a register id filters; account material is refused without being echoed."""
+    with pytest.raises(FilterParseError) as exc:
+        LedgerReviewFilterSpec.from_strings([f"account={value}"])
+    assert exc.value.reason == "invalid-value-ledger-account"
+    assert value not in exc.value.raw_token
+    assert value not in str(exc.value)
+
+
 def test_ledger_filter_parse_error_message_omits_sensitive_filter_value() -> None:
     sensitive_value = "client-tax-id-12345678Z invoice notes"
     with pytest.raises(FilterParseError) as exc:

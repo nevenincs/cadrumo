@@ -11,15 +11,12 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 
-from .. import installed_tui_continuations as continuation_module
-from ..installed_tui_continuations import (
-    ContinuationPathReceipt,
-    InstalledContinuationError,
-    _cli_public_readback,
-    _parse_child_state,
-    _state,
-)
-from ..tui_journey import create_continuation_checkpoint, prove_continuation
+from .. import cli_journey, continuation_child_process
+from .. import continuation_cli as continuation_module
+from ..continuation_cli import _cli_public_readback
+from ..continuation_contracts import ContinuationPathReceipt, InstalledContinuationError
+from ..continuation_state import _parse_child_state, _state
+from ..tui_continuation_evidence import create_continuation_checkpoint, prove_continuation
 
 if TYPE_CHECKING:
     from dev.acceptance.installed_cli import InstalledCli
@@ -192,7 +189,7 @@ def test_cli_completion_reuses_public_handoff_work_ids(monkeypatch, tmp_path: Pa
         },
     )
     monkeypatch.setattr(
-        continuation_module,
+        cli_journey,
         "create_m130_work",
         lambda *_args, **_kwargs: pytest.fail("completion must not create an existing handoff work unit"),
     )
@@ -236,8 +233,8 @@ def test_child_runner_has_a_bounded_2400_second_tui_window(monkeypatch, tmp_path
         receipt.write_text('{"status":"proven"}', encoding="utf-8")
         return SimpleNamespace(returncode=0, receipt_status="proven")
 
-    monkeypatch.setattr(continuation_module, "run_installed_tui_child_process", fake_child)
-    result = continuation_module._run_child(
+    monkeypatch.setattr(continuation_child_process, "run_installed_tui_child_process", fake_child)
+    result = continuation_child_process._run_child(
         direction="cli_to_tui",
         python_executable=tmp_path / "python.exe",
         workspace_root=tmp_path,

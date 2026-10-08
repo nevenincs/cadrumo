@@ -141,6 +141,61 @@ def measure_json_authority(
     }
 
 
+def _sqlite_model_workload_detail(
+    operation: Any,
+    workload: str,
+    *,
+    authority_grade: Any,
+) -> tuple[dict[str, object], float]:
+    modelo, filing_year, period, grade_name = _MODEL_WORKLOADS[workload]
+    snapshot = operation.snapshot(
+        modelo,
+        filing_year=filing_year,
+        period=period,
+        grade=authority_grade(grade_name),
+    )
+    detail: dict[str, object] = {"modelo": modelo, "revision": str(snapshot.revision.id)}
+    timings: list[float] = []
+    for _ in range(100):
+        _selected, elapsed = _timed(
+            lambda: operation.revision_for_context(
+                modelo,
+                filing_year=filing_year,
+                period=period,
+            )
+        )
+        timings.append(elapsed)
+    return detail, float(statistics.median(timings))
+
+
+def _sqlite_fact_detail(operation: Any, reader: Any, query_type: Any) -> dict[str, object]:
+    query = min(
+        (query for query in reader.component_queries() if isinstance(query, query_type)),
+        key=lambda item: item.fact_id,
+    )
+    return {"fact_id": str(operation.governed_fact(query.fact_id).fact_id)}
+
+
+def _sqlite_profile_detail(operation: Any) -> dict[str, object]:
+    return {"profile_schema": operation.profile_schema().id}
+
+
+def _sqlite_evidence_detail(operation: Any, reader: Any, query_type: Any, component_kind: Any) -> dict[str, object]:
+    query = min(
+        (
+            query
+            for query in reader.component_queries()
+            if isinstance(query, query_type) and query.kind is component_kind.LEGAL_EVIDENCE
+        ),
+        key=lambda item: item.reference_id,
+    )
+    return {"legal_evidence": operation.legal_evidence(query.reference_id).legal_reference_id}
+
+
+def _sqlite_enumeration_detail(operation: Any) -> dict[str, object]:
+    return {"modelos": len(operation.modelo_ids()), "revisions": len(operation.revision_ids())}
+
+
 def measure_sqlite_authority(descriptor_path: Path, *, workload: str) -> dict[str, object]:
     """Measure SQLite's complete admission plus one equivalent operation."""
     import psutil
@@ -168,54 +223,28 @@ def measure_sqlite_authority(descriptor_path: Path, *, workload: str) -> dict[st
                 first_started = perf_counter()
                 warm_context = 0.0
                 if workload in _MODEL_WORKLOADS:
-                    modelo, filing_year, period, grade_name = _MODEL_WORKLOADS[workload]
-                    snapshot = operation.snapshot(
-                        modelo,
-                        filing_year=filing_year,
-                        period=period,
-                        grade=RegistryAuthorityGrade(grade_name),
+                    detail, warm_context = _sqlite_model_workload_detail(
+                        operation,
+                        workload,
+                        authority_grade=RegistryAuthorityGrade,
                     )
-                    detail: dict[str, object] = {"modelo": modelo, "revision": str(snapshot.revision.id)}
-                    timings: list[float] = []
-                    for _ in range(100):
-                        _selected, elapsed = _timed(
-                            lambda: operation.revision_for_context(
-                                modelo,
-                                filing_year=filing_year,
-                                period=period,
-                            )
-                        )
-                        timings.append(elapsed)
-                    warm_context = float(statistics.median(timings))
                 elif workload == "fact":
-                    query = min(
-                        (
-                            query
-                            for query in reader.component_queries()
-                            if isinstance(query, GovernedFactComponentQuery)
-                        ),
-                        key=lambda item: item.fact_id,
-                    )
-                    detail = {"fact_id": str(operation.governed_fact(query.fact_id).fact_id)}
+                    detail = _sqlite_fact_detail(operation, reader, GovernedFactComponentQuery)
                 elif workload == "profile":
-                    detail = {"profile_schema": operation.profile_schema().id}
+                    detail = _sqlite_profile_detail(operation)
                 elif workload == "evidence":
-                    query = min(
-                        (
-                            query
-                            for query in reader.component_queries()
-                            if isinstance(query, EvidenceComponentQuery)
-                            and query.kind is AuthorityComponentKind.LEGAL_EVIDENCE
-                        ),
-                        key=lambda item: item.reference_id,
+                    detail = _sqlite_evidence_detail(
+                        operation,
+                        reader,
+                        EvidenceComponentQuery,
+                        AuthorityComponentKind,
                     )
-                    detail = {"legal_evidence": operation.legal_evidence(query.reference_id).legal_reference_id}
                 elif workload == "enumeration":
-                    detail = {"modelos": len(operation.modelo_ids()), "revisions": len(operation.revision_ids())}
+                    detail = _sqlite_enumeration_detail(operation)
                 else:
                     raise ValueError(f"unknown benchmark workload {workload!r}")
                 first = perf_counter() - first_started
-        telemetry = reader.telemetry()
+        stats = reader.stats()
         generation = reader.pin().logical_generation
         return {
             "backend": "sqlite",
@@ -229,9 +258,9 @@ def measure_sqlite_authority(descriptor_path: Path, *, workload: str) -> dict[st
             "identity_digest": generation,
             "detail": detail,
             "cache": {
-                "budget": telemetry.budget,
-                "retained_weight": telemetry.retained_weight,
-                "entries": telemetry.entries,
+                "budget": stats.budget,
+                "retained_weight": stats.retained_weight,
+                "entries": stats.entries,
             },
         }
     finally:
@@ -249,28 +278,37 @@ def _median(samples: list[dict[str, object]], member: str) -> float:
     return float(statistics.median(float(cast(float, sample[member])) for sample in samples))
 
 
-def _summary(samples: list[dict[str, object]]) -> dict[str, object]:
-    """Keep backend/workload medians and semantic parity separate."""
+def _group_samples(samples: list[dict[str, object]]) -> dict[tuple[str, str], list[dict[str, object]]]:
     grouped: dict[tuple[str, str], list[dict[str, object]]] = {}
     for sample in samples:
         grouped.setdefault((str(sample["backend"]), str(sample["workload"])), []).append(sample)
-    result: dict[str, object] = {}
-    for backend in sorted({key[0] for key in grouped}):
-        workloads: dict[str, object] = {}
-        backend_rows = [row for (name, _workload), rows in grouped.items() if name == backend for row in rows]
-        for workload in sorted({key[1] for key in grouped if key[0] == backend}):
-            rows = grouped[(backend, workload)]
-            entry: dict[str, object] = {
-                "runs": len(rows),
-                "post_import_admission_and_first_median_seconds": _median(
-                    rows, "post_import_admission_and_first_seconds"
-                ),
-                "incremental_authority_rss_median_bytes": _median(rows, "incremental_authority_rss_bytes"),
-            }
-            if workload in _MODEL_WORKLOADS:
-                entry["warm_context_median_seconds"] = _median(rows, "warm_context_median_seconds")
-            workloads[workload] = entry
-        result[backend] = {"fresh_processes": len(backend_rows), "workloads": workloads}
+    return grouped
+
+
+def _workload_summary(workload: str, rows: list[dict[str, object]]) -> dict[str, object]:
+    entry: dict[str, object] = {
+        "runs": len(rows),
+        "post_import_admission_and_first_median_seconds": _median(rows, "post_import_admission_and_first_seconds"),
+        "incremental_authority_rss_median_bytes": _median(rows, "incremental_authority_rss_bytes"),
+    }
+    if workload in _MODEL_WORKLOADS:
+        entry["warm_context_median_seconds"] = _median(rows, "warm_context_median_seconds")
+    return entry
+
+
+def _backend_summary(
+    backend: str,
+    grouped: dict[tuple[str, str], list[dict[str, object]]],
+) -> dict[str, object]:
+    backend_rows = [row for (name, _workload), rows in grouped.items() if name == backend for row in rows]
+    workload_names = sorted(workload for name, workload in grouped if name == backend)
+    workloads = {workload: _workload_summary(workload, grouped[(backend, workload)]) for workload in workload_names}
+    return {"fresh_processes": len(backend_rows), "workloads": workloads}
+
+
+def _paired_semantics(
+    grouped: dict[tuple[str, str], list[dict[str, object]]],
+) -> dict[str, object]:
     paired: dict[str, object] = {}
     for workload in sorted({key[1] for key in grouped}):
         json_rows = grouped.get(("json", workload), [])
@@ -283,8 +321,46 @@ def _summary(samples: list[dict[str, object]]) -> dict[str, object]:
             "operation_detail_equal": {json.dumps(row["detail"], sort_keys=True) for row in json_rows}
             == {json.dumps(row["detail"], sort_keys=True) for row in sqlite_rows},
         }
-    result["paired_semantics"] = paired
+    return paired
+
+
+def _summary(samples: list[dict[str, object]]) -> dict[str, object]:
+    """Keep backend/workload medians and semantic parity separate."""
+    grouped = _group_samples(samples)
+    result: dict[str, object] = {
+        backend: _backend_summary(backend, grouped) for backend in sorted({key[0] for key in grouped})
+    }
+    result["paired_semantics"] = _paired_semantics(grouped)
     return result
+
+
+def _benchmark_plan(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    if args.runs < 10 and not args.sample:
+        parser.error("release comparison requires at least 10 fresh processes per workload")
+    workloads: tuple[str, ...] = (cast(str, args.workload),) if args.workload is not None else WORKLOADS
+    backends: tuple[str, ...] = ("json", "sqlite") if args.backend == "both" else (cast(str, args.backend),)
+    if args.sample and (len(workloads) != 1 or len(backends) != 1):
+        parser.error("--sample requires exactly one --backend and one --workload")
+    return workloads, backends
+
+
+def _print_benchmark_samples(
+    *,
+    descriptor: str,
+    baseline: str,
+    workloads: tuple[str, ...],
+    backends: tuple[str, ...],
+    runs: int,
+) -> None:
+    specifications = [
+        (backend, descriptor, baseline, workload) for workload in workloads for backend in backends for _ in range(runs)
+    ]
+    with get_context("spawn").Pool(processes=1, maxtasksperchild=1) as workers:
+        samples = workers.map(_measure_sample, specifications, chunksize=1)
+    print(json.dumps({"samples": samples, "summary": _summary(samples)}, indent=2, sort_keys=True))
 
 
 def main() -> None:
@@ -302,26 +378,19 @@ def main() -> None:
     parser.add_argument("--runs", type=int, default=10)
     parser.add_argument("--sample", action="store_true", help="run one sample; otherwise require release count")
     args = parser.parse_args()
-    if args.runs < 10 and not args.sample:
-        parser.error("release comparison requires at least 10 fresh processes per workload")
-    workloads = (args.workload,) if args.workload else WORKLOADS
-    backends = ("json", "sqlite") if args.backend == "both" else (args.backend,)
+    workloads, backends = _benchmark_plan(args, parser)
     descriptor = str(args.descriptor.resolve(strict=True))
     baseline = str(args.json_baseline.resolve(strict=True))
     if args.sample:
-        if len(workloads) != 1 or len(backends) != 1:
-            parser.error("--sample requires exactly one --backend and one --workload")
         print(json.dumps(_measure_sample((backends[0], descriptor, baseline, workloads[0])), sort_keys=True))
         return
-    specifications = [
-        (backend, descriptor, baseline, workload)
-        for workload in workloads
-        for backend in backends
-        for _ in range(args.runs)
-    ]
-    with get_context("spawn").Pool(processes=1, maxtasksperchild=1) as workers:
-        samples = workers.map(_measure_sample, specifications, chunksize=1)
-    print(json.dumps({"samples": samples, "summary": _summary(samples)}, indent=2, sort_keys=True))
+    _print_benchmark_samples(
+        descriptor=descriptor,
+        baseline=baseline,
+        workloads=workloads,
+        backends=backends,
+        runs=args.runs,
+    )
 
 
 if __name__ == "__main__":

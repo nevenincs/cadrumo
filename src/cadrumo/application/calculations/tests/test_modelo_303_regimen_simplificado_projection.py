@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
@@ -19,14 +20,14 @@ from ....core.filing_projection_ref import (
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.iva_schema_vocabulary import (
-    m303_regime_composition_simplified_scope,
-)
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.m303_regimen_simplificado_projection import (
     m303_iae_epigraph_wire_value,
     project_m303_regimen_simplificado_rows,
     validate_m303_regimen_simplificado_endpoint_epoch,
+)
+from ....domain.calculations.registry.m303_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
 )
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
@@ -112,12 +113,14 @@ def test_projection_rejects_missing_or_duplicate_typed_references() -> None:
 @pytest.mark.parametrize(
     "revision_id, fact, sub_index",
     [
+        ("2022", M303RegimenSimplificadoFact.MESAS_NUMERO, 1),
+        ("2022", M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE, None),
         ("2023", M303RegimenSimplificadoFact.SUPERFICIE_HORNO_CUARTO_TRIMESTRE, 1),
         ("2024-hasta-08-y-2t", M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE, 1),
         ("2025", M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE, None),
     ],
 )
-def test_epoch_admission_refuses_real_horno_fact_shapes_outside_the_selected_design(
+def test_epoch_admission_refuses_fact_shapes_outside_the_selected_design(
     revision_id: str,
     fact: M303RegimenSimplificadoFact,
     sub_index: int | None,
@@ -131,6 +134,17 @@ def test_epoch_admission_refuses_real_horno_fact_shapes_outside_the_selected_des
     )
     with pytest.raises(RegistryValidationError, match="not admitted"):
         validate_m303_regimen_simplificado_endpoint_epoch((reference,), revision_id=revision_id)
+
+
+def test_singleton_fact_rejects_an_index_before_epoch_validation() -> None:
+    with pytest.raises(ValidationError, match="singleton simplified-regime fact"):
+        M303RegimenSimplificadoFactProjectionRef(
+            projection_kind="m303_regimen_simplificado_fact",
+            cohort=M303RegimenSimplificadoCohort.AGRICOLA,
+            slot=1,
+            fact=M303RegimenSimplificadoFact.VOLUMEN_INGRESOS,
+            sub_index=1,
+        )
 
 
 def test_projection_identity_never_uses_json_serialisation() -> None:

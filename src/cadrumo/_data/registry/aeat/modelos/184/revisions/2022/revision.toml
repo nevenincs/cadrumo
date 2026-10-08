@@ -52,9 +52,15 @@ republishes only the blocks it changes, so no complete ejercicio 2022 map is par
 it; the map rests on the consolidated 2023 design and the amending ordenes named above. \
 NOT CLAIMED -- no export layout, completeness manifest, verification expectation or \
 workbook pin is carried here; the grade stays applicability. NOT CLAIMED -- no independent \
-AEAT oracle checked any value. No human operator has countersigned this."""
+AEAT oracle checked any value. No human operator has countersigned this. RELOCATED \n2026-10-02 -- the 17 member-row bindings verified above are no longer stated on this \nedition: it carries no export layout, so nothing in it reads them, and 2023-2024, the first \nedition whose layout does, now declares them."""
 reviewed_at = 2026-09-30
 reviewed_against = "2019-2021"
+
+[revisions."2022".family_dispositions.bindings]
+reason = """
+A binding names the source of a value this revision reads or writes. This applicability-grade edition carries no export layout and no casilla bound to a source, so it reads none. The member-row bindings that fill the socio record are declared by 2023-2024, the first edition whose export layout writes that record."""
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-58-2003:art-93"]
+source_refs = ["boe-dr-184-2022", "aeat-modelo-184-procedure"]
 
 [[revisions."2022".lineage_attestations]]
 family = "casillas"

@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from ...core.json_contract import Notice, ResolvedNoticeAction
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.values import UserProfileFact
-    from .results import ConfigProfileCreateResult, ConfigProfileEditResult
+    from .results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
 import contextlib
 
@@ -78,6 +78,13 @@ from .errors import (
 )
 from .flow_validators import attach_taxpayer_projection_validator
 from .models import WizardFlow, WizardQuestion, WizardWidget
+from .patch_edit import (
+    WizardPatchPersister,
+    apply_profile_patch,
+    format_missing_flags,
+    refuse_foral_ccaa,
+    require_filing_baseline,
+)
 from .persistence import WizardPersistMode
 from .setup_legal_validators import attach_setup_legal_validators
 
@@ -175,10 +182,6 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
         click_type=_choice(["1", "2"]),
         metavar=_choice_metavar(["1", "2"]),
         help=tr("wizard.setup.flags.taxation-type.help"),
-    ),
-    "charge-iban": typer.Option(
-        "--charge-iban",
-        help=tr("wizard.setup.flags.charge-iban.help"),
     ),
     "output-language": typer.Option(
         "--output-language",
@@ -534,75 +537,6 @@ def _missing_required_flags(
     return tuple(missing)
 
 
-def _format_missing_flags(missing: tuple[str, ...]) -> str:
-    """Render missing question ids as the ``--flag`` form an operator types.
-
-    A wizard question id (``tax-id``, ``activity``) is the long-option
-    spelling minus the leading ``--``. The refusal an operator reads
-    must name the actual flags to add, never a raw Python identifier
-    tuple.
-    """
-    return " ".join(f"--{question_id}" for question_id in missing)
-
-
-def _missing_filing_baseline_flag_groups(
-    flow: WizardFlow,
-    answers: BaseModel,
-) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    """Return the missing filing flags split into identity and Modelo groups."""
-    from ..user_profile.filing_baseline import missing_filing_baseline_flag_groups
-    from .persistence import serialise_answers
-
-    profile_path_flags = {
-        question.profile_key: question.id
-        for section in flow.sections
-        for question in section.questions
-        if question.profile_key is not None
-    }
-    return missing_filing_baseline_flag_groups(
-        serialise_answers(flow, answers),
-        profile_path_flags=profile_path_flags,
-    )
-
-
-def _require_filing_baseline(flow: WizardFlow, answers: BaseModel) -> None:
-    """Refuse a wizard write whose projected answers lack the filing baseline.
-
-    Both the non-interactive patch and full-flow persistence paths reach this
-    single terminal-precondition owner after composing their candidate answer
-    set and before publishing any profile facts.
-    """
-    identity_missing, conditional_missing = _missing_filing_baseline_flag_groups(flow, answers)
-    missing = (*identity_missing, *conditional_missing)
-    if not missing:
-        return
-    # Both groups block the write, but they are different obligations. When the
-    # identity axis is satisfied and only the conditional Modelo requirements
-    # are outstanding, saying "identity data is incomplete" describes a state
-    # the profile is not in.
-    raise WizardMissingFlagError(
-        translated_message=(
-            "application.wizard.errors.edit_missing_filing_baseline"
-            if identity_missing
-            else "application.wizard.errors.edit_missing_modelo_requirements"
-        ),
-        context={
-            "flow_id": flow.id,
-            "missing": missing,
-            "missing_flags": _format_missing_flags(missing),
-        },
-        precondition_verdict=wizard_no_action_verdict(
-            condition=WizardPreconditionCondition.FILING_BASELINE_COMPLETE,
-            facts={
-                "filing_baseline_complete": False,
-                "missing_flag_count": len(missing),
-            },
-            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-        ),
-    )
-
-
 def setup_flow_definition(
     flow: WizardFlow,
     *,
@@ -814,6 +748,55 @@ def _canonical_integer_value(value: object) -> str:
     return str(int(str(value)))
 
 
+def _configure_select_option(
+    question: WizardQuestion,
+    operation: PinnedAuthorityOperation,
+    option: typer.models.OptionInfo,
+) -> None:
+    """Apply registry choices and reviewed help overrides for selects."""
+    if question.widget is not WizardWidget.SELECT:
+        return
+    values = [choice.value for choice in question.choices]
+    if question.id == "tax-residence-ccaa":
+        # Foral tokens stay selectable so the refusal can redirect the
+        # operator to the foral Hacienda instead of a generic choice error.
+        from ...domain.calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
+
+        values.extend(resolve_ccaa_catalogue(authority=operation).foral_cli_aliases)
+    option.click_type = _choice(values, case_sensitive=question.id != "iva-regime")
+    option.metavar = _choice_metavar(values)
+    if question.id == "situacion-familiar":
+        # Keep the closed input protocol visible at the boundary while using
+        # the direct catalogue translation for operator-facing help.
+        option.help = tr("wizard.setup.flags.situacion-familiar.help")
+    if question.id == "tax-residence-ccaa":
+        option.metavar = "CCAA"
+        option.show_choices = False
+        option.help = tr("wizard.setup.flags.tax-residence-ccaa.help")
+
+
+def _parameter_annotation_default(
+    question: WizardQuestion,
+    option: typer.models.OptionInfo,
+) -> tuple[object, object]:
+    """Derive the exact Typer annotation and default for one wizard widget."""
+    match question.widget:
+        case WizardWidget.CONFIRM:
+            return Annotated[bool | None, option], None
+        case WizardWidget.SELECT:
+            return Annotated[str | None, option], None
+        case WizardWidget.CHECKBOX:
+            return Annotated[list[str], option], []
+        case WizardWidget.INTEGER:
+            return Annotated[int | None, option], None
+        case WizardWidget.PATH:
+            return Annotated[Path | None, option], None
+        case WizardWidget.SECRET:
+            return Annotated[str | None, option], None
+        case WizardWidget.TEXT:
+            return Annotated[str | None, option], None
+
+
 def _python_parameter(
     flow: WizardFlow,
     question: WizardQuestion,
@@ -834,55 +817,12 @@ def _python_parameter(
     if option is None:
         option = typer.Option(_flag_name(question), help=tr(_help_key(flow, question)))
         SETUP_OPTION_INFOS[question.id] = option
-    if question.widget is WizardWidget.SELECT:
-        values = [choice.value for choice in question.choices]
-        if question.id == "tax-residence-ccaa":
-            # Foral tokens stay selectable so the refusal can redirect the
-            # operator to the foral Hacienda instead of a generic choice error.
-            from ...domain.calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
-
-            values.extend(resolve_ccaa_catalogue(authority=operation).foral_cli_aliases)
-        option.click_type = _choice(values, case_sensitive=question.id != "iva-regime")
-        option.metavar = _choice_metavar(values)
-        if question.id == "situacion-familiar":
-            # Typer's generated help currently reduces dynamic Choice metavars
-            # to ``<str>``. Keep this closed input protocol visible at the
-            # boundary through the explicit metavar above. The help copy stays
-            # a direct catalogue translation so it cannot bypass the locale
-            # source contract while appending transport tokens.
-            option.help = tr("wizard.setup.flags.situacion-familiar.help")
-        if question.id == "tax-residence-ccaa":
-            option.metavar = "CCAA"
-            option.show_choices = False
-            option.help = tr("wizard.setup.flags.tax-residence-ccaa.help")
+    _configure_select_option(question, operation, option)
     if section_title is not None:
         # `OptionInfo` carries `rich_help_panel`; setting it groups the
         # flag under the section's panel in Typer's `--help` output.
         option.rich_help_panel = section_title
-    annotation: object
-    default: object
-    match question.widget:
-        case WizardWidget.CONFIRM:
-            annotation = Annotated[bool | None, option]
-            default = None
-        case WizardWidget.SELECT:
-            annotation = Annotated[str | None, option]
-            default = None
-        case WizardWidget.CHECKBOX:
-            annotation = Annotated[list[str], option]
-            default = []
-        case WizardWidget.INTEGER:
-            annotation = Annotated[int | None, option]
-            default = None
-        case WizardWidget.PATH:
-            annotation = Annotated[Path | None, option]
-            default = None
-        case WizardWidget.SECRET:
-            annotation = Annotated[str | None, option]
-            default = None
-        case WizardWidget.TEXT:
-            annotation = Annotated[str | None, option]
-            default = None
+    annotation, default = _parameter_annotation_default(question, option)
     return inspect.Parameter(
         name=question.id.replace("-", "_"),
         kind=inspect.Parameter.KEYWORD_ONLY,
@@ -1015,6 +955,16 @@ def _colegio_concertado_profile_value(kwargs: Mapping[str, object]) -> dict[str,
     return {_COLEGIO_CONCERTADO_PROFILE_PATH: "true" if supplied else "false"}
 
 
+def _colegio_concertado_from_profile_values(values: Mapping[str, str]) -> bool | None:
+    """Recover the single typed header flag from the command's scalar projection."""
+    value = values.get(_COLEGIO_CONCERTADO_PROFILE_PATH)
+    if value is None:
+        return None
+    if value not in ("true", "false") or len(values) != 1:
+        raise InternalInvariantError("invalid wizard header scalar projection")
+    return value == "true"
+
+
 def scripted_profile_facts(
     flow: WizardFlow,
     kwargs: Mapping[str, object],
@@ -1060,7 +1010,7 @@ def scripted_profile_facts(
     from .persistence import profile_values_from_patch
 
     canonical = _collect_flag_values(flow, dict(kwargs))
-    _refuse_foral_ccaa(canonical, canonical, operation=operation)
+    refuse_foral_ccaa(canonical, canonical, operation=operation)
     profile_values = profile_values_from_patch(flow, canonical)
     profile_values.update(_colegio_concertado_profile_value(kwargs))
     if not profile_values:
@@ -1075,6 +1025,7 @@ def _run_patch_edit(
     scalar_profile_values: Mapping[str, str],
     profile_id: str,
     operation: PinnedAuthorityOperation,
+    patch_persister: WizardPatchPersister | None = None,
 ) -> tuple[dict[str, str], bool]:
     """Persist a non-interactive ``edit`` as a true patch.
 
@@ -1082,73 +1033,32 @@ def _run_patch_edit(
     every other stored field is left untouched. No full-flow walk, no
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
-    from ...domain.user_profile.values import ProfileSetupState, UserProfileFact
-    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import record_to_path_values
-    from .persistence import (
-        profile_values_from_patch,
-        project_answers,
-    )
 
-    # Runs first, and deliberately: its widget validation is what refuses a
-    # blank supplied for a REQUIRED question, so the clear path below can only
-    # ever see optional ones.
-    patched_values = profile_values_from_patch(flow, explicit_flags)
-    patched_values.update(scalar_profile_values)
-    cleared_paths = _cleared_profile_paths(flow, explicit_flags)
+    if patch_persister is not None:
+        return patch_persister(
+            profile_id=profile_id,
+            supplied=explicit_flags,
+            colegio_concertado=_colegio_concertado_from_profile_values(scalar_profile_values),
+        )
+
     profile_decode_context = operation.profile_decode_context()
     record = ProfileRecordRepository.for_current_session(
         profile_id,
         profile_decode_context=profile_decode_context,
     ).load(profile_id)
-    merged_values = record_to_path_values(record)
-    merged_values.update(patched_values)
-    for path in cleared_paths:
-        merged_values.pop(path, None)
-    # A profile is born INCOMPLETE and is a real, writable record from that
-    # moment -- the operator completes it against a live profile rather than
-    # through a gated wizard. Both guards below judge a COMPLETE record: the
-    # answers projection validates the whole model, and the baseline demands
-    # the filing identity. Running them while the record is still being filled
-    # in refused every incremental edit, including the ones supplying the very
-    # fields they asked for, and blamed --tax-id for a command that never
-    # named it. `complete-setup` is the gate that judges completeness, and the
-    # fact-write door already defers the same way through `require_complete`.
-    if record.setup_state is not ProfileSetupState.INCOMPLETE:
-        _require_filing_baseline(flow, project_answers(flow, merged_values))
-    published = apply_profile_fact_changes(
+    published = apply_profile_patch(
+        flow=flow,
         profile_id=profile_id,
-        changes=(
-            *(UserProfileFact(path=path, value=value) for path, value in patched_values.items()),
-            *(UserProfileFact(path=path, value=None) for path in cleared_paths),
-        ),
-        door=ProfileFactWriteDoor.PATCH,
-        profile_decode_context=profile_decode_context,
+        expected_revision=record.record_revision,
+        expected_content_digest=record.content_digest,
+        supplied=explicit_flags,
+        colegio_concertado=_colegio_concertado_from_profile_values(scalar_profile_values),
+        operation=operation,
     )
-    # The write door returns the CURRENT record untouched when the composed
-    # facts project to the values already stored, so an unchanged revision is
-    # the door's own answer to "did anything change", not a second guess here.
+    merged_values = record_to_path_values(published)
     return merged_values, published.record_revision != record.record_revision
-
-
-def _cleared_profile_paths(flow: WizardFlow, explicit_flags: Mapping[str, str]) -> tuple[str, ...]:
-    """Return the profile paths an explicitly blank optional flag clears.
-
-    The patch projector drops a blank answer, which is right for deciding what
-    to WRITE and wrong for deciding what the operator asked for: naming a flag
-    with an empty value is a request to clear that answer, not an absent flag.
-    Dropping it meant the CLI could set an optional fact but never unset one,
-    and said "updated" while leaving the old value in place. A cleared path is
-    published as an explicit ``value=None`` fact, which is the record's own
-    representation of a cleared answer -- the same one the manager writes.
-    """
-    questions = {question.id: question for section in flow.sections for question in section.questions}
-    return tuple(
-        question.profile_key
-        for question_id, raw in explicit_flags.items()
-        if (question := questions.get(question_id)) is not None and question.profile_key is not None and not raw.strip()
-    )
 
 
 def _seed_default_answers(flow: WizardFlow, canonical: dict[str, str]) -> dict[str, str]:
@@ -1185,7 +1095,7 @@ def _persist_full_flow_answers(
     ).load(profile_id)
     values = record_to_path_values(record)
     values.update({path: value for path, value in profile_values.items() if value})
-    _require_filing_baseline(flow, project_answers(flow, values))
+    require_filing_baseline(flow, project_answers(flow, values))
     from ...domain.deadlines.profiles import taxpayer_profile_from_mapping
 
     taxpayer_profile_from_mapping(values, tax_id_default=values.get("identity.tax_id", ""))
@@ -1235,7 +1145,7 @@ def _run_full_flow(
     if quiet:
         missing = _missing_required_flags(flow, canonical)
         if missing:
-            missing_flags = _format_missing_flags(missing)
+            missing_flags = format_missing_flags(missing)
             raise WizardMissingFlagError(
                 translated_message="application.wizard.errors.quiet_missing_flags",
                 context={
@@ -1442,29 +1352,6 @@ def _seed_output_language_from_environment(canonical: dict[str, str]) -> None:
         canonical["output-language"] = env_lang
 
 
-def _refuse_foral_ccaa(
-    canonical: dict[str, str],
-    explicit_flags: dict[str, str],
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Reject foral CCAA tokens before any persistence or prompt."""
-    ccaa_token = canonical.get("tax-residence-ccaa") or explicit_flags.get("tax-residence-ccaa")
-    if ccaa_token is None:
-        return
-
-    from ...core.text_fold import fold_diacritics
-    from ...domain.calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
-    from ...domain.contribuyente.errors import ForalRegimeError
-
-    normalized = fold_diacritics(ccaa_token.strip().casefold().replace(" ", "_").replace("-", "_"))
-    if resolve_ccaa_catalogue(authority=operation).is_foral_alias(normalized):
-        # Re-raise the domain refusal so the whole line renders through the
-        # localized CadrumoError boundary (translated_message), instead of
-        # English Click ``Usage`` chrome around a localized body.
-        raise ForalRegimeError(ccaa_token)
-
-
 # ``SetupAnswers`` field names whose free-text value fails an ISO-8601 date or
 # a decimal validator. Keyed on the pydantic error ``loc`` leaf so the raw
 # English validator ``msg`` never reaches operator output.
@@ -1605,6 +1492,7 @@ def _run_wizard_persistence_path(
     profile_name: str,
     profile_id: str,
     operation: PinnedAuthorityOperation,
+    patch_persister: WizardPatchPersister | None = None,
 ) -> tuple[dict[str, str], bool]:
     """Dispatch to patch-edit or full-flow persistence.
 
@@ -1622,6 +1510,7 @@ def _run_wizard_persistence_path(
             scalar_profile_values=scalar_profile_values,
             profile_id=profile_id,
             operation=operation,
+            patch_persister=patch_persister,
         )
 
     return _run_full_flow(
@@ -1813,36 +1702,37 @@ def _emit_wizard_success(
     from ..operator_output.emit import emit_operator_json_success
     from .results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
-    # Two distinct values, deliberately: ``status_token`` is the closed
-    # machine-readable vocabulary the JSON envelope carries, and ``verb`` is
-    # the localized word the operator reads on the text line. Collapsing them
-    # is what let the wizard publish ``creado`` as a contract token while the
-    # profile manager published ``created`` for the same command.
-    if mode == "create":
-        status_token = ProfileWizardStatus.CREATED
-        verb_key = "wizard.commands.status.created"
-    elif record_changed:
-        status_token = ProfileWizardStatus.UPDATED
-        verb_key = "wizard.commands.status.updated"
-    else:
-        status_token = ProfileWizardStatus.UNCHANGED
-        verb_key = "wizard.commands.status.unchanged"
+    def _success_status() -> tuple[ProfileWizardStatus, str]:
+        """Keep machine status and localized verb keys paired."""
+        if mode == "create":
+            return ProfileWizardStatus.CREATED, "wizard.commands.status.created"
+        if record_changed:
+            return ProfileWizardStatus.UPDATED, "wizard.commands.status.updated"
+        return ProfileWizardStatus.UNCHANGED, "wizard.commands.status.unchanged"
+
+    def _success_messages() -> tuple[str, str, str]:
+        """Resolve all user-visible disclosures in the active language."""
+        no_resume = (
+            modify_no_resume_message
+            if modify_no_resume_message is not None
+            else tr("application.wizard.notices.modify_no_resume")
+        )
+        descendants = (
+            modify_descendants_message
+            if modify_descendants_message is not None
+            else tr("application.wizard.notices.modify_descendants_via_door")
+        )
+        ccaa = (
+            tr("application.wizard.notices.ccaa_defaulted", ccaa=default_ccaa_value)
+            if ccaa_defaulted and default_ccaa_value is not None
+            else ""
+        )
+        return no_resume, descendants, ccaa
+
+    # Keep the closed machine token separate from the localized text verb.
+    status_token, verb_key = _success_status()
     verb = tr(verb_key)
-    resolved_modify_no_resume_message = (
-        modify_no_resume_message
-        if modify_no_resume_message is not None
-        else tr("application.wizard.notices.modify_no_resume")
-    )
-    resolved_modify_descendants_message = (
-        modify_descendants_message
-        if modify_descendants_message is not None
-        else tr("application.wizard.notices.modify_descendants_via_door")
-    )
-    ccaa_message = (
-        tr("application.wizard.notices.ccaa_defaulted", ccaa=default_ccaa_value)
-        if ccaa_defaulted and default_ccaa_value is not None
-        else ""
-    )
+    resolved_modify_no_resume_message, resolved_modify_descendants_message, ccaa_message = _success_messages()
     notices = _wizard_success_notices(
         mode,
         next_command=next_command,
@@ -2028,6 +1918,7 @@ def _execute_wizard_command(
     kwargs: dict[str, object],
     operation: PinnedAuthorityOperation,
     invocation_notices: Callable[[], Sequence[Notice]],
+    patch_persister: WizardPatchPersister | None = None,
 ) -> None:
     """Run the wizard command body after Typer has parsed dynamic flags."""
     profile_name, profile_id = _resolve_profile_target_for_mode(
@@ -2050,7 +1941,7 @@ def _execute_wizard_command(
     # discipline the error path uses for a translated refusal.
     modify_no_resume_message = tr("application.wizard.notices.modify_no_resume")
     modify_descendants_message = tr("application.wizard.notices.modify_descendants_via_door")
-    _refuse_foral_ccaa(canonical, explicit_flags, operation=operation)
+    refuse_foral_ccaa(canonical, explicit_flags, operation=operation)
     try:
         profile_values, record_changed = _run_wizard_persistence_path(
             flow,
@@ -2063,6 +1954,7 @@ def _execute_wizard_command(
             profile_name=profile_name,
             profile_id=profile_id,
             operation=operation,
+            patch_persister=patch_persister,
         )
     except ValidationError as exc:
         raise _wizard_validation_bad(flow, exc) from exc
@@ -2109,6 +2001,7 @@ def build_wizard_command(
     mode: WizardPersistMode,
     operation: PinnedAuthorityOperation,
     invocation_notices: Callable[[], Sequence[Notice]] = tuple,
+    patch_persister: WizardPatchPersister | None = None,
 ) -> Callable[..., None]:
     """Return a Typer-compatible callable that runs ``flow``.
 
@@ -2154,6 +2047,7 @@ def build_wizard_command(
                     kwargs=kwargs,
                     operation=operation,
                     invocation_notices=invocation_notices,
+                    patch_persister=patch_persister,
                 )
             except CadrumoError as exc:
                 # Pre-render translated_message INSIDE the override so the

@@ -109,11 +109,6 @@ class LineageTotalityReport:
     uncovered: tuple[CasillaRowKey, ...]
     stale: tuple[CasillaRowKey, ...]
 
-    @property
-    def is_total(self) -> bool:
-        """Whether every unresolved row is covered and no exception is stale."""
-        return not self.uncovered and not self.stale
-
 
 def unresolved_successor_rows(modelo: ModeloDefinition) -> tuple[CasillaRowKey, ...]:
     """Return the successor-edition rows that neither carry lineage nor declare a none.

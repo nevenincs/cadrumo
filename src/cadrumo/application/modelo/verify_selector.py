@@ -16,7 +16,7 @@ from .selectors import ModeloCalculationRevisionSelector
 class ModeloVerifySelector(StrEnum):
     """Draft-reachable selector subset accepted by ``modelo work verify``.
 
-    ``verify_modelo_revision`` refuses any revision not in state ``BORRADOR``,
+    ``verify_modelo_revision_with_preconditions`` refuses any revision not in state ``BORRADOR``,
     so the only selectors that can resolve to a verifiable revision are the ones
     that reach a draft: ``current`` (when the current revision is still a draft),
     ``latest-draft``, and ``explicit`` (an explicitly-named draft revision id).

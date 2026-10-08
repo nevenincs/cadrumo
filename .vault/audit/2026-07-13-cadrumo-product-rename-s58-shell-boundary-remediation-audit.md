@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-product-rename-s58-shell-boundary-remediation'
 date: '2026-07-13'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:4bfcab3d091d24369b4f09d1741bb481d39b18b6c4feafc3b9b63911405d093b'
-related:
-  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+related: []
 ---
 
 # `cadrumo-product-rename-s58-shell-boundary-remediation` audit: `Cadrumo product rename S58 shell boundary remediation audit`

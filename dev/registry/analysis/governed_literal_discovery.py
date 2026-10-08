@@ -21,9 +21,10 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
+from dev.first_party_source import PRODUCT_PACKAGE, is_production_source
 from dev.quality.unread_inputs import report_unread
 
-SOURCE_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo"
+SOURCE_ROOT: Final[Path] = REPO_ROOT / PRODUCT_PACKAGE
 
 _SEMANTIC_TOKEN: Final[re.Pattern[str]] = re.compile(
     r"(?:amount|article|base|cap|ceiling|coefficient|cutoff|deadline|deduction|exemption|"
@@ -74,8 +75,7 @@ class GovernedLiteralCandidate:
 
 def _candidate_modules(source_root: Path) -> Iterator[Path]:
     for path in sorted(source_root.rglob("*.py")):
-        relative_parts = path.relative_to(source_root).parts
-        if "tests" not in relative_parts and path.name != "conftest.py":
+        if is_production_source(path, root=source_root):
             yield path
 
 
@@ -101,29 +101,62 @@ def _scopes(tree: ast.Module) -> dict[int, str]:
 def _role(node: ast.AST, parents: dict[int, ast.AST], scopes: dict[int, str]) -> str:
     current = node
     while (parent := parents.get(id(current))) is not None:
-        if isinstance(parent, ast.keyword) and parent.arg:
-            return parent.arg
-        if isinstance(parent, ast.arguments):
-            owner = parents.get(id(parent))
-            if isinstance(owner, ast.FunctionDef | ast.AsyncFunctionDef):
-                positional = (*parent.posonlyargs, *parent.args)
-                for index, default in enumerate(parent.defaults):
-                    if current is default:
-                        offset = len(positional) - len(parent.defaults)
-                        return positional[offset + index].arg
-                for index, default in enumerate(parent.kw_defaults):
-                    if current is default:
-                        return parent.kwonlyargs[index].arg
-        if isinstance(parent, ast.Assign):
-            names = [target.id for target in parent.targets if isinstance(target, ast.Name)]
-            if names:
-                return names[0]
-        if isinstance(parent, ast.AnnAssign) and isinstance(parent.target, ast.Name):
-            return parent.target.id
-        if isinstance(parent, ast.Return):
-            return scopes.get(id(parent), _MODULE_SCOPE).rsplit(".", maxsplit=1)[-1]
+        role = _parent_role(current, parent, parents, scopes)
+        if role is not None:
+            return role
         current = parent
     return scopes.get(id(node), _MODULE_SCOPE).rsplit(".", maxsplit=1)[-1]
+
+
+def _parent_role(
+    current: ast.AST,
+    parent: ast.AST,
+    parents: dict[int, ast.AST],
+    scopes: dict[int, str],
+) -> str | None:
+    if isinstance(parent, ast.keyword) and parent.arg:
+        return parent.arg
+    if isinstance(parent, ast.arguments):
+        return _default_parameter_role(current, parent, parents)
+    if isinstance(parent, ast.Assign):
+        return _assignment_role(parent)
+    if isinstance(parent, ast.AnnAssign) and isinstance(parent.target, ast.Name):
+        return parent.target.id
+    if isinstance(parent, ast.Return):
+        return scopes.get(id(parent), _MODULE_SCOPE).rsplit(".", maxsplit=1)[-1]
+    return None
+
+
+def _default_parameter_role(
+    current: ast.AST,
+    arguments: ast.arguments,
+    parents: dict[int, ast.AST],
+) -> str | None:
+    owner = parents.get(id(arguments))
+    if not isinstance(owner, ast.FunctionDef | ast.AsyncFunctionDef):
+        return None
+    return _positional_default_role(current, arguments) or _keyword_default_role(current, arguments)
+
+
+def _positional_default_role(current: ast.AST, arguments: ast.arguments) -> str | None:
+    positional = (*arguments.posonlyargs, *arguments.args)
+    offset = len(positional) - len(arguments.defaults)
+    for index, default in enumerate(arguments.defaults):
+        if current is default:
+            return positional[offset + index].arg
+    return None
+
+
+def _keyword_default_role(current: ast.AST, arguments: ast.arguments) -> str | None:
+    for index, default in enumerate(arguments.kw_defaults):
+        if current is default:
+            return arguments.kwonlyargs[index].arg
+    return None
+
+
+def _assignment_role(assignment: ast.Assign) -> str | None:
+    names = [target.id for target in assignment.targets if isinstance(target, ast.Name)]
+    return names[0] if names else None
 
 
 def _inside_mapping(node: ast.AST, parents: dict[int, ast.AST]) -> bool:
@@ -149,11 +182,16 @@ def _has_ancestor(node: ast.AST, parents: dict[int, ast.AST], kinds: type[ast.AS
 def _decimal_call_names(tree: ast.Module) -> frozenset[str]:
     names = {"Decimal", "decimal.Decimal"}
     for node in tree.body:
-        if isinstance(node, ast.ImportFrom) and node.module == "decimal":
-            names.update(alias.asname or alias.name for alias in node.names if alias.name == "Decimal")
-        elif isinstance(node, ast.Import):
-            names.update(f"{alias.asname or alias.name}.Decimal" for alias in node.names if alias.name == "decimal")
+        names.update(_decimal_import_names(node))
     return frozenset(names)
+
+
+def _decimal_import_names(node: ast.stmt) -> set[str]:
+    if isinstance(node, ast.ImportFrom) and node.module == "decimal":
+        return {alias.asname or alias.name for alias in node.names if alias.name == "Decimal"}
+    if isinstance(node, ast.Import):
+        return {f"{alias.asname or alias.name}.Decimal" for alias in node.names if alias.name == "decimal"}
+    return set()
 
 
 def _call_name(node: ast.expr) -> str:
@@ -187,26 +225,55 @@ def _literal_candidate(
     if isinstance(value, bool) or value is None:
         return None
     if isinstance(value, int | float):
-        if value in _UNIT_IDENTITIES or _NON_POLICY_ROLE.search(role) or not _SEMANTIC_TOKEN.search(role):
-            return None
-        kind = CandidateKind.MAPPING if _inside_mapping(node, parents) else CandidateKind.NUMERIC
-        return kind, _excerpt(value)
-    if not isinstance(value, str) or not value.strip():
+        return _numeric_candidate(value, role, node, parents)
+    if isinstance(value, str) and value.strip():
+        return _string_candidate(value, role, node, parents)
+    return None
+
+
+def _numeric_candidate(
+    value: int | float,
+    role: str,
+    node: ast.Constant,
+    parents: dict[int, ast.AST],
+) -> tuple[CandidateKind, str] | None:
+    if value in _UNIT_IDENTITIES or _NON_POLICY_ROLE.search(role) or not _SEMANTIC_TOKEN.search(role):
         return None
+    kind = CandidateKind.MAPPING if _inside_mapping(node, parents) else CandidateKind.NUMERIC
+    return kind, _excerpt(value)
+
+
+def _string_candidate(
+    value: str,
+    role: str,
+    node: ast.Constant,
+    parents: dict[int, ast.AST],
+) -> tuple[CandidateKind, str] | None:
     if _DATE_LITERAL.fullmatch(value) and not _NON_POLICY_ROLE.search(role):
         return CandidateKind.DATE, _excerpt(value)
     if _LEGAL_TEXT.search(value) and not _NON_POLICY_ROLE.search(role):
         return CandidateKind.LEGAL_TEXT, _excerpt(value)
-    if _SEMANTIC_TOKEN.search(role):
-        kind = CandidateKind.MAPPING if _inside_mapping(node, parents) else CandidateKind.STRING
-        return kind, _excerpt(value)
-    return None
+    if not _SEMANTIC_TOKEN.search(role):
+        return None
+    kind = CandidateKind.MAPPING if _inside_mapping(node, parents) else CandidateKind.STRING
+    return kind, _excerpt(value)
 
 
 def _collect(tree: ast.Module, path: str) -> tuple[GovernedLiteralCandidate, ...]:
     parents = _parents(tree)
     scopes = _scopes(tree)
-    docstrings = {
+    docstrings = _docstring_nodes(tree)
+    found: set[GovernedLiteralCandidate] = set()
+    decimal_names = _decimal_call_names(tree)
+    for node in ast.walk(tree):
+        candidate = _candidate_for_node(node, path, parents, scopes, docstrings, decimal_names)
+        if candidate is not None:
+            found.add(candidate)
+    return tuple(sorted(found))
+
+
+def _docstring_nodes(tree: ast.Module) -> set[int]:
+    return {
         id(body[0].value)
         for owner in ast.walk(tree)
         if isinstance(owner, ast.Module | ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
@@ -215,64 +282,95 @@ def _collect(tree: ast.Module, path: str) -> tuple[GovernedLiteralCandidate, ...
         and isinstance(body[0].value, ast.Constant)
         and isinstance(body[0].value.value, str)
     }
-    found: set[GovernedLiteralCandidate] = set()
-    decimal_names = _decimal_call_names(tree)
-    for node in ast.walk(tree):
-        role = _role(node, parents, scopes)
-        classification_role = role
-        if not _SEMANTIC_TOKEN.search(classification_role) and not _NON_POLICY_ROLE.search(classification_role):
-            classification_role = scopes.get(id(node), _MODULE_SCOPE).rsplit(".", maxsplit=1)[-1]
-        if isinstance(node, ast.Call) and _call_name(node.func) in decimal_names:
-            argument = node.args[0] if node.args else None
-            if (
-                isinstance(argument, ast.Constant)
-                and _SEMANTIC_TOKEN.search(classification_role)
-                and not _NON_POLICY_ROLE.search(classification_role)
-            ):
-                found.add(
-                    GovernedLiteralCandidate(
-                        path,
-                        node.lineno,
-                        scopes.get(id(node), _MODULE_SCOPE),
-                        role,
-                        CandidateKind.DECIMAL,
-                        f"Decimal({_excerpt(argument.value)})",
-                    )
-                )
-        elif (
-            isinstance(node, ast.UnaryOp | ast.BinOp | ast.List | ast.Tuple | ast.Set)
-            and _SEMANTIC_TOKEN.search(classification_role)
-            and not _is_unit_expression(node)
-        ):
-            if any(isinstance(child, ast.Constant) for child in ast.walk(node)):
-                found.add(
-                    GovernedLiteralCandidate(
-                        path,
-                        node.lineno,
-                        scopes.get(id(node), _MODULE_SCOPE),
-                        role,
-                        CandidateKind.EXPRESSION,
-                        _excerpt(ast.unparse(node)),
-                    )
-                )
-        elif (
-            isinstance(node, ast.Constant)
-            and id(node) not in docstrings
-            and not _has_ancestor(
-                node,
-                parents,
-                (ast.Raise, ast.Call, ast.UnaryOp, ast.BinOp, ast.List, ast.Tuple, ast.Set),
-            )
-        ):
-            classified = _literal_candidate(node, classification_role, parents)
-            if classified is not None:
-                kind, excerpt = classified
-                found.add(
-                    GovernedLiteralCandidate(
-                        path, node.lineno, scopes.get(id(node), _MODULE_SCOPE), role, kind, excerpt
-                    )
-                )
-    return tuple(sorted(found))
+
+
+def _candidate_for_node(
+    node: ast.AST,
+    path: str,
+    parents: dict[int, ast.AST],
+    scopes: dict[int, str],
+    docstrings: set[int],
+    decimal_names: frozenset[str],
+) -> GovernedLiteralCandidate | None:
+    role = _role(node, parents, scopes)
+    classification_role = _classification_role(node, role, scopes)
+    if isinstance(node, ast.Call) and _call_name(node.func) in decimal_names:
+        return _decimal_candidate(node, path, role, classification_role, scopes)
+    expression = _expression_candidate(node, path, role, classification_role, scopes)
+    if expression is not None:
+        return expression
+    return _constant_node_candidate(node, path, role, classification_role, parents, scopes, docstrings)
+
+
+def _classification_role(node: ast.AST, role: str, scopes: dict[int, str]) -> str:
+    if _SEMANTIC_TOKEN.search(role) or _NON_POLICY_ROLE.search(role):
+        return role
+    return scopes.get(id(node), _MODULE_SCOPE).rsplit(".", maxsplit=1)[-1]
+
+
+def _decimal_candidate(
+    node: ast.Call,
+    path: str,
+    role: str,
+    classification_role: str,
+    scopes: dict[int, str],
+) -> GovernedLiteralCandidate | None:
+    argument = node.args[0] if node.args else None
+    if not isinstance(argument, ast.Constant):
+        return None
+    if not _SEMANTIC_TOKEN.search(classification_role) or _NON_POLICY_ROLE.search(classification_role):
+        return None
+    return GovernedLiteralCandidate(
+        path,
+        node.lineno,
+        scopes.get(id(node), _MODULE_SCOPE),
+        role,
+        CandidateKind.DECIMAL,
+        f"Decimal({_excerpt(argument.value)})",
+    )
+
+
+def _expression_candidate(
+    node: ast.AST,
+    path: str,
+    role: str,
+    classification_role: str,
+    scopes: dict[int, str],
+) -> GovernedLiteralCandidate | None:
+    if not isinstance(node, ast.UnaryOp | ast.BinOp | ast.List | ast.Tuple | ast.Set):
+        return None
+    if not _SEMANTIC_TOKEN.search(classification_role) or _is_unit_expression(node):
+        return None
+    if not any(isinstance(child, ast.Constant) for child in ast.walk(node)):
+        return None
+    return GovernedLiteralCandidate(
+        path,
+        node.lineno,
+        scopes.get(id(node), _MODULE_SCOPE),
+        role,
+        CandidateKind.EXPRESSION,
+        _excerpt(ast.unparse(node)),
+    )
+
+
+def _constant_node_candidate(
+    node: ast.AST,
+    path: str,
+    role: str,
+    classification_role: str,
+    parents: dict[int, ast.AST],
+    scopes: dict[int, str],
+    docstrings: set[int],
+) -> GovernedLiteralCandidate | None:
+    if not isinstance(node, ast.Constant) or id(node) in docstrings:
+        return None
+    if _has_ancestor(node, parents, (ast.Raise, ast.Call, ast.UnaryOp, ast.BinOp, ast.List, ast.Tuple, ast.Set)):
+        return None
+    classified = _literal_candidate(node, classification_role, parents)
+    if classified is None:
+        return None
+    kind, excerpt = classified
+    return GovernedLiteralCandidate(path, node.lineno, scopes.get(id(node), _MODULE_SCOPE), role, kind, excerpt)
 
 
 def discover_governed_literal_candidates(

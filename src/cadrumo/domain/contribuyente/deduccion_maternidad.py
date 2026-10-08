@@ -18,7 +18,7 @@ from ..calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
 )
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.schema_base import DateAxis
 
 _MATERNIDAD_FORMULA_SPEC_ID = "lirpf-art-81-maternity-formula-spec"
@@ -39,11 +39,7 @@ def _resolve_maternidad_formula_spec(
 ) -> tuple[GovernedFactSource, date, dict[str, str]]:
     """Resolve and validate the dated mapping that names maternity operands."""
     effective_date = date(filing_year, 12, 31)
-    authority = authority or governed_facts_in_scope()
-    if authority is None:
-        raise RegistryValidationError(
-            "maternity formula specification requires an explicit authority operation or scope",
-        )
+    authority = require_governed_fact_authority(authority, subject="maternity formula specification")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_MATERNIDAD_FORMULA_SPEC_ID,
@@ -53,7 +49,12 @@ def _resolve_maternidad_formula_spec(
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise RegistryValidationError("maternity formula specification must resolve as a mapping fact")
+    declarations = _maternidad_formula_declarations(resolved)
+    _require_maternidad_formula_keys(declarations)
+    return authority, effective_date, declarations
 
+
+def _maternidad_formula_declarations(resolved: ResolvedMappingFact) -> dict[str, str]:
     declarations: dict[str, str] = {}
     for entry in resolved.payload.entries:
         if type(entry.key) is not str or type(entry.value) is not str:
@@ -65,11 +66,13 @@ def _resolve_maternidad_formula_spec(
         if key in declarations:
             raise RegistryValidationError(f"maternity formula specification repeats key {key!r}")
         declarations[key] = value
+    return declarations
 
+
+def _require_maternidad_formula_keys(declarations: dict[str, str]) -> None:
     missing = _REQUIRED_FORMULA_SPEC_KEYS - declarations.keys()
     if missing:
         raise RegistryValidationError(f"maternity formula specification is missing required keys {sorted(missing)!r}")
-    return authority, effective_date, declarations
 
 
 def _resolve_maternidad_scalar(

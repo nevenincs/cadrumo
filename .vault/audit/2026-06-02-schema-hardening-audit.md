@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:08be41a1b43d7a7900e3f219cd5db22657674806cc2b78fd71ebd2bbd98e3ef9'
-related:
-  - "[[2026-06-02-registry-hardening-next-work-plan]]"
+related: []
 ---
 
 # `schema-hardening` audit: `M347 singleton marker audit`

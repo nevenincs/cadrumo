@@ -20,6 +20,7 @@ import pytest
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.bindings import CasillaObservation
 from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.tests.legal_inventory import legal_reference_ids
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..maritime_exemption import (
     MaritimeExemptionInactiveError,
@@ -631,7 +632,7 @@ def test_runtime_legal_and_source_refs_resolve_to_bundled_catalogues() -> None:
     legal_refs.add(str(retm_error.value.context["legal_ref"]))
 
     with bundled_indexed_authority().operation() as operation:
-        published_legal = set(operation.legal_reference_ids())
+        published_legal = set(legal_reference_ids(operation))
         assert sorted(ref for ref in legal_refs if ref not in published_legal) == []
         for ref in sorted(source_refs):
             assert operation.source_reference(ref) is not None

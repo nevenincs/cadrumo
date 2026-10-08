@@ -453,24 +453,7 @@ def _derived_annex_fragment_units(
     if include_iva_annual_fragments and unit.title == "ANEXO II":
         fragment_specs = (_IVA_ANNUAL_INSTRUCTION_FRAGMENT_SPEC, *fragment_specs)
     for anchor, start_prefix, end_prefix in fragment_specs:
-        starts = [index for index, line in enumerate(folded) if line.startswith(start_prefix)]
-        ends = [index for index, line in enumerate(folded) if line.startswith(end_prefix)]
-        if len(starts) != 1 or len(ends) != 1 or ends[0] <= starts[0] + 1:
-            continue
-        start = starts[0]
-        end = ends[0]
-        title = lines[start].strip()
-        body = "\n".join(lines[start + 1 : end]).strip()
-        if not title or not body:
-            continue
-        derived.append(
-            PreprocessUnit(
-                text=body,
-                title=title,
-                section=f"{unit.title}: {title}",
-                anchor=anchor,
-            ),
-        )
+        _collect_annex_fragment(anchor, start_prefix, end_prefix, folded, lines, unit, derived)
     return derived
 
 
@@ -606,31 +589,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
     digest = sha256_of(source)
     attribution = _attribution_for(boe_url)
 
-    units = legal_markup_units(markup)
-    # With no classed legal heading the splitter returns the whole document as
-    # one anonymous unit, and every article anchor would then be verified
-    # against every article. Plain-heading excerpts that declare a fragment per
-    # article are split on those declared boundaries instead.
-    if len(units) == 1 and units[0].title is None and units[0].anchor is None:
-        units = _declared_fragment_article_units(markup) or units
-    if container_anchor and len(units) == 1 and units[0].title is None and units[0].anchor is None:
-        units[0] = units[0].model_copy(update={"anchor": container_anchor})
-
-    # A file with no <h5 class="articulo"> (a single-article slice whose body
-    # is bare parrafos, or an atypical fragment) still yields one unit from
-    # the whole stripped document so nothing is silently dropped. A full BOE
-    # page reaching here was clipped to its legal-text container, so that
-    # container's fragment anchors the unit; a bare slice supplies none.
-    if not units:
-        whole = render_normative_prose(markup)
-        if whole:
-            units.append(PreprocessUnit(text=whole, anchor=container_anchor or None))
-
-    units = _with_derived_annex_fragments(
-        units,
-        include_iva_annual_fragments=source.name == "orden-hac-1347-2024.html",
-    )
-    units.extend(_m303_annual_orden_table_units(source))
+    units = _legal_html_units(markup, container_anchor, source)
 
     if not units:
         return [
@@ -678,3 +637,68 @@ def extract_html(source: Path, *, repo_root: Path) -> list[Path]:
     """
     outputs = build_outputs(source, repo_root=repo_root)
     return write_part_sidecars(source, outputs)
+
+
+def _legal_html_units(markup: str, container_anchor: str, source: Path) -> list[PreprocessUnit]:
+    """Legal html units."""
+    units = legal_markup_units(markup)
+    # With no classed legal heading the splitter returns the whole document as
+    # one anonymous unit, and every article anchor would then be verified
+    # against every article. Plain-heading excerpts that declare a fragment per
+    # article are split on those declared boundaries instead.
+    if _is_anonymous_single_unit(units):
+        units = _declared_fragment_article_units(markup) or units
+    if container_anchor and _is_anonymous_single_unit(units):
+        units[0] = units[0].model_copy(update={"anchor": container_anchor})
+
+    # A file with no <h5 class="articulo"> (a single-article slice whose body
+    # is bare parrafos, or an atypical fragment) still yields one unit from
+    # the whole stripped document so nothing is silently dropped. A full BOE
+    # page reaching here was clipped to its legal-text container, so that
+    # container's fragment anchors the unit; a bare slice supplies none.
+    if not units:
+        whole = render_normative_prose(markup)
+        if whole:
+            units.append(PreprocessUnit(text=whole, anchor=container_anchor or None))
+
+    units = _with_derived_annex_fragments(
+        units,
+        include_iva_annual_fragments=source.name == "orden-hac-1347-2024.html",
+    )
+    units.extend(_m303_annual_orden_table_units(source))
+    return units
+
+
+def _is_anonymous_single_unit(units: list[PreprocessUnit]) -> bool:
+    """Whether legal segmentation yielded only an unanchored whole document."""
+    return len(units) == 1 and units[0].title is None and units[0].anchor is None
+
+
+def _collect_annex_fragment(
+    anchor: str,
+    start_prefix: str,
+    end_prefix: str,
+    folded: tuple[str, ...],
+    lines: list[str],
+    unit: PreprocessUnit,
+    derived: list[PreprocessUnit],
+) -> None:
+    """Collect annex fragment."""
+    starts = [index for index, line in enumerate(folded) if line.startswith(start_prefix)]
+    ends = [index for index, line in enumerate(folded) if line.startswith(end_prefix)]
+    if len(starts) != 1 or len(ends) != 1 or ends[0] <= starts[0] + 1:
+        return
+    start = starts[0]
+    end = ends[0]
+    title = lines[start].strip()
+    body = "\n".join(lines[start + 1 : end]).strip()
+    if not title or not body:
+        return
+    derived.append(
+        PreprocessUnit(
+            text=body,
+            title=title,
+            section=f"{unit.title}: {title}",
+            anchor=anchor,
+        ),
+    )

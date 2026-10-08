@@ -10,23 +10,18 @@ from pathlib import Path
 
 import pytest
 
-from .._signal import (
-    _documentation_source_inventory,
-    _domain_summaries,
-    _dynamic_key_families,
-    _embedded_document_language_prose,
-    _filtered_translation_text,
-    _headline,
-    _human_translation_text,
-    _parallel_localization_inventory,
-    _platform_identity_terms,
-    _source_inventory,
-    _spellcheck_catalogues,
-    _translation_invariant_echo_reason,
-    _translation_matrix,
-    _visible_document_prose,
-)
 from ..manager import LocaleManager
+from ..signal_discovery import dynamic_key_families
+from ..signal_document_prose import embedded_document_language_prose, visible_document_prose
+from ..signal_documentation_inventory import documentation_source_inventory
+from ..signal_domain_summary import domain_summaries, headline
+from ..signal_echo_classification import load_platform_identity_terms, translation_invariant_echo_reason
+from ..signal_parallel_inventory import parallel_localization_inventory
+from ..signal_policy import LOCALES
+from ..signal_source_inventory import collect_source_inventory
+from ..signal_spelling import spellcheck_catalogues
+from ..signal_tokens import filtered_translation_text, human_translation_text
+from ..signal_translation_matrix import translation_matrix
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -59,7 +54,7 @@ def test_translation_matrix_counts_keys_and_locale_cells_without_overlap() -> No
         "es": {"cli.save": "Guardar"},
     }
 
-    matrix = _translation_matrix(required, leaves)
+    matrix = translation_matrix(required, leaves)
 
     assert matrix["cells"] == {
         "required": 4,
@@ -79,7 +74,7 @@ def test_translation_matrix_counts_keys_and_locale_cells_without_overlap() -> No
 
 def test_translation_matrix_flags_long_target_text_effectively_identical_to_spanish() -> None:
     spanish = "Importe total de la deducción tributaria aplicable en esta autoliquidación anual."
-    matrix = _translation_matrix(
+    matrix = translation_matrix(
         {"modelo.help"},
         {"es": {"modelo.help": spanish}, "en": {"modelo.help": spanish}},
     )
@@ -98,7 +93,7 @@ def test_translation_matrix_flags_long_target_text_effectively_identical_to_span
 
 
 def test_translation_matrix_flags_unaccented_tax_prose() -> None:
-    matrix = _translation_matrix(
+    matrix = translation_matrix(
         {"modelo.help"},
         {
             "es": {"modelo.help": "Descripción oficial de la casilla tributaria."},
@@ -113,7 +108,7 @@ def test_translation_matrix_flags_unaccented_tax_prose() -> None:
 
 
 def test_translation_matrix_refuses_dropped_expansion_and_casilla_tokens() -> None:
-    matrix = _translation_matrix(
+    matrix = translation_matrix(
         {"modelo.help"},
         {
             "es": {"modelo.help": "Importe %{amount} procedente de [00230] cuando [a=c1+c2]."},
@@ -136,7 +131,7 @@ def test_translation_matrix_refuses_dropped_expansion_and_casilla_tokens() -> No
 
 
 def test_spelling_prose_excludes_long_casilla_and_formula_references() -> None:
-    assert _human_translation_text("Import de [00230] quan [base_total=casella1+casella2].") == "import de quan ."
+    assert human_translation_text("Import de [00230] quan [base_total=casella1+casella2].") == "import de quan ."
 
 
 def test_spelling_filter_excludes_transport_syntax_but_keeps_visible_labels() -> None:
@@ -158,21 +153,21 @@ def test_spelling_filter_excludes_transport_syntax_but_keeps_visible_labels() ->
         + " %{amount} base_total=c1+c2 2025."
     )
 
-    filtered, excluded = _filtered_translation_text(value)
+    filtered, excluded = filtered_translation_text(value)
 
     assert filtered == "open or guide visible guide ."
     assert excluded == 10
 
 
 def test_spelling_filter_keeps_plain_prose_and_removes_file_extensions() -> None:
-    filtered, excluded = _filtered_translation_text("Olvassa el a guide.md fájlt, majd folytassa.")
+    filtered, excluded = filtered_translation_text("Olvassa el a guide.md fájlt, majd folytassa.")
 
     assert filtered == "olvassa el a fájlt majd folytassa."
     assert excluded == 1
 
 
 def test_spellcheck_reports_structural_exclusions_by_surface_and_locale(tmp_path, monkeypatch) -> None:
-    from .. import _signal as signal_module
+    from .. import signal_spelling as spelling_module
 
     tick = chr(96)
 
@@ -181,11 +176,11 @@ def test_spellcheck_reports_structural_exclusions_by_surface_and_locale(tmp_path
             return True
 
     monkeypatch.setattr(
-        signal_module,
+        spelling_module,
         "load_dictionaries",
-        lambda _repository: {locale: _Dictionary() for locale in signal_module._LOCALES},
+        lambda _repository: {locale: _Dictionary() for locale in LOCALES},
     )
-    spelling, inventory, findings = _spellcheck_catalogues(
+    spelling, inventory, findings = spellcheck_catalogues(
         {"runtime.value"},
         {"ca": {"runtime.value": "2025 + 2026"}},
         tmp_path,
@@ -224,18 +219,18 @@ def test_spellcheck_reports_structural_exclusions_by_surface_and_locale(tmp_path
 
 
 def test_spellcheck_reconciles_enrolled_cells_with_prose_and_structural_cells(tmp_path, monkeypatch) -> None:
-    from .. import _signal as signal_module
+    from .. import signal_spelling as spelling_module
 
     class _Dictionary:
         def lookup(self, _word: str) -> bool:
             return True
 
     monkeypatch.setattr(
-        signal_module,
+        spelling_module,
         "load_dictionaries",
-        lambda _repository: {locale: _Dictionary() for locale in signal_module._LOCALES},
+        lambda _repository: {locale: _Dictionary() for locale in LOCALES},
     )
-    _spelling, inventory, _findings = _spellcheck_catalogues(
+    _spelling, inventory, _findings = spellcheck_catalogues(
         {"runtime.prose", "runtime.syntax"},
         {
             "ca": {
@@ -258,18 +253,18 @@ def test_spellcheck_reconciles_enrolled_cells_with_prose_and_structural_cells(tm
 
 
 def test_spellcheck_returns_actionable_finding_for_each_unknown_parallel_cell(tmp_path, monkeypatch) -> None:
-    from .. import _signal as signal_module
+    from .. import signal_spelling as spelling_module
 
     class _Dictionary:
         def lookup(self, word: str) -> bool:
             return word.casefold() == "known"
 
     monkeypatch.setattr(
-        signal_module,
+        spelling_module,
         "load_dictionaries",
-        lambda _repository: {locale: _Dictionary() for locale in signal_module._LOCALES},
+        lambda _repository: {locale: _Dictionary() for locale in LOCALES},
     )
-    spelling, inventory, findings = _spellcheck_catalogues(
+    spelling, inventory, findings = spellcheck_catalogues(
         set(),
         {},
         tmp_path,
@@ -292,7 +287,7 @@ def test_spellcheck_returns_actionable_finding_for_each_unknown_parallel_cell(tm
 
 
 def test_spellcheck_routes_lang_annotated_embedded_prose_to_declared_dictionary(tmp_path, monkeypatch) -> None:
-    from .. import _signal as signal_module
+    from .. import signal_spelling as spelling_module
 
     class _Dictionary:
         def __init__(self, known: set[str]) -> None:
@@ -302,7 +297,7 @@ def test_spellcheck_routes_lang_annotated_embedded_prose_to_declared_dictionary(
             return word.casefold() in self.known
 
     monkeypatch.setattr(
-        signal_module,
+        spelling_module,
         "load_dictionaries",
         lambda _repository: {
             "ca": _Dictionary(set()),
@@ -311,7 +306,7 @@ def test_spellcheck_routes_lang_annotated_embedded_prose_to_declared_dictionary(
             "hu": _Dictionary(set()),
         },
     )
-    spelling, _inventory, _findings = _spellcheck_catalogues(
+    spelling, _inventory, _findings = spellcheck_catalogues(
         set(),
         {},
         tmp_path,
@@ -333,9 +328,9 @@ def test_domain_summary_enumerates_every_domain_and_unassigned_inventory() -> No
         "en": {"cli.save": "Save"},
         "es": {"cli.save": "Guardar", "modelo.title": "Modelo"},
     }
-    matrix = _translation_matrix(required, leaves)
+    matrix = translation_matrix(required, leaves)
 
-    domains = _domain_summaries(
+    domains = domain_summaries(
         required,
         matrix,
         leaves,
@@ -365,8 +360,8 @@ def test_headline_distinguishes_exact_and_known_backlogs() -> None:
     }
     open_inventory = {**exact, "exact": False, "cells_to_translate": None, "unique_keys_to_translate": None}
 
-    assert _headline(exact, locales, ("cli", "ca", 3), 0).startswith("Translate 4 locale cells for 3 unique keys")
-    assert _headline(open_inventory, locales, ("cli", "ca", 3), 2).startswith(
+    assert headline(exact, locales, ("cli", "ca", 3), 0).startswith("Translate 4 locale cells for 3 unique keys")
+    assert headline(open_inventory, locales, ("cli", "ca", 3), 2).startswith(
         "Translation total is not yet knowable: canonicalize 2 inventory violations"
     )
 
@@ -383,7 +378,7 @@ def test_source_inventory_reports_literal_key_set_reduction(tmp_path) -> None:
     locales.mkdir()
     manager = LocaleManager(source, locales)
 
-    inventory, findings = _source_inventory(manager)
+    inventory, findings = collect_source_inventory(manager)
 
     assert findings == []
     assert inventory["literal_tr_calls"] == 3
@@ -407,7 +402,7 @@ def test_source_inventory_reports_dot_key_uniqueness_and_semantic_duplicate_find
     locales = tmp_path / "locales"
     locales.mkdir()
 
-    inventory, findings = _source_inventory(
+    inventory, findings = collect_source_inventory(
         LocaleManager(source, locales),
         dynamic_resolved_keys=("cli.dynamic.one", "cli.save"),
     )
@@ -433,14 +428,14 @@ def test_source_inventory_ignores_non_translation_tr_alias(tmp_path) -> None:
     locales = tmp_path / "locales"
     locales.mkdir()
 
-    inventory, findings = _source_inventory(LocaleManager(source, locales))
+    inventory, findings = collect_source_inventory(LocaleManager(source, locales))
 
     assert findings == []
     assert inventory["tr_calls"] == 0
 
 
 def test_dynamic_key_families_use_registered_concrete_values() -> None:
-    finite, unresolved = _dynamic_key_families(
+    finite, unresolved = dynamic_key_families(
         ("wizard.setup.*", "wizard.setup.flags.*", "profile.keys.*"),
         registered_keys=(
             "wizard.setup.flags.export",
@@ -461,6 +456,7 @@ def test_dynamic_key_families_use_registered_concrete_values() -> None:
 
 def test_finite_dynamic_values_and_concrete_catalogue_keys_remain_required(tmp_path, monkeypatch) -> None:
     from .. import _signal as signal_module
+    from .. import signal_discovery as discovery_module
 
     source = tmp_path / "source"
     source.mkdir()
@@ -474,8 +470,8 @@ def test_finite_dynamic_values_and_concrete_catalogue_keys_remain_required(tmp_p
     monkeypatch.setattr(manager, "get_codebase_keys", lambda: set())
     monkeypatch.setattr(manager, "get_codebase_namespaces", lambda: {"profile.keys.*", "wizard.setup.*"})
     monkeypatch.setattr(
-        signal_module,
-        "_dynamic_key_families",
+        discovery_module,
+        "dynamic_key_families",
         lambda markers: ({"wizard.setup.*": ("wizard.setup.status.ready",)}, ("profile.keys.*",)),
     )
 
@@ -506,7 +502,7 @@ def test_parallel_toml_inventory_reports_missing_cells_not_authored_values(tmp_p
     registry.mkdir(parents=True)
     (registry / "scope.toml").write_text("name_es='Renta'\nname_en='Income tax'\n", encoding="utf-8")
 
-    inventory, findings = _parallel_localization_inventory(tmp_path)
+    inventory, findings = parallel_localization_inventory(tmp_path)
 
     assert inventory["parallel_localization_declarations"] == 2
     assert {finding["field"] for finding in findings if "field" in finding} == {"name_ca", "name_hu"}
@@ -526,7 +522,7 @@ def test_parallel_inventory_enrols_toml_and_every_po_plural_form_for_spelling(tm
     )
     values: dict[str, dict[str, str]] = {}
 
-    inventory, _findings = _parallel_localization_inventory(tmp_path, spelling_values=values)
+    inventory, _findings = parallel_localization_inventory(tmp_path, spelling_values=values)
 
     assert values["ca"]["parallel:src/cadrumo/_data/labels.toml:label_ca"] == "Declaració tributària"
     plural_values = {key: value for key, value in values["ca"].items() if "docs/locales/ca/LC_MESSAGES/guide.po" in key}
@@ -546,7 +542,7 @@ def test_generated_user_doc_adapter_reads_visible_prose_not_option_or_literal_sy
         encoding="utf-8",
     )
 
-    prose = _visible_document_prose(page)
+    prose = visible_document_prose(page)
 
     rendered = {text for _line, text in prose}
     assert "Filing command" in rendered
@@ -565,7 +561,7 @@ def test_generated_user_doc_adapter_enrols_explicit_embedded_language(tmp_path) 
         encoding="utf-8",
     )
 
-    assert _embedded_document_language_prose(page) == ((6, "es", "administracion tributaria"),)
+    assert embedded_document_language_prose(page) == ((6, "es", "administracion tributaria"),)
 
 
 def _write_docs_source_cache(docs, page: str, source_text: str, pot_text: str) -> None:
@@ -602,7 +598,7 @@ def test_documentation_inventory_extracts_live_source_and_enrols_english_for_spe
     }
     values: dict[str, dict[str, str]] = {}
 
-    inventory, findings = _documentation_source_inventory(
+    inventory, findings = documentation_source_inventory(
         tmp_path,
         catalogue_messages,
         spelling_values=values,
@@ -652,7 +648,7 @@ def test_documentation_inventory_enumerates_source_to_catalogue_drift(tmp_path) 
         "# Current source\n",
         'msgid ""\nmsgstr ""\n\nmsgid "Current source"\nmsgstr ""\n',
     )
-    inventory, findings = _documentation_source_inventory(
+    inventory, findings = documentation_source_inventory(
         tmp_path,
         {("guide.po", "Old source"): {"ca": True, "es": True, "hu": True}},
     )
@@ -692,7 +688,7 @@ def test_documentation_inventory_separates_source_echo_and_near_echo(tmp_path) -
         },
     }
 
-    inventory, findings = _documentation_source_inventory(
+    inventory, findings = documentation_source_inventory(
         tmp_path,
         catalogue_messages,
         catalogue_files={(locale, "guide.po") for locale in ("ca", "es", "hu")},
@@ -721,16 +717,16 @@ def test_documentation_inventory_separates_source_echo_and_near_echo(tmp_path) -
 
 
 def test_documentation_inventory_classifies_only_provable_invariant_echoes(tmp_path, monkeypatch) -> None:
-    from .. import _signal as signal_module
+    from .. import signal_documentation_echo as echo_module
 
     class _Dictionary:
         def lookup(self, word: str) -> bool:
             return word.casefold() == "manual"
 
     monkeypatch.setattr(
-        signal_module,
+        echo_module,
         "load_dictionaries",
-        lambda _repository: {locale: _Dictionary() for locale in signal_module._LOCALES},
+        lambda _repository: {locale: _Dictionary() for locale in LOCALES},
     )
     docs = tmp_path / "docs"
     messages = (
@@ -755,7 +751,7 @@ def test_documentation_inventory_classifies_only_provable_invariant_echoes(tmp_p
         ("guide.po", "Manual"): {"ca": ("Manual",)},
     }
 
-    inventory, findings = _documentation_source_inventory(
+    inventory, findings = documentation_source_inventory(
         tmp_path,
         catalogue_messages,
         catalogue_files={(locale, "guide.po") for locale in ("ca", "es", "hu")},
@@ -803,7 +799,7 @@ def test_translation_echo_invariants_use_identity_syntax_and_language_evidence()
     english = _Dictionary({"download", "the", "current", "return"})
 
     assert (
-        _translation_invariant_echo_reason(
+        translation_invariant_echo_reason(
             "Cadrumo vX.Y.Z",
             "es",
             dictionary=target,
@@ -812,7 +808,7 @@ def test_translation_echo_invariants_use_identity_syntax_and_language_evidence()
         == "canonical_product_identity"
     )
     assert (
-        _translation_invariant_echo_reason(
+        translation_invariant_echo_reason(
             "vX.Y.Z",
             "es",
             dictionary=target,
@@ -821,7 +817,7 @@ def test_translation_echo_invariants_use_identity_syntax_and_language_evidence()
         is None
     )
     assert (
-        _translation_invariant_echo_reason(
+        translation_invariant_echo_reason(
             "Windows (x86-64)",
             "es",
             dictionary=target,
@@ -830,7 +826,7 @@ def test_translation_echo_invariants_use_identity_syntax_and_language_evidence()
         == "platform_format"
     )
     assert (
-        _translation_invariant_echo_reason(
+        translation_invariant_echo_reason(
             "Régimen de atribución de rentas (socios)",
             "es",
             dictionary=target,
@@ -839,7 +835,7 @@ def test_translation_echo_invariants_use_identity_syntax_and_language_evidence()
         == "target_dictionary_shared_term"
     )
     assert (
-        _translation_invariant_echo_reason(
+        translation_invariant_echo_reason(
             "Download the current return",
             "es",
             dictionary=target,
@@ -858,11 +854,54 @@ def test_platform_identity_terms_follow_the_download_descriptor(tmp_path) -> Non
         encoding="utf-8",
     )
 
-    terms = _platform_identity_terms(tmp_path)
+    terms = load_platform_identity_terms(tmp_path)
 
     assert {"macos", "linux", "windows"}.issubset(terms)
     assert "any" not in terms
     assert "any platform with python 3 13+" not in terms
+
+
+@pytest.mark.parametrize("source", ("!", "●", "↓", "▹ ▿", "…", "`/`", "`?`"))
+def test_literal_symbols_are_invariant_without_language_dictionaries(source: str) -> None:
+    assert translation_invariant_echo_reason(source, "hu", dictionary=None) == "symbol_only"
+
+
+@pytest.mark.parametrize("source", ("`Enter`", "`Esc`", "`i`"))
+def test_keyboard_and_alphabetic_marks_require_existing_literal_code_contract(source: str) -> None:
+    assert translation_invariant_echo_reason(source, "ca", dictionary=None) == "inline_code"
+
+
+@pytest.mark.parametrize("source", ("Enter", "Esc", "Space", "i", "", " ", "Review the return!"))
+def test_symbol_invariance_does_not_exempt_unmarked_words_or_prose(source: str) -> None:
+    assert translation_invariant_echo_reason(source, "es", dictionary=None) is None
+
+
+def test_symbol_classification_preserves_blocking_prose_and_missing_translations(tmp_path, monkeypatch) -> None:
+    from .. import signal_documentation_echo as echo_module
+
+    monkeypatch.setattr(echo_module, "load_dictionaries", lambda _repository: {})
+    docs = tmp_path / "docs"
+    messages = ("●", "`Enter`", "Review the current return!", "Fill in the box")
+    pot = 'msgid ""\nmsgstr ""\n\n' + "\n".join(f'msgid "{message}"\nmsgstr ""\n' for message in messages)
+    _write_docs_source_cache(docs, "guide.md", "# Filing guide\n", pot)
+    catalogue_messages = {("guide.po", message): {"es": True} for message in messages if message != "Fill in the box"}
+    catalogue_translations = {
+        ("guide.po", message): {"es": (message,)} for message in messages if message != "Fill in the box"
+    }
+
+    inventory, findings = documentation_source_inventory(
+        tmp_path,
+        catalogue_messages,
+        catalogue_files={("es", "guide.po")},
+        catalogue_translations=catalogue_translations,
+    )
+
+    assert inventory["docs_translation_source_echo"] == 1
+    assert inventory["docs_translation_invariant_echo"] == 2
+    blocking = [finding for finding in findings if finding["kind"] == "docs_translation_source_echo"]
+    assert [finding["source"] for finding in blocking] == ["Review the current return!"]
+    missing = [finding for finding in findings if finding["kind"] == "docs_source_catalogue_drift"]
+    assert any(finding["missing_message_ids"] == ["Fill in the box"] for finding in missing)
 
 
 def test_documentation_inventory_fails_closed_when_source_manifest_is_absent(tmp_path) -> None:
@@ -870,7 +909,7 @@ def test_documentation_inventory_fails_closed_when_source_manifest_is_absent(tmp
     docs.mkdir()
     (docs / "guide.md").write_text("# Filing guide\n", encoding="utf-8")
 
-    inventory, findings = _documentation_source_inventory(tmp_path, {})
+    inventory, findings = documentation_source_inventory(tmp_path, {})
 
     assert inventory["docs_source_pages"] == 1
     assert inventory["docs_extraction_failures"] == 1
@@ -883,7 +922,7 @@ def test_documentation_inventory_fails_closed_when_source_manifest_is_absent(tmp
 
 
 def test_spellcheck_fails_closed_when_pinned_dictionaries_are_absent(tmp_path) -> None:
-    spelling, inventory, findings = _spellcheck_catalogues(
+    spelling, inventory, findings = spellcheck_catalogues(
         {"cli.title"},
         {"ca": {"cli.title": "Declaració tributària"}},
         tmp_path,
@@ -908,7 +947,7 @@ def test_identifier_signal_pattern_terminates_on_adversarial_underscore_runs() -
     adversarial = "A_" + "0_" * 30 + "é"
 
     started = time.perf_counter()
-    filtered, _ = _filtered_translation_text(adversarial)
+    filtered, _ = filtered_translation_text(adversarial)
     elapsed = time.perf_counter() - started
 
     assert elapsed < 2.0

@@ -60,16 +60,16 @@ Where it stops
   floor is moved to the earliest supported period its edition serves, and an
   edition serving no supported period has no scenario, because nothing below
   the floor selects and so nothing there can render.
-- Modelo 347 has no scenario: its layout declares a required repeated record,
-  so an empty draft leaves a required occurrence unemitted and the export path
-  refuses it. Supplying that occurrence needs source-shaped arrivals this module
-  has no honest synthetic form for, so the modelo stays undeclared.
+- Modelo 347 supplies purchase and sale rows from resolved fictional invoices,
+  including a below-threshold exclusion control. Property records are not covered
+  by this scenario.
 - Modelo 303's 2022 edition has no scenario: the export path refuses its layout,
   whose regimen-simplificado record does not repeat per projection row. It is
   the modelo's first edition and names no predecessor, so the gate does not
   require its bytes.
-- Draft construction and these facts read the bundled registry, as the gate
-  documents; they select the edition, and the bytes judge its export surface.
+- These facts read the published bundled generation, not the tree under
+  comparison; the gate builds them once per scenario and renders the same
+  facts through both trees, so the bytes judge the edition's export surface.
 """
 
 from __future__ import annotations
@@ -138,15 +138,14 @@ from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister,
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import resolve_bienes_inversion_regularizacion_parameters
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-    ValidatedRegistryAuthority,
     bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.iva_deduction_catalogue import iva_deduction_fact_kinds
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.prorrata_register_catalogue import (
     carried_prior_definitiva_prorrata_provenance,
     general_prorrata_register_regime,
@@ -165,6 +164,7 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
     EntradaModuloSimplificado,
     HechoActividadSimplificado,
+    LorcaActivityEligibility,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
@@ -182,8 +182,8 @@ from cadrumo.domain.prorrata_register.register import (
     SectorDefinition,
 )
 
-from .compiler.authority import compiled_bundled_authority
 from .compiler.loader import load_modelo_directory, load_shared_catalogues
+from .edition_export_m347 import third_party_export_inputs
 from .edition_round_trip import SYNTHETIC_TAX_ID, EditionExportScenario
 
 __all__ = [
@@ -210,6 +210,7 @@ __all__ = [
     "M322_SCENARIO_PERIODS",
     "M341_SCENARIO_PERIODS",
     "M345_SCENARIO_PERIODS",
+    "M347_SCENARIO_PERIODS",
     "M353_SCENARIO_PERIODS",
     "M390_SCENARIO_PERIODS",
     "M490_SCENARIO_PERIODS",
@@ -228,6 +229,7 @@ __all__ = [
     "m303_export_scenario",
     "m308_export_scenario",
     "m322_export_scenario",
+    "m347_export_scenario",
     "m390_export_scenario",
     "supported_scenario_periods",
 ]
@@ -238,7 +240,8 @@ M303_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2024-hasta-08-y-2t": Period.from_year_and_code(2024, "1T"),
     "2024-desde-09-y-3t": Period.from_year_and_code(2024, "3T"),
     "2025": Period.from_year_and_code(2025, "1T"),
-    "2026-y-siguientes": Period.from_year_and_code(2026, "1T"),
+    "2026-hasta-01-y-1t": Period.from_year_and_code(2026, "1T"),
+    "2026-y-siguientes": Period.from_year_and_code(2026, "2T"),
 }
 #: The annual period each Modelo 189 edition is rendered for.
 M189_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
@@ -277,6 +280,10 @@ M232_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
 #: The annual period each Modelo 345 edition is rendered for.
 M345_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2025": Period.from_year_and_code(2025, "0A"),
+}
+M347_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2011-2024": Period.from_year_and_code(2024, "0A"),
+    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
 }
 #: The annual period each Modelo 390 edition is rendered for; 390 files only ``0A``.
 M390_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
@@ -548,15 +555,32 @@ def _earliest_supported_period(
         if year < declared.filing_year or not revision.period_selector.includes_year(year):
             continue
         served = tuple(str(token) for token in revision.period_selector.periods_for_year(year))
-        preferred = declared.registry_token
-        for token in dict.fromkeys((*(item for item in served if item == preferred), *served)):
-            try:
-                selected = select_revision(modelo, filing_year=year, period=token, support=support)
-                candidate = Period.from_year_and_code(year, token)
-            except (RegistryError, ValueError):
-                continue
-            if str(selected.id) == revision_id:
-                return candidate
+        tokens = _preferred_scenario_period_tokens(served, declared.registry_token)
+        candidate = _supported_period_for_revision(modelo, year, revision_id, tokens, support)
+        if candidate is not None:
+            return candidate
+    return None
+
+
+def _preferred_scenario_period_tokens(served: tuple[str, ...], preferred: str) -> tuple[str, ...]:
+    return tuple(dict.fromkeys((*(item for item in served if item == preferred), *served)))
+
+
+def _supported_period_for_revision(
+    modelo: ModeloDefinition,
+    year: int,
+    revision_id: str,
+    tokens: tuple[str, ...],
+    support: SupportedFilingYearsCatalogue,
+) -> Period | None:
+    for token in tokens:
+        try:
+            selected = select_revision(modelo, filing_year=year, period=token, support=support)
+            candidate = Period.from_year_and_code(year, token)
+        except (RegistryError, ValueError):
+            continue
+        if str(selected.id) == revision_id:
+            return candidate
     return None
 
 
@@ -579,14 +603,19 @@ def m303_export_scenario(period: Period) -> EditionExportScenario:
 
 
 def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
-    authority = compiled_bundled_authority()
+    """Build the scenario's facts from one published bundled generation.
+
+    The edition snapshot, the governed facts and the regimen calculation all
+    read the same pinned operation, so the facts never mix a source compile
+    with the published generation, and building them does not compile the
+    whole bundled registry.
+    """
     with bundled_indexed_authority().operation() as operation:
-        registry_snapshot = authority.snapshot(
+        registry_snapshot = operation.snapshot(
             str(Modelo("303")), filing_year=period.filing_year, period=period.registry_token
         )
         m303_filing_facts = _m303_filing_facts(
             period,
-            authority=authority,
             registry_snapshot=registry_snapshot,
             operation=operation,
         )
@@ -597,7 +626,6 @@ def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,
         hydrocarbon_deposit_advance_payment_deduction_entitled=False,
-        charge_account=ChargeAccount(iban=_CHARGE_IBAN),
     )
     return build_filing_producer_snapshot(
         modelo=Modelo("303"),
@@ -613,7 +641,7 @@ def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
         ),
         amendment_evidence=None,
         refund_account=None,
-        charge_account=profile.charge_account,
+        charge_account=ChargeAccount(iban=_CHARGE_IBAN),
         m303_filing_facts=m303_filing_facts,
     )
 
@@ -621,13 +649,11 @@ def _m303_producer_snapshot(period: Period) -> FilingProducerSnapshot:
 def _m303_filing_facts(
     period: Period,
     *,
-    authority: ValidatedRegistryAuthority,
     registry_snapshot: RegistrySnapshot,
     operation: PinnedAuthorityOperation,
 ) -> M303FilingFacts:
     regimen = _m303_regimen_simplificado_evidence(
         period,
-        authority=authority,
         registry_snapshot=registry_snapshot,
         operation=operation,
     )
@@ -662,8 +688,8 @@ def _m303_filing_facts(
             period=period, recipient_of_cash_accounting_operations=False, source_ledger_ids=()
         ),
         prorrata_transition=M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=()),
-        prorrata_register=_m303_prorrata_register(period, authority=authority),
-        differentiated_contributions=_m303_differentiated_contributions(period=period, authority=authority),
+        prorrata_register=_m303_prorrata_register(period, operation=operation),
+        differentiated_contributions=_m303_differentiated_contributions(period=period, operation=operation),
         bienes_register=BienesInversionIvaRegister(),
         regularisation_result=RegistroRegularizacionResult(
             regularizacion_year=period.filing_year,
@@ -681,13 +707,12 @@ def _m303_filing_facts(
 def _m303_regimen_simplificado_evidence(
     period: Period,
     *,
-    authority: ValidatedRegistryAuthority,
     registry_snapshot: RegistrySnapshot,
     operation: PinnedAuthorityOperation,
 ) -> M303RegimenSimplificadoFilingEvidence:
     """One non-agricultural activity from the edition's own Orden, so the repeated record emits once."""
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("simplified", authority=authority)
+        scope=m303_regime_composition_simplified_scope("simplified", authority=operation)
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot, scope_decision=scope
@@ -706,6 +731,11 @@ def _m303_regimen_simplificado_evidence(
                 activity_id=activity.orden_id,
                 iae_epigrafe=epigrafe,
                 auxiliary_activity_indicator=activity.auxiliary_activity_indicator,
+                lorca_eligibility=(
+                    LorcaActivityEligibility(eligible=False, evidence_reference=_EVIDENCE)
+                    if regimen_snapshot.orden.lorca_reduction is not None
+                    else None
+                ),
                 modulos=tuple(
                     EntradaModuloSimplificado(
                         module_identity=module.identity, declared_quantity=Decimal("1"), evidence_reference=_EVIDENCE
@@ -740,9 +770,9 @@ def _m303_regimen_simplificado_evidence(
     )
 
 
-def _m303_prorrata_register(period: Period, *, authority: ValidatedRegistryAuthority) -> ProrrataRegister:
+def _m303_prorrata_register(period: Period, *, operation: PinnedAuthorityOperation) -> ProrrataRegister:
     """A general-regime register carrying the prior year's definitive percentage for the common and both sectors."""
-    prior_snapshot_ref = authority.snapshot(
+    prior_snapshot_ref = operation.snapshot(
         str(Modelo("303")), filing_year=period.filing_year - 1, period="4T"
     ).snapshot_ref
     return ProrrataRegister(
@@ -777,12 +807,12 @@ def _m303_prorrata_register(period: Period, *, authority: ValidatedRegistryAutho
 
 
 def _m303_differentiated_contributions(
-    *, period: Period, authority: ValidatedRegistryAuthority
+    *, period: Period, operation: PinnedAuthorityOperation
 ) -> tuple[IvaDifferentiatedDeductionContribution, ...]:
     """One contribution per deduction kind the differentiated sectors declare, in each sector."""
     kinds = iva_deduction_fact_kinds(
         effective_date=period.end_date,
-        authority=authority,
+        authority=operation,
     )
     return tuple(
         IvaDifferentiatedDeductionContribution(
@@ -813,6 +843,7 @@ def m390_export_scenario(period: Period) -> EditionExportScenario:
         period=period,
         inputs={},
         producer_snapshot=_m390_producer_snapshot,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         product_software_identity_factory=_m390_product_software_identity,
     )
 
@@ -985,7 +1016,9 @@ def _scenario_software_identity(modelo_id: str) -> AeatProductSoftwareIdentity:
     )
 
 
-def m200_export_scenario(period: Period) -> EditionExportScenario:
+def m200_export_scenario(
+    period: Period, *, result_disposition: ResultDisposition = ResultDisposition.NEGATIVA
+) -> EditionExportScenario:
     """A synthetic corporate draft with explicit envelope software evidence and its rate-dispatch profile bindings.
 
     The cuota-integra and tipo-gravamen formulas dispatch on the new-entity
@@ -1013,7 +1046,7 @@ def m200_export_scenario(period: Period) -> EditionExportScenario:
             # determination starts from it, so no draft can omit it.
             "DP200012:00501": Decimal("0.00"),
         },
-        producer_snapshot=_m200_producer_snapshot,
+        producer_snapshot=partial(_m200_producer_snapshot, result_disposition=result_disposition),
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         product_software_identity_factory=partial(_scenario_software_identity, "200"),
     )
@@ -1081,7 +1114,7 @@ def _m200_projection_rows() -> Modelo200ProjectionRows:
     )
 
 
-def _m200_producer_snapshot() -> FilingProducerSnapshot:
+def _m200_producer_snapshot(*, result_disposition: ResultDisposition) -> FilingProducerSnapshot:
     """The Modelo 200 snapshot whose typed rows feed the layout's projection pages."""
     return build_filing_producer_snapshot(
         modelo=Modelo("200"),
@@ -1090,7 +1123,7 @@ def _m200_producer_snapshot() -> FilingProducerSnapshot:
         presenter=_presenter(),
         model_profile=Modelo200ProfileFacts(projection_rows=_m200_projection_rows()),
         elections=FilingElectionFacts(
-            result_disposition=ResultDisposition.NEGATIVA,
+            result_disposition=result_disposition,
             payment=PaymentElection.INGRESO,
             refund=RefundElection.COMPENSAR,
             prior_domiciliation=PriorDomiciliationElection.KEEP,
@@ -1278,6 +1311,15 @@ def m308_export_scenario(period: Period) -> EditionExportScenario:
     )
 
 
+def m347_export_scenario(period: Period) -> EditionExportScenario:
+    """Supply required counterparty rows and their consistently resolved totals."""
+    return EditionExportScenario(
+        period=period,
+        inputs=third_party_export_inputs(period),
+        producer_snapshot=partial(_general_producer_snapshot, "347"),
+    )
+
+
 #: Per modelo, the scenario builder and the period each edition is rendered for.
 _DECLARED_SCENARIOS: Final[Mapping[str, tuple[Callable[[Period], EditionExportScenario], Mapping[str, Period]]]] = {
     str(Modelo("189")): (partial(general_export_scenario, "189"), M189_SCENARIO_PERIODS),
@@ -1285,11 +1327,7 @@ _DECLARED_SCENARIOS: Final[Mapping[str, tuple[Callable[[Period], EditionExportSc
     str(Modelo("193")): (m193_export_scenario, M193_SCENARIO_PERIODS),
     str(Modelo("232")): (partial(general_export_scenario, "232"), M232_SCENARIO_PERIODS),
     str(Modelo("345")): (partial(general_export_scenario, "345"), M345_SCENARIO_PERIODS),
-    # Modelo 347 is deliberately absent. Its m347-declarado record is a REQUIRED
-    # repeat over binding_rows in both editions, and the general scenario
-    # supplies no draft, so an empty render leaves a required occurrence
-    # unemitted. Declaring it here would produce a refusal rather than
-    # comparable bytes. It needs a builder with draft input, or an honest skip.
+    str(Modelo("347")): (m347_export_scenario, M347_SCENARIO_PERIODS),
     str(Modelo("303")): (m303_export_scenario, M303_SCENARIO_PERIODS),
     str(Modelo("131")): (m131_export_scenario, M131_SCENARIO_PERIODS),
     str(Modelo("390")): (m390_export_scenario, M390_SCENARIO_PERIODS),

@@ -16,11 +16,7 @@ from ..bindings_previous_filing import (
     previous_filing_source_reference,
     resolve_previous_filing_binding_values,
 )
-from ..relations import (
-    RegistryFoldRequirement,
-    relation_source_requirements,
-    resolve_relation_values_from_observations,
-)
+from ..relations import RegistryFoldRequirement, relation_source_requirements
 from ..schema import RegistrySnapshot
 from ._formula_runtime_support import (
     _M100_PAGOS_FRACCIONADOS_CASILLA,
@@ -35,6 +31,7 @@ from ._formula_runtime_support import (
     _previous_year_net_income_binding,
 )
 from .registry_observations import registry_grounded_modelo_observation
+from .relation_fixture import resolve_relation_values_from_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 

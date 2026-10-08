@@ -3,19 +3,19 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6a791382c19215d8c7093db4faa3148b2c4945211a26fbc4f3fa1c259c8a7ba8'
+body_hash: 'sha256:1d971ef5f5e0660d112d123a455b21e67a941ccdcabacd40d00e0929208a1fe7'
 related:
-  - "[[2026-08-05-modelo-parity-rollup-plan]]"
   - "[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]"
   - "[[2026-08-05-modelo-parity-rollup-denominator-research]]"
 ---
+
 # `modelo-parity-rollup` audit: `S02 conformance comparator review`
 
 ## Scope
 
-Reviewed the bounded W01.P03.S02 implementation against the accepted five-domain parity ADR, the denominator research, and the year-specific dictionary/layout source contracts. The review covered `src/cadrumo/application/registry/_conformance.py`, `src/cadrumo/application/registry/tests/test_conformance_profile.py`, the real bundled registry, and the focused verification gates.
+Reviewed the bounded W01.P03.S02 implementation against the accepted five-domain parity ADR, the denominator research, and the year-specific dictionary/layout source contracts. The review covered the retired module, the retired test, the real bundled registry, and the focused verification gates.
 
 ## Findings
 
@@ -43,9 +43,9 @@ The focused tests use the real bundled authority and also assert the observed an
 
 ## Verification
 
-- `uv run --no-sync pytest -q src/cadrumo/application/registry/tests/test_conformance_profile.py` â€” 25 passed.
-- `uv run --no-sync ruff check src/cadrumo/application/registry/_conformance.py src/cadrumo/application/registry/tests/test_conformance_profile.py` â€” all checks passed.
-- `uv run --no-sync ruff format --check src/cadrumo/application/registry/_conformance.py src/cadrumo/application/registry/tests/test_conformance_profile.py` â€” 2 files already formatted.
-- `uv run --no-sync basedpyright src/cadrumo/application/registry/_conformance.py src/cadrumo/application/registry/tests/test_conformance_profile.py` â€” 0 errors, 0 warnings, 0 notes.
+- the historical check â€” 25 passed.
+- the historical check â€” all checks passed.
+- the historical check â€” 2 files already formatted.
+- the historical check â€” 0 errors, 0 warnings, 0 notes.
 - `git diff --check` on the owned files â€” clean.
 - The delegated reviewer persona was invoked but did not return a report before shutdown; the supervisor completed this evidence-backed review and recorded the residual projection finding above.

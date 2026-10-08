@@ -1,7 +1,9 @@
 """The artefact one modelo export produces.
 
-A modelo export always reads one sealed calculation revision and always publishes
-to one operator-chosen file. What differs is the artefact: the AEAT-compatible
+A modelo export reads one selected saved calculation revision and publishes
+to one operator-chosen file. Sealed reports and filing files retain their own
+verification gates; saved review XLSX also permits provisional drafts.
+What differs is the artefact: the AEAT-compatible
 filing file the operator presents, or a local record of the calculation for review
 and archiving. This closed axis names that choice once, so a surface offering it
 renders the set rather than inventing its own vocabulary.
@@ -36,11 +38,15 @@ class ModeloExportArtefact(StrEnum):
             data and a signed integrity statement. A local record, never
             presentable at AEAT, and publishable only where the optional ``pdf``
             extra is installed.
+        CALCULATION_REVIEW_XLSX: An immutable saved review workbook, including
+            original form geometry where retained. Drafts remain provisional;
+            this workbook is never presentable at AEAT.
     """
 
     FICHERO_BOE = "fichero_boe"
     CALCULATION_REPORT_CSV = "calculation_report_csv"
     CALCULATION_REPORT_PDF = "calculation_report_pdf"
+    CALCULATION_REVIEW_XLSX = "calculation_review_xlsx"
 
 
 __all__ = ["ModeloExportArtefact"]

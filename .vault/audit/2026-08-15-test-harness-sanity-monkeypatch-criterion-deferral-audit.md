@@ -3,18 +3,17 @@ tags:
   - '#audit'
   - '#test-harness-sanity'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:588f0d6a57ff1d6aba97753ca40265c128360cb42cb5a0e1b868e93ed9462c68'
-related:
-  - "[[2026-08-14-test-harness-sanity-plan]]"
+body_hash: 'sha256:e7db3354b9b30ac702d44ccc8bac236826866e1327d678f1b4ff7dd40d000d96'
+related: []
 ---
 # `test-harness-sanity` audit: the one monkeypatch the no-monkeypatch gate cannot absorb
 
 ## Scope
 
-- `src/cadrumo/domain/calculations/registry/tests/test_read_parameter_authority_invalidation.py`
-- `src/cadrumo/tests/test_monkeypatch_inventory.py`
+- the retired test
+- the retired test
 - `.vault/plan/2026-08-14-test-harness-sanity-plan.md`
 
 ## Summary
@@ -31,8 +30,6 @@ commit `6d80634e6b` from the registry lane.
 ## Findings
 
 ### Registry read-parameter invalidation test monkeypatches the bundled path
-
-`src/cadrumo/domain/calculations/registry/tests/test_read_parameter_authority_invalidation.py:115,138`
 
 The fixture `redirected_bundled_registry_root` replaces
 `core.resources.bundled_path` so that `bundled_path("registry", "aeat")` returns

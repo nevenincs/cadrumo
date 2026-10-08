@@ -7,22 +7,16 @@
   var IS_MAC = /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent);
 
   /* ── Chrome strings ────────────────────────────────────────────────────
-   * Sphinx renders one inline <script type="application/json"
-   * id="cadrumo-chrome-strings"> payload per page, holding this site root's
-   * chrome resolved in the root's own language. Every string this file writes
-   * into the DOM is read from it, so a localized root never shows an English
-   * control around translated content. The English literal stays at each call
-   * site as the value used when no payload is present, which happens only
-   * outside a Sphinx build. */
+   * The build writes one cadrumo-chrome-strings.js per site root, loaded
+   * before this file, which publishes the root's chrome resolved in the root's
+   * own language. Every string this file writes into the DOM is read from it,
+   * so a localized root never shows an English control around translated
+   * content. The English literal stays at each call site as the value used
+   * when no strings were published, which happens only outside a Sphinx
+   * build. */
   var CHROME = (function () {
-    var node = document.getElementById("cadrumo-chrome-strings");
-    if (!node) return {};
-    try {
-      var parsed = JSON.parse(node.textContent);
-      return parsed && typeof parsed === "object" ? parsed : {};
-    } catch (e) {
-      return {};
-    }
+    var strings = window.cadrumoChromeStrings;
+    return strings && typeof strings === "object" ? strings : {};
   })();
 
   function chromeText(name, english) {
@@ -47,6 +41,64 @@
     } else {
       document.addEventListener("DOMContentLoaded", fn);
     }
+  }
+
+  /* ── Where this page sits in the site ──────────────────────────────────
+   * The site carries ONE Pagefind index for every language, written once at
+   * the apex above the language roots, and every page loads that one index.
+   * Three facts place a page in that site, each read from exactly one
+   * authority on the page itself:
+   *
+   *   SITE_LANGUAGE   the language the reader is reading, from <html lang>,
+   *                   which is also the `language` filter value the build
+   *                   stamped on this root's pages. It narrows every search to
+   *                   this language's pages plus the records every language
+   *                   shares.
+   *   ROOT_PATH       the path from this page to its own language root, which
+   *                   the theme already declares as data-content_root.
+   *   SITE_PREFIX     this root's own path inside the served site, declared by
+   *                   the build (docs/_templates/base.html). Empty when the
+   *                   root IS the site, one segment when it sits under one.
+   *
+   * SITE_PATH is then the path from this page to the apex: back out of the
+   * page's own directories, then back out of the language root. It is where the
+   * one index is loaded from, and what a shared record's destination is
+   * resolved against. It stays relative because the documentation is not
+   * mounted at a URL root in every layout it ships in -- the desktop scheme and
+   * the published site both mount it deeper. */
+  var SITE_LANGUAGE = (document.documentElement.getAttribute("lang") || "").toLowerCase();
+  var SITE_PREFIX = (function () {
+    var meta = document.querySelector('meta[name="cadrumo-docs-site-prefix"]');
+    var value = meta ? meta.getAttribute("content") || "" : "";
+    return value && value.charAt(value.length - 1) !== "/" ? value + "/" : value;
+  })();
+  var ROOT_PATH = document.documentElement.getAttribute("data-content_root") || "";
+  var SITE_PATH = (function () {
+    var path = ROOT_PATH === "./" ? "" : ROOT_PATH;
+    if (!SITE_PREFIX) return path;
+    return path + SITE_PREFIX.split("/").slice(0, -1).map(function () {
+      return "../";
+    }).join("");
+  })();
+
+  /* Resolve one search result's address to a URL this page can open.
+   *
+   * A full-text page hit needs nothing: Pagefind resolves a result's URL
+   * against the site apex it loaded its own bundle from, so a page already
+   * arrives addressed in the site, wherever the site is mounted.
+   *
+   * An injected record is the case the one index creates. It is ONE entry with
+   * one destination per language root, so the URL Pagefind resolves names no
+   * language at all; the record therefore ships its `target`, the destination
+   * relative to A language root, and the prefix of the root being read is what
+   * completes it. That is how a Spanish reader who picks a casilla lands on the
+   * Spanish casilla page. An absolute target (a permalink) is already a
+   * destination and is left alone. */
+  function resolveResultHref(meta, url) {
+    var target = meta && meta.target ? String(meta.target) : "";
+    if (!target) return String(url || "");
+    if (/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(target)) return target;
+    return SITE_PATH + SITE_PREFIX + target.replace(/^\//, "");
   }
 
   /* ── Broadcast dismiss ─────────────────────────────────────────────── */
@@ -264,8 +316,8 @@
    * opts:
    *   root          element the busy `is-busy` class toggles on
    *   input, list, status  the surface's three inner nodes
-   *   searchUrl     page-relative path used to resolve the pagefind bundle
-   *                 and, when `handoffRow` is on, the full-text escape row
+   *   searchUrl     page-relative path to this root's search page, used for
+   *                 the full-text escape row when `handoffRow` is on
    *   handoffRow    append the "Search the docs for …" navigation row
    *                 (modal only; the inline page already shows full text)
    *   navOnEmpty    an empty query paints the nav index (modal) vs clears
@@ -351,13 +403,27 @@
     var pagefindPromise = null;
     /* Resolve the index URL against the page so the dynamic import gets an
      * absolute specifier: a bare/relative one (e.g. "pagefind/pagefind.js")
-     * is treated as a package name and fails. searchUrl is page-relative
-     * (e.g. "search.html" or "../search.html"); strip its filename and append
-     * the pagefind bundle, resolved against the document base. */
-    var pagefindBase = new URL(
-      searchUrl.replace(/[^/]*$/, "") + "pagefind/",
-      document.baseURI
-    ).href;
+     * is treated as a package name and fails. The index is at the site's apex,
+     * above every language root, so it resolves against SITE_PATH -- not
+     * against this root, which is where each language once kept its own copy. */
+    var pagefindBase = new URL(SITE_PATH + "pagefind/", document.baseURI).href;
+
+    /* Narrow every search to the language of the page it runs on. The one index
+     * holds four languages' pages, so without this a Spanish reader is answered
+     * with English pages; the records every language shares declare all four
+     * values and so survive the narrowing. A page with no declared language
+     * (outside a Sphinx build) filters on nothing rather than on nothing
+     * matching. */
+    function withLanguage(filters) {
+      if (!SITE_LANGUAGE) return filters || undefined;
+      var merged = { language: [SITE_LANGUAGE] };
+      if (filters) {
+        Object.keys(filters).forEach(function (axis) {
+          merged[axis] = filters[axis];
+        });
+      }
+      return merged;
+    }
 
     function loadPagefind() {
       if (pagefindPromise) return pagefindPromise;
@@ -434,7 +500,7 @@
       if (!address) return Promise.resolve([]);
 
       return Promise.resolve(
-        pf.search(query, { filters: { kind: ["casilla"] } })
+        pf.search(query, { filters: withLanguage({ kind: ["casilla"] }) })
       )
         .then(function (response) {
           var results = response && response.results ? response.results : [];
@@ -548,6 +614,18 @@
       technical: 0.2,
     };
 
+    /* The injected record's summary in the language being read, falling back to
+     * English (the language the documentation's prose is authored in) when the
+     * record carries no section for it. A full-text page hit carries none. */
+    function summaryFor(meta) {
+      if (!meta) return "";
+      return (
+        (SITE_LANGUAGE && meta["summary_" + SITE_LANGUAGE]) ||
+        meta.summary_en ||
+        ""
+      );
+    }
+
     function cardFromPagefind(meta, fallbackTitle, url, excerpt, fromCardPass) {
       var kind = (meta && meta.kind) || "page";
       var displayClass = (meta && meta.display_class) || "";
@@ -587,17 +665,23 @@
        * the card band. Threading which pass produced the row keeps cards above
        * pages while pages still carry a class for their intra-band order + icon. */
       var isCard = !!fromCardPass;
-      /* Injected term/casilla/CLI records carry a clean single-language
-       * `summary`; show that, never Pagefind's auto-excerpt of the record,
-       * which is the cross-lingual token blob (title + every alias + all four
-       * descriptions). Full-text page hits carry no summary, so they keep their
-       * real Pagefind snippet. */
-      var summary = meta && meta.summary ? meta.summary : "";
+      /* Injected term/casilla/CLI records carry a clean one-line summary per
+       * language; show the one for the language being read, never Pagefind's
+       * auto-excerpt of the record, which is the cross-lingual token blob
+       * (title + every alias + all four descriptions). One record now stands
+       * for every language, so the language is chosen HERE rather than being
+       * fixed when the record was injected. Full-text page hits carry no
+       * summary, so they keep their real Pagefind snippet. */
+      var summary = summaryFor(meta);
       return {
         title: title,
-        href: url,
+        href: resolveResultHref(meta, url),
         crumb: crumbParts.join(" · "),
         excerpt: summary || excerpt || "",
+        /* A summary is plain text; Pagefind's own excerpt is markup carrying
+         * its matches as <mark> elements. A consumer that needs plain text
+         * reads this to know which one `excerpt` holds. */
+        excerptIsMarkup: !summary && !!excerpt,
         kind: kind,
         displayClass: displayClass,
         /* The weight-sorted Pagefind pass contains only injected records. Keep
@@ -634,10 +718,11 @@
       );
     }
 
-    /* The injected term/casilla/CLI records and the docs pages share one index
-     * (the injection files every record under the page language with combined
+    /* The injected term/casilla/CLI records and the docs pages of every
+     * language share ONE index (each record injected once with combined
      * multilingual content, so a Spanish term is found from an English page,
-     * and stamps a `weight` sort key on every record). Two passes compose the
+     * every language's filter value on it, and a `weight` sort key). Both
+     * passes narrow to the page's own language. Two passes compose the
      * ADR-D5 ladder reliably:
      *   1. a search SORTED by `weight` returns ONLY the injected records (the
      *      docs pages carry no `weight` key, so Pagefind drops them) ordered by
@@ -662,9 +747,11 @@
           return searchStructuredCasilla(pf, query).then(function (structured) {
             if (structured.length) return { cards: structured, structured: true };
             return Promise.resolve(
-              pf.search(query, { sort: { weight: "desc" } })
+              pf.search(query, { sort: { weight: "desc" }, filters: withLanguage(null) })
             ).then(function (cardRes) {
-              return Promise.resolve(pf.search(query)).then(function (pageRes) {
+              return Promise.resolve(
+                pf.search(query, { filters: withLanguage(null) })
+              ).then(function (pageRes) {
                 var cardResults = cardRes && cardRes.results ? cardRes.results : [];
                 var pageResults = pageRes && pageRes.results ? pageRes.results : [];
                 /* The weight-sorted pass ties every concept card at the flat
@@ -894,6 +981,19 @@
 
     return {
       render: render,
+      /* The ranked rows for `query` as data, in the order render() paints
+       * them, without touching the busy state or any host node. Never
+       * rejects: every search path settles, as it does for render(). */
+      results: function (query) {
+        return searchPagefind(query).then(
+          function (cards) {
+            return compose(query, cards);
+          },
+          function () {
+            return compose(query, []);
+          }
+        );
+      },
       moveSelection: function (delta) {
         select(selected + delta);
       },
@@ -906,6 +1006,32 @@
       },
     };
   }
+
+  /* ── Search as data ────────────────────────────────────────────────────
+   * The one search entry point other scripts on the page may call: the
+   * desktop frame bridge answers the window's own palette with it. It runs
+   * the same controller as the Ctrl-K palette, with no host nodes and no
+   * full-text handoff row, and resolves to that controller's ranked rows in
+   * order. Defined while the script evaluates, after the document body it
+   * reads has been parsed. */
+  var dataController = null;
+
+  function searchAsData(query) {
+    if (dataController === null) {
+      var trigger = document.querySelector("[data-cadrumo-search]");
+      dataController = createSearchController({
+        searchUrl: (trigger && trigger.getAttribute("data-cadrumo-search-url")) || "search.html",
+        handoffRow: false,
+      });
+    }
+    return dataController.results(String(query));
+  }
+
+  (function exposeSearch() {
+    var api = window.CadrumoDocs || {};
+    api.search = searchAsData;
+    window.CadrumoDocs = api;
+  })();
 
   /* ── Command palette (modal host) ──────────────────────────────────────── */
 
@@ -961,6 +1087,13 @@
       controller.render("");
       input.focus();
     }
+
+    /* The one page-level entry point other scripts may call: the desktop
+     * frame bridge opens the palette through it on the window's search
+     * shortcut. */
+    var api = window.CadrumoDocs || {};
+    api.openSearch = open;
+    window.CadrumoDocs = api;
 
     triggers.forEach(function (trigger) {
       trigger.addEventListener("click", function (event) {
@@ -1053,9 +1186,9 @@
       input: input,
       list: list,
       status: status,
-      /* The page IS search.html, so the pagefind bundle resolves against this
-       * document's own directory; the full-text handoff row is dropped because
-       * the page already renders full-text results inline. */
+      /* The page IS search.html, so it needs no row handing off to itself, and
+       * the full-text handoff row is dropped because the page already renders
+       * full-text results inline. */
       searchUrl: "",
       handoffRow: false,
       navOnEmpty: false,

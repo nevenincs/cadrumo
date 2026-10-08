@@ -1,0 +1,722 @@
+---
+tags:
+  - '#exec'
+  - '#runtime-manager-architecture'
+date: '2026-10-04'
+modified: '2026-10-08'
+body_schema: 'body-v2'
+body_hash: 'sha256:b0716341dc5b2bde051d75973a7e323336da96b7582b2059ac6684ac6ffffd53'
+related:
+  - "[[2026-10-04-runtime-manager-architecture-plan]]"
+---
+
+# `runtime-manager-architecture` ledger
+
+## Changes
+
+- `S06` `R` `src/cadrumo/adapters/local_runtime/manager_commands.py` -> `src/cadrumo/adapters/local_runtime/containment_commands.py`
+- `S06` `R` `src/cadrumo/adapters/local_runtime/tests/test_manager_command_sync.py` -> `src/cadrumo/adapters/local_runtime/tests/test_containment_command_sync.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/linux_worker_process.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/macos_worker_process.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/tests/test_linux_worker_containment.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_worker_containment.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_worker_process.py`
+- `S06` `M` `src/cadrumo/entrypoints/runtime/tests/linux_worker_parent_fixture.py`
+- `S06` `M` `src/cadrumo/entrypoints/runtime/tests/macos_worker_parent_fixture.py`
+- `S06` `M` `src/cadrumo/entrypoints/runtime/tests/test_linux_worker_launch_contract.py`
+- `S06` `M` `dev/quality/metadata/import_load_targets.json`
+- `S06` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S06` `verify:` `focused pytest (5 files) 73 passed 19 platform-skipped` -> `pass`
+- `S06` `verify:` `ruff check and format --check on touched files` -> `pass`
+- `S06` `verify:` `ty check touched files win32 linux darwin` -> `pass`
+- `S06` `verify:` `just check-import-boundaries` -> `fail`
+- `S06` `verify:` `just check-types` -> `fail`
+- `S01` `M` `dev/packaging/native/generate.py`
+- `S01` `A` `dev/packaging/native/runtime_exit_reasons.py`
+- `S01` `A` `dev/packaging/tests/test_native_runtime_exit_reasons.py`
+- `S01` `M` `native/CMakeLists.txt`
+- `S01` `M` `src/cadrumo/application/runtime/contracts.py`
+- `S01` `A` `src/cadrumo/application/runtime/tests/test_exit_reason_table.py`
+- `S01` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S01` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S01` `M` `src/cadrumo/entrypoints/runtime/shutdown.py`
+- `S01` `A` `src/cadrumo/entrypoints/runtime/tests/test_exit_reasons.py`
+- `S01` `M` `src/cadrumo/entrypoints/runtime/tests/test_installed_runtime.py`
+- `S01` `M` `src/cadrumo/entrypoints/runtime/tests/test_login_lifecycle.py`
+- `S01` `M` `src/cadrumo/entrypoints/runtime/tests/test_shutdown_watchdog.py`
+- `S01` `verify:` `exit-table, generator projection, watchdog and contracts pytest 51 passed` -> `pass`
+- `S01` `verify:` `runtime and packaging unit suites 324 passed 1 skipped` -> `pass`
+- `S01` `verify:` `installed runtime exits 67 68 69 71 observed` -> `pass`
+- `S01` `verify:` `ruff check and format --check` -> `pass`
+- `S01` `verify:` `ty win32 linux darwin; basedpyright and pyrefly on contracts.py` -> `pass`
+- `S01` `verify:` `cargo check and cargo test native/platform against generated contract.rs` -> `pass`
+- `S01` `verify:` `python -m dev.quality.import_gate` -> `fail`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/containment_commands.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/supervised_protocol.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/supervised_channel.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/tests/test_supervised_protocol.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/tests/test_supervised_channel.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/tests/test_supervised_runtime.py`
+- `S02` `A` `src/cadrumo/entrypoints/runtime/tests/supervised_streams_fixture.py`
+- `S02` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/server.py`
+- `S02` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/login_policy.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/test_login_policy.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/test_server.py`
+- `S02` `verify:` `focused supervised, server and login-policy pytest 71 passed` -> `pass`
+- `S02` `verify:` `installed runtime and exit-reason tests 11 passed 2 platform-skipped` -> `pass`
+- `S02` `verify:` `runtime suites -m unit 876 passed 10 skipped` -> `pass`
+- `S02` `verify:` `descendant-channel negative control fails with rewiring disabled` -> `pass`
+- `S02` `verify:` `ruff check and format --check; ty win32 linux darwin` -> `pass`
+- `S02` `verify:` `runtime suites -m integration` -> `fail`
+- `S02` `verify:` `just check-import-boundaries` -> `fail`
+- `S03` `A` `src/cadrumo/adapters/local_runtime/boot_record.py`
+- `S03` `A` `src/cadrumo/adapters/local_runtime/tests/test_boot_record.py`
+- `S03` `M` `src/cadrumo/entrypoints/runtime/supervised_channel.py`
+- `S03` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S03` `M` `src/cadrumo/entrypoints/runtime/tests/test_supervised_channel.py`
+- `S03` `M` `src/cadrumo/entrypoints/runtime/tests/test_supervised_runtime.py`
+- `S03` `M` `src/cadrumo/entrypoints/runtime/tests/test_installed_runtime.py`
+- `S03` `M` `src/cadrumo/core/storage_taxonomy.py`
+- `S03` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S03` `verify:` `focused boot-record, supervised, installation and storage gate pytest 141 passed 2 skipped` -> `pass`
+- `S03` `verify:` `Windows creation time checked against GetProcessTimes` -> `pass`
+- `S03` `verify:` `ruff check and format --check; ty win32 linux darwin` -> `pass`
+- `S03` `verify:` `just check-persistence-write-paths; just check-module-reachability` -> `pass`
+- `S03` `verify:` `just check-import-boundaries` -> `fail`
+- `S07` `A` `native/manager/Cargo.toml`
+- `S07` `A` `native/manager/Cargo.lock`
+- `S07` `A` `native/manager/build.rs`
+- `S07` `A` `native/manager/src/lib.rs`
+- `S07` `A` `native/manager/src/identity.rs`
+- `S07` `A` `native/manager/src/main.rs`
+- `S07` `A` `native/manager/tests/entrypoint.rs`
+- `S07` `A` `native/cmake/Manager.cmake`
+- `S07` `M` `dev/packaging/native/identity.py`
+- `S07` `M` `dev/packaging/tests/test_distribution_identity.py`
+- `S07` `verify:` `cargo build, test (8), clippy -D warnings, fmt --check in native/manager` -> `pass`
+- `S07` `verify:` `windows_manifest check on built exe; dumpbin DependentLoadFlags 0x800 and GUI subsystem` -> `pass`
+- `S07` `verify:` `image tests fail on a scratch build without 0x800 or windows_subsystem` -> `pass`
+- `S07` `verify:` `identity pytest 69 passed 2 skipped; ruff; ty` -> `pass`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/browser_runtime/installer.py`
+- `S05` `A` `src/cadrumo/core/child_console.py`
+- `S05` `A` `src/cadrumo/adapters/local_runtime/windows_token_elevation.py`
+- `S05` `A` `src/cadrumo/core/tests/test_child_console.py`
+- `S05` `A` `src/cadrumo/adapters/local_runtime/tests/test_windows_token_elevation.py`
+- `S05` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/kdf_console_fixture.py`
+- `S05` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_child_console.py`
+- `S05` `A` `src/cadrumo/entrypoints/runtime/tests/console_interrupt_fixture.py`
+- `S05` `A` `src/cadrumo/entrypoints/runtime/tests/test_console_interrupt.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/browser_runtime/tests/test_installer.py`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/tests/supervised_streams_fixture.py`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/tests/test_supervised_runtime.py`
+- `S05` `verify:` `console interrupt and supervised runtime pytest 12 passed` -> `pass`
+- `S05` `verify:` `focused child-console, elevation, KDF console pytest 29 passed 1 skipped` -> `pass`
+- `S05` `verify:` `Ctrl+C negative control (re-enable removed keeps serving)` -> `pass`
+- `S05` `verify:` `ruff check and format --check; ty win32 linux darwin on touched files` -> `pass`
+- `S05` `verify:` `just check-module-reachability` -> `pass`
+- `S05` `verify:` `just check-types` -> `fail`
+- `S05` `verify:` `just check-import-boundaries` -> `fail`
+- `S09` `M` `native/manager/Cargo.toml`
+- `S09` `M` `native/manager/Cargo.lock`
+- `S09` `M` `native/manager/src/lib.rs`
+- `S09` `A` `native/manager/src/contract.rs`
+- `S09` `A` `native/manager/src/supervision.rs`
+- `S09` `A` `native/manager/src/supervision/adoption.rs`
+- `S09` `A` `native/manager/src/supervision/boot_record.rs`
+- `S09` `A` `native/manager/src/supervision/environment.rs`
+- `S09` `A` `native/manager/src/supervision/exit.rs`
+- `S09` `A` `native/manager/src/supervision/json.rs`
+- `S09` `A` `native/manager/src/supervision/launch.rs`
+- `S09` `A` `native/manager/src/supervision/process.rs`
+- `S09` `A` `native/manager/src/supervision/protocol.rs`
+- `S09` `A` `native/manager/src/supervision/restart.rs`
+- `S09` `A` `native/manager/src/supervision/stop.rs`
+- `S09` `A` `native/manager/src/supervision/supervisor.rs`
+- `S09` `A` `native/manager/src/supervision/windows.rs`
+- `S09` `A` `native/manager/tests/supervision.rs`
+- `S09` `A` `native/manager/tests/protocol_conformance.rs`
+- `S09` `A` `native/manager/tests/protocol_vectors.json`
+- `S09` `A` `native/manager/tests/fixture/runtime.rs`
+- `S09` `A` `dev/packaging/tests/test_native_manager_protocol.py`
+- `S09` `verify:` `cargo fmt --check; build --locked debug and release; clippy -D warnings with and without fixture-test-mode and for linux target` -> `pass`
+- `S09` `verify:` `cargo test --locked 35 unit 5 entrypoint 7 conformance` -> `pass`
+- `S09` `verify:` `fixture-test-mode supervision tests 21 passed on three consecutive runs` -> `pass`
+- `S09` `verify:` `release build with fixture-test-mode refused` -> `pass`
+- `S09` `verify:` `negative controls (env_clear, creation-time check, Ctrl+C handler) fail as expected` -> `pass`
+- `S09` `verify:` `shared protocol vectors pytest 13 passed; ruff; ty` -> `pass`
+- `S07` `M` `native/platforms/windows-x64.json`
+- `S07` `M` `native/CMakeLists.txt`
+- `S07` `M` `native/CONTRACT.md`
+- `S07` `M` `native/cmake/Manager.cmake`
+- `S07` `M` `native/manager/build.rs`
+- `S07` `A` `native/manager/tests/version_resource.rs`
+- `S07` `verify:` `configure stages cadrumo-manager.exe from rust_manager` -> `pass`
+- `S07` `verify:` `rust_manager Release build with manifest check; CTest manager.rust and manager.supervision` -> `pass`
+- `S07` `verify:` `version-resource falsifiers fail without the resource link or with a wrong ProductName` -> `pass`
+- `S07` `verify:` `clippy -D warnings with and without fixture-test-mode; rustfmt --check` -> `pass`
+- `S07` `verify:` `application_images pytest 33 passed` -> `pass`
+- `S07` `verify:` `verify 13/13 and verify-package (staged, hashed, not startup, CADRUMO Background Services 0.5.1)` -> `pass`
+- `S11` `A` `native/manager/src/custody.rs`
+- `S11` `A` `native/manager/src/custody/windows.rs`
+- `S11` `A` `native/manager/src/custody/posix.rs`
+- `S11` `A` `native/manager/src/session.rs`
+- `S11` `A` `native/manager/src/session/instance.rs`
+- `S11` `A` `native/manager/src/session/claim.rs`
+- `S11` `A` `native/manager/src/session/quit.rs`
+- `S11` `A` `native/manager/src/session/ownership.rs`
+- `S11` `A` `native/manager/src/session/windows.rs`
+- `S11` `A` `native/manager/src/session/linux.rs`
+- `S11` `A` `native/manager/tests/custody_conformance.rs`
+- `S11` `A` `native/manager/tests/session_ownership.rs`
+- `S11` `A` `native/manager/tests/session_records.rs`
+- `S11` `A` `native/manager/tests/session_record_vectors.json`
+- `S11` `A` `dev/packaging/tests/test_native_manager_session_records.py`
+- `S11` `M` `native/manager/src/lib.rs`
+- `S11` `M` `native/manager/src/supervision.rs`
+- `S11` `M` `native/manager/Cargo.toml`
+- `S11` `M` `native/manager/Cargo.lock`
+- `S11` `verify:` `cargo build/test/clippy -D warnings (incl. linux target, fixture-test-mode)/fmt --check --locked` -> `pass`
+- `S11` `verify:` `cross-language custody lock and record conformance against the real Python primitives` -> `pass`
+- `S11` `verify:` `two-session start race 40 rounds, crashed claim holder, Quit suppression` -> `pass`
+- `S11` `verify:` `mutation checks (non-canonical encoder, wrong lock open mode) fail as expected` -> `pass`
+- `S11` `verify:` `session record vectors pytest 6 passed; ruff; ty` -> `pass`
+- `S23` `M` `native/manager/src/session/ownership.rs`
+- `S23` `M` `native/manager/src/supervision/supervisor.rs`
+- `S23` `M` `native/manager/tests/session_ownership.rs`
+- `S23` `M` `native/manager/tests/supervision.rs`
+- `S23` `verify:` `cargo test manager fixture-test-mode 121 Windows tests` -> `pass`
+- `S23` `verify:` `cargo test manager supervision and session_ownership 42 final tests` -> `pass`
+- `S23` `verify:` `cargo clippy manager all-targets fixture-test-mode -D warnings` -> `pass`
+- `S23` `verify:` `cargo fmt manager check and git diff check` -> `pass`
+- `S23` `verify:` `vaultspec-core vault check all feature runtime-manager-architecture` -> `pass`
+- `S08` `M` `native/manager/Cargo.toml`
+- `S08` `M` `native/manager/Cargo.lock`
+- `S08` `M` `native/manager/src/supervision/environment.rs`
+- `S08` `M` `native/manager/src/supervision/launch.rs`
+- `S08` `A` `native/manager/tests/environment.rs`
+- `S08` `M` `native/manager/tests/supervision.rs`
+- `S08` `M` `native/manager/tests/fixture/runtime.rs`
+- `S08` `verify:` `cargo test --locked --manifest-path native/manager/Cargo.toml --features fixture-test-mode --lib --test environment --test supervision` -> `pass`
+- `S08` `verify:` `cargo clippy --locked --manifest-path native/manager/Cargo.toml --all-targets --features fixture-test-mode -- -D warnings` -> `pass`
+- `S08` `verify:` `cargo fmt --manifest-path native/manager/Cargo.toml -- --check` -> `pass`
+- `S08` `verify:` `cargo build --locked --manifest-path native/manager/Cargo.toml --release` -> `pass`
+- `S10` `A` `native/manager/src/admission.rs`
+- `S10` `M` `native/manager/src/lib.rs`
+- `S10` `M` `native/manager/src/main.rs`
+- `S10` `M` `native/manager/tests/entrypoint.rs`
+- `S10` `verify:` `manager admission and entrypoint tests (8)` -> `pass`
+- `S10` `verify:` `manager all-target fixture Clippy` -> `pass`
+- `S10` `verify:` `manager fmt` -> `pass`
+- `S10` `M` `native/manager/src/supervision/supervisor.rs`
+- `S10` `M` `native/manager/tests/supervision.rs`
+- `S10` `M` `native/manager/tests/fixture/runtime.rs`
+- `S10` `verify:` `scratch/provisioning-state-map/verify-principal-manager.ps1` -> `pass`
+- `S10` `verify:` `scratch/provisioning-state-map/verify-principal-manager.ps1 -Check clippy` -> `pass`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/profile_connection_drain.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_session_end_settlement.py`
+- `S04` `A` `src/cadrumo/entrypoints/runtime/tests/test_session_end_native.py`
+- `S04` `verify:` `targeted ordered settlement pytest (4 tests, 2026-10-07)` -> `pass`
+- `S04` `verify:` `real Windows worker settlement with retained process handle and durable journal/lease assertions (20261007T041629.642461Z-pytest-11728-8c3fe090)` -> `pass`
+- `S04` `verify:` `scoped Ruff format lint and ty` -> `pass`
+- `S04` `by:` `root`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/profile_connection_operations.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/session_owner.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/supervised_channel.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/supervised_protocol.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_worker_operations.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/tests/test_supervised_channel.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/tests/test_supervised_protocol.py`
+- `S22` `M` `src/cadrumo/entrypoints/runtime/tests/test_supervised_runtime.py`
+- `S22` `M` `native/manager/src/supervision/protocol.rs`
+- `S22` `M` `native/manager/tests/fixture/runtime.rs`
+- `S22` `M` `native/manager/tests/protocol_conformance.rs`
+- `S22` `M` `native/manager/tests/protocol_vectors.json`
+- `S22` `verify:` `focused runtime protocol/admission unit tests (51 tests)` -> `pass`
+- `S22` `verify:` `real runtime/worker/persistence integration (17 tests)` -> `pass`
+- `S22` `verify:` `native mutation counts 0-to-1-to-0 and timeout-preserves-worker recheck` -> `pass`
+- `S22` `verify:` `uv run --no-sync pytest -q -n0 dev/packaging/tests/test_native_manager_protocol.py (13 tests)` -> `pass`
+- `S22` `verify:` `manager Windows fixture suite (139 tests; build/manager-startup-fixture.log)` -> `pass`
+- `S22` `verify:` `manager all-target all-test-feature Clippy -D warnings` -> `pass`
+- `S22` `by:` `root`
+- `S08` `A` `native/application/src/runtime.rs`
+- `S08` `A` `native/application/src/runtime_identity.py`
+- `S08` `M` `native/application/src/lib.rs`
+- `S08` `A` `native/manager/src/installed.rs`
+- `S08` `A` `native/manager/tests/runtime_identity.rs`
+- `S08` `verify:` `live packaged identity/deadline plus composed native runtime Ready/SessionEnd test (build/manager-startup-live-runtime.log; 25.16 seconds)` -> `pass`
+- `S08` `verify:` `manager and application scoped Clippy -D warnings` -> `pass`
+- `S08` `verify:` `optimized manager-only build (build/manager-startup-release.log; 26.53 seconds)` -> `pass`
+- `S08` `by:` `root`
+- `S10` `A` `native/manager/src/startup.rs`
+- `S10` `A` `native/manager/src/background.rs`
+- `S10` `A` `native/manager/src/windows_lifecycle.rs`
+- `S10` `A` `native/manager/tests/startup_cases/mod.rs`
+- `S10` `M` `native/CONTRACT.md`
+- `S10` `verify:` `manager native fixture suite (139 tests, including four startup composition cases and real hidden-window messages)` -> `pass`
+- `S10` `verify:` `release binary version/session-zero/private-argument admission checks (build/manager-startup-binary.json)` -> `pass`
+- `S10` `verify:` `release Windows manifest verifier` -> `pass`
+- `S10` `verify:` `manager all-target Clippy with both test features and rustfmt` -> `pass`
+- `S10` `by:` `root`
+- `S25` `M` `src/cadrumo/adapters/local_runtime/windows.py`
+- `S25` `M` `src/cadrumo/adapters/local_runtime/server_connection_handling.py`
+- `S25` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows.py`
+- `S25` `M` `src/cadrumo/adapters/local_runtime/tests/test_server.py`
+- `S25` `A` `src/cadrumo/adapters/local_runtime/tests/test_runtime_load.py`
+- `S25` `A` `src/cadrumo/entrypoints/runtime/tests/test_headless_load.py`
+- `S25` `verify:` `native transport/cleanup plus complete headless runtime (60 tests; build/runtime-load-final.log)` -> `pass`
+- `S25` `verify:` `shutdown with 16 stalled peers before handshake deadlines (build/runtime-load-shutdown.log)` -> `pass`
+- `S25` `verify:` `512 abrupt native connections (unchanged targeted rerun; build/runtime-load-churn512.log)` -> `pass`
+- `S25` `verify:` `cached current-source Rust manager adversarial suite (34 tests; 2.46 seconds)` -> `pass`
+- `S25` `verify:` `scoped Ruff lint format and ty` -> `pass`
+- `S25` `verify:` `scoped git diff --check` -> `pass`
+- `S25` `by:` `root`
+- `S25` `M` `src/cadrumo/entrypoints/runtime/tests/test_headless_load.py`
+- `S25` `verify:` `pytest headless native runtime benchmark` -> `pass`
+- `S25` `verify:` `ruff check and format headless benchmark` -> `pass`
+- `S25` `verify:` `ty check headless benchmark` -> `pass`
+- `S26` `M` `native/desktop/frontend/src/shell/signIn.ts`
+- `S26` `A` `native/desktop/frontend/src/components/AccountLoading.tsx`
+- `S26` `M` `native/desktop/frontend/src/components/accountWords.ts`
+- `S26` `M` `native/desktop/frontend/src/components/SignIn.tsx`
+- `S26` `M` `native/desktop/frontend/src/App.tsx`
+- `S26` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S26` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S26` `M` `native/desktop/frontend/tests/scenarios/manager.spec.ts`
+- `S26` `A` `native/desktop/frontend/tests/scenarios/startup.spec.ts`
+- `S26` `M` `dev/locales/desktop_chrome.py`
+- `S26` `verify:` `Playwright startup and manager scenarios (18 tests)` -> `pass`
+- `S26` `verify:` `Playwright final retry heading and readiness replacement (2 tests)` -> `pass`
+- `S26` `verify:` `pytest desktop_chrome (16 tests)` -> `pass`
+- `S26` `verify:` `pytest real Windows headless runtime load (1 test)` -> `pass`
+- `S26` `verify:` `TypeScript noEmit and scoped ESLint Prettier Ruff ty` -> `pass`
+- `S26` `by:` `root`
+- `S09` `M` `native/application/src/diagnostics/lifecycle.rs`
+- `S09` `M` `native/desktop/src-tauri/src/logs/manager.rs`
+- `S09` `M` `native/manager/src/diagnostics.rs`
+- `S09` `M` `native/manager/src/session/ownership.rs`
+- `S09` `M` `native/manager/src/supervision/boot_record.rs`
+- `S09` `M` `native/manager/src/supervision/process.rs`
+- `S09` `M` `native/manager/src/supervision/stop.rs`
+- `S09` `M` `native/manager/src/supervision/supervisor.rs`
+- `S09` `M` `native/manager/tests/diagnostics.rs`
+- `S09` `M` `native/manager/tests/startup_cases/mod.rs`
+- `S09` `M` `native/manager/tests/supervision.rs`
+- `S09` `A` `native/manager/tests/boot_record.rs`
+- `S09` `A` `native/manager/tests/termination.rs`
+- `S09` `M` `.vault/audit/2026-10-05-runtime-manager-architecture-audit.md`
+- `S09` `verify:` `manager.supervision CTest owning cargo test (155 tests)` -> `pass`
+- `S09` `verify:` `manager Clippy --all-targets --features fixture-test-mode -- -D warnings` -> `pass`
+- `S09` `verify:` `desktop test-unit logs::manager (4 tests)` -> `pass`
+- `S09` `verify:` `desktop clippy-backend` -> `fail`
+- `S09` `verify:` `targeted rustfmt and git diff --check` -> `pass`
+- `S09` `by:` `Codex`
+- `S27` `M` `dev/packaging/native/generate.py`
+- `S27` `M` `dev/packaging/native/installation.py`
+- `S27` `M` `dev/packaging/native/tests/test_distribution_prepare.py`
+- `S27` `M` `dev/packaging/tests/test_native_installation.py`
+- `S27` `M` `native/package-layout.json`
+- `S27` `M` `native/application/src/lib.rs`
+- `S27` `A` `native/application/src/installation.rs`
+- `S27` `A` `native/application/tests/installation.rs`
+- `S27` `M` `native/platform/src/lib.rs`
+- `S27` `M` `native/platform/src/storage.rs`
+- `S27` `A` `native/platform/src/installation.rs`
+- `S27` `M` `native/manager/src/lib.rs`
+- `S27` `M` `native/manager/src/main.rs`
+- `S27` `A` `native/manager/src/installation.rs`
+- `S27` `M` `native/desktop/src-tauri/src/manager.rs`
+- `S27` `M` `native/desktop/src-tauri/src/manager/package_tests.rs`
+- `S27` `M` `native/desktop/src-tauri/src/manager/tests.rs`
+- `S27` `M` `native/cmake/distribution/CMakeLists.txt`
+- `S27` `M` `native/CONTRACT.md`
+- `S27` `M` `.vault/audit/2026-10-05-runtime-manager-architecture-audit.md`
+- `S27` `verify:` `owning manager fixture cargo test (155 tests)` -> `pass`
+- `S27` `verify:` `shared application cargo test (70 tests, followed by final discovery fixture suite of 5 tests)` -> `pass`
+- `S27` `verify:` `desktop test-unit manager:: (17 tests)` -> `pass`
+- `S27` `verify:` `manager and application Clippy --all-targets -- -D warnings` -> `pass`
+- `S27` `verify:` `desktop clippy-backend` -> `pass`
+- `S27` `verify:` `pytest native installation and distribution preparation (28 pass, 2 POSIX skips)` -> `pass`
+- `S27` `verify:` `pytest unchanged incremental-generation and storage-contract coverage` -> `pass`
+- `S27` `verify:` `Ruff check/format and ty check on modified Python owners/tests` -> `pass`
+- `S27` `verify:` `targeted rustfmt and git diff --check` -> `pass`
+- `S27` `verify:` `vault check --feature runtime-manager-architecture` -> `pass`
+- `S27` `verify:` `vault check all` -> `fail`
+- `S27` `by:` `Codex`
+- `S27` `verify:` `vaultspec-core vault check all after Google governing-link repair` -> `pass`
+- `S24` `M` `dev/packaging/tests/test_native_manager_session_records.py`
+- `S24` `M` `native/CONTRACT.md`
+- `S24` `verify:` `pytest native_manager_session_records (7 passed)` -> `pass`
+- `S24` `verify:` `Ruff lint and format owning test` -> `pass`
+- `S24` `verify:` `ty owning test` -> `pass`
+- `S24` `verify:` `configured manager.rust CTest including cross-version custody vectors` -> `pass`
+- `S24` `by:` `Codex`
+- `S13` `M` `native/manager/Cargo.toml`
+- `S13` `M` `native/manager/Cargo.lock`
+- `S13` `M` `native/manager/src/admission.rs`
+- `S13` `M` `native/manager/src/background.rs`
+- `S13` `M` `native/manager/src/installation.rs`
+- `S13` `M` `native/manager/src/lib.rs`
+- `S13` `M` `native/manager/src/main.rs`
+- `S13` `M` `native/manager/src/session.rs`
+- `S13` `M` `native/manager/src/session/linux.rs`
+- `S13` `M` `native/manager/src/session/ownership.rs`
+- `S13` `M` `native/manager/src/supervision/adoption.rs`
+- `S13` `M` `native/manager/src/supervision/process.rs`
+- `S13` `M` `native/manager/src/supervision/stop.rs`
+- `S13` `M` `native/manager/src/supervision/windows.rs`
+- `S13` `M` `native/manager/src/supervision/environment.rs`
+- `S13` `M` `native/manager/src/windows_lifecycle.rs`
+- `S13` `M` `native/manager/src/ipc.rs`
+- `S13` `M` `native/manager/src/ipc/windows.rs`
+- `S13` `M` `native/manager/src/preferences.rs`
+- `S13` `M` `native/manager/src/strings.rs`
+- `S13` `M` `native/manager/src/windows_tray.rs`
+- `S13` `M` `native/manager/src/linux.rs`
+- `S13` `M` `native/manager/src/linux/process.rs`
+- `S13` `M` `native/manager/src/linux/login.rs`
+- `S13` `M` `native/manager/src/linux/tray.rs`
+- `S13` `M` `native/manager/src/linux/lifecycle.rs`
+- `S13` `M` `native/manager/src/linux/placement.rs`
+- `S13` `M` `dev/locales/manager.py`
+- `S13` `M` `dev/locales/manager_chrome.py`
+- `S13` `M` `dev/packaging/native/generate.py`
+- `S13` `M` `native/cmake/Contract.cmake`
+- `S13` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S13` `M` `src/cadrumo/locales/en/common.yml`
+- `S13` `M` `src/cadrumo/locales/es/common.yml`
+- `S13` `M` `src/cadrumo/locales/ca/common.yml`
+- `S13` `M` `src/cadrumo/locales/hu/common.yml`
+- `S13` `M` `dev/packaging/native/linux_autostart.py`
+- `S13` `M` `dev/packaging/native/tests/test_linux_autostart.py`
+- `S13` `verify:` `Windows Release manager/application/installer CTest` -> `pass`
+- `S13` `verify:` `Pinned Windows all-target Clippy for manager/application/installer` -> `pass`
+- `S13` `verify:` `Canonical locale/storage projection six tests` -> `pass`
+- `S13` `verify:` `Linux manager Release build and 65 unit tests` -> `pass`
+- `S13` `verify:` `Native desktop-file-validate generated XDG machine/user/escaped-path fixtures` -> `pass`
+- `S13` `by:` `Codex`
+- `S19` `A` `dev/packaging/native/macos_launchagent.py`
+- `S19` `A` `dev/packaging/native/tests/test_macos_launchagent.py`
+- `S19` `M` `dev/packaging/native/installation.py`
+- `S19` `verify:` `Configured builder macOS metadata and installation tests 28 passed 2 POSIX skipped` -> `pass`
+- `S19` `verify:` `Scoped Ruff format lint ty and diff` -> `pass`
+- `S19` `by:` `Codex`
+- `S15` `M` `src/cadrumo/application/operator_output/runtime_remedies.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/errors.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S15` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
+- `S15` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_manager_remedy.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_manager_remedy.py`
+- `S15` `M` `src/cadrumo_harness/mcp/tests/test_runtime_manager_remedy.py`
+- `S15` `verify:` `16 explicit CLI/TUI/MCP remedy tests` -> `pass`
+- `S15` `verify:` `Scoped Ruff and ty` -> `pass`
+- `S15` `by:` `Codex`
+- `S16` `M` `native/manager/src/cutover.rs`
+- `S16` `M` `native/manager/src/cutover_child.rs`
+- `S16` `M` `native/manager/src/cutover_coordinator.rs`
+- `S16` `M` `native/manager/src/cutover_parent.rs`
+- `S16` `M` `native/manager/src/cutover_windows.rs`
+- `S16` `M` `native/manager/src/failed_versions.rs`
+- `S16` `M` `native/manager/src/installation_watch.rs`
+- `S16` `M` `native/manager/src/background.rs`
+- `S16` `M` `native/manager/src/installation.rs`
+- `S16` `M` `native/manager/src/installed.rs`
+- `S16` `M` `native/manager/src/ipc.rs`
+- `S16` `M` `native/manager/src/ipc/windows.rs`
+- `S16` `M` `native/manager/src/lib.rs`
+- `S16` `M` `native/manager/src/main.rs`
+- `S16` `M` `native/manager/src/session/claim.rs`
+- `S16` `M` `native/manager/src/session/ownership.rs`
+- `S16` `M` `native/manager/src/startup.rs`
+- `S16` `M` `native/manager/src/windows_lifecycle.rs`
+- `S16` `M` `native/manager/src/windows_tray.rs`
+- `S16` `M` `native/application/src/installation.rs`
+- `S16` `M` `native/application/tests/installation_cutover.rs`
+- `S16` `M` `native/CONTRACT.md`
+- `S16` `M` `dev/packaging/native/generate.py`
+- `S16` `M` `dev/packaging/tests/test_native_storage_environment_contract.py`
+- `S16` `M` `dev/locales/manager_chrome.py`
+- `S16` `M` `src/cadrumo/locales/en/common.yml`
+- `S16` `M` `src/cadrumo/locales/es/common.yml`
+- `S16` `M` `src/cadrumo/locales/ca/common.yml`
+- `S16` `M` `src/cadrumo/locales/hu/common.yml`
+- `S16` `verify:` `Isolated Windows manager Release build` -> `pass`
+- `S16` `verify:` `Manager CTest 13.74 seconds` -> `pass`
+- `S16` `verify:` `Pinned manager all-target Clippy` -> `pass`
+- `S16` `verify:` `13 canonical projection/taxonomy tests` -> `pass`
+- `S16` `verify:` `Independent corrective source review` -> `pass`
+- `S16` `by:` `Codex`
+- `S18` `A` `dev/packaging/native/linux_manager_probe.py`
+- `S18` `A` `dev/packaging/native/tests/test_linux_manager_probe.py`
+- `S18` `M` `native/manager/src/linux/tray.rs`
+- `S18` `verify:` `Linux placement probe focused preflight test (1 test)` -> `pass`
+- `S18` `verify:` `Linux placement probe Ruff and ty` -> `pass`
+- `S18` `verify:` `Pinned manylinux platform/application/manager all-target Clippy before subsequent cutover contract regeneration` -> `pass`
+- `S18` `by:` `Codex`
+- `S16` `M` `src/cadrumo/application/runtime/session_events.py`
+- `S16` `M` `src/cadrumo/application/runtime/contracts.py`
+- `S16` `M` `src/cadrumo/application/runtime/transport.py`
+- `S16` `M` `src/cadrumo/application/runtime/profile_access.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/runtime_client.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/runtime_frame_io.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/runtime_verified_transport.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/server_connection_handling.py`
+- `S16` `M` `src/cadrumo/entrypoints/runtime/session_events.py`
+- `S16` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/account.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/runtime_account.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/runtime_session.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/runtime_profile_binding.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/framing.py`
+- `S16` `A` `src/cadrumo/entrypoints/runtime/tests/test_lifecycle_notices.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/tests/test_session_events.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_session.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/tests/test_app.py`
+- `S16` `M` `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_attempt.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_session.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login.py`
+- `S16` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_lifecycle_notice.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/custody.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/passphrase.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/runtime_automation_request.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/runtime_credentials.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/tests/test_runtime_credentials_cleanup.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/tests/test_passphrase_runtime_change.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_contracts.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_reference_login.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_credential_reference_admission.py`
+- `S16` `A` `src/cadrumo/entrypoints/runtime/notice_observation.py`
+- `S16` `verify:` `Focused runtime/frontend notice unit suite (69 tests)` -> `pass`
+- `S16` `verify:` `TUI login integration suite (35 tests)` -> `pass`
+- `S16` `verify:` `Affected CLI credential-admission suite after stale fixture correction (9 tests)` -> `pass`
+- `S16` `verify:` `Corrective lifecycle/supervisor deadline suite (25 tests)` -> `pass`
+- `S16` `verify:` `Scoped notice Ruff lint and formatting plus type checks` -> `pass`
+- `S16` `verify:` `Independent notice review and corrective deadline re-review` -> `pass`
+- `S18` `M` `native/manager/src/installed.rs`
+- `S18` `verify:` `Windows manager.rust CTest (21.81s)` -> `pass`
+- `S18` `verify:` `Windows pinned Rust 1.96 all-target Clippy -D warnings (10.46s)` -> `pass`
+- `S18` `verify:` `Linux manylinux_2_28 frozen source manager.rust CTest (9.75s)` -> `pass`
+- `S18` `verify:` `Linux pinned Rust 1.96 all-target Clippy -D warnings (18.92s)` -> `pass`
+- `S17` `M` `dev/packaging/native/installation.py`
+- `S17` `M` `dev/packaging/native/launch_guard_check.py`
+- `S17` `M` `dev/packaging/tests/test_native_installation.py`
+- `S17` `M` `native/CMakeLists.txt`
+- `S17` `M` `native/CONTRACT.md`
+- `S17` `M` `native/application/src/installation.rs`
+- `S17` `M` `native/application/src/installation/launch_guard.rs`
+- `S17` `M` `native/application/tests/installation_launch_guard.rs`
+- `S17` `M` `native/cmake/LaunchGuard.cmake`
+- `S17` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S17` `M` `native/desktop/src-tauri/src/main.rs`
+- `S17` `M` `native/desktop/src-tauri/src/terminal/tests.rs`
+- `S17` `M` `native/interpreter/launch_guard.h`
+- `S17` `M` `native/interpreter/posix/host.c`
+- `S17` `M` `native/interpreter/windows/host.c`
+- `S17` `M` `native/launch_guard/Cargo.toml`
+- `S17` `M` `native/launch_guard/Cargo.lock`
+- `S17` `M` `native/launch_guard/build.rs`
+- `S17` `M` `native/launch_guard/include/cadrumo_launch_guard.h`
+- `S17` `M` `native/launch_guard/src/lib.rs`
+- `S17` `verify:` `Windows CMake release interpreter hosts static link` -> `pass`
+- `S17` `verify:` `Windows CTest launch_guard native host admission (1.47s)` -> `pass`
+- `S17` `verify:` `Windows launch_guard.rust/application.rust after recovery API (12.75s/11.29s)` -> `pass`
+- `S17` `verify:` `Windows desktop 210 backend tests and pinned snapshot Clippy (6.35s)` -> `pass`
+- `S17` `verify:` `Application and launch guard all-target Clippy pinned Rust 1.96` -> `pass`
+- `S17` `verify:` `Portable installation Python fixtures 25 tests two POSIX host skips (6.40s)` -> `pass`
+- `S17` `verify:` `Linux release host and console entrypoint static links` -> `pass`
+- `S17` `verify:` `Linux launch_guard.rust/application.rust (2.02s/16.36s)` -> `pass`
+- `S17` `verify:` `Linux real host admission with SDK loader variables removed from test child (1.60s)` -> `pass`
+- `S17` `verify:` `Ruff format lint and ty launch_guard_check` -> `pass`
+- `S17` `by:` `Codex`
+- `S18` `M` `native/manager/src/linux.rs`
+- `S18` `M` `native/manager/src/linux/process.rs`
+- `S18` `A` `native/manager/src/linux/ipc.rs`
+- `S18` `M` `.vault/audit/2026-10-05-runtime-manager-architecture-audit.md`
+- `S18` `verify:` `manylinux manager.rust CTest (17.38s)` -> `pass`
+- `S18` `verify:` `manylinux manager Clippy all-targets warnings denied (4.88s)` -> `pass`
+- `S18` `verify:` `independent scoped Linux IPC source review` -> `pass`
+- `S19` `M` `native/manager/src/lib.rs`
+- `S19` `A` `native/manager/src/macos.rs`
+- `S19` `A` `native/manager/src/macos/records.rs`
+- `S19` `A` `native/manager/src/macos/process.rs`
+- `S19` `M` `.vault/plan/2026-10-04-runtime-manager-architecture-plan.md`
+- `S19` `M` `.vault/audit/2026-10-05-runtime-manager-architecture-audit.md`
+- `S19` `verify:` `Windows manager.rust (32.25s)` -> `pass`
+- `S19` `verify:` `pinned manager Clippy all-targets (17.93s)` -> `pass`
+- `S19` `verify:` `isolated Darwin-target libc-only Clippy (0.89s)` -> `pass`
+- `S19` `verify:` `Apple record Python ctypes ABI crosscheck` -> `pass`
+- `S19` `verify:` `independent macOS process source review` -> `pass`
+- `S19` `M` `native/manager/src/macos.rs`
+- `S19` `A` `native/manager/src/macos/login.rs`
+- `S19` `verify:` `Windows manager.rust (18.64s)` -> `pass`
+- `S19` `verify:` `manager pinned Clippy all-targets (1.75s)` -> `pass`
+- `S19` `verify:` `isolated Darwin-target Clippy (0.32s)` -> `pass`
+- `S19` `verify:` `independent macOS peer-session source review` -> `pass`
+- `S18` `M` `src/cadrumo/adapters/local_runtime/posix_endpoint.py`
+- `S18` `M` `src/cadrumo/adapters/local_runtime/tests/test_posix.py`
+- `S18` `M` `.vault/plan/2026-10-04-runtime-manager-architecture-plan.md`
+- `S18` `verify:` `native Linux pytest test_posix.py -m integration (33 tests, 2.62s)` -> `pass`
+- `S18` `verify:` `scoped Ruff lint and format` -> `pass`
+- `S18` `verify:` `ty check posix_endpoint.py tests/test_posix.py` -> `pass`
+- `S18` `verify:` `independent endpoint identity review` -> `pass`
+- `S19` `M` `native/manager/src/macos/login.rs`
+- `S19` `M` `native/manager/src/custody.rs`
+- `S19` `M` `native/manager/src/custody/posix.rs`
+- `S19` `M` `src/cadrumo/adapters/local_runtime/macos_login.py`
+- `S19` `M` `src/cadrumo/adapters/local_runtime/tests/test_macos_login.py`
+- `S19` `verify:` `Python macOS login tests (22) and scoped Ruff format ty` -> `pass`
+- `S19` `verify:` `native Apple SDK foundation tests (5) and process/session smoke` -> `pass`
+- `S19` `verify:` `actual Mac CMake manager.rust (50.14s)` -> `pass`
+- `S19` `verify:` `actual Mac Rust1.96 all-target Clippy (32.88s)` -> `pass`
+- `S19` `verify:` `independent session flags and Linux cfg review` -> `pass`
+- `S18` `M` `dev/packaging/native/linux_manager_probe.py`
+- `S18` `A` `.vault/research/2026-10-08-runtime-manager-architecture-linux-placement-research.md`
+- `S18` `A` `.vault/adr/2026-10-08-runtime-manager-architecture-linux-placement-adr.md`
+- `S18` `M` `.vault/index/runtime-manager-architecture.index.md`
+- `S18` `verify:` `probe unsupported Windows host refuses before launch` -> `pass`
+- `S18` `verify:` `probe scoped Ruff format ty` -> `pass`
+- `S18` `verify:` `independent Linux placement evidence and proposed-status review` -> `pass`
+- `S18` `M` `native/manager/src/ipc.rs`
+- `S18` `A` `native/manager/src/ipc/framing.rs`
+- `S18` `M` `native/manager/src/linux/ipc.rs`
+- `S18` `verify:` `native manylinux Rust1.96 manager.rust CTest 10.53s` -> `pass`
+- `S18` `verify:` `native manylinux all-target Release Clippy 2.24s` -> `pass`
+- `S18` `verify:` `configured Windows manager Rust tests 93units and integration suites` -> `pass`
+- `S18` `verify:` `configured Windows all-target Clippy 1.48s` -> `pass`
+- `S18` `verify:` `Rustfmt shared and Darwin seven source paths` -> `pass`
+- `S18` `verify:` `shared framing source review` -> `pass`
+- `S19` `A` `native/manager/src/macos/ipc.rs`
+- `S19` `A` `native/manager/src/macos/ipc/socket.rs`
+- `S19` `verify:` `Windows configured manager Rust tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `Rustfmt Darwin manager source paths` -> `pass`
+- `S19` `verify:` `aarch64-apple-darwin primitive and test Clippy typecheck -Dwarnings` -> `pass`
+- `S19` `verify:` `full manager Darwin cross-check on Windows missing Apple compiler SDK for ring` -> `fail`
+- `S19` `M` `native/manager/src/session.rs`
+- `S19` `M` `native/manager/src/supervision/process.rs`
+- `S19` `verify:` `Native macOS manager cargo test --lib with canonical private TMPDIR 76 tests` -> `pass`
+- `S19` `verify:` `Native macOS manager cargo clippy --all-targets -- -D warnings` -> `pass`
+- `S19` `verify:` `Configured Windows manager tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `Scoped rustfmt and git diff --check` -> `pass`
+- `S19` `verify:` `Independent shared-session source review` -> `pass`
+- `S19` `A` `.vault/research/2026-10-08-runtime-manager-architecture-darwin-socket-paths-research.md`
+- `S19` `M` `.vault/index/runtime-manager-architecture.index.md`
+- `S19` `verify:` `Native Darwin ordinary socket peer identity and fd-alias feasibility probe` -> `pass`
+- `S19` `verify:` `Read-only Darwin user-cache ownership mode and canonical path probe` -> `pass`
+- `S19` `verify:` `Independent research factual consistency review` -> `pass`
+- `S19` `A` `.vault/adr/2026-10-08-canonical-environment-darwin-transport-adr.md`
+- `S19` `M` `.vault/adr/2026-10-04-canonical-environment-adr.md`
+- `S19` `M` `.vault/adr/2026-08-03-canonical-storage-management-adr.md`
+- `S19` `M` `.vault/adr/2026-07-13-data-output-standardization-adr.md`
+- `S19` `M` `.vault/adr/2026-10-04-runtime-manager-architecture-adr.md`
+- `S19` `verify:` `independent Darwin transport decision review` -> `pass`
+- `S19` `verify:` `four affected vault feature checks (zero errors)` -> `pass`
+- `S19` `verify:` `scoped git diff --check` -> `pass`
+- `S19` `by:` `root`
+- `S19` `A` `src/cadrumo/core/runtime_transport.py`
+- `S19` `A` `src/cadrumo/core/darwin_transport.py`
+- `S19` `A` `src/cadrumo/core/tests/test_runtime_transport.py`
+- `S19` `M` `src/cadrumo/core/storage_taxonomy.py`
+- `S19` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S19` `M` `src/cadrumo/core/storage_materialization.py`
+- `S19` `M` `src/cadrumo/adapters/local_runtime/posix_endpoint.py`
+- `S19` `A` `src/cadrumo/adapters/local_runtime/tests/test_darwin_transport.py`
+- `S19` `M` `src/cadrumo/adapters/persistence/storage/tests/secure_sql.py`
+- `S19` `M` `src/cadrumo/application/storage_management/service.py`
+- `S19` `M` `dev/packaging/native/generate.py`
+- `S19` `A` `dev/packaging/native/transport_contract.py`
+- `S19` `A` `dev/packaging/native/tests/test_transport_contract.py`
+- `S19` `A` `dev/docs/tests/test_transport_namespace.py`
+- `S19` `A` `native/platform/src/transport.rs`
+- `S19` `A` `native/platform/src/transport/tests.rs`
+- `S19` `M` `native/platform/src/lib.rs`
+- `S19` `M` `native/platform/Cargo.toml`
+- `S19` `M` `native/platform/Cargo.lock`
+- `S19` `M` `native/application/Cargo.lock`
+- `S19` `M` `native/desktop/src-tauri/Cargo.lock`
+- `S19` `M` `native/manager/Cargo.toml`
+- `S19` `M` `native/manager/Cargo.lock`
+- `S19` `A` `native/manager/src/macos/naming.rs`
+- `S19` `M` `native/manager/src/macos/ipc.rs`
+- `S19` `M` `native/manager/src/macos/ipc/socket.rs`
+- `S19` `M` `native/cmake/Contract.cmake`
+- `S19` `M` `native/CONTRACT.md`
+- `S19` `verify:` `native Mac platform 32 and manager 78 tests` -> `pass`
+- `S19` `verify:` `native Mac platform and manager all-target Clippy` -> `pass`
+- `S19` `verify:` `configured Windows manager tests and toolchain-pinned Clippy` -> `pass`
+- `S19` `verify:` `Linux Python transport owning tests 63` -> `pass`
+- `S19` `verify:` `native Mac Python unit/integration tests 59` -> `pass`
+- `S19` `verify:` `native Mac read-only default path/custody probe` -> `pass`
+- `S19` `verify:` `scoped Python Ruff format and ty` -> `pass`
+- `S19` `verify:` `CMake configure and native_contract build` -> `pass`
+- `S19` `verify:` `integrated transport source review` -> `pass`
+- `S19` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S19` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S19` `M` `dev/quality/metadata/import_load_targets.json`
+- `S19` `verify:` `initial full import and platform type gates` -> `fail`
+- `S19` `verify:` `corrected full just check-import-boundaries` -> `pass`
+- `S19` `verify:` `corrected full just check-types (one concurrent unrelated test diagnostic)` -> `fail`
+- `S19` `verify:` `corrected transport Pyrefly and BasedPyright Windows Linux Darwin` -> `pass`
+- `S19` `verify:` `corrected native Mac Python 59 and Linux Python 29 tests` -> `pass`
+- `S19` `verify:` `corrective source review and unchanged generated Rust contract` -> `pass`
+
+## Notes
+
+- `S06` Repo-wide gates failed outside this Step: concurrent writers changed the governed tree mid-run and a hard finding in `test_censo_import_fact_payload.py;` check-types diagnostics name only other files while the shared .venv was being rebuilt. Mixed-owner files staged with only this Step's hunks.
+- `S01` Exit reasons apply in every launch mode, not only under --supervised; the supervisor-contract ADR scope line reads 'Without that flag ... unchanged' and needs the operator's confirmation or a supervised gate in a later Step. Import gate could not complete (import-linter exit 127, stale targets, tree changed). Mixed files committed with only this Step's lines; the HEAD `test_login_lifecycle` case was already broken by another writer's pending rename.
+- `S06` S06 content landed in commit 345b768233 (another session's commit swept the shared index); content verified identical to the staged Step.
+- `S02` Integration residue (8 failures, 3 errors in automation approval, password rotation, refusal detail, projection pages, operation secret, modelo lifecycle) sits in modules carrying another writer's uncommitted custody and operations edits and touches no symbol this Step changed; not provable against HEAD in the shared tree. Heartbeat reports `hosted_profiles` as an upper bound for in-flight operations; exact counts added as a follow-on Step. Windows plain-interpreter dev launcher does not pass pipes through its relaunch; supervised mode targets the packaged single-process host.
+- `S03` Import gate failed on stale `import_load_targets` metadata (another writer's uncommitted file), a mid-run tree change and two other workers' test files. Boot record registered as a taxonomy member only (no .runtime directory path definition, which would pull installation.json into scope); creation time is platform-native and can exceed 2^53 on Windows (the manager parses it as u64); package directory is null outside an installed package. Taxonomy files committed with only this Step's hunks.
+- `S07` Part A only (crate, standalone Manager.cmake not yet included, identity projection of `manager_id` and `manager_name` with one owner for the Background Services suffix). Step stays open for Part B: include point after `add_subdirectory(application),` packaging declaration shared with the desktop S13 mechanism, assemble/verify/signing inventory, Windows version resource. No platform/application crate dependency until a Step needs it.
+- `S05` check-types failures are in other writers' operations, aggregation and `server_connection_handling` files. Import gate: two foreign private imports and stale `import_load_targets` metadata (shared, held by another writer; needs just generate-import-load-targets to include `core.child_console` and `local_runtime.windows_token_elevation).` A full elevated token is not available on this host; the refusal is proven by a faked token read. The supervised flag reaches spawners through `core.process_binding.ProcessScopedBinding.` Finding for the manager: a runtime launched without -I on Windows relaunches through subprocess.run on the same console, so a Ctrl+C kills it without draining; the manager must launch the packaged single-process host.
+- `S09` Exit reasons come from the generated contract.rs via `include!(env!(CADRUMO_CONTRACT_RS));` the CMake build of the manager needs Part B's Manager.cmake wiring (not yet included in native/CMakeLists, so the bundle is unaffected). ADR stop-delivery hypothesis corrected: the Ctrl+C handler must be registered after AttachConsole (a handler installed before attach does not apply to a console-less process), kept for the whole attachment, removed after FreeConsole. `unsafe_code` changed from forbid to deny with allows only in supervision/windows.rs, the POSIX kill module and the fixture. Interim fixed environment allow-list until S08; Windows-only fixture coverage; a foreign runtime is final for run() in this Step.
+- `S07` Part B closes the Step. Fixed a Part A Manager.cmake defect that split escaped LIB/INCLUDE semicolons. Fixture target dir is `CADRUMO_PATH_CARGO/manager-fixture` inside the declared cargo output. ProductName is the channel display name (CADRUMO Preview on preview). Signing gap: signed=true is validated only; no signing inventory exists in packaging. CompanyName omitted pending a publisher projection. Desktop packaging path not exercised (docs off).
+- `S11` POSIX/Linux paths compile-checked only (no Rust toolchain in WSL). Adds unix-only libc 0.2.190 (same as sibling crates). supervision::json made pub(crate) for reuse. Follow-ons added to the plan: gate supervisor restarts through the start claim, register manager .runtime records in the Python storage taxonomy, and record the session lock/claim/Quit grammar as a cross-version contract. Token-user/owner-only descriptor code duplicates native/platform desktop.rs; a shared helper needs the platform owner.
+- `S23` Windows verification only; no Linux compile check. Toolchain <operator-home>/.cargo/bin/cargo.exe; target build/b5-manager-cargo; generated contract and identity build/windows-x86-64/b1/generated. main.rs remains version-only; composition and B4 S04/S22/S24 contracts remain open. `run_with_permit` transfers the initial claim safely through pre-readiness retry.
+- `S08` Partial S08 checkpoint: canonical native/platform installed-default resolver and Strict child environment replace manager's duplicated allowlist. Only filtered output is lazily cached for restarts, authority is package-pinned, and diagnostics omit environment values. Final 85 affected tests and release checks passed on Windows in build/b5-manager-cargo with B1-generated contract/identity; executor completion 22caa0 and 7edfba. S08 stays open for bounded interpreter identity/version probes and shared Settings projection; production entrypoint composition and B4 shutdown/count/schema contracts remain absent.
+- `S10` Partial S10 only: bare startup checks native session, full-token elevation and interactive desktop evidence before state or child work; --version remains available. Job escape, session-end and real runtime composition remain unimplemented. B4 ordered settle, exact operation counts and manager record grammars are still prerequisites.
+- `S10` Principal partial implementation: private session-end request, synchronized restart suppression, deadline escalation and truthful uncomposed entrypoint refusal. 133 Rust tests pass. OS window/session integration and installed discovery are unfinished; S10 stays open. No final bundle or real OS logout acceptance claimed.
+- `S04` Reuse existing ordered containment implementation; cap `SESSION_END_SETTLE` at three seconds. Real worker death, INTERRUPTED/ORPHANED journal settlement and exact lease release verified in synthetic encrypted profiles. No package compilation or session-1 logout test.
+- `S22` Heartbeat field is required `in_flight_operations:` integer|null on both sides; unknown never proves idle. Admission retains pre-fence requests, and late observations are not reused. Shared Git index lock initially rejected S04 checkpoint; no lock removed and no hook bypassed.
+- `S08` Partial S08: installed identity/version query now implemented and tested against the pre-existing packaged interpreter, complete inventory admission and fail-closed failed-version marker. Shared Settings projection remains open. No full package/docs/frontend rebuild. Native source and binary hashes, exact package distinction and limits are in build/manager-startup-verification.json.
+- `S10` Partial S10: production startup now composes admission, single breakaway attempt, session lock, inspected installed runtime, ownership/adoption and supervisor under a hidden top-level Windows window. Session-end cancellation waits for supervisor completion. Startup failure has visible notification only after interactive admission. Real session-1 GUI/logoff and shell-dispatch fallback remain unverified/unimplemented respectively. All remaining Rust implementation/review/testing performed by root after user's no-delegation instruction. Initial checkpoint commit rejected by another shared Git index lock; no lock removed or hook bypassed.
+- `S25` Operator authorized backend/runtime optimization, headless benchmarks and adversarial multiconnection testing, preserving the fast scoped loop. Measured a Windows accept race: disconnect-before-accept terminated the listener. Reset the existing pipe instance without an ownership gap and classify ordinary disconnect as local refusal. Adaptive 1-to-50ms waits replace a fixed 50ms delay without altering framing, peer admission, concurrency limit or idle deadline.
+- `S25` Benchmark evidence: build/runtime-load-benchmark.json. Native-pipe median round trips fell from 59-61ms to 13-15ms; at 24 clients throughput rose 468 to 1436 requests/s. Full source runtime: 18.93s startup, 9.63ms p50/17.01ms p95 with eight connections, 2.75s shutdown. Requests measure typed status/refusal, not authenticated mutations. Source-only changes; no binary/package rebuild.
+- `S25` One later stress fixture exceeded its unchanged 3s startup wait on the busy shared host; the 512-client test passed unchanged on targeted rerun. Baseline race failed, fix verified. Updated two stale assertions to the existing optional `sign_in` field and tick-before-first-loop semantics. No different-user/session or GUI acceptance. Repository-wide import gates were not rerun against unrelated concurrent changes under the operator's fast scoped verification instruction.
+- `S25` Root-cause follow-up: fresh runtime startup 11605.89ms; `main_import` 5710.24ms, `registry_prepare` 5573.05ms, `listener_listen` 6.947ms. Independent unprofiled import+registry 11865.39ms. Profile: 1806 strict schema calls, 481 distinct compiled models, 14.381s of 15.422s in strict schema processing (instrumented, not benchmark latency). Separate shutdown probe: runtime returned at 214.51ms, atexit marker 215.33ms, process exit 1766.45ms. No registry semantics changed or package rebuilt; earlier 18.93s versus now 11.61s is not an optimization claim. Full evidence build/runtime-root-cause-report.json with source hashes and profile artifacts. Headless test passed in 14.89s. Shared Git index lock still present; no lock removed.
+- `S26` User authorized implementation of React ghost UI for asynchronous Tauri startup. Reused existing native manager launch and canonical readiness reads without Rust edits, new state libraries or package compilation. Corrected related missing `starting_services` declaration in canonical desktop locale projection and regenerated only chrome strings. React waits are bounded and stale read results cannot restore an unmounted owner. Evidence and source hashes: build/runtime-startup-ui/verification.json; visually inspected loading.png. Browser scenarios prove React behavior, native source runtime smoke proves native IPC; session-1 desktop GUI not claimed. Existing shared Git index.lock still blocks checkpoint; no lock removed and no other workstream staged.
+- `S09` Desktop Clippy fails in a concurrent sign-in test outside this step; the manager and changed consumer tests pass. Interactive installation and OS session-end acceptance remain disposable-host rollout obligations.
+- `S27` Concrete discovery source fix and scoped review pass. S27 remains open because the required repository-wide vault check fails on an unrelated approved Google plan's non-accepted backup-custody ADR. Full format-specific installation/upgrade and interactive-session acceptance remain excluded disposable-host rollout gates. Concurrent source edits and registry-authority documentation hunks are preserved and excluded from this commit.
+- `S27` The 2026-10-07 Google decision-coverage repair removes the prior external schema blocker. Prior source verification at commit 7798824f68 remains evidence for S27; later concurrent startup/cancellation improvements belong to their owners. Closing discovery does not close MSI lifecycle or product acceptance.
+- `S24` Existing canonical taxonomy already enrolls all six manager/runtime records; added cross-version grammar and enrollment/axis assertions without a second path authority.
+- `S13` Coherent shared Windows tray/IPC and Linux foundation checkpoint; S13 remains open until integration review/interactive evidence. S12 successor readiness and S18 production composition remain open. Linux test harness fixes are verified separately. No disposable-host installation acceptance.
+- `S19` Unsigned metadata/source checkpoint only. No login registration, ad-hoc substitute, Apple SDK/Mach-O build, DMG or native SMAppService acceptance. S19 stays open. Shared distribution cache input enrollment follows in S09 graph checkpoint.
+- `S15` Localized passive guidance; no manager request or business-code change. Repository-wide import gate previously blocked by unrelated concurrent module removals; S15 broader gate remains open.
+- `S16` S16/S17 coherent integration checkpoint. Attended installed two-release upgrade/rollback/cancelled-shutdown evidence, connected-frontend notices, obsolete native-product cleanup and native removal emitter remain open. No acceptance or signing claim.
+- `S18` Partial S18 checkpoint only: probe is an opt-in disposable graphical-runner experiment, not runtime acceptance. Current WSL process has no authoritative graphical logind membership and correctly refuses despite display environment variables. Linux manager entrypoint remains gated pending placement/session identity and native installation ownership evidence. Full latest Linux native suite must be rerun after cutover contract regeneration.
+- `S16` Partial S16 checkpoint: localized notices use existing typed E-frame stream and sole writer with complete-frame flush witnesses, pre-login and restricted TUI plus human CLI consumers. One retained read-only observation worker enforces bounded StopIfIdle and rejects expired results. Legacy client to new server compatible; opted-in client to older strict server deliberately refuses without downgrade. Real installed interactive two-release notice acceptance remains outstanding; native reference-login integration was adapted/typechecked but not rerun.
+- `S18` Partial S18 portability checkpoint: canonical generated platform replaces Windows-only package inspection; integrity tests cover missing/changed inventories and incompatible target. Native Linux entry remains gated; no graphical session, install, upgrade or uninstall acceptance claimed.
+- `S17` Partial S17 corrective checkpoint; independent interpreter and desktop lifetime leases, explicit native/portable launch policy, metadata commands included. Initial Linux host test correctly refused inherited SDK `LD_` settings before reaching subject; child test environment now excludes them, production refusal unchanged. Native installed removal and two-release interactive acceptance remain pending; all MSI gates retained.
+- `S18` Partial S18 transport foundation only; main activation, cross-version cutover, placement choice and native acceptance remain open.
+- `S19` Partial unsigned S19 source foundation; no native macOS linking, execution, session or service activation evidence.
+- `S19` S19 remains open; actual Apple SDK build newly available on user-supplied non-disposable Mac. Preserve both existing machines and all lifecycle gates.
+- `S18` S18 remains open: manager loop, native placement and lifecycle acceptance remain unfinished; existing Windows and macOS hosts are non-disposable.
+- `S19` S19 remains open: component evidence does not establish graphical lifecycle, SMAppService activation or signed release acceptance.
+- `S18` S18 remains open; proposed direct-child amendment is unaccepted and insufficient for the observed default GNOME autostart profile. Preserved existing Windows/Mac hosts receive no destructive acceptance.
+- `S18` Partial S18 checkpoint: share existing bounded framing for Darwin reuse; Linux placement and lifecycle remain unfinished. No activation or host registration.
+- `S19` Source checkpoint only. Current task audit token is corroborated against held process and Security session facts; transport retains owner-only namespace/socket, per-socket NOSIGPIPE and bounded authenticated exchanges. Independent source review finds no concrete defect. Full native compilation and execution remain pending because the real Mac is unreachable; primitive cross-typecheck is not native execution. Main activation, login registration and S19 remain gated/open.
+- `S19` S19 remains open. Native IPC component execution now verified, but SSH refusal is not graphical positive admission or installed lifecycle acceptance. Initial native fixture failures from symlinked SSH TMPDIR were retained; corrected private canonical path passed without weakening custody.
+- `S19` High installed-default socket path blocker remains unresolved. Feasibility probes establish that fd aliases fail ENOENT and the user cache is only a candidate; no namespace decision or product activation is claimed.
+- `S19` Accepted transport-only exception under explicit all-code/build advance authorization; source implementation and native verification pending, S19 remains open. Bounded crossref used as advisory, not complete corpus proof.
+- `S19` S19 remains open for platform activation/lifecycle/registration and acceptance. Frozen package builds unchanged; non-disposable hosts used only for isolated tests/builds and read-only native probes.
+- `S19` Transport-specific findings repaired; remaining full type diagnostic belongs to concurrently edited worker cleanup test. S19 remains open.

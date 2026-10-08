@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#export-parity'
 date: '2026-09-26'
-modified: '2026-09-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c5827fc03fca7a5fa460b0f13c1573962326dc805b9db34e587b1bc6a004082'
+body_hash: 'sha256:2496a881ceb09e7c1dcde5117e152cf4c6361d8037eeff6800c67fcc54b9e1d1'
 related:
   - "[[2026-09-26-export-parity-plan]]"
 ---
@@ -51,8 +51,6 @@ related:
 - `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py`
 - `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_nonwork_command_specs.py`
 - `S07` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
-- `S07` `M` `src/cadrumo/entrypoints/tui/modelo/view/overview.py`
-- `S07` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_overview.py`
 - `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
 - `S07` `M` `src/cadrumo/locales/en/cli.yml`
 - `S07` `M` `src/cadrumo/locales/es/cli.yml`
@@ -179,8 +177,6 @@ related:
 - `S09` `M` `src/cadrumo/entrypoints/tests/test_work_rename_operation.py`
 - `S09` `M` `src/cadrumo/entrypoints/tests/test_workspace_refresh_target_resolution.py`
 - `S09` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
-- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/view/overview.py`
-- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_overview.py`
 - `S09` `M` `src/cadrumo/locales/ca/application.yml`
 - `S09` `M` `src/cadrumo/locales/ca/cli.yml`
 - `S09` `M` `src/cadrumo/locales/ca/common.yml`
@@ -226,9 +222,6 @@ related:
 - `S10` `M` `src/cadrumo/entrypoints/tests/test_work_rename_operation.py`
 - `S10` `A` `src/cadrumo/entrypoints/tui/modelo/export_result.py`
 - `S10` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
-- `S10` `M` `src/cadrumo/entrypoints/tui/modelo/view/overview.py`
-- `S10` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_export_result_lifecycle.py`
-- `S10` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_export_result_screen.py`
 - `S10` `M` `src/cadrumo/locales/ca/common.yml`
 - `S10` `M` `src/cadrumo/locales/en/common.yml`
 - `S10` `M` `src/cadrumo/locales/es/common.yml`

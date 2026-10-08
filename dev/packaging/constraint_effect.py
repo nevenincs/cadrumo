@@ -90,6 +90,32 @@ def _marker_is_active(marker_text: str) -> bool:
         raise ConstraintDriftError(f"constraint row has an invalid environment marker: {text!r}") from exc
 
 
+def _constraint_pin(requirement: str, row: str) -> tuple[str, str]:
+    if "==" not in requirement:
+        raise ConstraintDriftError(f"constraint row is not an == pin: {row!r}")
+    name_part, _, version = requirement.partition("==")
+    name = normalise_distribution_name(name_part.split("[", 1)[0])
+    version = version.strip()
+    if not name or not version or any(character in version for character in _VERSION_REJECT):
+        raise ConstraintDriftError(f"constraint row is not a single == pin: {row!r}")
+    return name, version
+
+
+def _active_constraint_pin(raw: str) -> tuple[str, str] | None:
+    stripped = raw.strip()
+    if not stripped or stripped.startswith("#"):
+        return None
+    requirement, _marker_sep, marker = stripped.partition(";")
+    requirement = requirement.strip()
+    if not requirement:
+        # A marker-only continuation line carries no requirement to pin.
+        return None
+    pin = _constraint_pin(requirement, stripped)
+    if not _marker_is_active(marker):
+        return None
+    return pin
+
+
 def parse_constraint_lines(constraint_lines: Sequence[str]) -> dict[str, ConstraintPin]:
     """Parse ``name==version`` rows into a normalised name -> :class:`ConstraintPin` map.
 
@@ -102,24 +128,10 @@ def parse_constraint_lines(constraint_lines: Sequence[str]) -> dict[str, Constra
     """
     versions: dict[str, set[str]] = {}
     for raw in constraint_lines:
-        stripped = raw.strip()
-        if not stripped or stripped.startswith("#"):
+        pin = _active_constraint_pin(raw)
+        if pin is None:
             continue
-        requirement, _marker_sep, marker = stripped.partition(";")
-        requirement = requirement.strip()
-        if not requirement:
-            # A marker-only continuation line carries no requirement to pin.
-            continue
-        if "==" not in requirement:
-            raise ConstraintDriftError(f"constraint row is not an == pin: {stripped!r}")
-        name_part, _, version = requirement.partition("==")
-        name = normalise_distribution_name(name_part.split("[", 1)[0])
-        version = version.strip()
-        if not name or not version or any(character in version for character in _VERSION_REJECT):
-            raise ConstraintDriftError(f"constraint row is not a single == pin: {stripped!r}")
-        if not _marker_is_active(marker):
-            # Another platform's row: not expected in this environment.
-            continue
+        name, version = pin
         versions.setdefault(name, set()).add(version)
     if not versions:
         raise ConstraintDriftError("no active pinned constraints were parsed for this platform")

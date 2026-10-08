@@ -35,10 +35,8 @@ from .....application.user_profile.registration import register_profile_with_cre
 from .....core.paths import effective_storage_root
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from ..custody.acceleration_receipt import profile_session_path
-from ..master_key.active_session import (
-    close_active_bucket_session,
-    suspend_active_session,
-)
+from ..master_key.active_session import close_active_bucket_session
+from ..master_key.tests.session_scope import suspend_active_session
 from .profile_capsule_runtime import profile_authority_contexts
 from .secure_sql import isolated_profile_storage_root
 

@@ -13,10 +13,10 @@ from ..active_session import (
     bind_active_bucket_session,
     close_active_bucket_session,
     current_active_bucket_session,
-    suspend_active_session,
 )
 from ..bucket_session import BucketSession
 from .bucket_session_isolation import evict_bucket_sessions_bound_since, observe_bucket_session_binding
+from .session_scope import suspend_active_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

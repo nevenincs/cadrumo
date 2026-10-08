@@ -51,10 +51,14 @@ source_refs = [
 
 [revisions."2010-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
-A projection endpoint's projection_ref accepts only FilingProjectionRef, which is a CLOSED discriminated union in cadrumo.core whose every member is an m303_ engine-computed IVA fact. No declaration naming this modelo's own rows can validate against it, so the family is empty by construction rather than by omission -- the same structural reading modelo 131 already records for its own repeating rows. This modelo's repetition is served by the other mechanism: its repeated detail rows materialise \
-from BINDING values, which is what an authored ExportRecordDefinition expresses with repeat == \"binding_rows\". Modelo 360 declares exactly that family of row bindings -- modelo-360-refund-row-supplier-nif, -member-state, -operation-kind, -operation-date and -amount -- one per refund line of the solicitud de devolucion, so the rows come from binding values and never from a projection endpoint."""
+A projection endpoint's projection_ref accepts only FilingProjectionRef, which is a CLOSED discriminated union in cadrumo.core whose every member is an m303_ engine-computed IVA fact. No declaration naming this modelo's own rows can validate against it, so the family is empty by construction rather than by omission -- the same structural reading modelo 131 already records for its own repeating rows. Nor does this modelo repeat a record: the diseno lays the solicitud's operations out as fixed numbered \nslots on its second page record, and each slot position is an operator-entered manual casilla, so no repeated row needs a projection endpoint."""
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
+[revisions."2010-y-siguientes".family_dispositions.bindings]
+reason = "A binding resolves a casilla's value from a declared source, and only a BOUND casilla requires one. Every value of this solicitud de devolucion is entered by the non-established claimant for its own request -- its activity, annexes and the invoices that bore the Spanish IVA it asks back -- and each design position is a manual casilla, so no ledger, profile or earlier-filing source is declared for any of them."
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
+
 [revisions."2010-y-siguientes".family_dispositions.dependency_classifications]
 reason = """
 Modelo 360 is a SOLICITUD DE DEVOLUCION, not a self-assessment. Under Ley 37/1992 art. 117 bis an empresario o profesional not established in the territory of application of the tax asks to recover the Spanish input VAT it bore, by listing the invoices that bore it. A dependency classification declares a source modelo this one depends on in an earlier or enclosing period. A non-established claimant files no Spanish periodic IVA self-assessment -- that is precisely why the refund is claimed \

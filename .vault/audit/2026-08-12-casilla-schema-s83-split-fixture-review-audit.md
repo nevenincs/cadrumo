@@ -3,17 +3,16 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:195dd0c0a4b1cffa2b664490da9f7db112edbe25194d670d6da7e1acd3832114'
-related:
-  - "[[2026-08-10-casilla-schema-plan]]"
+body_hash: 'sha256:55a83202f03453bfd1b08822697494c2587c4f9ecc6f7252921aa4036c5cc2e9'
+related: []
 ---
 # `casilla-schema` audit: `S83 split fixture review`
 
 ## Scope
 
-Formal read-only review of `W05.P11.S83`, limited to `src/cadrumo/application/modelo/tests/test_e2e_ledger_m303_quarters_to_m390_annual.py` and its execution record. The review checked law-determined M303 revision selection, the evolved withdrawn-export assertions, local-filing-to-M390 behaviour, advisory-origin fidelity, absence of the retired target token or a mirrored selector, prohibited test doubles, and execution-record honesty. Bounded verification reran formatting, lint, static typing, the exact four-test module, and the retired-revision gate against the current shared worktree.
+Formal read-only review of `W05.P11.S83`, limited to the retired test and its execution record. The review checked law-determined M303 revision selection, the evolved withdrawn-export assertions, local-filing-to-M390 behaviour, advisory-origin fidelity, absence of the retired target token or a mirrored selector, prohibited test doubles, and execution-record honesty. Bounded verification reran formatting, lint, static typing, the exact four-test module, and the retired-revision gate against the current shared worktree.
 
 ## Findings
 

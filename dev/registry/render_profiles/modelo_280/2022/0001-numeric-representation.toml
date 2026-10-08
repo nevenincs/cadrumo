@@ -1,0 +1,1029 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+signed_composite_rules = []
+literal_numeric_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 47
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-47-offset-1"
+decision_statement = "Official 280 row 47 at 1+1 writes modelo-280-t1-record-type as enumeration."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 47, positions 1-1; printed evidence: Constante número '1'."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 47
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["280"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 49
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-49-offset-2"
+decision_statement = "Official 280 row 49 at 2+3 writes modelo-280-t1-modelo as enumeration."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 49, positions 2-4; printed evidence: Constante '280'."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 49
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 51
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-51-offset-5"
+decision_statement = "Official 280 row 51 at 5+4 writes modelo-280-t1-ejercicio as year_yyyy."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 51, positions 5-8; printed evidence: Las cuatro cifras del ejercicio fiscal al que corresponde la declaración."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 51
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 81
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-81-offset-59"
+decision_statement = "Official 280 row 81 at 59+9 writes modelo-280-t1-contact-phone as digit_string."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 81, positions 59-67; printed evidence: TELÉFONO : Campo numérico de"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 81
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 88
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "7"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-88-offset-108"
+decision_statement = "Official 280 row 88 at 108+13 writes modelo-280-t1-numero-identificativo as identifier_digits."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 88, positions 108-120; printed evidence: Se consignará el número identificativo correspondiente a la declaración. El número identificativo que habrá de figurar en el modelo 280, será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 280."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 88
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "7"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 128
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "9"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-128-offset-123"
+decision_statement = "Official 280 row 128 at 123+13 writes modelo-280-t1-numero-identificativo-anterior as identifier_digits."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 128, positions 123-135; printed evidence: En caso de que se haya consignado una “C” en el campo “Declaración Complementaria” se consignará el número identificativo correspondiente a la declaración a la que complementa. En el caso de que se haya consignado una \"S\" en el campo \"Declaración sustitutiva\", se consignará el número identificativo correspondiente a la"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 128
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "9"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 146
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "10"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-146-offset-136"
+decision_statement = "Official 280 row 146 at 136+9 writes modelo-280-t1-numero-total-declarados as integer."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 146, positions 136-144; printed evidence: Se consignará el número total de registros de declarados, registros de detalle de tipo 2 que conforman la declaración."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 146
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "10"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 18
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 150
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "11"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-150-offset-145"
+decision_statement = "Official 280 row 150 at 145+20 writes modelo-280-t1-importe-total-aportaciones as decimal."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 150, positions 145-164; printed evidence: Se consignará la suma total de las cantidades reflejadas en el campo APORTACIONES EFECTUADAS EN EL EJERCICIO, posiciones 111 a 116 del registro de tipo 2. Los importes deben consignarse en EUROS. El importe no irá precedido de signo alguno (+/-), ni incluirá coma decimal. Este campo se subdivide en dos: 145-162: Numéri"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 150
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "11"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 18
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 170
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "12"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-170-offset-165"
+decision_statement = "Official 280 row 170 at 165+20 writes modelo-280-t1-base-retenciones as decimal."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 170, positions 165-184; printed evidence: Se consignará la suma de los importes incluidos en el campo del registro de tipo 2, BASE DE LA RETENCIÓN PRACTICADA, posiciones 166 a 175. Los importes deben consignarse en EUROS. El importe no irá precedido de signo alguno (+/-), ni incluirá coma decimal. Este campo se subdivide en dos: 165-182: Numérico. ENTERO: Part"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 170
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = false
+ordinal = "12"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 205
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-205-offset-1"
+decision_statement = "Official 280 row 205 at 1+1 writes modelo-280-t2-record-type as enumeration."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 205, positions 1-1; printed evidence: Constante '2'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 205
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["280"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 207
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-207-offset-2"
+decision_statement = "Official 280 row 207 at 2+3 writes modelo-280-t2-modelo as enumeration."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 207, positions 2-4; printed evidence: Constante '280'."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 207
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 209
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-209-offset-5"
+decision_statement = "Official 280 row 209 at 5+4 writes modelo-280-t2-ejercicio as year_yyyy."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 209, positions 5-8; printed evidence: Consignar lo contenido en estas mismas posiciones del registro de tipo 1."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 209
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 253
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "8"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-253-offset-76"
+decision_statement = "Official 280 row 253 at 76+1 writes modelo-280-t2-tipo-plan as enumeration."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 253, positions 76-76; printed evidence: Se consignará una de las claves siguientes: 1. SIALP: Seguro Individual de Ahorro a Largo Plazo. 2. CIALP: Cuenta Individual de Ahorro a Largo Plazo."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 253
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "8"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_year"
+value_policy = "yyyymmdd-text-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 278
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "12"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-278-offset-102"
+decision_statement = "Official 280 row 278 at 102+4 writes modelo-280-t2-fecha-apertura-component-102 as date_text_year."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 278, positions 102-105; printed evidence: : Año"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 278
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "12"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_month"
+value_policy = "yyyymmdd-text-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 279
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "13"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-279-offset-106"
+decision_statement = "Official 280 row 279 at 106+2 writes modelo-280-t2-fecha-apertura-component-106 as date_text_month."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 279, positions 106-107; printed evidence: : Mes"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 279
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "13"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_day"
+value_policy = "yyyymmdd-text-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 280
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "14"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-280-offset-108"
+decision_statement = "Official 280 row 280 at 108+2 writes modelo-280-t2-fecha-apertura-component-108 as date_text_day."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 280, positions 108-109; printed evidence: En caso de movilización de los derechos económicos del Plan de Ahorro a Largo Plazo, se tomará la fecha original de su apertura."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 280
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "14"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 325
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "17"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-325-offset-111"
+decision_statement = "Official 280 row 325 at 111+4 writes modelo-280-t2-aportaciones-ejercicio-component-111 as amount_integer_part."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 325, positions 111-114; printed evidence: Se consignará la parte entera de las aportaciones efectuadas durante el ejercicio."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 325
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "17"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 328
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "18"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-328-offset-115"
+decision_statement = "Official 280 row 328 at 115+2 writes modelo-280-t2-aportaciones-ejercicio-component-115 as amount_fractional_digits."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 328, positions 115-116; printed evidence: decimal. Se consignará la parte decimal de las aportaciones efectuadas durante el ejercicio."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 328
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "18"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 358
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "20"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-358-offset-117"
+decision_statement = "Official 280 row 358 at 117+8 writes modelo-280-t2-rendimientos-positivos-ejercicio-component-117 as amount_integer_part."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 358, positions 117-124; printed evidence: entera. Se consignará la parte entera de los rendimientos positivos obtenidos durante el ejercicio."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 358
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "20"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 362
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "21"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-362-offset-125"
+decision_statement = "Official 280 row 362 at 125+2 writes modelo-280-t2-rendimientos-positivos-ejercicio-component-125 as amount_fractional_digits."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 362, positions 125-126; printed evidence: decimal. Se consignará la parte decimal de los rendimientos positivos obtenidos durante el ejercicio."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 362
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "21"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 393
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "23"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-393-offset-127"
+decision_statement = "Official 280 row 393 at 127+8 writes modelo-280-t2-rendimientos-negativos-ejercicio-component-127 as amount_integer_part."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 393, positions 127-134; printed evidence: entera. Se consignará la parte entera de los rendimientos negativos obtenidos durante el ejercicio."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 393
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "23"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 397
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "24"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-397-offset-135"
+decision_statement = "Official 280 row 397 at 135+2 writes modelo-280-t2-rendimientos-negativos-ejercicio-component-135 as amount_fractional_digits."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 397, positions 135-136; printed evidence: decimal. Se consignará la parte decimal de los rendimientos negativos obtenidos durante el ejercicio."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 397
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "24"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2", "3"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 401
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "25"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-401-offset-137"
+decision_statement = "Official 280 row 401 at 137+1 writes modelo-280-t2-extincion-plan as enumeration."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 401, positions 137-137; printed evidence: En caso de extinción del Plan de Ahorro a Largo Plazo durante el ejercicio, deberá consignarse alguna de las siguientes claves: 1: Extinción del Plan de Ahorro a Largo Plazo por disposición de las cantidades integradas en el mismo antes de que hayan transcurrido 5 años desde su apertura o por incumplimiento del límite "
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 401
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "25"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_year"
+value_policy = "yyyymmdd-text-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 452
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "27"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-452-offset-138"
+decision_statement = "Official 280 row 452 at 138+4 writes modelo-280-t2-fecha-extincion-component-138 as date_text_year."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 452, positions 138-141; printed evidence: : Año"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 452
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "27"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_month"
+value_policy = "yyyymmdd-text-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 453
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "28"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-453-offset-142"
+decision_statement = "Official 280 row 453 at 142+2 writes modelo-280-t2-fecha-extincion-component-142 as date_text_month."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 453, positions 142-143; printed evidence: : Mes"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 453
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "28"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_day"
+value_policy = "yyyymmdd-text-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 454
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "29"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-454-offset-144"
+decision_statement = "Official 280 row 454 at 144+2 writes modelo-280-t2-fecha-extincion-component-144 as date_text_day."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 454, positions 144-145; printed evidence: : Día"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 454
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "29"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 471
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "31"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-471-offset-146"
+decision_statement = "Official 280 row 471 at 146+8 writes modelo-280-t2-rendimientos-positivos-acumulados-component-146 as amount_integer_part."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 471, positions 146-153; printed evidence: entera. Se consignará la parte entera de los rendimientos positivos acumulados obtenidos desde la fecha de apertura."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 471
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "31"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 475
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "32"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-475-offset-154"
+decision_statement = "Official 280 row 475 at 154+2 writes modelo-280-t2-rendimientos-positivos-acumulados-component-154 as amount_fractional_digits."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 475, positions 154-155; printed evidence: decimal. Se consignará la parte decimal de los rendimientos positivos acumulados obtenidos desde la fecha de apertura."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 475
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "32"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 491
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "34"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-491-offset-156"
+decision_statement = "Official 280 row 491 at 156+8 writes modelo-280-t2-rendimientos-negativos-acumulados-component-156 as amount_integer_part."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 491, positions 156-163; printed evidence: entera. Se consignará la parte entera de los rendimientos negativos acumulados obtenidos desde la fecha de apertura."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 491
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "34"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 495
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "35"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-495-offset-164"
+decision_statement = "Official 280 row 495 at 164+2 writes modelo-280-t2-rendimientos-negativos-acumulados-component-164 as amount_fractional_digits."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 495, positions 164-165; printed evidence: decimal. Se consignará la parte decimal de los rendimientos negativos acumulados obtenidos desde la fecha de apertura."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 495
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "35"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 516
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "37"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-516-offset-166"
+decision_statement = "Official 280 row 516 at 166+8 writes modelo-280-t2-base-retencion-practicada-component-166 as amount_integer_part."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 516, positions 166-173; printed evidence: entera. Se consignará la parte entera de la base de retención practicada."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 516
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "37"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 519
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "38"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-519-offset-174"
+decision_statement = "Official 280 row 519 at 174+2 writes modelo-280-t2-base-retencion-practicada-component-174 as amount_fractional_digits."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 519, positions 174-175; printed evidence: decimal. Se consignará la parte decimal de la base de retención practicada."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 519
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "38"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "signed_amount_integer_part"
+value_policy = "signed-component-integer-part"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 547
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "40"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-547-offset-177"
+decision_statement = "Official 280 row 547 at 177+8 writes modelo-280-t2-rendimientos-negativos-imputables-component-177 as signed_amount_integer_part."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 547, positions 177-184; printed evidence: entera. Se consignará la parte entera de los rendimientos negativos imputables."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 547
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "40"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "signed_amount_fractional_digits"
+value_policy = "signed-component-fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 550
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "41"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m280-2022-row-550-offset-185"
+decision_statement = "Official 280 row 550 at 185+2 writes modelo-280-t2-rendimientos-negativos-imputables-component-185 as signed_amount_fractional_digits."
+justification = "Exact aeat-dr-280-2022 SHA 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701, PDF row 550, positions 185-186; printed evidence: decimal. Se consignará la parte decimal de los rendimientos negativos imputables."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 550
+record_identity = "Tipo 2 - Registro De Declarado"
+ordinal_absent = false
+ordinal = "41"
+
+[design_identity]
+modelo = "280"
+design_epoch = "2022"
+source_ref = "aeat-dr-280-2022"
+source_sha256 = "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701"

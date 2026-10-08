@@ -42,6 +42,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 #: CLI reference uses the standard docutils set (``= - ^ ~ " '``).
 _UNDERLINE_RE = re.compile(r"""^([=\-^~"'])\1*$""")
 
+#: A heading written in the reader's language declares the anchor its section is
+#: published under, because the slug of its own words moves with the language
+#: (:mod:`dev.docs.section_anchors`). A declaration names the next heading.
+_DECLARED_ANCHOR_RE = re.compile(r"^\.\. cadrumo-section-anchor:: (\S+)$")
+
 
 def _page_anchor_set(rst: str) -> set[str]:
     """Return the section-id set Sphinx will generate for a rendered CLI page.
@@ -51,20 +56,28 @@ def _page_anchor_set(rst: str) -> set[str]:
     node's plain text (RST inline markup such as the ``\\`\\``-literal backticks
     the command headings use is stripped to its text) via
     ``docutils.nodes.make_id``, so stripping the backtick characters from the
-    raw heading line and slugging the remainder reproduces the live anchor.
+    raw heading line and slugging the remainder reproduces the live anchor --
+    unless the heading declares an anchor of its own, which is then the id its
+    section carries and the slug of its words is not published at all.
     """
     anchors: set[str] = set()
     lines = rst.splitlines()
+    declared: str | None = None
     for index in range(len(lines) - 1):
         text = lines[index]
         underline = lines[index + 1]
+        declaration = _DECLARED_ANCHOR_RE.match(text)
+        if declaration is not None:
+            declared = str(declaration.group(1))
+            continue
         if not text.strip():
             continue
         if _UNDERLINE_RE.match(text):
             continue  # the text line is itself an adornment (over-line, etc.)
         if _UNDERLINE_RE.match(underline) and len(underline) >= len(text.rstrip()):
             title = text.replace("``", "").strip()
-            anchor = make_id(title)
+            anchor = declared if declared is not None else make_id(title)
+            declared = None
             if anchor:
                 anchors.add(anchor)
     return anchors

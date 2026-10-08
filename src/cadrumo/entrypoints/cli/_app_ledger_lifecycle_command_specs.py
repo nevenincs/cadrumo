@@ -23,12 +23,10 @@ from ._app_ledger_command_spec_support import (
     _required_text_argument,
     irpf_category_option,
 )
-from .command_spec import (
-    CommandSpec,
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -36,6 +34,7 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec, InvocationSpec
 
 LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
@@ -268,6 +267,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             irpf_category_option("cli.ledger.update.irpf_category_help"),
             _optional_text_option("notes", ("--notes",), "cli.ledger.update.notes_help"),
             _optional_text_option("group", ("--group",), "cli.ledger.update.group_help"),
+            _optional_text_option("account", ("--account",), "cli.ledger.update.account_help"),
             _LEDGER_ACTOR_OPTION,
         ),
         policy=_POLICY_4,

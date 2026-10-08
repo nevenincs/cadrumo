@@ -46,26 +46,35 @@ from openpyxl import Workbook
 from openpyxl.cell.cell import Cell
 from openpyxl.comments import Comment
 from openpyxl.packaging.custom import StringProperty
-from openpyxl.styles import Alignment, Font, PatternFill, Protection
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Protection, Side
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.properties import PageSetupProperties
 from openpyxl.writer.excel import ExcelWriter
 
 from ....application.storage.calc_sheets.export_tables import export_identity_stamps
+from ....application.storage.calc_sheets.number_formats import XLSX_NUMBER_LOCALE
 from ....application.storage.calc_sheets.records import (
+    AnySheetExportPlan,
     SheetCellConstraint,
-    SheetExportPlan,
     SheetProtectedRange,
+    SheetReviewMetadata,
     SheetStyledRange,
+    SheetTemplatePreviewMetadata,
     TabName,
     column_index_to_letters,
 )
 from ....application.storage.calc_sheets.theme import (
+    FORM_SHOW_GRIDLINES,
     ROLE_STYLES,
     STYLED_RANGE_VERTICAL_ALIGN,
     WORKBOOK_FONT_FAMILY,
+    WORKBOOK_FONT_SIZE,
 )
-from ....application.storage.calc_sheets.workbook_cells import formula_cell_blocks, plan_value_blocks
+from ....application.storage.calc_sheets.workbook_cells import (
+    formula_cell_blocks,
+    plan_value_blocks,
+    validate_merged_content,
+)
 from ....core.errors.hierarchy import InternalInvariantError
 
 if TYPE_CHECKING:
@@ -94,6 +103,7 @@ _RENDERED_PLAN_FACETS: Final[frozenset[str]] = frozenset(
         "formula_cells",
         "frozen_views",
         "guide",
+        "human_presentation",
         "metadata",
         "number_formats",
         "protected_ranges",
@@ -103,7 +113,11 @@ _RENDERED_PLAN_FACETS: Final[frozenset[str]] = frozenset(
         "section_headers",
         "styled_ranges",
         "tariffs",
+        "tabs",
         "value_cells",
+        "merged_ranges",
+        "row_heights",
+        "hidden_rows",
     },
 )
 
@@ -143,7 +157,7 @@ def unrendered_plan_facets(facet_names: Iterable[str]) -> tuple[str, ...]:
     return tuple(sorted(set(facet_names) - _RENDERED_PLAN_FACETS))
 
 
-def _require_rendered_facets(plan: SheetExportPlan) -> None:
+def _require_rendered_facets(plan: AnySheetExportPlan) -> None:
     """Refuse a plan carrying a facet this materializer would silently drop.
 
     A workbook missing a declared facet is not a lesser workbook; it is a
@@ -160,7 +174,7 @@ def _require_rendered_facets(plan: SheetExportPlan) -> None:
         )
 
 
-def materialize_export_plan(plan: SheetExportPlan) -> bytes:
+def materialize_export_plan(plan: AnySheetExportPlan) -> bytes:
     """Materialise ``plan`` as the bytes of one offline ``.xlsx`` workbook.
 
     Args:
@@ -177,10 +191,11 @@ def materialize_export_plan(plan: SheetExportPlan) -> bytes:
             declares a facet this materializer does not render.
     """
     _require_rendered_facets(plan)
+    validate_merged_content(plan)
 
     workbook = Workbook()
     workbook.remove(workbook.worksheets[0])
-    sheets: dict[TabName, Worksheet] = {tab: workbook.create_sheet(title=tab.value) for tab in TabName}
+    sheets: dict[TabName, Worksheet] = {tab: workbook.create_sheet(title=tab.value) for tab in plan.tabs}
 
     written = _write_cells(sheets, plan)
     family = plan.font_family or WORKBOOK_FONT_FAMILY
@@ -194,6 +209,17 @@ def materialize_export_plan(plan: SheetExportPlan) -> bytes:
     _apply_views(sheets, plan)
     _apply_auto_filters(sheets, plan)
     _apply_protection(sheets, plan, written=written)
+    for region in plan.merged_ranges:
+        sheets[region.tab].merge_cells(
+            start_row=region.start_row,
+            end_row=region.end_row,
+            start_column=region.start_column,
+            end_column=region.end_column,
+        )
+    for height in plan.row_heights:
+        sheets[height.tab].row_dimensions[height.row].height = height.height_pixels * 0.75
+    for hidden in plan.hidden_rows:
+        sheets[hidden.tab].row_dimensions[hidden.row].hidden = True
     _stamp_identity(workbook, plan)
 
     return _deterministic_payload(workbook, plan)
@@ -222,7 +248,7 @@ def _cell(sheet: Worksheet, *, row: int, column: int) -> Cell:
 
 def _write_cells(
     sheets: Mapping[TabName, Worksheet],
-    plan: SheetExportPlan,
+    plan: AnySheetExportPlan,
 ) -> Mapping[TabName, tuple[Cell, ...]]:
     """Write every value and formula the shared cell stream addresses.
 
@@ -230,19 +256,26 @@ def _write_cells(
     it is a cell the plan declares, so it must carry the input styling that tells
     the operator to fill it in.
     """
-    written: dict[TabName, list[Cell]] = {tab: [] for tab in TabName}
-    for block in (*plan_value_blocks(plan), *formula_cell_blocks(plan.formula_cells)):
+    written: dict[TabName, list[Cell]] = {tab: [] for tab in plan.tabs}
+    for block in plan_value_blocks(plan):
         for address, value in block.addressed_values():
             cell = _cell(sheets[address.tab], row=address.row, column=address.column)
             if value is not None:
                 cell.value = value
+                if isinstance(value, str):
+                    cell.data_type = "s"
+            written[address.tab].append(cell)
+    for block in formula_cell_blocks(plan.formula_cells):
+        for address, value in block.addressed_values():
+            cell = _cell(sheets[address.tab], row=address.row, column=address.column)
+            cell.value = value
             written[address.tab].append(cell)
     return {tab: tuple(cells) for tab, cells in written.items()}
 
 
 def _apply_base_font(written: Mapping[TabName, tuple[Cell, ...]], *, family: str) -> None:
     """Set the declared family on every written cell, before role styling lands."""
-    base = Font(name=family)
+    base = Font(name=family, size=WORKBOOK_FONT_SIZE)
     for cells in written.values():
         for cell in cells:
             cell.font = base
@@ -265,6 +298,7 @@ def _apply_styled_ranges(
         font = Font(
             name=family,
             bold=style.bold,
+            size=style.font_size,
             color=_argb(style.font_hex) if style.font_hex is not None else None,
         )
         fill = (
@@ -274,8 +308,8 @@ def _apply_styled_ranges(
         )
         alignment = Alignment(
             horizontal=style.align,
-            vertical=STYLED_RANGE_VERTICAL_ALIGN,
-            wrap_text=styled.wrap,
+            vertical="center" if STYLED_RANGE_VERTICAL_ALIGN == "middle" else STYLED_RANGE_VERTICAL_ALIGN,
+            wrap_text=styled.wrap or style.wrap,
         )
         sheet = sheets[styled.tab]
         for row in range(styled.start_row, styled.end_row + 1):
@@ -285,17 +319,24 @@ def _apply_styled_ranges(
                 cell.alignment = alignment
                 if fill is not None:
                     cell.fill = fill
+                if styled.boxed:
+                    side = Side(style="thin")
+                    cell.border = Border(top=side, bottom=side, left=side, right=side)
 
 
-def _apply_number_formats(sheets: Mapping[TabName, Worksheet], plan: SheetExportPlan) -> None:
+def _apply_number_formats(sheets: Mapping[TabName, Worksheet], plan: AnySheetExportPlan) -> None:
     """Give each numeric casilla cell the display pattern the plan declares."""
     for number_format in plan.number_formats:
         address = number_format.address
         cell = _cell(sheets[address.tab], row=address.row, column=address.column)
-        cell.number_format = number_format.pattern
+        cell.number_format = (
+            XLSX_NUMBER_LOCALE + number_format.pattern
+            if number_format.data_type in {"money", "integer", "decimal", "percentage"}
+            else number_format.pattern
+        )
 
 
-def _apply_emphasis(sheets: Mapping[TabName, Worksheet], plan: SheetExportPlan) -> None:
+def _apply_emphasis(sheets: Mapping[TabName, Worksheet], plan: AnySheetExportPlan) -> None:
     """Bold the section-header cells and the start / final anchor labels.
 
     The weight is added to whatever font the cell already carries, so the role
@@ -307,7 +348,7 @@ def _apply_emphasis(sheets: Mapping[TabName, Worksheet], plan: SheetExportPlan) 
         cell.font = cell.font + Font(bold=True)
 
 
-def _apply_notes(sheets: Mapping[TabName, Worksheet], plan: SheetExportPlan) -> None:
+def _apply_notes(sheets: Mapping[TabName, Worksheet], plan: AnySheetExportPlan) -> None:
     """Attach each value cell's note as a workbook comment."""
     for value_cell in plan.value_cells:
         if value_cell.note is None:
@@ -317,7 +358,7 @@ def _apply_notes(sheets: Mapping[TabName, Worksheet], plan: SheetExportPlan) -> 
         cell.comment = Comment(value_cell.note, _COMMENT_AUTHOR)
 
 
-def _apply_cell_constraints(sheets: Mapping[TabName, Worksheet], plan: SheetExportPlan) -> None:
+def _apply_cell_constraints(sheets: Mapping[TabName, Worksheet], plan: AnySheetExportPlan) -> None:
     """Install each constrained cell's input validation and its grounding note.
 
     The note is attached after :func:`_apply_notes` for the same reason the
@@ -338,6 +379,19 @@ def _apply_cell_constraints(sheets: Mapping[TabName, Worksheet], plan: SheetExpo
 
 def _validation_for(constraint: SheetCellConstraint) -> DataValidation | None:
     """Build the cell validation for a constraint, or ``None`` when it bounds nothing."""
+    choices = constraint.text_validation_formula()
+    if choices is not None:
+        message = constraint.grounding_message()
+        return DataValidation(
+            type="custom",
+            formula1=choices,
+            allow_blank=True,
+            showInputMessage=True,
+            showErrorMessage=True,
+            errorStyle="stop",
+            prompt=message,
+            error=message,
+        )
     lower, upper = constraint.resolved_bounds()
     message = constraint.grounding_message()
     if lower is not None and upper is not None:
@@ -361,7 +415,7 @@ def _validation_for(constraint: SheetCellConstraint) -> DataValidation | None:
     )
 
 
-def _apply_column_widths(sheets: Mapping[TabName, Worksheet], plan: SheetExportPlan) -> None:
+def _apply_column_widths(sheets: Mapping[TabName, Worksheet], plan: AnySheetExportPlan) -> None:
     """Size each declared column so labels and legal references do not clip.
 
     The plan states widths in character units, which is the unit a spreadsheet
@@ -373,7 +427,7 @@ def _apply_column_widths(sheets: Mapping[TabName, Worksheet], plan: SheetExportP
         sheets[width.tab].column_dimensions[letters].width = width.width
 
 
-def _apply_views(sheets: Mapping[TabName, Worksheet], plan: SheetExportPlan) -> None:
+def _apply_views(sheets: Mapping[TabName, Worksheet], plan: AnySheetExportPlan) -> None:
     """Freeze each declared header band and repeat it on every printed page.
 
     The repeated print rows are the frozen rows: one declared header band, shown
@@ -384,6 +438,8 @@ def _apply_views(sheets: Mapping[TabName, Worksheet], plan: SheetExportPlan) -> 
         sheet.page_setup.fitToWidth = 1
         sheet.page_setup.fitToHeight = 0
         sheet.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
+    if TabName.FORM in sheets:
+        sheets[TabName.FORM].sheet_view.showGridLines = FORM_SHOW_GRIDLINES
     for frozen in plan.frozen_views:
         sheet = sheets[frozen.tab]
         sheet.freeze_panes = _cell(sheet, row=frozen.frozen_rows + 1, column=frozen.frozen_columns + 1)
@@ -391,7 +447,7 @@ def _apply_views(sheets: Mapping[TabName, Worksheet], plan: SheetExportPlan) -> 
             sheet.print_title_rows = f"1:{frozen.frozen_rows}"
 
 
-def _apply_auto_filters(sheets: Mapping[TabName, Worksheet], plan: SheetExportPlan) -> None:
+def _apply_auto_filters(sheets: Mapping[TabName, Worksheet], plan: AnySheetExportPlan) -> None:
     """Install the declared filter over each tab's header and data rows."""
     for auto_filter in plan.auto_filters:
         start = f"{column_index_to_letters(auto_filter.start_column)}{auto_filter.start_row}"
@@ -401,7 +457,7 @@ def _apply_auto_filters(sheets: Mapping[TabName, Worksheet], plan: SheetExportPl
 
 def _apply_protection(
     sheets: Mapping[TabName, Worksheet],
-    plan: SheetExportPlan,
+    plan: AnySheetExportPlan,
     *,
     written: Mapping[TabName, tuple[Cell, ...]],
 ) -> None:
@@ -433,7 +489,7 @@ def _within_any(regions: Iterable[SheetProtectedRange], *, row: int, column: int
     )
 
 
-def _stamp_identity(workbook: Workbook, plan: SheetExportPlan) -> None:
+def _stamp_identity(workbook: Workbook, plan: AnySheetExportPlan) -> None:
     """Carry the export's identity in the workbook's own document properties.
 
     The shared stamps become custom document properties, the machine-readable
@@ -446,7 +502,11 @@ def _stamp_identity(workbook: Workbook, plan: SheetExportPlan) -> None:
     exported_at = metadata.exported_at.astimezone(UTC).replace(tzinfo=None)
     workbook.properties.creator = _DOCUMENT_CREATOR
     workbook.properties.lastModifiedBy = _DOCUMENT_CREATOR
-    workbook.properties.title = f"AEAT {metadata.modelo_id} {metadata.period.registry_token} {metadata.filing_year}"
+    workbook.properties.title = (
+        metadata.title
+        if isinstance(metadata, (SheetReviewMetadata, SheetTemplatePreviewMetadata))
+        else f"AEAT {metadata.modelo_id} {metadata.period.registry_token} {metadata.filing_year}"
+    )
     workbook.properties.created = exported_at
     workbook.properties.modified = exported_at
     # The workbook ships live formulas with no cached results, so a reader must
@@ -457,7 +517,7 @@ def _stamp_identity(workbook: Workbook, plan: SheetExportPlan) -> None:
         properties.append(StringProperty(name=key, value=value))
 
 
-def _deterministic_payload(workbook: Workbook, plan: SheetExportPlan) -> bytes:
+def _deterministic_payload(workbook: Workbook, plan: AnySheetExportPlan) -> bytes:
     """Serialize ``workbook`` into bytes that depend only on the plan.
 
     ``Workbook.save`` stamps the modification property with the wall clock and
@@ -472,7 +532,7 @@ def _deterministic_payload(workbook: Workbook, plan: SheetExportPlan) -> bytes:
     return _normalized_archive(raw.getvalue(), timestamp=_archive_timestamp(plan))
 
 
-def _archive_timestamp(plan: SheetExportPlan) -> tuple[int, int, int, int, int, int]:
+def _archive_timestamp(plan: AnySheetExportPlan) -> tuple[int, int, int, int, int, int]:
     """Return the plan's export instant as a zip entry timestamp."""
     exported_at = plan.metadata.exported_at.astimezone(UTC)
     stamp = (

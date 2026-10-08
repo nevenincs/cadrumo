@@ -19,12 +19,12 @@ from .....domain.calculations.registry.formula_runtime import (
     calculate_registry_snapshot,
 )
 from .....domain.calculations.registry.ids import BindingId, RelationId
-from .....domain.calculations.registry.relations import (
-    resolve_relation_values_from_observations as resolve_relation_values_from_observations,
-)
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from .....domain.calculations.registry.tests.relation_fixture import (
+    resolve_relation_values_from_observations as resolve_relation_values_from_observations,
+)
 from .....domain.period import calculation_filing_date
 from .....tests.inventory import FIXTURES_DIR
 from ..errors import DeclaracionParseError

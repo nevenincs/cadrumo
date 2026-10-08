@@ -1,9 +1,9 @@
 """The shared credential-attempt host and password-assessment presentation.
 
-``CredentialScreen`` is the base every secret-entry surface builds on: it
+``CredentialScreen`` is the base for registration and password rotation: it
 owns the bounded, thread-backed attempt lifecycle (start once, settle back
 on the UI task, refuse or leave) so
-:class:`~cadrumo.entrypoints.tui.secret.login.LoginScreen` and
+:class:`~cadrumo.entrypoints.tui.secret.passphrase.PassphraseScreen` and
 :class:`~cadrumo.entrypoints.tui.secret.registration.RegistrationScreen`
 differ only in their form and their injected door, never in how an attempt
 is run or reported.

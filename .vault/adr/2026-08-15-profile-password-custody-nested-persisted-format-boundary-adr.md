@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d321d0a8b94a8eb8fade817a630cb1bf1c79177233c0c05f88fc68a740f83807'
+body_hash: 'sha256:fe41c4c7413834810d22c0752d9608cb055b5c32cfd6b5961b16202013ca146d'
 related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-07-09-compatibility-lifecycle-audit]]'
 ---
@@ -147,7 +146,7 @@ delivered is not a rejection but a named, two-part reason each can now cite
 instead of re-deriving from proximity.
 
 A stale entry in the persisted-format literal-inventory gate
-(`tests/test_persisted_version_literal_inventory.py`) was found and fixed
+ was found and fixed
 while grounding this record: an already-retired record class remained
 enrolled in that gate's table and its anti-tautology fixture, failing the
 gate on an unrelated axis. The entry and its synthetic proof were retired

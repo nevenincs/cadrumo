@@ -1,0 +1,253 @@
+// Deterministic log records for the scenario host: every level, both known
+// sources, one source the shell does not name, a record with continuation
+// lines and one long message. All values are synthetic.
+
+import type { LogLevel, LogRecord, LogSourceStates } from "../../ipc/contract";
+
+export const FIXTURE_LOG_FILE = "<storage>/logs/cadrumo.log";
+
+export const AVAILABLE: LogSourceStates = {
+  python: {
+    kind: "available",
+    detail: FIXTURE_LOG_FILE,
+    failure: null,
+    rejected: 0,
+  },
+  manager: {
+    kind: "available",
+    detail: "<storage>/logs/cadrumo-manager.log",
+    failure: null,
+    rejected: 0,
+  },
+};
+
+export const MISSING: LogSourceStates = {
+  python: { ...AVAILABLE.python, kind: "missing" },
+  manager: AVAILABLE.manager,
+};
+
+export const UNREADABLE: LogSourceStates = {
+  python: {
+    ...AVAILABLE.python,
+    kind: "unreadable",
+    failure: {
+      code: "read_failed",
+      operation: "logging",
+      message: "The log file could not be read.",
+    },
+  },
+  manager: AVAILABLE.manager,
+};
+
+const START_MS = Date.UTC(2026, 2, 2, 9, 14, 5, 120);
+
+function python(
+  seq: number,
+  offsetMs: number,
+  level: LogLevel,
+  logger: string,
+  message: string,
+  detail: string | null = null,
+): LogRecord {
+  const timestampMs = START_MS + offsetMs;
+  return {
+    seq,
+    source: "python",
+    timestamp: new Date(timestampMs).toISOString(),
+    timestampMs,
+    level,
+    logger,
+    message,
+    detail,
+    process: { role: "tui", pid: 4208 },
+    context: {
+      process_id: 4208,
+      process_role: "tui",
+      diagnostic_id: `fixture-attempt-${seq}`,
+      outcome: level === "ERROR" ? "failed" : "ready",
+    },
+  };
+}
+
+function host(
+  seq: number,
+  offsetMs: number,
+  level: LogLevel,
+  message: string,
+  role: "tui" | "repl" | "console",
+  pid: number,
+): LogRecord {
+  const timestampMs = START_MS + offsetMs;
+  return {
+    seq,
+    source: "host",
+    timestamp: new Date(timestampMs).toISOString(),
+    timestampMs,
+    level,
+    logger: null,
+    message,
+    detail: null,
+    process: { role, pid },
+    context: {},
+  };
+}
+
+const TRACEBACK = [
+  "Traceback (most recent call last):",
+  '  File "cadrumo/application/example.py", line 42, in run',
+  "    result = step(value)",
+  '  File "cadrumo/application/example.py", line 17, in step',
+  '    raise ValueError("fixture failure")',
+  "ValueError: fixture failure",
+].join("\n");
+
+export const FIXTURE_RECORDS: readonly LogRecord[] = [
+  host(1, 0, "INFO", "host_started", "console", 4120),
+  host(2, 40, "INFO", "child_started", "console", 4188),
+  host(3, 95, "INFO", "child_started", "repl", 4204),
+  python(4, 1300, "INFO", "cadrumo.entrypoints.tui.app", "Workbench ready"),
+  python(
+    5,
+    1420,
+    "DEBUG",
+    "cadrumo.application.state_projection",
+    "Projection refreshed in 18 ms",
+  ),
+  python(
+    6,
+    2210,
+    "INFO",
+    "cadrumo.application.overview.calendar",
+    "Calendar projection admitted 6 obligations",
+  ),
+  python(
+    7,
+    3050,
+    "WARNING",
+    "cadrumo.application.aeat_sync.workspace_reader",
+    "Remote observations were never captured for this profile",
+  ),
+  {
+    seq: 8,
+    source: "manager",
+    timestamp: new Date(START_MS + 3400).toISOString(),
+    timestampMs: START_MS + 3400,
+    level: "INFO",
+    logger: null,
+    message: "A source this shell does not name still renders by its name",
+    detail: null,
+    process: null,
+    context: {},
+  },
+  python(
+    9,
+    4125,
+    "ERROR",
+    "cadrumo.application.example",
+    "Step failed and was not retried",
+    TRACEBACK,
+  ),
+  python(
+    10,
+    4630,
+    "INFO",
+    "cadrumo.core.logging",
+    "A long message wraps inside its column instead of widening the list: " +
+      "identifier-with-no-break-opportunity-".repeat(4) +
+      "end",
+  ),
+  host(11, 5200, "WARNING", "child_exited", "repl", 4204),
+  python(
+    12,
+    6010,
+    "CRITICAL",
+    "cadrumo.application.operations",
+    "Operation settled as UNKNOWN after an ambiguous interruption",
+  ),
+  python(13, 6900, "INFO", "cadrumo.entrypoints.tui.app", "Idle"),
+  {
+    seq: 14,
+    source: "python",
+    timestamp: "",
+    timestampMs: null,
+    level: null,
+    logger: null,
+    message: "A line the format did not match: no timestamp, level or logger",
+    detail: null,
+    process: null,
+    context: {},
+  },
+  {
+    seq: 15,
+    source: "python",
+    timestamp: "2026-03-02 09:14:10,000",
+    timestampMs: null,
+    level: "INFO",
+    logger: "cadrumo.legacy",
+    message: "An older timestamp has no recorded timezone",
+    detail: null,
+    process: null,
+    context: {},
+  },
+];
+
+/** Records the fixture reports as lost to ring overflow before delivery. */
+export const FIXTURE_DROPPED = 3;
+
+const BATCH_LIMIT = 5000;
+const GENERATED_LEVELS: readonly LogLevel[] = [
+  "INFO",
+  "INFO",
+  "DEBUG",
+  "INFO",
+  "WARNING",
+  "INFO",
+  "ERROR",
+];
+
+/** The generated record with this sequence number. */
+function generated(seq: number): LogRecord {
+  const at = seq - 1;
+  const level = GENERATED_LEVELS[at % GENERATED_LEVELS.length] ?? "INFO";
+  return python(
+    seq,
+    at * 37,
+    level,
+    `cadrumo.generated.module_${at % 23}`,
+    `Generated record ${seq} for the log view measurement`,
+    level === "ERROR" ? TRACEBACK : null,
+  );
+}
+
+/**
+ * A log of `count` generated records, in batches no larger than the host
+ * sends, for measuring the log view under the load the contract allows.
+ */
+export function generatedBatches(
+  count: number,
+): { records: LogRecord[]; dropped: number; states: LogSourceStates }[] {
+  const batches = [];
+  for (let start = 0; start < count; start += BATCH_LIMIT) {
+    const records: LogRecord[] = [];
+    for (let at = start; at < Math.min(count, start + BATCH_LIMIT); at++)
+      records.push(generated(at + 1));
+    batches.push({ records, dropped: 0, states: AVAILABLE });
+  }
+  return batches;
+}
+
+/** How many records one batch of a live feed carries. */
+export const FEED_BATCH = 20;
+
+/** The next batch of a live feed: records `from` onward, as they would
+ * arrive from a process that is writing its log. */
+export function feedBatch(from: number): {
+  records: LogRecord[];
+  dropped: number;
+  states: LogSourceStates;
+} {
+  const records: LogRecord[] = [];
+  for (let seq = from; seq < from + FEED_BATCH; seq++)
+    records.push(generated(seq));
+  return { records, dropped: 0, states: AVAILABLE };
+}

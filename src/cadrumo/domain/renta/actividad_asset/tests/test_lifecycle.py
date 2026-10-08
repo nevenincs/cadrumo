@@ -22,6 +22,7 @@ from ..lifecycle import (
     OwnershipMode,
 )
 from ..schedule import AssetScheduleHistory, ScheduleAuthority, calendar_days_in_tax_year, schedule_charge
+from .lineage_projection import resolve_current_transaction_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -107,8 +108,7 @@ def test_revision_identity_is_immutable_and_lineage_resolves_without_new_identit
     revision = _revision()
 
     assert revision.revision_id == _revision().revision_id
-    assert revision.acquisition.resolve_current_transaction_id({"a" * 64: "d" * 64}) == "d" * 64
-    assert revision.is_stale_for({"a" * 64: "d" * 64})
+    assert resolve_current_transaction_id(revision.acquisition, {"a" * 64: "d" * 64}) == "d" * 64
     with pytest.raises(ValidationError):
         revision.asset_id = "other"  # type: ignore[misc]
 

@@ -203,7 +203,7 @@ legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-
 id = "decl.op2-fecha"
 number = "3170-3177"
 section = ["devolucion", "solicitud"]
-data_type = "text"
+data_type = "date"
 semantic_role = "operacion_fecha"
 # Design operacion 2 fecha de emision.
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
@@ -1711,7 +1711,7 @@ legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-
 id = "decl.op1-fecha"
 number = "70-77"
 section = ["devolucion", "solicitud"]
-data_type = "text"
+data_type = "date"
 semantic_role = "operacion_fecha"
 # Design operacion 1 fecha de emision.
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]

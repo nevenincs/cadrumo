@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7a7fd597a6da7fd346be8d8e99cae953d99c63b01f11c879d1903aec5d54b5e9'
+body_hash: 'sha256:1eef52a03dc38c8e0b24a1131d8bbe86266e3afd2059c09740db7d09629cdf28'
 related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-25-registry-completeness-closure-s85-remediation-rereview-audit]]"
 ---
 
@@ -15,7 +14,7 @@ related:
 
 ## Scope
 
-Read-only final re-review of the four S85 remediation paths captured in mixed commit `96bb9e08a2`, with execution evidence in `538738ce3a`, against the prior remediation audit. The review is explicitly limited to `src/cadrumo/domain/calculations/registry/_authority.py`, its public facade, `dev/registry/filing_export_proof.py`, and its focused integration tests. The other 470 files in the mixed relocation commit are outside this audit and receive no S85 credit.
+Read-only final re-review of the four S85 remediation paths captured in mixed commit `96bb9e08a2`, with execution evidence in `538738ce3a`, against the prior remediation audit. The other 470 files in the mixed relocation commit are outside this audit and receive no S85 credit.
 
 The review covers the diagnostic object's complete stored-object graph, its `object.__getattribute__` surface, normal and live canonical factory admission, strict-failure materialization refusal, static projection serialization, one-path classifier/provenance/residue ownership, tracking-metadata hygiene, dynamic current-corpus disposition, fabricated-input prohibition, and the uncredited Modelo 200/S22 predecessor boundary.
 

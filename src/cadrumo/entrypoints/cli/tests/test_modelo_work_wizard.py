@@ -22,15 +22,22 @@ flow implementation or alter the production non-interactive refusal.
 from __future__ import annotations
 
 import json
+import sys
+from collections.abc import Iterator, Sequence
 from decimal import Decimal
 from io import StringIO
+from pathlib import Path
 
 import pytest
+from click.testing import Result
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import ValidationError
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 from ....adapters.persistence.storage.tests.secure_sql import (
@@ -42,18 +49,23 @@ from ....application.flows.definition import FlowDefinition, FlowPage
 from ....application.flows.errors import FlowCopyResolutionError
 from ....application.flows.scripted import run_scripted_flow
 from ....application.modelo.action_errors import modelo_work_wizard_retry_exhausted_precondition
-from ....application.modelo.work_wizard import ModeloWorkWizardStep, open_modelo_work_wizard
-from ....core.bucket_pointer import resolve_active_bucket_id
+from ....application.modelo.work_wizard import (
+    ModeloWorkWizardStep,
+    discover_modelo_work_wizard_steps,
+    open_modelo_work_wizard_from_steps,
+)
+from ....application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from ....core.flows import FlowMode
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .. import _modelo_work_wizard_cli
-from .._modelo_behavior_support import resolve_work_unit_for_cli
 from .._modelo_work_wizard_payloads import WizardPromptedCasillaPayload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
-from ._modelo_work_ux_support import _create_m130_work_unit
+from ._modelo_work_ux_support import _create_m130_work_unit, load_work_unit_by_id
 from .cli_runner import invoke_cached_cli
+from .modelo_cli import create_modelo_work_unit_via_cli
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
 __all__ = ["_isolated_cli_backend"]
 
@@ -94,12 +106,29 @@ def test_wizard_retry_exhaustion_has_a_declared_no_recovery_outcome() -> None:
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
 
-def _invoke(args: list[str]):
-    return invoke_cached_cli(args)
+def _invoke(fixture: NativeCliProfileFixture, args: Sequence[str]) -> Result:
+    """Run one protected command through the fixture's installed profile worker."""
+    if fixture.label is None:
+        raise AssertionError("the native profile fixture has not registered a subject")
+    close_active_bucket_session()
+    result = invoke_cached_cli(
+        (
+            "--format",
+            "json",
+            "--profile",
+            fixture.label,
+            "--profile-secrets-stdin",
+            *args,
+        ),
+        input=json.dumps({"profile_passphrase": fixture.passphrase}),
+    )
+    if fixture.passphrase in result.output:
+        pytest.fail("profile credential appeared in CLI output", pytrace=False)
+    return result
 
 
 def _scripted_manual_answers(
-    work_unit_id: str, *, operation: PinnedAuthorityOperation
+    work_unit_id: str, *, fixture: NativeCliProfileFixture, operation: PinnedAuthorityOperation
 ) -> list[tuple[ModeloWorkWizardStep, str]]:
     """Walk the wizard's outstanding manual pages through the scripted substrate.
 
@@ -111,14 +140,15 @@ def _scripted_manual_answers(
     pairs in flow order, read back off the engine state exactly as the wizard
     reads them.
     """
-    bucket_id = resolve_active_bucket_id()
-    assert bucket_id is not None
+    bucket_id = _login_for_oracle(fixture, operation=operation)
     # Step discovery reads the registry and the bucket-scoped profile, so it
     # runs inside a real profile storage session — the same session the CLI
     # command opens per invocation.
     with open_test_profile_session(bucket_id):
-        unit = resolve_work_unit_for_cli(work_unit_id=work_unit_id)
-        with open_modelo_work_wizard(unit, operation=operation) as wizard:
+        unit = load_work_unit_by_id(work_unit_id)
+        with open_modelo_work_wizard_from_steps(
+            unit, steps=discover_modelo_work_wizard_steps(unit, operation=operation)
+        ) as wizard:
             definition = wizard.definition_for()
             tokens = ["0"] * len(wizard.steps)
             state, projection = run_scripted_flow(definition, tokens, mode=FlowMode.CREATE)
@@ -134,9 +164,9 @@ def _calculate_flags(overrides: list[str]) -> list[str]:
     return flags
 
 
-def _create_profile() -> None:
-    """Register the profile through the shared CLI registration door."""
-    register_cli_profile(
+def _create_profile(fixture: NativeCliProfileFixture) -> None:
+    """Register a profile served by the test-owned native worker."""
+    fixture.register(
         label="operator",
         facts={
             "taxpayer_type.entity_type": "natural_person",
@@ -145,18 +175,94 @@ def _create_profile() -> None:
             "identity.name": "Operator",
             "identity.surnames": "Wizard",
             "activities.description": "design",
+            "censo.activity_start_date": "2025-01-01",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.regime": "GENERAL",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
-        log_in=False,
     )
 
 
-def _seed_m130_ledger(source_key: str) -> None:
+def _login_for_oracle(fixture: NativeCliProfileFixture, *, operation: PinnedAuthorityOperation) -> str:
+    """Open the real password-registered profile before encrypted local assertions."""
+    if fixture.label is None:
+        raise AssertionError("the native profile fixture has not registered a subject")
+    close_active_bucket_session()
+    login = authenticate_profile_for_invocation(
+        name=fixture.label,
+        passphrase_callback=lambda: fixture.passphrase,
+        profile_decode_context=operation.profile_decode_context(),
+    )
+    assert login.bucket_id == resolve_login_target(fixture.label).bucket_id
+    return login.bucket_id
+
+
+@pytest.fixture
+def wizard_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
+    """Provide one password-registered profile served by its real worker."""
+    with native_cli_profile_scope(tmp_path) as fixture:
+        _create_profile(fixture)
+        yield fixture
+
+
+def _seed_m130_ledger(
+    source_key: str, *, fixture: NativeCliProfileFixture, operation: PinnedAuthorityOperation
+) -> None:
+    _login_for_oracle(fixture, operation=operation)
     seed_m130_income_transaction(amount=_INGRESOS, filing_year=2025, source_key=source_key)
     seed_m130_expense_transaction(amount=_GASTOS, filing_year=2025, source_key=source_key)
 
 
+def _create_m123_work_unit(*, operation: PinnedAuthorityOperation) -> str:
+    """Create the real 2025 2T work unit used by the no-prompt wizard path."""
+    revision = operation.snapshot("123", filing_year=2025, period="2T").revision
+    return create_modelo_work_unit_via_cli(
+        modelo="123",
+        filing_year=2025,
+        period="2T",
+        revision=revision.id,
+    )
+
+
+def _assert_encrypted_calculation_matches_cli(
+    fixture: NativeCliProfileFixture,
+    *,
+    operation: PinnedAuthorityOperation,
+    work_unit_id: str,
+    payload: dict[str, object],
+    expect_ledger_sources: bool,
+) -> None:
+    """Compare the worker receipt with the password-opened encrypted revision."""
+    bucket_id = _login_for_oracle(fixture, operation=operation)
+    revision_id = payload.get("calculation_revision_id")
+    assert isinstance(revision_id, str) and revision_id
+    revision = CalculationRevisionCatalogueRepository().load(operation=operation).get(revision_id)
+    assert revision is not None
+    assert revision.work_unit_id == work_unit_id
+    unit = WorkUnitCatalogueRepository(bucket_id=bucket_id).load().get(work_unit_id)
+    assert unit is not None
+    assert unit.current_calculation_revision_id == revision.calculation_revision_id
+
+    public_values = payload.get("casilla_values")
+    assert isinstance(public_values, dict)
+    persisted_values = {key: value for key, value in revision.casilla_values.items()}
+    assert set(public_values) == set(persisted_values)
+    assert all(Decimal(str(public_values[key])) == persisted_values[key] for key in public_values)
+
+    if expect_ledger_sources:
+        transactions = TransactionCatalogueRepository(bucket_id=bucket_id).load().transactions
+        assert len(revision.source_transaction_ids) == 2
+        assert set(revision.source_transaction_ids) <= set(transactions)
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_wizard_scripted_path_walks_the_manual_sequence_and_lands_the_m130_draft(
-    *, operation: PinnedAuthorityOperation
+    wizard_profile: NativeCliProfileFixture, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The wizard's discovered steps, driven scripted, produce the oracle M130 draft.
 
@@ -166,11 +272,10 @@ def test_wizard_scripted_path_walks_the_manual_sequence_and_lands_the_m130_draft
     ``work calculate`` composition the wizard uses, land the oracle draft:
     ledger-bound 01/02, computed rendimiento neto 03 and pago fraccionado 04/19.
     """
-    _create_profile()
-    _seed_m130_ledger("wizard-scripted-sequence")
+    _seed_m130_ledger("wizard-scripted-sequence", fixture=wizard_profile, operation=operation)
     work_unit_id = _create_m130_work_unit()
 
-    answers = _scripted_manual_answers(work_unit_id, operation=operation)
+    answers = _scripted_manual_answers(work_unit_id, fixture=wizard_profile, operation=operation)
 
     # The full manual-input sequence: exactly the registry-declared manual
     # casillas, each answered through the scripted substrate path.
@@ -183,7 +288,8 @@ def test_wizard_scripted_path_walks_the_manual_sequence_and_lands_the_m130_draft
 
     overrides = [f"{step.key}={value}" for step, value in answers]
     result = _invoke(
-        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_calculate_flags(overrides)],
+        wizard_profile,
+        ["app", "modelo", "work", "calculate", work_unit_id, *_calculate_flags(overrides)],
     )
     assert result.exit_code == 0, result.output
 
@@ -197,8 +303,10 @@ def test_wizard_scripted_path_walks_the_manual_sequence_and_lands_the_m130_draft
     assert Decimal(casillas["19"]) == _PAGO_FRACCIONADO
 
 
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_wizard_scripted_inputs_compose_the_same_calculate_as_work_calculate(
-    *, operation: PinnedAuthorityOperation
+    wizard_profile: NativeCliProfileFixture, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The scripted-wizard inputs assemble the same overrides and draft as ``work calculate``.
 
@@ -207,49 +315,50 @@ def test_wizard_scripted_inputs_compose_the_same_calculate_as_work_calculate(
     scripted-derived casilla overrides are byte-identical to the override set a
     hand-typed ``work calculate`` receives, and both compose the identical draft.
     """
-    _create_profile()
-    _seed_m130_ledger("wizard-scripted-parity")
+    _seed_m130_ledger("wizard-scripted-parity", fixture=wizard_profile, operation=operation)
     work_unit_id = _create_m130_work_unit()
 
-    answers = _scripted_manual_answers(work_unit_id, operation=operation)
+    answers = _scripted_manual_answers(work_unit_id, fixture=wizard_profile, operation=operation)
     scripted_overrides = sorted(f"{step.key}={value}" for step, value in answers)
 
     # The wizard's inputs are exactly the override set work calculate receives.
     assert scripted_overrides == [f"{casilla}=0" for casilla in _MANUAL_CASILLAS]
 
-    scripted_draft = _payload(
-        _invoke(
-            [
-                "--format",
-                "json",
-                "app",
-                "modelo",
-                "work",
-                "calculate",
-                work_unit_id,
-                *_calculate_flags(scripted_overrides),
-            ],
-        ).output,
-    )["casilla_values"]
-    canonical_draft = _payload(
-        _invoke(
-            [
-                "--format",
-                "json",
-                "app",
-                "modelo",
-                "work",
-                "calculate",
-                work_unit_id,
-                *_calculate_flags([f"{casilla}=0" for casilla in _MANUAL_CASILLAS]),
-            ],
-        ).output,
-    )["casilla_values"]
+    scripted_result = _invoke(
+        wizard_profile,
+        [
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            work_unit_id,
+            *_calculate_flags(scripted_overrides),
+        ],
+    )
+    assert scripted_result.exit_code == 0, scripted_result.output
+    scripted_draft = _payload(scripted_result.output)["casilla_values"]
+    canonical_result = _invoke(
+        wizard_profile,
+        [
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            work_unit_id,
+            *_calculate_flags([f"{casilla}=0" for casilla in _MANUAL_CASILLAS]),
+        ],
+    )
+    assert canonical_result.exit_code == 0, canonical_result.output
+    canonical_draft = _payload(canonical_result.output)["casilla_values"]
 
     assert scripted_draft == canonical_draft
 
 
-def test_wizard_non_interactive_host_with_steps_refuses_with_the_typed_console_error() -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_wizard_non_interactive_host_with_steps_refuses_with_the_typed_console_error(
+    wizard_profile: NativeCliProfileFixture, *, operation: PinnedAuthorityOperation
+) -> None:
     """A non-TTY caller with outstanding steps gets the substrate's typed refusal.
 
     The test process is non-interactive, so the wizard — which has outstanding
@@ -257,11 +366,10 @@ def test_wizard_non_interactive_host_with_steps_refuses_with_the_typed_console_e
     unsupported-console error rather than block. Asserted structurally on the
     envelope error code, never on localized prose.
     """
-    _create_profile()
-    _seed_m130_ledger("wizard-non-interactive")
+    _seed_m130_ledger("wizard-non-interactive", fixture=wizard_profile, operation=operation)
     work_unit_id = _create_m130_work_unit()
 
-    result = _invoke(["--format", "json", "app", "modelo", "work", "wizard", work_unit_id])
+    result = _invoke(wizard_profile, ["app", "modelo", "work", "wizard", work_unit_id])
 
     assert result.exit_code != 0
     assert "Traceback" not in result.output
@@ -269,8 +377,13 @@ def test_wizard_non_interactive_host_with_steps_refuses_with_the_typed_console_e
     assert error["code"] == "REFUSED_FLOW_UNSUPPORTED_CONSOLE"
 
 
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
+    wizard_profile: NativeCliProfileFixture,
     monkeypatch: pytest.MonkeyPatch,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The registered wizard command carries its calculated ledger trace to JSON.
 
@@ -280,8 +393,7 @@ def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
     emits its command-owned JSON envelope. The separate non-interactive test
     above retains the production refusal for ordinary piped callers.
     """
-    _create_profile()
-    _seed_m130_ledger("wizard-cli-source-provenance")
+    _seed_m130_ledger("wizard-cli-source-provenance", fixture=wizard_profile, operation=operation)
     work_unit_id = _create_m130_work_unit()
 
     # Five registry-discovered manual casillas, then submit from review.
@@ -302,7 +414,7 @@ def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
         # non-TTY stdio is an operator console. The preceding refusal test
         # keeps that production guard covered independently.
         monkeypatch.setattr(_modelo_work_wizard_cli, "LineFlowFrontend", _headless_line_frontend)
-        result = _invoke(["--format", "json", "app", "modelo", "work", "wizard", work_unit_id])
+        result = _invoke(wizard_profile, ["app", "modelo", "work", "wizard", work_unit_id])
 
     assert result.exit_code == 0, result.output
     document = json.loads(result.output)
@@ -325,6 +437,51 @@ def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
         "ledger_renta_gastos_pago_fraccionado_aggregation",
     }
     assert all(source_ref.startswith("transaction:") for source_ref in ledger_rows.values())
+    _assert_encrypted_calculation_matches_cli(
+        wizard_profile,
+        operation=operation,
+        work_unit_id=work_unit_id,
+        payload=payload,
+        expect_ledger_sources=True,
+    )
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_registered_m123_wizard_prompts_registry_pages_and_publishes(
+    wizard_profile: NativeCliProfileFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The registered M123 2T wizard asks its nine pinned pages, then publishes."""
+    work_unit_id = _create_m123_work_unit(operation=operation)
+    page_ids = {"10", "11", "13", "01", "02", "04", "05", "07", "08"}
+    keystrokes = "0\r" * len(page_ids) + "\r"
+    with create_pipe_input() as pipe:
+        pipe.send_text(keystrokes)
+
+        def _headless_line_frontend(definition: FlowDefinition) -> _line_frontend.LineFlowFrontend:
+            return _line_frontend.LineFlowFrontend(
+                definition,
+                input=pipe,
+                output=PlainTextOutput(StringIO()),
+            )
+
+        monkeypatch.setattr(_modelo_work_wizard_cli, "LineFlowFrontend", _headless_line_frontend)
+        result = _invoke(wizard_profile, ["app", "modelo", "work", "wizard", work_unit_id])
+
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert {row["key"] for row in payload["prompted_casillas"]} == page_ids
+    assert payload["saved"] is True
+    _assert_encrypted_calculation_matches_cli(
+        wizard_profile,
+        operation=operation,
+        work_unit_id=work_unit_id,
+        payload=payload,
+        expect_ledger_sources=False,
+    )
 
 
 def _valid_prompted_casilla_kwargs() -> dict[str, object]:
@@ -371,17 +528,21 @@ def test_wizard_prompted_casilla_payload_refuses_malformed_field(field: str, bad
         WizardPromptedCasillaPayload.model_validate(kwargs)
 
 
-def test_canonical_wizard_factory_carries_real_registry_grounding(*, operation: PinnedAuthorityOperation) -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_canonical_wizard_factory_carries_real_registry_grounding(
+    wizard_profile: NativeCliProfileFixture, *, operation: PinnedAuthorityOperation
+) -> None:
     """The public wizard factory discovers the registry's grounded question set."""
-    _create_profile()
-    _seed_m130_ledger("wizard-binding-grounding-lookup")
+    _seed_m130_ledger("wizard-binding-grounding-lookup", fixture=wizard_profile, operation=operation)
     work_unit_id = _create_m130_work_unit()
-    bucket_id = resolve_active_bucket_id()
-    assert bucket_id is not None
+    bucket_id = _login_for_oracle(wizard_profile, operation=operation)
 
     with open_test_profile_session(bucket_id):
-        unit = resolve_work_unit_for_cli(work_unit_id=work_unit_id)
-        with open_modelo_work_wizard(unit, operation=operation) as wizard:
+        unit = load_work_unit_by_id(work_unit_id)
+        with open_modelo_work_wizard_from_steps(
+            unit, steps=discover_modelo_work_wizard_steps(unit, operation=operation)
+        ) as wizard:
             steps = wizard.steps
             definition = wizard.definition_for()
             first_page = definition.sections[0].items[0]

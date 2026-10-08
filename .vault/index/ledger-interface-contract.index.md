@@ -4,14 +4,11 @@ tags:
   - '#index'
   - '#ledger-interface-contract'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:92e5d71563351aea9c77343dbc4b3c3f3f3ac1086c0428a96e6432ecbede8f74'
+body_hash: 'sha256:babcb1fcaf5e1911c631b47c3e7a2b8ca6212a4dc6d248dbc50609fad02f5a5f'
 related:
-  - '[[2026-06-10-ledger-interface-contract-W03-P05-summary]]'
   - '[[2026-06-10-ledger-interface-contract-adr]]'
-  - '[[2026-06-10-ledger-interface-contract-ledger]]'
-  - '[[2026-06-10-ledger-interface-contract-plan]]'
   - '[[2026-06-10-ledger-interface-contract-research]]'
   - '[[2026-06-11-ledger-interface-contract-code-review-audit]]'
 ---
@@ -29,15 +26,6 @@ Auto-generated index of all documents tagged with `#ledger-interface-contract`.
 ### audit
 
 - `2026-06-11-ledger-interface-contract-code-review-audit` - `ledger-interface-contract` Code Review
-
-### exec
-
-- `2026-06-10-ledger-interface-contract-ledger` - `ledger-interface-contract` ledger
-- `2026-06-10-ledger-interface-contract-W03-P05-summary` - `ledger-interface-contract` `W03.P05` summary
-
-### plan
-
-- `2026-06-10-ledger-interface-contract-plan` - `ledger-interface-contract` `Uniform ledger response envelope, ID resolution, and sorting` plan
 
 ### research
 

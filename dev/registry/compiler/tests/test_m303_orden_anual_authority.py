@@ -18,11 +18,11 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
     CandidateFactAuthority,
     validating_governed_facts,
 )
-from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
-    m303_regime_composition_simplified_scope,
-)
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303AnnualOrdenProjection
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.m303_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScope,

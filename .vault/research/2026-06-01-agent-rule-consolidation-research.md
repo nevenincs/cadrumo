@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#agent-rule-consolidation'
 date: '2026-06-01'
-modified: '2026-07-17'
-body_hash: 'sha256:9cff1b3ff435c07326c42eccd058ba8ae10c8b0564c1cbc41e77eeaf896f095a'
+modified: '2026-10-03'
+body_hash: 'sha256:0cf78fd6209d6d81c3648720bd61319130842f8af030f7e6ee00ede54c52ddf3'
 related: []
 ---
 
@@ -23,7 +23,7 @@ rule system, and what rule text has gone stale.
 
 The working tree carries heavy in-flight campaign WIP (modified CLI test files,
 a new `test_casilla_keying_convention.py`, edited `.vault` plans, a deleted
-`scripts/gen_api_stubs.py`) that is peer work and out of scope. The untracked
+the former source file) that is peer work and out of scope. The untracked
 *root* surface is ephemeral agent scratch the existing `.gitignore`
 "Top-level scratch outputs" block does not match: commit-message temps
 (`.msg`, `.commit-msg-*.tmp`), multi-hundred-KB capture dumps

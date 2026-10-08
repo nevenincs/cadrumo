@@ -48,6 +48,7 @@ IVA_WALLET_OWNED_CARRY_TARGETS: frozenset[IvaWalletCarryTarget] = frozenset(
         "2024-hasta-08-y-2t",
         "2024-desde-09-y-3t",
         "2025",
+        "2026-hasta-01-y-1t",
         "2026-y-siguientes",
     )
 )

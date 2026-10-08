@@ -18,22 +18,23 @@
         "command": "modelo.describe",
         "notices": [],
         "result": {
+          "authority_grade": "filing",
           "binding_count": 52,
           "bound_casilla_count": 52,
           "cadence": "quarterly",
           "casilla_count": 229,
           "code": "303",
-          "computed_casilla_count": 39,
+          "computed_casilla_count": 40,
           "filing_period": null,
           "filing_year": null,
-          "formula_count": 39,
+          "formula_count": 40,
           "jurisdiction": "ES-AEAT",
           "legal_refs": [
             "rd-1624-1992:art-71",
             "orden-eha-3786-2008:art-1",
             "orden-eha-3786-2008:art-7"
           ],
-          "manual_casilla_count": 75,
+          "manual_casilla_count": 74,
           "official_name": "Modelo 303. Value Added Tax. Self-assessment.",
           "operation": "modelo.describe",
           "period": null,
@@ -62,6 +63,7 @@
             "2024-hasta-08-y-2t",
             "2024-desde-09-y-3t",
             "2025",
+            "2026-hasta-01-y-1t",
             "2026-y-siguientes"
           ],
           "source_refs": [
@@ -72,7 +74,7 @@
           ],
           "tax_domain": "iva",
           "title": "VAT. Self-assessment (quarterly)",
-          "valid_from": "2026-01-01",
+          "valid_from": "2026-02-01",
           "valid_to": null
         },
         "schema_version": "2",

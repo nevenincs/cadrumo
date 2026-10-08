@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#justfile-design'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:537531e70b2e87420985bfd7dbd69cf010616434737a9a218289430eddfaa320'
-related:
-  - "[[2026-09-11-justfile-design-plan]]"
+related: []
 ---
 
 # `justfile-design` audit: `W04 documentation and domain recipe review`

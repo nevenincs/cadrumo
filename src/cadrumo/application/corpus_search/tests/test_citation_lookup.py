@@ -82,21 +82,6 @@ def test_every_catalogue_citation_resolves_to_text(lookup: CitationLookup) -> No
     assert not unresolved, f"citations resolved to empty text: {unresolved[:10]}"
 
 
-def test_resolve_corpus_text_accepts_a_citation_id(lookup: CitationLookup) -> None:
-    text = lookup.resolve_corpus_text("ley-58-2003:art-27.2")
-    assert "extempor" in text.lower()
-
-
-def test_resolve_corpus_text_accepts_a_corpus_ref(lookup: CitationLookup) -> None:
-    text = lookup.resolve_corpus_text("corpus/normatives/html/ley-58-2003-art-27.html#a27-2")
-    assert "extempor" in text.lower()
-
-
-def test_resolve_corpus_text_refuses_unknown_reference(lookup: CitationLookup) -> None:
-    with pytest.raises(CorpusSearchInputError):
-        lookup.resolve_corpus_text("corpus/normatives/html/does-not-exist.html#a1")
-
-
 def test_operation_loads_selected_reference_then_its_evidence_pointwise(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:

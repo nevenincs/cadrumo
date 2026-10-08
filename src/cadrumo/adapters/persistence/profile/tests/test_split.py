@@ -28,9 +28,15 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_lifecycle import archive_manual_transaction
-from cadrumo.application.ledger.actions_manual import create_manual_transaction
+from cadrumo.application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
 from cadrumo.application.ledger.actions_split_merge import split_transaction
-from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, SplitChildCommand
+from cadrumo.application.ledger.models import (
+    ManualLedgerTransactionCommand,
+    ManualLedgerTransactionPatch,
+    SplitChildCommand,
+)
+from cadrumo.application.ledger.persistence_ports import LedgerPersistenceConflictError
+from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import (
     BusinessClassification,
@@ -38,6 +44,7 @@ from cadrumo.domain.transactions.enums import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from cadrumo.domain.transactions.models import TransactionCatalogue
 
 from ._split_test_support import _BUCKET_ID, _create_parent, _repositories
 
@@ -238,3 +245,91 @@ def test_split_preserves_parent_amount_as_persisted_child_sum(secure_objects: Se
         )
     persisted = {child.raw.amount for child in result.child_transactions}
     assert persisted == set(amounts)
+
+
+def test_split_refuses_if_an_unrelated_row_changes_after_its_snapshot(
+    secure_objects: SecureObjectRepository,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    parent_result = _create_parent(secure_objects, transaction_repository, event_repository)
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        unrelated_result = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 10),
+                amount=Decimal("55.00"),
+                direction=TransactionDirection.OUTGOING,
+                counterparty="Other vendor",
+                description="unrelated row",
+                actor="operator-A",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 10, 9, 30, tzinfo=UTC),
+        )
+
+        original_save = transaction_repository.save_if_revision_with_secure_object_writes
+        race_triggered = False
+
+        def update_unrelated_before_guarded_save(
+            catalogue: TransactionCatalogue,
+            *,
+            expected_revision_id: str,
+            extra_writes: tuple[SecureObjectWrite, ...],
+        ) -> None:
+            nonlocal race_triggered
+            if not race_triggered:
+                race_triggered = True
+                current = transaction_repository.load()
+                updated = update_manual_transaction_fields(
+                    bucket_id=_BUCKET_ID,
+                    transaction_id=unrelated_result.ref.transaction_id,
+                    patch=ManualLedgerTransactionPatch(notes="concurrent note update"),
+                    actor="operator-B",
+                    source_command="test concurrent ledger update",
+                    ports=ports,
+                    catalogue=current,
+                )
+                assert updated.transaction.notes == "concurrent note update"
+            original_save(
+                catalogue,
+                expected_revision_id=expected_revision_id,
+                extra_writes=extra_writes,
+            )
+
+        monkeypatch.setattr(
+            transaction_repository,
+            "save_if_revision_with_secure_object_writes",
+            update_unrelated_before_guarded_save,
+        )
+        with pytest.raises(LedgerPersistenceConflictError):
+            split_transaction(
+                bucket_id=_BUCKET_ID,
+                transaction_id=parent_result.ref.transaction_id,
+                children=(
+                    SplitChildCommand(amount=Decimal("60.00"), description="part one"),
+                    SplitChildCommand(amount=Decimal("40.00"), description="part two"),
+                ),
+                actor="operator-A",
+                ports=ports,
+            )
+
+    catalogue = transaction_repository.load()
+    saved_parent = catalogue.get(parent_result.ref.transaction_id)
+    saved_unrelated = catalogue.get(unrelated_result.ref.transaction_id)
+    split_events = tuple(
+        event
+        for event in event_repository.load().events.values()
+        if event.event_type is BucketEventType.LEDGER_TRANSACTION_SPLIT
+    )
+    assert race_triggered
+    assert saved_parent is not None
+    assert saved_parent.lifecycle_state is TransactionLifecycleState.ACTIVE
+    assert saved_unrelated is not None
+    assert saved_unrelated.notes == "concurrent note update"
+    assert split_events == ()

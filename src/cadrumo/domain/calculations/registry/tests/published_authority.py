@@ -26,6 +26,7 @@ from ..ids import RevisionId
 from ..schema import ModeloDefinition, ModeloRevision, RegistrySnapshot, SupportedFilingYearsCatalogue
 from ..schema_references import LegalReference, SourceReference
 from ..static_inspection import RegistryRevisionInspection
+from .legal_quotation import legal_quotation_is_grounded
 
 
 @dataclass(frozen=True, slots=True)
@@ -183,7 +184,7 @@ def published_legal_references(reference_ids: Iterable[str]) -> dict[str, LegalR
 def published_legal_quotation_is_grounded(reference_id: str, quotation: str) -> bool:
     """Judge one quotation against the published evidence through the canonical projection."""
     with bundled_indexed_authority().operation() as operation:
-        return operation.legal_quotation_is_grounded(reference_id, quotation)
+        return legal_quotation_is_grounded(operation, reference_id, quotation)
 
 
 def published_legal_evidence_text(reference_id: str) -> str:

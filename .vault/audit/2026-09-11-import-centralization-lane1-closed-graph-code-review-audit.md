@@ -3,15 +3,14 @@ tags:
   - '#audit'
   - '#import-centralization'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f309289b292d06cf8997c55154b6d2e675988307e3ee0260807ccdc7eb8bc334'
+body_hash: 'sha256:0941cebc73b85160deabb592ab77a7a63ff1ae98b80e501adea424f7bd370fb3'
 related:
   - "[[2026-09-11-import-centralization-import-authority-drift-audit]]"
   - "[[2026-07-01-import-centralization-adr]]"
   - "[[2026-07-02-arch-remediation-ports-inversion-adr]]"
   - "[[2026-07-08-importlinter-test-carveout-adr]]"
-  - "[[2026-07-01-import-centralization-plan]]"
 ---
 # `import-centralization` audit: `Lane 1 closed graph code review`
 
@@ -53,8 +52,8 @@ The moved resource tests collect 44 tests; the focused run passes 42. `cadrumo.d
 - Keep the closed Import Linter contracts authoritative and keep all forbidden edges visible until the handoffs land.
 ### Lane 1 closed graph code review | high | Review confirms the registry-authoring seam is not closed
 
-The independent read-only review confirms that `src/cadrumo/domain/calculations/registry/tests/_scenarios.py:17` still reaches `test_support.registry_authoring`, which in turn imports private `dev.registry.compiler` helpers. Broad collection also reaches the same repository-only surface through `src/cadrumo/conftest.py:311`. This is a direct S407/S408 failure, not a permissible test carve-out; the registry-authoring cohort must move to the development test seam under Lane 3.
+Broad collection also reaches the same repository-only surface through `src/cadrumo/conftest.py:311`. This is a direct S407/S408 failure, not a permissible test carve-out; the registry-authoring cohort must move to the development test seam under Lane 3.
 
 ### Lane 1 closed graph code review | high | Shared CLI/TUI helper seams remain outside Lane 1
 
-The review also confirms `src/cadrumo/tests/cli_runner.py:37` and `src/cadrumo/tests/cli_performance.py:753,771` reach `cadrumo.entrypoints.cli`, while TUI tests reach `test_support.tui_*` and then `dev.tui.harness.*`. These are outer test seams for the corresponding CLI/TUI and tooling owners; no source-side compatibility helper is appropriate.
+These are outer test seams for the corresponding CLI/TUI and tooling owners; no source-side compatibility helper is appropriate.

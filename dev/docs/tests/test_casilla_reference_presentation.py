@@ -28,7 +28,6 @@ that does not exist, and a requiredness inverted from the declared one.
 
 from __future__ import annotations
 
-import inspect
 import re
 from functools import cache
 from typing import Any
@@ -43,18 +42,13 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstrai
 from dev._paths import REPO_ROOT
 
 from .._locale_chrome import DocsChromeError, docs_chrome
-from ..casilla_reference import (
-    EMPTY_SCHEMA,
-    CasillaFacts,
-    CompiledSchema,
-    ModeloOverview,
-    _display_language,
-    _handbook_definitions,
-    _legal_provision_display,
-    display_locale_keys,
-    render_casilla_reference,
-)
-from ..legal_reference import legal_reference_target, load_legal_provisions
+from ..casilla_display import _display_language, display_locale_keys
+from ..casilla_legal_grounding import _legal_provision_display
+from ..casilla_reference import render_casilla_reference
+from ..casilla_reference_models import EMPTY_SCHEMA, CasillaFacts, CompiledSchema, ModeloOverview
+from ..casilla_schema_compilation import _handbook_definitions
+from ..legal_catalogue import load_legal_provisions
+from ..legal_reference_routing import legal_reference_target
 from ..terminology.casilla_anchor import casilla_page_anchor
 from ..terminology.casilla_projection import project_modelo_casillas
 from ..terminology.search_record import CasillaSearchRecord
@@ -182,6 +176,23 @@ def test_catalogue_line_wrapping_cannot_break_raw_html_cards_or_index() -> None:
     assert "Ayuda con salto de línea" in rst
     assert "Etiqueta con\n" not in rst
     assert "Ayuda con\n" not in rst
+
+
+def test_an_element_only_some_languages_carry_stays_inside_the_raw_html_block() -> None:
+    """The title and the help ride on the line before them and keep the block's indent.
+
+    They are elements a language has or has not, so each is written at the end of
+    the preceding line with its own line break
+    (:func:`~dev.docs._locale_chrome.docs_line`). A continuation line that lost
+    the three-space indent would end the ``raw`` directive and put the card's
+    markup on the page as text.
+    """
+    rst = _render((_record(),), OutputLanguage.ES)
+
+    carried = [line for line in rst.split("\n") if "casilla-card__title" in line or "casilla-card__help" in line]
+    assert len(carried) == 2, "the reference record authors both a label and a help text"
+    for line in carried:
+        assert line.startswith("   <"), line
 
 
 @pytest.mark.parametrize("language", [OutputLanguage.EN, OutputLanguage.CA, OutputLanguage.HU])
@@ -374,8 +385,9 @@ def test_printed_box_number_wins_over_the_record_design_number() -> None:
 def _overview(**overrides: object) -> ModeloOverview:
     fields: dict[str, object] = {
         "title": "IRPF pago fraccionado",
+        "source_title": "IRPF instalment payment",
         "official_name": "Modelo 130. Pago fraccionado.",
-        "definition": None,
+        "definitions": {},
         "tax_domain": "irpf",
         "cadence": "quarterly",
         "legal_refs": ("ley-37-1992:art-92",),
@@ -387,7 +399,11 @@ def _overview(**overrides: object) -> ModeloOverview:
 def test_modelo_page_leads_with_the_curated_definition_when_one_exists() -> None:
     """An approved Handbook definition is the modelo's opening statement."""
     definition = "Curated statement of what this modelo is."
-    rst = _render((_record(),), OutputLanguage.EN, _schema(overview=_overview(definition=definition)))
+    rst = _render(
+        (_record(),),
+        OutputLanguage.EN,
+        _schema(overview=_overview(definitions={OutputLanguage.EN.value: definition})),
+    )
     assert f'<p class="modelo-overview__definition">{definition}</p>' in rst
     assert "Modelo 130. Pago fraccionado." in rst
 
@@ -547,7 +563,8 @@ def test_sections_carry_jump_targets_matching_the_page_nav() -> None:
 
 def test_colliding_section_anchors_are_a_build_failure() -> None:
     """Two section paths folding to one jump target are refused, never merged."""
-    from ..casilla_reference import CasillaReferenceError, _section_anchor
+    from ..casilla_display import _section_anchor
+    from ..casilla_reference_models import CasillaReferenceError
 
     underscored = ("irpf", "resultado_final")
     hyphenated = ("irpf", "resultado-final")
@@ -599,9 +616,12 @@ def test_a_closed_family_that_cannot_be_read_raises_rather_than_emptying() -> No
     """
     from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-    source = inspect.getsource(display_locale_keys)
+    from ..casilla_display import _closed_values
 
-    assert "raise LookupError" in source, "the derivation must refuse an unreadable field, not return empty"
+    with pytest.raises(LookupError, match="declares no field"):
+        _closed_values(CasillaDefinition, "missing_display_family")
+    with pytest.raises(LookupError, match="neither an Enum nor a Literal"):
+        _closed_values(CasillaDefinition, "number")
     assert CasillaDefinition.model_fields.get("data_type") is not None, (
         "the field this gate reasons about must still exist, or the gate is asserting nothing"
     )

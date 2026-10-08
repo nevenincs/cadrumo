@@ -175,42 +175,25 @@ def test_refuses_reordered_numbered_pages() -> None:
 
 def test_refuses_mutated_header_geometry_and_literal() -> None:
     intermediate = _intermediate("aeat-dr-390-2025", 2025, "2025")
-    (header,) = intermediate.auxiliary_envelope_headers
-    shifted_second_field = header.fields[1].model_copy(
-        update={"parser_field": header.fields[1].parser_field.model_copy(update={"offset": 4})},
+    (envelope,) = intermediate.variable_envelopes
+    fields = envelope.prefix_fields
+    malformed_geometry = envelope.model_copy(
+        update={"prefix_fields": (fields[0], fields[1].model_copy(update={"offset": 4}), *fields[2:])},
     )
-    malformed_geometry = header.model_copy(
-        update={"fields": (header.fields[0], shifted_second_field, *header.fields[2:])},
+    malformed_literal = envelope.model_copy(
+        update={"prefix_fields": (*fields[:-1], fields[-1].model_copy(update={"content": '"</BAD>"'}))},
     )
-    altered_closing_field = header.fields[-1].model_copy(
-        update={"parser_field": header.fields[-1].parser_field.model_copy(update={"content": '"</BAD>"'})},
-    )
-    malformed_literal = header.model_copy(
-        update={"fields": (*header.fields[:-1], altered_closing_field)},
-    )
-    shifted_anchor_field = header.fields[1].model_copy(
-        update={"parser_field": header.fields[1].parser_field.model_copy(update={"source_row": 8})},
-    )
-    malformed_anchor = header.model_copy(
-        update={"fields": (header.fields[0], shifted_anchor_field, *header.fields[2:])},
+    malformed_anchor = envelope.model_copy(
+        update={"prefix_fields": (fields[0], fields[1].model_copy(update={"source_row": 8}), *fields[2:])},
     )
     generation_input = _input(intermediate, "2025-y-siguientes", "2025", 2025)
-
-    with pytest.raises(RegistryValidationError, match="source anchors must be contiguous"):
-        _validate(
-            intermediate.model_copy(update={"auxiliary_envelope_headers": (malformed_geometry,)}),
-            generation_input,
-        )
-    with pytest.raises(RegistryValidationError, match="literals conflict"):
-        _validate(
-            intermediate.model_copy(update={"auxiliary_envelope_headers": (malformed_literal,)}),
-            generation_input,
-        )
-    with pytest.raises(RegistryValidationError, match="source rows must retain their exact anchors"):
-        _validate(
-            intermediate.model_copy(update={"auxiliary_envelope_headers": (malformed_anchor,)}),
-            generation_input,
-        )
+    for malformed, message in (
+        (malformed_geometry, "source anchors must be contiguous"),
+        (malformed_literal, "literals conflict"),
+        (malformed_anchor, "source rows must retain their exact anchors"),
+    ):
+        with pytest.raises(RegistryValidationError, match=message):
+            _validate(intermediate.model_copy(update={"variable_envelopes": (malformed,)}), generation_input)
 
 
 def test_refuses_missing_product_software_identity_and_non_annual_period() -> None:

@@ -37,7 +37,6 @@ IRPF_INCOME_CATEGORIES_PATH = "taxpayer_type.irpf_income_categories"
 IVA_REGIME_PATH = "iva.regime"
 AUTH_PROVIDER_PATH = "auth.provider"
 CLAVE_MOVIL_ROUTE_PATH = "auth.clave_movil_route"
-CLAVE_MOVIL_PROVIDER = "clave_movil"
 
 ATRIBUCION_SOCIOS_SECTION = "attribution_entity_socios"
 PARTICIPE_CLAVE_FIELD = "participe_clave"
@@ -90,11 +89,7 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
 
 def _conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[str, ...]:
     """Derive the conditional requirements inside a pinned registry scope."""
-    required: list[str] = []
-    if _token(values.get(AUTH_PROVIDER_PATH)).lower() == CLAVE_MOVIL_PROVIDER:
-        required.append(CLAVE_MOVIL_ROUTE_PATH)
-
-    required.extend(modelo_iva_profile_required_paths(values))
+    required: list[str] = list(modelo_iva_profile_required_paths(values))
 
     if _token(values.get(ENTITY_TYPE_PATH)).lower() == entity_type_legal_entity_token().value:
         # A legal entity without a declared form has no selector for its
@@ -330,7 +325,6 @@ def _token(value: object) -> str:
 
 __all__ = [
     "AUTH_PROVIDER_PATH",
-    "CLAVE_MOVIL_PROVIDER",
     "CLAVE_MOVIL_ROUTE_PATH",
     "COUNTRY_OF_FISCAL_RESIDENCE_PATH",
     "ENTITY_TYPE_PATH",

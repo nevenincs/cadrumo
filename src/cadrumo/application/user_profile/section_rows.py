@@ -92,12 +92,13 @@ def _require_existing_row(section_key: str, row_key: str, current: UserProfileRe
         )
 
 
-def _validate_field_keys(
+def validate_profile_repeatable_row_fields(
     section: ProfileSectionDefinition,
     *,
     values: Mapping[str, str],
     clear_fields: Iterable[str] = (),
 ) -> tuple[str, ...]:
+    """Validate schema field keys and explicit row edits before private reads."""
     declared = {field.key for field in section.fields}
     clears = tuple(clear_fields)
     unknown = tuple(sorted(({*values} | set(clears)) - declared))
@@ -229,7 +230,7 @@ def add_profile_repeatable_section_row(
     # ignores keys it does not declare, so a mistyped field used to arrive here
     # as "no populated field" -- which told an operator who had populated one
     # that they had not, and never mentioned the key that was wrong.
-    _validate_field_keys(section, values=values)
+    validate_profile_repeatable_row_fields(section, values=values)
     declared = {field.key for field in section.fields}
     current = ProfileRecordRepository.for_current_session(
         profile_id,
@@ -271,7 +272,7 @@ def update_profile_repeatable_section_row(
 ) -> ProfileRepeatableRowChangeOutcome:
     """Modify one stable row, retaining omissions and clearing only explicit fields."""
     section = _repeatable_section(schema, section_key)
-    clears = _validate_field_keys(section, values=values, clear_fields=clear_fields)
+    clears = validate_profile_repeatable_row_fields(section, values=values, clear_fields=clear_fields)
     if not values and not clears:
         raise ProfileSchemaValidationError("repeatable-row update requires a value or explicit clear")
     repository = ProfileRecordRepository.for_current_session(
@@ -356,4 +357,5 @@ __all__ = [
     "remove_profile_repeatable_section_row",
     "section_row_facts",
     "update_profile_repeatable_section_row",
+    "validate_profile_repeatable_row_fields",
 ]

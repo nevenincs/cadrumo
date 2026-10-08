@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#duplication-evidence-repair'
 date: '2026-07-22'
-modified: '2026-07-22'
+modified: '2026-10-03'
 body_hash: 'sha256:240dd63ebb0fae6c629ca426fc564ccccb4f9871c7c8b5fe7be4f5f6e896350c'
 related:
-  - "[[2026-07-17-duplication-evidence-repair-plan]]"
-  - "[[2026-07-17-duplication-evidence-repair-adr]]"
   - "[[2026-07-17-cli-authority-verb-conformance-audit]]"
+  - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
 ---
 
 # `duplication-evidence-repair` audit: `Close honesty review`

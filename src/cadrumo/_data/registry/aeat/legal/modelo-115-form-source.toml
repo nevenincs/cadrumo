@@ -1,0 +1,12 @@
+# Annex II supplies printed form structure; the 2019 record design owns current wire fields.
+[sources."boe-2000-21430-modelo-115-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2000-21430-modelos-115-180.pdf"
+sha256 = "a49d7a27a2b10d6b17f106c3b8279201368ee7cccee4f3edfb40db4c82f44ceb"
+bytes = 5994105
+retrieved_at = 2026-10-05
+published_at = 2000-11-28
+source_url = "https://www.boe.es/buscar/pdf/2000/BOE-A-2000-21430-consolidado.pdf"
+review_status = "pending_review"

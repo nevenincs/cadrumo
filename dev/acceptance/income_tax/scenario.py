@@ -315,6 +315,20 @@ def build_retention_mutation_oracle(year: int) -> RetentionMutationOracle:
     )
 
 
+def _boundary_annual_oracle(
+    income: tuple[IssuedInvoice, ...], expenses: tuple[ExpenseInvoice, ...], quarterly: tuple[QuarterlyOracle, ...]
+) -> AnnualOracle:
+    """Calculate the annual control from the selected transaction-date facts."""
+    return AnnualOracle(
+        activity_income=sum((item.taxable_base for item in income), Decimal()),
+        deductible_expenses=sum((item.taxable_base for item in expenses), Decimal()),
+        activity_net_income=sum((item.taxable_base for item in income), Decimal())
+        - sum((item.taxable_base for item in expenses), Decimal()),
+        activity_withholding=sum((item.withholding for item in income), Decimal()),
+        m130_payments=sum((item.payment for item in quarterly), Decimal()),
+    )
+
+
 def build_boundary_control_scenario(year: int) -> BoundaryControlScenario:
     """Build an isolated variant that selects facts by transaction filing date.
 
@@ -335,14 +349,7 @@ def build_boundary_control_scenario(year: int) -> BoundaryControlScenario:
         selected_income_ids=tuple(item.invoice_id for item in selected_income),
         excluded_income_ids=tuple(item.invoice_id for item in income if item.transaction_date.year != year),
         quarter_oracle=quarterly,
-        annual_oracle=AnnualOracle(
-            activity_income=sum((item.taxable_base for item in selected_income), Decimal()),
-            deductible_expenses=sum((item.taxable_base for item in selected_expenses), Decimal()),
-            activity_net_income=sum((item.taxable_base for item in selected_income), Decimal())
-            - sum((item.taxable_base for item in selected_expenses), Decimal()),
-            activity_withholding=sum((item.withholding for item in selected_income), Decimal()),
-            m130_payments=sum((item.payment for item in quarterly), Decimal()),
-        ),
+        annual_oracle=_boundary_annual_oracle(selected_income, selected_expenses, quarterly),
     )
 
 
@@ -393,6 +400,13 @@ def _quarterly_oracle(
     return tuple(rows)
 
 
+def _filing_window_items[T: IssuedInvoice | ExpenseInvoice](
+    items: tuple[T, ...], year: int, cutoff: date
+) -> tuple[T, ...]:
+    """Select facts using the transaction filing year and cumulative cutoff."""
+    return tuple(item for item in items if item.transaction_date.year == year and item.transaction_date <= cutoff)
+
+
 def _quarterly_oracle_by_transaction_date(
     *, year: int, income: tuple[IssuedInvoice, ...], expenses: tuple[ExpenseInvoice, ...]
 ) -> tuple[QuarterlyOracle, ...]:
@@ -401,12 +415,8 @@ def _quarterly_oracle_by_transaction_date(
     prior_positive_results = Decimal()
     for index, period in enumerate(PERIODS, start=1):
         cutoff = date(year, index * 3, (31, 30, 30, 31)[index - 1])
-        selected_income = tuple(
-            item for item in income if item.transaction_date.year == year and item.transaction_date <= cutoff
-        )
-        selected_expenses = tuple(
-            item for item in expenses if item.transaction_date.year == year and item.transaction_date <= cutoff
-        )
+        selected_income = _filing_window_items(income, year, cutoff)
+        selected_expenses = _filing_window_items(expenses, year, cutoff)
         cumulative_income = sum((item.taxable_base for item in selected_income), Decimal())
         cumulative_expenses = sum((item.taxable_base for item in selected_expenses), Decimal())
         net = cumulative_income - cumulative_expenses

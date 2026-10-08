@@ -1,0 +1,287 @@
+"""The official grids and repeated records of a page, measured as the paper form's rows and columns.
+
+A grid of the official form is a table: its rows are printed down the side and
+its columns across, and each cell holds one box. The casilla list draws a grid
+that way when the table fits the width it has, and otherwise stacks it, one row
+heading over one line per box. The decision is taken per grid, from the widths
+this module measures, never from a fixed breakpoint.
+
+Nothing here decides what a box means. It lays out texts the list hands it: the
+column headings, the row labels, and for each cell its box number and value.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Final
+
+from rich.cells import cell_len
+
+from .....application.modelo.work_form_models import (
+    ModeloFormPrintedRate,
+    ModeloFormRate,
+    ModeloFormRepeatingRow,
+)
+from ...components.cell_text import longest_word, wrap_words
+
+type GridKey = tuple[str, str]
+"""A cell's semantic address, as the casilla list keys its cursor."""
+
+#: The cursor mark, the row's level mark and the space after them.
+GRID_LEAD: Final[int] = 3
+#: A row label is never wider than this; a longer heading wraps onto further lines.
+GRID_LABEL_CAP: Final[int] = 32
+#: A row label runs to at most this many lines; one that needs more stacks its grid.
+GRID_LABEL_LINES: Final[int] = 3
+#: The indent of a row label's second and later lines, so they never read as the next row's label.
+GRID_LABEL_INDENT: Final[int] = 2
+#: Cells between two columns.
+GRID_GAP: Final[int] = 2
+#: A money or text value column makes room for at least this many cells, so figures line up as they grow.
+GRID_VALUE_FLOOR: Final[int] = 12
+#: A record column makes room for this much of its heading, so a long heading takes few lines.
+GRID_RECORD_HEADING_FLOOR: Final[int] = 16
+#: A rate column makes room for at least this many cells.
+GRID_RATE_FLOOR: Final[int] = 4
+
+
+def wrap_label(text: str, width: int) -> tuple[str, ...]:
+    """Break a row label into lines of ``width`` cells, each line after the first indented under the first."""
+    first = wrap_words(text, width)
+    if len(first) == 1:
+        return first
+    rest = wrap_words(text[len(first[0]) :], max(width - GRID_LABEL_INDENT, 1))
+    return (first[0], *(" " * GRID_LABEL_INDENT + line for line in rest))
+
+
+def _whole(text: str, width: int) -> bool:
+    """Whether every word of a label fits its column, the first line's own and the indented lines'."""
+    return longest_word(text) <= max(width - GRID_LABEL_INDENT, 1) or cell_len(text) <= width
+
+
+@dataclass(frozen=True, slots=True, eq=False)
+class GridShape:
+    """One official grid, as the list shows it: the heading of each column.
+
+    Two grids with the same headings are still two grids, so a shape compares
+    by identity: the rows that name it are the rows of one table.
+    """
+
+    id: str
+    headings: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class GridSlot:
+    """One cell of a printed row: the box it shows, a literal the design prints, or an empty slot."""
+
+    key: GridKey | None = None
+    literal: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class GridRowPlace:
+    """Where a row heading stands in its grid, and which of the lines after it are its cells.
+
+    ``span`` is how many list items after the heading belong to the row: its
+    boxes, then any literal the design prints without a box. ``rate`` is the
+    rate the row's one rate box shows, and ``boxes`` the row's box numbers, so
+    a stacked row can say which row it is once the rate column is gone.
+    """
+
+    grid: GridShape
+    heading: str
+    slots: tuple[GridSlot, ...]
+    span: int
+    rate: ModeloFormRate | ModeloFormPrintedRate | None = None
+    boxes: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class CasillaListRecords:
+    """The records of a repeating group, shown read-only as a table with an index column."""
+
+    headings: tuple[str, ...]
+    data_types: tuple[str, ...]
+    rows: tuple[ModeloFormRepeatingRow, ...]
+    #: The casilla each column shows, so a finding about a column can be placed on this table.
+    column_casilla_ids: tuple[str | None, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class GridCellText:
+    """The texts of one cell, measured before any is placed."""
+
+    box: str
+    value: str
+    #: A rate column's floor applies only to a column whose every box is a rate.
+    rate: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class TableGeometry:
+    """Where every column of one grid sits at one width.
+
+    ``widths`` is each column's full width; a cell reads, right-aligned in it,
+    an overlay slot, the box number in ``boxes`` cells, a space, the value in
+    ``values`` cells, a space and the origin mark. ``header`` holds each
+    column's heading, broken into lines no wider than the column.
+    """
+
+    label: int
+    boxes: tuple[int, ...]
+    values: tuple[int, ...]
+    widths: tuple[int, ...]
+    header: tuple[tuple[str, ...], ...]
+
+    @property
+    def header_height(self) -> int:
+        """The lines the column headings take."""
+        return max((len(lines) for lines in self.header), default=0)
+
+    def start(self, column: int) -> int:
+        """The first cell of a column, counted from the left edge of the line."""
+        return GRID_LEAD + self.label + 1 + sum(self.widths[:column]) + GRID_GAP * column
+
+    def column_at(self, x: int) -> int | None:
+        """The column a cell at ``x`` falls in, or ``None`` left of the first column."""
+        for column in range(len(self.widths)):
+            if x < self.start(column) + self.widths[column] + GRID_GAP:
+                return column if x >= self.start(0) else None
+        return len(self.widths) - 1 if self.widths else None
+
+
+def cell_width(box: int, value: int) -> int:
+    """A cell's width: the overlay slot, the box, a space, the value, a space and the origin mark."""
+    return 1 + box + 1 + value + 2
+
+
+def _column_measurements(
+    headings: tuple[str, ...],
+    columns: tuple[tuple[GridCellText, ...], ...],
+    literals: tuple[tuple[str, ...], ...],
+) -> tuple[list[int], list[int], list[int]]:
+    boxes: list[int] = []
+    values: list[int] = []
+    widths: list[int] = []
+    for heading, cells, fixed in zip(headings, columns, literals, strict=True):
+        box = max((cell_len(cell.box) for cell in cells), default=0)
+        floor = GRID_RATE_FLOOR if cells and all(cell.rate for cell in cells) else GRID_VALUE_FLOOR
+        widest = max((cell_len(text) for text in (*(cell.value for cell in cells), *fixed)), default=1)
+        value = max(widest, floor if cells else 1)
+        boxes.append(box)
+        values.append(value)
+        widths.append(max(cell_width(box, value), longest_word(heading)))
+    return boxes, values, widths
+
+
+def _label_width(labels: tuple[str, ...], width: int, cells_width: int) -> int | None:
+    room = width - GRID_LEAD - 1 - cells_width
+    widest_label = max((cell_len(label) for label in labels), default=0)
+    label = min(GRID_LABEL_CAP, widest_label, room)
+    if label < 1 and widest_label:
+        return None
+    label = max(label, 1)
+    if any(len(wrap_label(text, label)) > GRID_LABEL_LINES or not _whole(text, label) for text in labels):
+        return None
+    return label
+
+
+def measure_table(
+    headings: tuple[str, ...],
+    columns: tuple[tuple[GridCellText, ...], ...],
+    literals: tuple[tuple[str, ...], ...],
+    labels: tuple[str, ...],
+    width: int,
+) -> TableGeometry | None:
+    """Measure a grid as a table at ``width``, or ``None`` when it does not fit and must be stacked.
+
+    Every row label must fit its column in at most :data:`GRID_LABEL_LINES`
+    lines with no word cut, so a grid whose labels would lose a word, or run
+    down the side far past its own cells, goes stacked rather than cut a row.
+    """
+    boxes, values, widths = _column_measurements(headings, columns, literals)
+    cells_width = sum(widths) + GRID_GAP * max(len(widths) - 1, 0)
+    label = _label_width(labels, width, cells_width)
+    if label is None:
+        return None
+    header = tuple(wrap_words(heading, column_width) for heading, column_width in zip(headings, widths, strict=True))
+    return TableGeometry(label=label, boxes=tuple(boxes), values=tuple(values), widths=tuple(widths), header=header)
+
+
+@dataclass(frozen=True, slots=True)
+class RecordsGeometry:
+    """How a repeating group's records sit at one width: as a table, or labelled stacked values."""
+
+    table: bool
+    index: int
+    widths: tuple[int, ...]
+    header: tuple[tuple[str, ...], ...]
+
+    @property
+    def header_height(self) -> int:
+        """The lines a table's column headings take; stacked records carry their labels beside each value."""
+        return max((len(lines) for lines in self.header), default=0) if self.table else 0
+
+
+def measure_records(
+    headings: tuple[str, ...], indexes: tuple[str, ...], values: tuple[tuple[str, ...], ...], width: int
+) -> RecordsGeometry:
+    """Measure records as a table when every column fits whole, otherwise use labelled stacked records."""
+    index = max((cell_len(text) for text in indexes), default=1)
+    widths = tuple(
+        max(
+            longest_word(heading),
+            min(cell_len(heading), GRID_RECORD_HEADING_FLOOR),
+            max((cell_len(row[column]) for row in values), default=1),
+        )
+        for column, heading in enumerate(headings)
+    )
+    total = GRID_LEAD + index + sum(widths) + GRID_GAP * len(widths)
+    if total > width:
+        return RecordsGeometry(table=False, index=index, widths=widths, header=())
+    header = tuple(wrap_words(heading, column_width) for heading, column_width in zip(headings, widths, strict=True))
+    return RecordsGeometry(table=True, index=index, widths=widths, header=header)
+
+
+def stacked_record_lines(
+    headings: tuple[str, ...], index: str, values: tuple[str, ...], *, index_width: int, width: int
+) -> tuple[str, ...]:
+    """Keep every declared column and value readable when a record table cannot fit.
+
+    Every column carries its saved row index; wrapped continuations stay under
+    that column's label. The scrollable list retains the whole record rather
+    than choosing summary columns that have no route to their omitted values.
+    """
+    prefix = " " * GRID_LEAD + index.rjust(index_width) + " " * GRID_GAP
+    continuation = " " * len(prefix)
+    lines: list[str] = []
+    for heading, value in zip(headings, values, strict=True):
+        wrapped = wrap_words(f"{heading}: {value}", max(width - len(prefix), 1))
+        lines.extend((prefix if number == 0 else continuation) + line for number, line in enumerate(wrapped))
+    return tuple(lines)
+
+
+__all__ = [
+    "GRID_GAP",
+    "GRID_LABEL_CAP",
+    "GRID_LABEL_INDENT",
+    "GRID_LABEL_LINES",
+    "GRID_LEAD",
+    "GRID_RATE_FLOOR",
+    "GRID_RECORD_HEADING_FLOOR",
+    "GRID_VALUE_FLOOR",
+    "CasillaListRecords",
+    "GridCellText",
+    "GridKey",
+    "GridRowPlace",
+    "GridShape",
+    "GridSlot",
+    "RecordsGeometry",
+    "TableGeometry",
+    "cell_width",
+    "measure_records",
+    "measure_table",
+    "stacked_record_lines",
+    "wrap_label",
+]

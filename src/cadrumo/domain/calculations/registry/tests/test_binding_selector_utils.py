@@ -7,7 +7,7 @@ from typing import Any, NamedTuple, Protocol, runtime_checkable
 import pytest
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from ..binding_provider_registration import provider_model_for
+from ..binding_provider_registration import registration_for
 from ..binding_selector_utils import BindingRowSetSelector, binding_row_set_selector, selector_as_dict
 from ..binding_temporal import (
     BindingTemporalSelector,
@@ -224,6 +224,6 @@ def test_selector_projection_round_trips_every_temporal_member(case: _TemporalCa
 
     projected = selector_as_dict(binding)
 
-    projected_provider = provider_model_for(case.source).model_validate(projected)
+    projected_provider = registration_for(case.source).provider_model.model_validate(projected)
     assert isinstance(projected_provider, _TemporalProvider)
     assert projected_provider.temporal == case.temporal

@@ -3,15 +3,17 @@ tags:
   - '#audit'
   - '#tui-entrypoint-separation'
 date: '2026-09-08'
-modified: '2026-09-09'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:fbbeea622e2432834a4f68156b64fc9ddf7e16bd72fb30d982a0d16b6be8b23d'
+body_hash: 'sha256:9999f7dc44dc7e7dfe3bc8060c902735bb31628beb8d35fb6473eb4895db1646'
 related: []
 ---
 
 # `tui-entrypoint-separation` audit: `p01 capability teardown`
 
 ## Scope
+
+Inspect the TUI capability teardown for stale CLI declarations, locale keys and root options left after removing the global launch path.
 
 ## Findings
 
@@ -36,3 +38,5 @@ full-screen action. It must be removed with the global request or rehomed, with 
 help, on the forthcoming opaque `aeat app tui` launcher.
 
 ## Recommendations
+
+Remove the orphaned TUI_NOT_IMPLEMENTED code and locale/help keys. Remove --self-test from the root command or move it under aeat app tui with its behavior and help, as required by the identified gap.

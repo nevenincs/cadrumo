@@ -15,13 +15,17 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo.core.storage_environment import resolve_storage_path
+
 from .paths import (
     ScratchAllocation,
     ScratchOwnershipError,
     allocate_scratch_directory,
     remove_scratch_directory,
+    scratch_base,
     scratch_environment,
 )
+from .reaper import sweep_scratch_directories
 
 _STATE_KEY = pytest.StashKey["RunLog"]()
 _SILENT_COLLECTION_KEY = pytest.StashKey[bool]()
@@ -33,14 +37,27 @@ _INHERITED_RUN = False
 _RUN_SCRATCH_ENV: Final = "CADRUMO_TEST_RUN_SCRATCH"
 
 
+def _product_log_directory(root: Path) -> Path:
+    """Preserve an explicit product log override and isolate the default per process."""
+    configured = os.environ.get("CADRUMO_LOG_DIR", "").strip()
+    if configured:
+        candidate = resolve_storage_path(configured)
+        run_default = (root / "artifacts" / "product-logs").resolve()
+        try:
+            candidate.relative_to(run_default)
+        except ValueError:
+            return candidate
+    return root / "artifacts" / "product-logs" / f"pid-{os.getpid()}"
+
+
 class RunLog:
     """Live, flush-on-write record for one pytest controller invocation."""
 
     def __init__(self, repository: Path, *, scratch: Path | None = None) -> None:
         """Mint the run directory and take ``scratch``, or allocate one, as the run's scratch.
 
-        The scratch is released when the process exits: removed when the run
-        passed, kept when it did not. Exit is the one point after which nothing
+        Dead-owner scratch beside it is swept first. The run's own scratch is
+        released when the process exits, whatever the run's outcome. Exit is the one point after which nothing
         of this run still writes there: xdist tears its workers down when the
         session finishes, and the run controller mints this log before the
         conftests register the collection storage root's exit cleanup, so that
@@ -56,6 +73,7 @@ class RunLog:
         self.cache = self.root / "cache"
         for path in (self.artifacts, self.cache):
             path.mkdir()
+        sweep_scratch_directories(scratch_base())
         self.scratch = allocate_scratch_directory() if scratch is None else scratch
         self.scratch_allocation = ScratchAllocation.record(self.scratch)
         atexit.register(self.release_scratch)
@@ -65,8 +83,8 @@ class RunLog:
         self.exit_status: int | None = None
         self.stream: IO[str] = self.path.open("x", encoding="utf-8", newline="\n")
         _apply_run_environment(self.root, self.scratch)
-        product_logs = self.artifacts / "product-logs" / f"pid-{os.getpid()}"
-        product_logs.mkdir(parents=True)
+        product_logs = _product_log_directory(self.root)
+        product_logs.mkdir(parents=True, exist_ok=True)
         os.environ["CADRUMO_LOG_DIR"] = str(product_logs)
         os.environ["CADRUMO_TEST_RUN_ROOT"] = str(self.root)
         self.write(f"START {now.isoformat()} pid={os.getpid()}")
@@ -97,30 +115,24 @@ class RunLog:
         self.metadata_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
 
     def release_scratch(self) -> str:
-        """Remove a passing run's scratch, keep any other run's, and record which in the run log.
+        """Remove this run's scratch whatever its exit status, and record the outcome in the run log.
 
-        Decided by the exit status :meth:`finish` recorded, so a run that never
-        reached it -- one that crashed before its session finished -- keeps its
-        scratch like a failing one. A kept scratch stays for inspection and is
-        reclaimed by the run reaper once this process is gone. Nothing here can
-        change the run's exit status: a refused or incomplete removal is written
-        to the log beside the verdict, never raised.
+        Failure detail belongs in the run log, which lives outside the scratch;
+        keeping a failed run's scratch let concurrent sessions fill the disk.
+        Nothing here can change the run's exit status: a refused or incomplete
+        removal is written to the log, never raised, and left for the next
+        run's start-of-run sweep.
 
         Returns:
             The line recorded in the run log.
         """
         scratch = self.scratch_allocation.path
-        if self.exit_status is None:
-            line = f"SCRATCH KEPT {scratch}: the run recorded no exit status"
-        elif self.exit_status != 0:
-            line = f"SCRATCH KEPT {scratch}: exit={self.exit_status}"
+        try:
+            remove_scratch_directory(self.scratch_allocation)
+        except (ScratchOwnershipError, OSError) as error:
+            line = f"SCRATCH NOT REMOVED {scratch}: {type(error).__name__}: {error}"
         else:
-            try:
-                remove_scratch_directory(self.scratch_allocation)
-            except (ScratchOwnershipError, OSError) as error:
-                line = f"SCRATCH NOT REMOVED {scratch}: {type(error).__name__}: {error}"
-            else:
-                line = f"SCRATCH REMOVED {scratch}"
+            line = f"SCRATCH REMOVED {scratch}"
         try:
             with self.path.open("a", encoding="utf-8", newline="\n") as stream:
                 stream.write(line + "\n")
@@ -138,7 +150,7 @@ def prepare_environment(repository: Path) -> None:
         global _INHERITED_RUN
         _INHERITED_RUN = True
         _apply_run_environment(root, Path(os.environ[_RUN_SCRATCH_ENV]))
-        product_logs = root / "artifacts" / "product-logs" / f"pid-{os.getpid()}"
+        product_logs = _product_log_directory(root)
         product_logs.mkdir(parents=True, exist_ok=True)
         os.environ["CADRUMO_LOG_DIR"] = str(product_logs)
         return
@@ -150,9 +162,8 @@ def _apply_run_environment(root: Path, scratch: Path) -> None:
 
     Logs, artifacts and pytest's own cache live in the run directory; temporary
     files live in the run's short scratch, which the run directory is too deep
-    to host. Tool caches such as uv's keep their own homes: pointing
-    ``XDG_CACHE_HOME`` at the run gave every run that builds or installs a
-    distribution a cold, gigabyte-sized uv cache that outlived it with the logs.
+    to host. External tool caches stay shared under the configured Cadrumo
+    development cache root, outside the per-run logs.
     """
     artifacts = root / "artifacts"
     cache = root / "cache"
@@ -251,7 +262,9 @@ def configure(config: pytest.Config) -> None:
     if run_log is None:
         # The scratch allocated above already holds this controller's basetemp;
         # the run log takes it rather than minting a second one beside it.
-        run_log = RunLog(Path(config.rootpath), scratch=own_scratch)
+        from .paths import test_log_root
+
+        run_log = RunLog(test_log_root(), scratch=own_scratch)
         _ACTIVE = run_log
     config.stash[_STATE_KEY] = run_log
     silent_collection = _redirect_collection_output(config, run_log)

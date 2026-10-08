@@ -1,9 +1,10 @@
 [revisions."2019"]
 casilla_source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 application_link_source_refs = ["aeat-modelo-194-procedure"]
-# Applicability-grade Modelo 194 record-design era. This revision models only
-# the five manual hoja-resumen fields grounded in the approving Orden; it does
-# not declare an export layout or infer any unbundled design year.
+# Applicability-grade Modelo 194 record-design era. Summary, contact and
+# declaration-identification fields are enrolled. Recipient detail and the
+# generated filing export remain unfinished. Historical review below predates
+# the additional fields; current lineage evidence is stored with declarations.
 authority_grade = "applicability"
 valid_from = 2019-01-01
 valid_to = 2022-12-31

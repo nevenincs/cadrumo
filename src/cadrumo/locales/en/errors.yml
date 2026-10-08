@@ -31,14 +31,8 @@ errors:
     auth_former_product_session_state: Cadrumo detected retired-product AEAT session
       state and refuses to read, move, re-key, delete, or adopt it.
     auth_google: A Google authentication error occurred.
-    auth_google_client_not_registered: No Google Desktop OAuth client is registered
-      for the active profile. Register a client to use Google features.
-    auth_google_client_revoked: The registered Google Desktop OAuth client has been
-      revoked. Register a new client.
-    auth_google_expired: The Google refresh token has expired under the 7-day Testing-project
-      cap. Re-authorize Google access.
-    auth_google_revoked: The Google refresh token has been revoked. Re-authorize Google
-      access.
+    auth_google_client_revoked: Google no longer accepts this installation's Desktop
+      OAuth client. Update the application to a current release.
     auth_google_scope_insufficient: The granted Google scopes do not include every
       scope this operation requires. Re-authorize, granting all requested scopes.
     auth_outbound_storage_permission: The active credentials lack the permission required
@@ -158,17 +152,20 @@ errors:
     error_application_live_iva_surface_timeout: Live IVA read surface timed out before
       returning AEAT evidence.
     error_application_registry: The modelo registry orchestration failed or was refused.
+    error_automation_decision_run: The automation decision could not be confirmed.
+      Inspect the operation before retrying.
+    error_automation_inventory_read: The automation inventory could not be confirmed.
+    error_automation_requester_uncertain: The authorization request outcome could
+      not be confirmed. Inspect the existing request before trying again.
     error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
       100 borrador shape.
     error_cadrumo_async_resource_cleanup: Asynchronous resource cleanup failed; retry
       cleanup before continuing.
     error_cadrumo_core: An internal application error occurred.
     error_cadrumo_core_not_found: The requested resource or record was not found.
-    error_cadrumo_observability: An error occurred in the application telemetry.
+    error_cadrumo_observability: An error occurred in the application diagnostic logging.
     error_calc_sheets_engine: The spreadsheet export engine encountered an unresolvable
       state while building the export plan.
-    error_calc_sheets_parity: The parity harness scenario references casilla ids that
-      are not present in the registry snapshot.
     error_calc_sheets_record: A spreadsheet record operation failed due to an invalid
       column index or malformed A1 address.
     error_calculations_registry: An error occurred loading, resolving or validating
@@ -243,6 +240,8 @@ errors:
     error_justificante: A receipt-related error occurred.
     error_justificante_csv_not_found: The PDF does not contain a Código Seguro de
       Verificación.
+    error_ledger_own_account_register_record: An own bank account register record
+      is structurally invalid.
     error_llm: A language-model error occurred.
     error_modelo_aggregation_binding: The bucket-derived aggregation bindings conflict
       with the input provided.
@@ -258,11 +257,16 @@ errors:
       compatible with the calculation revision's current state.
     error_modelo_casilla_provenance_missing: An engine-result casilla has no definition
       in the registry.
+    error_modelo_cleared_casilla_source_fed: Box {casilla_ids} cannot be cleared because
+      one of its sources still supplies a value. Restore the source value instead
+      of clearing it.
     error_modelo_external_filing_import: The imported external filing could not be
       persisted. Check the casilla values and the evidence reference.
     error_modelo_filing_record_not_found: The requested filing record was not found.
     error_modelo_iva_wallet_reconciliation_blocked: 'Modelo 303 calculation is blocked:
       IVA wallet reconciliation is required'
+    error_modelo_metadata_run: The work metadata operation did not return a confirmed
+      result. Inspect its operation ID before retrying.
     error_modelo_verification_report_not_found: The requested verification report
       was not found.
     error_modelo_work_unit_already_discarded: The work unit is already discarded.
@@ -288,7 +292,11 @@ errors:
       not valid.
     error_profile_bienes_inversion_record: A capital-goods IVA regularisation record
       is structurally invalid.
+    error_profile_foreign_asset_register_record: A Modelo 720 foreign-asset register
+      record is structurally invalid.
     error_profile_inventory_ledger: A profile inventory ledger operation is not valid.
+    error_profile_mutation_run: The profile change finished without a usable result.
+      Inspect the operation before retrying.
     error_profile_prorrata_register_record: A cross-period IVA prorrata register record
       is structurally invalid.
     error_profile_tax_residence: A tax-residence profile error occurred.
@@ -313,8 +321,6 @@ errors:
       LongPathsEnabled (see `aeat config check`).
     error_storage_management: The local storage tree could not be read or reclaimed.
     error_submission_validation: A submission model failed validation.
-    error_telemetry_schema: A telemetry metric key was not registered in the closed
-      metric schema for its command.
     error_transaction_catalogue: The transaction catalogue is invalid or inconsistent.
     error_transaction_classification_rule: A ledger classification rule is invalid.
     error_transaction_llm_classifier: The transaction classification by the language
@@ -348,6 +354,8 @@ errors:
       modelo, year, and period.
     modelo_work_selector: The modelo work selector failed.
     modelo_work_selector_unit_not_found: The selected modelo work unit was not found.
+    windows_credential_api: Windows Credential Manager could not complete the credential
+      operation.
   fail:
     canonical_auth_diagnostic_persistence: Authentication diagnostics could not be
       persisted.
@@ -355,8 +363,7 @@ errors:
     canonical_catalogue_invoice_rate: The invoice-catalogue exchange-rate lookup failed.
     canonical_counterparty_establishment_persistence: The counterparty establishment
       record could not be persisted.
-    canonical_diagnostic_run_telemetry: The diagnostic run telemetry could not be
-      read.
+    canonical_diagnostic_run_record: The diagnostic run records could not be read.
     canonical_evidence_bundle_persistence: The evidence bundle could not be persisted.
     canonical_invoice_catalogue_read_persistence: The invoice catalogue could not
       be loaded for link verification.
@@ -414,10 +421,6 @@ errors:
       or used.
     fail_financial_usage_ratios_usage_ratio_persistence: The usage-ratio profile could
       not be read or written.
-    fail_google_adc_stale: Application Default Credentials could not be refreshed.
-      Run gcloud auth application-default login.
-    fail_google_adc_unavailable: Application Default Credentials could not be found
-      on this host. Run gcloud auth application-default login.
     fail_google_browser_open: The browser could not be opened to show the Google consent
       page. Open the link manually.
     fail_google_loopback_bind: The local HTTP receiver could not bind a port. Close
@@ -648,6 +651,8 @@ errors:
     integrity_storage_validation: A storage parameter failed validation.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
+    windows_credential_record: The Windows credential record does not satisfy the
+      required secret storage format.
   internal:
     canonical_authority_cache_cycle: The authority component loader detected a recursive
       load cycle.
@@ -675,7 +680,17 @@ errors:
       its display copy.'
     internal_flow_validator_registry: 'Internal error: the guided flow validator registry
       rejected the operation.'
-    internal_observability_run_context_missing: 'Internal error: a telemetry event
+    internal_modelo_help_catalogue_gap: A help text for this box is missing from the
+      catalogue.
+    internal_modelo_source_kind_unclassified: A value source has no declared family,
+      so it cannot be explained.
+    internal_modelo_value_presentation_catalogue_gap: A word for showing a value is
+      missing from the catalogue.
+    internal_modelo_value_presentation_unknown: A box's value type has no display
+      rule.
+    internal_modelo_work_form_layout: This modelo's form layout does not match its
+      revision.
+    internal_observability_run_context_missing: 'Internal error: a diagnostic event
       was recorded outside an active run context.'
     internal_operation_declaration_breach: 'Internal error: an operation executor
       claimed a phase, effect, resource, or interaction its definition does not declare.'
@@ -712,6 +727,8 @@ errors:
       itself must be done outside the application.
     locked_auth_acquisition: Another process is acquiring AEAT authentication right
       now. Wait for it to finish and try again.
+    locked_cli_operation_still_running: Operation {operation_id} is still running.
+      Its effect is not yet known. Check its result before trying again.
     locked_google_keychain: The operating-system keychain holding the Google credentials
       is locked or unreachable. Unlock the keychain and try again.
     locked_journal_busy: A journal file stayed in use by another program, so it could
@@ -746,17 +763,17 @@ errors:
       casilla.
     canonical_bien_inversion_disposal_incomplete: A capital-good disposal requires
       both a disposal year and a disposal regime.
-    canonical_evidence_sweep_file_not_reachable: The evidence provider refused a file
-      under the current access scope.
     canonical_inventory_closing_authority_conflict: A different immutable inventory
       closing authority is already recorded.
-    canonical_invoice_draft_reader_busy_refused: The invoice-draft reader's model
-      was not run because another on-host reading already held this machine's inference
-      slot.
-    canonical_invoice_draft_reader_headroom_refused: The invoice-draft reader's model
-      was not loaded because this machine showed no measured memory headroom for it.
-    canonical_invoice_withholding_defects: The invoice evidence cannot support a withholding
-      capture until every listed defect is corrected on the invoice.
+    canonical_invoice_draft_reader_busy_refused: The automatic invoice reader did
+      not run because another reading was already using this machine.
+    canonical_invoice_draft_reader_headroom_refused: The automatic invoice reader
+      did not run because this machine does not have enough free memory for it.
+    canonical_invoice_evidence_review_changed: The evidence source or invoice draft
+      has changed since review. Read and review the current document before confirming
+      it.
+    canonical_invoice_withholding_defects: The invoice cannot be used to record the
+      withholding until every listed defect is corrected on the invoice.
     canonical_invoice_withholding_evidence: The invoice evidence cannot support a
       withholding capture.
     canonical_ledger_payment_withholding_evidence: The ledger payment cannot support
@@ -774,12 +791,17 @@ errors:
     canonical_modelo_193_settled_row_amount_authority_unresolved: 'Modelo 193 cannot
       be exported: it contains a record paying income accrued in an earlier year,
       and no official source settles the base and withholding that record declares.'
+    canonical_modelo_binding_value_contract_unsupported: The binding has no official
+      value format supported by the automated preview.
+    canonical_modelo_binding_value_invalid: The supplied value does not satisfy the
+      binding's official value format.
     canonical_modelo_lifecycle_clock_precedes: The action's clock is earlier than
       a record it would update, so nothing was saved. Retry with the current time.
     canonical_modelo_workspace_stale_cursor: The pinned cursor no longer matches the
       current baseline; restart the query.
     canonical_modelo_workspace_unresolved_work: The workspace read reached an unresolved
       work selection.
+    canonical_operation_financial_operand: The financial data could not be accepted.
     canonical_operation_observation_cursor_ahead: The requested observation cursor
       is beyond the authoritative anchor.
     canonical_operation_observation_unknown_operation: No observation journal exists
@@ -798,8 +820,6 @@ errors:
       available.
     canonical_tui_modelo_workspace_declaration_admission: The Modelo workspace declaration
       cannot be admitted in the current workspace generation.
-    canonical_tui_modelo_workspace_session_admission: The Modelo workspace session
-      cannot be admitted from the supplied projection.
     canonical_tui_module_argument: The TUI module accepts only its supported arguments.
     canonical_tui_navigation_contract: The TUI navigation request violates its contract.
     canonical_tui_recovery_handover_cancelled: The recovery handover was cancelled
@@ -822,8 +842,12 @@ errors:
     censal_read_identity: The censal read does not belong to this profile's taxpayer.
     clave_credentials_incomplete: The selected Cl@ve authentication mode is missing
       a credential it needs.
+    financial_edit_journal_purge: This legacy financial edit journal could not be
+      safely purged. Its operation is unavailable. No edit value was loaded.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
       fileable.
+    ledger_source_jurisdiction_required: Provide the taxpayer jurisdiction before
+      adding this ledger transaction.
     locale_catalogue_capture_not_current: This locale catalogue capture is no longer
       current.
     m145_communication_record_ambiguous: The Modelo 145 communication record id prefix
@@ -843,8 +867,6 @@ errors:
     modelo_210_agrupacion_renta_rows: Modelo 210 annual grouped-renta rows must form
       a lawful single grouping (one code, one rate, one identified property, and one
       payer unless the multi-payer exception applies).
-    modelo_347_threshold: Modelo 347 operations above the reporting threshold require
-      explicit declaration coverage.
     modelo_349_country_prefix_context: 'Modelo 349 rejects country prefix {country_code}
       for operation key {clave_operacion} in {filing_year}/{period}: {reason}. Authority:
       AEAT Brexit IVA NIF-IVA / Modelo 349 instructions.'
@@ -894,6 +916,8 @@ errors:
     modelo_work_period_token: Invalid modelo period token.
     modelo_work_registry_year_mismatch: The selected registry revision does not cover
       the requested filing year.
+    modelo_work_rename_approval_stale: The work unit changed after it was read. Read
+      it again before renaming it.
     modelo_work_selector_ambiguous: More than one modelo work unit matches the selector.
     modelo_work_selector_contradiction: The modelo work selector arguments contradict
       each other.
@@ -916,6 +940,10 @@ errors:
     profile_passphrase_rotation: The profile password could not be changed.
     profile_recovery: The recovery request could not be completed.
     profile_registration: The profile could not be registered.
+    prorrata_preflight: The prorrata mutation failed its preflight validation. Correct
+      the reported values before continuing.
+    purchase_invoice_evidence_snapshot_changed: The purchase invoice evidence changed
+      after review. Review the current record before trying again.
     reconciliation_declaration_source_unsupported: Reconciliation from a declaration
       is not available yet.
     reconciliation_drift: Reconciliation detected arithmetic or identity drift across
@@ -951,6 +979,10 @@ errors:
       available catalogue.
     refused_application_live_input: The live AEAT read request cannot be executed
       with the input provided.
+    refused_application_live_nif_iva_certificate_required: 'AEAT only answers NIF-IVA
+      checks for certificate logins, and Cadrumo can''t log in with a certificate
+      for this check yet. Check the NIF-IVA in the European Commission''s VIES service:
+      https://ec.europa.eu/taxation_customs/vies/'
     refused_auth_certificate_source_not_found: The named certificate source is not
       registered.
     refused_auth_configure_dangling_active_profile: The active-profile pointer does
@@ -1016,12 +1048,20 @@ errors:
     refused_flow_submit: The guided flow refused the submission.
     refused_flow_unsupported_console: The guided flow cannot run because this console
       cannot host interactive questions.
-    refused_google_impersonation: IAM refused to mint an impersonated token for the
-      target service account. Grant it roles/iam.serviceAccountTokenCreator.
+    refused_foreign_asset_record_join: A Modelo 720 asset is not registered, disagrees
+      with its register entry, or has no declaration of your condition and share.
+      Register and declare the asset before calculating.
+    refused_foreign_asset_valuation: A Modelo 720 valuation could not be converted
+      to euros at its legal rate date. Check the asset's currency and valuation date.
+    refused_google_client_metadata_unavailable: This installation does not include
+      the Google client it needs to sign in. Google features are unavailable until
+      you install a release that includes it.
     refused_google_non_interactive: Google login needs an interactive terminal with
       a browser; run it from an interactive shell.
     refused_google_profile_unbound: No active profile is bound. Select a profile or
       use --profile.
+    refused_google_sign_in_required: Google access for this profile has ended or was
+      withdrawn. Sign in again with `aeat config google login`.
     refused_google_validation: The Google parameters provided failed validation.
     refused_inventory_actividad_conflict: An inventory already exists for that activity
       and year.
@@ -1057,6 +1097,8 @@ errors:
       in a form this command could not read, so nothing was taken from the document.
       Nothing was saved; run the command again, and if it keeps happening the reader
       model is the thing to change.
+    refused_ledger_own_account_register_validation: An own bank account or its designation
+      failed validation.
     refused_live_borrador_snapshot_not_found: No Modelo 100 borrador snapshot exists
       with the identifier provided.
     refused_live_expedientes_snapshot_not_found: No expedientes snapshot exists with
@@ -1079,6 +1121,21 @@ errors:
     refused_llm_validation: A language-model object failed validation.
     refused_modelo_100_borrador_binding: The Modelo 100 borrador values cannot be
       consumed for the calculation.
+    refused_modelo_360_solicitud: The Modelo 360 solicitud could not be declared or
+      removed as asked.
+    refused_modelo_360_solicitud_account_bic_missing: Own account {own_account_id}
+      has no SWIFT-BIC, which Modelo 360 requires; add it with app ledger account
+      update.
+    refused_modelo_360_solicitud_account_closed: Own account {own_account_id} is closed,
+      so it cannot receive the refund.
+    refused_modelo_360_solicitud_account_invalid: The representante's account is not
+      a valid IBAN with its SWIFT-BIC.
+    refused_modelo_360_solicitud_account_unknown: Own account {own_account_id} is
+      not one of your registered own accounts.
+    refused_modelo_360_solicitud_holder_mismatch: The account holder in the facts
+      (campo 114) must be the holder of the account you chose.
+    refused_modelo_360_solicitud_undeclared: No Modelo 360 solicitud is declared for
+      {filing_year}.
     refused_modelo_amendment_complementaria_liability_decrease: A complementaria cannot
       lawfully decrease the taxpayer's declared liability before the autoliquidación
       rectificativa unification. Use the solicitud de rectificación procedure for
@@ -1100,9 +1157,13 @@ errors:
       filter dispatch table.
     refused_modelo_charge_account_missing: A direct-debit filing was selected but
       no charge account is recorded.
-    refused_modelo_export_prior_domiciliation_election_required: Modelo 303 export
-      needs a choice for any earlier direct debit (keep it, or cancel or modify it);
-      none was given, so nothing was written. Choose one and export again.
+    refused_modelo_domiciliation_past_cutoff: Direct debit for this filing closed
+      on {payment_cutoff_on}; on {export_on} the result can only be paid another way.
+    refused_modelo_edit_parse: This entry could not be read.
+    refused_modelo_export_prior_domiciliation_election_required: A Modelo 303 rectificativa
+      that states casilla 111 needs a choice for the earlier direct debit (keep it,
+      or cancel or modify it); none was given, so nothing was written. Choose one
+      and export again.
     refused_modelo_ledger_evidence_recapture: The evidence behind this filing cannot
       be re-bundled because the contributing ledger rows have changed since it was
       sealed. Recalculate the return instead; recapture only picks up evidence attached
@@ -1126,6 +1187,9 @@ errors:
     refused_modelo_refund_election_not_eligible: A refund was requested for a period
       where it is not available; only the year's last filing period permits a non-REDEME
       refund.
+    refused_modelo_result_disposition_uncodified: This modelo's record design has
+      a declaration-type field, but Cadrumo has no grounded code set for it yet, so
+      the result cannot be filed without guessing that field.
     refused_modelo_stored_row_field_input: Calculation revision {calculation_revision_id}
       stores a single input value for casillas {casilla_ids}, which take one value
       per detail row. Recalculate work unit {work_unit_id} to replace it.
@@ -1165,6 +1229,8 @@ errors:
       stored session could not be revoked, so the new profile was not created.
     refused_profile_foral_regime: The foral regime selected is not modelled by this
       profile. Select a supported regime.
+    refused_profile_foreign_asset_register_validation: A Modelo 720 foreign-asset
+      register entry failed validation.
     refused_profile_inventory_validation: A profile inventory ledger failed validation.
     refused_profile_label_ambiguous: The profile label matches more than one active
       profile. Use the profile UUID to disambiguate.
@@ -1179,6 +1245,8 @@ errors:
       profile selector. Complete the profile before continuing.
     refused_profile_prorrata_register_validation: A cross-period IVA prorrata register
       record failed validation.
+    refused_profile_receipt: The saved human sign-in receipt could not authenticate
+      this profile.
     refused_profile_schema_validation: The profile data violates the schema contract.
       Correct the values shown.
     refused_renta_maritime_exemption_inactive: 'DA 41 LIRPF exemption is inactive:
@@ -1191,6 +1259,7 @@ errors:
       or re-run with --override-retention and --reason to override.'
     refused_review_filter_parse: '`--filter KEY=VALUE` could not be parsed. Check
       the syntax of the filter provided.'
+    refused_runtime_frontend: The profile runtime refused this request.
     refused_source_mesh_invariant: 'Refused: source mesh invariant violation.'
     refused_storage_bucket_already_present: A bucket with that identifier already
       exists.
@@ -1289,7 +1358,13 @@ errors:
   transaction:
     import_source_invalid: the source is not a valid ledger document
     ledger_import_failed: 'The ledger file cannot be imported: {reason}'
+    ledger_import_own_account_mismatch: The statement names a different account than
+      own account {own_account_id}, so it was not imported into it.
+    ledger_import_period_without_span: Period {period} has no calendar date span,
+      so it cannot filter imported rows. Use a quarter, a month or 0A.
     ledger_import_requires_bucket: Ledger source import requires an active profile
       unless dry-run mode is used.
+    own_account_unknown: Own account {own_account_id} is not one of your registered
+      own bank accounts.
     unknown_ledger_provider: 'Unknown ledger provider {provider!r}. Recognised providers:
       {providers}.'

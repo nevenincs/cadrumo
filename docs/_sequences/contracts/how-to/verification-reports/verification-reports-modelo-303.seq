@@ -2,20 +2,20 @@
 @step Open a Modelo 303 draft for the first quarter.
 aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @capture work_unit_id result.work_unit_id
-@step Calculate the draft from the classified ledger.
+@step Calculate the draft from the classified records.
 aeat --format json app modelo work calculate {work_unit_id} --no-joint-return-elected
 @capture calculation_revision_id result.calculation_revision_id
-@step Verify the draft; the run saves a report you can reopen.
+@step Check the draft; the run saves a report you can reopen.
 aeat --format json app modelo work verify {calculation_revision_id}
 @capture verification_report_id result.verification_report_id
 @expect result.calculation_revision_id == "{calculation_revision_id}"
 @expect result.verified_by == "docs-sequence-sandbox"
-@step List the reports persisted for that exact calculation revision.
+@step List the reports persisted for that exact calculation.
 aeat --format json app modelo verification-report list --calculation-revision-id {calculation_revision_id}
 @expect result.calculation_revision_id_filter == "{calculation_revision_id}"
 @expect result.reports[0].verification_report_id == "{verification_report_id}"
 @expect result.reports[0].calculation_revision_id == "{calculation_revision_id}"
-@step Open the saved verification report and read its findings.
+@step Open the saved check report and read its issues.
 @result aeat --format json app modelo verification-report view {verification_report_id}
 @expect result.verification_report_id == "{verification_report_id}"
 @expect result.calculation_revision_id == "{calculation_revision_id}"

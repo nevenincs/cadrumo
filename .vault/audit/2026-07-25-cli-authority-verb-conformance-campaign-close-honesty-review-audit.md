@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cli-authority-verb-conformance'
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:646ffe6d217e20b8feb02c22a4ee8704a5acf6bfcb48b015ec9025b45cf21785'
+modified: '2026-10-05'
+body_hash: 'sha256:9f837fe5960e401ef9ba0e91e755ffede28a3ff405709eaf4818a46b0cf12976'
 related:
-  - "[[2026-07-15-cli-authority-verb-conformance-plan]]"
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
 ---
 
@@ -284,7 +283,7 @@ review routing (79), and the duplication runner and health report (11).
 
 Two failures need owner attribution before any closure: the passphrase and
 recovery lifecycle suite at 8 failed against 123 passed, and the MCP dispatch,
-identity, input-schema, risk, mutability and telemetry parity suite at 22
+identity, input-schema, risk and mutability parity suite at 22
 failed against 257 passed. The first is the expected keychain remainder in
 whole or in part; the second is not explained by that and has not been
 triaged. Neither Step is closed.

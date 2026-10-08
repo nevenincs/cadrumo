@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#unreachable-capability'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:49173ffde3043dcd810abe721a0b5597f106ad7311a6856990cac5ab52919d6a'
+body_hash: 'sha256:b725c1f825098d85fa7fe3a428f2e1c2566418552871f6d348497e2cf54682f3'
 related: []
 ---
 
@@ -38,7 +38,7 @@ The walk rooted only at the `cadrumo` distribution's `[project.scripts]`. It
 missed `__main__.py` module execution, so `python -m cadrumo.entrypoints.tui`
 was invisible despite a live subprocess test at
 `src/cadrumo/entrypoints/tui/tests/test_module_execution.py:36`. It missed the
-sibling workspace distribution entirely: `src/cadrumo-harness/pyproject.toml:37`
+sibling workspace distribution entirely: the former source file
 declares `cadrumo-mcp`, which reaches `application/command_search`,
 `application/corpus_search`, `core/spanish_stemming`, `core/fts_query` and
 `core/concept_lifecycle` through the MCP server. It counted empty
@@ -78,7 +78,7 @@ operator. Ranked by value and readiness:
   registry-grounded tests. The five `rental_*` tables already exist in every
   profile database through `Base.metadata.create_all` at
   `src/cadrumo/adapters/persistence/storage/sql/engine.py:284`. It is blocked
-  deliberately and visibly, not by neglect: `src/cadrumo/_data/source_connectivity/census.toml`
+  deliberately and visibly, not by neglect: the former source file
   marks `fincas.annual-aggregates` as `grounding_blocked` pending official
   evidence, due 2026-11-30.
 - **AEAT Renta WEB Open cross-check**, the three-module unit of
@@ -158,10 +158,10 @@ exists could not be determined.
 - `dev/audit/unreachable_code.py` — the audit; `just audit-unreachable-code`
 - `src/cadrumo/entrypoints/tui/app.py:12` — the unmounted root
 - `src/cadrumo/entrypoints/tui/tests/test_module_execution.py:36`
-- `src/cadrumo-harness/pyproject.toml:37` — the `cadrumo-mcp` console script
+- the former source file — the `cadrumo-mcp` console script
 - `src/cadrumo/adapters/persistence/storage/sql/engine.py:284`
-- `src/cadrumo/_data/source_connectivity/census.toml` — `fincas.annual-aggregates`
-- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/application_links/0001-modelo-100-renta-web-open-cross-reference.toml:4`
+- the former source file — `fincas.annual-aggregates`
+
 - `src/cadrumo/adapters/inbound/einvoice/shape.py:145`
 - `src/cadrumo/entrypoints/cli/_app_live_portals_cli.py:47`
 - `src/cadrumo/application/modelo/amendment_actions.py`

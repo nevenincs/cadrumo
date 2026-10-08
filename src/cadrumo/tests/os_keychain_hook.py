@@ -1,30 +1,36 @@
 """Shared credential-store probe for cases that cannot run without one.
 
-Call :func:`require_os_credential_store` as the first statement of a case whose
-subject is unreachable when the OS credential store refuses. It is deliberately
-NOT wired as an autouse fixture over the ``os_keychain`` marker: the marker says
-a case needs custody to reach its subject, not that it cannot run at all, and on
-a store-refusing host several marked cases still pass by asserting the refusal
-path. A blanket marker-keyed skip measured here turned 33 reds into 41 skips,
-discarding six live assertions and silencing one failure that was NOT the store.
-Per-case invocation keeps that from happening.
+Call :func:`require_os_credential_store` as the first statement of a case, or
+of the fixture that builds its subject, when that subject is unreachable while
+the OS credential store refuses. It is deliberately NOT wired as an autouse
+fixture over the ``os_keychain`` marker: the marker says a case needs custody
+to reach its subject, not that it cannot run at all, and on a store-refusing
+host several marked cases still pass by asserting the refusal path. A blanket
+marker-keyed skip measured here turned 33 reds into 41 skips, discarding six
+live assertions and silencing one failure that was NOT the store. Per-case
+invocation keeps that from happening.
 
 The capability is a property of the LOGON SESSION, not of the dependency set.
 A headless CI runner and an agent's SSH network logon both select a real
 backend that then refuses every credential call, so no keychain-custodied
-session key can exist there at all and no code change closes the resulting red.
+secret can exist there at all and no code change closes the resulting red.
+Such a case is therefore skipped, under a warning that says it was not
+verified -- a red there names nothing the reader can repair, and trains them
+to discount this lane's failures.
 
 The probe stands BELOW Cadrumo: it drives ``keyring`` directly, under its own
 service name and a synthetic value it deletes again, so a refusal it reports is
-a property of the host rather than of anything this repository wrote. When the
-store answers, nothing is skipped and the cases run the real mint, failing
-loudly on any regression. That is what separates this from pinning a null or
-file backend, which would leave the mint asserting nothing about the writer it
-names.
+a property of the host rather than of anything this repository wrote. That is
+the whole licence for the skip. The verdict is taken before the case runs and
+never from an exception the case itself raised, so a custody regression on a
+host whose store answers still fails loudly. It is also what separates this
+from pinning a null or file backend, which would leave the mint asserting
+nothing about the writer it names.
 """
 
 from __future__ import annotations
 
+import warnings
 from contextlib import suppress
 from functools import lru_cache
 from secrets import token_urlsafe
@@ -36,12 +42,16 @@ import pytest
 
 _PROBE_SERVICE = "cadrumo-credential-store-probe"
 
-__all__ = ["os_credential_store_refusal", "require_os_credential_store"]
+__all__ = ["OsCredentialStoreRefusedWarning", "os_credential_store_refusal", "require_os_credential_store"]
+
+
+class OsCredentialStoreRefusedWarning(pytest.PytestWarning):
+    """Announces a case skipped, unverified, because this logon session's credential store refused."""
 
 
 @lru_cache(maxsize=1)
 def os_credential_store_refusal() -> str | None:
-    """Report why this host cannot custody a session key, or ``None`` if it can.
+    """Report why this logon session cannot custody a secret, or ``None`` if it can.
 
     Cached for the lifetime of the worker: the answer is a property of the
     logon session, and a write/read/delete round trip per test would cost more
@@ -78,19 +88,21 @@ def os_credential_store_refusal() -> str | None:
 
 
 def require_os_credential_store() -> None:
-    """Fail THIS case on a measured refusal, naming what the host refused.
+    """Skip THIS case, under a warning, on a measured refusal naming what the host refused.
 
     ``mint_profile_session`` has no file-store fallback: the persisted receipt
     is split knowledge whose on-disk half is written only once the store has
-    taken the session key. A case whose subject needs a receipt that EXISTS
-    cannot reach it on a refusing host, so the case must not run there -- which
-    is exactly what the ``os_keychain`` marker decides, and every lane excludes
-    it. Once a lane has explicitly enrolled the marker, an absent prerequisite
-    is a red naming the measured reason, never a green skip: the same shape
-    ``requires_live_enabled`` uses for the live opt-in. Pinning a null or file
-    backend instead would leave the mint asserting nothing about the writer it
-    names.
+    taken the session key, and native automation custody has no fallback
+    either. A case whose subject needs a stored secret that EXISTS cannot reach
+    it in a refusing logon session, so it must not run there.
+
+    The skip is never silent. The warning reaches the run's warnings summary
+    and the skip reason its short summary, both naming the measured refusal, so
+    a green run on such a host reads as unverified rather than as coverage.
     """
     refusal = os_credential_store_refusal()
-    if refusal is not None:
-        pytest.fail(f"the OS credential store cannot custody a profile-session key on this host: {refusal}")
+    if refusal is None:
+        return
+    reason = f"the OS credential store refuses this logon session, so this case was NOT verified: {refusal}"
+    warnings.warn(reason, OsCredentialStoreRefusedWarning, stacklevel=2)
+    pytest.skip(reason)

@@ -42,7 +42,7 @@ from .actions_common import (
     require_source_command,
     require_transaction,
     resolve_bucket_event_repository,
-    resolve_transaction_repository,
+    resolve_revision_guarded_transaction_repository,
     save_transaction_catalogue_and_events,
     transaction_modelo_source_ids,
 )
@@ -58,6 +58,7 @@ from .models import (
     SplitChildCommand,
     SplitTransactionResult,
 )
+from .persistence_ports import LedgerPersistenceConflictError
 
 
 def split_transaction(
@@ -104,9 +105,12 @@ def split_transaction(
     trimmed_actor = require_actor(actor, operation="ledger split")
     trimmed_source_command = require_source_command(source_command, operation="ledger split")
     require_splittable_child_count(bucket_id=bucket_id, transaction_id=transaction_id, children=children)
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    repository = resolve_revision_guarded_transaction_repository(
+        bucket_id=bucket_id,
+        repository=ports.transaction_repository,
+    )
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)
-    catalogue = repository.load()
+    catalogue, catalogue_revision = repository.load_revisioned()
     parent_after, final_children, event, split_group_id, child_ids = _build_split_state(
         catalogue=catalogue,
         bucket_id=bucket_id,
@@ -131,6 +135,7 @@ def split_transaction(
         event_repository=event_repository,
         catalogue=new_catalogue,
         events=(event,),
+        expected_catalogue_revision=catalogue_revision,
     )
 
     return SplitTransactionResult(
@@ -374,6 +379,7 @@ def split_transaction_with_classified_children(
     reason: str = "",
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
+    expected_current: Transaction | None = None,
 ) -> SplitTransactionResult:
     """Split a parent and persist fully-classified children in ONE transaction.
 
@@ -405,9 +411,18 @@ def split_transaction_with_classified_children(
             "each split child must carry exactly one classification patch",
             context={"children": len(children), "classifications": len(child_classifications)},
         )
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    repository = resolve_revision_guarded_transaction_repository(
+        bucket_id=bucket_id,
+        repository=ports.transaction_repository,
+    )
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)
-    catalogue = repository.load()
+    catalogue, catalogue_revision = repository.load_revisioned()
+
+    if expected_current is not None and require_transaction(catalogue, transaction_id) != expected_current:
+        raise LedgerPersistenceConflictError(
+            "transaction changed since it was reviewed; obtain a new review before splitting",
+            context={"transaction_id": transaction_id},
+        )
 
     parent_after, bare_children, split_event, split_group_id, child_ids = _build_split_state(
         catalogue=catalogue,
@@ -476,6 +491,7 @@ def split_transaction_with_classified_children(
         event_repository=event_repository,
         catalogue=new_catalogue,
         events=(split_event, *child_events),
+        expected_catalogue_revision=catalogue_revision,
     )
 
     return SplitTransactionResult(
@@ -714,6 +730,7 @@ def _build_split_child_transaction(
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "source_jurisdiction": parent.source_jurisdiction,
             "group_label": parent.group_label,
+            "own_account_id": parent.own_account_id,
             "created_by": actor,
             "source_command": source_command,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
@@ -781,9 +798,12 @@ def merge_transactions(
             context={"bucket_id": bucket_id, "child_transaction_ids": tuple(child_transaction_ids)},
         )
 
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    repository = resolve_revision_guarded_transaction_repository(
+        bucket_id=bucket_id,
+        repository=ports.transaction_repository,
+    )
     event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)
-    catalogue = repository.load()
+    catalogue, catalogue_revision = repository.load_revisioned()
 
     children = tuple(require_transaction(catalogue, child_id) for child_id in child_transaction_ids)
     split_group_id = _resolve_merge_split_group(
@@ -855,6 +875,7 @@ def merge_transactions(
         event_repository=event_repository,
         catalogue=new_catalogue,
         events=(event,),
+        expected_catalogue_revision=catalogue_revision,
     )
 
     return MergeTransactionsResult(
@@ -939,6 +960,7 @@ def _build_merged_transaction(
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "source_jurisdiction": parent.source_jurisdiction,
             "group_label": parent.group_label,
+            "own_account_id": parent.own_account_id,
             "created_by": actor,
             "source_command": source_command,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,

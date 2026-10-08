@@ -9,10 +9,10 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Protocol
 
 from ...core.errors.hierarchy import InternalInvariantError
-from ...domain.usage_ratios.model import UsageRatioProfile
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.usage_ratios.model import UsageRatioProfile
 
 
 class UsageRatioCensoGuardLoader(Protocol):

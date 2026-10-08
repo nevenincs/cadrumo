@@ -36,10 +36,12 @@ to 0 and 21. :func:`binding_export_spans` builds that index once per revision.
 Why one refuses and the others advise
 -------------------------------------
 
-An OVERLAP is a REFUSAL. Two declarations claiming one position is never
-legitimate under any record design: whichever renders second silently destroys
-the other's datum, and no AEAT design asks for that. The live corpus carries
-none under any grouping, so the refusal is wired with nothing to grandfather.
+An OVERLAP is a REFUSAL. Two different writers claiming one position cannot
+both be emitted. An inline ``binding`` field and its own fixed selector are
+one writer only when binding id, record, geometry, type, decimals and sign all
+match. The runtime resolver already uses the inline field in that case. This
+check reconciles only that exact pair and refuses a mismatch, even when the
+two positions do not happen to overlap.
 
 A GAP and a RECORD_STARTS_LATE are ADVISORIES, and are reported as two kinds
 rather than one because a ruling on a hole in the middle of a record is not a
@@ -54,15 +56,14 @@ deliberately empty span is declared, not omitted, as a
 field carrying its own ``offset`` and ``length``, so a filler CLOSES a span
 rather than excusing one.
 
-What holds the promotion back is the authored corpus, not the argument: a live
-read reports 115 gaps and 0 late starts across the loaded layouts, concentrated
-in hand-authored envelope-header and page records. Many sit between spans AEAT
-marks for itself, and whether the design intends those positions to be authored
-or deliberately left to the administration is a question about the designs,
-which this check does not read. Refusing them now would refuse the shipped
-registry on a reading no source document has been checked against. So they are
-REPORTED under their own names by :func:`export_record_placement_advisories` and
-promoted once the designs have ruled -- not dropped, and not counted as clean.
+The authored corpus now declares every position: holes AEAT marks for itself
+("Reservado para la Administración", "BLANCOS", the sello electrónico) are
+fillers transcribed from their design rows, and the file-envelope "Versión del
+Programa" and "NIF Empresa Desarrollo" slots the designs delegate to the entidad
+desarrolladora are literals bound to the development mock identity fact. Until
+the GAP and RECORD_STARTS_LATE kinds are promoted to refusals, a new hole is
+REPORTED under its own name by :func:`export_record_placement_advisories` -- not
+dropped, and not counted as clean.
 
 One casilla split across two consecutive fields is coverage-complete and passes.
 Modelo 296's 2024 casilla 03 is the worked case: an integer part at 160 length 13
@@ -93,16 +94,23 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from itertools import pairwise
 from types import MappingProxyType
 
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.binding_selector_utils import (
     BindingFixedExportSelector,
     binding_export_selector,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefinition
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportFieldDataType,
+    ExportFieldDefinition,
+    ExportRecordDefinition,
+)
 
 __all__ = [
     "FIRST_RECORD_POSITION",
@@ -131,12 +139,16 @@ class PlacedSpan:
     Carries where the claim came from, because the two sources are declared in
     different places and an advisory naming only a position is not actionable:
     ``origin`` is an export field id, or a binding id when the positions come
-    from that binding's fixed export selector.
+    from that binding's fixed export selector. The wire-shape members make an
+    inline binding field comparable to its canonical selector.
     """
 
     offset: int
     length: int
     origin: str
+    data_type: ExportFieldDataType = dataclass_field(compare=False)
+    decimals: int | None = dataclass_field(compare=False)
+    signed: bool = dataclass_field(compare=False)
 
     @property
     def end(self) -> int:
@@ -163,7 +175,16 @@ def binding_export_spans(revision: ModeloRevision) -> Mapping[str, tuple[PlacedS
         except RegistryValidationError:
             continue
         if isinstance(selector, BindingFixedExportSelector):
-            spans[selector.record].append(PlacedSpan(selector.offset, selector.length, str(binding.id)))
+            spans[selector.record].append(
+                PlacedSpan(
+                    selector.offset,
+                    selector.length,
+                    str(binding.id),
+                    selector.data_type,
+                    selector.decimals,
+                    selector.signed,
+                )
+            )
     return {record: tuple(sorted(record_spans)) for record, record_spans in spans.items()}
 
 
@@ -186,11 +207,126 @@ def validate_export_record_field_placement(
             Omitted means the record's inline fields are its whole layout, which
             holds for every record declaring no ``binding_record``.
     """
-    return [
+    failures = _binding_reconciliation_failures(prefix=prefix, record=record, binding_spans=binding_spans)
+    failures.extend(
         _overlap_failure(prefix=prefix, record=record, previous=previous, following=following)
         for previous, following in pairwise(record_placed_spans(record, binding_spans))
         if previous.end > following.offset
+    )
+    return failures
+
+
+def _matching_inline_binding_fields(
+    record: ExportRecordDefinition, span: PlacedSpan
+) -> tuple[ExportFieldDefinition, ...]:
+    return tuple(
+        field
+        for field in record.fields
+        if field.kind == CasillaFieldKind.BINDING and field.binding is not None and str(field.binding) == span.origin
+    )
+
+
+def _inline_field_matches_selector(field: ExportFieldDefinition, span: PlacedSpan) -> bool:
+    return (
+        field.offset == span.offset
+        and field.length == span.length
+        and field.data_type == span.data_type
+        and field.decimals == span.decimals
+        and field.signed == span.signed
+    )
+
+
+def _inline_fields_match_selector(fields: tuple[ExportFieldDefinition, ...], span: PlacedSpan) -> bool:
+    if len(fields) == 1:
+        return _inline_field_matches_selector(fields[0], span)
+    if len(fields) != 2 or span.data_type != "decimal" or span.signed or span.decimals is None:
+        return False
+    first, second = sorted(fields, key=lambda field: field.offset or 0)
+    if (first.value_policy, second.value_policy) != (
+        ExportValuePolicy.INTEGER_PART,
+        ExportValuePolicy.FRACTIONAL_DIGITS,
+    ):
+        return False
+    return (
+        span.decimals > 0
+        and span.length > span.decimals
+        and (first.offset, first.length, second.offset, second.length)
+        == (span.offset, span.length - span.decimals, span.end - span.decimals, span.decimals)
+        and all((field.data_type, field.decimals, field.signed) == ("integer", None, False) for field in fields)
+    )
+
+
+def _binding_reconciliation_failures(
+    *,
+    prefix: str,
+    record: ExportRecordDefinition,
+    binding_spans: Mapping[str, tuple[PlacedSpan, ...]],
+) -> list[str]:
+    binding_record = record.binding_record
+    if binding_record is None:
+        return []
+    return [
+        *_own_binding_reconciliation_failures(
+            prefix=prefix,
+            record=record,
+            binding_record=binding_record,
+            binding_spans=binding_spans,
+        ),
+        *_foreign_binding_reconciliation_failures(
+            prefix=prefix,
+            record=record,
+            binding_record=binding_record,
+            binding_spans=binding_spans,
+        ),
     ]
+
+
+def _own_binding_reconciliation_failures(
+    *,
+    prefix: str,
+    record: ExportRecordDefinition,
+    binding_record: str,
+    binding_spans: Mapping[str, tuple[PlacedSpan, ...]],
+) -> list[str]:
+    failures: list[str] = []
+    own_spans = binding_spans.get(binding_record, ())
+    for span in own_spans:
+        inline = _matching_inline_binding_fields(record, span)
+        if not inline:
+            continue
+        if not _inline_fields_match_selector(inline, span):
+            failures.append(
+                f"{prefix}: export record {record.id!r} inline binding {span.origin!r} does not match its "
+                f"fixed selector in record {binding_record!r} at position {span.offset} "
+                f"length {span.length}, type {span.data_type}, decimals {span.decimals}, signed {span.signed}"
+            )
+    return failures
+
+
+def _foreign_binding_reconciliation_failures(
+    *,
+    prefix: str,
+    record: ExportRecordDefinition,
+    binding_record: str,
+    binding_spans: Mapping[str, tuple[PlacedSpan, ...]],
+) -> list[str]:
+    other_record_by_binding = {
+        span.origin: other_binding_record
+        for other_binding_record, spans in binding_spans.items()
+        if other_binding_record != binding_record
+        for span in spans
+    }
+    failures: list[str] = []
+    for field in record.fields:
+        if field.kind != CasillaFieldKind.BINDING or field.binding is None:
+            continue
+        other_record = other_record_by_binding.get(str(field.binding))
+        if other_record is not None:
+            failures.append(
+                f"{prefix}: export record {record.id!r} inline binding {field.binding!r} belongs to "
+                f"fixed selector record {other_record!r}, not {binding_record!r}"
+            )
+    return failures
 
 
 def export_record_placement_advisories(
@@ -241,14 +377,24 @@ def record_placed_spans(
     one declaring neither is logical-only; one declaring exactly half of the
     pair is refused by the layout-resolution range check that owns that
     contradiction, and is skipped here rather than reported a second time under
-    a different name.
+    a different name. A fixed selector already represented by its exact inline
+    binding field contributes no second span; the validator reports any shape
+    mismatch before accepting the record.
     """
     inline = tuple(
-        PlacedSpan(field.offset, field.length, str(field.id))
+        PlacedSpan(field.offset, field.length, str(field.id), field.data_type, field.decimals, field.signed)
         for field in record.fields
         if field.offset is not None and field.length is not None
     )
-    bound = () if record.binding_record is None else binding_spans.get(record.binding_record, ())
+    bound = (
+        ()
+        if record.binding_record is None
+        else tuple(
+            span
+            for span in binding_spans.get(record.binding_record, ())
+            if not _inline_fields_match_selector(_matching_inline_binding_fields(record, span), span)
+        )
+    )
     return tuple(sorted((*inline, *bound)))
 
 

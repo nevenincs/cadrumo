@@ -25,15 +25,12 @@ from typing import Final
 
 import pytest
 
-from cadrumo.core.corpus_text import (
-    corpus_redaction_marks,
-    normalise_corpus_text,
-    resolve_anchored_extracted_unit,
-)
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from dev.corpus.text import corpus_redaction_marks, resolve_anchored_extracted_unit
 from dev.docs.preprocess.normatives_html import build_xml_outputs
 
 from ..compiler.legal_grounding import verify_legal_reference, verify_legal_reference_grounding

@@ -371,20 +371,7 @@ def validate_ratification_queue(
     shipped = {(query.concept_id, _normalise(query.query)) for query in enumerate_query_vocabulary(resolved)}
     violations: list[RatificationViolation] = []
     for entry in queue.entries:
-        concept = resolved.by_id.get(entry.concept_id)
-        if concept is None:
-            violations.append(_violation(entry, "concept is not enrolled in the Handbook"))
-            continue
-        if entry.status is not RatificationStatus.REJECTED and not _passes_relative_cosine(entry, queue.thresholds):
-            violations.append(_violation(entry, "candidate does not pass relative-cosine thresholds"))
-        if entry.status is RatificationStatus.RATIFIED:
-            if not _ratified_landed(entry, resolved):
-                violations.append(_violation(entry, f"ratified {entry.action.value} has not landed in the Handbook"))
-            if (entry.concept_id, _normalise(entry.candidate)) not in shipped:
-                violations.append(_violation(entry, "ratified candidate is absent from the shipped query vocabulary"))
-        else:
-            if (entry.concept_id, _normalise(entry.candidate)) in shipped:
-                violations.append(_violation(entry, "unratified candidate is present in the shipped query vocabulary"))
+        _validate_ratification_entry(entry, resolved, queue, shipped, violations)
     return RatificationValidationResult(violations=tuple(violations))
 
 
@@ -432,3 +419,27 @@ def _violation(entry: SynonymCandidateEntry, reason: str) -> RatificationViolati
 
 def _normalise(value: str) -> str:
     return _Whitespace.sub(" ", value.strip()).casefold()
+
+
+def _validate_ratification_entry(
+    entry: SynonymCandidateEntry,
+    resolved: TerminologyHandbook,
+    queue: SynonymRatificationQueue,
+    shipped: set[tuple[str, str]],
+    violations: list[RatificationViolation],
+) -> None:
+    """Validate ratification entry."""
+    concept = resolved.by_id.get(entry.concept_id)
+    if concept is None:
+        violations.append(_violation(entry, "concept is not enrolled in the Handbook"))
+        return
+    if entry.status is not RatificationStatus.REJECTED and not _passes_relative_cosine(entry, queue.thresholds):
+        violations.append(_violation(entry, "candidate does not pass relative-cosine thresholds"))
+    if entry.status is RatificationStatus.RATIFIED:
+        if not _ratified_landed(entry, resolved):
+            violations.append(_violation(entry, f"ratified {entry.action.value} has not landed in the Handbook"))
+        if (entry.concept_id, _normalise(entry.candidate)) not in shipped:
+            violations.append(_violation(entry, "ratified candidate is absent from the shipped query vocabulary"))
+    else:
+        if (entry.concept_id, _normalise(entry.candidate)) in shipped:
+            violations.append(_violation(entry, "unratified candidate is present in the shipped query vocabulary"))

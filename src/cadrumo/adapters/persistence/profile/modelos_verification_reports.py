@@ -27,9 +27,9 @@ See Also:
     :mod:`~adapters.persistence.profile.modelos_calculation`
         Sibling calculation-revision repository whose revisions are assessed by
         verification reports stored here.
-    :func:`~application.modelo.filing_actions.list_verification_reports`
-        Read-side application service that loads reports through this repository
-        boundary.
+    :func:`~application.calculations.verification_report_gate.require_verification_report_coordinates_current`
+        Application gate that checks the coordinates of reports loaded through
+        this repository boundary.
 """
 
 from __future__ import annotations
@@ -39,6 +39,7 @@ from typing import TYPE_CHECKING
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
+from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....domain.calculations.registry.tax_id_format import SubjectTaxId
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.verification_report import VerificationReportCatalogue
@@ -48,6 +49,8 @@ from ..storage.secure_object_namespaces import MODELO_VERIFICATION_REPORT_CATALO
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ....core.secure_object_write import SecureObjectWrite
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..storage.sql.secure_objects import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
@@ -120,6 +123,7 @@ class VerificationReportCatalogueRepository:
         catalogue: VerificationReportCatalogue,
         *,
         boundary: str,
+        operation: PinnedAuthorityOperation | None = None,
     ) -> None:
         """Refuse reports whose parent calculation revision is not in this bucket.
 
@@ -134,6 +138,8 @@ class VerificationReportCatalogueRepository:
         Args:
             catalogue: The catalogue being written or read back.
             boundary: ``"save"`` or ``"load"``, recorded on the refusal context.
+            operation: Retained published authority for nested calculation
+                decoding, when the caller already owns one.
 
         Raises:
             :class:`VerificationReportPersistenceError`: When any report names a
@@ -146,7 +152,7 @@ class VerificationReportCatalogueRepository:
         revisions = CalculationRevisionCatalogueRepository(
             objects=self._objects,
             m303_rectificativa_taxpayer_tax_id=self._m303_rectificativa_taxpayer_tax_id,
-        ).load()
+        ).load(operation=operation)
         unresolved = sorted(
             {
                 report.calculation_revision_id
@@ -186,7 +192,7 @@ class VerificationReportCatalogueRepository:
             },
         )
 
-    def load(self) -> VerificationReportCatalogue:
+    def load(self, *, operation: PinnedAuthorityOperation | None = None) -> VerificationReportCatalogue:
         """Load and decrypt this bucket's verification-report catalogue.
 
         Returns:
@@ -200,6 +206,13 @@ class VerificationReportCatalogueRepository:
                 storage-layer classification or envelope-version integrity
                 error.
         """
+        catalogue, _revision_id = self.load_revisioned(operation=operation)
+        return catalogue
+
+    def load_revisioned(
+        self, *, operation: PinnedAuthorityOperation | None = None
+    ) -> tuple[VerificationReportCatalogue, str]:
+        """Return the validated catalogue and its revision for guarded filing."""
         from ..storage.envelope.contract import Envelope
         from ..storage.errors import ClassificationError, EnvelopeVersionError
         from ..storage.schema_lineage import (
@@ -223,7 +236,7 @@ class VerificationReportCatalogueRepository:
                 logger=_LOGGER,
             )
         if record is None:
-            return VerificationReportCatalogue()
+            return VerificationReportCatalogue(), ABSENT_SECURE_OBJECT_REVISION_ID
         envelope = Envelope[VerificationReportCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
         if not inner_envelope_classification_is_expected(envelope.classification, _VERIFICATION_CATALOGUE_SENSITIVITY):
             _LOGGER.error(
@@ -259,17 +272,32 @@ class VerificationReportCatalogueRepository:
                     "max_supported_version": _VERIFICATION_CATALOGUE_VERSION,
                 },
             )
-        self._assert_reports_resolve_to_local_revisions(envelope.payload, boundary="load")
-        return envelope.payload
+        self._assert_reports_resolve_to_local_revisions(envelope.payload, boundary="load", operation=operation)
+        return envelope.payload, record.revision_id
 
-    def save(self, catalogue: VerificationReportCatalogue) -> None:
+    def to_secure_object_write(
+        self,
+        catalogue: VerificationReportCatalogue,
+        *,
+        expected_revision_id: str,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> SecureObjectWrite:
+        """Assert the reviewed report catalogue has not changed in a filing batch."""
+        self._assert_reports_resolve_to_local_revisions(catalogue, boundary="save", operation=operation)
+        return self._storage.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id)
+
+    def save(
+        self, catalogue: VerificationReportCatalogue, *, operation: PinnedAuthorityOperation | None = None
+    ) -> None:
         """Encrypt and persist the verification-report catalogue for this bucket.
 
         Args:
             catalogue: The full :class:`VerificationReportCatalogue` to store,
                 keyed by each report's verification-report identifier.
+            operation: Retained published authority for parent calculation
+                validation when the caller already owns one.
         """
-        self._assert_reports_resolve_to_local_revisions(catalogue, boundary="save")
+        self._assert_reports_resolve_to_local_revisions(catalogue, boundary="save", operation=operation)
         self._storage.save(catalogue)
 
 

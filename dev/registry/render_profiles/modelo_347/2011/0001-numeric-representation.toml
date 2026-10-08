@@ -21,6 +21,7 @@ allowed_values = []
 [singleton_rules.anchor]
 sheet = "Tipo 2 - Registro De Declarado"
 source_row = 378
+semantic_part_offset = 77
 ordinal = "9"
 record_identity = "Tipo 2 - Registro De Declarado"
 
@@ -33,6 +34,7 @@ justification = "The design divides the cell in its own text: '77-78 CODIGO PROV
 [singleton_rules.evidence.governed_anchor]
 sheet = "Tipo 2 - Registro De Declarado"
 source_row = 378
+semantic_part_offset = 77
 ordinal = "9"
 record_identity = "Tipo 2 - Registro De Declarado"
 

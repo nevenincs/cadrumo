@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-localization-cascade'
 date: '2026-08-05'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:574d022adc85a5e278f12b81b4fef64e7c1d4c4e20747c9db40b6927dea0e504'
+body_hash: 'sha256:427b50b981a3af71f1d511e4001a4993ba5146443ef37003f4130ff0f2e2f8cd'
 related:
   - "[[2026-08-04-modelo-localization-cascade-adr]]"
   - "[[2026-08-05-modelo-localization-cascade-gapped-continuity-chain-notation-research]]"
@@ -87,7 +87,7 @@ irpf-aeip-<event-slug>-aplicado
 `<event-slug>` is the official Spanish title, NFKD accent-stripped, `ñ` folded to `n` and
 the ordinal indicators `º`/`ª` to `o`/`a` so "4ª Edición" and "150.º aniversario" stay
 readable, then lowercased with non-alphanumeric runs collapsed to single hyphens
-(`dev/registry/aeip/manager.py`, `derive_slug`).
+(the former source file, `derive_slug`).
 
 The separator is the load-bearing detail. `casilla_continuity_locale_key` embeds the chain
 id whole into `modelo.schema.100.casilla.continuidad.<chain-id>.label`, and
@@ -112,7 +112,7 @@ scheme without renaming existing chains.
 
 Measured properties, all gated in `dev/registry/aeip/tests/test_manager.py`: zero slug
 collisions across 136 programmes; every planned id validates against the real `ContinuidadId`
-annotation (`src/cadrumo/domain/calculations/registry/_schema_base.py:185`, imported rather
+annotation (the former source file, imported rather
 than restated); no planned id base32-encodes; the longest id among programmes that actually
 get a chain is exactly 128 characters (Magallanes/Elcano V Centenario), fitting with no
 margin.
@@ -235,17 +235,17 @@ anexo A; the planner takes a `--modelo` option but no other modelo was scanned.
 
 ## Sources
 
-- `dev/registry/aeip/manager.py` — extraction through the loader, slug derivation, ambiguity
+- the former source file — extraction through the loader, slug derivation, ambiguity
   detection, chain planning.
 - `dev/registry/aeip/adjudications.toml` — the four recorded judgments and their evidence.
 - `dev/registry/aeip/tests/test_manager.py` — real-corpus gates, including the locale-key
   readability gate and the landed-chain ratification.
-- `src/cadrumo/domain/calculations/registry/_modelo_localization.py` —
+- the former source file —
   `casilla_occurrence_locale_key`, `casilla_continuity_locale_key`,
   `encode_modelo_locale_segment`.
-- `src/cadrumo/domain/calculations/registry/_schema_base.py:185` — the `ContinuidadId`
+- the former source file — the `ContinuidadId`
   constraint (max 128, `^[a-z0-9][a-z0-9._:-]*[a-z0-9]$`).
-- `src/cadrumo/domain/calculations/registry/_validate_cross_revision_contiguity.py` — the
+- the former source file — the
   contiguity policy that refuses a gapped chain.
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/` — the AEAT
   Diseño de Registros dictionaries, 2020-2025; the XML field names `M21CTLA`, `M21GPFA`,

@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
-from cadrumo.domain.calculations.registry.facts.schema import FactSelector
+from cadrumo.domain.calculations.registry.facts.variants import FactSelector
 
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_providers import (

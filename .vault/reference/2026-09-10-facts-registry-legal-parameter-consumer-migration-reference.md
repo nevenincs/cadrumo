@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#facts-registry'
 date: '2026-09-10'
-modified: '2026-09-10'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:33419c5bf68bef68b04a7e87cedb5d5cf5f022b9aa8b2fe5fd6beb089844fb3d'
-related:
-  - "[[2026-09-09-facts-registry-plan]]"
+related: []
 ---
 
 # `facts-registry` reference: `Facts registry legal-parameter consumer migration reference`

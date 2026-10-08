@@ -4,14 +4,11 @@ These frozen pydantic DTOs are emitted by
 :class:`~domain.calculations.registry.queries.RegistryQueryService` for read-only
 registry introspection: modelo listings, revision descriptions, casilla
 details, binding selector projections, formula dependency rows, support-matrix
-summaries, and the registry-wide binding-source inventory.
+summaries.
 
 The contracts stay in the domain layer and are deliberately not CLI payload
 schemas. Application facades return these reports unchanged; CLI modules then
-project them into strict ``--json`` envelopes. The source-inventory report is
-also intentionally disposition-free: it records the committed
-:class:`~core.aggregation.BindingSourceKind` declarations and leaves enrolled/deferred/
-reserved mesh classification to application-layer gates.
+project them into strict ``--json`` envelopes.
 
 See Also:
     :class:`~domain.calculations.registry.queries.RegistryQueryService`
@@ -38,16 +35,15 @@ from typing import Literal
 
 from pydantic import BaseModel, NonNegativeInt
 
-from ....core.aggregation import BindingSourceKind
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
 from ....core.filing_year import FilingYear
 from ....core.identity.aeat_box import AeatBoxNumber
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistrySelectorPeriodCode
-from ....core.text_bounds import PositiveCount
 from .binding_provider import BindingProvider
 from .binding_selector_utils import BooleanBindingEncodedValue
-from .ids import BindingId, FormulaId, LegalRefId, ParameterId, RevisionId, SourceRefId
+from .ids import BindingId, FormulaId, LegalRefId, ParameterId, SourceRefId
 from .schema_input_kind import InputKind
 from .support_matrix import ModeloEntry
 
@@ -90,10 +86,12 @@ class ModeloDescribeReport(BaseModel):
     """Full describe view for one resolved modelo revision.
 
     Every field here is regulatory grounding an operator may need to justify a
-    revision selection, so the counts are bounded and ``filing_year`` shares the
-    :class:`~core.period.Period` year range: a describe view is projected verbatim into
-    the CLI ``--json`` envelope, and a negative count or an out-of-range year
-    reaching that surface is a defect in the projection, not a legitimate value.
+    revision selection, including the revision's declared authority grade. An
+    absent grade remains ``None``; the query does not promote it. Counts are
+    bounded and ``filing_year`` shares the :class:`~core.period.Period` year
+    range: a describe view is projected verbatim into the CLI ``--json``
+    envelope, and a negative count or an out-of-range year reaching that
+    surface is a defect in the projection, not a legitimate value.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -105,6 +103,7 @@ class ModeloDescribeReport(BaseModel):
     cadence: str
     jurisdiction: str
     revision: str
+    authority_grade: RegistryAuthorityGrade | None
     revision_ids: tuple[str, ...]
     filing_year: FilingYear | None
     filing_period: Period | None = None
@@ -270,34 +269,6 @@ class ModeloFormulasReport(BaseModel):
     rows: tuple[ModeloFormulaRow, ...]
 
 
-class RegistrySourceSite(BaseModel):
-    """One committed modelo revision that declares a binding source kind."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    modelo: str
-    revision_id: RevisionId
-    binding_count: PositiveCount
-
-
-class RegistrySourceInventoryRow(BaseModel):
-    """Every committed revision that declares one binding source kind."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    source_kind: BindingSourceKind
-    sites: tuple[RegistrySourceSite, ...]
-    total_binding_count: PositiveCount
-
-
-class RegistrySourceInventoryReport(BaseModel):
-    """Registry-wide inventory of every declared binding source kind."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    rows: tuple[RegistrySourceInventoryRow, ...]
-
-
 class ModeloSupportMatrixReport(BaseModel):
     """Registry-wide support/capability matrix."""
 
@@ -318,7 +289,4 @@ __all__ = [
     "ModeloListReport",
     "ModeloListRow",
     "ModeloSupportMatrixReport",
-    "RegistrySourceInventoryReport",
-    "RegistrySourceInventoryRow",
-    "RegistrySourceSite",
 ]

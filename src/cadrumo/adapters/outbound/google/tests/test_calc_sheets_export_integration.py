@@ -95,7 +95,8 @@ def test_apply_design_request_set_is_complete_for_a_real_modelo() -> None:
 
     # The base font sets a monospace family on every tab's whole grid.
     assert base_font, "base font requests missing"
-    families = {req["repeatCell"]["cell"]["userEnteredFormat"]["textFormat"]["fontFamily"] for req in base_font}
+    assert base_font[0] == {"updateSpreadsheetProperties": {"properties": {"locale": "es_ES"}, "fields": "locale"}}
+    families = {req["repeatCell"]["cell"]["userEnteredFormat"]["textFormat"]["fontFamily"] for req in base_font[1:]}
     assert families == {plan.font_family}
 
     # Styled ranges carry fills / bold / alignment; at least one sets a fill.

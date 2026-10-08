@@ -23,7 +23,11 @@ import pytest
 
 from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.prorrata_register.register import ProrrataRegisterEntry
-from ..prorrata_regularizacion import ProrrataDeclaredVolumeLedgerRollup, derive_prorrata_applicability
+from ..prorrata_regularizacion import (
+    ProrrataDeclaredVolumeLedgerRollup,
+    build_prorrata_declared_volume_advisory,
+    derive_prorrata_applicability,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -101,3 +105,29 @@ def test_prorrata_does_not_apply_for_ninguna_and_full_declared_right_to_deduct()
 def test_declared_volume_inputs_must_travel_together() -> None:
     with pytest.raises(ValueError, match="declared_volume_total and declared_volume_con_derecho"):
         derive_prorrata_applicability(declared_volume_total=Decimal("100000.00"))
+
+
+@pytest.mark.parametrize(
+    ("declared", "unknown", "reason"),
+    [
+        (Decimal("250"), (), None),
+        (Decimal("300"), (), "prorrata_volume_divergence"),
+        (Decimal("300"), ("unclassified",), "prorrata_volume_check_unavailable"),
+        (None, (), "prorrata_volume_declaration_missing"),
+    ],
+)
+def test_volume_advisory_distinguishes_disagreement_from_unknown_or_absent_facts(
+    declared: Decimal | None, unknown: tuple[str, ...], reason: str | None
+) -> None:
+    rollup = ProrrataDeclaredVolumeLedgerRollup(
+        declared_volume_total=declared,
+        declared_volume_con_derecho=Decimal("200"),
+        declared_volume_sin_derecho=declared - Decimal("200") if declared is not None else None,
+        ledger_volume_total=Decimal("250"),
+        ledger_volume_con_derecho=Decimal("200"),
+        ledger_volume_sin_derecho=Decimal("50"),
+        included_ledger_ids=("sale", "exempt"),
+        unclassified_ledger_ids=unknown,
+    )
+    diagnostic = build_prorrata_declared_volume_advisory(rollup, ejercicio=2026)
+    assert (diagnostic.reason if diagnostic else None) == reason

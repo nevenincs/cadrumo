@@ -36,13 +36,14 @@ def _attachment(
     *,
     source: AttachmentSource = AttachmentSource.GOOGLE_DRIVE,
     linked_invoice_ids: tuple[str, ...] = (),
+    source_reference: str | None = None,
 ) -> Attachment:
     return Attachment(
         attachment_id=digest,
         sha256=digest,
         kind=AttachmentKind.DRIVE_DOCUMENT,
         source=source,
-        source_reference=f"https://drive.google.com/file/d/{_FILE_ID}",
+        source_reference=source_reference or f"https://drive.google.com/file/d/{_FILE_ID}",
         mime_type="application/pdf",
         bytes_size=42,
         captured_at=datetime(2026, 8, 23, tzinfo=UTC),
@@ -126,6 +127,37 @@ def test_a_single_item_read_verifies_the_blob_before_exposing_the_manifest() -> 
     assert item.attachment_id == attachment.attachment_id
     assert item.provider_locator == _FILE_ID
     assert item.pending_review is True
+
+
+@pytest.mark.parametrize("file_id", ("A" * 10, "B" * 24))
+def test_single_item_read_exposes_only_canonical_short_url_id(file_id: str) -> None:
+    """Canonical URL provenance keeps the URL-context 10+ grammar at review."""
+    attachment = _attachment("e" * 64, source_reference=f"https://drive.google.com/file/d/{file_id}")
+
+    item = get_attachment_review_item(_InMemoryAttachmentStore(attachment), attachment.attachment_id)
+
+    assert item.provider_locator == file_id
+    assert "https://" not in item.provider_locator
+
+
+@pytest.mark.parametrize(
+    "reference",
+    (
+        f"http://drive.google.com/file/d/{_FILE_ID}",
+        f"https://drive.google.com.evil.test/file/d/{_FILE_ID}",
+        f"https://user@drive.google.com/file/d/{_FILE_ID}",
+        f"https://drive.google.com:443/file/d/{_FILE_ID}",
+        f"https://drive.google.com/file/d/{_FILE_ID}?access_token=secret",
+        f"https://drive.google.com/file/d/{_FILE_ID}#secret",
+        f"https://drive.google.com/file/d/{_FILE_ID}/view",
+    ),
+)
+def test_single_item_read_refuses_noncanonical_drive_reference(reference: str) -> None:
+    attachment = _attachment("f" * 64, source_reference=reference)
+
+    item = get_attachment_review_item(_InMemoryAttachmentStore(attachment), attachment.attachment_id)
+
+    assert item.provider_locator == "not-exposed"
 
 
 def test_a_single_item_read_refuses_when_the_blob_fails_verification() -> None:

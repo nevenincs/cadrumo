@@ -290,27 +290,34 @@ class EvidenceIdentityPayload(BaseModel):
     def _passing_commands_and_time_are_valid(self) -> Self:
         if self.observed_at.tzinfo is None or self.observed_at.utcoffset() is None:
             raise ValueError("observed_at must carry a timezone")
-        if self.result.status is EvidenceStatus.PASSED and any(command.exit_status != 0 for command in self.commands):
-            raise ValueError("passing evidence cannot contain a failed command")
-        if self.result.status is EvidenceStatus.PASSED and not (
-            self.isolation.checkout_imports_removed and self.isolation.ambient_product_executables_removed
-        ):
-            raise ValueError("passing evidence requires checkout and ambient executable isolation")
-        if self.result.status is EvidenceStatus.PASSED and self.destination.version != self.cohort.version:
-            raise ValueError("passing evidence destination version must match the cohort")
-        if self.installation is not None:
-            if self.result.status is EvidenceStatus.PASSED and self.installation.status != "resolved":
-                raise ValueError("passing evidence requires a resolved installation outcome")
-            if (
-                self.installation.cohort_manifest_sha256 is not None
-                and self.installation.cohort_manifest_sha256 != self.cohort.manifest_sha256
-            ):
-                raise ValueError("installation evidence does not bind the supplied release cohort")
-            if self.installation.mode == "binary" and self.installation.cohort_manifest_sha256 is None:
-                raise ValueError("binary installation evidence must bind a release-cohort manifest")
+        self._validate_passing_result()
+        self._validate_installation_binding()
         if self.observed_at < self.cohort.created_at:
             raise ValueError("evidence cannot predate cohort construction")
         return self
+
+    def _validate_passing_result(self) -> None:
+        if self.result.status is not EvidenceStatus.PASSED:
+            return
+        if any(command.exit_status != 0 for command in self.commands):
+            raise ValueError("passing evidence cannot contain a failed command")
+        if not (self.isolation.checkout_imports_removed and self.isolation.ambient_product_executables_removed):
+            raise ValueError("passing evidence requires checkout and ambient executable isolation")
+        if self.destination.version != self.cohort.version:
+            raise ValueError("passing evidence destination version must match the cohort")
+
+    def _validate_installation_binding(self) -> None:
+        if self.installation is None:
+            return
+        if self.result.status is EvidenceStatus.PASSED and self.installation.status != "resolved":
+            raise ValueError("passing evidence requires a resolved installation outcome")
+        if (
+            self.installation.cohort_manifest_sha256 is not None
+            and self.installation.cohort_manifest_sha256 != self.cohort.manifest_sha256
+        ):
+            raise ValueError("installation evidence does not bind the supplied release cohort")
+        if self.installation.mode == "binary" and self.installation.cohort_manifest_sha256 is None:
+            raise ValueError("binary installation evidence must bind a release-cohort manifest")
 
 
 class DistributionEvidence(EvidenceIdentityPayload):

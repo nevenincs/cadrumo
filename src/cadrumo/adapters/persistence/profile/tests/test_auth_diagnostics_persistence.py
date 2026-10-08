@@ -17,7 +17,8 @@ from cadrumo.application.auth.diagnostics import (
     AuthDiagnosticPhoneState,
     list_auth_diagnostics,
     load_auth_diagnostic,
-    record_auth_diagnostic_phone_state,
+    persist_auth_diagnostic_phone_state,
+    prepare_auth_diagnostic_phone_state,
 )
 from cadrumo.application.auth.errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 from cadrumo.core.classification.policies import SensitivityClass
@@ -40,11 +41,12 @@ def _load_auth_diagnostic(diagnostic_id: str):
 
 def _record_auth_diagnostic_phone_state(diagnostic_id: str, phone_state: str):
     """Update one application diagnostic through the composed persistence adapter."""
-    return record_auth_diagnostic_phone_state(
-        diagnostic_id,
-        phone_state,
-        persistence=build_auth_diagnostic_persistence(),
-    )
+    persistence = build_auth_diagnostic_persistence()
+    prepared = prepare_auth_diagnostic_phone_state(diagnostic_id, phone_state, persistence=persistence)
+    if prepared is None:
+        return None
+    persist_auth_diagnostic_phone_state(prepared, persistence=persistence)
+    return prepared.result
 
 
 def test_auth_diagnostics_list_and_show_redact_page_bodies(
@@ -320,7 +322,7 @@ class TestPersistedInstantContract:
 class TestPersistedPhoneStateTaxonomy:
     """A persisted phone state is held to the same closed vocabulary as the mutation.
 
-    The taxonomy was enforced only by ``record_auth_diagnostic_phone_state``:
+    The taxonomy was enforced only by ``prepare_auth_diagnostic_phone_state``:
     the read path pushed whatever the row held through ``str()``, so a payload
     carrying an unrecognised state was listed verbatim while the mutation API
     refused the identical value for the same diagnostic.

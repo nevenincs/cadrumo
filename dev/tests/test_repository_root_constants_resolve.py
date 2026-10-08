@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 
 #: The scanned trees. Both hold gates that locate a subject by walking upward.
-_SCANNED_TREES = ("src", "dev")
+_SCANNED_TREES = ("src", "dev", "packaging")
 
 #: A directory is the repository root when it carries the project definition.
 _REPOSITORY_MARKER = "pyproject.toml"

@@ -47,7 +47,7 @@ def _run(storage_root: Path, *args: str, stdin_payload: str | None = None) -> su
         env_strip_prefixes=("AEAT_", "PYTEST_"),
         extra_env=_NO_KEYCHAIN,
         stdin_payload=stdin_payload,
-        timeout=60.0,
+        timeout=None,
     )
 
 

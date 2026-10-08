@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#period-grammar-standardisation'
 date: '2026-08-16'
-modified: '2026-10-01'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:4a03f43d09e333c8cefc10b27590f4579f9d75519db12665001a42ed3359313b'
+body_hash: 'sha256:34766b8e506de1825cf64d33a673105326e222c1c1b187350e42309b12c4dcfb'
 related:
   - '[[2026-06-11-period-grammar-standardisation-adr]]'
   - '[[2026-06-11-period-grammar-standardisation-code-review-audit]]'
-  - '[[2026-06-11-period-grammar-standardisation-ledger]]'
-  - '[[2026-06-11-period-grammar-standardisation-plan]]'
   - '[[2026-06-11-period-grammar-standardisation-research]]'
   - '[[2026-06-12-period-grammar-standardisation-closeout-audit]]'
 ---
@@ -30,14 +28,6 @@ Auto-generated index of all documents tagged with `#period-grammar-standardisati
 
 - `2026-06-11-period-grammar-standardisation-code-review-audit` - `period-grammar-standardisation` Code Review
 - `2026-06-12-period-grammar-standardisation-closeout-audit` - `period-grammar-standardisation` Closeout Audit
-
-### exec
-
-- `2026-06-11-period-grammar-standardisation-ledger` - `period-grammar-standardisation` ledger
-
-### plan
-
-- `2026-06-11-period-grammar-standardisation-plan` - `period-grammar-standardisation` `period grammar standardisation: AEAT-token-only, year always separate, conflation burn-down` plan
 
 ### research
 

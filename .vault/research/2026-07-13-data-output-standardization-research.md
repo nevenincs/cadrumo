@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#data-output-standardization'
 date: '2026-07-13'
-modified: '2026-07-13'
-body_hash: 'sha256:7e80866cc2fb64d71c9d337a33139f65d7b1b189044609c719899fbf3faadc39'
+modified: '2026-10-05'
+body_hash: 'sha256:275e358bbad6a95cb66555f1aa23360c0c16dd5b309898098ec993607144f4f1'
 related: []
 ---
 
@@ -43,7 +43,7 @@ blobs (`<root>/blobs`), audit (`<root>/audit`), and the SQLite `database_url`
 (`<root>/buckets/<bucket>/db/cadrumo.db`). The other **~22 output directories**
 default to `PROJECT_ROOT/var/...` and are NOT rerooted — on an installed run
 `PROJECT_ROOT` resolves inside site-packages/venv/uv-cache, so durable and
-partly sensitive outputs (backups, llm-cache, llm-usage, llm-run-telemetry,
+partly sensitive outputs (backups, llm-cache, llm-usage,
 submissions, browser-traces, inbox, inbox/pdfs, workflow-runs, drafts,
 status-cache, runs, justificantes, filing-history, registry-parity store,
 financial/transactions, financial/invoices, financial/attachments,
@@ -142,7 +142,7 @@ could diverge.
 
 **F3.2 — Direct OS-temp use instead of tmp_path.**
 `domain/calculations/registry/tests/test_authority.py:359` and
-`tests/test_loader_cache_isolation.py:180` inspect `Path(tempfile.gettempdir())`
+the former source file inspect `Path(tempfile.gettempdir())`
 directly (white-box coupling to the loader's disk-pickle location). Seven more
 dev-side tests use raw `tempfile.TemporaryDirectory()` instead of `tmp_path`
 (`dev/docs/tests/test_cli_tree.py:65`, `test_glossary_reference.py:139`,
@@ -168,7 +168,7 @@ with stale `aeat.*` imports), a second naked `scratch/test_conformance_check.py`
 
 **F3.4 — Isolation-fixture drift (no single source of truth for redirecting
 output dirs in tests).** Canonical helpers exist
-(`src/cadrumo/tests/secure_sql.py:228` `isolated_profile_storage_root`, `:449`
+(the former source file `isolated_profile_storage_root`, `:449`
 `isolated_cli_runtime_profile`, plus siblings), but ~22 test files each define
 a private copy-pasted `_isolated_cli_backend` autouse fixture repeating the
 same five `override_settings(cadrumo_token_dir=..., cadrumo_runs_dir=...,
@@ -189,10 +189,10 @@ its own namespaced fixtures tree with sidecar provenance — no drift.
 ### Axis 4 — Dev scripts, packaging, and generated-artifact producers
 
 **F4.1 — Packaging generators are clean.** `materialise_plugin()` /
-`materialise_marketplace()` (`src/cadrumo/agent/_workspace.py:369,428`) write
+`materialise_marketplace()`  write
 under operator-chosen output dirs with `cadrumo-` naming, and the checked-in
 marketplace scaffold is generator-locked by test.
-`dev/packaging/smoke_plugin_validate.py:86` (`cadrumo-plugin-smoke-`) and
+the former source file (`cadrumo-plugin-smoke-`) and
 `dev/docs/serve.py:514` (`cadrumo-docs-serve-`) use correct prefixes and
 clean up by default.
 
@@ -246,8 +246,7 @@ login-failure diagnostics and auth diagnostics persist through
 model.
 
 **F5.3 — Cache lifecycle is three-way inconsistent.** Managed:
-LLM run-telemetry (retention-days prune, `_run_telemetry.py:245-280`,
-`config.py:727`), status cache (TTL 900s, `config.py:872`), workflow-runs
+status cache (TTL 900s, `config.py:872`), workflow-runs
 (rotation store via `_rotation.py:462`). Unmanaged/unbounded: LLM response
 cache (`adapters/outbound/llm/_cache.py:55,265` —
 `<provider>/<model>/{hash}.json`, no cleanup), LLM usage JSONL
@@ -269,9 +268,6 @@ single location-authority violation found.
 have no consumer anywhere in `src/cadrumo` outside `config.py` — dead fields
 sharing one default dir (`var/browser-traces`); if reactivated they collide.
 Candidates for deletion (no-dormant discipline) or re-pointing in the ADR.
-
-**F5.6 — No unmanaged telemetry spools.** The LLM run-telemetry dir is the
-only local telemetry sink and it is retention-pruned.
 
 ### Axis 6 — Naming-schema classification (against the Cadrumo doctrine)
 
@@ -341,7 +337,7 @@ derived from it, `PROJECT_ROOT`-relative defaults eliminated.
 Both belong under a settings-driven cache root with scoping and eviction.
 
 **D3 — No lifecycle (retention/rotation) policy.** Managed exemplars exist
-(run-telemetry retention-days, status-cache TTL, workflow-runs rotation) but
+(status-cache TTL, workflow-runs rotation) but
 `cadrumo.log`, LLM cache, LLM usage, run traces, wallet dumps, and both temp
 caches grow unbounded. The ADR should mandate a per-category lifecycle
 declaration (rotation, TTL, retention days, or explicitly unbounded-by-design).
@@ -396,13 +392,13 @@ should be deleted or wired, not left as dead vocabulary.
   `_loader_cache.py`, `_workbook_parity.py`
 - `adapters/persistence/storage/` (envelope, blob_store, secret_store,
   master_key, bucket, `_rotation.py`), `adapters/outbound/storage/_local.py`,
-  `adapters/outbound/llm/` (`_cache.py`, `_usage.py`, `_run_telemetry.py`)
+  `adapters/outbound/llm/` (`_cache.py`, `_usage.py`)
 - `application/modelo/_review_package.py`,
   `entrypoints/cli/_modelo_review_package_cli.py`,
   `application/ledger/_actions_split_merge.py`, `_actions_manual.py`
 - `src/cadrumo/conftest.py`, repo-root `conftest.py`,
-  `src/cadrumo/tests/secure_sql.py`, `src/cadrumo/tests/env_scope.py`
-- `dev/packaging/smoke_plugin_validate.py`, `dev/docs/` generators,
+  the former source file, `src/cadrumo/tests/env_scope.py`
+- the former source file, `dev/docs/` generators,
   `dev/registry/newmodelo/manager.py`, `.gitignore`
 - Prior art: secure-persistence-foundation research (2026-04-27),
   secure-persistence-enforcement ADR (2026-05-06), cadrumo product rename

@@ -35,7 +35,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.config import override_settings
 from ....core.credentials import assess_profile_password
@@ -352,7 +352,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
         # Unlocking again through the ordinary login door is how the test
         # reaches the encrypted record the screen actually wrote.
         _, profile_decode_context = _profile_contexts_for_test()
-        login_profile(
+        authenticate_profile_for_invocation(
             name="Language Subject",
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=profile_decode_context,

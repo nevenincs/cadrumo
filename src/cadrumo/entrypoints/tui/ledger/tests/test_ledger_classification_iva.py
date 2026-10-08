@@ -150,6 +150,12 @@ async def test_blank_iva_and_prorrata_inputs_remain_unset() -> None:
     (
         ("iva_rate", "21", 0, "decimal fraction"),
         ("business_pct", "1.01", 2, "business_pct must be within"),
+        # Shapes the command line refuses through the same canonical grammar.
+        ("taxable_base", "1e3", 0, "taxable_base must be a decimal"),
+        ("taxable_base", "1_000", 0, "taxable_base must be a decimal"),
+        ("iva_amount", "+5", 0, "iva_amount must be a decimal"),
+        ("iva_amount", "1.234", 0, "iva_amount must be a decimal"),
+        ("business_pct", "NaN", 2, "business_pct must be a decimal"),
     ),
 )
 async def test_invalid_rate_or_percentage_refuses_before_submit(

@@ -27,12 +27,13 @@ from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ONE, ZERO
 from ....core.money.rounding import round_to_cents as _round_to_cents
 from ._formula_operator_contracts import require_formula_operator_arity
 from .casilla_membership import undeclared_casilla_ids
 from .errors import RegistrySnapshotError, RegistryValidationError
+from .formula_input_keys import canonicalize_formula_input_keys
 from .ids import RevisionId
 from .schema_base import NUMERIC_CASILLA_DATA_TYPES
 from .schema_formula import BracketEntry, DatedValue, ParameterDefinition
@@ -116,6 +117,33 @@ def numeric_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
     ctx.operand_casilla_refs.append(casilla_id)
     ctx.operand_values.append(value)
     return value
+
+
+def text_tolerant_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
+    """Read a casilla whose official record design declares either a text or a decimal type.
+
+    Some official record designs declare a rate-like casilla as text (``X``)
+    while its siblings use a decimal type, an AEAT dictionary quirk rather than
+    a semantic difference. A text-typed casilla's value only ever reaches
+    :attr:`EvalContext.text_values`, never :attr:`EvalContext.values`, so
+    :func:`numeric_casilla_value` refuses it. A casilla the registry declares as
+    text is therefore read from ``text_values`` whether or not the operator
+    filled it, and every other casilla is read through
+    :func:`numeric_casilla_value`. An unparsable, blank or absent text value
+    resolves to zero, the same "not applied" signal a blank decimal casilla
+    gives.
+    """
+    if casilla_id in ctx.text_values or casilla_id in ctx.text_casilla_ids:
+        ctx.operand_refs.append(casilla_id)
+        ctx.operand_casilla_refs.append(casilla_id)
+        raw_text = ctx.text_values.get(casilla_id, "").strip()
+        try:
+            value = Decimal(raw_text) if raw_text else ZERO
+        except ArithmeticError:
+            value = ZERO
+        ctx.operand_values.append(value)
+        return value
+    return numeric_casilla_value(casilla_id, ctx)
 
 
 def evaluate_args_op(op: str, args: list[Decimal]) -> Decimal:
@@ -431,43 +459,11 @@ def validated_decimal_input_casilla_ids[InputKey, InputValue](
     values, then :func:`domain.calculations.registry.casilla_membership.undeclared_casilla_ids`
     rejects inputs outside the revision's declared casilla set.
     """
-    _reject_non_string_input_keys(inputs)
-    canonical_inputs = _canonicalize_input_keys(inputs)
+    canonical_inputs = canonicalize_formula_input_keys(inputs, surface="input")
     unknown = undeclared_casilla_ids(revision, canonical_inputs)
     if unknown:
         raise RegistryValidationError.for_unknown_input_casilla_ids(casilla_ids=unknown)
     return _validated_decimal_inputs(canonical_inputs)
-
-
-def _reject_non_string_input_keys[InputKey, InputValue](inputs: Mapping[InputKey, InputValue]) -> None:
-    """Reject non-string keys before canonical casilla-id validation."""
-    invalid = tuple(repr(key) for key in inputs if not isinstance(key, str))
-    if invalid:
-        raise RegistryValidationError(
-            f"input keys must be canonical casilla.id strings: {sorted(invalid)!r}",
-            translated_message="errors.calc.unknown_input_casillas",
-            context={"casilla_ids": ",".join(sorted(invalid))},
-        )
-
-
-def _canonicalize_input_keys[InputKey, InputValue](
-    inputs: Mapping[InputKey, InputValue],
-) -> dict[CasillaId, InputValue]:
-    """Validate input key shape while retaining the caller's value sequence."""
-    malformed: list[str] = []
-    canonical_inputs: dict[CasillaId, InputValue] = {}
-    for key in inputs:
-        try:
-            canonical_inputs[validated_casilla_id(key, surface="input casilla.id")] = inputs[key]
-        except ValueError:
-            malformed.append(str(key))
-    if malformed:
-        raise RegistryValidationError(
-            f"input keys must be canonical casilla.id strings: {sorted(malformed)!r}",
-            translated_message="errors.calc.unknown_input_casillas",
-            context={"casilla_ids": ",".join(sorted(malformed))},
-        )
-    return canonical_inputs
 
 
 def _validated_decimal_inputs[InputValue](

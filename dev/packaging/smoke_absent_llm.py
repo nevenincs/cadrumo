@@ -37,15 +37,15 @@ from packaging.requirements import Requirement
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
+from dev.first_party_source import is_test_source
+from dev.product_environment import clean_product_env
 
 from ._distribution_names import normalise_distribution_name
+from .dependency_contract import assert_wheel_metadata_matches_pyproject, optional_extra_registry, wheel_metadata
 from .lane_verification_core import (
     assert_cadrumo_version_output,
-    assert_wheel_metadata_matches_pyproject,
-    clean_product_env,
     create_pip_venv,
     install_targets_with_pip,
-    optional_extra_registry,
     relative_manifest_path,
     require_executable,
     resolve_work_dir,
@@ -53,7 +53,6 @@ from .lane_verification_core import (
     run_checked_marker,
     venv_cadrumo_path,
     venv_python_path,
-    wheel_metadata,
     write_smoke_manifest,
 )
 from .proof_ledger import record_proof
@@ -210,7 +209,7 @@ def _guarded_surfaces_from_production_guards(repo_root: Path, symbol: str) -> tu
     reachable: set[str] = set()
     for path in scan_directory(package, pattern="*.py", recursive=True):
         relative = path.relative_to(package)
-        if "tests" in relative.parts:
+        if is_test_source(relative):
             continue
         tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
         names = _guarded_definition_names(tree, symbol)
@@ -579,6 +578,31 @@ print("llm-extra-absent-ok")
     record_proof(_CLAIM_EXTRA_PROBES_ABSENT)
 
 
+def _assert_surface_outcomes(stdout: str) -> None:
+    marker = "SURFACE_OUTCOMES:"
+    line = next((row for row in stdout.splitlines() if row.startswith(marker)), None)
+    if line is None:
+        raise SystemExit(f"the surface driver produced no outcomes; stdout was: {stdout!r}")
+    outcomes = json.loads(line[len(marker) :])
+    _assert_inference_refusals(outcomes)
+    print(f"{len(outcomes)} inference surfaces refused with the declared install guidance", flush=True)
+
+
+def _assert_inference_refusals(outcomes: list[dict[str, str]]) -> None:
+    driven = {entry["name"] for entry in outcomes}
+    expected = {name for _module, name, _call in _INFERENCE_SURFACES}
+    if driven != expected:
+        raise SystemExit(f"the driver did not reach every surface: missing {sorted(expected - driven)!r}")
+    wrong = [entry for entry in outcomes if entry["outcome"] != "refused" or entry.get("extra") != _EXPECTED_EXTRA]
+    if wrong:
+        raise SystemExit(
+            "these inference surfaces did not refuse with the declared install guidance in a core "
+            f"install: {wrong!r}. Each must raise MissingOptionalExtraError naming extra {_EXPECTED_EXTRA!r}; a "
+            "'module-not-found' outcome is the raw failure the guard exists to convert, and a 'succeeded' "
+            "outcome is a model-bearing surface running without the model-bearing dependencies.",
+        )
+
+
 def _assert_inference_surfaces_refuse(work_dir: Path, venv_path: Path) -> None:
     """Drive every inference-adjacent surface and require the declared guidance.
 
@@ -637,26 +661,7 @@ print("SURFACE_OUTCOMES:" + json.dumps(outcomes))
         cwd=work_dir,
         env=_lane_env(work_dir, "surface-state"),
     )
-    marker = "SURFACE_OUTCOMES:"
-    line = next((row for row in result.stdout.splitlines() if row.startswith(marker)), None)
-    if line is None:
-        raise SystemExit(f"the surface driver produced no outcomes; stdout was: {result.stdout!r}")
-    outcomes = json.loads(line[len(marker) :])
-
-    driven = {entry["name"] for entry in outcomes}
-    expected = {name for _module, name, _call in _INFERENCE_SURFACES}
-    if driven != expected:
-        raise SystemExit(f"the driver did not reach every surface: missing {sorted(expected - driven)!r}")
-
-    wrong = [entry for entry in outcomes if entry["outcome"] != "refused" or entry.get("extra") != _EXPECTED_EXTRA]
-    if wrong:
-        raise SystemExit(
-            "these inference surfaces did not refuse with the declared install guidance in a core "
-            f"install: {wrong!r}. Each must raise MissingOptionalExtraError naming extra {_EXPECTED_EXTRA!r}; a "
-            "'module-not-found' outcome is the raw failure the guard exists to convert, and a 'succeeded' "
-            "outcome is a model-bearing surface running without the model-bearing dependencies.",
-        )
-    print(f"{len(outcomes)} inference surfaces refused with the declared install guidance", flush=True)
+    _assert_surface_outcomes(result.stdout)
     record_proof(_CLAIM_SURFACES_REFUSE)
 
 

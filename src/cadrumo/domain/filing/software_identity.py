@@ -8,6 +8,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
+from cadrumo.domain.calculations.registry.export_literal_fact import ExportLiteralFact, resolve_export_literal_fact
+from cadrumo.domain.calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -48,11 +50,22 @@ type AeatProgramIdentifier = Annotated[
 """Exact four-byte developer-authored software-version identifier for an AEAT header."""
 
 
-DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER = "0000"
-"""All-zero program identifier of Cadrumo's development mock software identity."""
+DEVELOPMENT_MOCK_SOFTWARE_IDENTITY_FACT_ID = "aeat-eedd:development-mock-software-identity"
+"""Governed mapping fact holding the development mock's program identifier and developer NIE.
 
-DEVELOPMENT_MOCK_DEVELOPER_TAX_ID = "00000000T"
-"""All-zero, checksum-valid developer NIF of Cadrumo's development mock software identity."""
+The registry fact is the one home of those values: the fixed-record envelopes
+bind their EEDD slots to it through ``literal_fact``, and
+:func:`development_mock_software_identity` reads the same entries.
+"""
+
+DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER_FACT = ExportLiteralFact(
+    fact_id=DEVELOPMENT_MOCK_SOFTWARE_IDENTITY_FACT_ID,
+    key="program_identifier",
+)
+DEVELOPMENT_MOCK_DEVELOPER_TAX_ID_FACT = ExportLiteralFact(
+    fact_id=DEVELOPMENT_MOCK_SOFTWARE_IDENTITY_FACT_ID,
+    key="developer_tax_id",
+)
 
 DEVELOPMENT_MOCK_EVIDENCE_REFERENCE = "cadrumo:development-mock-software-identity:not-aeat-certified"
 """Evidence reference naming the mock as uncertified, so no receipt can mistake it for a registration."""
@@ -109,18 +122,10 @@ class AeatProductSoftwareIdentity(BaseModel):
         references = tuple(item.reference for item in self.evidence)
         if len(set(references)) != len(references):
             raise ValueError("AEAT product software evidence must not repeat a reference")
-        uses_mock_values = (
-            self.program_identifier == DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER
-            or self.developer_tax_id == DEVELOPMENT_MOCK_DEVELOPER_TAX_ID
-        )
+        zero_program = _is_all_zero(self.program_identifier)
+        zero_developer = _is_all_zero(self.developer_tax_id)
         cites_mock_evidence = DEVELOPMENT_MOCK_EVIDENCE_REFERENCE in references
-        if uses_mock_values != cites_mock_evidence or (
-            uses_mock_values
-            and (
-                self.program_identifier != DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER
-                or self.developer_tax_id != DEVELOPMENT_MOCK_DEVELOPER_TAX_ID
-            )
-        ):
+        if zero_program != zero_developer or zero_program != cites_mock_evidence:
             raise ValueError(
                 "the all-zero development mock values and the mock evidence reference must appear together and whole",
             )
@@ -129,24 +134,39 @@ class AeatProductSoftwareIdentity(BaseModel):
     @property
     def grade(self) -> AeatSoftwareIdentityGrade:
         """Derive the grade from the values, so a mock can never be relabelled as reviewed."""
-        if self.developer_tax_id == DEVELOPMENT_MOCK_DEVELOPER_TAX_ID:
+        if _is_all_zero(self.developer_tax_id):
             return AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK
         return AeatSoftwareIdentityGrade.REVIEWED
 
 
-def development_mock_software_identity() -> AeatProductSoftwareIdentity:
+def _is_all_zero(identifier: str) -> bool:
+    """Whether every digit of an identifier is zero: the mark of the development mock.
+
+    A program identifier is all digits; a Spanish tax identifier carries one or
+    two control letters around its number, so only its digits are read. No AEAT
+    registration is numbered zero, which is what makes the all-zero shape a
+    placeholder no reader can mistake for one.
+    """
+    digits = [character for character in identifier if character.isdigit()]
+    return bool(digits) and all(character == "0" for character in digits)
+
+
+def development_mock_software_identity(authority: GovernedFactSource | None = None) -> AeatProductSoftwareIdentity:
     """Return Cadrumo's development mock identity for envelope-prefixed export headers.
 
     AEAT reserves the program identifier and developer NIF header fields for a
     software developer it has registered. Cadrumo holds no such registration,
-    so exports stamp an all-zero identity that no reader can mistake for one;
-    every consumer reports the :attr:`AeatProductSoftwareIdentity.grade` so the
-    operator learns the file is not presentable at AEAT. The tax identifier is
-    validated like any other, so the caller must hold an authority operation.
+    so exports stamp the all-zero identity the governed fact
+    :data:`DEVELOPMENT_MOCK_SOFTWARE_IDENTITY_FACT_ID` declares; every consumer
+    reports the :attr:`AeatProductSoftwareIdentity.grade` so the operator learns
+    the file is not presentable at AEAT. Both the fact and the tax identifier's
+    validation need governed facts, so the caller must hold an authority
+    operation or pass ``authority``.
     """
+    selected = require_governed_fact_authority(authority, subject="development mock software identity")
     return AeatProductSoftwareIdentity(
-        program_identifier=DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER,
-        developer_tax_id=DEVELOPMENT_MOCK_DEVELOPER_TAX_ID,
+        program_identifier=resolve_export_literal_fact(DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER_FACT, authority=selected),
+        developer_tax_id=resolve_export_literal_fact(DEVELOPMENT_MOCK_DEVELOPER_TAX_ID_FACT, authority=selected),
         evidence=(
             AeatProductSoftwareEvidence(
                 reference=DEVELOPMENT_MOCK_EVIDENCE_REFERENCE,
@@ -157,9 +177,10 @@ def development_mock_software_identity() -> AeatProductSoftwareIdentity:
 
 
 __all__ = [
-    "DEVELOPMENT_MOCK_DEVELOPER_TAX_ID",
+    "DEVELOPMENT_MOCK_DEVELOPER_TAX_ID_FACT",
     "DEVELOPMENT_MOCK_EVIDENCE_REFERENCE",
-    "DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER",
+    "DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER_FACT",
+    "DEVELOPMENT_MOCK_SOFTWARE_IDENTITY_FACT_ID",
     "AeatProductSoftwareEvidence",
     "AeatProductSoftwareIdentity",
     "AeatProgramIdentifier",

@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#gate-integrity-adjudication'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:50da274c53c8a122dc9eed3cc1926e8f37784117949df3a2d63a3429335f4a5e'
+body_hash: 'sha256:90d8ee27a7e3f5d233142060ceea14c6dcf7e302511a313bdb877b2239a97caa'
 related: []
 ---
 
@@ -126,7 +126,7 @@ the verify-only policy.
 - `.importlinter` - the two TUI contracts, and the launcher-only contract whose
   test allowances are the file-local precedent for separating production edges
   from test edges.
-- `src/cadrumo/entrypoints/cli/_tui_session.py` - the out-of-process session
+- the former source file - the out-of-process session
   bridge and its statement of the boundary.
 - `src/cadrumo/entrypoints/cli/_modelo_work_review_cli.py:29` and
   `src/cadrumo/entrypoints/cli/_modelo_work_select_cli.py:46,60,61,62` - the five
@@ -139,7 +139,7 @@ the verify-only policy.
 - `prek.toml` - the verify-only policy and its recorded incident rationale.
 - `justfile` - the four mechanical gate recipes and the change-scoped
   documentation precedent.
-- `dev/quality/relative_imports.py` - the scanner's documented per-path
+- the former source file - the scanner's documented per-path
   invocation mode.
 - `2026-08-11-tui-architecture-adr` D11, and
   `2026-09-02-unreachable-capability-tui-navigation-join-adr` - the current

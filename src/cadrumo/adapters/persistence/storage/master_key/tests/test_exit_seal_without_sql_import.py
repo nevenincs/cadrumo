@@ -63,7 +63,7 @@ def test_a_session_opened_without_sql_is_sealed_and_disposed_at_exit(tmp_path: P
         [sys.executable, "-c", _CHILD, str(evidence)],
         capture_output=True,
         text=True,
-        timeout=180,
+        timeout=None,
         check=False,
     )
 

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:89f906e5627e343a81a920654d8f66f81da676265467d0bc5fa8c47ad1a8ada3'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-26-tui-architecture-s170-alias-selection-remediation-audit]]"
 ---
 

@@ -6,21 +6,23 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 
 import pytest
-from textual.widgets import DataTable, Static
+from textual.screen import Screen
+from textual.widgets import Button, DataTable, Static
 
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
-from .....application.modelo.declarations_workspace import (
+from .....application.modelo.declarations_workspace import project_declarations_workspace
+from .....application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
-    project_declarations_workspace,
 )
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
+from .....core.i18n.render import tr
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.modelos.calculation_revision import (
@@ -45,8 +47,9 @@ from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...components.host import ScreenHostApp
 from ...navigation import TuiScreenContextV1
 from ...tests.frame import geometry_band
-from ..controller import DeclarationsWorkspaceController, declarations_copy
+from ..controller import DeclarationsWorkspaceController
 from ..filing_history import DeclarationsFilingHistoryScreen
+from ..models import DeclarationsWorkspaceWiringV1
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -219,9 +222,11 @@ def _controller(projection: DeclarationsWorkspaceProjectionV1) -> DeclarationsWo
     return DeclarationsWorkspaceController(
         TuiScreenContextV1(destination="workbench.declarations"),
         projection,
-        work_action=ActionReference(action_id=lookup_action("operator.modelo.work.list").action_id),
-        revisions_action=ActionReference(action_id=lookup_action("operator.modelo.work.revisions").action_id),
-        filing_action=ActionReference(action_id=lookup_action("operator.modelo.filing_record.list").action_id),
+        DeclarationsWorkspaceWiringV1(
+            work_action=ActionReference(action_id=lookup_action("operator.modelo.work.list").action_id),
+            revisions_action=ActionReference(action_id=lookup_action("operator.modelo.work.revisions").action_id),
+            filing_action=ActionReference(action_id=lookup_action("operator.modelo.filing_record.list").action_id),
+        ),
     )
 
 
@@ -246,18 +251,18 @@ async def test_history_shows_chain_columns_and_reconciliation_and_override_event
             row_key = f"filing:{entry.filing_record_id}"
             cells = tuple(str(cell) for cell in table.get_row(row_key))
             assert cells[2:] == (
-                declarations_copy(f"tui.declarations.filing_state.{local_state}"),
-                declarations_copy(f"tui.declarations.confirmation.{confirmation}"),
-                declarations_copy(f"tui.declarations.{evidence}"),
+                tr(f"tui.declarations.filing_state.{local_state}"),
+                tr(f"tui.declarations.confirmation.{confirmation}"),
+                tr(f"tui.declarations.{evidence}"),
             )
             table.move_cursor(row=table.get_row_index(row_key))
             await pilot.pause()
-            assert str(detail.render()) == declarations_copy(
+            assert str(detail.render()) == tr(
                 "tui.declarations.filing_history.chain_detail",
-                origin=declarations_copy(f"tui.declarations.origin.{origin}"),
-                kind=declarations_copy(f"tui.declarations.declaration_kind.{kind}"),
-                confirmation=declarations_copy(f"tui.declarations.confirmation.{confirmation}"),
-                amends=declarations_copy(f"tui.declarations.value.{amends}"),
+                origin=tr(f"tui.declarations.origin.{origin}"),
+                kind=tr(f"tui.declarations.declaration_kind.{kind}"),
+                confirmation=tr(f"tui.declarations.confirmation.{confirmation}"),
+                amends=tr(f"tui.declarations.value.{amends}"),
             )
 
         keys = tuple(str(row.key.value) for row in table.ordered_rows)
@@ -270,12 +275,46 @@ async def test_history_shows_chain_columns_and_reconciliation_and_override_event
         )
         event_labels = [str(table.get_row(key)[2]) for key in keys[:3]]
         assert event_labels == [
-            declarations_copy("tui.declarations.lifecycle.observation_override_cleared"),
-            declarations_copy("tui.declarations.lifecycle.observation_overridden"),
-            declarations_copy("tui.declarations.lifecycle.reconciled"),
+            tr("tui.declarations.lifecycle.observation_override_cleared"),
+            tr("tui.declarations.lifecycle.observation_overridden"),
+            tr("tui.declarations.lifecycle.reconciled"),
         ]
         assert all("tui.declarations." not in label for label in event_labels)
         table.move_cursor(row=table.get_row_index("lifecycle:event-reconciled"))
         await pilot.pause()
         assert str(detail.render()) == ""
         assert geometry_band(screen.app, 80) == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "button_id", ["filing-history-export", "filing-history-reconcile-export", "filing-history-google-review"]
+)
+async def test_history_export_buttons_dispatch_the_exact_selected_filing(
+    authority_operation: PinnedAuthorityOperation, button_id: str
+) -> None:
+    projection = _chain_projection(authority_operation)
+    controller = _controller(projection)
+    selected = []
+
+    def factory(row):
+        selected.append(row)
+        return Screen()
+
+    controller.filing_google_review_factory = factory
+    controller.filing_export_factory = factory
+    controller.reconciliation_export_factory = factory
+    screen = DeclarationsFilingHistoryScreen(controller)
+    async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
+        await pilot.pause()
+        table = screen.query_one("#declarations-filings", DataTable)
+        button = screen.query_one(f"#{button_id}", Button)
+        assert button.disabled
+        historical = next(row for row in projection.filings if row.declaration_kind is FilingDeclarationKind.ORIGINAL)
+        table.move_cursor(row=table.get_row_index(f"filing:{historical.filing_record_id}"))
+        await pilot.pause()
+        assert not button.disabled
+        button.press()
+        await pilot.pause()
+        assert selected == [historical]
+        assert selected[0].calculation_revision_id == historical.calculation_revision_id

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#censo-operator-manual-enrolment'
 date: '2026-07-12'
-modified: '2026-07-12'
-body_hash: 'sha256:c226a21ece01acf5c9a6494bb192b223f7b21c09dd1871f14d538e7d79a55f9c'
-related:
-  - "[[2026-07-11-censo-operator-manual-enrolment-plan]]"
+modified: '2026-10-03'
+body_hash: 'sha256:2b8d4eab4b7cb167aaff0ba629a886eaef37ae5bd10fb290569d1235fc45b482'
+related: []
 ---
 
 # `censo-operator-manual-enrolment` audit: `operator-manual migration residual audit`
@@ -23,10 +22,10 @@ pass.
 
 ### stale-operator-guidance | medium | Shipped how-to and agent guidance still instructs the retired CLI family
 
-The current `docs/how-to/censo-update.md`, `docs/how-to/read-live-aeat-data.md`,
-and `src/aeat/_data/agent/skills/inicio-actividad/SKILL.md` still direct users
+The current `docs/how-to/censo-update.md`, the retired document,
+and the retired document still direct users
 to `config profile censo pull`, `compare`, or `apply`. Current source says the
-opposite: `src/aeat/application/user_profile/_censo_sync.py` records that the
+opposite: the retired module records that the
 live scrape and command family are retired, and that `config profile edit` is
 the operator-declared, non-official replacement. This is the concrete residual
 for `P02.S05`; it must be corrected through the required documentation
@@ -34,7 +33,7 @@ workflow, not by treating the removal as fully complete.
 
 ### shared-locale-wip | info | The Censo locale subtree is staged shared work and cannot be safely claimed here
 
-`src/aeat/locales/en.yml` is already staged in the shared worktree. The current
+The retired data file was already staged in the shared worktree. The current
 plan's locale-related cleanup therefore remains owned by that in-flight change;
 this reconciliation does not alter, overwrite, or take credit for it.
 

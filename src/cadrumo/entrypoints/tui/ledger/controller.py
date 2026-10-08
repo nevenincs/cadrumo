@@ -92,19 +92,14 @@ _STATUS_LOCALE_KEYS: Final = {
 }
 
 
-def ledger_copy(key: str, **values: object) -> str:
-    """Resolve all operator copy through the canonical catalogue boundary."""
-    return tr(key, **values)
-
-
 def area_label(area: LedgerWorkspaceArea) -> str:
     """Return an operator label without displaying an internal enum token."""
-    return ledger_copy(_AREA_LOCALE_KEYS[area])
+    return tr(_AREA_LOCALE_KEYS[area])
 
 
 def availability_label(availability: LedgerWorkspaceAvailability) -> str:
     """Render availability with a textual cue independent of colour."""
-    return ledger_copy(_AVAILABILITY_LOCALE_KEYS[availability])
+    return tr(_AVAILABILITY_LOCALE_KEYS[availability])
 
 
 def review_status_label(status: str) -> str:
@@ -112,12 +107,12 @@ def review_status_label(status: str) -> str:
     key = _REVIEW_STATUS_LOCALE_KEYS.get(status)
     if key is None:
         raise ValueError("unsupported Ledger review status")
-    return ledger_copy(key)
+    return tr(key)
 
 
 def status_label(status: LedgerWorkspaceStatus) -> str:
     """Render source status through its authored catalogue key."""
-    return ledger_copy(_STATUS_LOCALE_KEYS[status])
+    return tr(_STATUS_LOCALE_KEYS[status])
 
 
 def item_count_label(state: LedgerWorkspaceAreaStateV1) -> str:
@@ -159,6 +154,7 @@ class LedgerWorkspaceController:
         self.link_submitter = injection.link_submitter
         self.activity_asset_actions = injection.activity_asset_actions
         self.record_doors = injection.record_doors
+        self.own_account_door = injection.own_account_door
         self._states = {row.area: row for row in projection.areas}
 
     def classification_target_coordinate(self) -> tuple[int, int, str]:
@@ -184,7 +180,7 @@ class LedgerWorkspaceController:
         entry = next((row for row in self.projection.entries if row.transaction_id == transaction_id), None)
         if entry is None:
             return str(transaction_id)[:12]
-        return ledger_copy("tui.ledger.entry_label", date=entry.date, description=entry.description)
+        return tr("tui.ledger.entry_label", date=entry.date, description=entry.description)
 
     def state_for(self, area: LedgerWorkspaceArea) -> LedgerWorkspaceAreaStateV1:
         """Return the application-owned area state."""
@@ -247,7 +243,10 @@ class LedgerWorkspaceController:
                 and (self.classify_action is None or self.classification_submitter is None)
             )
             or (area is LedgerWorkspaceArea.IMPORT and self.import_door is None)
-            or (area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None))
+            or (
+                area is LedgerWorkspaceArea.EVIDENCE
+                and (self.evidence_action is None or (self.evidence_items is None and self.evidence_door is None))
+            )
         )
 
     def refusal_for(self, area: LedgerWorkspaceArea) -> LedgerRouteRefusalV1 | None:
@@ -616,7 +615,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         if self.refreshing:
             return
         self.refreshing = True
-        self._status_line().update(ledger_copy("tui.ledger.flow.refreshing"))
+        self._status_line().update(tr("tui.ledger.flow.refreshing"))
         self.run_worker(self._refresh(), group="ledger-refresh")
 
     async def _refresh(self) -> None:
@@ -624,7 +623,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         try:
             self.controller = await asyncio.to_thread(self.controller.refreshed)
         except CadrumoError:
-            self._status_line().update(ledger_copy("tui.ledger.flow.refresh_failed"))
+            self._status_line().update(tr("tui.ledger.flow.refresh_failed"))
         else:
             self._status_line().update("")
         finally:
@@ -642,9 +641,9 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
     def populate_navigation(self) -> None:
         """Populate the complete seven-area catalogue in canonical order."""
         table = cast("DataTable[str]", self.query_one("#ledger-navigation", DataTable))
-        table.add_column(ledger_copy("tui.ledger.column.destination"), key="destination")
-        table.add_column(ledger_copy("tui.ledger.column.availability"), key="availability")
-        table.add_column(ledger_copy("tui.ledger.column.items"), key="items")
+        table.add_column(tr("tui.ledger.column.destination"), key="destination")
+        table.add_column(tr("tui.ledger.column.availability"), key="availability")
+        table.add_column(tr("tui.ledger.column.items"), key="items")
         for area in LedgerWorkspaceArea:
             state = self.controller.state_for(area)
             refusal = self.controller.refusal_for(area)
@@ -652,7 +651,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
             # An area waiting only for the operator to pick an entry is not
             # unavailable; saying so would send them away from the fix.
             availability_cell = (
-                ledger_copy("tui.ledger.availability.choose_entry")
+                tr("tui.ledger.availability.choose_entry")
                 if refusal is not None and refusal.reason_key == "tui.ledger.refusal.selection_required"
                 else availability_label(availability)
             )
@@ -668,7 +667,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         notice = self.query_one("#ledger-refusal", Static)
         if refusal is not None:
             self.refusal = refusal
-            notice.update(ledger_copy(refusal.reason_key))
+            notice.update(tr(refusal.reason_key))
             return True
         target = self.controller.route_target(area)
         self.requested_target = target
@@ -719,7 +718,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         from .invoice_entry import LedgerInvoiceEntryScreen
 
         if not self.controller.can_add_invoices():
-            self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.submission_unavailable"))
+            self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.submission_unavailable"))
             return
         replace_workspace_body(self.app, LedgerInvoiceEntryScreen(self.controller))
 
@@ -729,17 +728,17 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
 
         doors = self.controller.record_doors
         if doors is None:
-            self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.submission_unavailable"))
+            self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.submission_unavailable"))
             return
         replace_workspace_body(self.app, LedgerInvoiceCatalogueScreen(self.controller, doors))
 
     def on_ledger_transaction_detail_requested(self, event: LedgerTransactionDetailRequested) -> None:
         """Open the selected transaction without resolving a row position."""
-        from .record_views import LedgerTransactionDetailScreen
+        from .transaction_views import LedgerTransactionDetailScreen
 
         doors = self.controller.record_doors
         if doors is None:
-            self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.submission_unavailable"))
+            self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.submission_unavailable"))
             return
         replace_workspace_body(
             self.app,
@@ -771,7 +770,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
 
     def _refuse_pending_destination(self) -> None:
         """Surface the canonical pending-area copy on this screen's notice."""
-        self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.destination_pending"))
+        self.query_one("#ledger-refusal", Static).update(tr("tui.ledger.refusal.destination_pending"))
 
 
 __all__ = [
@@ -788,7 +787,6 @@ __all__ = [
     "area_label",
     "availability_label",
     "item_count_label",
-    "ledger_copy",
     "review_status_label",
     "status_label",
 ]

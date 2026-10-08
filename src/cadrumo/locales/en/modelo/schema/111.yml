@@ -9,6 +9,57 @@ modelo:
         official_name: Personal Income Tax withholdings and payments on account. Employment
           and business income, prizes and certain capital gains and income attributions.
         title: IRPF withholdings and payments on account
+      form:
+        column:
+          contraprestaciones_satisfechas: Consideration paid
+        context:
+          apellidos: Surname or registered business name
+          declaracion-complementaria: Supplementary self-assessment
+          ejercicio: Tax year
+          iban: IBAN
+          justificante-anterior: Previous self-assessment receipt number
+          nif: Tax identification number (NIF)
+          nombre: Given name
+          periodo: Period
+        page:
+          dr-m11101:
+            heading: Page 1 · Withholdings and payments on account
+        row:
+          contraprestaciones:
+            heading: Cash or in-kind consideration
+          percep-dinerarias:
+            heading: Cash payments
+          percep-en-especie:
+            heading: Payments in kind
+          premios-dinerarios:
+            heading: Cash prizes
+          premios-en-especie:
+            heading: Prizes in kind
+          rendimientos-dinerarios:
+            heading: Cash income
+          rendimientos-en-especie:
+            heading: Income in kind
+        section:
+          complementaria:
+            heading: Supplementary return (6)
+          contraprest-cesion-dchos-imagen:
+            heading: Consideration for image rights
+          devengo:
+            heading: Tax period (2)
+          ganancias-patrim-aprovecham-forestales:
+            heading: Capital gains from forestry use
+          identificacion:
+            heading: Declarant (1)
+          ingreso:
+            heading: Payment (4)
+          premios:
+            heading: Prizes
+          rendim-actividades-economicas:
+            heading: Business income
+          rendim-del-trabajo:
+            heading: Employment income
+          total-liquidacion:
+            heading: Return total
       revision:
         2019-y-siguientes:
           casilla:

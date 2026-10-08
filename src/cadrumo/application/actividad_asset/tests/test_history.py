@@ -31,15 +31,20 @@ from ..history import ActivityAssetHistory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _revision(*, number: int = 1, supersedes_revision_id: str | None = None) -> ActivityAssetRevision:
+def _revision(
+    *,
+    number: int = 1,
+    supersedes_revision_id: str | None = None,
+    evidence_marker: str = "a",
+) -> ActivityAssetRevision:
     return ActivityAssetRevision(
         asset_id="asset-history-test",
         revision_number=number,
         supersedes_revision_id=supersedes_revision_id,
         acquisition=AcquisitionLineageReference(
-            observed_transaction_id="a" * 64,
-            invoice_evidence_id="invoice-history-test",
-            evidence_fingerprint="b" * 64,
+            observed_transaction_id=evidence_marker * 64,
+            invoice_evidence_id=f"invoice-history-test-{evidence_marker}",
+            evidence_fingerprint=chr(ord(evidence_marker) + 1) * 64,
         ),
         acquisition_shape=AcquisitionShape.PRIMARY_PURCHASE,
         asset_kind=AssetKind.MATERIAL,
@@ -98,6 +103,19 @@ def test_history_preserves_revision_and_claim_supersession_trails() -> None:
         correction.revision_id,
     )
     assert effective_claims(recorded.history.claims) == (amended_claim,)
+
+
+def test_history_append_revision_accepts_only_the_current_successor() -> None:
+    initial = _revision()
+    history = ActivityAssetHistory().append_revision(initial)
+    winning = _revision(number=2, supersedes_revision_id=initial.revision_id, evidence_marker="c")
+    stale = _revision(number=2, supersedes_revision_id=initial.revision_id, evidence_marker="e")
+
+    corrected = history.append_revision(winning)
+
+    assert corrected.append_revision(winning) is corrected
+    with pytest.raises(ActividadAssetClaimConflictError, match="current revision"):
+        corrected.append_revision(stale)
 
 
 def test_history_exact_claim_retry_is_a_noop_and_conflicts_preserve_history() -> None:

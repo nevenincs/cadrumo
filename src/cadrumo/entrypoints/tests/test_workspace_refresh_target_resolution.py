@@ -26,11 +26,11 @@ from cadrumo.application.modelo.calculation_summary_pdf_ports import (
 from cadrumo.application.modelo.operation_definitions import (
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
     MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_SUFFIX,
-    ModeloWorkRenameRequest,
     build_modelo_lifecycle_operation_definitions,
     build_modelo_lifecycle_operation_registrations,
     resolve_modelo_work_unit_refresh_target,
 )
+from cadrumo.application.modelo.work_change_contracts import ModeloWorkRenameRequest
 from cadrumo.application.modelo.workspace_models import ModeloWorkspaceRefreshTargetV1
 from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
 from cadrumo.application.operations.frontend_requests import (
@@ -119,7 +119,13 @@ def _canonical_request(subject_ref: str) -> str:
     return OperationRequest[ModeloWorkRenameRequest](
         definition_id=_DEFINITION_ID,
         subject_ref=subject_ref,
-        payload=ModeloWorkRenameRequest(work_unit_id=subject_ref, new_name="renamed unit", actor="operator"),
+        payload=ModeloWorkRenameRequest(
+            work_unit_id=subject_ref,
+            new_name="renamed unit",
+            actor="operator",
+            observed_name="original unit",
+            observed_updated_at=_NOW,
+        ),
     ).model_dump_json()
 
 

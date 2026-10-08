@@ -56,7 +56,6 @@ import pytest
 
 from ....application.modelo.selectors import ModeloCalculationRevisionSelector
 from ....core.i18n.render import locale_map
-from ....domain.attachments.enums import AttachmentSource
 from .cli_runner import cadrumo_click_command
 from .live_command_validation import CitedCommand, validate_cited_command
 from .test_documented_command_conformance import _AEAT_TOKEN_RE, _parse_command_line
@@ -267,24 +266,6 @@ def _advertised_option_choices(verb_path: tuple[str, ...], option_flag: str) -> 
     raise AssertionError(f"{' '.join(verb_path)} has no {option_flag} option")
 
 
-def _evidence_pull_source_advertised() -> frozenset[str]:
-    """The ``ledger evidence pull --source`` advertised member set, read live."""
-    return _advertised_option_choices(("app", "ledger", "evidence", "pull"), "--source")
-
-
-# The doclink handler accepts exactly the three link sources it maps to an
-# AttachmentKind (gmail, google_drive, url); LOCAL_FILE and INLINE are not
-# document-link sources. Ground the accepted set in the handler's mapping, not in
-# the advertised set.
-_DOCLINK_ACCEPTED_SOURCES: frozenset[str] = frozenset(
-    {
-        AttachmentSource.GMAIL.value,
-        AttachmentSource.GOOGLE_DRIVE.value,
-        AttachmentSource.URL.value,
-    },
-)
-
-
 # The verify --select handler accepts only the selectors that can reach a
 # draft (BORRADOR) revision: ``current`` (when the current revision is a draft),
 # ``latest-draft``, and ``explicit`` (an explicitly-named draft revision id).
@@ -306,11 +287,6 @@ def _verify_select_advertised() -> frozenset[str]:
 
 def _enum_choice_surfaces() -> tuple[_EnumChoiceSurface, ...]:
     return (
-        _EnumChoiceSurface(
-            label="aeat app ledger evidence pull --source",
-            advertised=_evidence_pull_source_advertised(),
-            accepted=_DOCLINK_ACCEPTED_SOURCES,
-        ),
         _EnumChoiceSurface(
             label="aeat app modelo work verify --select",
             advertised=_verify_select_advertised(),

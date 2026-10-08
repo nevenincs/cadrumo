@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-09-03'
-modified: '2026-09-03'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7665a587b014a046d082abf8e2c76ca222a9d22af0d3f5f71e4bbaa17533964b'
+body_hash: 'sha256:d54936ff27a263045e488d784b60ec6614b3a2cd3c11abcc7f75a59cf3f439f0'
 related:
-  - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
   - '[[2026-09-02-unreachable-capability-tui-homepage-product-design-research]]'
 ---
@@ -16,7 +15,7 @@ related:
 
 ## Scope
 
-Independent review of `W08.P26.S373` across `src/cadrumo/entrypoints/tui/devtools/home_candidates.py` and `src/cadrumo/entrypoints/tui/devtools/tests/test_home_candidates.py` against the accepted navigation decision, Home product-design research and the exact compositor-measurement plan row. The review covered the four supported sizes, two themes, four shipped locales, all seven fixture states, horizontal and vertical scroll ownership, focus targets, compact launcher detail reach, keyboard cost, semantic restoration, projection-only authority and test integrity.
+The review covered the four supported sizes, two themes, four shipped locales, all seven fixture states, horizontal and vertical scroll ownership, focus targets, compact launcher detail reach, keyboard cost, semantic restoration, projection-only authority and test integrity.
 
 The dense compositor matrix contains exactly sixty-four live Textual frames: two candidates by four sizes by two themes by four locales. The state-floor matrix contains fourteen further live frames: two candidates by seven scenarios at `80x24`. Each matrix reads composed widget geometry rather than a screenshot proxy. Current implementation keeps every table at zero horizontal scroll, permits at most one visible vertical-scroll owner and restricts that owner to the candidate's outer content scroll. The due-driven candidate has exactly three visual-order focus targets, while the launcher has one chooser target and no more than five rows.
 

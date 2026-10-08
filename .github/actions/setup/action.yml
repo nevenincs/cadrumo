@@ -44,6 +44,15 @@ runs:
       with:
         tool: just@1.38.0
 
+    - name: Bind tool storage to the checkout
+      shell: bash
+      run: |
+        set -euo pipefail
+        for name in UV_CACHE_DIR UV_PYTHON_INSTALL_DIR UV_TOOL_DIR UV_TOOL_BIN_DIR PIP_CACHE_DIR npm_config_cache CARGO_HOME CARGO_TARGET_DIR PYTHONPYCACHEPREFIX XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME RUFF_CACHE_DIR; do
+          value="$(just --evaluate "$name")"
+          printf '%s=%s\n' "$name" "$value" >> "$GITHUB_ENV"
+        done
+
     - name: Install uv
       uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
       with:
@@ -55,30 +64,16 @@ runs:
     - name: Initialize the worktree
       shell: bash
       # Self-hosted runner services can carry a workstation authority override,
-      # and `dev/env/_install.py` only drops the variable when it already
-      # resolves to this checkout, so a foreign absolute path survives that
-      # check. The unset is what removes it.
-      # It does NOT leave the variable unset: `dev/_paths.py` re-seeds it to
-      # this checkout's `.authority` at import time, before any `python -m dev.*`
-      # tool runs. CI therefore exercises the CHECKOUT posture, never the
-      # packaged default.
-      #
-      # `just setup` ends with an advisory `aeat config check`, whose output is
-      # localized product text. A job log is read by whoever is debugging, not
-      # by an operator who chose a language, so a runner resolving a non-English
-      # locale reports its diagnostics in one the reader may not have -- a
-      # Spanish authority-descriptor refusal in run 35521505145 was misread as
-      # evidence of a configured override and cost a debugging cycle. Pinning
-      # the language changes only what is PRINTED: transport tokens,
-      # identifiers and stored data are untranslated either way. Same posture
-      # as `dev/packaging/installed_tax_oracle.py:186`, which pins it because
-      # the packaging oracles read product output as data.
+      # and the editable build inside `uv sync` honours a foreign
+      # `CADRUMO_AUTHORITY_ROOT` as named. The unset keeps setup on this
+      # checkout's own `.authority`. `dev/_paths.py` re-seeds the variable to
+      # that directory for every later `python -m dev.*` tool, so CI exercises
+      # the CHECKOUT posture, never the packaged default.
       #
       # A job that asked for no authority tells the editable build not to
       # resolve one; otherwise that build compiles the whole registry (about
       # four minutes) for a lint job that never reads it.
       env:
-        CADRUMO_OUTPUT_LANGUAGE: en
         CADRUMO_EDITABLE_AUTHORITY: ${{ inputs.authority == 'true' && 'resolve' || 'skip' }}
       run: |
         unset CADRUMO_AUTHORITY_ROOT

@@ -111,10 +111,10 @@ def test_remote_mirror_manifest_persists_ciphertext_hashes_and_revision_watermar
     ("namespace_key", "plaintext", "bucket_id"),
     (
         pytest.param(
-            "google_oauth_client",
-            b"oauth client secret that must never reach the remote mirror",
+            "google_drive_config",
+            b"drive configuration that must never reach the remote mirror",
             "0f5cf7d0-9f8e-4b17-9a3d-6c1f2e8a4b71",
-            id="oauth-client",
+            id="drive-config",
         ),
         pytest.param(
             "google_oauth_token",

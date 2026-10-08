@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:2f43c1fb2d6cded7f52e14708a2a10fb5cc93e094ac5896ad59b81780e142240'
+body_hash: 'sha256:2811415f0fc532196b88aee1a6e18c9eb5f1c3a0468fd85924439a02912d0ca5'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-adr]]"
   - "[[2026-08-05-ledger-invoice-decomposition-reference]]"
@@ -33,7 +33,7 @@ without the distinction being stated.
 ### The income measure is decided by a default, not by law
 
 MEASURED. `_RentaLedgerIncomeSelector.fact` carries a default of `gross_income_sum`
-(`src/cadrumo/domain/calculations/registry/_ledger_bindings.py:911`) while its sibling
+ while its sibling
 `_ImpatriadoLedgerIncomeSelector.fact` defaults to `ingresos_integros_sum`
 (`_ledger_impatriado_bindings.py:101`). One concept, two silent defaults, diverging on
 the measure that determines a taxpayer's declared income.
@@ -67,7 +67,7 @@ under LIVA article 20 with 15% retención, cash is 0.85 times base — a silent
 under-declaration of 15% of base, on the central figure of the return.
 
 It compounds within the same rows. MEASURED: `_income_withheld_amount`
-(`src/cadrumo/application/aggregation/_renta_income_ledger.py:459-468`) requires BOTH
+ requires BOTH
 `taxable_base` and `iva_amount` to infer withholding, so rows lacking substrate
 contribute zero to the retenciones casilla. Income is understated and the offsetting
 credit is dropped, from one missing input.
@@ -77,7 +77,7 @@ credit is dropped, from one missing input.
 MEASURED. `taxable_base_sum` coerces a missing base to zero
 (`_ledger_bindings.py:1013-1014`, `observation.taxable_base_amount or Decimal("0")`). Two
 committed Modelo 130 casilla-01 bindings use this fact
-(`src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/0003-m130-income-cumulative.toml:29`
+
 and `:46`).
 
 This always under-declares, where the fallback above can err either way. Two facts on one
@@ -109,7 +109,7 @@ the mechanism built to detect it.
 
 MEASURED as an absence. The IVA category taxonomy distinguishes domestic, intra-community
 supply and acquisition, reverse charge, import from third country, exempt, not-subject
-and OSS regimes, and `CUOTA_LESS_M303_IVA_CATEGORIES` (`src/cadrumo/domain/iva/_schema.py:163`)
+and OSS regimes, and `CUOTA_LESS_M303_IVA_CATEGORIES`
 records which bear no cuota by law. `EVIDENCE_EXEMPT_IVA_CATEGORIES` at `:184` is derived
 from it rather than re-listed, which is the correct pattern and the precedent to extend.
 
@@ -123,7 +123,7 @@ zero IVA and no category is indistinguishable from a declared-exempt supply.
 ### Where the substrate path is already correct
 
 MEASURED, and worth stating because it bounds the work. When substrate IS recorded the
-chain behaves: the Transaction gross invariant (`src/cadrumo/domain/transactions/_models.py:1118-1206`)
+chain behaves: the Transaction gross invariant
 explicitly accepts net-paid incoming activity rows where cash is below base plus IVA, and
 bounds inferred withholding by a registry maximum supported rate. A single FX normalisation
 path exists with a predicate refusing unconverted non-EUR rows. Seven ledger binding-value
@@ -259,18 +259,10 @@ grounding is a cited framework rather than bundled verbatim text.
 
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/_ledger_bindings.py:911`, `:1003-1012`, `:1013-1014`
-- `src/cadrumo/domain/calculations/registry/_ledger_impatriado_bindings.py:101`
-- `src/cadrumo/domain/calculations/registry/_irnr_ledger_bindings.py:52`
-- `src/cadrumo/domain/calculations/registry/_retenciones_bindings.py:78`, `:125`
 - `src/cadrumo/domain/calculations/registry/_ledger_binding_resolution.py:38`
-- `src/cadrumo/application/aggregation/_renta_income_ledger.py:434`, `:459-468`
-- `src/cadrumo/application/aggregation/_renta_gasto_ledger.py:88`, `:277`
-- `src/cadrumo/application/aggregation/_iva_ledger.py:123`
+
 - `src/cadrumo/application/aggregation/tests/test_shared_issue_reasons.py`
-- `src/cadrumo/domain/iva/_schema.py:163`, `:184`
-- `src/cadrumo/domain/transactions/_models.py:1118-1206`
-- `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/0003-m130-income-cumulative.toml:29`, `:46`
+
 - `src/cadrumo/adapters/inbound/financial/` — absence of `taxable_base` population, verified by zero-hit search
 - RD 439/2007 article 110.3.a — bundled corpus, read verbatim
 - LIRPF articles 27 and 28.1 — bundled corpus

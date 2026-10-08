@@ -1,5 +1,5 @@
 @setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
-@step Record the equipment purchase whose deductible IVA exceeds the quarter's charged IVA.
+@step Record the equipment purchase whose deductible VAT exceeds the quarter's charged VAT.
 aeat --format json app ledger add --date 2026-05-12 --amount 1815 --direction OUTGOING --description "equipo informatico" --classification BUSINESS --category-id hardware_amortizable --taxable-base 1500 --iva-rate 0.21 --iva-amount 315
 @expect result.transaction.category_id == "hardware_amortizable"
 @expect result.transaction.iva_amount == "315"
@@ -9,7 +9,7 @@ aeat --format json app ledger add --date 2026-05-12 --amount 1815 --direction OU
 @expect result.name == "303-2026-2T"
 @expect result.revision_id == "2026-y-siguientes"
 @expect exit_code == 0
-@step Calculate, verify, export, and file the credit quarter.
+@step Calculate, check, export, and file the credit quarter.
 @static aeat app modelo work calculate --modelo 303 --year 2026 --period 2T
 @blocked unconverted Needs a filed 2026 1T for the wallet carry; building one here refuses in the cumulative page run, where work file rejects an already-presentado 1T revision.
 @static aeat app modelo work verify --modelo 303 --year 2026 --period 2T

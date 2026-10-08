@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
@@ -38,10 +38,13 @@ from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.type_guards import is_object_mapping
 from ..calculations.registry.concepto_ingreso import require_concepto_ingreso
 from ..calculations.registry.errors import RegistryValidationError
-from ..calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
+from ..calculations.registry.eu_member_state_catalogue import (
+    require_eu_member_state,
+    resolve_eu_member_state_catalogue,
+)
 from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
-from ..calculations.registry.iva_schema_vocabulary import require_iva_exemption_article
+from ..calculations.registry.iva_legal_vocabulary import require_iva_exemption_article
 from ..calculations.registry.prorrata_exclusions import resolve_art104_tres_exclusion_catalogue
 from ..calculations.registry.prorrata_vocabulary import require_input_classification
 from ..identifiers import canonical_decimal_string
@@ -54,7 +57,6 @@ from ..iva.schema import (
     IvaCategory,
     IvaExemptionArticle,
     default_iva_cash_accounting_treatment,
-    require_eu_member_state,
 )
 from .cash_accounting_validation import validate_cash_accounting_axis
 from .enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -80,13 +82,14 @@ from .model_validation import (
     validate_confidence_range,
     validate_non_negative_decimal,
 )
+from .own_accounts import OwnAccountId
 from .raw_transaction import RawTransaction
 from .retencion_facts import retencion_effective_date
 
 __all__ = ["DecisionProvenance", "derive_split_group_id"]
 
 
-def derive_transaction_id(raw: RawTransaction) -> str:
+def derive_transaction_id(raw: RawTransaction, *, own_account_id: str | None = None) -> str:
     """Return the stable transaction hash for one raw transaction.
 
     This content hash is the single authority for storage, audit, and
@@ -102,22 +105,29 @@ def derive_transaction_id(raw: RawTransaction) -> str:
     freezes or re-mints the id, so the content-addressing invariant import
     dedup relies on is untouched.
 
+    The taxpayer's own account enters the hash only when the row is bound to
+    one, so an account-unassigned row keeps the id it has always had while
+    the same movement on two own accounts yields two ids.
+
     Args:
         raw: The upstream immutable raw transaction emitted by a provider.
+        own_account_id: The own bank account the movement belongs to, if bound.
 
     Returns:
         A lowercase SHA-256 digest derived from the provider identity,
-        effective value date, amount, and narrative fields.
+        effective value date, amount, narrative fields and, when bound, the
+        own account.
     """
     effective_value_date = raw.value_date or raw.booked_date
-    return content_hash_hex(
-        {
-            "amount": canonical_decimal_string(raw.amount),
-            "narrative": raw.description,
-            "provider_id": raw.provider_transaction_id,
-            "value_date": effective_value_date.isoformat(),
-        }
-    )
+    payload: dict[str, str] = {
+        "amount": canonical_decimal_string(raw.amount),
+        "narrative": raw.description,
+        "provider_id": raw.provider_transaction_id,
+        "value_date": effective_value_date.isoformat(),
+    }
+    if own_account_id is not None:
+        payload["own_account_id"] = own_account_id
+    return content_hash_hex(payload)
 
 
 _REFERENCE_NOISE = re.compile(r"[^0-9a-z]+")
@@ -148,7 +158,12 @@ def normalise_movement_reference(value: str) -> str:
     return _REFERENCE_NOISE.sub("", stripped.casefold())
 
 
-def derive_import_fingerprint(raw: RawTransaction, *, direction: TransactionDirection | str | None = None) -> str:
+def derive_import_fingerprint(
+    raw: RawTransaction,
+    *,
+    direction: TransactionDirection | str | None = None,
+    own_account_id: str | None = None,
+) -> str:
     """Return the stable cross-format import-dedup fingerprint for a raw row.
 
     Unlike :func:`derive_transaction_id` — which keys on the provider
@@ -164,7 +179,10 @@ def derive_import_fingerprint(raw: RawTransaction, *, direction: TransactionDire
     same statement (or the same movements exported as a different file
     format) recognises the row as already present. Import callers that
     have parsed flow direction must pass it; callers without a parse-boundary
-    direction receive an explicit ``UNSPECIFIED`` discriminator.
+    direction receive an explicit ``UNSPECIFIED`` discriminator. A row bound to
+    an own account folds that account in, so identical movements on two own
+    accounts are not mistaken for a re-import; an unbound row's fingerprint is
+    unchanged.
     """
     effective_value_date = raw.value_date or raw.booked_date
     if isinstance(direction, TransactionDirection):
@@ -173,15 +191,16 @@ def derive_import_fingerprint(raw: RawTransaction, *, direction: TransactionDire
         direction_value = "UNSPECIFIED"
     else:
         direction_value = direction
-    return content_hash_hex(
-        {
-            "amount": canonical_decimal_string(raw.amount),
-            "currency": raw.currency,
-            "direction": direction_value,
-            "reference": normalise_movement_reference(raw.description),
-            "value_date": effective_value_date.isoformat(),
-        }
-    )
+    payload: dict[str, str] = {
+        "amount": canonical_decimal_string(raw.amount),
+        "currency": raw.currency,
+        "direction": direction_value,
+        "reference": normalise_movement_reference(raw.description),
+        "value_date": effective_value_date.isoformat(),
+    }
+    if own_account_id is not None:
+        payload["own_account_id"] = own_account_id
+    return content_hash_hex(payload)
 
 
 def derive_movement_day_key(raw: RawTransaction) -> str:
@@ -201,7 +220,85 @@ def _derive_transaction_id_from_validated_data(data: dict[str, object]) -> str:
     raw = data.get("raw")
     if not isinstance(raw, RawTransaction):
         raise TransactionValidationError("raw is required before transaction_id can be derived")
-    return derive_transaction_id(raw)
+    own_account_id = data.get("own_account_id")
+    return derive_transaction_id(raw, own_account_id=own_account_id if isinstance(own_account_id, str) else None)
+
+
+def _effective_date_for_enum_projection(info: core_schema.ValidationInfo) -> date | None:
+    raw = info.data.get("raw")
+    if isinstance(raw, RawTransaction):
+        return raw.value_date or raw.booked_date
+    return None
+
+
+def _translate_registry_enum_error(resolve: Callable[[], object]) -> object:
+    try:
+        return resolve()
+    except RegistryValidationError as exc:
+        raise TransactionValidationError(str(exc)) from exc
+
+
+def _coerce_concepto_ingreso_field(value: object, info: core_schema.ValidationInfo) -> object:
+    if value is None or isinstance(value, ConceptoIngreso):
+        return value
+    effective_date = _effective_date_for_enum_projection(info)
+    if effective_date is None:
+        raise TransactionValidationError(
+            "concepto_ingreso requires the transaction's effective date for registry resolution",
+        )
+    return _translate_registry_enum_error(lambda: require_concepto_ingreso(value, effective_date=effective_date))
+
+
+def _coerce_deduction_fact_kind_field(value: object, info: core_schema.ValidationInfo) -> object:
+    if value is None or isinstance(value, IvaDeductionFactKind):
+        return value
+    effective_date = _effective_date_for_enum_projection(info)
+    return _translate_registry_enum_error(
+        lambda: require_iva_deduction_fact_kind(value, effective_date=effective_date),
+    )
+
+
+def _coerce_input_classification_field(value: object, info: core_schema.ValidationInfo) -> object:
+    if value is None or isinstance(value, InputClassification):
+        return value
+    effective_date = _effective_date_for_enum_projection(info)
+    if effective_date is None:
+        raise TransactionValidationError(
+            "input_classification requires the transaction's effective date for registry resolution",
+        )
+    return _translate_registry_enum_error(lambda: require_input_classification(value, effective_date=effective_date))
+
+
+def _coerce_counterparty_identification_state_field(value: object, info: core_schema.ValidationInfo) -> object:
+    if value is None or isinstance(value, EUMemberState):
+        return value
+    effective_date = _effective_date_for_enum_projection(info)
+    return _translate_registry_enum_error(lambda: require_eu_member_state(value, effective_date=effective_date))
+
+
+def _coerce_transaction_enum_field(value: object, info: core_schema.ValidationInfo) -> object:
+    field_name = info.field_name
+    if field_name == "concepto_ingreso":
+        return _coerce_concepto_ingreso_field(value, info)
+    if field_name == "deduction_fact_kind":
+        return _coerce_deduction_fact_kind_field(value, info)
+    if field_name == "input_classification":
+        return _coerce_input_classification_field(value, info)
+    if field_name == "counterparty_identification_state":
+        return _coerce_counterparty_identification_state_field(value, info)
+    if not isinstance(value, str):
+        return value
+    enum_by_field: dict[str, type] = {
+        "direction": TransactionDirection,
+        "business_classification": BusinessClassification,
+        "lifecycle_state": TransactionLifecycleState,
+        "iva_category": IvaCategory,
+        "exemption_article": IvaExemptionArticle,
+        "cash_accounting_treatment": IvaCashAccountingTreatment,
+        "art_104_tres_exclusion": Art104TresExclusion,
+        "tipo_actividad": TipoActividad,
+    }
+    return enum_by_field[field_name or ""](value)
 
 
 class Transaction(BaseModel):
@@ -209,10 +306,13 @@ class Transaction(BaseModel):
 
     Attributes:
         transaction_id: Lowercase 64-char SHA-256 derived deterministically
-            from the wrapped raw record by :func:`derive_transaction_id`.
-            Re-validated on every parse to detect tampering.
+            from the wrapped raw record (and ``own_account_id`` when bound) by
+            :func:`derive_transaction_id`. Re-validated on every parse to
+            detect tampering.
         raw: The verbatim
             :class:`domain.transactions.raw_transaction.RawTransaction`.
+        own_account_id: The taxpayer's own bank account the movement belongs
+            to, or ``None`` when the row is account-unassigned.
         direction: Closed :class:`TransactionDirection`.
         business_classification: Current :class:`BusinessClassification`
             decision; defaults to
@@ -425,6 +525,7 @@ class Transaction(BaseModel):
     model_config = _STRICT_FROZEN
 
     raw: RawTransaction
+    own_account_id: OwnAccountId | None = None
     transaction_id: TransactionId = Field(default_factory=_derive_transaction_id_from_validated_data)
     direction: TransactionDirection
     business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED
@@ -492,7 +593,7 @@ class Transaction(BaseModel):
     # Persistence-record lifecycle timestamps (ledger-interface-contract D6).
     # ``created_at`` is stamped once and carried verbatim through every later
     # edit; ``modified_at`` is re-stamped on every mutating edit
-    # (update/classify/allocate/attach/doclink/archive/stash/restore/link/
+    # (update/classify/allocate/attach/archive/stash/restore/link/
     # split/merge). They make ``--sort-by created_at|modified_at`` honest for
     # hand-added rows, which otherwise carry no creation timestamp (only
     # imported rows have ``raw.provenance.ingested_at``). Both are UTC-aware.
@@ -540,71 +641,7 @@ class Transaction(BaseModel):
         carries no re-entrancy risk. No-op for an already-typed enum member
         or ``None``.
         """
-        if info.field_name == "concepto_ingreso":
-            if value is None or isinstance(value, ConceptoIngreso):
-                return value
-            raw = info.data.get("raw")
-            effective_date = None
-            if isinstance(raw, RawTransaction):
-                effective_date = raw.value_date or raw.booked_date
-            if effective_date is None:
-                raise TransactionValidationError(
-                    "concepto_ingreso requires the transaction's effective date for registry resolution",
-                )
-            try:
-                return require_concepto_ingreso(value, effective_date=effective_date)
-            except RegistryValidationError as exc:
-                raise TransactionValidationError(str(exc)) from exc
-        if info.field_name == "deduction_fact_kind":
-            if value is None or isinstance(value, IvaDeductionFactKind):
-                return value
-            raw = info.data.get("raw")
-            effective_date = None
-            if isinstance(raw, RawTransaction):
-                effective_date = raw.value_date or raw.booked_date
-            try:
-                return require_iva_deduction_fact_kind(value, effective_date=effective_date)
-            except RegistryValidationError as exc:
-                raise TransactionValidationError(str(exc)) from exc
-        if info.field_name == "input_classification":
-            if value is None or isinstance(value, InputClassification):
-                return value
-            raw = info.data.get("raw")
-            effective_date = None
-            if isinstance(raw, RawTransaction):
-                effective_date = raw.value_date or raw.booked_date
-            if effective_date is None:
-                raise TransactionValidationError(
-                    "input_classification requires the transaction's effective date for registry resolution",
-                )
-            try:
-                return require_input_classification(value, effective_date=effective_date)
-            except RegistryValidationError as exc:
-                raise TransactionValidationError(str(exc)) from exc
-        if info.field_name == "counterparty_identification_state":
-            if value is None or isinstance(value, EUMemberState):
-                return value
-            raw = info.data.get("raw")
-            effective_date = None
-            if isinstance(raw, RawTransaction):
-                effective_date = raw.value_date or raw.booked_date
-            try:
-                return require_eu_member_state(value, effective_date=effective_date)
-            except RegistryValidationError as exc:
-                raise TransactionValidationError(str(exc)) from exc
-        if not isinstance(value, str):
-            return value
-        enum_by_field: dict[str, type] = {
-            "direction": TransactionDirection,
-            "business_classification": BusinessClassification,
-            "lifecycle_state": TransactionLifecycleState,
-            "iva_category": IvaCategory,
-            "exemption_article": IvaExemptionArticle,
-            "cash_accounting_treatment": IvaCashAccountingTreatment,
-            "art_104_tres_exclusion": Art104TresExclusion,
-            "tipo_actividad": TipoActividad,
-        }
-        return enum_by_field[info.field_name or ""](value)
+        return _coerce_transaction_enum_field(value, info)
 
     @field_validator("operation_date", mode="before")
     @classmethod
@@ -700,7 +737,7 @@ class Transaction(BaseModel):
     @pydantic_validation_boundary
     def _enforce_derived_transaction_id(self) -> Self:
         """Validate ``transaction_id`` against the already-validated raw record."""
-        if self.transaction_id != derive_transaction_id(self.raw):
+        if self.transaction_id != derive_transaction_id(self.raw, own_account_id=self.own_account_id):
             raise TransactionValidationError("transaction_id must match the stable hash derived from raw")
         return self
 
@@ -1049,7 +1086,13 @@ def existing_transaction_import_fingerprints(transaction: Transaction) -> frozen
     must use this exact projection: a directionless fallback would incorrectly
     collapse otherwise distinct incoming and outgoing movements.
     """
-    fingerprints = {derive_import_fingerprint(transaction.raw, direction=transaction.direction)}
+    fingerprints = {
+        derive_import_fingerprint(
+            transaction.raw,
+            direction=transaction.direction,
+            own_account_id=transaction.own_account_id,
+        )
+    }
     if transaction.import_fingerprint:
         fingerprints.add(transaction.import_fingerprint)
     return frozenset(fingerprints)

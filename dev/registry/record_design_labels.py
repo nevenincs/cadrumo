@@ -25,14 +25,15 @@ stated it.
 
 from __future__ import annotations
 
-import hashlib
 import re
 import unicodedata
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from cadrumo.core.hashing import sha256_file
 from cadrumo.core.toml import load_toml
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = REPO_ROOT / "src" / "cadrumo" / "_data"
@@ -47,7 +48,11 @@ MODELOS_ROOT = DATA_ROOT / "registry" / "aeat" / "modelos"
 #: decode under it is an error the caller sees.
 _SIDECAR_ENCODING = "utf-8"
 
-_RECORD_HEADING = re.compile(r"^# (?P<record>\S+)")
+#: A record heading names the whole record: ``# DP30301`` and ``# Pág. 2 bis``
+#: alike. Reading only the first word would fold every ``Pág. N`` record of a
+#: design into one key ``Pág.``, so later pages would borrow the first page's
+#: labels at the same offset.
+_RECORD_HEADING = re.compile(r"^# (?P<record>\S.*?)\s*$")
 
 #: The design source families whose sidecars carry a positional field table.
 _RECORD_DESIGN_KIND = "record_design"
@@ -89,37 +94,54 @@ def read_record_design(sidecar: Path) -> dict[tuple[str, int], RecordDesignRow]:
     record: str | None = None
     columns: dict[str, int] | None = None
     for line in sidecar.read_text(encoding=_SIDECAR_ENCODING).splitlines():
-        heading = _RECORD_HEADING.match(line)
-        if heading is not None:
-            record, columns = str(heading.group("record")), None
+        record, columns, cells = _record_design_table_cells(line, record, columns)
+        if cells is None or record is None or columns is None:
             continue
-        if record is None:
+        row = _record_design_row(record, columns, cells)
+        if row is None:
             continue
-        cells = [cell.strip() for cell in line.split("|")]
-        if len(cells) < 4:
-            continue
-        normalised = [cell.lower().rstrip(".") for cell in cells]
-        if normalised[1].startswith("posic"):
-            columns = {name: index for index, name in enumerate(normalised)}
-            continue
-        if columns is None:
-            continue
-        offset = _cell_int(cells, columns.get("posic"))
-        label_index = next((index for name, index in columns.items() if name.startswith("descripci")), None)
-        if offset is None or label_index is None or label_index >= len(cells):
-            continue
-        length_index = next((index for name, index in columns.items() if name.startswith("lon")), None)
-        rows.setdefault(
-            (record, offset),
-            RecordDesignRow(
-                record=record,
-                offset=offset,
-                length=_cell_int(cells, length_index),
-                label=cells[label_index],
-                ordinal=_cell_int(cells, 0),
-            ),
-        )
+        rows.setdefault((row.record, row.offset), row)
     return rows
+
+
+def _record_design_table_cells(
+    line: str,
+    record: str | None,
+    columns: dict[str, int] | None,
+) -> tuple[str | None, dict[str, int] | None, list[str] | None]:
+    heading = _RECORD_HEADING.match(line)
+    if heading is not None:
+        return str(heading.group("record")), None, None
+    if record is None:
+        return record, columns, None
+    cells = [cell.strip() for cell in line.split("|")]
+    if len(cells) < 4:
+        return record, columns, None
+    normalised = [cell.lower().rstrip(".") for cell in cells]
+    if normalised[1].startswith("posic"):
+        return record, {name: index for index, name in enumerate(normalised)}, None
+    if columns is None:
+        return record, columns, None
+    return record, columns, cells
+
+
+def _record_design_row(
+    record: str,
+    columns: Mapping[str, int],
+    cells: list[str],
+) -> RecordDesignRow | None:
+    offset = _cell_int(cells, columns.get("posic"))
+    label_index = next((index for name, index in columns.items() if name.startswith("descripci")), None)
+    if offset is None or label_index is None or label_index >= len(cells):
+        return None
+    length_index = next((index for name, index in columns.items() if name.startswith("lon")), None)
+    return RecordDesignRow(
+        record=record,
+        offset=offset,
+        length=_cell_int(cells, length_index),
+        label=cells[label_index],
+        ordinal=_cell_int(cells, 0),
+    )
 
 
 def _cell_int(cells: list[str], index: int | None) -> int | None:
@@ -212,7 +234,7 @@ def _sidecar_for(source_id: str, source: Mapping[str, object]) -> Path:
     binary = DATA_ROOT / corpus_path
     if not binary.is_file():
         raise RecordDesignUnavailableError(f"source {source_id!r}: {corpus_path} is not present in this repository")
-    actual = hashlib.sha256(binary.read_bytes()).hexdigest()
+    actual = sha256_file(binary)
     if actual != declared_hash:
         raise RecordDesignUnavailableError(
             f"source {source_id!r}: {corpus_path} hashes {actual}, but the registry declares {declared_hash}; "
@@ -222,6 +244,32 @@ def _sidecar_for(source_id: str, source: Mapping[str, object]) -> Path:
     if not sidecar.is_file():
         raise RecordDesignUnavailableError(f"source {source_id!r}: {corpus_path} has no .extracted.md sidecar")
     return sidecar
+
+
+def record_design_sidecars(
+    source_refs: Sequence[str],
+    sources: Mapping[str, SourceReference],
+) -> tuple[tuple[str, Path], ...]:
+    """Return the extracted sidecar of every ``record_design`` source among ``source_refs``, in citation order.
+
+    ``sources`` is the compiled source catalogue, so a caller already holding an
+    edition's typed citations reads the same provenance chain as
+    :func:`edition_record_designs` without re-reading raw manifests. Each binary
+    is hashed against its declared ``sha256`` before its sidecar is returned.
+
+    Raises:
+        RecordDesignUnavailableError: When a cited design cannot be read or does
+            not hash to the declared value.
+    """
+    sidecars: list[tuple[str, Path]] = []
+    for ref in source_refs:
+        source = sources.get(str(ref))
+        if source is None or str(source.kind) != _RECORD_DESIGN_KIND:
+            continue
+        sidecars.append(
+            (str(ref), _sidecar_for(str(ref), {"corpus_path": source.corpus_path, "sha256": source.sha256}))
+        )
+    return tuple(sidecars)
 
 
 def record_design_source_ref(
@@ -284,21 +332,41 @@ def edition_record_designs(
     sources = _legal_sources()
     designs: dict[str, dict[tuple[str, int], RecordDesignRow]] = {}
     revisions_dir = modelos_root / modelo / "revisions"
-    if not revisions_dir.is_dir():
-        return designs
-    for revision_dir in sorted(path for path in revisions_dir.iterdir() if path.is_dir()):
-        if editions is not None and revision_dir.name not in editions:
-            continue
-        manifest = revision_dir / "revision.toml"
-        if not manifest.is_file():
-            continue
-        with manifest.open("rb") as handle:
-            table = load_toml(handle).get("revisions", {}).get(revision_dir.name, {})
-        refs = table.get("source_refs") if isinstance(table, dict) else None
-        for ref in refs if isinstance(refs, list) else ():
-            source = sources.get(str(ref))
-            if not isinstance(source, dict) or source.get("kind") != _RECORD_DESIGN_KIND:
-                continue
-            designs[revision_dir.name] = read_record_design(_sidecar_for(str(ref), source))
-            break
+    for revision_dir in _selected_revision_directories(revisions_dir, editions):
+        design = _record_design_for_revision(revision_dir, sources)
+        if design is not None:
+            designs[revision_dir.name] = design
     return designs
+
+
+def _selected_revision_directories(revisions_dir: Path, editions: Sequence[str] | None) -> tuple[Path, ...]:
+    if not revisions_dir.is_dir():
+        return ()
+    return tuple(
+        sorted(
+            path for path in revisions_dir.iterdir() if path.is_dir() and (editions is None or path.name in editions)
+        )
+    )
+
+
+def _record_design_for_revision(
+    revision_dir: Path,
+    sources: Mapping[str, dict[str, object]],
+) -> dict[tuple[str, int], RecordDesignRow] | None:
+    manifest = revision_dir / "revision.toml"
+    if not manifest.is_file():
+        return None
+    refs = _revision_source_references(manifest, revision_dir.name)
+    for ref in refs:
+        source = sources.get(str(ref))
+        if not isinstance(source, dict) or source.get("kind") != _RECORD_DESIGN_KIND:
+            continue
+        return read_record_design(_sidecar_for(str(ref), source))
+    return None
+
+
+def _revision_source_references(manifest: Path, revision: str) -> Sequence[object]:
+    with manifest.open("rb") as handle:
+        table = load_toml(handle).get("revisions", {}).get(revision, {})
+    refs = table.get("source_refs") if isinstance(table, dict) else None
+    return refs if isinstance(refs, list) else ()

@@ -10,33 +10,35 @@ import pytest
 from pydantic import ValidationError
 
 from ....filing_evidence import FilingEvidenceReference
+from .._anexo_d_records import InventoryAnexoDResult
 from ..closing_authority_records import (
     InventoryClosingAuthorityDecision,
     InventoryClosingAuthorityRecord,
     PriorAuthoritativeClosingLink,
+)
+from ..closing_foundations import (
+    InventoryClosingAuthority,
+    InventoryClosingDecisionEvidence,
+    InventoryClosingDecisionEvidenceRole,
+    InventoryClosingValuationBasis,
+    InventoryLedgerError,
+    PhysicalClosingEvidence,
+    PhysicalClosingEvidenceRole,
+    PhysicalClosingObservation,
+    PriorClosingContinuityEvidence,
+    fingerprint_prior_authoritative_closing,
 )
 from ..records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
     InventoryAcquisitionEvidenceKind,
-    InventoryAnexoDResult,
     InventoryAttributableCostComponent,
     InventoryAttributableCostKind,
-    InventoryClosingAuthority,
-    InventoryClosingDecisionEvidence,
-    InventoryClosingDecisionEvidenceRole,
-    InventoryClosingValuationBasis,
     InventoryLedger,
-    InventoryLedgerError,
     MovementKind,
     MovementRecord,
-    PhysicalClosingEvidence,
-    PhysicalClosingEvidenceRole,
-    PhysicalClosingObservation,
-    PriorClosingContinuityEvidence,
     ValuationMethod,
-    fingerprint_prior_authoritative_closing,
 )
 from ..valuation import compute_inventory_anexo_d_projection
 
@@ -399,3 +401,18 @@ def test_reminted_substituted_sources_refuse_but_distinct_projection_succeeds() 
         )
         with pytest.raises(ValidationError, match="retained source authority"):
             type(baseline).model_validate(_projection_validation_payload(reminted))
+
+
+def test_a_missing_authority_scope_is_an_invariant_failure_not_an_inapplicable_year() -> None:
+    # Deferred: importing the registry before the inventory records re-enters their import cycle.
+    from cadrumo.core.errors.hierarchy import InternalInvariantError
+
+    from ....calculations.registry.tests.fact_scope import outside_governed_fact_validation
+
+    ledger = _ledger()
+
+    with (
+        outside_governed_fact_validation(),
+        pytest.raises(InternalInvariantError, match="requires an explicit generation-pinned governed-fact scope"),
+    ):
+        compute_inventory_anexo_d_projection(ledger)

@@ -10,6 +10,57 @@ modelo:
           i d'activitats econòmiques, premis i determinats guanys patrimonials i imputacions
           de renda.
         title: IRPF retencions i ingressos a compte
+      form:
+        column:
+          contraprestaciones_satisfechas: Contraprestacions satisfetes
+        context:
+          apellidos: Cognoms o raó social
+          declaracion-complementaria: Autoliquidació complementària
+          ejercicio: Exercici
+          iban: Codi IBAN
+          justificante-anterior: Núm. de justificant de l’autoliquidació anterior
+          nif: NIF
+          nombre: Nom
+          periodo: Període
+        page:
+          dr-m11101:
+            heading: Pàgina 1 · Retencions i ingressos a compte
+        row:
+          contraprestaciones:
+            heading: Contraprestacions dineràries o en espècie
+          percep-dinerarias:
+            heading: Percepcions dineràries
+          percep-en-especie:
+            heading: Percepcions en espècie
+          premios-dinerarios:
+            heading: Premis dineraris
+          premios-en-especie:
+            heading: Premis en espècie
+          rendimientos-dinerarios:
+            heading: Rendiments dineraris
+          rendimientos-en-especie:
+            heading: Rendiments en espècie
+        section:
+          complementaria:
+            heading: Complementària (6)
+          contraprest-cesion-dchos-imagen:
+            heading: Contraprestacions per la cessió de drets d'imatge
+          devengo:
+            heading: Meritació (2)
+          ganancias-patrim-aprovecham-forestales:
+            heading: Guanys patrimonials d'aprofitaments forestals
+          identificacion:
+            heading: Declarant (1)
+          ingreso:
+            heading: Ingrés (4)
+          premios:
+            heading: Premis
+          rendim-actividades-economicas:
+            heading: Rendiments d'activitats econòmiques
+          rendim-del-trabajo:
+            heading: Rendiments del treball
+          total-liquidacion:
+            heading: Total de la liquidació
       revision:
         2019-y-siguientes:
           casilla:

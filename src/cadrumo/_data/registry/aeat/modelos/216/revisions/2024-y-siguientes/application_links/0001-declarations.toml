@@ -1,12 +1,4 @@
 [[revisions."2024-y-siguientes".application_links]]
-id = "modelo-216-calculation"
-surface = "calculation"
-consumer = "cadrumo.domain.calculations.registry"
-requires_snapshot = true
-legal_refs = ["orden-eha-3290-2008:art-1", "trlirnr-rdleg-5-2004:art-24"]
-additional_source_refs = ["boe-modelo-216-form-layout"]
-
-[[revisions."2024-y-siguientes".application_links]]
 id = "modelo-216-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"
@@ -38,13 +30,6 @@ legal_refs = ["orden-eha-3290-2008:art-1"]
 # consumes it, so the layout is reachable from the export path rather than
 # being inert registry data.
 
-[[revisions."2024-y-siguientes".application_links]]
-id = "modelo-216-export"
-surface = "export"
-consumer = "cadrumo.application.filing.export_draft"
-requires_snapshot = true
-legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-dr-216-2024"]
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-216-extractor"
 surface = "extractor"

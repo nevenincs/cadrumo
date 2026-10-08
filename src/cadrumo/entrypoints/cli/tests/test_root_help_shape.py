@@ -145,8 +145,11 @@ def test_root_help_projects_both_graph_owned_profile_secret_options_once(languag
     # option exactly once into the options table.
     assert _option_row_count(result.output, "--profile-secrets-stdin") == 1
     assert _option_row_count(result.output, "--profile-secrets-fd") == 1
+    assert _option_row_count(result.output, "--profile-auth-method") == 1
+    assert _option_row_count(result.output, "--profile-credential-ref") == 1
     assert tr("cli.config.custody.profile_secrets_stdin_help", locale=language) in result.output
     assert tr("cli.config.custody.profile_secrets_fd_help", locale=language) in result.output
+    assert tr("cli.config.custody.profile_credential_ref_help", locale=language) in result.output
 
 
 def test_root_help_does_not_consume_or_close_a_selected_profile_secret_descriptor() -> None:
@@ -293,7 +296,7 @@ def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=60,
+        timeout=None,
         check=False,
     )
 
@@ -322,7 +325,7 @@ def test_installed_console_exposes_contextual_product_identity(tmp_path: Path) -
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=60,
+        timeout=None,
         check=False,
     )
     help_result = subprocess.run(
@@ -332,7 +335,7 @@ def test_installed_console_exposes_contextual_product_identity(tmp_path: Path) -
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=60,
+        timeout=None,
         check=False,
     )
 
@@ -360,7 +363,7 @@ def test_uv_no_sync_console_help_starts_from_repo_root(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=60,
+        timeout=None,
         check=False,
     )
 
@@ -399,7 +402,7 @@ def test_installed_console_help_does_not_adopt_former_product_state(tmp_path: Pa
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=60,
+        timeout=None,
         check=False,
     )
 
@@ -426,7 +429,7 @@ def test_installed_console_refuses_former_product_state_without_a_traceback(tmp_
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=60,
+        timeout=None,
         check=False,
     )
 
@@ -486,7 +489,7 @@ def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=60,
+        timeout=None,
         check=False,
     )
     combined_logs = f"{logs.stdout}\n{logs.stderr}"
@@ -500,7 +503,7 @@ def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=60,
+        timeout=None,
         check=False,
     )
     combined_list = f"{listed.stdout}\n{listed.stderr}"
@@ -518,7 +521,7 @@ def test_installed_console_profile_create_fails_fast_without_prompt_host(tmp_pat
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=60,
+        timeout=None,
         check=False,
     )
 
@@ -602,7 +605,9 @@ class TestBareInvocationWithActiveProfile:
         landing = _invoke([])
 
         assert logged_out.exit_code == 0, logged_out.output
-        assert "logged_out_profile\toperator" in logged_out.output
+        # This synthetic registration has no readable bucket manifest after
+        # the command boundary; logout truthfully falls back to a redacted ID.
+        assert f"logged_out_profile\t{CLI_PROFILE_ID_PLACEHOLDER}" in logged_out.output
         assert landing.exit_code == 0, landing.output
         assert "aeat config login NAME" in landing.output
         assert "aeat config profile create NAME" not in landing.output

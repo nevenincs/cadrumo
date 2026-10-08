@@ -32,7 +32,7 @@ from .....application.user_profile.acquisition_sources import (
     ProfileAcquisitionSourceKey,
     ProfileAcquisitionSourceV1,
 )
-from .....application.user_profile.login_session import login_profile
+from .....application.user_profile.login_session import authenticate_profile_for_invocation
 from .....application.user_profile.overview import ProfileOverview, build_profile_overview
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....application.user_profile.registration import register_profile_with_credentials
@@ -70,7 +70,7 @@ def _build_overview() -> ProfileOverview:
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
-        login_profile(
+        authenticate_profile_for_invocation(
             name=enrolled.profile_id,
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,

@@ -15,7 +15,7 @@ different halves and neither is redundant.
 from __future__ import annotations
 
 import pytest
-from textual.widgets import Input
+from textual.widgets import Input, Static
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -23,7 +23,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
-from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.overview import ProfileOverview, build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
@@ -57,7 +57,7 @@ def _ensure_logged_in() -> None:
     session. Logging in derives the same DEK the capsule was sealed under.
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    login_profile(
+    authenticate_profile_for_invocation(
         name=_LABEL,
         passphrase_callback=lambda: _CREDENTIAL_INPUT,
         profile_decode_context=_profile_decode_context_for_test,
@@ -111,7 +111,7 @@ def _notice(app: ProfileManagerScreen) -> str:
 
 async def _submit(app, pilot, path: str, value: str) -> None:
     """Drive one real edit: open the dialog, type, press save."""
-    from ..profile.overview import FieldEditScreen
+    from ..profile.edit_screens import FieldEditScreen
 
     field = app._field_by_key[path]
     app.app.push_screen(FieldEditScreen(field), app._apply_edit_for(field))
@@ -141,7 +141,8 @@ async def test_a_blank_submission_on_a_required_field_does_not_clear_it(tmp_path
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _submit(app, pilot, _REQUIRED_PATH, "")
-            assert _notice(app), "the operator must be told why nothing happened"
+            assert str(app.app.screen.query_one("#edit-refusal", Static).content)
+            assert app.app.screen is not app, "the question stays open for correction"
             pilot.app.exit(None)
 
         assert _stored().get(_REQUIRED_PATH) == "12345678Z"

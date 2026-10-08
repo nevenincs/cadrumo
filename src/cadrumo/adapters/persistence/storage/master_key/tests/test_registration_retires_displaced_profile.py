@@ -1,23 +1,7 @@
-"""Creation must retire the profile whose selection it takes away.
+"""Registration changes selection while preserving runtime-owned human sign-in.
 
-Registering a profile compare-and-swaps the active pointer onto the new capsule
-inside the create transaction's own durable journal. Whatever the pointer named
-before is displaced by that swap, and until the transaction retired it, the
-displaced profile kept a resumable acceleration receipt: its bucket key stayed
-recoverable with no passphrase for the whole window until some later login
-happened to observe the boundary, and permanently for a registration that no
-login ever follows.
-
-Every profile here is created through the production credential door and
-unlocked through the public login service against an isolated real storage
-root. Each operator step runs in its own interpreter, because that is what an
-``aeat`` invocation is and it is the only configuration in which no live
-in-process session can name the profile being displaced -- a single-process
-proof of this property is a proof of a different property that shares its name.
-
-The measurement is on RECOVERED KEY MATERIAL rather than on a vanished file: a
-variant that unlinks the receipt while leaving the key reachable by some other
-route would satisfy a file-absence check and be the same defect.
+Each registration and proof-borrowing probe uses a fresh interpreter and real
+isolated storage. Selecting another profile does not authorize receipt deletion.
 """
 
 from __future__ import annotations
@@ -38,9 +22,9 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profi
 from cadrumo.application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
 from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
+from cadrumo.tests.process_results import receive_process_result
 
-from .test_login_handover import (
-    _assert_no_resumable_material,
+from .profile_process_support import (
     _child_settings,
     _close_child_login,
     _login_in_separate_process,
@@ -96,13 +80,14 @@ def _register_in_separate_process(storage_root: Path, label: str, password: str)
     )
     child.start()
     try:
-        result = result_queue.get(timeout=180)
-        child.join(timeout=30)
+        result = receive_process_result(result_queue, owners=(child,))
+        child.join(timeout=None)
         assert child.exitcode == 0
         return result
     finally:
         if child.is_alive():
             child.terminate()
+        if child.pid is not None:
             child.join(timeout=30)
 
 
@@ -147,57 +132,47 @@ def _attempt_registration_in_separate_process(storage_root: Path, label: str, pa
     )
     child.start()
     try:
-        result = result_queue.get(timeout=180)
-        child.join(timeout=30)
+        result = receive_process_result(result_queue, owners=(child,))
+        child.join(timeout=None)
         assert child.exitcode == 0
         return result
     finally:
         if child.is_alive():
             child.terminate()
+        if child.pid is not None:
             child.join(timeout=30)
 
 
 @pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
-def test_registration_retires_the_profile_it_displaces_without_waiting_for_a_login(
+def test_registration_preserves_the_displaced_profiles_signed_in_receipt(
     tmp_path: Path,
 ) -> None:
-    """The displaced profile holds no recoverable key material once creation returns.
-
-    No login runs after the registration, which is the case the login-side
-    retirement can never cover: a registration that nothing follows would
-    otherwise leave the displaced profile resumable for good.
-
-    The probe deliberately runs before any further authentication, so what it
-    measures is the create transaction's own effect rather than a later login's.
-    """
+    """A selection change preserves both receipt bytes and usable proof."""
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         displaced = _register_in_separate_process(storage_root, "Displacement One", _CREDENTIAL_DISPLACED)["profile_id"]
         opened = _login_in_separate_process(storage_root, displaced, _CREDENTIAL_DISPLACED)
         assert opened["bucket_id"] == displaced
+        receipt = profile_session_path(storage_root=storage_root, profile_id=UUID(displaced))
+        saved = receipt.read_bytes()
 
         entering = _register_in_separate_process(storage_root, "Displacement Two", _CREDENTIAL_ENTERING)["profile_id"]
 
         selected = read_pointer(storage_root)
         assert selected.bucket_id == entering, "creation is expected to select the new capsule"
 
-        _assert_no_resumable_material(
-            storage_root,
-            displaced,
-            after="a registration that displaced the selected profile",
-        )
+        assert receipt.read_bytes() == saved
+        probe = _probe_resumable_session(storage_root, displaced)
+        assert probe["resumed"] is True
+        assert probe["dek_length"] == 32
+        assert probe["refusal"] is None
 
 
 @pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
-def test_the_displaced_profile_is_resumable_until_the_registration_displaces_it(
+def test_a_selected_profiles_saved_sign_in_is_resumable(
     tmp_path: Path,
 ) -> None:
-    """The anti-tautology arm: the same probe DOES recover the key while the profile is selected.
-
-    Without this, the refusal above would be satisfied by a probe that can never
-    reach the material from another process at all, and the suite would pass
-    with the defect fully intact.
-    """
+    """The same cross-process probe can recover an explicitly saved sign-in."""
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         selected = _register_in_separate_process(storage_root, "Resumable One", _CREDENTIAL_DISPLACED)["profile_id"]
@@ -213,14 +188,7 @@ def test_the_displaced_profile_is_resumable_until_the_registration_displaces_it(
 def test_a_registration_that_displaces_nothing_still_publishes_its_profile(
     tmp_path: Path,
 ) -> None:
-    """A first registration has no predecessor to retire and must not refuse.
-
-    The retirement reads the pointer value the transaction journalled before it
-    staged anything. On the very first registration there is none, and on a
-    re-registration of the already-selected profile the predecessor is the
-    profile being published. Neither is a displacement, and treating either as
-    one would refuse the profile-creation door outright.
-    """
+    """First registration publishes a capsule that can authenticate."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         assert read_pointer(storage_root).bucket_id is None
 
@@ -238,14 +206,7 @@ def test_a_registration_that_displaces_nothing_still_publishes_its_profile(
 def test_the_entering_profile_keeps_the_session_the_registration_gave_it(
     tmp_path: Path,
 ) -> None:
-    """Retirement reaches the displaced profile and stops there.
-
-    A retirement that resolved the wrong identity -- the profile being published
-    rather than the one being displaced -- would satisfy the non-resurrection
-    proof above while destroying the session of the profile the operator just
-    created. This pins the opposite direction: after the displacement, the new
-    profile authenticates and its own receipt resumes.
-    """
+    """The newly selected profile can authenticate and explicitly save sign-in."""
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         displaced = _register_in_separate_process(storage_root, "Survivor One", _CREDENTIAL_DISPLACED)["profile_id"]
@@ -260,49 +221,21 @@ def test_the_entering_profile_keeps_the_session_the_registration_gave_it(
         assert probe["dek_length"] == 32
 
 
-@pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
-def test_a_retirement_that_cannot_complete_refuses_the_registration_in_its_own_words(
+def test_registration_does_not_delete_an_obstructed_foreign_receipt(
     tmp_path: Path,
 ) -> None:
-    """A retirement that did not complete must refuse, and must say what happened.
-
-    The refusal itself is the safety property: the removal is ordered ahead of
-    the pointer compare-and-swap, so a failure leaves the pointer on the
-    displaced profile rather than selecting the new capsule over a session that
-    is still live. What this pins beyond that is the ACCOUNT the operator gets.
-    The create transaction refuses a label collision and a failed retirement
-    through one exception family, and reporting the second as the first sends
-    the operator off to rename a brand-new profile whose label was never the
-    problem.
-
-    The obstruction is a real filesystem state rather than a patched function:
-    the receipt path is occupied by a non-empty directory, so the unlink cannot
-    succeed on any platform and the primitive's own absence check reports it.
-    The unobstructed control is the displacement test at the top of this module
-    -- without it this case would be satisfied by a registration door that
-    refuses unconditionally.
-    """
-    require_os_credential_store()
+    """Selection changes neither inspect nor mutate another profile's receipt."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         displaced = _register_in_separate_process(storage_root, "Obstructed One", _CREDENTIAL_DISPLACED)["profile_id"]
-        _login_in_separate_process(storage_root, displaced, _CREDENTIAL_DISPLACED)
-
         receipt = profile_session_path(storage_root=storage_root, profile_id=UUID(displaced))
-        assert receipt.exists(), "the displaced profile must hold a receipt for the retirement to reach"
-        receipt.unlink()
-        receipt.mkdir()
-        (receipt / "occupant.bin").write_bytes(b"an occupied receipt path cannot be unlinked")
+        assert not receipt.exists()
+        receipt.mkdir(parents=True)
+        sentinel = b"runtime-owned receipt location must survive registration"
+        (receipt / "occupant.bin").write_bytes(sentinel)
 
         refusal = _attempt_registration_in_separate_process(storage_root, "Obstructed Two", _CREDENTIAL_ENTERING)
 
-        assert refusal["refused"] is True
-        assert refusal["cause"] == "ProfileCustodyDisplacedSessionRetirementError"
-        assert refusal["translated_message"] == (
-            "application.user_profile.errors.registration_displaced_session_not_retired"
-        )
-        assert refusal["translated_message"] != "application.user_profile.errors.profile_already_exists"
-
+        assert refusal == {"refused": False, "translated_message": None, "cause": None}
         selected = read_pointer(storage_root)
-        assert selected.bucket_id == displaced, (
-            "a refused retirement must leave the pointer on the profile it failed to retire"
-        )
+        assert selected.bucket_id is not None and selected.bucket_id != displaced
+        assert (receipt / "occupant.bin").read_bytes() == sentinel

@@ -80,11 +80,13 @@ def test_readiness_payload_preserves_facts_without_selecting_actions() -> None:
 
     payload = _readiness_result(
         report,
+        authority_generation="a" * 64,
         modelo="303",
         revision_id="2026-y-siguientes",
         filing_year=2026,
     )
 
+    assert payload.authority_generation == "a" * 64
     assert payload.missing[0].selector == "tax_residence.jurisdiction_scope"
     assert payload.missing_bindings[0].source is BindingSourceKind.PREVIOUS_FILING
     assert payload.ledger_issues[0].reason == LedgerPreflightIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE.value

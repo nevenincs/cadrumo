@@ -1,0 +1,11 @@
+[[revisions.2023-y-siguientes.export_layouts]]
+id = 'modelo-270-fichero-boe'
+format = 'fixed_width'
+source_refs = ['aeat-dr-270-2023']
+legal_refs = [
+    'ley-35-2006:da-33',
+    'ley-58-2003:art-93',
+    'orden-hap-2368-2013:art-1',
+    'orden-hfp-1286-2023:art-2',
+]
+dictionary_path_overrides = []

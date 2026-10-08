@@ -54,10 +54,7 @@ from .._modelo_nonwork_review_package_command_specs import (
     MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS,
 )
 from .._modelo_nonwork_work_amend_command_specs import MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS
-from ..command_spec import (
-    SchemaState,
-    TranslationKey,
-)
+from ..command_shared_contracts import SchemaState, TranslationKey
 from ..command_specs import COMMAND_GRAPH
 from ..modelo_work_command_specs import _ADDRESS, _LANGUAGE, _a, _o
 
@@ -73,6 +70,7 @@ _EXPECTED_KEYS = {
     "app_modelo_describe",
     "app_modelo_export",
     "app_modelo_filing_record",
+    "app_modelo_filing_record_export",
     "app_modelo_filing_record_import",
     "app_modelo_filing_record_list",
     "app_modelo_filing_record_observe_local",
@@ -96,7 +94,12 @@ _EXPECTED_KEYS = {
     "app_modelo_m145_mark_delivered_to_payer",
     "app_modelo_m145_mark_locally_completed",
     "app_modelo_m145_validate",
+    "app_modelo_m360",
+    "app_modelo_m360_declare",
+    "app_modelo_m360_list",
+    "app_modelo_m360_remove",
     "app_modelo_reconcile",
+    "app_modelo_reconcile_export",
     "app_modelo_reconcile_import",
     "app_modelo_reconcile_list",
     "app_modelo_reconcile_pull",
@@ -247,9 +250,14 @@ def test_reconcile_target_parameters_keep_order_and_import_extras_local() -> Non
         "period",
         "revision",
         "bucket_id",
+        "calculation_revision",
         "actor",
     )
-    assert pull.parameters is RECONCILE_TARGET_PARAMETERS
+    assert pull.parameters[:-1] == RECONCILE_TARGET_PARAMETERS
+    assert pull.parameters[-1].name == "source"
+    assert all(
+        actual is expected for actual, expected in zip(pull.parameters[:-1], RECONCILE_TARGET_PARAMETERS, strict=True)
+    )
     assert tuple(parameter.name for parameter in imported.parameters) == (
         "work_unit_id",
         "file",
@@ -258,13 +266,14 @@ def test_reconcile_target_parameters_keep_order_and_import_extras_local() -> Non
         "period",
         "revision",
         "bucket_id",
+        "calculation_revision",
         "actor",
         "kind",
     )
     assert imported.parameters[0] is RECONCILE_TARGET_PARAMETERS[0]
     assert all(
         actual is expected
-        for actual, expected in zip(imported.parameters[2:8], RECONCILE_TARGET_PARAMETERS[1:], strict=True)
+        for actual, expected in zip(imported.parameters[2:-1], RECONCILE_TARGET_PARAMETERS[1:], strict=True)
     )
     assert pull.policy is not imported.policy
     assert pull.handler is not imported.handler
@@ -556,7 +565,7 @@ def test_calculation_and_filing_common_parameters_keep_exact_order_and_identity(
 
 def test_every_nonwork_target_is_public_resolvable_and_runtime_materializable() -> None:
     executable = tuple(spec for spec in MODELO_NONWORK_COMMAND_SPECS if spec.handler is not None)
-    assert len(executable) == 46
+    assert len(executable) == 51
     for spec in executable:
         assert spec.handler is not None and spec.handler.target is not None
         target = spec.handler.target

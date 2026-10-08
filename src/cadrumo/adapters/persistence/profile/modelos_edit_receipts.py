@@ -50,6 +50,22 @@ class ModeloEditReceiptRepository(SecureBoundRepository[ModeloEditMutationResult
         """Return the receipt's own content-addressed identity."""
         return payload.receipt_id
 
+    def find_operation_receipt(
+        self, *, operation_id: str, baseline_id: str
+    ) -> ModeloEditMutationResultReceiptV1 | None:
+        """Find one exact co-transaction receipt, refusing ambiguous or unreadable proof."""
+        try:
+            matches = tuple(
+                receipt
+                for receipt in self.iter_records()
+                if receipt.operation_id == operation_id and receipt.baseline_id == baseline_id
+            )
+            if len(matches) > 1:
+                raise ModeloEditReceiptPersistenceError("ambiguous_operation_receipt")
+            return matches[0] if matches else None
+        except (OSError, StorageError, TypeError, ValueError, ValidationError) as exc:
+            raise ModeloEditReceiptPersistenceError("find_operation_receipt") from exc
+
     @override
     def to_secure_object_write(
         self,

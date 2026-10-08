@@ -33,15 +33,15 @@ See Also:
         The optional second door, driven from the offer that follows creation.
     :func:`~cadrumo.core.credentials.assess_profile_password`
         The canonical assessment behind validation and the live strength line.
-    :class:`~cadrumo.entrypoints.tui.secret.login.LoginScreen`
-        The other credential surface; the two share their attempt
-        lifecycle and panel layout through ``CredentialScreen``.
+    :class:`~cadrumo.entrypoints.tui.secret.runtime_login.RuntimeLoginScreen`
+        Admission to an existing profile through the authenticated shared runtime.
 """
 
 from __future__ import annotations
 
 from contextvars import copy_context
 from dataclasses import dataclass
+from logging import ERROR, WARNING
 from threading import Event
 from typing import TYPE_CHECKING, ClassVar, cast, override
 
@@ -54,12 +54,15 @@ from textual.widgets import Button, Footer, Input, Label, Select, Static
 from textual.worker import Worker, WorkerState
 
 from ....core.credentials import PROFILE_PASSWORD_MIN_SCALARS
+from ....core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_scope
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
 from ....core.i18n.render import output_language, tr
+from ....core.logging import get_logger
 from ..components.app_access import TypedAppAccess
 from ..components.status import PinnedStatusBar
 from ..components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
+from ..components.widgets import DisclosureGroup
 from .credentials import (
     CREDENTIAL_PANEL_CSS,
     CredentialAttempt,
@@ -113,6 +116,8 @@ _SURFACE_REFUSAL_LOCALE_KEYS: dict[str, str] = {
 _RECOVERY_HANDOFF_POLL_SECONDS = 0.1
 
 _RECOVERY_ENROLLMENT_WORKER = "profile-recovery-enrollment"
+
+_LOGGER = get_logger(__name__)
 
 
 class RecoveryHandoverDeclinedError(CadrumoError):
@@ -253,8 +258,9 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         yield Static(id="registration-banner", classes="cadrumo-banner")
         yield PinnedStatusBar(id="credential-status")
         with self.credential_panel(panel_id="registration-body"):
+            yield Static(id="registration-progress")
             yield Static(id="registration-intro")
-            yield Static(id="registration-why")
+            yield Static(id="registration-requirements", classes="field-hint")
 
             # Every translated string on this page is written by
             # :meth:`_render_localised_copy` rather than here, because the
@@ -274,6 +280,9 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
 
             yield Label(id="label-confirm", classes="field-label")
             yield Input(id="field-confirm", password=True)
+
+            with DisclosureGroup(title="", id="registration-password-help"):
+                yield Static(id="registration-why")
 
             yield Label(id="label-output-language", classes="field-label")
             # The one widget that cannot be composed empty: a chooser that
@@ -348,8 +357,15 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         self.title = title
         self.sub_title = tr("flows.registration.section", locale=locale)
         self.query_one("#registration-banner", Static).update(title)
+        self.query_one("#registration-progress", Static).update(tr("flows.registration.progress", locale=locale))
+        self.query_one("#registration-requirements", Static).update(
+            tr("flows.registration.requirements", locale=locale)
+        )
         self.query_one("#registration-intro", Static).update(tr("flows.registration.intro", locale=locale))
         self.query_one("#registration-why", Static).update(tr("flows.registration.why_password", locale=locale))
+        self.query_one("#registration-password-help", DisclosureGroup).title = tr(
+            "flows.registration.password_help", locale=locale
+        )
         self.query_one("#registration-body", Vertical).border_title = tr("flows.registration.section", locale=locale)
         self.query_one("#label-username", Label).update(tr("flows.registration.username_label", locale=locale))
         self.query_one("#hint-username", Static).update(tr("flows.registration.username_hint", locale=locale))
@@ -869,25 +885,56 @@ def build_profile_registration_attempt(
     from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
     from ....domain.user_profile.values import UserProfileFact
 
-    try:
-        with bundled_indexed_authority().operation() as operation:
-            outcome = register_profile_with_credentials(
-                label=label,
-                passphrase=candidate_passphrase,
-                facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=output_language),),
-                profile_create_context=operation.profile_create_context(),
-                profile_decode_context=operation.profile_decode_context(),
+    with diagnostic_scope(new=True):
+        diagnostic_event(_LOGGER, "tui_profile_registration_started")
+        try:
+            with bundled_indexed_authority().operation() as operation:
+                outcome = register_profile_with_credentials(
+                    label=label,
+                    passphrase=candidate_passphrase,
+                    facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=output_language),),
+                    profile_create_context=operation.profile_create_context(),
+                    profile_decode_context=operation.profile_decode_context(),
+                )
+        except ProfileRegistrationError as refusal:
+            diagnostic_event(
+                _LOGGER,
+                "tui_profile_registration_refused",
+                fields={
+                    "reason_code": refusal.translated_message or "profile_registration_refused",
+                    "error_type": type(refusal).__name__,
+                    "outcome": "refused",
+                },
+                level=WARNING,
+                primary_error=refusal,
             )
-    except ProfileRegistrationError as refusal:
-        if refusal.translated_message is None:
+            if refusal.translated_message is None:
+                raise
+            return RegistrationAttempt(
+                expected_refusal=RegistrationRefusal(
+                    message_key=refusal.translated_message,
+                    context=tuple((refusal.context or {}).items()),
+                )
+            )
+        except BaseException as error:
+            diagnostic_event(
+                _LOGGER,
+                "tui_profile_registration_failed",
+                fields={
+                    **diagnostic_error_fields(error),
+                    "reason_code": "unexpected_registration_failure",
+                    "outcome": "failed",
+                },
+                level=ERROR,
+                primary_error=error,
+            )
             raise
-        return RegistrationAttempt(
-            expected_refusal=RegistrationRefusal(
-                message_key=refusal.translated_message,
-                context=tuple((refusal.context or {}).items()),
-            )
+        diagnostic_event(
+            _LOGGER,
+            "tui_profile_registration_persisted",
+            fields={"profile_persisted": True, "outcome": "created", "runtime_admitted": False},
         )
-    return RegistrationAttempt(outcome=outcome)
+        return RegistrationAttempt(outcome=outcome)
 
 
 def build_profile_recovery_enrollment_attempt(

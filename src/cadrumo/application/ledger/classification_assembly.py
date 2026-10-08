@@ -1191,6 +1191,30 @@ def _unsupported_relief_claim(
     )
 
 
+def _resolve_undeclared_ingestion_category(
+    assembly: ClassificationAssembly,
+    *,
+    operation: PinnedAuthorityOperation,
+    classified: IvaCategory | None,
+    rate_tier: IvaRateKind | None,
+) -> IvaCategoryResolution:
+    """Resolve table-placed and charged-rate fallback outcomes without a declared fact."""
+    if classified is not None:
+        return IvaCategoryResolution(
+            outcome=IvaCategoryOutcome.CLASSIFIED,
+            category=classified,
+            classified=classified,
+        )
+    projected = resolve_iva_classification_inputs(
+        effective_date=(assembly.criteria.transaction_date if assembly.criteria is not None else today_madrid()),
+        operation=operation,
+    )
+    inferred = projected.rate_categories.get(rate_tier) if rate_tier is not None else None
+    if inferred is None:
+        return IvaCategoryResolution(outcome=IvaCategoryOutcome.UNRESOLVED)
+    return IvaCategoryResolution(outcome=IvaCategoryOutcome.RATE_INFERRED, category=inferred)
+
+
 def resolve_ingestion_iva_category(
     assembly: ClassificationAssembly,
     *,
@@ -1267,20 +1291,12 @@ def resolve_ingestion_iva_category(
     classified = _table_verdict(assembly, operation=operation)
     stated_fact = declared.stated_category
     if stated_fact is None:
-        if classified is not None:
-            return IvaCategoryResolution(
-                outcome=IvaCategoryOutcome.CLASSIFIED,
-                category=classified,
-                classified=classified,
-            )
-        projected = resolve_iva_classification_inputs(
-            effective_date=(assembly.criteria.transaction_date if assembly.criteria is not None else today_madrid()),
+        return _resolve_undeclared_ingestion_category(
+            assembly,
             operation=operation,
+            classified=classified,
+            rate_tier=rate_tier,
         )
-        inferred = projected.rate_categories.get(rate_tier) if rate_tier is not None else None
-        if inferred is None:
-            return IvaCategoryResolution(outcome=IvaCategoryOutcome.UNRESOLVED)
-        return IvaCategoryResolution(outcome=IvaCategoryOutcome.RATE_INFERRED, category=inferred)
 
     stated = stated_fact.value
     # Asked BEFORE the tier check and before the verdict comparison, because it

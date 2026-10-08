@@ -6,8 +6,8 @@ date: '2026-06-03'
 related:
   - "[[2026-06-03-iva-exemption-article-research]]"
 superseded_by: '2026-07-11-article-20-uno-26-correction-adr'
-modified: '2026-08-15'
-body_hash: 'sha256:13857199697ae314f8cb7d802e5a32cde68be11d4e29594c433aff4acbff2046'
+modified: '2026-10-03'
+body_hash: 'sha256:83015efb9c53b2477ca0bc7fab96cf94566724f81e0254e3217aa247c6fda24c'
 ---
 # `iva-exemption-article` adr: `IvaExemptionArticle discriminator on Transaction` | (**status:** `superseded`)
 
@@ -75,14 +75,13 @@ corpus.
 Land in one atomic explicit-path commit per the relocation-atomicity
 rule:
 
-1. New closed enum `IvaExemptionArticle` under
-   `src/cadrumo/domain/iva/_schema.py` next to `IvaCategory`. StrEnum
+1. New closed enum `IvaExemptionArticle`  next to `IvaCategory`. StrEnum
    with MVP members named above; docstring cites Ley 37/1992 art-20
    per the registry-calculation-legal-grounding rule.
 2. New optional `exemption_article: IvaExemptionArticle | None`
    field on the Transaction model. Model-validator rejects
    `exemption_article != None AND category != DOMESTIC_EXEMPT`.
-3. Classification rules in `src/cadrumo/domain/iva/_classification.py`
+3. Classification rules
    gain auto-classification heuristics for the ART_20_UNO_8 / 14 /
    26 cases that can be inferred from transaction shape. Heuristics
    that fail leave the field `None` rather than guessing.

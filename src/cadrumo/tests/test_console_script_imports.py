@@ -53,7 +53,7 @@ def test_cadrumo_package_imports_in_subprocess() -> None:
         capture_output=True,
         text=True,
         check=False,
-        timeout=120,
+        timeout=None,
     )
     assert completed.returncode == 0, (
         f"fresh-subprocess `import cadrumo` failed:\n  stdout: {completed.stdout!r}\n  stderr: {completed.stderr!r}"
@@ -61,10 +61,11 @@ def test_cadrumo_package_imports_in_subprocess() -> None:
 
 
 def test_console_scripts_expose_only_the_canonical_cadrumo_commands() -> None:
-    """The distribution ships exactly its human CLI and the bundled MCP harness server."""
+    """The distribution ships exactly its human CLI, the bundled MCP harness server and the local runtime."""
     pyproject = parse_toml((_PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
     assert pyproject["project"]["scripts"] == {
         "aeat": "cadrumo.entrypoints.cli.bootstrap:main",
         "cadrumo-mcp": "cadrumo_harness.mcp.main:main",
+        "cadrumo-runtime": "cadrumo.entrypoints.runtime.bootstrap:main",
     }

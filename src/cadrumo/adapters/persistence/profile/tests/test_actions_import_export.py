@@ -9,7 +9,11 @@ import pytest
 
 from cadrumo.adapters.inbound.financial.ledger_import import build_ledger_import_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_import import import_ledger_source, import_ledger_transactions
+from cadrumo.application.ledger.actions_import import (
+    import_ledger_transactions,
+    persist_prepared_ledger_source_import,
+    prepare_ledger_source_import,
+)
 from cadrumo.application.ledger.models import LedgerSourceImportCommand
 from cadrumo.domain.transactions.enums import TransactionDirection
 
@@ -17,6 +21,7 @@ from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
 )
 from .ledger_action_persistence_support import (
+    import_ledger_source,
     parsed_import_transaction,
 )
 from .ledger_action_persistence_support import (
@@ -75,6 +80,40 @@ def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
     assert [tx.raw.amount for tx in stored] == [Decimal("48.40"), Decimal("121.00")]
     assert stored[0].direction is TransactionDirection.OUTGOING
     assert stored[1].direction is TransactionDirection.INCOMING
+
+
+def test_prepared_ledger_source_persists_pinned_rows_after_source_is_removed(
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+) -> None:
+    """The COMMIT-stage action must consume staged rows, not reopen the input path."""
+    transaction_repository, event_repository = _repositories(secure_objects)
+    statement = tmp_path / "pinned.csv"
+    statement.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+        "2026-04-15,Original Merchant,Original reference,121.00,EUR,pinned-row\n",
+        encoding="utf-8",
+    )
+    command = LedgerSourceImportCommand(
+        bucket_id=_BUCKET_ID,
+        path=statement,
+        provider="csv",
+        actor="operator-A",
+    )
+
+    prepared = prepare_ledger_source_import(command, ports=build_ledger_import_ports())
+    statement.unlink()
+    result = persist_prepared_ledger_source_import(
+        prepared,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    )
+
+    stored = tuple(transaction_repository.load().values())
+    assert result.imported == 1
+    assert len(stored) == 1
+    assert stored[0].raw.counterparty == "Original Merchant"
+    assert stored[0].raw.description == "Original reference"
 
 
 def test_import_outgoing_magnitude_row_stores_positive_with_outgoing_direction(

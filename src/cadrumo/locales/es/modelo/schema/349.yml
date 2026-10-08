@@ -9,6 +9,54 @@ modelo:
         official_name: Modelo 349. Declaración Informativa. Declaración recapitulativa
           de operaciones intracomunitarias.
         title: Declaración recapitulativa de operaciones intracomunitarias
+      form:
+        authored:
+          base:
+            heading: Base imponible o importe
+          base-anterior:
+            heading: Base imponible declarada anteriormente
+          base-rectificada:
+            heading: Base imponible rectificada
+          clave:
+            heading: Clave de operación
+          contacto:
+            heading: Persona y teléfono de contacto
+          contacto-nombre:
+            heading: Persona de contacto
+          contacto-telefono:
+            heading: Teléfono de contacto
+          declaracion:
+            heading: Declaración complementaria o sustitutiva
+          ejercicio:
+            heading: Ejercicio
+          identificacion:
+            heading: Declarante
+          nif:
+            heading: NIF del declarante
+          nif-comunitario:
+            heading: NIF comunitario
+          nombre:
+            heading: Apellidos y nombre o razón social
+          operaciones:
+            heading: Relación de operaciones intracomunitarias
+          operador-nombre:
+            heading: Apellidos y nombre o razón social del operador
+          pais:
+            heading: Código país
+          period-code:
+            heading: Período
+          periodo:
+            heading: Ejercicio y período
+          rectificaciones:
+            heading: Rectificaciones de períodos anteriores
+          resumen:
+            heading: Hoja resumen
+          resumen-importes:
+            heading: Resumen de los datos incluidos en la declaración
+          sustituto-nif:
+            heading: NIF del destinatario final sustituto
+          sustituto-nombre:
+            heading: Nombre del destinatario final sustituto
       revision:
         2020-y-siguientes:
           casilla:

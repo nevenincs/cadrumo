@@ -20,7 +20,7 @@ wizard:
     blank_path: 'Útvonal megadása kötelező a következőhöz: %{prompt_key}.'
     blank_secret: 'Titkos érték megadása kötelező a következőhöz: %{prompt_key}.'
     blank_text: 'Érték megadása kötelező a következőhöz: %{prompt_key}.'
-    checkbox_required: 'Válasszon legalább egy lehetőséget a következőhöz: %{prompt_key}.'
+    checkbox_required: 'Válassz legalább egy lehetőséget a következőhöz: %{prompt_key}.'
     checkbox_unknown: 'Ismeretlen érték a következőhöz: %{flag} (%{prompt_key}): %{raw}.
       Érvényes lehetőségek: %{choices}.'
     checkbox_without_choices: A(z) %{prompt_key} kérdésnél nincsenek jelölőnégyzet-lehetőségek
@@ -46,12 +46,12 @@ wizard:
     unsupported_console: 'Az irányított beállítás interaktív terminált igényel, ez
       a futtatás azonban nem rendelkezik ilyennel. Még semmi nem lett mentve.
 
-      Ezt a profilt kétféleképpen hozhatja létre:
+      Ezt a profilt kétféleképpen hozhatod létre:
 
-      1. Futtassa újra a parancsot interaktív terminálból az irányított beállítás
-      használatához: aeat config profile create NAME
+      1. Futtasd újra a parancsot interaktív terminálból az irányított beállítás használatához:
+      aeat config profile create NAME
 
-      2. Vagy hozzon létre resident IRPF természetes személy profilt egyetlen lépéssel,
+      2. Vagy hozz létre resident IRPF természetes személy profilt egyetlen lépéssel,
       a szükséges adatokat kapcsolókként megadva: aeat config profile create NAME
       --quiet --tax-id NIF/CIF/DNI/NIE --entity-type natural_person --irpf-income-categories
       actividad_economica --tax-residence-ccaa madrid --name KERESZTNÉV --surnames
@@ -59,10 +59,10 @@ wizard:
     unsupported_console_edit: 'Az irányított beállítás nem tudott interaktív promptot
       megnyitni ebben a futtatásban. Még semmi nem lett mentve.
 
-      Szerkessze a profilt nem interaktívan, megadva a módosítandó mezőt: aeat config
+      Szerkeszd a profilt nem interaktívan, megadva a módosítandó mezőt: aeat config
       profile edit %{profile_name} --quiet --<mező> ÉRTÉK
 
-      Vagy futtassa újra az irányított szerkesztést interaktív terminál-munkamenetből:
+      Vagy futtasd újra az irányított szerkesztést interaktív terminál-munkamenetből:
       aeat config profile edit %{profile_name}'
   other:
     description: Egyéb konfigurációs lehetőségek
@@ -86,7 +86,7 @@ wizard:
       title: Szolgáltatási képességek
     certificate:
       path:
-        prompt: Adja meg a digitális tanúsítvány elérési útját (.p12, .pfx)
+        prompt: Add meg a digitális tanúsítvány elérési útját (.p12, .pfx)
     codes:
       disability-grade:
         choices:
@@ -96,7 +96,7 @@ wizard:
           65-plus:
             description: Elismert 65%-os vagy nagyobb fogyatékosság - nagyobb személyiminimum-növekedés.
             label: Fogyatékossági fokozat 65% vagy magasabb
-          assistance-or-mobility:
+          assistance-or-reduced-mobility:
             description: Igazolt harmadik személy segítségének szükségessége vagy
               csökkent mozgásképesség - asszisztencia-növekményt ad.
             label: Harmadik személy segítsége vagy korlátozott mozgásképesség
@@ -115,36 +115,36 @@ wizard:
         label: A tanúsítvány értékének átvétele
         provenance: Certificado de Situación Censal (nem hivatalos bizonyíték)
       compare:
-        help: Tartsa meg a válaszát, vegye át a tanúsítvány értékét, vagy halassza
+        help: Tartsd meg a válaszodat, vedd át a tanúsítvány értékét, vagy halaszd
           el a döntést.
         prompt: Ez az adat eltér a tanúsítványtól. Melyik értéket tartja meg?
       keep:
         label: A saját válaszom megtartása
-        provenance: Az Ön beállítási válasza
+        provenance: A beállítási válaszod
       title: Összevetés a Certificado de Situación Censal tanúsítvánnyal
     descendientes:
       acogimiento-resolucion:
         help: 'Az első örökbefogadás előtti vagy tartós nevelésbe vételi határozat
-          dátuma. Akkor is adja meg, ha a gyermeket később örökbefogadták: a hároméves
+          dátuma. Akkor is add meg, ha a gyermeket később örökbefogadták: a hároméves
           kor alatti növekmény az első nevelésbe vételtől számít, összesen három időszakon
           át tart, és az örökbefogadás nem indítja újra.'
         prompt: Az első nevelésbe vételi határozat dátuma
       alta-posterior-nacimiento-mes:
-        help: Adjon meg egy hónapot 1 és 12 között. Ennek egyeznie kell az első megadott
-          munkahónappal; hagyja üresen, ha az anya már a születéskor teljesítette
-          a feltételt.
+        help: Adj meg egy hónapot 1 és 12 között. Ennek egyeznie kell az első megadott
+          munkahónappal; hagyd üresen, ha az anya már a születéskor teljesítette a
+          feltételt.
         invalid_range: A hónapnak %{minimum} és %{maximum} között kell lennie.
         prompt: Az a hónap, amikor az anya a születés után teljesítette a 30 járulékfizetési
           napot
       birth-date:
         prompt: Születési dátum
       convivencia:
-        prompt: Ez a leszármazó Önnel él?
+        prompt: Ez a leszármazó veled él?
       count:
-        help: 'Számolja meg a gyermekeket, akik után igénybe veheti a leszármazók
+        help: 'Számold meg a gyermekeket, akik után igénybe veheted a leszármazók
           utáni minimumot (LIRPF 58. cikk): 25 év alattiak (vagy bármely életkorú
-          fogyatékos), akik Önnel élnek.'
-        prompt: Hány leszármazót (gyermeket) szeretne bevallani?
+          fogyatékos), akik veled élnek.'
+        prompt: Hány leszármazót (gyermeket) szeretnél bevallani?
       custodia-compartida:
         prompt: A felügyeletet megosztja a másik szülővel?
       declaracion-propia:
@@ -157,13 +157,13 @@ wizard:
             label: Nem járulok hozzá az eltartásához
           'true':
             label: Igen, hozzájárulok az eltartásához
-        help: Csak akkor válaszoljon, ha a leszármazott nem él Önnel. Az a szülő,
-          akinek nincs felügyeleti joga, még közös sem, és nem fizet bírósági határozaton
+        help: Csak akkor válaszolj, ha a leszármazott nem él veled. Az a szülő, akinek
+          nincs felügyeleti joga, még közös sem, és nem fizet bírósági határozaton
           alapuló tartásdíjat, de hozzájárul a gyermek eltartásához, jogosult a leszármazottak
-          utáni adóalap-kedvezményre. Ha tartásdíjat vall be, ez a beszámítás egyetlen
+          utáni adóalap-kedvezményre. Ha tartásdíjat vallasz be, ez a beszámítás egyetlen
           leszármazottra sem alkalmazható, amíg az alkalmazás nem tudja azt gyermekenként
           megosztani.
-        prompt: Hozzájárul Ön ennek a leszármazottnak a gazdasági eltartásához?
+        prompt: Hozzájárulsz ennek a leszármazottnak a gazdasági eltartásához?
       discapacidad:
         choices:
           '0':
@@ -179,52 +179,52 @@ wizard:
         relacion_mismatch: Ez a dátum nem felel meg a megadott jogviszonynak. Az anyakönyvi
           bejegyzés csak örökbefogadott leszármazottra vonatkozik, a nevelésbe vételi
           határozat pedig csak örökbefogadás előtti vagy tartós nevelésbe vételre,
-          illetve korábban nevelésbe vett örökbefogadottra. Javítsa a jogviszonyt,
-          vagy törölje a dátumot.
+          illetve korábban nevelésbe vett örökbefogadottra. Javítsd a jogviszonyt,
+          vagy töröld a dátumot.
       fallecimiento:
-        help: Hagyja üresen, ha ez a leszármazott nem hunyt el.
+        help: Hagyd üresen, ha ez a leszármazott nem hunyt el.
         prompt: A halálozás dátuma
       gastos-guarderia:
-        both_declared: Adja meg ennek a gyermeknek vagy az éves bölcsődei összeget,
+        both_declared: Add meg ennek a gyermeknek vagy az éves bölcsődei összeget,
           vagy a havi összegeket, de ne mindkettőt. A havi bontás az egyetlen, amely
           ki tudja fejezni azt az évet, amelyben a gyermek betölti a harmadik életévét,
-          ezért törölje az éves összeget.
+          ezért töröld az éves összeget.
         help: Engedélyezett bölcsődének fizetett összegek (LIRPF 81.2. cikk), amelyek
           növelik az anyasági levonást; egész euró.
-        invalid_negative: A bölcsődei költség nem lehet negatív; adjon meg 0-t vagy
+        invalid_negative: A bölcsődei költség nem lehet negatív; adj meg 0-t vagy
           pozitív összeget euróban (LIRPF 81 bis cikk).
         prompt: Az adóévben fizetett bölcsődei költségek (euró)
       gastos-guarderia-mensuales:
-        help: 'Az éves összeg helyett ezt használja, ha a gyermek az adóévben tölti
+        help: 'Az éves összeg helyett ezt használd, ha a gyermek az adóévben tölti
           be a harmadik életévét: csak a születésnap utáni hónapok számítanak, és
-          egy éves összeg nem osztható fel közöttük. Írja be minden hónapot és összegét
+          egy éves összeg nem osztható fel közöttük. Írd be minden hónapot és összegét
           HH:ÖSSZEG formában, pontosvesszővel elválasztva, vagy egy időszakot HH-HH:ÖSSZEG
           formában, például 9-12:210;1:180. A jogosult hónapokat a bölcsőde igazolja.'
-        invalid_grammar: Írja be minden hónapot és összegét HH:ÖSSZEG formában, pontosvesszővel
-          elválasztva; egy időszak HH-HH:ÖSSZEG formában írható. Például 9-12:210;1:180.
-          A hónapok 1-től 12-ig terjednek, az összegek egész eurók, és minden hónap
-          csak egyszer szerepelhet.
+        invalid_grammar: Írd be minden hónap számát és összegét HH:ÖSSZEG formában,
+          pontosvesszővel elválasztva; egy időszak HH-HH:ÖSSZEG formában írható. Például
+          9-12:210;1:180. A hónapok 1-től 12-ig terjednek, az összegek egész eurók,
+          és minden hónap csak egyszer szerepelhet.
         prompt: Ennek a gyermeknek a bölcsődei költségei, hónapról hónapra (nem kötelező)
       inscripcion-registro-civil:
         help: Az a dátum, amikor az örökbefogadást az anyakönyvbe bejegyezték. Ha
-          a bejegyzés nem volt szükséges, adja meg a bírósági vagy hatósági határozat
+          a bejegyzés nem volt szükséges, add meg a bírósági vagy hatósági határozat
           dátumát. A hároméves kor alatti növekmény ettől a dátumtól számít.
         prompt: Anyakönyvi bejegyzés dátuma
       meses-madre-trabajo:
         help: 'Az anyasági levonáshoz (LIRPF 81. cikk): MELY hónapokban fizetett az
           anya tb-járulékot, amíg ez a gyermek jogosultságot adott -- 3 év alatt,
           vagy (kortól függetlenül) az INSCRIPCION/ACOGIMIENTO alatt rögzített örökbefogadási/nevelésbe
-          vételi belépési ablakon belül. Írja MM vagy MM-MM formában, '';'' jellel
+          vételi belépési ablakon belül. Írd MM vagy MM-MM formában, '';'' jellel
           elválasztva (például 5-8 vagy 1;2;11;12). A hónapokat, nem a számukat, mert
           a bölcsődei növekmény azon hónapok alapján arányosul, amelyeket ezek és
           a bölcsődei hónapok megosztanak.'
-        invalid_range: Adja meg a hónapokat MM vagy MM-MM formában, ';' jellel elválasztva
+        invalid_range: Add meg a hónapokat MM vagy MM-MM formában, ';' jellel elválasztva
           (például 5-8 vagy 1;2;11;12), mindegyik %{minimum} és %{maximum} között.
         prompt: Mely hónapokban dolgozott az anya jogosultan -- 3 év alatti gyermek,
           vagy örökbefogadás/nevelésbe vétel a belépési dátum ablakán belül (bevallási
           év)
       nif:
-        prompt: A leszármazó adószáma (NIF/NIE) (hagyja üresen, ha nincs)
+        prompt: A leszármazó adószáma (NIF/NIE) (hagyd üresen, ha nincs)
       prorrata-minimo:
         choices:
           'false':
@@ -248,11 +248,10 @@ wizard:
             label: Bírósági határozaton alapuló gyermekelhelyezés
           tutela:
             label: Gyámság vagy törvényes képviselet
-        help: Válassza ki a jogviszonyt. Mindegyik jogosít a leszármazottak utáni
-          adóalap-kedvezményre. Csak az örökbefogadás és az örökbefogadás előtti vagy
-          tartós nevelésbe vétel jogosít ezenfelül a hároméves kor alatti növekményre,
-          a gyermek életkorától függetlenül; az ideiglenes nevelésbe vétel és a gyámság
-          nem.
+        help: Válaszd ki a jogviszonyt. Mindegyik jogosít a leszármazottak utáni adóalap-kedvezményre.
+          Csak az örökbefogadás és az örökbefogadás előtti vagy tartós nevelésbe vétel
+          jogosít ezenfelül a hároméves kor alatti növekményre, a gyermek életkorától
+          függetlenül; az ideiglenes nevelésbe vétel és a gyámság nem.
         prompt: Kapcsolat ezzel a leszármazottal
       rentas-anuales:
         help: Hagyd üresen, ha nem tudod. A magas jövedelem megszüntetheti a kedvezményt.
@@ -279,11 +278,7 @@ wizard:
         prompt: Kiskorú gyermekek a családi egységben
       title: Családi egység
     filing-export:
-      charge-iban:
-        help: Az IBAN, amelyet az AEAT megterhelhet, ha a 303-as modell bevallása
-          csoportos beszedést választ. Ez különbözik a visszatérítési számlától.
-        prompt: IBAN az AEAT csoportos beszedéséhez
-      title: A 303-as modell beszedési számlája
+      title: A Modelo 303 beszedési számlája
     flags:
       activity:
         help: Gazdasági tevékenység egyszerű szövegként, vagy IAE fejezet, ha ismeri
@@ -299,8 +294,6 @@ wizard:
           történő befizetéssel terhelt
       bienes-extranjero-above-threshold:
         help: Külföldi vagyon meghaladja a jogszabályi küszöbértéket
-      charge-iban:
-        help: IBAN, amelyet az AEAT megterhelhet a 303-as modell választott beszedéséhez.
       cloud-evidence-upload:
         help: Érzékeny bizonylatok feltöltésének engedélyezése felhő LLM-szolgáltatókhoz
           (alapból kikapcsolva).
@@ -308,7 +301,7 @@ wizard:
         help: Az adóügyi lakóhely szerinti ország ISO 3166-1 alfa-2 kódja (pl. GB,
           DE, FR). Kötelező, ha a fiscal-residency értéke non_resident_irnr.
       declaration-roles:
-        help: 347-es modell bevallói szerepkör; adja meg a --declaration-roles kapcsolót
+        help: Modelo 347 bevallói szerepkör; add meg a --declaration-roles kapcsolót
           szerepkörönként egyszer
       descendiente:
         help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
@@ -334,13 +327,13 @@ wizard:
         help: Alkalmazottai vannak és forrásadóval terhelt béreket fizet
       incn-prior-12-months:
         help: Nettó árbevétel (importe neto de la cifra de negocios) az előző 12 hónapban,
-          euróban. 6 000 000 EUR felett a 202-es nyomtatvány az LIS 40.3. cikkely
-          szerinti módozatot írja elő; alatta mindkét módozat választható. Opcionális.
+          euróban. 6 000 000 EUR felett a Modelo 202 az LIS 40.3. cikkely szerinti
+          módozatot írja elő; alatta mindkét módozat választható. Opcionális.
       irpf-estimation-regime:
         help: A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza,
-          hogy a 130-as vagy 131-es nyomtatvány alkalmazandó-e
+          hogy a Modelo 130 vagy a Modelo 131 alkalmazandó-e
       irpf-income-categories:
-        help: IRPF jövedelemkategória; adja meg a --irpf-income-categories kapcsolót
+        help: IRPF jövedelemkategória; add meg a --irpf-income-categories kapcsolót
           kategóriánként egyszer
       irpf-special-regime:
         help: IRPF különleges adózási rend. "general" a legtöbb adózó számára. "impatriado"
@@ -358,12 +351,11 @@ wizard:
       iva-group-member-enrolled:
         help: IVA-csoport tag szervezeteként bejelentkezett
       iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
-        help: Nyilatkozzon a szénhidrogén-adóraktári előlegek levonására való jogosultságról.
+        help: Nyilatkozz a szénhidrogén-adóraktári előlegek levonására való jogosultságról.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
       iva-m303-regime-composition:
-        help: '303-es nyomtatvány rendszerösszetétel: általános, egyszerűsített vagy
-          vegyes.'
+        help: 'Modelo 303 rendszerösszetétel: általános, egyszerűsített vagy vegyes.'
       iva-oss-enrolled:
         help: OSS-be bejelentkezett
       iva-redeme-enrolled:
@@ -375,40 +367,40 @@ wizard:
       iva-sii-enrolled:
         help: Az adózó be van-e jegyezve az SII-be
       iva-voluntary-sii-enrolled:
-        help: Nyilatkozzon az önkéntes SII-bejelentkezésről, elkülönítve a kötelező
+        help: Nyilatkozz az önkéntes SII-bejelentkezésről, elkülönítve a kötelező
           okoktól.
       legal-entity-form:
         help: Elismert jogi forma, ha az entitástípus jogi személy
       legal-name:
         help: Jogi személy cégneve az exportfejlécekhez
       ley-49-2002-option-date:
-        help: Rögzíti a 036-os nyomtatvány 653-as mezőjének dátumát a Ley 49/2002
-          II. címe szerinti választáshoz.
+        help: Rögzíti a Modelo 036 653-as mezőjének dátumát a Ley 49/2002 II. címe
+          szerinti választáshoz.
       ley-49-2002-option-declared:
-        help: Rögzíti, hogy a 036-os nyomtatvány 651-es mezője bejelenti-e a Ley 49/2002
-          II. címe szerinti választást.
+        help: Rögzíti, hogy a Modelo 036 651-es mezője bejelenti-e a Ley 49/2002 II.
+          címe szerinti választást.
       ley-49-2002-renunciation-date:
-        help: Rögzíti a 036-os nyomtatvány 654-es mezőjének dátumát a Ley 49/2002
-          II. címe szerinti lemondáshoz.
+        help: Rögzíti a Modelo 036 654-es mezőjének dátumát a Ley 49/2002 II. címe
+          szerinti lemondáshoz.
       ley-49-2002-renunciation-declared:
-        help: Rögzíti, hogy a 036-os nyomtatvány 652-es mezője bejelenti-e a Ley 49/2002
-          II. címe szerinti rendszerről való lemondást.
+        help: Rögzíti, hogy a Modelo 036 652-es mezője bejelenti-e a Ley 49/2002 II.
+          címe szerinti rendszerről való lemondást.
       llm-vision:
         help: Helyi LLM-látás engedélyezése a számlák beolvasásához.
       modelo-111-no-retenciones-periods:
-        help: Vesszővel elválasztott 111-es nyomtatvány nem kötelezett időszakok,
-          ÉÉÉÉ:IDŐSZAK formátumban (például 2025:2T,2025:3T). Csak akkor használja,
-          ha nem történt forrásadó-köteles kifizetés.
+        help: Vesszővel elválasztott Modelo 111 nem kötelezett időszakok, ÉÉÉÉ:IDŐSZAK
+          formátumban (például 2025:2T,2025:3T). Csak akkor használd, ha nem történt
+          forrásadó-köteles kifizetés.
       modelo-115-no-relevant-payment-periods:
-        help: Vesszővel elválasztott 115-ös nyomtatvány releváns városi bérleti kifizetés
+        help: Vesszővel elválasztott Modelo 115 releváns városi bérleti kifizetés
           nélküli időszakai ÉÉÉÉ:IDŐSZAK formátumban (például 2025:3T,2025:4T). Ez
           kifejezett helyi bizonyíték, nem AEAT-benyújtási bizonyíték.
       monedas-virtuales-extranjero-above-threshold:
-        help: Külföldi virtuális valuták meghaladják a 721-es nyomtatvány küszöbértékét
+        help: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
       name:
         help: A helyi áttekintésekben megjelenő megjelenítési név
       new-entity-first-two-profit-periods:
-        help: Jelölje be, ha az újonnan létrehozott jogi személy az első két nyereséges
+        help: Jelöld be, ha az újonnan létrehozott jogi személy az első két nyereséges
           adóidőszakának egyikében van (LIS 29. cikkely), a 15%-os kedvezményes adókulcs
           igénybevételéhez. Opcionális; jelöletlenül az egyéb alkalmazandó adókulcs
           érvényes.
@@ -440,7 +432,7 @@ wizard:
         help: Forrásadóval terhelt helyi bérleti díjat fizet
       premio-loteria-gravamen-especial-sin-retencion:
         help: Különadó alá eső lottó- vagy fogadási nyereményt kapott forrásadó-levonás
-          és adóelőleg nélkül (136-os nyomtatvány)
+          és adóelőleg nélkül (Modelo 136)
       premio-loteria-gravamen-especial-trimestres:
         help: Negyedévek, amelyekben a nyereményt felvették, |-jellel elválasztott
           ÉÉÉÉ-nT tokenekként (például 2025-1T|2025-3T)
@@ -522,8 +514,9 @@ wizard:
       taxpayer-sex:
         help: 'Az első adózó neme: H = férfi, M = nő.'
       third-party-transactions-above-347-threshold:
-        help: Harmadik féllel folytatott ügyletek meghaladják a 347-es nyomtatvány
-          küszöbértékét
+        help: Nyilatkozz arról, hogy a Modelo 347 által lefedett naptári évben az
+          ugyanazzal a személlyel vagy szervezettel folytatott ügyleteid meghaladták
+          a 3 005,06 EUR-t (harmadik felek nevében történő beszedésnél a 300,51 EUR-t).
     format:
       amount-eur: Összeg euróban, tizedesponttal, pl. 50000.00.
       date-iso: Dátum ÉÉÉÉ-HH-NN formátumban, pl. 2024-03-01.
@@ -537,13 +530,13 @@ wizard:
 
       Ez előkészíti a helyi profilt, amelyet az alkalmazás a könyveléshez és az adóűrlap-ellenőrzésekhez
       használ. Várható %{section_total} szekció. Csak %{required_total} válasz kötelező
-      a kezdéshez; a többi üresen hagyható, ha még nem ismeri. Legyen kéznél a NIF/CIF/DNI/NIE
-      azonosítója, egy rövid tevékenységleírás, IVA/IRPF adózási rend adatai, adóügyi
-      lakóhely és családi adatok, ha relevánsak. Mentés után ellenőrizze az előrehaladást
-      a következővel: .'
+      a kezdéshez; a többi üresen hagyható, ha még nem ismered. Tartsd kéznél a NIF/CIF/DNI/NIE
+      azonosítódat, egy rövid tevékenységleírást, az IVA/IRPF adózási rend adatait,
+      az adóügyi lakóhelyed adatait és a családi adataidat, ha relevánsak. Mentés
+      után ellenőrizd az előrehaladást a következővel: .'
     iva:
       iva-cash-accounting-regime-enrolled:
-        prompt: Be van jelentkezve az IVA pénzforgalmi különleges rendszerébe?
+        prompt: Bejelentkeztél az IVA pénzforgalmi különleges rendszerébe?
       iva-group-dominant-entity-enrolled:
         prompt: IVA-csoport domináns szervezeteként bejelentkezett
       iva-group-member-enrolled:
@@ -563,7 +556,7 @@ wizard:
       iva-sii-enrolled:
         prompt: SII-be bejelentkezett (azonnali információszolgáltatás)
       iva-voluntary-sii-enrolled:
-        prompt: Önkéntesen bejelentkezett az SII-be?
+        prompt: Önkéntesen csatlakoztál az SII-hez?
       m303-regime-composition:
         choices:
           general:
@@ -572,7 +565,7 @@ wizard:
             label: Vegyes rendszerek
           simplified:
             label: Csak egyszerűsített rendszer
-        prompt: Melyik 303-es nyomtatvány rendszerösszetétel alkalmazandó?
+        prompt: Melyik Modelo 303 rendszerösszetétel alkalmazandó?
       title: IVA
     notes:
       notes:
@@ -603,13 +596,16 @@ wizard:
               számítódik, csak a felsorolt tevékenységekre.'
             label: Objektív becslés (módszerek)
         help: A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza,
-          hogy a 130-as vagy 131-es nyomtatvány alkalmazandó-e
+          hogy a Modelo 130 vagy a Modelo 131 alkalmazandó-e
         prompt: IRPF becslési rend
       irpf-special-regime:
         choices:
           general:
+            description: Az IRPF általános rendszere szerint adózol (Modelo 100).
             label: Általános adózási rend
           impatriado:
+            description: A LIRPF 93. cikke szerinti különleges rendszert választottad
+              (Modelo 151).
             label: Bejövő expatriált – Beckham-törvény (LIRPF 93. cikkely)
         help: A kiküldött (Beckham-törvény) adózási rend az áthelyezés utáni első
           6 adóévre alkalmazható. A legtöbb adózó az általános rend szerint adózik.
@@ -620,16 +616,16 @@ wizard:
         prompt: A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)
       modelo-111-no-retenciones-periods:
         help: ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt retención vagy ingreso a
-          cuenta alá eső kifizetés, ezért nem nyújtandó be üres 111-es nyomtatvány.
-        prompt: 111-es nyomtatvány forrásadó nélküli időszakok
+          cuenta alá eső kifizetés, ezért nem nyújtandó be üres Modelo 111.
+        prompt: Modelo 111 forrásadó nélküli időszakok
       modelo-115-no-relevant-payment-periods:
         help: ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt releváns, forrásadó-köteles
           városi bérleti kifizetés, ezért helyi nulla 115-ös számítás készíthető.
-        prompt: 115-ös nyomtatvány releváns kifizetés nélküli időszakai
+        prompt: Modelo 115 releváns kifizetés nélküli időszakai
       monedas-virtuales-extranjero-above-threshold:
-        prompt: Külföldi virtuális valuták meghaladják a 721-es nyomtatvány küszöbértékét
+        prompt: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
       objective-estimation-modulos-iae-epigraph:
-        help: Évente egyszer kerül a profilba. Az együtthatók továbbra is a modellnyilvántartásban
+        help: Évente egyszer kerül a profilba. Az együtthatók továbbra is a nyomtatványdefiníciókban
           maradnak.
         prompt: IAE epigrafus objektív becslési modulokhoz
       objective-estimation-modulos-module-1-units:
@@ -666,18 +662,20 @@ wizard:
       professional-income-withholding-ge-70pct:
         prompt: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
       third-party-transactions-above-347-threshold:
-        prompt: Harmadik féllel folytatott ügyletek meghaladják a 347-es nyomtatvány
-          küszöbértékét
+        prompt: A Modelo 347 által lefedett naptári évben meghaladták-e az ugyanazzal
+          a személlyel vagy szervezettel folytatott ügyleteid a 3 005,06 EUR-t (a
+          harmadik felek nevében beszedett összegeknél a 300,51 EUR-t), az értékesítéseket
+          és a beszerzéseket külön számítva?
       title: Nyomtatvány kötelezettségek
     preferencias:
       title: Beállítások és képességek
     profile:
       activity:
-        prompt: Gazdasági tevékenység (egyszerű szöveg is megfelelő; használja az
-          IAE fejezetet, ha ismeri)
+        prompt: Gazdasági tevékenység (egyszerű szöveg is megfelelő; használd az IAE
+          fejezetet, ha ismered)
       activity-start-date:
         help: Ha meg van adva, az előtte lévő időszakok bevallásai nem jelennek meg
-          lejártként. Hagyja üresen, ha nem tudja.
+          lejártként. Hagyd üresen, ha nem tudod.
         prompt: Mikortól van bevallási kötelezettsége / mikor regisztrált? (ÉÉÉÉ-HH-NN,
           opcionális)
       address-postcode:
@@ -690,7 +688,7 @@ wizard:
             label: Mentes
           general:
             description: 'Általános IVA: az értékesítésre IVA-t számít fel, a beszerzések
-              IVA-ja levonható, negyedéves 303-es nyomtatvány.'
+              IVA-ja levonható, negyedéves Modelo 303.'
             label: Általános adózási rend
           reagp:
             description: 'Mezőgazdasági, állattenyésztési és halászati különös szabályozás
@@ -698,8 +696,8 @@ wizard:
             label: Mezőgazdaság, állattenyésztés és halászat különleges adózási rendje
               (REAGP)
           recargo-equivalencia:
-            description: 'Kiskereskedőknek: a beszállító felárat számít fel, és ön
-              nem nyújt be IVA-bevallást erre a tevékenységre.'
+            description: 'Kiskereskedőknek: a beszállító felárat számít fel, és nem
+              nyújtasz be IVA-bevallást erre a tevékenységre.'
             label: Egyenértékűségi pótlék
           simplificado:
             description: Modul-alapú egyszerűsített IVA a jogosult tevékenységekhez
@@ -724,7 +722,7 @@ wizard:
             label: Magyar
         prompt: CLI kimeneti nyelv ehhez a profilhoz
       regimes:
-        prompt: Válassza ki az alkalmazandó adózási rendeket
+        prompt: Válaszd ki az alkalmazandó adózási rendeket
       surnames:
         prompt: Vezetéknevei vagy cégneve az exportfejlécekhez
       tax-id:
@@ -732,11 +730,11 @@ wizard:
       taxation-type:
         choices:
           individual:
-            description: Akkor használja, ha kizárólag saját egyéni bevallását nyújtja
-              be
+            description: Akkor használd, ha kizárólag a saját egyéni bevallásodat
+              nyújtod be
             label: 1 - egyéni
           joint:
-            description: Csak a családi egység közös adózásához használja
+            description: Csak a családi egység közös adózásához használd
             label: 2 - közös
         prompt: Adózási típus kódja
       title: Profil azonosítása
@@ -780,7 +778,7 @@ wizard:
         choices:
           non-resident-irnr:
             description: 'Nem rezidens: csak a spanyol forrású jövedelem adózik IRNR
-              szerint (210-es nyomtatvány), és adóügyi képviselő lehet szükséges.'
+              szerint (Modelo 210), és adóügyi képviselő lehet szükséges.'
             label: Nem rezidens – IRNR (RDLeg 5/2004)
           resident-irpf:
             description: 'Spanyol adóügyi illetőség (183+ nap vagy érdekközpont):
@@ -903,11 +901,11 @@ wizard:
               31.3. cikk).
             label: Harmadik felek nevében történő díjbeszedés
         help: 'A 347-es adatlap C, D vagy E kulcsát aktiváló intézményi szerepek:
-          harmadik felek nevében történő díjbeszedés (31.3. cikk), lakásszövetkezet
-          jellegű társasház (49/1960. törvény), szociális jellegű szervezet (LIVA
-          20.tres cikk), az általános adatszolgáltatási kötelezettség alá tartozó
-          szervezet (LGT 94. cikk), vagy közigazgatási szervbe integrált entitás.
-          Hagyja üresen, ha egyik sem alkalmazandó.'
+          harmadik felek nevében történő díjbeszedés (31.3. cikk), társasházi közösség
+          (49/1960. törvény), szociális jellegű szervezet (LIVA 20.tres cikk), az
+          általános adatszolgáltatási kötelezettség alá tartozó szervezet (LGT 94.
+          cikk), vagy közigazgatási szervbe integrált entitás. Hagyd üresen, ha egyik
+          sem alkalmazandó.'
         prompt: A bejelentő szervezet betölt-e valamelyik alábbi intézményi szerepet
           a 347-es adatlap (harmadik felekkel folytatott ügyletek) szempontjából?
       entity-type:
@@ -928,15 +926,15 @@ wizard:
           vagy jövedelemattribúciós szervezet
         prompt: Entitástípus
       incn-prior-12-months:
-        help: Erre azért van szükségünk, hogy meghatározzuk, hogy a 202-es nyomtatvány
-          az LIS 40.3. cikkely szerinti módozatot írja-e elő (6 000 000 EUR felett).
-          Hagyja üresen, ha nem tudja.
+        help: Erre azért van szükségünk, hogy meghatározzuk, hogy a Modelo 202 az
+          LIS 40.3. cikkely szerinti módozatot írja-e elő (6 000 000 EUR felett).
+          Hagyd üresen, ha nem tudod.
         prompt: Mi volt a nettó árbevétele az elmúlt 12 hónapban? (euróban, opcionális)
       irpf-income-categories:
         choices:
           actividad-economica:
-            description: Önálló gazdasági vagy szakmai tevékenység - negyedéves 130-as
-              nyomtatvány és IVA kötelezettségekkel jár.
+            description: Önálló gazdasági vagy szakmai tevékenység - negyedéves Modelo
+              130 és IVA kötelezettségekkel jár.
             label: Gazdasági tevékenység
           capital-inmobiliario:
             description: Ingatlan-bérbeadásból származó jövedelem.
@@ -955,8 +953,8 @@ wizard:
             description: 'Munkajövedelem: munkáltatótól vagy társadalombiztosítástól
               származó bér vagy nyugdíj.'
             label: Munkaviszonyból származó jövedelem
-        help: Válassza ki az összes IRPF jövedelemkategóriát; csak a gazdasági tevékenység
-          vált ki 130-as/131-es nyomtatvány kötelezettséget
+        help: Válaszd ki az összes IRPF jövedelemkategóriát; csak a gazdasági tevékenység
+          vált ki Modelo 130 és Modelo 131 kötelezettséget
         prompt: IRPF jövedelemkategóriák
       legal-entity-form:
         choices:
@@ -982,23 +980,23 @@ wizard:
             label: Kereskedelmi célú polgári társaság
         prompt: Jogi forma
       ley-49-2002-option-date:
-        help: A 036-os nyomtatvány 653-as mezőjéhez tartozó ISO dátumot használd.
+        help: A Modelo 036 653-as mezőjéhez tartozó ISO dátumot használd.
         prompt: A Ley 49/2002 szerinti különleges rendszer választásának bejelentett
           dátuma
       ley-49-2002-option-declared:
-        help: A 036-os nyomtatvány 651-es mezőjében szereplő bejelentési tényt használd;
-          a jogi alkalmazás továbbra is a törvényi feltételektől és a lemondás hiányától
+        help: A Modelo 036 651-es mezőjében szereplő bejelentési tényt használd; a
+          jogi alkalmazás továbbra is a törvényi feltételektől és a lemondás hiányától
           függ.
-        prompt: A szervezet a 036-os nyomtatványon bejelentette a Ley 49/2002 II.
-          címe szerinti különleges adózási rendszer választását?
+        prompt: A szervezet a Modelo 036-on bejelentette a Ley 49/2002 II. címe szerinti
+          különleges adózási rendszer választását?
       ley-49-2002-renunciation-date:
-        help: A 036-os nyomtatvány 654-es mezőjéhez tartozó ISO dátumot használd.
+        help: A Modelo 036 654-es mezőjéhez tartozó ISO dátumot használd.
         prompt: A Ley 49/2002 szerinti különleges rendszerről való lemondás bejelentett
           dátuma
       ley-49-2002-renunciation-declared:
-        help: A 036-os nyomtatvány 652-es mezőjében szereplő bejelentési tényt használd.
-        prompt: A szervezet a 036-os nyomtatványon bejelentette a Ley 49/2002 II.
-          címe szerinti különleges adózási rendszerről való lemondást?
+        help: A Modelo 036 652-es mezőjében szereplő bejelentési tényt használd.
+        prompt: A szervezet a Modelo 036-on bejelentette a Ley 49/2002 II. címe szerinti
+          különleges adózási rendszerről való lemondást?
       new-entity-first-two-profit-periods:
         help: Csak jogi személyekre vonatkozik. Ha be van jelölve, az entitás 15%-os
           kedvezményes adókulcs szerint adózik az adott két időszakban.
@@ -1012,18 +1010,18 @@ wizard:
       monoparental_requires_hijos_warning: 'Egyszülős családi egység: az egyszülős
         egységként való közös adóbevallás (LIRPF 82.1.2° cikkely) kiskorú gyermekeket
         igényel a családi egységben. Eltartott gyermekek nélkül a közös bevallás nem
-        lehetséges ennél a családi helyzetnél. Engedélyezze az eltartott kiskorú gyermekek
-        opciót, vagy váltson egyéni adózásra.'
+        lehetséges ennél a családi helyzetnél. Engedélyezd az eltartott kiskorú gyermekek
+        opciót, vagy válts egyéni adózásra.'
       non_resident_requires_country: 'Nem rezidens IRNR: az adóügyi illetőség szerinti
         ország kötelező. Add meg az illetőség szerinti országot.'
       non_resident_requires_representante: 'Nem rezidens IRNR: adóügyi képviselő kötelező.
         Add meg a képviselő NIF-jét és nevét.'
   test:
-    description: Tesztelje a konfigurációt és a csatlakozást
+    description: Teszteld a konfigurációdat és a kapcsolatot.
     example:
       choices:
         'yes':
-          description: Válassza ezt a megerősítéshez
+          description: Válaszd ezt a megerősítéshez
           label: Igen
       help: Példa súgószöveg teszteléshez
       prompt: Példa tesztkérdés

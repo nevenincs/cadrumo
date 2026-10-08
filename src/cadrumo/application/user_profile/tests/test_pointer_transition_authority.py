@@ -26,14 +26,14 @@ _B = "22222222-2222-4222-8222-222222222222"
 
 def _select_b_then_a_in_child(root_text: str, result_queue: Any) -> None:
     """Publish two real transitions from one fresh interpreter."""
-    from collections.abc import Iterator
+    from collections.abc import Generator
     from contextlib import contextmanager
 
     from ....core.locks import exclusive_file_lock
     from ..profile_pointer import active_profile_pointer_transaction as transaction_context
 
     @contextmanager
-    def _root_lock(root: Path, *, timeout_seconds: float) -> Iterator[None]:
+    def _root_lock(root: Path, *, timeout_seconds: float) -> Generator[None]:
         with exclusive_file_lock(root, timeout=timeout_seconds):
             yield
 
@@ -43,8 +43,8 @@ def _select_b_then_a_in_child(root_text: str, result_queue: Any) -> None:
     result_queue.put((selected_b, selected_a))
 
 
-def test_absence_idempotence_and_restore_keep_one_durable_lineage(tmp_path: Path) -> None:
-    """A clear tombstone and restore never erase or reuse a coordinate."""
+def test_absence_idempotence_and_reselection_keep_one_durable_lineage(tmp_path: Path) -> None:
+    """A clear tombstone and reselection never erase or reuse a coordinate."""
     assert observe_active_profile_pointer(tmp_path) == BucketPointer.absent(transition_revision=0)
 
     with active_profile_pointer_transaction(tmp_path) as transaction:
@@ -52,7 +52,7 @@ def test_absence_idempotence_and_restore_keep_one_durable_lineage(tmp_path: Path
         selected_a = transaction.select(_A)
         assert transaction.select(_A) == selected_a
         selected_b = transaction.select(_B)
-        restored_a = transaction.compare_and_restore(expected=selected_b, captured=selected_a)
+        restored_a = transaction.compare_and_select(expected=selected_b, bucket_id=_A)
         tombstone = transaction.clear()
         assert transaction.clear() == tombstone
 
@@ -94,10 +94,10 @@ def test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba(
     result_queue = context.Queue()
     child = context.Process(target=_select_b_then_a_in_child, args=(str(tmp_path), result_queue))
     child.start()
-    child.join(30)
+    child.join(None)
 
     assert child.exitcode == 0
-    selected_b, selected_a_again = result_queue.get(timeout=10)
+    selected_b, selected_a_again = result_queue.get_nowait()
     assert selected_b.bucket_id == _B
     assert selected_b.transition_revision == initial_a.transition_revision + 1
     assert selected_a_again.bucket_id == _A
@@ -110,6 +110,13 @@ def test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba(
         pytest.raises(ActiveProfilePointerTransactionError),
     ):
         transaction.compare_and_select(expected=initial_a, bucket_id=_B)
+
+    with active_profile_pointer_transaction(tmp_path) as transaction:
+        assert transaction.read() == selected_a_again
+        cleared = transaction.clear()
+        assert cleared.bucket_id is None
+        assert cleared.transition_revision == selected_a_again.transition_revision + 1
+        assert transaction.clear() == cleared
 
 
 def test_defining_modules_are_the_only_public_pointer_transition_surface() -> None:

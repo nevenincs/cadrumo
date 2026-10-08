@@ -29,6 +29,7 @@ from ...core.identity.profile_label import ProfileLabel
 from ...core.paths import effective_storage_root
 from ...core.profile_discovery import ProfileSummaryOutcome
 from ...core.profile_publication import ProfilePublicationKindValue
+from ...core.time.utc import parse_iso_datetime
 from .custody_ports import (
     ProfileCustodyCapsuleSummaryWitnessPort,
     ProfileCustodyConcurrentChangeError,
@@ -165,7 +166,7 @@ def _summary_of(witness: ProfileCustodyCapsuleSummaryWitnessPort) -> ProfileSumm
         profile_id=str(witness.profile_id),
         label=witness.label.label,
         label_revision=witness.label.label_revision,
-        published_at=datetime.fromisoformat(witness.commit.published_at.replace("Z", "+00:00")).astimezone(UTC),
+        published_at=parse_iso_datetime(witness.commit.published_at).astimezone(UTC),
         publication_kind=witness.commit.publication_kind,
     )
 

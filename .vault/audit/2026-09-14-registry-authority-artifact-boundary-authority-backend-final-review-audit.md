@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:53aec85a1fc296ea77bc9216453b421e74a6322b238df52c5deef5b4fd4afcfe'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-adr]]"
-  - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
   - "[[2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference]]"
 ---
 # `registry-authority-artifact-boundary` audit: `authority backend final review`

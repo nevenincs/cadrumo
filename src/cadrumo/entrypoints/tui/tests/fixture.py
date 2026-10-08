@@ -23,7 +23,8 @@ from typing import TYPE_CHECKING
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
-from ....application.user_profile.login_session import logout_active_profile
+from ....adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.config import load_settings
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
@@ -84,9 +85,12 @@ def harness_storage(*, fresh: bool = False, namespace: str = "profile") -> Gener
         raise ValueError("devtool storage namespace must not be blank")
     root = workspace() / ("fresh" if fresh else namespace)
     root.mkdir(parents=True, exist_ok=True)
-    from ..launcher import profile_storage_scope
+    # The visual harness still drives registration, login, and Profile manager
+    # components against real encrypted test storage. Those application doors
+    # need their profile persistence bindings while the pilot is active.
+    from ...adapter_composition import profile_adapter_composition
 
-    with profile_storage_scope(root) as storage_root:
+    with isolated_profile_storage_root(tmp_path=root) as storage_root, profile_adapter_composition():
         yield storage_root
 
 
@@ -117,7 +121,7 @@ def ensure_profile() -> str:
             profile_create_context=profile_create_context,
             profile_decode_context=profile_decode_context,
         )
-    logout_active_profile()
+    reset_test_profile_session()
     return outcome.bucket_id
 
 
@@ -166,13 +170,17 @@ def ensure_session() -> str:
     fixture pin instead, and every surface reading the profile record then
     refuses on the generation mismatch.
     """
-    from ....application.user_profile.login_session import login_profile
+    from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
+    from ....application.user_profile.login_session import authenticate_profile_for_invocation
     from ....domain.calculations.registry.authority import bundled_indexed_authority
 
     bucket_id = ensure_profile()
+    ProfileCapsuleLifecycle().select(bucket_id)
     with bundled_indexed_authority().operation():
         _profile_create_context, profile_decode_context = _profile_contexts_for_test()
-        login_profile(name=bucket_id, passphrase_callback=passphrase, profile_decode_context=profile_decode_context)
+        authenticate_profile_for_invocation(
+            name=bucket_id, passphrase_callback=passphrase, profile_decode_context=profile_decode_context
+        )
     return bucket_id
 
 

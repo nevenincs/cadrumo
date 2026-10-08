@@ -150,10 +150,7 @@ def sheet_note_definitions(extracted: str) -> dict[str, dict[str, str]]:
             sheet = heading.group(1)
             current = None
             continue
-        # Both openings carry the same two named groups, so the branch below
-        # reads one shape. A label-alone row's wording group is empty by
-        # construction: its wording is on the rows that follow.
-        opening = _DEFINITION.match(line) or _LABEL_ONLY.match(line)
+        opening = _note_definition_opening(line)
         if opening is not None:
             current = _normalise(opening.group("label"))
             sheets.setdefault(sheet, {}).setdefault(current, [])
@@ -163,14 +160,31 @@ def sheet_note_definitions(extracted: str) -> dict[str, dict[str, str]]:
             continue
         if current is None:
             continue
-        stripped = line.strip().lstrip("|").strip()
-        if not stripped or stripped.startswith("#") or _ROW.match(line) or _TABLE_FOOTER.match(stripped):
+        continuation = _note_definition_continuation(line)
+        if continuation is None:
             current = None
             continue
-        sheets[sheet][current].append(stripped)
+        sheets[sheet][current].append(continuation)
     return {
         name: {label: " ".join(parts).strip() for label, parts in labels.items()} for name, labels in sheets.items()
     }
+
+
+def _note_definition_opening(line: str) -> re.Match[str] | None:
+    """Read either same-line or label-only note openings with one group shape.
+
+    Both patterns expose the same named groups. A label-only row's wording
+    group is empty by construction, because its wording appears on later rows.
+    """
+    return _DEFINITION.match(line) or _LABEL_ONLY.match(line)
+
+
+def _note_definition_continuation(line: str) -> str | None:
+    """Return continuation text, or ``None`` when this row closes a note."""
+    stripped = line.strip().lstrip("|").strip()
+    if not stripped or stripped.startswith("#") or _ROW.match(line) or _TABLE_FOOTER.match(stripped):
+        return None
+    return stripped
 
 
 def sheet_unnumbered_notes(extracted: str) -> dict[str, str]:

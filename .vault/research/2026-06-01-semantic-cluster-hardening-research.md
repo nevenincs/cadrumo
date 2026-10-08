@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#semantic-cluster-hardening'
 date: '2026-06-01'
-modified: '2026-08-15'
-body_hash: 'sha256:17040bf2ab8785a33597917dafb0bd7f643cc71c8dd23a517927ddb05f5c3fd7'
+modified: '2026-10-03'
+body_hash: 'sha256:e0e10701bcee0ce4f1d0287b4921d2bc579fbd3b975ed4a436e33ef62ecf72cd'
 related: []
 ---
 
@@ -47,8 +47,7 @@ today's tree with the tooling; no prior conclusion is inherited as settled:
   tracker *claims* the enrollment waves are substantially complete (claims to
   re-verify, not facts to trust):
   `STRICT_FROZEN_CONFIG` migration landed 84 of 87 sites (3 documented
-  bespoke exclusions); the `PROMOTE-001` substitutability machinery exists in
-  `src/aeat/diagnostics/_identity_placement.py` as `PROMOTE001_PROTECT_LIST`;
+  bespoke exclusions); the `PROMOTE-001` substitutability machinery exists  as `PROMOTE001_PROTECT_LIST`;
   name collisions (`ProfileFactValue` → `UserProfileFactValue`) are resolved;
   and the substitutability pre-filter is already mandated in the
   swarm-audit-cadence rule.

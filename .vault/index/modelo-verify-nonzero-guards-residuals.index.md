@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#modelo-verify-nonzero-guards-residuals'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d034fb97b6df2d6e52c70fcc4b265d1792b6209da707d9b77951979ae2aae5dd'
+body_hash: 'sha256:ea4322d05a6bc3d5897611febbe96f896917ec9b92b5e8d53edba9a6df418063'
 related:
   - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-adr]]'
-  - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-ledger]]'
-  - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-plan]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-research]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#modelo-verify-nonzero-guards
 ### adr
 
 - `2026-07-01-modelo-verify-nonzero-guards-residuals-adr` - `modelo-verify-nonzero-guards-residuals` adr: `M202 casilla-33 minimum floor and M714 edges stay documented non-guards` | (**status:** `accepted`)
-
-### exec
-
-- `2026-07-01-modelo-verify-nonzero-guards-residuals-ledger` - `modelo-verify-nonzero-guards-residuals` ledger
-
-### plan
-
-- `2026-07-01-modelo-verify-nonzero-guards-residuals-plan` - `modelo-verify-nonzero-guards-residuals` plan
 
 ### research
 

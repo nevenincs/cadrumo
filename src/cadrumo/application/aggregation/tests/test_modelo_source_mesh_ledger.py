@@ -109,8 +109,10 @@ class _EmptyActivityAssetHistoryRepository:
         del revision
         raise AssertionError("empty resolver repository is read-only")
 
-    def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:
-        del claim
+    def record_claim(
+        self, claim: AmortizationClaim, *, expected_history: ActivityAssetHistory | None = None
+    ) -> ActivityAssetHistoryClaimResult:
+        del claim, expected_history
         raise AssertionError("empty resolver repository is read-only")
 
 
@@ -1329,6 +1331,33 @@ def test_renta_source_mesh_declares_only_the_claim_for_a_register_owned_acquisit
     assert len(withheld) == 1
     assert withheld[0].source_ref == f"transaction:{acquisition.transaction_id}"
     assert asset.asset_id in withheld[0].message
+
+
+@pytest.mark.parametrize("period", ["1T", "2T"])
+def test_renta_gasto_keeps_only_in_window_held_back_identity_as_durable_evidence(period: str) -> None:
+    transaction = _renta_transaction("missing-base-gasto", purchase_invoice_evidence_id=None)
+    tx_repo = _InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
+    resolution = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        prorrata_register_repository=_empty_prorrata_repository(),
+        activity_asset_history_repository=_EmptyActivityAssetHistoryRepository(),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="130",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, period),
+            revision=_revision("130", "2019-y-siguientes"),
+        )
+    )
+    held_back = [diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "source_domain_not_ready"]
+    if period == "1T":
+        assert held_back == []
+    else:
+        assert len(held_back) == 1
+        assert held_back[0].source_ref == f"transaction:{transaction.transaction_id}"
+        assert held_back[0].binding_source is BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION
 
 
 def test_renta_gasto_source_mesh_declares_only_the_claim_for_a_register_owned_acquisition() -> None:

@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:48548df634a0dd1997d160b5a07bd7e41d84d0908103b536a7aa6054f71e94b2'
+modified: '2026-10-03'
+body_hash: 'sha256:ff6f2789c0bcba6c533ca96832cb5201229d9de48b661c2704510f683f31ec6a'
 related:
-  - "[[2026-06-10-llm-evidence-classification-plan]]"
   - "[[2026-06-10-llm-evidence-classification-adr]]"
 ---
 
@@ -26,7 +25,7 @@ W02).
 
 ### EVIDENCE-INPUT-H1 | HIGH | EvidenceInput byte tripwire bypassed by nested serialization, dict(), and pickle
 
-`src/aeat/application/ledger/_evidence_input.py`. The overridden
+The retired module. The overridden
 `model_dump`/`model_dump_json` intercept only DIRECT calls; they install no
 pydantic serializer, so the `data: bytes` field schema is still live. The
 decrypted FINANCIAL bytes leak via three vectors: (1) nested serialization -- when
@@ -40,7 +39,6 @@ refusals. Add regression tests per vector. STATUS: fixed in follow-up commit
 
 ### EVIDENCE-INPUT-M1 | MEDIUM | Persistence-tripwire test misses the realistic leak path
 
-`src/aeat/application/ledger/tests/test_evidence_input.py`.
 `test_evidence_input_refuses_persistence` asserts only direct `model_dump()` /
 `model_dump_json()` raise; it would pass with H1 fully exploitable. A safety test
 must fail when the invariant breaks. Remediation: assert nested-model dump,
@@ -48,7 +46,7 @@ must fail when the invariant breaks. Remediation: assert nested-model dump,
 
 ### EVIDENCE-INPUT-M2 | MEDIUM | put_file buffers the whole invoice in memory (pre-existing)
 
-`src/aeat/adapters/persistence/storage/attachment.py` `put_file` accumulates all
+The retired module `put_file` accumulates all
 chunks in a list then re-joins -- a streaming API that does not stream. No bytes
 hit disk outside secure storage; pre-existing; not a W01 defect. Note for the
 large-evidence/rasterisation path W02 introduces. STATUS: deferred (out of W01
@@ -56,7 +54,7 @@ scope).
 
 ### EVIDENCE-INPUT-M3 | MEDIUM | Torn-write window across blob/manifest/catalogue writes
 
-`src/aeat/application/ledger/_evidence.py` `add()` does four separate
+The retired module `add()` does four separate
 secure-object writes with no enclosing transaction. The ordering is the safe
 ordering (record saved last, so a saved record always has its blob); a crash
 leaves at worst an orphan content-addressed blob (harmless on re-add). Does not
@@ -65,17 +63,17 @@ single-writer atomic primitive if one lands.
 
 ### EVIDENCE-INPUT-L1 | LOW | add() method docstring stale vs behavior
 
-`src/aeat/application/ledger/_evidence.py` `add()` docstring omits the in-store
+The retired module `add()` docstring omits the in-store
 byte copy and `attachment_id` recording. STATUS: fixed in follow-up commit.
 
 ### EVIDENCE-INPUT-L2 | LOW | resolve_attachment_evidence_input lacks a Raises clause
 
-`src/aeat/application/ledger/_evidence_input.py` -- documentation-completeness nit;
+The retired module -- documentation-completeness nit;
 the error paths are correctly handled by the store. STATUS: noted.
 
 ### EVIDENCE-INPUT-L3 | LOW | attachment_id None-tolerance vs no-legacy
 
-`src/aeat/application/ledger/_evidence.py` -- `attachment_id` defaults to `None`
+The retired module -- `attachment_id` defaults to `None`
 for hand-constructed/pre-contract records; freshly-added records always set it. The
 refusal path is the correct safety behavior; could tighten to required later.
 STATUS: noted.

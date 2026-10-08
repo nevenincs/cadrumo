@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#recargo-equivalencia-source-of-truth'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e1ffb10ce25f1d163107b330276ba7d99eb88de2175180cf9bae56a43c1baf64'
+body_hash: 'sha256:1f75e79a5f2b18a055555686a37613d77c3772134b23b470d733281948fe32cd'
 related: []
 ---
 
@@ -18,15 +18,14 @@ related: []
 Every recargo figure that reaches a Modelo 303 box originates on the transaction as
 `recargo_amount`, an optional operator-supplied field. The IVA ledger aggregator scales
 it by business proportionality and carries it onto the observation
-(`src/cadrumo/application/aggregation/_iva_ledger.py:1269`), where the
+, where the
 `recargo_amount_sum` fact aggregates it into the bound casilla. No step derives the
 figure from a rate. The supplier's invoice is, in effect, already the source of truth --
 by omission rather than by decision.
 
 ### The art. 161 rate table exists, is grounded, and has no production consumer
 
-`recargo_rate_for`, `load_recargo_rates` and `LIVA_ART_161_RECARGO` in
-`src/cadrumo/domain/iva/_recargo_equivalencia.py` are referenced only by their own
+`recargo_rate_for`, `load_recargo_rates` and `LIVA_ART_161_RECARGO`  are referenced only by their own
 definition, the `domain/iva` facade re-export, and that facade's `__all__`. A sweep of
 production code (tests excluded) finds no call site. There is no dynamic reach either:
 no `getattr` or `import_module` against the IVA facade resolves these names, and the
@@ -89,5 +88,4 @@ Behaviour is identical today, which is why the conflation survives.
 Bundled corpus entries `real-decreto-ley-20-2022:art-72`, `real-decreto-ley-4-2024:art-1`
 and `ley-37-1992:art-161`, read through the shipped corpus-quotation checker. Modelo 303
 record designs for 2023, 2024 (both halves), 2025 and 2026, read from the bundled
-diseno extracts. Shipped source at `src/cadrumo/domain/iva/_recargo_equivalencia.py` and
-`src/cadrumo/application/aggregation/_iva_ledger.py`.
+diseno extracts. Shipped source  and

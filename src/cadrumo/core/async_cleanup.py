@@ -13,7 +13,7 @@ import sys
 from collections.abc import Awaitable
 from typing import Protocol
 
-from .errors.hierarchy import CoreError
+from .errors.hierarchy import CoreError, InternalInvariantError
 
 
 class AsyncCloseable(Protocol):
@@ -49,6 +49,16 @@ class AsyncResourceCleanupError(CoreError):
         self._retry_task_name = retry_task_name
         self._close_attempts = close_attempts
 
+    @property
+    def resources(self) -> tuple[AsyncCloseable, ...]:
+        """Expose the actual failed owners for transfer to an enclosing scope."""
+        return self._resources
+
+    def discard_released_resources(self, *resources: AsyncCloseable) -> None:
+        """Retire retry ownership after an enclosing scope completed actual release."""
+        released = {id(resource) for resource in resources}
+        self._resources = tuple(resource for resource in self._resources if id(resource) not in released)
+
     async def retry_cleanup(self) -> None:
         """Retry only the resource owners whose prior close failed."""
         await close_async_resources(
@@ -60,8 +70,9 @@ class AsyncResourceCleanupError(CoreError):
 
     def merged_with(self, later: AsyncResourceCleanupError) -> AsyncResourceCleanupError:
         """Combine nested cleanup failures without losing either owner."""
+        retained = {id(resource): resource for resource in self._resources + later._resources}
         return AsyncResourceCleanupError(
-            self._resources + later._resources,
+            tuple(retained.values()),
             self._failures + later._failures,
             retry_task_name=self._retry_task_name,
             close_attempts=max(self._close_attempts, later._close_attempts),
@@ -71,6 +82,30 @@ class AsyncResourceCleanupError(CoreError):
 def _runtime_object(value: object) -> object:
     """Capture an event-loop result before checking its concrete task shape."""
     return value
+
+
+def has_async_cleanup_failure(error: BaseException) -> bool:
+    """Identify failures that retain asynchronous resource cleanup ownership."""
+    return bool(async_cleanup_failures(error))
+
+
+def async_cleanup_failures(error: BaseException) -> tuple[AsyncResourceCleanupError, ...]:
+    """Recover canonical cleanup owners attached while an error unwinds."""
+    pending = [error]
+    visited: set[int] = set()
+    failures: list[AsyncResourceCleanupError] = []
+    while pending:
+        current = pending.pop()
+        if id(current) in visited:
+            continue
+        visited.add(id(current))
+        if isinstance(current, AsyncResourceCleanupError):
+            failures.append(current)
+        for field in ("async_cleanup_error", "cleanup_error", "body_error"):
+            attached = current.__dict__.get(field)
+            if isinstance(attached, BaseException):
+                pending.append(attached)
+    return tuple(failures)
 
 
 async def await_cancellation_complete[T](
@@ -240,17 +275,90 @@ def _attach_cleanup_error_to_body(
     """
     if active_error is None or isinstance(active_error, asyncio.CancelledError):
         return False
-    previous_cleanup_error = active_error.__dict__.get("async_cleanup_error")
-    if isinstance(previous_cleanup_error, AsyncResourceCleanupError):
-        cleanup_error = previous_cleanup_error.merged_with(cleanup_error)
-    active_error.__dict__["async_cleanup_error"] = cleanup_error
-    active_error.add_note("Asynchronous resource cleanup also failed; retry through the attached async_cleanup_error")
+    attach_async_cleanup_error(
+        active_error,
+        cleanup_error,
+        note="Asynchronous resource cleanup also failed; retry through the attached async_cleanup_error",
+    )
     return True
+
+
+def attach_async_cleanup_error(
+    primary: BaseException,
+    cleanup_error: AsyncResourceCleanupError,
+    *,
+    note: str | None = None,
+) -> AsyncResourceCleanupError:
+    """Retain a secondary cleanup failure on ``primary`` without replacing it.
+
+    The failure is stored as ``async_cleanup_error``, merged after any owner
+    already retained directly on the primary error so earlier retry ownership survives. Attaching the
+    already-retained failure again is a no-op merge. The retained failure is
+    returned for callers that mirror it onto another attachment.
+    """
+    previous = merged_cleanup_owner(primary)
+    primary.__dict__["async_cleanup_error"] = cleanup_error
+    if isinstance(primary.__dict__.get("cleanup_error"), AsyncResourceCleanupError):
+        primary.__dict__["cleanup_error"] = cleanup_error
+    retained = retain_merged_cleanup(primary, previous)
+    if retained is None:
+        raise InternalInvariantError("an attached cleanup failure must retain its retry owner")
+    if note is not None:
+        primary.add_note(note)
+    return retained
+
+
+def direct_cleanup_owners(error: BaseException) -> tuple[AsyncResourceCleanupError, ...]:
+    """Return the distinct cleanup owners attached directly to ``error``.
+
+    ``error`` itself, its ``async_cleanup_error`` and its ``cleanup_error``
+    are considered in that order; nested causes are not followed.
+    """
+    owners: list[AsyncResourceCleanupError] = []
+    for candidate in (error, error.__dict__.get("async_cleanup_error"), error.__dict__.get("cleanup_error")):
+        if isinstance(candidate, AsyncResourceCleanupError) and all(candidate is not seen for seen in owners):
+            owners.append(candidate)
+    return tuple(owners)
+
+
+def merged_cleanup_owner(*errors: BaseException | None) -> AsyncResourceCleanupError | None:
+    """Merge every distinct cleanup owner attached directly to ``errors`` without losing any."""
+    merged: AsyncResourceCleanupError | None = None
+    seen: set[int] = set()
+    for error in errors:
+        if error is None:
+            continue
+        for owner in direct_cleanup_owners(error):
+            if id(owner) not in seen:
+                seen.add(id(owner))
+                merged = owner if merged is None else merged.merged_with(owner)
+    return merged
+
+
+def retain_merged_cleanup(primary: BaseException, *earlier: BaseException | None) -> AsyncResourceCleanupError | None:
+    """Keep every cleanup owner of ``earlier`` and ``primary`` on the escaping ``primary``.
+
+    The merged owner replaces ``async_cleanup_error`` and, when already present,
+    ``cleanup_error``, so both canonical attachment fields agree. It is returned
+    (or ``None`` when no owner exists).
+    """
+    retained = merged_cleanup_owner(*earlier, primary)
+    if retained is not None and retained is not primary:
+        primary.__dict__["async_cleanup_error"] = retained
+        if isinstance(primary.__dict__.get("cleanup_error"), AsyncResourceCleanupError):
+            primary.__dict__["cleanup_error"] = retained
+    return retained
 
 
 __all__ = [
     "AsyncCloseable",
     "AsyncResourceCleanupError",
+    "async_cleanup_failures",
+    "attach_async_cleanup_error",
     "await_cancellation_complete",
     "close_async_resources",
+    "direct_cleanup_owners",
+    "has_async_cleanup_failure",
+    "merged_cleanup_owner",
+    "retain_merged_cleanup",
 ]

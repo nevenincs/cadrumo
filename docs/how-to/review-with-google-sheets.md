@@ -1,24 +1,17 @@
 # Review calculations with Google Sheets
 
-This page covers the spreadsheet review of a modelo calculation: exporting it
-to Google Sheets, checking how each total is reached with live formulas, and
-pulling your reviewed edits back as typed filing inputs. Pull returns those
-edits without persisting them. This workflow is for reviewing calculated values after your profile
-and transactions are ready. It is not a bank statement import or bulk edit
-tool.
+Google review is outbound-only. Edits in Google Sheets do not become Cadrumo
+calculation inputs. The spreadsheet `pull`, `calculate`, and `verify` commands
+have been removed; use local calculation inputs and `work calculate` instead.
 
-Cadrumo has two spreadsheet routes for the same calculation surface.
-`aeat app modelo spreadsheet push` creates a Google Sheets workbook in your
-Drive, and `pull` and `calculate` read your edits back. `aeat app modelo
-spreadsheet export` writes an offline `.xlsx` workbook with live formulas to a
-local path. It needs no Google account, but no command reads an edited local
-workbook back. Use Google Sheets to review and adjust, and see
-[Export an offline workbook](#export-an-offline-workbook) for the other route.
+The previous template-based Google `push` remains disabled. Use `publish` with
+an exact saved calculation revision to create a new native Google Sheet.
+Offline `.xlsx` export remains available; see
+[Export an offline workbook](#export-an-offline-workbook).
 
-The local configuration commands on this page (status, folder binding, logout)
-and the ledger readiness checks run live at build time. The commands that reach
+The local configuration commands on this page (status, folder view, logout) and the readiness checks on your records run live at build time. The commands that reach
 Google Drive and Sheets run against your own authorized account rather than the
-documentation sandbox, so they are shown as display-only frames.
+documentation sandbox, so they are shown as examples that are not run.
 
 ## Before you start
 
@@ -28,57 +21,69 @@ You need:
 - classified transaction data; see [Import and manage transactions](import-bank-statements.md)
 - a modelo and period ready enough to calculate
 - the `google` extra, installed with `pip install "cadrumo[google]"`
-- a Google API credentials file (a Desktop OAuth client JSON from the
-  [Google Cloud Console](https://console.cloud.google.com/))
-- the ID of a Google Drive folder where Cadrumo should create spreadsheets
-  (copy the ID from the folder's URL in Google Drive)
 
-Cadrumo creates its `cadrumo-vault/` folder inside that Drive folder. It does
-not use an older `aeat-vault/` folder; export a new workbook before pulling
-edits into Cadrumo.
+Cadrumo creates a managed Drive folder for each profile. Transport checks the
+local creation receipt, profile, ownership markers and current ancestry before
+accessing managed content. Known identities may receive a minimal metadata check
+when moved outside that folder; their content is then refused. Google does not
+provide an atomic folder-membership condition for every content request, so an
+external move between the check and request remains a provider limitation.
 
 ## Configure Google access
 
-Register the Desktop OAuth client for the active profile and run the consent
-flow. Both reach Google, so they are display-only here:
+Sign in to Google for the active profile. Cadrumo opens Google's consent page
+in your browser and asks for your email address and for access to the files
+it creates, nothing else in your Drive. You do not need a Google Cloud project
+or a credentials file. Signing in also creates one folder in your My Drive,
+named `Cadrumo` followed by the first characters of the profile's ID, where
+every exported workbook and the encrypted backup are kept. Sign-in reaches
+Google, so it is shown here without being run:
 
 ```{cli-sequence} sheets-oauth
 ```
 
-Check the Google status and set the Drive folder where Cadrumo will create
-spreadsheets. These are local configuration commands, so they run here. On an
-unconfigured profile the status shows `client_registered` and `session_present`
-as false, and the folder you set reads back verbatim:
+Check the Google status and the folder created for the profile. These are
+local commands, so they run here. On a profile that has not signed in, the
+status shows `session_present` as false and no folder exists yet:
 
 ```{cli-sequence} sheets-folder
-:verify: Confirm the Drive folder binding reads back the value you set.
+:verify: Confirm that a profile which has not signed in has no Drive folder.
 ```
 
-Probe the connection once the OAuth client is registered. The probe reaches
-Google, so it is display-only here:
+A trashed or mismatched managed folder is refused. Signing in again does not
+search your Drive for a same-name replacement. An uncertain creation needs
+reconciliation before another creation attempt.
+
+Probe the connection once you have signed in. The probe reaches
+Google, so it is shown here without being run:
 
 ```{cli-sequence} sheets-probe
 ```
 
-The Google integration is profile-scoped. If you switch profiles, check Google
-status and folder binding again.
+The Google integration is profile-scoped. Each profile signs in separately and gets its own folder.
 
-## Export a calculation workbook
+## Publish a saved calculation
 
-Export the registry calculation surface for one modelo, year, and period. The
-export creates a Google Sheets workbook inside the configured `cadrumo-vault/`
-area in Drive:
+Copy the calculation revision ID returned by `app modelo work calculate`, then run:
 
-```{cli-sequence} sheets-push
+```text
+aeat app modelo spreadsheet publish --calculation-revision-id REVISION_ID --accept-readable-export
 ```
 
-It is a calculation review surface, not a bank statement export. Use `aeat app
-ledger export` when you need a CSV, JSONL, or XLSX snapshot of ledger rows.
+The flag authorizes a readable copy of that revision and its captured ledger
+support in the profile's managed Google folder. Anyone with sufficient Google
+authorization can read the Sheet. Original attachment bytes are not uploaded by
+this command. The result includes the actual spreadsheet URL.
 
-Use `--prefill-relations` only when you want the spreadsheet to include values
-carried from related filings, such as annual summaries or prior-quarter
-carryovers. Add `--dry-run` to preview what the export would clear and rewrite
-in the workbook without writing anything.
+Each publication creates a new document and preserves earlier review notes.
+The Sheet uses saved values without recalculating from today's ledger. Missing
+historical evidence, attribution or display metadata is reported explicitly;
+an incomplete review is not a filing-ready or audit-complete declaration.
+
+An optional `--publication-id UUID` identifies one publication across retries.
+Keep that identity after a timeout: a timeout does not prove that no Sheet was
+created. A retained, completed publication can return its existing URL without
+rewriting it; partial or uncertain publication requires reconciliation.
 
 (export-an-offline-workbook)=
 ## Export an offline workbook
@@ -90,62 +95,18 @@ workbook with live formulas. Nothing is uploaded:
 aeat app modelo spreadsheet export --modelo 303 --year 2026 --period 1T --output modelo-303-2026-1T.xlsx
 ```
 
-The result prints the file path, size, SHA-256 checksum, and casilla count. The
+The result prints the file path, size, SHA-256 checksum, and box count. The
 command refuses to overwrite an existing file unless you add `--replace`, and
 it refuses an `--output` path whose parent directory does not exist. The
 refusal reads `The export output path is not valid` and names the reason.
 
-The offline workbook is a review copy. `pull`, `calculate`, and `verify` work
-only with a Google Sheet, so edits you make in the local file do not flow back
-into Cadrumo. It accepts `--prefill-relations` like `push`.
+The offline workbook is a review copy. Edits in it do not flow back into
+Cadrumo. It accepts `--prefill-relations` for values carried from related filings.
 
-## Pull your edits back
+(back-up-your-encrypted-records-to-drive)=
+## Back up your encrypted data to Drive
 
-After reviewing or editing the workbook, pull typed edits back from the Sheet.
-Add `--assemble-observations` when you want the command output to include
-edited row-level data assembled as structured observations. The command does
-not persist those observations:
-
-```{cli-sequence} sheets-pull
-```
-
-The pull command checks that the spreadsheet belongs to the current profile and
-matches the expected filing period. If it refuses, re-export and retry from the
-new spreadsheet. To use a pulled edit in a filing, supply it to `aeat app modelo
-work calculate` with `--casilla`, `--binding`, or `--relation`.
-
-## Compute casilla values from the Sheet
-
-Run `aeat app modelo spreadsheet calculate` when you want Cadrumo to calculate
-casilla values from the edits in the Sheet. It pulls the operator-edited cells, runs the calculation engine
-over them, and displays the result. It persists nothing:
-
-```{cli-sequence} sheets-calculate
-```
-
-The `calculate` command checks that the spreadsheet matches the expected filing
-period. If it refuses, re-export and retry from the new spreadsheet.
-
-## Check the spreadsheet calculation
-
-Run the calc-sheets verification command for the same modelo, year, and period.
-If you have a scenario JSON with operator inputs and expected Agencia Estatal
-de Administración Tributaria (AEAT) outputs, pass it explicitly with
-`--scenario`:
-
-```{cli-sequence} sheets-verify
-```
-
-Verification rewrites that period's workbook with your scenario file's inputs,
-then compares the workbook's formula results with the local calculation engine
-and, when the scenario supplies AEAT-published expected outputs, with those as
-well. It overwrites edits made in the pushed sheet, so pull your edits before
-you verify.
-It does not submit a filing to AEAT.
-
-## Back up your encrypted records to Drive
-
-Keep an off-machine copy of your encrypted records by mirroring them to the
+Keep an off-machine copy of your encrypted data by mirroring it to the
 configured Drive folder. Preview with `--dry-run` first; it reports what would
 upload per storage area without changing anything. Narrow a large push with
 `--namespace` or `--limit`:
@@ -153,22 +114,63 @@ upload per storage area without changing anything. Narrow a large push with
 ```{cli-sequence} sheets-backup-push
 ```
 
-Only ciphertext is uploaded. Your records leave the machine exactly as they
-sit encrypted on disk, and the master key never leaves your computer, so the
-Drive copy is unreadable without it. The mirror is one-way: Cadrumo writes the
-copy and never reads Drive back as a source of truth for your records.
+Secure-object payloads are uploaded as their stored ciphertext, with length
+and SHA-256 checks before a complete namespace manifest is published. Structural
+manifests contain metadata and are not encrypted payloads. A limited or incomplete
+upload does not establish a complete backup; inspect failed and degraded manifest
+counts. A partial upload retains acknowledged ciphertext when safe cleanup cannot
+be established.
+
+This is a one-way mirror with no remote restore command. Local `archive import`
+reads a portable archive, not these mirrored objects. Successful upload and
+integrity verification do not establish recoverability.
 
 ## Sign out of Google
 
+Google logout removes local credentials; it does not revoke Google's grant.
+To stop access by copied credentials as well, follow
+[Remove Google access](protect-data-access.md#remove-google-access).
+
 Clear the Google session for the active profile. Logout is a local command, so
 it runs here. If a session exists, it removes the saved session token and its
-metadata. The registered OAuth client is kept on purpose, so a later `aeat
-config google login` can sign in again without re-importing the Cloud Console
-JSON:
+metadata. The profile's Drive folder is kept, so a later `aeat config google
+login` signs in again and validates its recorded identity:
 
 ```{cli-sequence} sheets-logout
-:verify: Confirm logout keeps the registered client; with no saved session it removes nothing.
+:verify: Confirm that with no saved session logout removes nothing.
 ```
+
+## Upgrading from an earlier version
+
+Earlier versions asked you to create a Google Cloud project, register its
+client file, and point Cadrumo at a Drive folder of your own. This version
+does none of that. After you update:
+
+1. Run `aeat config google login`. A sign-in from an earlier version is not
+   reused; Cadrumo tells you to sign in again.
+2. Keep earlier workbooks for review. Cadrumo does not adopt historical
+   unreceipted workbooks or search Drive to repair them. Use `publish` to make a
+   new review copy from a saved calculation revision.
+
+These are no longer available:
+
+| Removed | Use instead |
+|---|---|
+| `config google register` and its client file | Nothing. The application carries its own Google client. |
+| `config google credential-source` and service-account access | `aeat config google login` |
+| `config google folder set` and `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID` | Nothing. Cadrumo creates its folder at sign-in. |
+| `config google login --refresh-only` | `aeat config google login` |
+| `app ledger evidence pull` and `pull-all` | Download the document, then `aeat app ledger evidence add`; see [Attach supporting documents](ledger-evidence.md). |
+| `CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S` | Nothing. It had no effect. |
+
+Scripts that read command output should also note these changes. `config
+google status` no longer reports `client_registered`, `client_id`,
+`last_refresh_at` or `reauth_required`. `config google logout` no longer
+reports `client_preserved`. `config google login` no longer reports `mode` and
+now reports `root_folder_id`. The error codes `AUTH_GOOGLE_EXPIRED` and
+`AUTH_GOOGLE_REVOKED` are replaced by `REFUSED_GOOGLE_SIGN_IN_REQUIRED`, and a
+profile whose installation has no Google client refuses with
+`REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE`.
 
 ## Where this fits
 
@@ -179,19 +181,20 @@ ready before you rely on the calculation workbook:
 :verify: Confirm the preflight reports the imported rows as not ready for calculation.
 ```
 
-If the ledger still has missing categories, IVA fields, currency, or
+If your records still have missing categories, VAT fields, currency, or
 proportionality references, finish those in
 [Classify transactions](classify-transactions.md) before relying on the
 calculation workbook.
 
-For casilla-level manual inputs, bindings, offsets, and revisions, use
+For manual box values, the rules that fill each box, offsets, and earlier
+calculations, use
 [Review and supply calculation inputs](review-calculation-values.md).
 
 ## Next steps
 
-- [Import, export, and evidence](../reference/import-export-and-evidence.md) -
-  understand why a Google Sheet is a review surface rather than filing evidence
-  or calculation authority.
+- [Import, export, and supporting documents](../reference/import-export-and-evidence.md) -
+  understand why a Google Sheet is for review only, not filing proof or the
+  official basis of a calculation.
 - [Import and manage transactions](import-bank-statements.md)
 - [Classify transactions](classify-transactions.md)
 - [Review and supply calculation inputs](review-calculation-values.md)

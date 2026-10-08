@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-14'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
 body_hash: 'sha256:f8c2f2e37bf49859bd836d3d55457645b9cb935ef239ebb4ecd629d53ecd3908'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `silent partial record design extraction`

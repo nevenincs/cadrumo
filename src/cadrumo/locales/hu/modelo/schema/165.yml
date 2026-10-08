@@ -32,7 +32,7 @@ modelo:
           m165-porcentaje-participacion:
             label: A részesedés százaléka
           m165-representante-legal-nif:
-            label: A törvényes képviselő adószáma
+            label: A törvényes képviselő NIF-azonosítója
           m165-socio-nif:
             label: A tag vagy résztulajdonos adószáma
           m165-socio-nombre:

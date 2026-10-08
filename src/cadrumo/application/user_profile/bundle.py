@@ -30,6 +30,7 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.portable_export import UserProfilePortableExport
 
@@ -46,6 +47,7 @@ def serialize_profile_bundle(
     bucket_id: str,
     custody_profile: StorageCustodyProfile | str = StorageCustodyProfile.STRUCTURED,
     profile_decode_context: ProfileDecodeContext,
+    authority_operation: PinnedAuthorityOperation,
 ) -> UserProfilePortableExport:
     """Build a v3 :class:`~cadrumo.domain.user_profile.portable_export.UserProfilePortableExport`.
 
@@ -61,6 +63,7 @@ def serialize_profile_bundle(
             or one of its string values.
         profile_decode_context: Decode context supplied by the enclosing
             pinned authority operation for the encrypted profile rows.
+        authority_operation: Held authority pin used to bind profile calculation reads.
 
     The bundle carries only decrypted pydantic domain-model payloads
     (no encrypted envelopes or key material). The recipient re-encrypts
@@ -86,7 +89,9 @@ def serialize_profile_bundle(
     transaction_catalogue = transaction_catalogue_repository(bucket_id=bucket_id).load()
     ledger_transactions = tuple(transaction_catalogue)
 
-    revision_catalogue = calculation_revision_catalogue_repository(bucket_id=bucket_id).load()
+    revision_catalogue = calculation_revision_catalogue_repository(
+        bucket_id=bucket_id, operation=authority_operation
+    ).load(operation=authority_operation)
     calculation_revisions = tuple(revision_catalogue)
 
     filing_catalogue = modelo_record_catalogue_repository(bucket_id=bucket_id).load()

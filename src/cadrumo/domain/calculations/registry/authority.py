@@ -27,9 +27,9 @@ from ....core.hashing import content_hash_hex, sha256_hex
 from ....core.identity.digest import ContentDigest
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
-from ....core.resources.bundled_data import bundled_path as _bundled_path
 from ....core.tax_domain import TaxDomain
 from ....core.time.clock import today_madrid
+from . import authority_location
 from .authority_artifact import (
     AuthorityComponentKind,
     AuthorityComponentQuery,
@@ -38,6 +38,7 @@ from .authority_artifact import (
     AuthorityGenerationPin,
     EvidenceComponentQuery,
     ExportLayoutComponentQuery,
+    FormLayoutComponentQuery,
     GovernedFactComponentQuery,
     ModeloDirectoryComponentQuery,
     ModeloRevisionComponentQuery,
@@ -50,8 +51,11 @@ from .authority_artifact import (
     RuntimeCatalogueComponentQuery,
     SnapshotGlobalsComponentQuery,
 )
-from .authority_store import AuthorityStoreError, SQLiteAuthorityReader
-from .errors import AuthorityDescriptorUnavailableError, RegistrySnapshotError, RegistryValidationError
+from .authority_store import (
+    AuthorityStoreError,
+    SQLiteAuthorityReader,
+)
+from .errors import RegistrySnapshotError, RegistryValidationError
 from .facts.resolution import (
     GovernedFactQuery,
     MappingFactQuery,
@@ -62,7 +66,7 @@ from .facts.resolution import (
 )
 from .facts.schema import GovernedFact
 from .governed_fact_scope import validating_governed_facts
-from .ids import LegalRefId, RevisionId
+from .ids import RevisionId
 from .schema import (
     ModeloDefinition,
     ModeloRevision,
@@ -74,6 +78,7 @@ from .schema import (
 from .schema_base import DateAxis
 from .schema_deadlines import DeadlineWindowDefinition
 from .schema_exports import ExportLayoutDefinition
+from .schema_form_layouts import FormLayoutDefinition
 from .schema_references import LegalReference, SourceReference
 from .snapshot import build_validated_snapshot, collect_snapshot_ref_ids
 from .static_inspection import RegistryRevisionInspection
@@ -256,20 +261,6 @@ class ValidatedRegistryAuthority:
     def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
         """Return the registry's single filing-year support envelope."""
         return self.catalogues.require_supported_filing_years()
-
-    def project_filing_year(self, filing_year: int) -> int:
-        """Project an admitted filing year onto the authority's authored horizon."""
-        support = self.catalogues.supported_filing_years
-        if support is None:
-            raise RegistrySnapshotError("the calculation registry declares no supported filing years")
-        projected = support.projection_coordinate(filing_year)
-        if projected is None:
-            ceiling = support.hard_ceiling
-            span = f"{support.floor} and later" if ceiling is None else f"{support.floor}..{ceiling}"
-            raise RegistrySnapshotError(
-                f"filing year {filing_year} is outside the calculation registry's supported span {span}"
-            )
-        return projected
 
     def tax_domain(
         self,
@@ -788,6 +779,22 @@ class PinnedAuthorityOperation:
             raise RegistryValidationError("export layout component decoded to an unexpected type")
         return value
 
+    def form_layout(self, modelo_id: str | Modelo, revision_id: str) -> FormLayoutDefinition | None:
+        """Load a revision's declared form layout, or ``None`` when it declares none.
+
+        Absence is the inspection-only arm, not an error: the revision exists
+        and has no published layout. An unknown revision still refuses.
+        """
+        normalized = Modelo(modelo_id).value
+        query = FormLayoutComponentQuery(normalized, revision_id)
+        if query not in self._reader.component_queries():
+            self.revision(normalized, revision_id)
+            return None
+        value = self._reader.load(query, pin=self.generation)
+        if not isinstance(value, FormLayoutDefinition):
+            raise RegistryValidationError("form layout component decoded to an unexpected type")
+        return value
+
     def legal_evidence(self, legal_reference_id: str) -> PublishedLegalEvidence:
         """Load one publisher-captured legal evidence projection."""
         value = self._reader.load(
@@ -797,19 +804,6 @@ class PinnedAuthorityOperation:
         if not isinstance(value, PublishedLegalEvidence):
             raise RegistryValidationError("legal evidence component decoded to an unexpected type")
         return value
-
-    def legal_reference_ids(self) -> tuple[str, ...]:
-        """Return every published legal declaration identity without hydrating payloads."""
-        return tuple(
-            query.reference_id
-            for query in self._reader.component_queries()
-            if isinstance(query, ReferenceComponentQuery) and query.kind is AuthorityComponentKind.LEGAL_REFERENCE
-        )
-
-    def legal_quotation_is_grounded(self, legal_ref_id: LegalRefId, quotation: str) -> bool:
-        """Answer one citation query from this generation's published legal evidence."""
-        evidence = self.legal_evidence(str(legal_ref_id))
-        return AuthorityEvidenceProjection(legal=(evidence,)).quotation_is_grounded(str(legal_ref_id), quotation)
 
     def capture_law_selected_projection(
         self,
@@ -882,13 +876,23 @@ class IndexedRegistryAuthority:
     @contextmanager
     def operation(self) -> Generator[PinnedAuthorityOperation]:
         """Pin one reader incarnation for a complete application operation."""
+        with self.lease_operation() as operation, validating_governed_facts(operation):
+            yield operation
+
+    @contextmanager
+    def lease_operation(self) -> Generator[PinnedAuthorityOperation]:
+        """Retain a reader across tasks without borrowing another task's fact scope.
+
+        Long-lived hosts pair this physical lease with a separate
+        ``validating_governed_facts`` scope in each task performing work.
+        Ordinary callers use ``operation`` to acquire both together.
+        """
         reader, operation = self._authority_for_operation()
         try:
             with reader.lease() as generation:
                 if generation != operation.generation:
                     raise RegistrySnapshotError("authority operation generation disagrees with its reader lease")
-                with validating_governed_facts(operation):
-                    yield operation
+                yield operation
         finally:
             self._close_retired_readers()
 
@@ -932,7 +936,6 @@ class IndexedRegistryAuthority:
             self._retired_readers = still_leased
 
 
-_BUNDLED_AUTHORITY_DESCRIPTOR_PARTS = ("registry", "authority", "authority.current.json")
 _bundled_indexed_authority_lock = RLock()
 _bundled_indexed_authority: IndexedRegistryAuthority | None = None
 
@@ -942,7 +945,9 @@ def bundled_indexed_authority() -> IndexedRegistryAuthority:
     global _bundled_indexed_authority
     with _bundled_indexed_authority_lock:
         if _bundled_indexed_authority is None:
-            _bundled_indexed_authority = IndexedRegistryAuthority(bundled_authority_descriptor_path())
+            _bundled_indexed_authority = IndexedRegistryAuthority(
+                authority_location.bundled_authority_descriptor_path()
+            )
         return _bundled_indexed_authority
 
 
@@ -975,37 +980,3 @@ def release_bundled_indexed_authority() -> bool:
             return False
         _bundled_indexed_authority = None
         return True
-
-
-def bundled_authority_descriptor_path() -> Path:
-    """Return the selector for the content-addressed SQLite generation.
-
-    Resolution has two arms and no fallback between them. When
-    ``cadrumo_authority_root`` is set it is the whole answer: the descriptor
-    is read from that directory, and its absence there is a refusal rather
-    than a silent slide back to the packaged copy, which would let a
-    development checkout answer from a stale generation it believed it had
-    replaced. When the setting is unset -- the installed posture -- the
-    packaged resource resolves exactly as it always has.
-
-    Returns:
-        The descriptor path, which is guaranteed to exist at the moment of
-        the call.
-
-    Raises:
-        AuthorityDescriptorUnavailableError: When the selected arm carries no
-            descriptor. Fail-closed: every registry read follows this
-            selector, so an absent authority cannot be answered partially.
-    """
-    from ....core.config import configured_authority_root
-
-    authority_root = configured_authority_root()
-    if authority_root is not None:
-        configured = authority_root / _BUNDLED_AUTHORITY_DESCRIPTOR_PARTS[-1]
-        if not configured.is_file():
-            raise AuthorityDescriptorUnavailableError.for_configured_root(descriptor_path=configured)
-        return configured
-    packaged = _bundled_path(*_BUNDLED_AUTHORITY_DESCRIPTOR_PARTS)
-    if not packaged.is_file():
-        raise AuthorityDescriptorUnavailableError.for_packaged_location(descriptor_path=packaged)
-    return packaged

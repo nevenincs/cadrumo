@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.process_results import receive_process_result
+
 from .....application.operations.capabilities import OperationRequestStoragePolicy
 from .....application.operations.models import OperationIdentity
 from .....application.operations.persistence.events import OperationPhaseEvent
@@ -319,13 +321,20 @@ def test_public_persistence_modules_serialize_expired_takeover_races_without_res
         )
         for successor in successors
     )
-    for process in processes:
-        process.start()
-    start.set()
-    dispositions = sorted(results.get(timeout=15) for _ in processes)
-    for process in processes:
-        process.join(timeout=15)
-        assert process.exitcode == 0
+    try:
+        for process in processes:
+            process.start()
+        start.set()
+        dispositions = sorted(receive_process_result(results, owners=processes) for _ in processes)
+        for process in processes:
+            process.join(timeout=None)
+            assert process.exitcode == 0
+    finally:
+        for child_owner in processes:
+            if child_owner.is_alive():
+                child_owner.kill()
+            if child_owner.pid is not None:
+                child_owner.join(timeout=30)
 
     assert dispositions == [OperationLeaseDisposition.OWNER_LOST.value, OperationLeaseDisposition.TAKEN_OVER.value]
     current = asyncio.run(
@@ -368,13 +377,20 @@ def test_public_persistence_modules_serialize_snapshot_cas_and_refuse_linked_roo
         )
         for _ in range(2)
     )
-    for process in processes:
-        process.start()
-    start.set()
-    outcomes = sorted(results.get(timeout=15) for _ in processes)
-    for process in processes:
-        process.join(timeout=15)
-        assert process.exitcode == 0
+    try:
+        for process in processes:
+            process.start()
+        start.set()
+        outcomes = sorted(receive_process_result(results, owners=processes) for _ in processes)
+        for process in processes:
+            process.join(timeout=None)
+            assert process.exitcode == 0
+    finally:
+        for child_owner in processes:
+            if child_owner.is_alive():
+                child_owner.kill()
+            if child_owner.pid is not None:
+                child_owner.join(timeout=30)
 
     assert outcomes == ["committed", "rejected"]
     journal_path = tmp_path / "operation-journals" / f"{_OPERATION_ID}.json"

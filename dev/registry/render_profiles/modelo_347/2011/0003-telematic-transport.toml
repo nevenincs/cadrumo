@@ -1,0 +1,35 @@
+schema_version = 1
+fragment_id = "telematic-transport"
+width_17_rules = []
+singleton_rules = []
+
+[design_identity]
+modelo = "347"
+design_epoch = "2011"
+source_ref = "aeat-dr-347-2011"
+source_sha256 = "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e809"
+
+[[telematic_transport_choice_rules]]
+rule_kind = "telematic_transport_choice"
+selected_literal = "T"
+alternative_literals = ["C"]
+selection_condition = "telematic_transmission"
+expected_source_content = "Se cumplimentará una de las siguientes claves: 'C': Si la información se presenta en soporte. 'T': Transmisión telemática cve: BOE-A-2011-19397 BOLETÍN OFICIAL DEL ESTADO Núm. 298 Lunes 12 de diciembre de 2011 Sec. I. Pág. 132691"
+
+[telematic_transport_choice_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 92
+ordinal = "6"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[telematic_transport_choice_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m347-2011-row-92-telematic-transport"
+decision_statement = "This generated export is transmitted telematically and therefore selects the source-listed T code."
+justification = "The exact enrolled source at row 92, position 58 lists C for physical support and T for telematic transmission."
+
+[telematic_transport_choice_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 92
+ordinal = "6"
+record_identity = "Tipo 1 - Registro De Declarante"

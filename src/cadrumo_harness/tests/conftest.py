@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from ._plugin_cohort import TestPluginCohort, make_test_plugin_cohort
+from ._plugin_cohort import PluginTestCohort, make_test_plugin_cohort
 
 
 @pytest.fixture
-def plugin_cohort(tmp_path: Path) -> TestPluginCohort:
+def plugin_cohort(tmp_path: Path) -> PluginTestCohort:
     """Return a complete local wheel cohort outside each emitted tree."""
     return make_test_plugin_cohort(tmp_path / "sealed-input")

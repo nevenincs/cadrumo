@@ -117,7 +117,7 @@ def test_normatives_source_resolves_to_the_generated_legal_anchor(resolver: Targ
     resolves it to the legal id carrying the generated page/anchor target and
     BOE permalink provenance.
     """
-    from ...legal_reference import legal_reference_target
+    from ...legal_reference_routing import legal_reference_target
     from ..resolution import GroundingSurface, ResolvedTarget
     from ..search_record import SearchRecordKind
 
@@ -148,7 +148,7 @@ def test_normatives_target_uses_generated_legal_reference_and_preserves_permalin
     resolver: TargetResolver,
 ) -> None:
     """The target follows the renderer while the catalogue permalink stays provenance."""
-    from ...legal_reference import legal_reference_target
+    from ...legal_reference_routing import legal_reference_target
     from ..resolution import ResolvedTarget
 
     catalogue = compiled_bundled_authority().catalogues.legal
@@ -199,7 +199,7 @@ def test_precise_legal_toml_range_resolves_named_provision_and_preserves_boe_pro
     resolver: TargetResolver,
 ) -> None:
     """A precise legal-table range resolves its generated provision target."""
-    from ...legal_reference import legal_reference_target
+    from ...legal_reference_routing import legal_reference_target
     from ..resolution import GroundingSurface, ResolvedTarget
     from ..search_record import SearchRecordKind
 

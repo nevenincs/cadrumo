@@ -3,18 +3,19 @@ tags:
   - '#reference'
   - '#facts-registry'
 date: '2026-09-11'
-modified: '2026-09-11'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0f11bfc667e5db20f81ce53750835fab5204b1e5624a45d095e09c9f5d37570b'
+body_hash: 'sha256:046952112ac96f1320eb251cee14558c332c31c13cf94baf4c96eb42d3104ea2'
 related: []
 ---
+
 # `facts-registry` reference: external constants retirement
 
 This audit examined `src/cadrumo/core/external_constants.py`, the statutory fact fragments in `src/cadrumo/_data/registry/aeat/facts`, the retirement ledger, and the focused retirement gate after checkpoint `6915716bb6`.
 
 ## Summary
 
-The statutory Python fact adapter is retired: `dev/registry/compiler/statutory_constants.py` has no live file or registration, and the legally grounded scalar and mapping declarations resolve from authored fact fragments. No production caller directly imports a remaining legal scalar or mapping declaration from `external_constants.py`; the existing fact-context boundaries resolve typed facts with explicit effective dates and preserve provenance.
+No production caller directly imports a remaining legal scalar or mapping declaration from `external_constants.py`; the existing fact-context boundaries resolve typed facts with explicit effective dates and preserve provenance.
 
 `external_constants.py` must not be removed as a module. It remains the typed owner of unrelated operational configuration, encodings, MIME types, remote surface values, and output-language configuration. The retirement target is only the residual legal duplicate declarations and obsolete model-routing aliases.
 

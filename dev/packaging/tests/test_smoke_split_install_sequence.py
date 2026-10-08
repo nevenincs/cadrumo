@@ -1,4 +1,4 @@
-"""Real-wheel contract tests for the mandatory three-wheel cohort."""
+"""Real-wheel contract tests for the mandatory four-wheel cohort."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ _REPO_ROOT = REPO_ROOT
 
 @pytest.fixture(scope="module")
 def real_cohort_wheels(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, tuple[Path, ...]]:
-    """Build the real three-wheel cohort ONCE for this module.
+    """Build the real four-wheel cohort ONCE for this module.
 
     Both tests below built the identical cohort from the identical
     ``build_root``, differing only in the directory it landed in. Measured on
@@ -56,12 +56,13 @@ def real_cohort_wheels(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, 
     return wheel, tuple(companions)
 
 
-def test_three_wheel_cohort_installs_only_aeat_human_script(
+def test_four_wheel_cohort_installs_only_aeat_human_script(
     tmp_path: Path,
     real_cohort_wheels: tuple[Path, tuple[Path, ...]],
 ) -> None:
     """The real root wheel installs ``aeat`` without a ``cadrumo`` alias."""
     wheel, companions = real_cohort_wheels
+    assert len(companions) == 3
     venv = create_pip_venv(tmp_path, f"{sys.version_info.major}.{sys.version_info.minor}")
     _install_cohort_with_pip(tmp_path, wheel, companions, venv)
 
@@ -75,8 +76,9 @@ def test_real_wheels_form_one_complete_authority_cohort(
     tmp_path: Path,
     real_cohort_wheels: tuple[Path, tuple[Path, ...]],
 ) -> None:
-    """The compact root artifact and both data wheels install as one product."""
+    """The compact root artifact and all three data wheels install as one product."""
     wheel, companions = real_cohort_wheels
+    assert len(companions) == 3
 
     with zipfile.ZipFile(wheel) as archive:
         assert not any(

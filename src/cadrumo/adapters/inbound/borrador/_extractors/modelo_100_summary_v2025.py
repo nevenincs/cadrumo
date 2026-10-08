@@ -28,8 +28,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import ClassVar
 
-from .....core.aeat_csv import normalise_aeat_csv
+from .....core.aeat_csv import AEAT_CSV_PATTERN, normalise_aeat_csv
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.identity.digest import ContentDigest
 from .....core.time.clock import now
 from ...pdf.extracted_casilla import ExtractedCasilla
 from ...pdf.label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
@@ -45,8 +46,10 @@ _CASILLA_VALUE_RE = re.compile(
 
 _NIF_RE = re.compile(r"NIF\s*[:\-]?\s*([0-9A-Z]{8,12})", re.IGNORECASE)
 _EJERCICIO_RE = re.compile(r"Ejercicio\s*[:\-]?\s*([0-9]{4})", re.IGNORECASE)
+# The capture is the canonical CSV shape, closed by a word boundary so a longer
+# run is refused rather than truncated to a different identifier.
 _CSV_RE = re.compile(
-    r"C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n\s*[:\-]?\s*([A-Z0-9]{8,24})",
+    rf"C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n\s*[:\-]?\s*({AEAT_CSV_PATTERN.pattern})\b",
     re.IGNORECASE,
 )
 
@@ -93,6 +96,22 @@ class Modelo100ObservedV2025Extractor:
                 registry-profile projection does not meet its minimum coverage.
         """
         pages = extract_pages_text(pdf_path)
+        return self.extract_pages(
+            pages,
+            artefact_kind,
+            source_pdf_sha256=sha256_file(pdf_path),
+            extraction_profile=extraction_profile,
+        )
+
+    def extract_pages(
+        self,
+        pages: tuple[str, ...],
+        artefact_kind: ArtefactKind,
+        *,
+        source_pdf_sha256: ContentDigest,
+        extraction_profile: BorradorExtractionProfile | None = None,
+    ) -> InboundBorradorObservation:
+        """Extract the canonical observation from one captured page-text pass."""
         text = "\n".join(pages)
 
         tax_id, ejercicio, csv_value = _extract_header_values(text, artefact_kind)
@@ -106,7 +125,6 @@ class Modelo100ObservedV2025Extractor:
             matched_targets=matched_targets,
         )
 
-        source_pdf_sha256 = sha256_file(pdf_path)
         return InboundBorradorObservation(
             modelo="100",
             ejercicio=ejercicio,

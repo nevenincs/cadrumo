@@ -3,21 +3,13 @@ tags:
   - '#audit'
   - '#vault-health-reconciliation'
 date: '2026-10-01'
-modified: '2026-10-01'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:907f6f204acd0bcb3ea59cb2a115f1edc67189af56418db39f3bdaf41030a2fe'
 related:
   - "[[2026-08-28-test-reconciliation-sweep-adr]]"
   - "[[2026-09-27-website-repository-boundary-docs-static-delivery-adr]]"
-  - "[[2026-06-09-justfile-redesign-plan]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
-  - "[[2026-08-11-tui-architecture-plan]]"
-  - "[[2026-08-11-tui-interface-plan]]"
-  - "[[2026-08-28-semantic-consolidation-plan]]"
-  - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
   - "[[2026-09-09-registry-edition-authoring-plan]]"
-  - "[[2026-09-09-registry-generator-plan]]"
-  - "[[2026-09-11-binding-schema-plan]]"
   - "[[2026-09-24-retenciones-workflow-plan]]"
   - '[[2026-08-26-cli-root-verb-homes-close-honesty-audit]]'
   - '[[2026-08-31-tui-interface-audit]]'
@@ -206,7 +198,7 @@ tokens. Local evidence was used for the remaining bounded investigation.
 Live verification:
 `uv run --no-sync pytest -q -n 0 -m unit src/cadrumo/tests/test_namespace_attribute_reachability.py`
 passed, 3 tests. Run receipt:
-`C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-10-01/20261001T000053.498855Z-pytest-43160-f1e289d1/run.log`.
+`<operator-home>/AppData/Local/Temp/.logs/test-runs/2026-10-01/20261001T000053.498855Z-pytest-43160-f1e289d1/run.log`.
 
 All fifteen archived records preserve their exact original bytes. Both accepted
 ADR bodies and statuses are unchanged. All ten affected plan bodies preserve
@@ -215,7 +207,7 @@ Steps; the owning formatter may reflow blank lines. Ledger repair is append-only
 
 The complete machine-readable baseline, previews, provenance and verification
 receipts are retained in the local evidence directory
-`C:/Users/hello/AppData/Local/Temp/cadrumo-vault-repair-e8207a00ab7841b8bd7e88a413b6bc64/`.
+`<operator-home>/AppData/Local/Temp/cadrumo-vault-repair-e8207a00ab7841b8bd7e88a413b6bc64/`.
 
 ### Repair-tool verification
 

@@ -3,28 +3,19 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d12faa966ff5c9ba2f456f17802e4668d8f0b059c65d71bb1306df4d608101c3'
+body_hash: 'sha256:4aaa847371d7fec81aecc5d9f46caa26f6fad20c17ab0992105e7449ad9ede31'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit]]"
 ---
+
 # `tui-architecture` audit: `S159 registry native capture review`
 
 ## Scope
 
-Independent current-HEAD review of the combined S159 implementation, facade,
-tests, and lifecycle records carried by commits `8c845ab92f` and `d42da6d435`.
-The review was grounded in the accepted registry API gate ADR, the reconciled
-owner-seam audit and composition references, `W03.P20.S159` and its execution
-record, and the always-on registry, dependency-boundary, no-legacy, and quality
-rules. Vaultspec RAG semantic discovery landed on the native capture in
-`src/cadrumo/domain/calculations/registry/_authority.py`; a current-HEAD exact
-census then covered the complete authority, public facade, focused capture
-tests, identity-keyed load/cache transitions, reset interactions, and the S167
-consumer seam.
+Independent current-HEAD review of the combined S159 implementation, facade, tests, and lifecycle records carried by commits `8c845ab92f` and `d42da6d435`. The review was grounded in the accepted registry API gate ADR, the reconciled owner-seam audit and composition references, `W03.P20.S159` and its execution record, and the always-on registry, dependency-boundary, no-legacy, and quality rules.
 
 The public facade promotion, single production capture home, absence of lower-
 layer `ModeloWorkspace` imports, law-selected inspection-versus-graded-snapshot
@@ -39,78 +30,25 @@ deadlock was found.
 
 ### authority-identity | high | Same-root A to B to A transitions leave stale authorities current and reuse the original generation
 
-`ValidatedRegistryAuthority.load` resolves the current `RegistryIdentity` and
-keys its LRU by that identity, but the identity is not retained as a currentness
-coordinate on the authority (`src/cadrumo/domain/calculations/registry/_authority.py:169`).
-`_require_current_capture_incarnation` checks only the explicit-reset epoch
-(`src/cadrumo/domain/calculations/registry/_authority.py:419`). Loading changed
-same-root tree B therefore creates a later generation while the old A instance
-continues to capture and report its earlier generation as current. Restoring A
-then hits the still-resident A LRU entry and reuses the original A object and
-generation rather than allocating a later A generation. This violates the ADR's
-every-owner-transition, A to B to A, no-reuse, and current-generation guarantees
-and allows S167's two-pass validation to accept a stale owner instance.
+Loading changed same-root tree B therefore creates a later generation while the old A instance continues to capture and report its earlier generation as current. Restoring A then hits the still-resident A LRU entry and reuses the original A object and generation rather than allocating a later A generation. This violates the ADR's every-owner-transition, A to B to A, no-reuse, and current-generation guarantees and allows S167's two-pass validation to accept a stale owner instance.
 
-The focused test covers only A to explicit reset to A
-(`src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py:106`).
-Existing authority tests prove same-root identity replacement without the
-global reset, but the native-capture suite never asks the predecessor to refuse
-or proves A to B to A generation monotonicity.
+Existing authority tests prove same-root identity replacement without the global reset, but the native-capture suite never asks the predecessor to refuse or proves A to B to A generation monotonicity.
 
 ### reset-linearization | high | Reset can race an in-flight load and publish pre-reset state afterward
 
-Identity collection and `_load_authority` execute outside the lifecycle lock,
-while reset invalidates generations and clears the authority caches under that
-lock and then clears compiled-tree and fingerprint caches only after releasing
-it (`src/cadrumo/domain/calculations/registry/_authority.py:169`,
-`src/cadrumo/domain/calculations/registry/_authority.py:574`, and
-`src/cadrumo/domain/calculations/registry/_authority.py:583`). An in-flight load
-can cross that boundary, repopulate the LRU after its clear, or construct in the
-new reset epoch from inputs obtained before the reset. The unlocked failure-
-cache write can likewise repopulate a refusal after reset. The result can be an
-apparently current authority over pre-reset inputs or a cached authority that is
-already stale when returned. No focused test races reset against load.
+An in-flight load can cross that boundary, repopulate the LRU after its clear, or construct in the new reset epoch from inputs obtained before the reset. The unlocked failure- cache write can likewise repopulate a refusal after reset. The result can be an apparently current authority over pre-reset inputs or a cached authority that is already stale when returned. No focused test races reset against load.
 
 ### cache-singleflight | medium | Concurrent cold loads can mint multiple current generations for one unchanged tree
 
-`_load_authority` has no single-flight boundary around an LRU miss
-(`src/cadrumo/domain/calculations/registry/_authority.py:549`). Standard LRU
-memoization permits duplicate underlying calls while the first call is still
-computing. Each duplicate constructs an authority and allocates a different
-generation, yet both carry the same reset epoch and both pass the currentness
-check. Cache warm-up alone can therefore create multiple simultaneously current
-generations without an owner-state transition and cause false
-`workspace_changed` outcomes. The concurrency test uses one already-created
-authority and does not exercise concurrent loading.
+Standard LRU memoization permits duplicate underlying calls while the first call is still computing. Each duplicate constructs an authority and allocates a different generation, yet both carry the same reset epoch and both pass the currentness check. Cache warm-up alone can therefore create multiple simultaneously current generations without an owner-state transition and cause false `workspace_changed` outcomes. The concurrency test uses one already-created authority and does not exercise concurrent loading.
 
 ### snapshot-isolation | medium | Cached snapshot aliases can mutate or tear a capture without advancing generation
 
-`snapshot` returns its cached `RegistrySnapshot` directly, including mutable
-nested mappings (`src/cadrumo/domain/calculations/registry/_authority.py:352`).
-The capture deep-copies that object under authority locks, but a caller already
-holding the cached alias can mutate a nested mapping without either lock. Such a
-mutation can change or race the captured projection without a generation
-advance, so the lock does not establish the required immutable or
-snapshot-isolated owner value. The focused isolation test proves only that
-mutating the returned capture does not mutate the cache; it does not prove the
-reverse direction or concurrent mutation safety.
+The capture deep-copies that object under authority locks, but a caller already holding the cached alias can mutate a nested mapping without either lock. Such a mutation can change or race the captured projection without a generation advance, so the lock does not establish the required immutable or snapshot-isolated owner value. The focused isolation test proves only that mutating the returned capture does not mutate the cache; it does not prove the reverse direction or concurrent mutation safety.
 
 ### global-lock-scope | medium | The lifecycle lock serializes all registry validation and snapshot work process-wide
 
-`_AUTHORITY_CAPTURE_LOCK` is process-global (`src/cadrumo/domain/calculations/registry/_authority.py:82`)
-and wraps `validate_modelo`, `inspect_revision`, `validate_registry`,
-`mark_registry_validated`, and `snapshot` as well as capture and reset
-(`src/cadrumo/domain/calculations/registry/_authority.py:200`,
-`src/cadrumo/domain/calculations/registry/_authority.py:226`,
-`src/cadrumo/domain/calculations/registry/_authority.py:240`,
-`src/cadrumo/domain/calculations/registry/_authority.py:264`, and
-`src/cadrumo/domain/calculations/registry/_authority.py:352`). Full corpus
-validation, snapshot construction, and capture copying for unrelated roots and
-authority instances cannot overlap. The concurrency test asserts only equal
-results, so a completely serialized implementation passes. Acquisition order is
-consistent and no deadlock was found, but the scope is broader than the
-generation/reset critical section and introduces process-wide head-of-line
-blocking into all existing registry reads.
+Full corpus validation, snapshot construction, and capture copying for unrelated roots and authority instances cannot overlap. The concurrency test asserts only equal results, so a completely serialized implementation passes. Acquisition order is consistent and no deadlock was found, but the scope is broader than the generation/reset critical section and introduces process-wide head-of-line blocking into all existing registry reads.
 
 ## Recommendations
 
@@ -189,16 +127,7 @@ and an exact committed-source census at current HEAD.
 
 ### unrelated-root-overlap-regression | low | Concurrent-root independence lacks a committed biting regression gate
 
-The remediated production implementation permits unrelated roots to perform
-long construction concurrently, and an independent barrier probe proved both
-distinct roots entered `_construct_authority` before either was released.
-However, no committed S159 test encodes that property. The nine focused native
-capture tests can all pass if a future change restores a process-global lock
-around long registry work. The earlier audit explicitly required an overlap
-proof, and the execution record now claims this behavior. Add the same
-two-root barrier proof to
-`src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py`
-so re-serialization makes the durable gate red.
+The remediated production implementation permits unrelated roots to perform long construction concurrently, and an independent barrier probe proved both distinct roots entered `_construct_authority` before either was released. However, no committed S159 test encodes that property. The nine focused native capture tests can all pass if a future change restores a process-global lock around long registry work. The earlier audit explicitly required an overlap proof, and the execution record now claims this behavior.
 
 ### Verification
 

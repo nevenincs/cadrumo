@@ -38,7 +38,7 @@ _WORK_UNIT_NOW = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 
 
 def _work_unit() -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(2026, "2T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_WORK_UNIT_BUCKET,
@@ -52,7 +52,7 @@ def _work_unit() -> WorkUnit:
         filing_year=2026,
         period=period,
         revision_id=_WORK_UNIT_REVISION,
-        name="303-2026-1T",
+        name="303-2026-2T",
         created_at=_WORK_UNIT_NOW,
         updated_at=_WORK_UNIT_NOW,
     )
@@ -122,7 +122,7 @@ class TestResultSummaryNarrowing:
                 modelo="303",
                 revision_id="2026-y-siguientes",
                 modelo_year=2026,
-                period="1T",
+                period="2T",
             ),
             state=CalculationRevisionState.BORRADOR,
             input_values_by_casilla_id={},

@@ -40,10 +40,10 @@ import argparse
 import json
 import sys
 import unicodedata
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 from cadrumo.core.toml import parse_toml
 
@@ -87,28 +87,54 @@ def scan(data_root: Path = _DATA, legal_root: Path = _LEGAL) -> Iterator[Finding
     for catalogue in sorted(legal_root.glob("*.toml")):
         document = parse_toml(catalogue.read_text(encoding="utf-8"))
         for legal_id, entry in document.get("legal", {}).items():
-            corpus_ref, quotes = entry.get("corpus_ref"), entry.get("required_text")
-            if not corpus_ref or not quotes:
-                continue
-            excerpt = _excerpt_for(data_root, corpus_ref)
-            if excerpt is None:
-                continue
-            if excerpt not in cache:
-                text = excerpt.read_text(encoding="utf-8")
-                spaced = _fold_space(text)
-                cache[excerpt] = (text, spaced, _fold_accents(spaced))
-            text, spaced, folded = cache[excerpt]
-            for quote in quotes:
-                if quote in text:
-                    continue
-                if _fold_space(quote) in spaced:
-                    yield Finding(catalogue.name, legal_id, "whitespace", quote)
-                elif _fold_accents(_fold_space(quote)) in folded:
-                    yield Finding(catalogue.name, legal_id, "diacritic", quote)
-                elif _fold_accents(_fold_space(quote)).casefold() in folded.casefold():
-                    yield Finding(catalogue.name, legal_id, "case", quote)
-                else:
-                    yield Finding(catalogue.name, legal_id, "absent", quote)
+            yield from _entry_findings(catalogue.name, legal_id, entry, data_root=data_root, cache=cache)
+
+
+def _entry_findings(
+    catalogue: str,
+    legal_id: str,
+    entry: Mapping[str, Any],
+    *,
+    data_root: Path,
+    cache: dict[Path, tuple[str, str, str]],
+) -> Iterator[Finding]:
+    corpus_ref, quotes = entry.get("corpus_ref"), entry.get("required_text")
+    if not corpus_ref or not quotes:
+        return
+    excerpt = _excerpt_for(data_root, corpus_ref)
+    if excerpt is None:
+        return
+    if excerpt not in cache:
+        text = excerpt.read_text(encoding="utf-8")
+        spaced = _fold_space(text)
+        cache[excerpt] = (text, spaced, _fold_accents(spaced))
+    text, spaced, folded = cache[excerpt]
+    for quote in quotes:
+        finding = _quote_finding(catalogue, legal_id, quote, text=text, spaced=spaced, folded=folded)
+        if finding is not None:
+            yield finding
+
+
+def _quote_finding(
+    catalogue: str,
+    legal_id: str,
+    quote: str,
+    *,
+    text: str,
+    spaced: str,
+    folded: str,
+) -> Finding | None:
+    if quote in text:
+        return None
+    if _fold_space(quote) in spaced:
+        kind = "whitespace"
+    elif _fold_accents(_fold_space(quote)) in folded:
+        kind = "diacritic"
+    elif _fold_accents(_fold_space(quote)).casefold() in folded.casefold():
+        kind = "case"
+    else:
+        kind = "absent"
+    return Finding(catalogue, legal_id, kind, quote)
 
 
 def main(argv: list[str] | None = None) -> int:

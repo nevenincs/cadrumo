@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#m145-reopen-tractability'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:1289f4e06d8876b0b37b553d21fd5a56b400c8a1ee5b5b93252bb8cbbad6efff'
+modified: '2026-10-03'
+body_hash: 'sha256:c58dd972180a967e056149e36bb66d3267c025600d3bf7f193053012ba761384'
 related:
   - "[[2026-06-03-m036-lifecycle-verbs-research]]"
 ---
@@ -135,12 +135,12 @@ declaration recording.
 
 ## Peer-WIP risk
 
-- `src/aeat/entrypoints/cli/_modelo.py` — last commit `7558800b1`
+- the former source file — last commit `7558800b1`
   (M036 verb mount, same pattern). Currently peer-clean per
   `git status` summary. LOW risk if landing additions follow the
   bottom-of-file lazy-mount pattern, untouching `work_app` /
   `_guard_stub_modelo`.
-- `src/aeat/application/modelo/test_export.py` — has 232-line
+- the former source file — has 232-line
   uncommitted peer WIP. DO NOT modify this file; new M145 tests
   go in `test_m145_communication.py`.
 - `src/aeat/_data/registry/aeat/modelos/145/` — absent. NO risk.
@@ -176,10 +176,10 @@ Subagent ground-truth discovery 2026-06-03 against #638
 modelo-145-reopen plan. Cited file:line evidence:
 
 - `src/aeat/_data/registry/aeat/modelos/145/` (absent)
-- `src/aeat/application/modelo/_schema.py:1143-44`
+
   (communication / payer_delivery literals)
-- `src/aeat/entrypoints/cli/_modelo.py` (peer-clean mount target)
-- `src/aeat/application/modelo/test_export.py` (232-line peer WIP
+- the former source file (peer-clean mount target)
+- the former source file (232-line peer WIP
   — DO NOT TOUCH)
 - `2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan.md`
   (the 23-step plan)

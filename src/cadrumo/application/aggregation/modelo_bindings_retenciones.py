@@ -130,6 +130,8 @@ class RetencionesAggregationSourceResolver:
         :meth:`resolve` and the per-modelo aggregate report both read through
         here, so the report summarises exactly the rows the calculation
         materialises rather than a window of its own choosing.
+
+        Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
         """
         if (
             not revision_has_binding_source(revision, "retenciones_aggregation")

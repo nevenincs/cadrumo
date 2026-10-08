@@ -43,7 +43,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 
 from ..compiler.record_design import extract_record_design
-from ..compiler.record_design_pdf_repairs import rejoin_bare_coordinate_rows
+from ..compiler.record_design_pdf_coordinate_repairs import rejoin_bare_coordinate_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

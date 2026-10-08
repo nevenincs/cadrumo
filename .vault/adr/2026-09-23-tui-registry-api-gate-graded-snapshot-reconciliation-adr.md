@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-registry-api-gate'
 date: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:9d301518790902632dbd1901c6a0a499550e7f467d38ab3f19e3961f49d46bb2'
+body_hash: 'sha256:1e4e7b82fa75e8381ed58209cc0153347c21374636e6c6246b095e8b1915b465'
 related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-09-23-tui-registry-api-gate-graded-snapshot-restoration-reference]]"
@@ -14,7 +14,7 @@ related:
   - '[[2026-08-26-tui-architecture-graded-snapshot-assembly-sizing-reference]]'
 ---
 
-# `tui-registry-api-gate` adr: `reconcile graded admission to the current workspace contract` | (**status:** `proposed`)
+# `tui-registry-api-gate` adr: `reconcile graded admission to the current workspace contract` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -64,9 +64,9 @@ and how to admit a unit that has no calculation.
   captures.** Rejected. It would give static admission the calculation and
   readiness semantics the API-gate decision reserves for a grade-checked
   admission. That is the downgrade by another route.
-- **Fall back to static inspection when graded admission refuses.** Rejected.
-  The accepted decision forbids the downgrade, and the operator would see an
-  empty destination with no stated reason.
+- **Fall back to static inspection when graded admission refuses, and drop
+  the refusal.** Rejected. The accepted decision forbids a silent downgrade,
+  and the operator would see an empty destination with no stated reason.
 
 ## Constraints
 
@@ -94,15 +94,22 @@ This amends the API-gate decision in four places and leaves the rest of it in fo
   the second pass matches the first; a mismatch refuses with the existing
   changed or unavailable refusal, and never retries silently without limit.
 - **TUI admission.** The TUI requests graded admission at the calculation
-  grade for every work unit that has a current calculation revision.
-  - A unit with no calculation is admitted by static inspection, and the
-    chrome states that no calculation exists. This is a choice made before
-    admission, from the work unit's own state, never a fallback after a graded
-    refusal.
-  - A graded refusal is shown as a refusal, with its reason and the action it
-    names.
+  grade for every work unit.
+  - A graded refusal is never discarded. The launcher reader carries it beside
+    a static-inspection projection of the same target, and every destination
+    that opens the unit renders the refusal with its reason and the action it
+    names. A static projection is never presented without the refusal that
+    produced it, so the operator always sees why values are absent.
+  - A unit with no calculation reaches this path through the resolver's own
+    no-calculation refusal, so the chrome states that no calculation exists.
   - The launcher's reader type carries the refused result, so one refused
     unit does not refuse the whole Modelo source.
+
+  Reconciled on acceptance to the reader the TUI ships. The considered option
+  rejected below was rejected because the operator would see an empty
+  destination with no stated reason; carrying and rendering the refusal
+  removes that reason, and the resolver's three taxpayer-facing refusals each
+  leave the revision resolvable at static inspection.
 
 A behavioural test drives the production launcher reader over a calculated
 unit and asserts that Results, Inputs and Verification render its values. A

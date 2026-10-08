@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import cast
 
 import pytest
+
+from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 
 from ..installed_parity import (
     COMPARED_FIELDS,
     CalendarParityError,
     CalendarWindow,
+    _fresh_cli_calendar,
     compare_rows,
     parse_cli_calendar,
     parse_tui_detail,
@@ -58,6 +62,37 @@ _RENDERED = (
 
 def _cli_rows():
     return parse_cli_calendar({"result": {"entries": [_ENTRY]}}, _TEXT)
+
+
+@pytest.mark.parametrize("refused", [False, True])
+def test_post_tui_cli_calendar_uses_fresh_proof_for_both_formats(refused: bool) -> None:
+    calls: list[tuple[str, bool]] = []
+
+    class ReadbackCli:
+        def run(self, arguments, *, command: str, authenticated: bool):
+            calls.append(("json", authenticated))
+            assert command == "overview.calendar"
+            assert "--allow-incomplete" in arguments
+            if refused:
+                raise InstalledCliError("synthetic fresh-proof refusal")
+            return {"result": {"entries": [_ENTRY]}}
+
+        def run_text(self, _arguments, *, command: str, authenticated: bool) -> str:
+            calls.append(("text", authenticated))
+            assert command == "overview.calendar"
+            return _TEXT
+
+    cli = cast("InstalledCli", ReadbackCli())
+    window = CalendarWindow.for_evaluation(date(2026, 9, 23))
+    if refused:
+        with pytest.raises(CalendarParityError, match="fresh-proof refusal"):
+            _fresh_cli_calendar(cli, window)
+        assert calls == [("json", True)]
+    else:
+        rows, authentication = _fresh_cli_calendar(cli, window)
+        assert rows == _cli_rows()
+        assert authentication == "stdin_secret"
+        assert calls == [("json", True), ("text", True)]
 
 
 def test_window_covers_the_prior_and_current_calendar_years() -> None:

@@ -34,7 +34,7 @@ from ....domain.transactions.llm import prompt_spec_with_saturation_fields
 from ....domain.transactions.tests.vision_evidence_support import vision_transaction
 from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from ....tests.llm_vision_evidence_support import png_image
-from ..ledger_llm_composition import VisionReader, compose_ledger_llm
+from ...ledger_llm_composition import VisionReader, compose_ledger_llm
 from .persistence_vision_evidence_support import (
     add_evidence,
     scan_only_pdf,

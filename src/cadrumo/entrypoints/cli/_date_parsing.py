@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import date as _date
 
 from ...core.i18n.render import tr
+from ...core.parsing.dates import require_iso8601_date
 from .common import bad
 
 __all__ = ["_parse_iso_date", "_parse_iso_date_str", "_parse_optional_iso_date_str"]
@@ -26,8 +27,6 @@ def _parse_iso_date(
     translation_key: str = "cli.common.errors.invalid_iso_date",
     default: str | None = None,
 ) -> _date:
-    from ...core.parsing.dates import parse_iso8601_date
-
     message = tr(
         translation_key,
         label=label,
@@ -36,15 +35,11 @@ def _parse_iso_date(
         value=raw,
     )
     try:
-        parsed = parse_iso8601_date(raw.strip())
+        # A blank value refuses here with the same message as a malformed one:
+        # this gate requires a date.
+        return require_iso8601_date(raw)
     except ValueError as exc:
         raise bad(message) from exc
-    if parsed is None:
-        # ``parse_iso8601_date`` treats a blank/empty string as "absent" and
-        # returns ``None`` rather than raising; this gate requires a value,
-        # so blank input refuses with the same message as a malformed one.
-        raise bad(message)
-    return parsed
 
 
 def _parse_iso_date_str(raw: str, *, label: str) -> str:

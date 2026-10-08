@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#semantic-search-precompile-boundary'
 date: '2026-08-01'
-modified: '2026-08-02'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c72efa1a96e738429c66b942a8292e7e71598eb1789e242eaa9eca13e3497fd9'
+body_hash: 'sha256:979f0d63db7feaa10aa33465e2a73a4efdc9de8be71db6a49b21a547dcde9d6c'
 related:
-  - "[[2026-07-31-semantic-search-precompile-boundary-plan]]"
   - "[[2026-07-31-semantic-search-precompile-boundary-adr]]"
 ---
 
@@ -25,7 +24,7 @@ Every prior read-only inventory finding was RE-MEASURED at current HEAD rather t
 
 ### stale-hybrid-claim-server | low | The server's command-index construction comment still called the index hybrid.
 
-The P02 rewire narrowed the command-search index to per-column BM25 plus token overlap but did not touch the construction-site comment in `src/cadrumo/entrypoints/mcp/_server.py`, which still read "The hybrid command-search index backing the `search` meta-tool". This is a decision-trail claim a maintainer would read as current architecture. Notably, the earlier read-only inventory concluded the MCP surface was clean; that conclusion was correct for the four model-facing tool descriptions it checked but did not cover this comment. Re-measuring rather than trusting the inherited finding is what surfaced it. CLOSED by commit `b2c0f125b6`; the harness rule-surface drift gate stays green (6 passed).
+The P02 rewire narrowed the command-search index to per-column BM25 plus token overlap but did not touch the construction-site comment in the retired module, which still read "The hybrid command-search index backing the `search` meta-tool". This is a decision-trail claim a maintainer would read as current architecture. Notably, the earlier read-only inventory concluded the MCP surface was clean; that conclusion was correct for the four model-facing tool descriptions it checked but did not cover this comment. Re-measuring rather than trusting the inherited finding is what surfaced it. CLOSED by commit `b2c0f125b6`; the harness rule-surface drift gate stays green (6 passed).
 
 ### refoundation-plan-unannotated | medium | The parent plan advertised the retired runtime embedder as delivered, while its ADR and audit siblings were both annotated.
 

@@ -9,6 +9,16 @@ from ._entrypoints_part2 import DECLARED_ERROR_CODES as _ENTRYPOINTS_PART2_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.entrypoints.cli.errors.CliRecordedOperationError",
+        ErrorCode(
+            code="REFUSED_CLI_RECORDED_OPERATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.entrypoints.cli.config.errors.ConfigBoundaryError",
         ErrorCode(
             code="ERROR_CONFIG_BOUNDARY",
@@ -44,6 +54,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="INTERNAL_CLI_OUTBOUND_PAYLOAD_BOUNDARY",
             category=ErrorCategory.INTERNAL,
             message_key="errors.internal.cli_outbound_payload_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.entrypoints.cli.errors.CliOperationStillRunningError",
+        ErrorCode(
+            code="LOCKED_CLI_OPERATION_STILL_RUNNING",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_cli_operation_still_running",
             retryable=False,
             runbook_id=None,
         ),
@@ -94,6 +114,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_CLI_NON_TTY",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_cli_non_tty",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.entrypoints.runtime.supervised_protocol.SupervisorLineError",
+        ErrorCode(
+            code="REFUSED_RUNTIME_SUPERVISOR_LINE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_operator_surface_contract",
             retryable=False,
             runbook_id=None,
         ),

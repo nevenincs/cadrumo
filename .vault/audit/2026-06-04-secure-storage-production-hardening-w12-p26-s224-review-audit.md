@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:31186ca3dc4fab981fac86eac95893d0c48d276267d8147ed85a3681bab24ade'
+modified: '2026-10-03'
+body_hash: 'sha256:abb08e744a09e93421b6e4463c22d9ebe41511df06b624202c33c89a7bb8da29'
 related: []
 ---
 
@@ -33,8 +33,8 @@ message through `tr()`. This step did not add new operator-facing raw strings.
 
 ## S224-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/ledger/_ratios.py src/aeat/application/ledger/test_ratios.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/ledger/test_ratios.py` passed.
+- the historical check passed.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` returned only the existing monotonic-order warning.
 

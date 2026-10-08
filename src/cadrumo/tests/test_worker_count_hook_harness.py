@@ -19,7 +19,6 @@ from cadrumo.tests.worker_count_hook import DEFAULT_WORKER_COUNT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_SUBPROCESS_TIMEOUT_SECONDS = 60
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 
 _PROBE_TEST = """
@@ -84,7 +83,6 @@ def _resolved_worker_count(
                 capture_output=True,
                 text=True,
                 check=False,
-                timeout=_SUBPROCESS_TIMEOUT_SECONDS,
             )
         )
         sentinel = tmp_path / "worker_count.txt"

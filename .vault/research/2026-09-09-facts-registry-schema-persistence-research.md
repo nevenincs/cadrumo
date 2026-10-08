@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#facts-registry'
 date: '2026-09-09'
-modified: '2026-09-09'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:2ec5af7e8aaba97e878eb73b08c19e013cf36e1f61e7b14048903d6968ea2125'
+body_hash: 'sha256:36c911cdcdb00933cbcf7700123f26e30cce583c2b7ec97c921477dcf291f9c4'
 related: []
 ---
 
@@ -40,8 +40,7 @@ would be an invasive semantic change.
 
 Scalar values, tax brackets, typed mappings, entity sets, treaty overrides,
 calendar events, and multi-output surcharge bands require different payload
-models. The IVA table documents deliberately overlapping overrides at
-`src/cadrumo/_data/registry/aeat/iva/rates.toml:31`; treaty overrides carry
+models. The IVA table documents deliberately overlapping overrides ; treaty overrides carry
 semantic kinds and optional rates at
 `src/cadrumo/domain/calculations/registry/convenio.py:39`; and LGT surcharge
 bands emit more than one result at
@@ -58,7 +57,7 @@ Closed family-specific payload models retain domain meaning.
 ### One fact per flat file matches current review granularity
 
 Current revision parameters use numbered one-concept fragments, for example
-`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0052-renta-2025-deduccion-madrid-nacimiento-adopcion-cuantia.toml:1`.
+
 A sibling candidate topology is
 `src/cadrumo/_data/registry/aeat/facts/NNNN-<stable-slug>.toml`, with one
 semantic fact and all of its variants in the file. The numeric prefix is
@@ -94,9 +93,9 @@ need a validated, acyclic override or supersession edge.
 - `src/cadrumo/domain/calculations/registry/schema_formula.py:177`
 - `src/cadrumo/domain/calculations/registry/schema_formula.py:352`
 - `src/cadrumo/domain/calculations/registry/schema_references.py:594`
-- `src/cadrumo/_data/registry/aeat/iva/rates.toml:31`
+
 - `src/cadrumo/domain/calculations/registry/convenio.py:39`
 - `src/cadrumo/_data/registry/aeat/legal/ley-58-2003-recargo-bands.toml:24`
-- `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0052-renta-2025-deduccion-madrid-nacimiento-adopcion-cuantia.toml:1`
+
 - `src/cadrumo/domain/calculations/registry/ids.py:8`
 - `src/cadrumo/domain/calculations/registry/formula_runtime_ops.py:265`

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 19:17+0200\n"
+"POT-Creation-Date: 2026-10-02 00:01+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -24,20 +24,21 @@ msgstr "El flujo de presentación"
 
 #: ../../how-to/filing-spine.md:3
 msgid ""
-"This page covers the filing workflow's two building blocks - the work "
-"unit (the saved workspace for one filing target) and the calculation "
-"revision (one saved calculation result) - and how create, calculate, "
-"verify, file, and export choose between them. Use it after completing the"
-" quickstart if you want to understand how the tool organises and stores "
-"your filing work between steps."
+"This page covers the filing workflow's two building blocks: the "
+"declaration (everything saved for one filing target) and the saved "
+"calculation (one saved calculation result). It also covers how the "
+"`create`, `calculate`, `verify`, `file`, and `export` commands choose "
+"between them. Use it after completing the quickstart if you want to "
+"understand how the tool organises and stores your filing work between "
+"steps."
 msgstr ""
-"Esta página cubre los dos pilares del flujo de presentación (la unidad de"
-" trabajo, que es el espacio de trabajo guardado para un objetivo de "
-"presentación, y la revisión de cálculo, que es un resultado de cálculo "
-"guardado) y cómo eligen entre ellas los comandos de crear, calcular, "
-"verificar, presentar y exportar. Úsala después de completar la guía "
-"rápida si quieres entender cómo organiza y guarda la herramienta tu "
-"trabajo de presentación entre pasos."
+"Esta página cubre los dos pilares del flujo de presentación: la "
+"declaración (todo lo guardado para un objetivo de presentación) y el "
+"cálculo guardado (un resultado de cálculo guardado). También explica cómo"
+" eligen entre ellos los comandos `create`, `calculate`, `verify`, `file` "
+"y `export`. Úsala después de completar la guía rápida si quieres entender"
+" cómo organiza y guarda la herramienta tu trabajo de presentación entre "
+"pasos."
 
 #: ../../how-to/filing-spine.md:10
 msgid "Before you start"
@@ -101,26 +102,29 @@ msgid ""
 "and `export` writes the `.boe`. Without it, `verify` blocks on an "
 "unresolved cross-period dependency on the prior period and `export` "
 "refuses. To file a period that folds in a real prior period, import that "
-"prior filing's evidence first; see [Reconcile a filing](reconcile.md)."
+"prior filing's AEAT receipt first; see [Reconcile a filed modelo against "
+"its AEAT receipt](reconcile.md)."
 msgstr ""
 "La `--activity-start-date` del perfil de arriba deja fuera la dependencia"
 " del periodo anterior para esta primera presentación, así que `verify` "
 "informa de `complete` y `export` escribe el `.boe`. Sin ella, `verify` se"
 " bloquea por una dependencia entre periodos sin resolver con el periodo "
 "anterior y `export` se niega. Para presentar un periodo que integra un "
-"periodo anterior real, importa primero la evidencia de esa presentación "
-"anterior; consulta [Conciliar una presentación](reconcile.md)."
+"periodo anterior real, importa primero el justificante de la AEAT de esa "
+"presentación anterior; consulta [Conciliar un modelo presentado con tu "
+"justificante de la AEAT](reconcile.md)."
 
 #: ../../how-to/filing-spine.md:45
 msgid ""
 "`--modelo`, `--year`, and `--period` are the normal way to name the "
-"filing you are working on. Use that shape for routine create, calculate, "
-"verify, file, export, status, history, and revision commands."
+"filing you are working on. Use that shape for the routine `create`, "
+"`calculate`, `verify`, `file`, `export`, `status`, `history`, and "
+"`revision` commands."
 msgstr ""
 "`--modelo`, `--year` y `--period` son la forma normal de nombrar la "
-"presentación en la que estás trabajando. Usa ese formato para los "
-"comandos rutinarios de crear, calcular, verificar, presentar, exportar, "
-"estado, historial y revisión."
+"presentación en la que estás trabajando. Usa ese formato para las órdenes"
+" rutinarias `create`, `calculate`, `verify`, `file`, `export`, `status`, "
+"`history` y `revision`."
 
 #: ../../how-to/filing-spine.md:49
 msgid "Start with the visible filing target"
@@ -177,14 +181,14 @@ msgstr "Cómo obtiene su ID una presentación"
 
 #: ../../how-to/filing-spine.md:74
 msgid ""
-"The tool assigns a unique reference number to each filing workspace. For "
-"most use you do not need to know or remember it. The tool finds your work"
-" automatically from the modelo, year, and period you type."
+"The tool assigns a unique reference number to each declaration. For most "
+"use you do not need to know or remember it. The tool finds your work "
+"automatically from the modelo, year, and period you type."
 msgstr ""
-"La herramienta asigna un número de referencia único a cada espacio de "
-"trabajo de presentación. Para la mayoría de los usos no necesitas "
-"conocerlo ni recordarlo. La herramienta localiza tu trabajo "
-"automáticamente a partir del modelo, el año y el periodo que escribes."
+"La herramienta asigna un número de referencia único a cada declaración. "
+"Para la mayoría de los usos no necesitas conocerlo ni recordarlo. La "
+"herramienta localiza tu trabajo automáticamente a partir del modelo, el "
+"año y el periodo que escribes."
 
 #: ../../how-to/filing-spine.md:78
 msgid ""
@@ -194,13 +198,13 @@ msgid ""
 "specific ruleset version."
 msgstr ""
 "La herramienta sabe qué versión de las reglas fiscales oficiales se "
-"aplica a cada formulario y periodo. No necesitas elegirla a mano. Usa "
+"aplica a cada modelo y periodo. No necesitas elegirla a mano. Usa "
 "`--revision` solo cuando el soporte o un mensaje de error te pida apuntar"
 " a una versión concreta del conjunto de reglas."
 
 #: ../../how-to/filing-spine.md:82
-msgid "To see the reference number for a saved filing:"
-msgstr "Para ver el número de referencia de una presentación guardada:"
+msgid "To see the reference number for a declaration:"
+msgstr "Para ver el número de referencia de una declaración:"
 
 #: ../../how-to/filing-spine.md:88
 msgid "After you have the `work_unit_id`, address the same saved work by ID:"
@@ -218,118 +222,116 @@ msgstr ""
 "el número de referencia cuando Cadrumo informe de que más de una "
 "presentación coincide con el mismo modelo, año y periodo."
 
-#: ../../how-to/filing-spine.md:97
-msgid "A work unit is one filing in progress"
-msgstr "Una unidad de trabajo es una presentación en curso"
+#: ../../how-to/filing-spine.md:98
+msgid "A declaration is one filing in progress"
+msgstr "Una declaración es una presentación en curso"
 
-#: ../../how-to/filing-spine.md:99
+#: ../../how-to/filing-spine.md:100
 msgid ""
-"A work unit is the saved workspace for one filing target. It is the thing"
-" that connects later commands to the same local filing work."
+"A declaration is everything saved for one filing target. It is the thing "
+"that connects later commands to the same local filing work."
 msgstr ""
-"Una unidad de trabajo es el espacio de trabajo guardado para un objetivo "
-"de presentación. Es lo que conecta los comandos posteriores con el mismo "
-"trabajo de presentación local."
+"Una declaración es todo lo guardado para un objetivo de presentación. Es "
+"lo que conecta las órdenes posteriores con el mismo trabajo de "
+"presentación local."
 
-#: ../../how-to/filing-spine.md:102
+#: ../../how-to/filing-spine.md:103
 msgid ""
-"For example, `aeat app modelo work create` creates or reuses the work "
-"unit for Modelo 303 Q1 2026 (the chain sequence above runs the full "
-"form)."
+"For example, `aeat app modelo work create` creates or reuses the "
+"declaration for Modelo 303, first quarter of 2026 (the chain sequence "
+"above runs the full form)."
 msgstr ""
-"Por ejemplo, `aeat app modelo work create` crea o reutiliza la unidad de "
-"trabajo del Modelo 303 del 1T de 2026 (la secuencia de la cadena de "
-"arriba ejecuta la forma completa)."
+"Por ejemplo, `aeat app modelo work create` crea o reutiliza la "
+"declaración del Modelo 303 del primer trimestre de 2026 (la secuencia de "
+"la cadena de arriba ejecuta la forma completa)."
 
-#: ../../how-to/filing-spine.md:105
+#: ../../how-to/filing-spine.md:107
 msgid "The tool keeps a record of your filing work. That record links to:"
 msgstr ""
 "La herramienta mantiene un registro de tu trabajo de presentación. Ese "
 "registro enlaza con:"
 
-#: ../../how-to/filing-spine.md:107
+#: ../../how-to/filing-spine.md:109
 msgid "the latest calculated draft"
 msgstr "el último borrador calculado"
 
-#: ../../how-to/filing-spine.md:108
-msgid "the verified draft, if you have verified one"
-msgstr "el borrador verificado, si has verificado alguno"
-
-#: ../../how-to/filing-spine.md:109
-msgid "the filed record, if you have marked one as filed locally"
-msgstr "el registro presentado, si has marcado alguno como presentado localmente"
+#: ../../how-to/filing-spine.md:110
+msgid "the checked draft, if you have checked one"
+msgstr "el borrador comprobado, si has comprobado alguno"
 
 #: ../../how-to/filing-spine.md:111
+msgid "the recorded filing, if you have recorded one as filed"
+msgstr "la presentación registrada, si has registrado alguna como presentada"
+
+#: ../../how-to/filing-spine.md:113
 msgid ""
-"No separate command \"switches\" the current work unit. The active "
+"No separate command \"switches\" the current declaration. The active "
 "profile is global, but the filing work is selected on each command. To "
 "work on a different filing, pass a different visible target or pass a "
 "different `work_unit_id`:"
 msgstr ""
-"Ningún comando aparte \"cambia\" la unidad de trabajo actual. El perfil "
-"activo es global, pero el trabajo de presentación se selecciona en cada "
-"comando. Para trabajar en otra presentación, pasa un objetivo visible "
-"distinto o pasa un `work_unit_id` distinto:"
+"Ninguna orden aparte \"cambia\" la declaración actual. El perfil activo "
+"es global, pero el trabajo de presentación se selecciona en cada orden. "
+"Para trabajar en otra presentación, pasa un objetivo visible distinto o "
+"pasa un `work_unit_id` distinto:"
 
-#: ../../how-to/filing-spine.md:119
-msgid "A calculation revision is one saved result"
-msgstr "Una revisión de cálculo es un resultado guardado"
+#: ../../how-to/filing-spine.md:122
+msgid "Each calculation is saved as one result"
+msgstr "Cada cálculo se guarda como un resultado"
 
-#: ../../how-to/filing-spine.md:121
+#: ../../how-to/filing-spine.md:124
 msgid ""
-"A calculation revision is one saved calculation result inside a work "
-"unit. It has its own reference number, the calculation-revision-id, which"
-" `calculate` creates and which is separate from the work-unit-id."
+"A saved calculation is one calculation result inside a declaration. It "
+"has its own reference number (the calculation-revision-id), which "
+"`calculate` creates and which is separate from the work-unit-id."
 msgstr ""
-"Una revisión de cálculo es un resultado de cálculo guardado dentro de una"
-" unidad de trabajo. Tiene su propio número de referencia, el calculation-"
-"revision-id, que crea `calculate` y que es distinto del work-unit-id."
-
-#: ../../how-to/filing-spine.md:125
-msgid ""
-"When you run `aeat app modelo work calculate`, Cadrumo saves a draft "
-"calculation revision, run by the chain sequence above."
-msgstr ""
-"Cuando ejecutas `aeat app modelo work calculate`, Cadrumo guarda una "
-"revisión de cálculo en borrador (la secuencia de la cadena de arriba la "
-"ejecuta)."
+"Un cálculo guardado es un resultado de cálculo dentro de una declaración."
+" Tiene su propio número de referencia (el calculation-revision-id), que "
+"crea `calculate` y que es distinto del work-unit-id."
 
 #: ../../how-to/filing-spine.md:128
 msgid ""
+"When you run `aeat app modelo work calculate`, Cadrumo saves a draft "
+"calculation, run by the chain sequence above."
+msgstr ""
+"Cuando ejecutas `aeat app modelo work calculate`, Cadrumo guarda un "
+"cálculo en borrador (la secuencia de la cadena de arriba la ejecuta)."
+
+#: ../../how-to/filing-spine.md:131
+msgid ""
 "Running calculation again does not overwrite the old result. Every saved "
-"calculation is immutable: earlier revisions stay on disk exactly as they "
-"were, identified by their exact contents, so you can compare revisions "
+"calculation is immutable: earlier calculations stay on disk exactly as "
+"they were, identified by their exact contents, so you can compare them "
 "and go back. If your transactions or manual values changed, the tool "
 "creates a new saved calculation alongside the old; if nothing changed, it"
 " reuses the same result. The tool updates your filing record to reflect "
-"the latest calculated draft. A saved revision is a record of one attempt,"
-" not a verdict: its numbers commit to nothing until you verify and file "
-"it."
+"the latest calculated draft. A saved calculation is a record of one "
+"attempt, not a verdict: its numbers commit you to nothing until you check"
+" it and record it as filed."
 msgstr ""
 "Volver a ejecutar el cálculo no sobrescribe el resultado anterior. Cada "
-"cálculo guardado es inmutable: las revisiones anteriores permanecen en "
-"disco tal como estaban, identificadas por su contenido exacto, así que "
-"puedes compararlas y volver atrás. Si tus transacciones o tus valores "
+"cálculo guardado es inmutable: los cálculos anteriores permanecen en "
+"disco tal como estaban, identificados por su contenido exacto, así que "
+"puedes compararlos y volver atrás. Si tus movimientos o tus valores "
 "manuales han cambiado, la herramienta crea un cálculo guardado nuevo "
 "junto al anterior; si no ha cambiado nada, reutiliza el mismo resultado. "
 "La herramienta actualiza tu registro de presentación para reflejar el "
-"último borrador calculado. Una revisión guardada es el registro de un "
+"último borrador calculado. Un cálculo guardado es el registro de un "
 "intento, no un veredicto: sus cifras no te comprometen a nada hasta que "
-"las verifiques y las presentes."
-
-#: ../../how-to/filing-spine.md:137
-msgid ""
-"List the saved calculation revisions for a filing with `aeat app modelo "
-"work revisions`, and show the current revision's persisted values with "
-"`aeat app modelo work revision` (the visible-target sequence above runs "
-"both)."
-msgstr ""
-"Enumera las revisiones de cálculo guardadas de una presentación con `aeat"
-" app modelo work revisions`, y muestra los valores persistidos de la "
-"revisión actual con `aeat app modelo work revision` (la secuencia del "
-"objetivo visible de arriba ejecuta ambas)."
+"lo compruebas y lo registras como presentado."
 
 #: ../../how-to/filing-spine.md:141
+msgid ""
+"List the saved calculations for a filing with `aeat app modelo work "
+"revisions`, and show the current calculation's saved values with `aeat "
+"app modelo work revision` (the visible-target sequence above runs both)."
+msgstr ""
+"Enumera los cálculos guardados de una presentación con `aeat app modelo "
+"work revisions`, y muestra los valores guardados del cálculo actual con "
+"`aeat app modelo work revision` (la secuencia del objetivo visible de "
+"arriba ejecuta ambas)."
+
+#: ../../how-to/filing-spine.md:145
 msgid ""
 "If you need to view one specific saved calculation, type its reference "
 "number after the command:"
@@ -337,95 +339,90 @@ msgstr ""
 "Si necesitas ver un cálculo guardado concreto, escribe su número de "
 "referencia después del comando:"
 
-#: ../../how-to/filing-spine.md:148
+#: ../../how-to/filing-spine.md:152
 msgid "Reference numbers to know:"
 msgstr "Números de referencia que conviene conocer:"
 
-#: ../../how-to/filing-spine.md:150
-msgid "the filing workspace reference - from `aeat app modelo work list`"
-msgstr ""
-"la referencia del espacio de trabajo de presentación: de `aeat app modelo"
-" work list`"
-
-#: ../../how-to/filing-spine.md:151
-msgid "the saved calculation reference - from `aeat app modelo work revisions`"
-msgstr "la referencia del cálculo guardado: de `aeat app modelo work revisions`"
-
-#: ../../how-to/filing-spine.md:152
-msgid "the rules version reference - shown in status output; you rarely need this"
-msgstr ""
-"la referencia de la versión de las reglas: se muestra en la salida de "
-"estado; rara vez la necesitas"
-
-#: ../../how-to/filing-spine.md:153
-msgid "a run reference - only appears when a command was interrupted mid-way"
-msgstr ""
-"una referencia de ejecución: solo aparece cuando un comando se "
-"interrumpió a medias"
+#: ../../how-to/filing-spine.md:154
+msgid "the declaration reference, from `aeat app modelo work list`"
+msgstr "la referencia de la declaración: de `aeat app modelo work list`"
 
 #: ../../how-to/filing-spine.md:155
-msgid "How verify, file, and export choose a revision"
-msgstr "Cómo eligen una revisión verify, file y export"
+msgid "the saved calculation reference, from `aeat app modelo work revisions`"
+msgstr "la referencia del cálculo guardado: de `aeat app modelo work revisions`"
+
+#: ../../how-to/filing-spine.md:156
+msgid "the rules version reference, shown in status output (you rarely need this)"
+msgstr ""
+"la referencia de la versión de las reglas, que se muestra en la salida de"
+" estado (rara vez la necesitas)"
 
 #: ../../how-to/filing-spine.md:157
-msgid ""
-"Most commands start from the visible filing target and then choose the "
-"relevant calculation revision under that work unit."
+msgid "a run reference, which only appears when a command was interrupted mid-way"
 msgstr ""
-"La mayoría de los comandos parten del objetivo de presentación visible y "
-"luego eligen la revisión de cálculo relevante dentro de esa unidad de "
-"trabajo."
+"una referencia de ejecución: solo aparece cuando una orden se interrumpió"
+" a medias"
 
 #: ../../how-to/filing-spine.md:160
+msgid "How `verify`, `file`, and `export` choose a saved calculation"
+msgstr "Cómo eligen un cálculo guardado `verify`, `file` y `export`"
+
+#: ../../how-to/filing-spine.md:162
 msgid ""
-"Verification defaults to the current draft revision; run it with `aeat "
+"Most commands start from the visible filing target and then choose the "
+"relevant saved calculation in that declaration."
+msgstr ""
+"La mayoría de las órdenes parten del objetivo de presentación visible y "
+"luego eligen el cálculo guardado pertinente dentro de esa declaración."
+
+#: ../../how-to/filing-spine.md:165
+msgid ""
+"The check defaults to the current draft calculation; run it with `aeat "
 "app modelo work verify` (the chain sequence above runs it)."
 msgstr ""
-"La verificación usa de forma predeterminada la revisión en borrador "
+"La comprobación usa de forma predeterminada el cálculo en borrador "
 "actual; ejecútala con `aeat app modelo work verify` (la secuencia de la "
 "cadena de arriba la ejecuta)."
 
-#: ../../how-to/filing-spine.md:163
-msgid "Local filing defaults to the current verified revision:"
+#: ../../how-to/filing-spine.md:168
+msgid "Recording a filing defaults to the current checked calculation:"
 msgstr ""
-"La presentación local usa de forma predeterminada la revisión verificada "
-"actual:"
+"El registro de la presentación usa de forma predeterminada el cálculo "
+"comprobado actual:"
 
-#: ../../how-to/filing-spine.md:169
+#: ../../how-to/filing-spine.md:174
 msgid ""
-"`work file` records a local filed marker. It does not submit anything to "
-"AEAT."
+"`work file` records the filing as filed in Cadrumo. It does not submit "
+"anything to AEAT."
 msgstr ""
-"`work file` registra un marcador de presentado local. No presenta nada "
-"ante la AEAT."
+"`work file` registra la presentación como presentada en Cadrumo. No "
+"presenta nada ante la AEAT."
 
-#: ../../how-to/filing-spine.md:171
+#: ../../how-to/filing-spine.md:176
 msgid ""
-"Export defaults to the filed revision if one exists. Otherwise, it uses "
-"the current verified revision; run it with `aeat app modelo export` (the "
-"chain sequence above runs it)."
+"Export defaults to the calculation recorded as filed, if one exists. "
+"Otherwise, it uses the current checked calculation; run it with `aeat app"
+" modelo export` (the chain sequence above runs it)."
 msgstr ""
-"La exportación usa de forma predeterminada la revisión presentada si "
-"existe alguna. En caso contrario, usa la revisión verificada actual; "
-"ejecútala con `aeat app modelo export` (la secuencia de la cadena de "
-"arriba la ejecuta)."
-
-#: ../../how-to/filing-spine.md:175
-msgid ""
-"Export refuses a plain draft. The upload file is the artefact that leaves"
-" the tool for AEAT, so it is built only from a revision that passed the "
-"completeness check (or one already recorded as filed) - the gate that "
-"stops an incomplete or inconsistent draft from becoming a filing by "
-"accident."
-msgstr ""
-"La exportación rechaza un borrador sin más. El fichero de subida es el "
-"artefacto que sale de la herramienta hacia la AEAT, así que solo se "
-"construye a partir de una revisión que ha superado la comprobación de "
-"completitud (o una ya registrada como presentada): la barrera que impide "
-"que un borrador incompleto o incoherente se convierta en una presentación"
-" por accidente."
+"La exportación usa de forma predeterminada el cálculo registrado como "
+"presentado, si existe alguno. En caso contrario, usa el cálculo "
+"comprobado actual; ejecútala con `aeat app modelo export` (la secuencia "
+"de la cadena de arriba la ejecuta)."
 
 #: ../../how-to/filing-spine.md:180
+msgid ""
+"Export refuses a plain draft. The upload file is the file you take to "
+"AEAT, so it is built only from a calculation that passed the completeness"
+" check (or one already recorded as filed). That rule stops an incomplete "
+"or inconsistent draft from becoming a filing by accident."
+msgstr ""
+"La exportación rechaza un borrador sin más. El fichero de subida es el "
+"fichero que llevas a la AEAT, así que solo se construye a partir de un "
+"cálculo que ha superado la comprobación de completitud (o uno ya "
+"registrado como presentado). Esa regla impide que un borrador incompleto "
+"o incoherente se convierta en una presentación por accidente."
+
+#: ../../how-to/filing-spine.md:185
 msgid ""
 "The `.boe` extension is a naming convention. The tool writes the file to "
 "the `--output` path you choose, in the modelo's official layout whatever "
@@ -442,27 +439,27 @@ msgstr ""
 " fichero existente salvo que añadas `--replace`. También se niega cuando "
 "el directorio de la ruta `--output` no existe."
 
-#: ../../how-to/filing-spine.md:187
+#: ../../how-to/filing-spine.md:192
 msgid "Each command automatically picks the most appropriate saved calculation:"
 msgstr "Cada comando elige automáticamente el cálculo guardado más apropiado:"
 
-#: ../../how-to/filing-spine.md:189
+#: ../../how-to/filing-spine.md:194
 msgid "`verify` uses the current draft, the one your latest calculation saved"
 msgstr "`verify` usa el borrador actual, el que guardó tu último cálculo"
 
-#: ../../how-to/filing-spine.md:190
-msgid "`file` uses the latest verified draft"
-msgstr "`file` usa el último borrador verificado"
+#: ../../how-to/filing-spine.md:195
+msgid "`file` uses the latest checked draft"
+msgstr "`file` usa el último borrador comprobado"
 
-#: ../../how-to/filing-spine.md:191
+#: ../../how-to/filing-spine.md:196
 msgid ""
-"`export` uses whichever was marked as filed; if none was filed, it uses "
-"the verified draft"
+"`export` uses whichever was recorded as filed; if none was recorded as "
+"filed, it uses the checked draft"
 msgstr ""
-"`export` usa el que se haya marcado como presentado; si no se presentó "
-"ninguno, usa el borrador verificado"
+"`export` usa el que se haya registrado como presentado; si no se registró"
+" ninguno como presentado, usa el borrador comprobado"
 
-#: ../../how-to/filing-spine.md:194
+#: ../../how-to/filing-spine.md:199
 msgid ""
 "If you need a different saved calculation, use `--select` with the "
 "visible target:"
@@ -470,59 +467,55 @@ msgstr ""
 "Si necesitas un cálculo guardado distinto, usa `--select` con el objetivo"
 " visible:"
 
-#: ../../how-to/filing-spine.md:201
+#: ../../how-to/filing-spine.md:206
 msgid "You can also pass exact IDs on commands that accept them:"
 msgstr "También puedes pasar IDs exactos en los comandos que los aceptan:"
 
-#: ../../how-to/filing-spine.md:207
+#: ../../how-to/filing-spine.md:212
 msgid "For the complete option list, see the [CLI reference](../cli/index.rst)."
 msgstr ""
 "Para la lista completa de opciones, consulta la [referencia de la "
 "CLI](../cli/index.rst)."
 
-#: ../../how-to/filing-spine.md:209
+#: ../../how-to/filing-spine.md:214
 msgid "Rename, discard, or review a filing's history"
 msgstr "Renombrar, descartar o revisar el historial de una presentación"
 
-#: ../../how-to/filing-spine.md:211
-msgid "Manage or review the lifecycle of a work unit as it progresses:"
-msgstr ""
-"Gestiona o revisa el ciclo de vida de una unidad de trabajo a medida que "
-"avanza:"
+#: ../../how-to/filing-spine.md:216
+msgid "Manage or review the lifecycle of a declaration as it progresses:"
+msgstr "Gestiona o revisa el ciclo de vida de una declaración a medida que avanza:"
 
-#: ../../how-to/filing-spine.md:213
-msgid "`rename`: Add or update a friendly display name for the work unit:"
-msgstr ""
-"`rename`: añade o actualiza un nombre descriptivo para la unidad de "
-"trabajo:"
+#: ../../how-to/filing-spine.md:218
+msgid "`rename`: Add or update a friendly display name for the declaration:"
+msgstr "`rename`: añade o actualiza un nombre descriptivo para la declaración:"
 
-#: ../../how-to/filing-spine.md:219
+#: ../../how-to/filing-spine.md:224
 msgid "`history`: Review all actions the tool has taken on this filing, in order:"
 msgstr ""
 "`history`: revisa todas las acciones que la herramienta ha realizado "
 "sobre esta presentación, en orden:"
 
-#: ../../how-to/filing-spine.md:225
+#: ../../how-to/filing-spine.md:230
 msgid ""
-"`discard`: Mark the filing workspace as discarded. The tool records this "
-"action in the history log. Use this if you created the workspace by "
-"mistake or want to replace it with a fresh one:"
+"`discard`: Mark the declaration as discarded. The tool records this "
+"action in the history log. Use this if you created it by mistake or want "
+"to replace it with a fresh one:"
 msgstr ""
-"`discard`: marca el espacio de trabajo de presentación como descartado. "
-"La herramienta registra esta acción en el historial. Usa esto si creaste "
-"el espacio de trabajo por error o quieres reemplazarlo por uno nuevo:"
+"`discard`: marca la declaración como descartada. La herramienta registra "
+"esta acción en el historial. Usa esto si la creaste por error o quieres "
+"reemplazarla por una nueva:"
 
-#: ../../how-to/filing-spine.md:233
+#: ../../how-to/filing-spine.md:236
 msgid "The `--reason` text is for your own records only. It is not sent to AEAT."
 msgstr ""
 "El texto de `--reason` es solo para tus propios registros. No se envía a "
 "la AEAT."
 
-#: ../../how-to/filing-spine.md:235
+#: ../../how-to/filing-spine.md:238
 msgid "Resume an interrupted filing"
 msgstr "Reanudar una presentación interrumpida"
 
-#: ../../how-to/filing-spine.md:237
+#: ../../how-to/filing-spine.md:240
 msgid ""
 "If a command was interrupted halfway through (for example, because your "
 "connection dropped while the tool was reading live AEAT data), you can "
@@ -532,13 +525,13 @@ msgstr ""
 "conexión mientras la herramienta leía datos de la AEAT en directo), "
 "puedes comprobarlo y reiniciarlo:"
 
-#: ../../how-to/filing-spine.md:241
-msgid "`runs`: List recent flow runs, from most recent to oldest:"
+#: ../../how-to/filing-spine.md:244
+msgid "`runs`: List recent runs, from most recent to oldest:"
 msgstr ""
-"`runs`: enumera las ejecuciones de flujo recientes, de la más reciente a "
-"la más antigua:"
+"`runs`: enumera las ejecuciones recientes, de la más reciente a la más "
+"antigua:"
 
-#: ../../how-to/filing-spine.md:247
+#: ../../how-to/filing-spine.md:250
 msgid ""
 "`resume`: Restart an interrupted command using the filing details or the "
 "reference number shown in the error message:"
@@ -547,19 +540,19 @@ msgstr ""
 "presentación o el número de referencia que se muestra en el mensaje de "
 "error:"
 
-#: ../../how-to/filing-spine.md:253
+#: ../../how-to/filing-spine.md:256
 msgid "When to use exact IDs"
 msgstr "Cuándo usar IDs exactos"
 
-#: ../../how-to/filing-spine.md:255
+#: ../../how-to/filing-spine.md:258
 msgid "Use modelo, year, and period for all normal work."
 msgstr "Usa modelo, año y periodo para todo el trabajo normal."
 
-#: ../../how-to/filing-spine.md:257
+#: ../../how-to/filing-spine.md:260
 msgid "Use the exact reference number when:"
 msgstr "Usa el número de referencia exacto cuando:"
 
-#: ../../how-to/filing-spine.md:259
+#: ../../how-to/filing-spine.md:262
 msgid ""
 "Cadrumo tells you that more than one filing matches the same modelo, "
 "year, and period (Cadrumo refuses to guess; it prints candidates for you "
@@ -569,11 +562,11 @@ msgstr ""
 " año y periodo (Cadrumo se niega a adivinar; imprime candidatos para que "
 "elijas)"
 
-#: ../../how-to/filing-spine.md:261
+#: ../../how-to/filing-spine.md:264
 msgid "you are replaying or inspecting one specific saved calculation"
 msgstr "estás reproduciendo o examinando un cálculo guardado concreto"
 
-#: ../../how-to/filing-spine.md:262
+#: ../../how-to/filing-spine.md:265
 msgid ""
 "support asks you to share the exact reference number from the command "
 "output"
@@ -581,46 +574,47 @@ msgstr ""
 "el soporte te pide que compartas el número de referencia exacto de la "
 "salida del comando"
 
-#: ../../how-to/filing-spine.md:264
+#: ../../how-to/filing-spine.md:267
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/filing-spine.md:266
+#: ../../how-to/filing-spine.md:269
 msgid ""
-"[Quickstart: prepare a modelo filing](quickstart.md) - the shortest path "
+"[Quickstart: produce a modelo file](quickstart.md): the shortest path "
 "from profile to exported file."
 msgstr ""
-"[Guía rápida: prepara la presentación de un modelo](quickstart.md): el "
-"camino más corto del perfil al fichero exportado."
+"[Inicio rápido: producir un fichero de modelo](quickstart.md): el camino "
+"más corto del perfil al fichero exportado."
 
-#: ../../how-to/filing-spine.md:268
+#: ../../how-to/filing-spine.md:271
 msgid ""
-"[Review and supply calculation inputs](review-calculation-values.md) - "
-"how to inspect saved values, missing bindings, and manual inputs."
+"[Review and supply calculation inputs](review-calculation-values.md): how"
+" to inspect saved values, missing values, and manual inputs."
 msgstr ""
 "[Revisar y aportar las entradas de cálculo](review-calculation-"
-"values.md): cómo examinar los valores guardados, los bindings que faltan "
-"y las entradas manuales."
+"values.md): cómo examinar los valores guardados, los valores que faltan y"
+" las entradas manuales."
 
-#: ../../how-to/filing-spine.md:270
+#: ../../how-to/filing-spine.md:273
 msgid ""
-"[Review calculations with Google Sheets](review-with-google-sheets.md) - "
+"[Review calculations with Google Sheets](review-with-google-sheets.md): "
 "how to inspect calculation workbooks outside the terminal."
 msgstr ""
-"[Revisar los cálculos con Google Sheets](review-with-google-sheets.md): "
-"cómo examinar los libros de cálculo fuera de la terminal."
+"[Revisar cálculos con Google Sheets](review-with-google-sheets.md): cómo "
+"examinar los libros de cálculo fuera del terminal."
 
-#: ../../how-to/filing-spine.md:272
+#: ../../how-to/filing-spine.md:275
 msgid ""
-"[Reconcile a filing](reconcile.md) - how to compare a filed modelo with "
-"its justificante."
+"[Reconcile a filed modelo against its AEAT receipt](reconcile.md): how to"
+" compare a filed modelo with its AEAT receipt."
 msgstr ""
-"[Conciliar una presentación](reconcile.md): cómo comparar un modelo "
-"presentado con su justificante."
+"[Conciliar un modelo presentado con tu justificante de la "
+"AEAT](reconcile.md): cómo comparar un modelo presentado con su "
+"justificante de la AEAT."
 
-#: ../../how-to/filing-spine.md:274
-msgid "[Command reference](../cli/index.rst) - exact flags and selector options."
+#: ../../how-to/filing-spine.md:277
+msgid "[Command reference](../cli/index.rst): exact flags and selector options."
 msgstr ""
-"[Referencia de comandos](../cli/index.rst): opciones exactas y opciones "
-"de selector."
+"[Referencia de órdenes](../cli/index.rst): opciones exactas y opciones de"
+" selector."
 

@@ -69,7 +69,10 @@ from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ....domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -218,7 +221,7 @@ def _persist_two_quarters_of_recargo_sales(
 
 
 def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
-    """A neutral (zero, non-blocking) IVA-wallet decision for the quarter."""
+    """A zero wallet balance backed by a timestamped synthetic capture for the quarter."""
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=_TAX_ID,
         target_year=_YEAR,
@@ -232,11 +235,20 @@ def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
         wallet_amount=Decimal("0.00"),
         local_recurrence_amount=None,
         override_amount=None,
-        divergence="match",
+        divergence="wallet_only",
         blocked=False,
         stale_wallet=False,
-        reason_identity="aeat_wallet_validated",
+        reason_identity="aeat_wallet_uncrosschecked",
         wallet_captured_at=_FILE_AT,
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="aeat_wallet",
+                amount=Decimal("0.00"),
+                source_locator=f"aeat-wallet:recargo-cross-period-synthetic-fixture:{period}",
+                captured_at=_FILE_AT,
+                registry_snapshot_refs=(),
+            ),
+        ),
         decided_at=_FILE_AT,
     )
 

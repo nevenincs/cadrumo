@@ -496,7 +496,7 @@ def _build_reconciliation_context(
         override=override,
         when=when,
         wallet_captured_at=wallet_captured_at,
-        stale_wallet=_is_wallet_stale(wallet_captured_at, when, max_wallet_age_days),
+        stale_wallet=is_wallet_stale(wallet_captured_at, when, max_wallet_age_days),
         authority_sources=_authority_sources(
             wallet=wallet,
             local_recurrence_amount=local_recurrence_amount,
@@ -889,11 +889,12 @@ def validate_wallet_matches_snapshot(
         )
 
 
-def _is_wallet_stale(
+def is_wallet_stale(
     captured_at: datetime | None,
     decided_at: datetime,
     max_wallet_age_days: int,
 ) -> bool:
+    """Apply the wallet capture age limit consistently during capture and replay."""
     if captured_at is None:
         return False
     if max_wallet_age_days < 0:
@@ -914,6 +915,7 @@ __all__ = [
     "IvaCompensationReconciliationDecision",
     "IvaCompensationWalletObservationProtocol",
     "LocalIvaCompensationRecurrenceProtocol",
+    "is_wallet_stale",
     "local_recurrence_authority_source",
     "reconcile_iva_compensation_wallet",
     "validate_wallet_matches_snapshot",

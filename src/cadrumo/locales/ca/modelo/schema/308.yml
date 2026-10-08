@@ -3,11 +3,137 @@ modelo:
     '308':
       casilla:
         continuidad:
+          declaracion-tipo:
+            label: Tipus de declaració
+          declarante-nombre:
+            label: Nom del sol·licitant
+          devolucion-bic:
+            label: Codi BIC / SWIFT
+          devolucion-ccc:
+            help: Codi de compte de client de 20 dígits d’aquesta edició històrica.
+              Conserva els zeros inicials.
+            label: Compte per a la devolució (CCC)
+          devolucion-iban:
+            label: Compte per a la devolució (IBAN)
           filing-period:
             help: Dada declarada al model 308, presa del disseny de registre oficial.
             label: Meritació. Període
           filing-year:
             label: Exercici a què es refereix la sol·licitud
+          mtn-adquirente-apellidos:
+            label: Cognoms o raó social de l’adquirent
+          mtn-adquirente-nif:
+            label: NIF de l’adquirent
+          mtn-adquirente-nombre:
+            label: Nom de l’adquirent
+          mtn-adquirente-nombre-completo:
+            help: Cognoms i nom o raó social de l’adquirent
+            label: Cognoms i nom o raó social de l’adquirent
+          mtn-adquirente-pais:
+            label: País de l’adquirent
+          mtn-aeronave-ano:
+            label: Any de fabricació de l’aeronau
+          mtn-aeronave-fabricante:
+            label: Fabricant de l’aeronau
+          mtn-aeronave-marca:
+            label: Marca de l’aeronau
+          mtn-aeronave-peso:
+            label: Pes màxim d’enlairament (kg)
+          mtn-aeronave-serie:
+            label: Número de sèrie de l’aeronau
+          mtn-embarcacion-eslora:
+            label: Eslora màxima
+          mtn-embarcacion-fabricante:
+            label: Fabricant de l’embarcació
+          mtn-embarcacion-identificacion:
+            label: Identificació de l’embarcació
+          mtn-embarcacion-tipo:
+            label: Tipus d’embarcació
+          mtn-iva-devolver-art21:
+            label: 'IVA a retornar: article 21.4 de la Llei de l’IVA'
+          mtn-iva-devolver-eib:
+            label: IVA a retornar per lliuraments intracomunitaris
+          mtn-iva-devolver-transporte:
+            label: IVA a retornar per l’activitat de transport
+          mtn-iva-soportado:
+            label: IVA suportat en l’adquisició
+          mtn-iva-soportado-art21:
+            label: 'IVA suportat: article 21.4 de la Llei de l’IVA'
+          mtn-maximo-devolver:
+            label: Import màxim a retornar
+          mtn-precio-adquisicion:
+            label: Preu d’adquisició
+          mtn-precio-venta:
+            label: Preu de venda
+          mtn-tipo-01:
+            label: Tipus d’IVA en l’adquisició (%)
+          mtn-tipo-04:
+            label: Tipus d’IVA en la venda (%)
+          mtn-vehiculo-bastidor:
+            label: Número de bastidor del vehicle
+          mtn-vehiculo-clasificacion:
+            label: Classificació del vehicle
+          mtn-vehiculo-marca:
+            label: Marca del vehicle
+          mtn-vehiculo-modelo:
+            label: Model del vehicle (denominació comercial)
+          mtn-vehiculo-tipo:
+            label: Tipus de vehicle
+          observaciones:
+            help: Observacions
+            label: Observacions
+          papel-declarante-apellidos:
+            label: Cognoms o raó social
+          papel-declarante-nif:
+            label: NIF del sol·licitant
+          papel-declarante-nombre-completo:
+            help: Cognoms i nom o raó social del sol·licitant
+            label: Cognoms i nom o raó social del sol·licitant
+          papel-firma:
+            help: Context de l’apartat 5 del formulari en paper. No acredita una signatura
+              electrònica ni la presentació de la sol·licitud.
+            label: Signatura (formulari en paper)
+          papel-firma-fecha:
+            help: Context de l’apartat 5 del formulari en paper. No acredita una signatura
+              electrònica ni la presentació de la sol·licitud.
+            label: Data de signatura
+          papel-firma-lugar:
+            help: Context de l’apartat 5 del formulari en paper. No acredita una signatura
+              electrònica ni la presentació de la sol·licitud.
+            label: Lloc de signatura
+          papel-importe-devolucion:
+            help: Import que sol·licites rebre per transferència a l’apartat 6 del
+              formulari. Comprova que correspon a la teva sol·licitud; les diferents
+              modalitats de devolució no se sumen automàticament.
+            label: Import D · Devolució sol·licitada
+          persona-contacto:
+            help: Persona de contacte
+            label: Persona de contacte
+          req-base-08:
+            label: Base imposable · línia 1
+          req-base-11:
+            label: Base imposable · línia 2
+          req-base-14:
+            label: Base imposable · línia 3
+          req-cuota-10:
+            label: Quota d’IVA · línia 1
+          req-cuota-13:
+            label: Quota d’IVA · línia 2
+          req-cuota-16:
+            label: Quota d’IVA · línia 3
+          req-iva-devolver-17:
+            label: IVA a retornar pel recàrrec d’equivalència
+          req-tipo-09:
+            label: Tipus d’IVA (%) · línia 1
+          req-tipo-12:
+            label: Tipus d’IVA (%) · línia 2
+          req-tipo-15:
+            label: Tipus d’IVA (%) · línia 3
+          telefono-contacto:
+            help: Telèfon de contacte
+            label: Telèfon de contacte
+          tipo-tributacion-sujeto-pasivo:
+            label: Tipus de tributació segons el subjecte passiu
       construct:
         modelo-308-iva-solicitud-devolucion:
           field:
@@ -18,153 +144,550 @@ modelo:
           21.4 de la Llei de l''IVA i subjectes passius ocasionals.'
         title: IVA. Sol·licitud de devolució (recàrrec d'equivalència, article 30
           bis, subjectes passius ocasionals)
+      form:
+        choice:
+          devolucion:
+            heading: Devolució
+          ocasional:
+            heading: Lliuraments intracomunitaris ocasionals de mitjans de transport
+              nous
+          recargo:
+            heading: Activitats exclusivament en recàrrec d’equivalència
+          social:
+            heading: Ens públic o establiment privat de caràcter social (art. 21.4
+              LIVA)
+          transporte:
+            heading: Transport de viatgers o mercaderies per carretera
+        column:
+          iva:
+            heading: IVA / màxim a retornar
+          precio:
+            heading: Preu
+        context:
+          nif:
+            heading: NIF del sol·licitant
+          nombre:
+            heading: Cognoms o raó social
+        row:
+          adquisicion:
+            heading: Adquisició
+          recargo-1:
+            heading: Línia 1
+          recargo-2:
+            heading: Línia 2
+          recargo-3:
+            heading: Línia 3
+          venta:
+            heading: Venda
+        section:
+          adquirente:
+            heading: Adquirent del mitjà de transport
+          aeronave:
+            heading: Aeronaus
+          articulo21:
+            heading: Lliuraments de l’article 21.4 de la Llei de l’IVA
+          embarcacion:
+            heading: Embarcacions
+          firma:
+            heading: 'Subjecte passiu: data i signatura'
+          identificacion:
+            heading: Identificació
+          liquidacion-transporte:
+            heading: Liquidació de mitjans de transport
+          recargo:
+            heading: Règim especial del recàrrec d’equivalència
+          solicitud:
+            heading: Sol·licitud de devolució
+          vehiculo:
+            heading: Vehicles terrestres
       revision:
         2009-2011-junio:
+          casilla:
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              help: NIF de l’adquirent. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2009.
+            x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              help: Nom del país de l’adquirent, segons el disseny oficial de 2009.
+            x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              help: Any de fabricació de l’aeronau. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2009.
+            x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: Fabricant de l’aeronau. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2009.
+            x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              help: Marca de l’aeronau. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2009.
+            x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              help: Pes màxim d’enlairament (kg). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2009.
+            x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              help: Número de sèrie de l’aeronau. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2009.
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: Eslora màxima. Dada de la sol·licitud del model 308, segons el
+                disseny oficial de 2009.
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: Fabricant de l’embarcació. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2009.
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: Identificació de l’embarcació. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2009.
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              help: Tipus d’embarcació. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2009.
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              help: IVA a retornar per lliuraments intracomunitaris. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2009.
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              help: IVA a retornar per l’activitat de transport. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2009.
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              help: IVA suportat en l’adquisició. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2009.
+            x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              help: Import màxim a retornar. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2009.
+            x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              help: Preu d’adquisició. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2009.
+            x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              help: Preu de venda. Dada de la sol·licitud del model 308, segons el
+                disseny oficial de 2009.
+            x-chim6r1edlq6sbbkd5o6ub9g64:
+              help: Tipus d’IVA en l’adquisició (%). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2009. Casella 02 del formulari.
+            x-chim6r1edlq6sbbkd5o6ub9g6g:
+              help: Tipus d’IVA en la venda (%). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2009. Casella 05 del formulari.
+            x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              help: Número de bastidor. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2009.
+            x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: Classificació del vehicle. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2009.
+            x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              help: Marca del vehicle. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2009.
+            x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              help: Model del vehicle (denominació comercial). Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2009.
+            x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              help: Tipus de vehicle. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2009.
+            x-chim6r1ee9in2bb2c5pmab9g70:
+              help: Base imposable · línia 1. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2009. Casella 08 del formulari.
+            x-chim6r1ee9in2bb2c5pmab9h64:
+              help: Base imposable · línia 2. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2009. Casella 11 del formulari.
+            x-chim6r1ee9in2bb2c5pmab9h6g:
+              help: Base imposable · línia 3. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2009. Casella 14 del formulari.
+            x-chim6r1ee9in2bb3elnn8o9d64o0:
+              help: Quota d’IVA · línia 1. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2009. Casella 10 del formulari.
+            x-chim6r1ee9in2bb3elnn8o9d64pg:
+              help: Quota d’IVA · línia 2. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2009. Casella 13 del formulari.
+            x-chim6r1ee9in2bb3elnn8o9d64r0:
+              help: Quota d’IVA · línia 3. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2009. Casella 16 del formulari.
+            x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              help: IVA a retornar pel recàrrec d’equivalència. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2009. Casella 17 del formulari.
+            x-chim6r1ee9in2bbkd5o6ub9g74:
+              help: Tipus d’IVA (%) · línia 1. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2009. Casella 09 del formulari.
+            x-chim6r1ee9in2bbkd5o6ub9h68:
+              help: Tipus d’IVA (%) · línia 2. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2009. Casella 12 del formulari.
+            x-chim6r1ee9in2bbkd5o6ub9h6k:
+              help: Tipus d’IVA (%) · línia 3. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2009. Casella 15 del formulari.
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Tipus de declaració. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2009.
           field:
             label: Model 308, exercicis 2009 a 2011, fins al juny de 2011
         2011-julio-2015:
+          casilla:
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              help: NIF de l’adquirent. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2011.
+            x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              help: Nom del país de l’adquirent, segons el disseny oficial de 2011.
+            x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              help: Any de fabricació de l’aeronau. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2011.
+            x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: Fabricant de l’aeronau. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2011.
+            x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              help: Marca de l’aeronau. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2011.
+            x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              help: Pes màxim d’enlairament (kg). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2011.
+            x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              help: Número de sèrie de l’aeronau. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2011.
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: Eslora màxima. Dada de la sol·licitud del model 308, segons el
+                disseny oficial de 2011.
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: Fabricant de l’embarcació. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2011.
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: Identificació de l’embarcació. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2011.
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              help: Tipus d’embarcació. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2011.
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
+              help: 'IVA a retornar: article 21.4 de la Llei de l’IVA. Dada de la
+                sol·licitud del model 308, segons el disseny oficial de 2011.'
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              help: IVA a retornar per lliuraments intracomunitaris. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2011.
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              help: IVA a retornar per l’activitat de transport. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2011.
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              help: IVA suportat en l’adquisició. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2011.
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
+              help: 'IVA suportat: article 21.4 de la Llei de l’IVA. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2011.'
+            x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              help: Import màxim a retornar. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2011.
+            x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              help: Preu d’adquisició. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2011.
+            x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              help: Preu de venda. Dada de la sol·licitud del model 308, segons el
+                disseny oficial de 2011.
+            x-chim6r1edlq6sbbkd5o6ub9g64:
+              help: Tipus d’IVA en l’adquisició (%). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2011. Casella 02 del formulari.
+            x-chim6r1edlq6sbbkd5o6ub9g6g:
+              help: Tipus d’IVA en la venda (%). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2011. Casella 05 del formulari.
+            x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              help: Número de bastidor. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2011.
+            x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: Classificació del vehicle. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2011.
+            x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              help: Marca del vehicle. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2011.
+            x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              help: Model del vehicle (denominació comercial). Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2011.
+            x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              help: Tipus de vehicle. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2011.
+            x-chim6r1ee9in2bb2c5pmab9g70:
+              help: Base imposable · línia 1. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2011. Casella 08 del formulari.
+            x-chim6r1ee9in2bb2c5pmab9h64:
+              help: Base imposable · línia 2. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2011. Casella 11 del formulari.
+            x-chim6r1ee9in2bb2c5pmab9h6g:
+              help: Base imposable · línia 3. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2011. Casella 14 del formulari.
+            x-chim6r1ee9in2bb3elnn8o9d64o0:
+              help: Quota d’IVA · línia 1. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2011. Casella 10 del formulari.
+            x-chim6r1ee9in2bb3elnn8o9d64pg:
+              help: Quota d’IVA · línia 2. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2011. Casella 13 del formulari.
+            x-chim6r1ee9in2bb3elnn8o9d64r0:
+              help: Quota d’IVA · línia 3. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2011. Casella 16 del formulari.
+            x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              help: IVA a retornar pel recàrrec d’equivalència. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2011. Casella 17 del formulari.
+            x-chim6r1ee9in2bbkd5o6ub9g74:
+              help: Tipus d’IVA (%) · línia 1. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2011. Casella 09 del formulari.
+            x-chim6r1ee9in2bbkd5o6ub9h68:
+              help: Tipus d’IVA (%) · línia 2. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2011. Casella 12 del formulari.
+            x-chim6r1ee9in2bbkd5o6ub9h6k:
+              help: Tipus d’IVA (%) · línia 3. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2011. Casella 15 del formulari.
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Tipus de declaració. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2011.
           field:
             label: Model 308, exercicis 2011 a 2015, des del juliol de 2011
         2016-2018:
+          casilla:
+            x-chim6r1echincrrcelhmirre5lh6ioo:
+              help: Codi BIC / SWIFT. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016.
+            x-chim6r1echincrrcelhmirre5lkm4obe:
+              help: Compte per a la devolució (IBAN). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
+              help: Cognoms o raó social de l’adquirent. Dada de la sol·licitud del
+                model 308, segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
+              help: NIF de l’adquirent. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016.
+            x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
+              help: Nom de l’adquirent. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016.
+            x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
+              help: País de l’adquirent. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016.
+            x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
+              help: Any de fabricació de l’aeronau. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: Fabricant de l’aeronau. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
+              help: Marca de l’aeronau. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016.
+            x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
+              help: Pes màxim d’enlairament (kg). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
+              help: Número de sèrie de l’aeronau. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: Eslora màxima. Dada de la sol·licitud del model 308, segons el
+                disseny oficial de 2016.
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: Fabricant de l’embarcació. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: Identificació de l’embarcació. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
+              help: Tipus d’embarcació. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016.
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
+              help: 'IVA a retornar: article 21.4 de la Llei de l’IVA. Dada de la
+                sol·licitud del model 308, segons el disseny oficial de 2016.'
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
+              help: IVA a retornar per lliuraments intracomunitaris. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
+              help: IVA a retornar per l’activitat de transport. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
+              help: IVA suportat en l’adquisició. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
+              help: 'IVA suportat: article 21.4 de la Llei de l’IVA. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2016.'
+            x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
+              help: Import màxim a retornar. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
+              help: Preu d’adquisició. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016.
+            x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
+              help: Preu de venda. Dada de la sol·licitud del model 308, segons el
+                disseny oficial de 2016.
+            x-chim6r1edlq6sbbkd5o6ub9g64:
+              help: Tipus d’IVA en l’adquisició (%). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2016. Casella 02 del formulari.
+            x-chim6r1edlq6sbbkd5o6ub9g6g:
+              help: Tipus d’IVA en la venda (%). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2016. Casella 05 del formulari.
+            x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
+              help: Número de bastidor. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016.
+            x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: Classificació del vehicle. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
+              help: Marca del vehicle. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016.
+            x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
+              help: Model del vehicle (denominació comercial). Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2016.
+            x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
+              help: Tipus de vehicle. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016.
+            x-chim6r1edpnmqojick:
+              help: Nom del sol·licitant. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016.
+            x-chim6r1ee9in2bb2c5pmab9g70:
+              help: Base imposable · línia 1. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2016. Casella 08 del formulari.
+            x-chim6r1ee9in2bb2c5pmab9h64:
+              help: Base imposable · línia 2. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2016. Casella 11 del formulari.
+            x-chim6r1ee9in2bb2c5pmab9h6g:
+              help: Base imposable · línia 3. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2016. Casella 14 del formulari.
+            x-chim6r1ee9in2bb3elnn8o9d64o0:
+              help: Quota d’IVA · línia 1. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016. Casella 10 del formulari.
+            x-chim6r1ee9in2bb3elnn8o9d64pg:
+              help: Quota d’IVA · línia 2. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016. Casella 13 del formulari.
+            x-chim6r1ee9in2bb3elnn8o9d64r0:
+              help: Quota d’IVA · línia 3. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016. Casella 16 del formulari.
+            x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
+              help: IVA a retornar pel recàrrec d’equivalència. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2016. Casella 17 del formulari.
+            x-chim6r1ee9in2bbkd5o6ub9g74:
+              help: Tipus d’IVA (%) · línia 1. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2016. Casella 09 del formulari.
+            x-chim6r1ee9in2bbkd5o6ub9h68:
+              help: Tipus d’IVA (%) · línia 2. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2016. Casella 12 del formulari.
+            x-chim6r1ee9in2bbkd5o6ub9h6k:
+              help: Tipus d’IVA (%) · línia 3. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2016. Casella 15 del formulari.
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Tipus de declaració. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2016.
+            x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
+              help: Tipus de tributació segons el subjecte passiu. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2016.
           field:
             label: Model 308, exercicis 2016 a 2018
         2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
-              help: Casella 966-976 del model 308, exercici 2009.
-              label: Devolució - SWIFT-BIC
+              help: Codi BIC / SWIFT. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019.
             x-chim6r1echincrrcelhmirre5lkm4obe:
-              help: Casella 932-965 del model 308, exercici 2009.
-              label: Devolució - IBAN
+              help: Compte per a la devolució (IBAN). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2019.
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
-              help: Casella 119-178 del model 308, exercici 2009.
-              label: NMT - Adquirent - Cognoms o Raó social
+              help: Cognoms o raó social de l’adquirent. Dada de la sol·licitud del
+                model 308, segons el disseny oficial de 2019.
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
-              help: Casella 110-118 del model 308, exercici 2009.
-              label: Mitjans de transport nous (NMT) - Adquirent - NIF
+              help: NIF de l’adquirent. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019.
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
-              help: Casella 179-198 del model 308, exercici 2009.
-              label: NMT - Adquirent - Nom
+              help: Nom de l’adquirent. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019.
             x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
-              help: Casella 199-200 del model 308, exercici 2009.
-              label: NMT - Adquirent - País
+              help: País de l’adquirent. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019.
             x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
-              help: Casella 638-641 del model 308, exercici 2009.
-              label: NMT - Aeronaus - Any de fabricació
+              help: Any de fabricació de l’aeronau. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2019.
             x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
-              help: Casella 496-535 del model 308, exercici 2009.
-              label: NMT - Aeronaus - Fabricant
+              help: Fabricant de l’aeronau. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2019.
             x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
-              help: Casella 536-615 del model 308, exercici 2009.
-              label: NMT - Aeronaus - Marca
+              help: Marca de l’aeronau. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019.
             x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
-              help: Casella 642-651 del model 308, exercici 2009.
-              label: NMT - Aeronaus - Pes màxim d'enlairament
+              help: Pes màxim d’enlairament (kg). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2019.
             x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
-              help: Casella 616-637 del model 308, exercici 2009.
-              label: NMT - Aeronaus - Núm. de sèrie
+              help: Número de sèrie de l’aeronau. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2019.
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
-              help: Casella 491-495 del model 308, exercici 2009.
-              label: NMT - Embarcacions - Eslora màxima
+              help: Eslora màxima. Dada de la sol·licitud del model 308, segons el
+                disseny oficial de 2019.
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
-              help: Casella 349-388 del model 308, exercici 2009.
-              label: NMT - Embarcacions - Fabricant
+              help: Fabricant de l’embarcació. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2019.
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
-              help: Casella 469-490 del model 308, exercici 2009.
-              label: NMT - Embarcacions - Identificació
+              help: Identificació de l’embarcació. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2019.
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
-              help: Casella 389-468 del model 308, exercici 2009.
-              label: NMT - Embarcacions - Tipus
+              help: Tipus d’embarcació. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019.
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
-              help: Casella 781-797 del model 308, exercici 2009.
-              label: NMT - Liquidació - IVA a retornar art. 21.4º, párrafo 2º LIVA
-                [20]
+              help: 'IVA a retornar: article 21.4 de la Llei de l’IVA. Dada de la
+                sol·licitud del model 308, segons el disseny oficial de 2019.'
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
-              help: Casella 730-746 del model 308, exercici 2009.
-              label: NMT - Liquidació - IVA a retornar per lliuraments intracomunitaris
-                [07]
+              help: IVA a retornar per lliuraments intracomunitaris. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2019.
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
-              help: Casella 747-763 del model 308, exercici 2009.
-              label: NMT - Liquidació - IVA a retornar per activitat de transport
-                [18]
+              help: IVA a retornar per l’activitat de transport. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2019.
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
-              help: Casella 674-690 del model 308, exercici 2009.
-              label: NMT - Liquidació - IVA suportat [03]
+              help: IVA suportat en l’adquisició. Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2019.
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
-              help: Casella 764-780 del model 308, exercici 2009.
-              label: NMT - Liquidació - IVA suportat art. 21.4º, párrafo 2º LIVA [19]
+              help: 'IVA suportat: article 21.4 de la Llei de l’IVA. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2019.'
             x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
-              help: Casella 713-729 del model 308, exercici 2009.
-              label: NMT - Liquidació - Màxim a retornar [06]
+              help: Import màxim a retornar. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2019.
             x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
-              help: Casella 652-668 del model 308, exercici 2009.
-              label: NMT - Liquidació - Preu d'adquisició [01]
+              help: Preu d’adquisició. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019.
             x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
-              help: Casella 691-707 del model 308, exercici 2009.
-              label: NMT - Liquidació - Preu de venda [04]
+              help: Preu de venda. Dada de la sol·licitud del model 308, segons el
+                disseny oficial de 2019.
             x-chim6r1edlq6sbbkd5o6ub9g64:
-              help: Casella 669-673 del model 308, exercici 2009.
-              label: NMT - Liquidació - Tipus (%) [02]
+              help: Tipus d’IVA en l’adquisició (%). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2019. Casella 02 del formulari.
             x-chim6r1edlq6sbbkd5o6ub9g6g:
-              help: Casella 708-712 del model 308, exercici 2009.
-              label: NMT - Liquidació - Tipus (%) [05]
+              help: Tipus d’IVA en la venda (%). Dada de la sol·licitud del model
+                308, segons el disseny oficial de 2019. Casella 05 del formulari.
             x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
-              help: Casella 321-342 del model 308, exercici 2009.
-              label: NMT - Vehicles - Núm. id. bastidor
+              help: Número de bastidor. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019.
             x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
-              help: Casella 343-348 del model 308, exercici 2009.
-              label: NMT - Vehicles - Classificació
+              help: Classificació del vehicle. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2019.
             x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
-              help: Casella 201-240 del model 308, exercici 2009.
-              label: NMT - Vehicles - Marca
+              help: Marca del vehicle. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019.
             x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
-              help: Casella 281-320 del model 308, exercici 2009.
-              label: NMT - Vehicles - Model (denominació comercial)
+              help: Model del vehicle (denominació comercial). Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2019.
             x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
-              help: Casella 241-280 del model 308, exercici 2009.
-              label: NMT - Vehicles - Tipus
+              help: Tipus de vehicle. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019.
             x-chim6r1edpnmqojick:
-              help: Casella 83-102 del model 308, exercici 2009.
-              label: Identificació - Nom
+              help: Nom del sol·licitant. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019.
             x-chim6r1ee9in2bb2c5pmab9g70:
-              help: Casella 798-814 del model 308, exercici 2009.
-              label: Règim Espec. recàrrec equival. (RERE) - Liquidació - Base Imposable
-                [08]
+              help: Base imposable · línia 1. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2019. Casella 08 del formulari.
             x-chim6r1ee9in2bb2c5pmab9h64:
-              help: Casella 837-853 del model 308, exercici 2009.
-              label: RERE - Liquidació - Base Imposable [11]
+              help: Base imposable · línia 2. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2019. Casella 11 del formulari.
             x-chim6r1ee9in2bb2c5pmab9h6g:
-              help: Casella 876-892 del model 308, exercici 2009.
-              label: RERE - Liquidació - Base Imposable [14]
+              help: Base imposable · línia 3. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2019. Casella 14 del formulari.
             x-chim6r1ee9in2bb3elnn8o9d64o0:
-              help: Casella 820-836 del model 308, exercici 2009.
-              label: RERE - Liquidació - Quota [10]
+              help: Quota d’IVA · línia 1. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019. Casella 10 del formulari.
             x-chim6r1ee9in2bb3elnn8o9d64pg:
-              help: Casella 859-875 del model 308, exercici 2009.
-              label: RERE - Liquidació - Quota [13]
+              help: Quota d’IVA · línia 2. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019. Casella 13 del formulari.
             x-chim6r1ee9in2bb3elnn8o9d64r0:
-              help: Casella 898-914 del model 308, exercici 2009.
-              label: RERE - Liquidació - Quota [16]
+              help: Quota d’IVA · línia 3. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019. Casella 16 del formulari.
             x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
-              help: Casella 915-931 del model 308, exercici 2009.
-              label: RERE - Liquidació - IVA a retornar [17]
+              help: IVA a retornar pel recàrrec d’equivalència. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2019. Casella 17 del formulari.
             x-chim6r1ee9in2bbkd5o6ub9g74:
-              help: Casella 815-819 del model 308, exercici 2009.
-              label: RERE - Liquidació - Tipus (%) [09]
+              help: Tipus d’IVA (%) · línia 1. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2019. Casella 09 del formulari.
             x-chim6r1ee9in2bbkd5o6ub9h68:
-              help: Casella 854-858 del model 308, exercici 2009.
-              label: RERE - Liquidació - Tipus (%) [12]
+              help: Tipus d’IVA (%) · línia 2. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2019. Casella 12 del formulari.
             x-chim6r1ee9in2bbkd5o6ub9h6k:
-              help: Casella 893-897 del model 308, exercici 2009.
-              label: RERE - Liquidació - Tipus (%) [15]
+              help: Tipus d’IVA (%) · línia 3. Dada de la sol·licitud del model 308,
+                segons el disseny oficial de 2019. Casella 15 del formulari.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Casella 13 del model 308, exercici 2009.
-              label: Tipus de declaració
+              help: Tipus de declaració. Dada de la sol·licitud del model 308, segons
+                el disseny oficial de 2019.
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
-              label: Tipus de sol·licitud (recàrrec d'equivalència / art. 30 bis /
-                art. 21.4 / subjecte passiu ocasional / règim simplificat de transport)
+              label: Motiu de la sol·licitud
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
-              help: Casella 109 del model 308, exercici 2009.
-              label: Tipus de tributació segons el subjecte passiu
+              help: Tipus de tributació segons el subjecte passiu. Dada de la sol·licitud
+                del model 308, segons el disseny oficial de 2019.
           field:
             label: Model 308, exercicis 2019 i següents

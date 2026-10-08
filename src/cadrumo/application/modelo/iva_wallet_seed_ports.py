@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
@@ -34,8 +35,8 @@ class ModeloIvaWalletSeedPorts:
 class ModeloIvaWalletSeedPortsFactory(Protocol):
     """Construct the IVA-wallet seed authorities for one profile bucket."""
 
-    def __call__(self, *, bucket_id: str) -> ModeloIvaWalletSeedPorts:
-        """Return the complete IVA-wallet seed bundle for ``bucket_id``."""
+    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloIvaWalletSeedPorts:
+        """Return the wallet bundle for one bucket and its held authority operation."""
         ...
 
 

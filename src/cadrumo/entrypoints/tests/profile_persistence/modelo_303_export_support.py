@@ -29,7 +29,7 @@ from ....adapters.persistence.storage.runtime_repository import secure_object_re
 from ....application.calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.calculation_actions import calculate_modelo_revision
-from ....application.modelo.verification_actions import verify_modelo_revision
+from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.config import Settings
@@ -63,6 +63,7 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.verification_report import VerificationReport
 from ....tests.env_scope import ready_clave_settings
 from .file_flow_test_support import calculation_ports_for_test
 from .verification_repository_support import (
@@ -252,6 +253,7 @@ def _seed_modelo_303_1t_clean_state(
     *,
     bucket_id: str,
     taxpayer_tax_id: str,
+    available_compensation: Decimal = Decimal("800.00"),
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
@@ -278,6 +280,7 @@ def _seed_modelo_303_1t_clean_state(
     )
     assert source_casilla_ids, "Modelo 303 2T fixture must declare a 1T filed-history dependency"
     values = {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casilla_ids)}
+    values["iva.compensacion-disponible-fin-periodo"] = available_compensation
     values, source_headers = modelo_303_filed_disposition(
         values,
         source_locator="modelo-303-2026-1T:declaration-type",
@@ -313,11 +316,9 @@ def _seed_modelo_303_1t_clean_state(
     # reference, and the advanced work-unit pointers.
     filed_at = datetime(2026, 5, 21, 11, 1, tzinfo=UTC)
     filed_by = "aeat-import-test"
-    # Deliberately None, exactly as the import verb persisted it: absent
-    # filing-instance evidence is what marks this revision as EXTERNALLY
-    # imported AEAT evidence rather than an app-produced local filing. Supplying
-    # real evidence here reclassifies the period as a local recurrence and
-    # changes the wallet reconciliation outcome these tests assert.
+    # This revision represents imported AEAT evidence. The validated observation
+    # envelope below independently grounds the prior-period carry, so its amount
+    # must agree with the wallet whenever the fixture expects verification.
     prior_filing_instance_evidence = None
     prior_observations = external_filing_observations(
         casilla_values=values,
@@ -433,20 +434,28 @@ def _wallet_decision_repository_at(sidecar_root: Path) -> tuple[IvaWalletDecisio
     return IvaWalletDecisionRepository(objects=objects), settings
 
 
-def build_verified_modelo_303_revision(
+def calculate_and_verify_modelo_303_revision(
     *,
     positive_result: bool = False,
     negative_result: bool = False,
     casilla_111: Decimal | None = None,
+    autoconsumo_promotor_base: Decimal | None = None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[
     str,
     str,
+    VerificationReport,
     CalculationRevision,
     WorkUnitCatalogueRepository,
     CalculationRevisionCatalogueRepository,
     BucketEventHistoryRepository,
 ]:
+    """Calculate one 2026 2T Modelo 303 revision and run the real verify gate over it.
+
+    The report is returned whatever it grants, so a caller can assert a refusal;
+    the revision is reloaded after verification so it carries the state the
+    gate left it in.
+    """
     taxpayer_nif = _synthetic_valid_nif(12_345_678)
     bucket_id = _seed_profile(
         tax_id=taxpayer_nif,
@@ -477,6 +486,8 @@ def build_verified_modelo_303_revision(
         binding_values["modelo-303-iva-repercutido-general-cuota"] = Decimal("2400.00")
     if negative_result:
         binding_values["modelo-303-iva-soportado-interiores-cuota"] = Decimal("2000.00")
+    if autoconsumo_promotor_base is not None:
+        binding_values["modelo-303-autoconsumo-promotor-base"] = autoconsumo_promotor_base
 
     casilla_inputs = {
         "iva.prorrata-volumen-con-derecho": Decimal("100.00"),
@@ -509,13 +520,14 @@ def build_verified_modelo_303_revision(
     _seed_modelo_303_1t_clean_state(
         bucket_id=bucket_id,
         taxpayer_tax_id=taxpayer_nif,
+        available_compensation=Decimal("1200.00"),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         bucket_event_repository=event_repo,
         operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
-        report = verify_modelo_revision(
+        report = verify_modelo_revision_with_preconditions(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
@@ -525,7 +537,32 @@ def build_verified_modelo_303_revision(
             clock=datetime(2026, 5, 21, 12, 2, tzinfo=UTC),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
-    assert report.granted_verificado_completo is True
+        ).report
     verified = calc_repo.load().revisions[revision.calculation_revision_id]
+    return taxpayer_nif, bucket_id, report, verified, work_repo, calc_repo, event_repo
+
+
+def build_verified_modelo_303_revision(
+    *,
+    positive_result: bool = False,
+    negative_result: bool = False,
+    casilla_111: Decimal | None = None,
+    operation: PinnedAuthorityOperation,
+) -> tuple[
+    str,
+    str,
+    CalculationRevision,
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    BucketEventHistoryRepository,
+]:
+    taxpayer_nif, bucket_id, report, verified, work_repo, calc_repo, event_repo = (
+        calculate_and_verify_modelo_303_revision(
+            positive_result=positive_result,
+            negative_result=negative_result,
+            casilla_111=casilla_111,
+            operation=operation,
+        )
+    )
+    assert report.granted_verificado_completo is True, report.model_dump_json(indent=2)
     return taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo

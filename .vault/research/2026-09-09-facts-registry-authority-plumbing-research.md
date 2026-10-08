@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#facts-registry'
 date: '2026-09-09'
-modified: '2026-09-09'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:d75a36135218f134e0e0c3f306f301416546652f1fd7a1e1992a91d1cc472ce7'
+body_hash: 'sha256:90bffa9f52e8f050d17312c83ed5bb95fdc4424a1b3231436e322eb3b8a1183d'
 related: []
 ---
 
@@ -36,19 +36,17 @@ Registry identity currently concatenates core, treaty, and annual-Orden
 /blocking collectors explicitly at
 `src/cadrumo/domain/calculations/registry/authority.py:67`. The base fingerprint
 walk covers authorization, legal, modelos, and profile schema but omits current
-IVA, category, and calendar directories at
-`src/cadrumo/domain/calculations/registry/_loader_internals.py:977`. A single
+IVA, category, and calendar directories . A single
 provider registry should derive compiler enrollment, fingerprint collection,
 validation, reset hooks, and directory ownership. A top-level census should
 refuse an unowned governed directory.
 
 ### Validation memoization is a correctness trap
 
-`RegistryValidator` retains legal, source, and supported-year inputs at
-`src/cadrumo/domain/calculations/registry/_validate.py:78`; its cache keys do not
+`RegistryValidator` retains legal, source, and supported-year inputs ; its cache keys do not
 know about a future facts facet. Registry validation memoization likewise keys
 existing catalogue identities at
-`src/cadrumo/domain/calculations/registry/_validation_memoization.py:19`.
+
 Adding facts to the data model without adding their identity to both memo
 layers could reuse a green verdict for a different fact catalogue.
 
@@ -91,8 +89,6 @@ under the same barrier as authority generations.
 - `src/cadrumo/domain/calculations/registry/authority.py:433`
 - `src/cadrumo/domain/calculations/registry/authority.py:1038`
 - `src/cadrumo/domain/calculations/registry/authority.py:1093`
-- `src/cadrumo/domain/calculations/registry/_loader_internals.py:977`
-- `src/cadrumo/domain/calculations/registry/_validate.py:78`
-- `src/cadrumo/domain/calculations/registry/_validation_memoization.py:19`
+
 - `src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py:19`
 - `src/cadrumo/domain/iva/rates.py:194`

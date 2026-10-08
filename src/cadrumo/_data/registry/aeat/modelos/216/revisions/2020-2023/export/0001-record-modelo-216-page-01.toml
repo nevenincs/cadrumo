@@ -1,0 +1,359 @@
+[[revisions.2020-2023.export_layouts]]
+id = 'generated-modelo-216-2020-2023-fichero'
+
+[[revisions.2020-2023.export_layouts.records]]
+id = 'modelo-216-page-01'
+record_type = 'page_01'
+order = 0
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-open'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-modelo'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '216'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-page'
+offset = 6
+length = 5
+kind = 'literal'
+literal = '01000'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-end'
+offset = 11
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-complementaria-page-indicator'
+offset = 12
+length = 1
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-tipo-autoliquidacion'
+offset = 13
+length = 1
+kind = 'header'
+producer_key = 'filing.result_disposition'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-nif'
+offset = 14
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-apellidos'
+offset = 23
+length = 60
+kind = 'header'
+producer_key = 'taxpayer.surnames_or_legal_name'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-nombre'
+offset = 83
+length = 20
+kind = 'header'
+producer_key = 'taxpayer.given_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-devengo-ejercicio'
+offset = 103
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = true
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-devengo-periodo'
+offset = 107
+length = 2
+kind = 'draft'
+draft_attribute = 'period_code'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-casilla-1'
+offset = 109
+length = 17
+kind = 'casilla'
+casilla_id = '1'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-casilla-2'
+offset = 126
+length = 17
+kind = 'casilla'
+casilla_id = '2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-casilla-3'
+offset = 143
+length = 17
+kind = 'casilla'
+casilla_id = '3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-casilla-4'
+offset = 160
+length = 17
+kind = 'casilla'
+casilla_id = '4'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-casilla-5'
+offset = 177
+length = 17
+kind = 'casilla'
+casilla_id = '5'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-casilla-6'
+offset = 194
+length = 17
+kind = 'casilla'
+casilla_id = '6'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-casilla-7'
+offset = 211
+length = 17
+kind = 'casilla'
+casilla_id = '7'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-iban'
+offset = 228
+length = 34
+kind = 'header'
+producer_key = 'selected_account.iban'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-complementaria'
+offset = 262
+length = 1
+kind = 'header'
+producer_key = 'amendment_evidence.is_complementaria'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-complementaria-justificante'
+offset = 263
+length = 13
+kind = 'header'
+producer_key = 'amendment_evidence.original_aeat_receipt'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-reserved-aeat'
+offset = 276
+length = 100
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-sello-electronico'
+offset = 376
+length = 13
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[[revisions.2020-2023.export_layouts.records.fields]]
+id = 'modelo-216-page-01-close'
+offset = 389
+length = 12
+kind = 'literal'
+literal = '</T21601000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3290-2008:art-1']
+source_refs = ['aeat-dr-216-2020-2023']
+
+[revisions.2020-2023.export_layouts.records.row_field_casilla_ids]

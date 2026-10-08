@@ -38,7 +38,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
-from ....domain.iva.recargo_equivalencia import recargo_rate_for_applied_rate
+from ....domain.iva.recargo_equivalencia import recargo_rate_record_for_applied_rate
 from ....domain.iva.schema import IvaCategory
 from .._modelo_bindings_invoice_iva import (
     _recargo_rate_divergence,
@@ -172,11 +172,15 @@ def test_the_table_silence_branch_is_defensive_and_currently_unreachable() -> No
     December 2024 window, and the table declines outside it.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        assert recargo_rate_for_applied_rate(
+        pairing = recargo_rate_record_for_applied_rate(
             Decimal("0.02"), date(2024, 11, 15), operation=_authority_operation_for_test
-        ) == Decimal("0.0026")
+        )
+        assert pairing is not None
+        assert pairing.recargo_rate == Decimal("0.0026")
         assert (
-            recargo_rate_for_applied_rate(Decimal("0.02"), date(2025, 6, 15), operation=_authority_operation_for_test)
+            recargo_rate_record_for_applied_rate(
+                Decimal("0.02"), date(2025, 6, 15), operation=_authority_operation_for_test
+            )
             is None
         )
 

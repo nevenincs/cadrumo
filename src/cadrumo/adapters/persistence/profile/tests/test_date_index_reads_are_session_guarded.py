@@ -46,6 +46,8 @@ from ..transactions import TransactionCatalogueRepository
 if TYPE_CHECKING:
     from pathlib import Path
 
+from .date_index_inventory import _all_date_index_rows
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
@@ -75,7 +77,7 @@ def test_the_raw_index_read_refuses_when_the_session_serves_another_bucket(tmp_p
         repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
 
         with activate_session(_foreign_session()), pytest.raises(StorageValidationError) as raised:
-            repository._all_date_index_rows()
+            _all_date_index_rows(repository)
 
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
 
@@ -90,6 +92,6 @@ def test_the_same_read_succeeds_under_its_own_session(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
 
-        rows = repository._all_date_index_rows()
+        rows = _all_date_index_rows(repository)
 
     assert rows == {}

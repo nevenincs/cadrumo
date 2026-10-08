@@ -186,6 +186,7 @@ def _pull_the_m130_history(
         bucket_id=bucket_id,
         output_root=output_root,
         objects=objects,
+        operation=published_authority_operation(),
     )
     return tuple(
         persist_filed_calculation_observation(_synthetic_register_row(period), ports=ports) for period in _M130_QUARTERS

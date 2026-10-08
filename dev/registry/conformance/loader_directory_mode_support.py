@@ -8,7 +8,6 @@ from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
 
-from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
@@ -60,38 +59,6 @@ def committed_registry_modelos() -> tuple[ModeloDefinition, ...]:
     """Load all bundled modelo definitions for registry conformance tests."""
     modelos, _catalogues = load_registry_tree(committed_registry_root())
     return modelos
-
-
-@cache
-def committed_modelo_toml_paths() -> tuple[Path, ...]:
-    """Return every bundled modelo TOML path."""
-    return scan_directory(committed_modelos_dir(), pattern="*.toml", recursive=True)
-
-
-@cache
-def committed_toml_paths_by_modelo_id() -> dict[str, tuple[Path, ...]]:
-    """Group bundled TOML paths by modelo identifier."""
-    paths_by_modelo_id: dict[str, list[Path]] = {}
-    modelos_dir = committed_modelos_dir()
-    for path in committed_modelo_toml_paths():
-        relative = path.relative_to(modelos_dir)
-        if len(relative.parts) < 3 or relative.parts[1] != "revisions":
-            continue
-        paths_by_modelo_id.setdefault(relative.parts[0], []).append(path)
-    return {modelo_id: tuple(sorted(paths)) for modelo_id, paths in paths_by_modelo_id.items()}
-
-
-@cache
-def committed_toml_paths_by_fragment_revision() -> dict[tuple[str, str], tuple[Path, ...]]:
-    """Group bundled fragment paths by modelo and revision."""
-    paths_by_revision: dict[tuple[str, str], list[Path]] = {}
-    modelos_dir = committed_modelos_dir()
-    for path in committed_modelo_toml_paths():
-        relative = path.relative_to(modelos_dir)
-        if len(relative.parts) < 4 or relative.parts[1] != "revisions" or relative.parts[2].endswith(".toml"):
-            continue
-        paths_by_revision.setdefault((relative.parts[0], relative.parts[2]), []).append(path)
-    return {revision_key: tuple(sorted(paths)) for revision_key, paths in paths_by_revision.items()}
 
 
 def standard_manifest_text(_description: str) -> str:

@@ -26,11 +26,12 @@ from typing import Final, NamedTuple
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.travel_agency_mediation import require_travel_agency_mediation
 from ..iva.classification import InvoiceKind, TransactionKind
 from ..iva.oss import OssIossRegime, require_oss_ioss_regime
-from ..iva.schema import EUMemberState, IvaCategory, require_eu_member_state
+from ..iva.schema import EUMemberState, IvaCategory
 from .enums import (
     InvoiceClass,
     InvoiceLegalMention,
@@ -131,6 +132,7 @@ _STRING_FIELD_RULES: Final[tuple[_StringFieldRule, ...]] = (
     _StringFieldRule("recipient_address", absent_when_blank=True),
     _StringFieldRule("exemption_reference", absent_when_blank=True),
     _StringFieldRule("rectifies_invoice_number", uppercase=True, absent_when_blank=True),
+    _StringFieldRule("referencia_catastral", uppercase=True, absent_when_blank=True),
 )
 
 
@@ -147,23 +149,25 @@ def _coerce_enum_field(payload: dict[str, object], rule: _EnumFieldRule) -> None
     if not isinstance(effective_date, date):
         effective_date = today_madrid()
     try:
-        payload[rule.field] = (
-            require_oss_ioss_regime(text)
-            if rule.enum is OssIossRegime
-            else TransactionKind(text)
-            if rule.enum is TransactionKind
-            else require_eu_member_state(text)
-            if rule.enum is EUMemberState
-            else require_iva_category(text, effective_date=effective_date)
-            if rule.enum is IvaCategory
-            else require_invoice_class(text, effective_date=effective_date)
-            if rule.enum is InvoiceClass
-            else require_invoice_operation_date_role(text, effective_date=effective_date)
-            if rule.enum is InvoiceOperationDateRole
-            else rule.enum(text)
-        )
+        payload[rule.field] = _coerce_enum_value(rule, text, effective_date=effective_date)
     except (RegistryValidationError, TypeError, ValueError) as exc:
         raise InvoiceValidationError(rule.message) from exc
+
+
+def _coerce_enum_value(rule: _EnumFieldRule, text: str, *, effective_date: date) -> object:
+    if rule.enum is OssIossRegime:
+        return require_oss_ioss_regime(text)
+    if rule.enum is TransactionKind:
+        return TransactionKind(text)
+    if rule.enum is EUMemberState:
+        return require_eu_member_state(text)
+    if rule.enum is IvaCategory:
+        return require_iva_category(text, effective_date=effective_date)
+    if rule.enum is InvoiceClass:
+        return require_invoice_class(text, effective_date=effective_date)
+    if rule.enum is InvoiceOperationDateRole:
+        return require_invoice_operation_date_role(text, effective_date=effective_date)
+    return rule.enum(text)
 
 
 def _coerce_legal_mentions(payload: dict[str, object]) -> None:

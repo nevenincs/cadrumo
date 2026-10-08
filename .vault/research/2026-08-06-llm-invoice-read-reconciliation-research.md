@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#llm-invoice-read-reconciliation'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:31f45ff479848fbf5df0f95f50749f36122c5c0dce9d87267cc20dd5bf62a89b'
+body_hash: 'sha256:d715f29d8e6591123f48c8c697d726d955752746b6af68a7340aa5d1562b220f'
 related: []
 ---
 # `llm-invoice-read-reconciliation` research: `What the evidence-read path does and does not know about the invoice model`
@@ -22,7 +22,7 @@ these axes at all, and what it costs the taxpayer either way. Every claim below 
 measured by running the real path against real encrypted storage, not read off the source.
 
 The short answer: it never implemented them. `InvoiceDraft`
-(`src/cadrumo/application/ledger/_evidence_draft.py:192`) carries eight fields -- supplier
+ carries eight fields -- supplier
 tax id, invoice number, invoice date, taxable base, IVA rate, IVA amount, grand total,
 currency -- and has no counterpart for any axis added since. This is not decay; the reader
 was built for a simpler `Invoice` and the model moved past it.
@@ -44,19 +44,19 @@ so the coherence guard added by `e173f8e493` degrades all of them.
 
 The guard itself is correct: a record with no declared category genuinely cannot be
 decomposed, because field nullness cannot distinguish "this component does not exist in
-law" from "nobody recorded it" (`src/cadrumo/domain/invoices/_decomposition.py:1`). What is
+law" from "nobody recorded it" . What is
 missing is the data-entry surface that would let an operator satisfy it. The guard shipped
 ahead of its input.
 
 A closed rate-to-category mapping already exists: `classify_invoice_line_for_iva`
-(`src/cadrumo/domain/iva/_invoice_classification.py:158`) derives an `IvaCategory`, a flow
+ derives an `IvaCategory`, a flow
 direction and a rate kind from `(iva_rate, invoice_kind)`, and `build_catalogue_invoice`
 already holds both inputs.
 
 It is NOT idle capacity, and an earlier draft of this document said it was. The mapping is
 consumed in production through `invoice_line_to_iva_observation`
 (same file, line 221, which calls it at line 267), which
-`src/cadrumo/application/aggregation/_modelo_bindings.py:1097` calls to build the
+the former source file calls to build the
 invoice-derived Modelo 303 observations. The error came from a symbol sweep that excluded
 the mapping's own package and so never saw the intermediate hop; the module's own docstring
 states the consumer chain plainly. Recorded because the wrong conclusion is the more
@@ -79,7 +79,7 @@ confirmed invoice persisted `grand_total = 121.00` with `recargo_amount = None`.
 the supplier repercuted under LIVA art. 161 vanished, with no diagnostic anywhere.
 
 The derivation is not the fault. `build_catalogue_invoice`
-(`src/cadrumo/application/invoices/_creation.py:94`) computes the total as base plus a
+ computes the total as base plus a
 registry-resolved cuota and never reads the draft's `grand_total` or `iva_amount`, which is
 precisely what the regulated-number discipline requires. The fault is that the disagreement
 between printed and derived totals was thrown away. The governing constraint anticipated
@@ -91,7 +91,7 @@ only.
 
 The same discarded figure is the only available signal for two further silent
 under-declarations on this path. `_resolve_iva_rate_slot(None)` resolves to
-`IvaRate.EXEMPT` (`src/cadrumo/application/invoices/_creation.py:74`), so a rate the reader
+`IvaRate.EXEMPT` , so a rate the reader
 could not recover mints a zero-cuota invoice whose printed total still shows the cuota that
 was charged. A misread base propagates into the derived total the same way. All three are
 detectable at zero cost, because the derived total is arithmetically fixed at base plus
@@ -104,10 +104,10 @@ make the recargo capturable: the confirm path still has nowhere to put it.
 
 ### The reader cannot identify the counterparty on an issued invoice
 
-`_find_supplier_tax_id` (`src/cadrumo/application/ledger/_evidence_draft.py:256`) returns
+`_find_supplier_tax_id`  returns
 the first checksum-valid Spanish tax id in document order, with no label anchoring -- no
 attempt to locate "Cliente:", "Destinatario:", "Facturar a:" or "Emisor:". The vision prompt
-(`src/cadrumo/application/ledger/_evidence_draft_vision.py:76`) is a module-level constant
+ is a module-level constant
 taking no direction argument, and instructs the model to return the supplier's NIF/NIE/CIF
 exactly as printed. `confirm_invoice_draft_from_evidence` never passes its `kind` down to
 extraction, so direction is structurally unavailable to the reader even though the caller
@@ -133,7 +133,7 @@ taxpayer's first signal is a discrepancy notice.
 
 The purchase shaping runs through the surrounding surface as well: the evidence record
 carries no direction field and excludes one from its id derivation
-(`src/cadrumo/application/ledger/_evidence.py:123`), its counterparty slot is named
+, its counterparty slot is named
 `supplier`, the `evidence extract` verb has no `--kind` option, and the review hint the CLI
 prints after an extract hardcodes `--kind received`
 (`src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py:322`). No issued-direction test
@@ -147,7 +147,7 @@ that matters is concentrated in counterparty identification.
 
 ### The regulated-number constraint has a gap on the standalone-invoice path
 
-`_VisionExtractedFields` (`src/cadrumo/application/ledger/_evidence_draft_vision.py:98`)
+`_VisionExtractedFields`
 declares `taxable_base`, `iva_rate` and `iva_amount` as model-emitted fields. The governing
 constraint states that the response schema must make it structurally impossible for the
 model to emit those three, and adds that evidence reading does not relax this.
@@ -183,7 +183,7 @@ than as separate incidents:
   the expense and OSS paths still unchecked;
 - `route_invoice_retenciones`, dead while its plan step was marked done;
 - `simplificada_requires_tax_id_for_domestic_issuer`
-  (`src/cadrumo/application/invoices/_issuer_establishment.py`), landed in commit
+  , landed in commit
   `b721701389` and exported through the package facade with no caller within the hour.
 
 Three, not four. `classify_invoice_line_for_iva` was counted here in an earlier draft and
@@ -193,7 +193,7 @@ instance added to it -- the fourth instance was the least verified and the only 
 which is the failure mode of arguing by accumulation.
 
 A fifth is the mirror shape rather than another instance: `SELF_SUPPLY_ART_9_1_D`
-(`src/cadrumo/core/_prorrata_exclusions.py:54`) documents itself as auto-derived from the
+ documents itself as auto-derived from the
 IVA category, against an `IvaCategory` member that does not exist -- a consumer wired to an
 absent producer. A check keyed on "exported with no caller" would not catch it.
 
@@ -217,21 +217,21 @@ member represents it.
 
 ## Sources
 
-- `src/cadrumo/application/ledger/_evidence_draft.py:192` -- `InvoiceDraft` field set
-- `src/cadrumo/application/ledger/_evidence_draft.py:256` -- unanchored tax-id first-match
-- `src/cadrumo/application/ledger/_evidence_draft.py:491` -- `_agreed_counterparty_tax_id`
-- `src/cadrumo/application/ledger/_evidence_draft_vision.py:76` -- direction-free prompt
-- `src/cadrumo/application/ledger/_evidence_draft_vision.py:98` -- `_VisionExtractedFields`
-- `src/cadrumo/application/ledger/_evidence.py:123` -- evidence record without direction
-- `src/cadrumo/application/invoices/_creation.py:74` -- `_resolve_iva_rate_slot`
-- `src/cadrumo/application/invoices/_creation.py:94` -- `build_catalogue_invoice`
-- `src/cadrumo/application/invoices/_issuer_establishment.py` -- unconsumed predicate
-- `src/cadrumo/domain/invoices/_decomposition.py:1` -- decomposition contract rationale
-- `src/cadrumo/domain/iva/_invoice_classification.py:78` -- domestic-only rate mapping
-- `src/cadrumo/domain/iva/_invoice_classification.py:158` -- `classify_invoice_line_for_iva`
-- `src/cadrumo/domain/iva/_invoice_classification.py:221` -- `invoice_line_to_iva_observation`
-- `src/cadrumo/application/aggregation/_modelo_bindings.py:1097` -- its production caller
-- `src/cadrumo/core/_prorrata_exclusions.py:54` -- `SELF_SUPPLY_ART_9_1_D`
+- the former source file -- `InvoiceDraft` field set
+- the former source file -- unanchored tax-id first-match
+- the former source file -- `_agreed_counterparty_tax_id`
+- the former source file -- direction-free prompt
+- the former source file -- `_VisionExtractedFields`
+- the former source file -- evidence record without direction
+- the former source file -- `_resolve_iva_rate_slot`
+- the former source file -- `build_catalogue_invoice`
+- the former source file -- unconsumed predicate
+- the former source file -- decomposition contract rationale
+- the former source file -- domestic-only rate mapping
+- the former source file -- `classify_invoice_line_for_iva`
+- the former source file -- `invoice_line_to_iva_observation`
+- the former source file -- its production caller
+- the former source file -- `SELF_SUPPLY_ART_9_1_D`
 - `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py:132` -- sole category assigner
 - `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py:322` -- hardcoded `--kind received`
 - commit `bf2a0c880a` -- recargo joins the totals identity

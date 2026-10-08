@@ -17,13 +17,31 @@ from pydantic import ValidationError
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IrpfIncomeCategory, IVARegime
 
+from ....core.aggregation import ThirdPartyDeclarationRole
 from ....core.calendar_shift import shift_by_calendar_years
-from ....domain.calculations.registry.applicability import ApplicabilityVerdict
-from ....domain.deadlines.models import TaxpayerProfile
+from ....domain.calculations.registry.applicability import (
+    ApplicabilityVerdict,
+    ModeloApplicabilityExclusion,
+    ModeloApplicabilityRule,
+)
+from ....domain.calculations.registry.applicability_payer_facts import PayerFactProjection
+from ....domain.contribuyente.entity_type import LegalEntityForm
+from ....domain.deadlines.models import (
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloEnrollment,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
 from ....domain.deadlines.recargo import twelve_month_anniversary
 from ....domain.retention.floor import retention_floor_years
 from ..errors import OverviewExplainError
-from ..explain import OverviewExplain, _out_of_plazo_warning, build_overview_explain
+from ..explain import (
+    OverviewExplain,
+    _out_of_plazo_warning,
+    applicability_profile_fact_keys,
+    build_overview_explain,
+)
 from .calendar_test_support import profile as _autonomo_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -272,3 +290,113 @@ def test_out_of_plazo_warning_delegates_its_date_arithmetic() -> None:
         "the four-year horizon must be read from the grounded retention "
         f"constant, not written as a literal; referenced names were {referenced}"
     )
+
+
+_SII_PAYER_FACT = PayerFactProjection(
+    "iva_books_kept_through_sii",
+    profile_keys=("iva.sii_enrolled", "iva.voluntary_sii_enrolled", "enrollment.large_company"),
+    label="lleva los libros registro del IVA a través del SII",
+    legal_refs=("rd-1065-2007:art-32",),
+    three_state=True,
+)
+
+
+def _rule_with(*exclusions: ModeloApplicabilityExclusion) -> ModeloApplicabilityRule:
+    return ModeloApplicabilityRule(
+        modelo="347",
+        applicable_entity_types=frozenset({EntityType.from_registry("legal_entity")}),
+        applicable_reason="applies",
+        not_applicable_reason="does not apply",
+        exclusions=exclusions,
+        legal_refs=("rd-1065-2007:art-31",),
+    )
+
+
+def test_rule_fact_keys_include_what_only_an_exclusion_reads() -> None:
+    """An exclusion's payer-fact keys and its role condition are inputs to the verdict."""
+
+    rule = _rule_with(
+        ModeloApplicabilityExclusion(
+            id="sii",
+            outcome=ApplicabilityVerdict.NOT_APPLICABLE,
+            payer_fact=_SII_PAYER_FACT,
+            reason="excluded",
+            legal_refs=("rd-1065-2007:art-32",),
+        ),
+        ModeloApplicabilityExclusion(
+            id="collector",
+            outcome=ApplicabilityVerdict.INCOMPLETE,
+            declaration_roles=frozenset({ThirdPartyDeclarationRole.from_registry("third_party_fee_collector")}),
+            reason="undetermined",
+            legal_refs=("rd-1065-2007:art-32",),
+        ),
+    )
+
+    assert applicability_profile_fact_keys(rule) == (
+        "entity_type",
+        "iva.sii_enrolled",
+        "iva.voluntary_sii_enrolled",
+        "enrollment.large_company",
+        "declaration_roles",
+    )
+
+
+def test_rule_fact_keys_without_exclusions_name_no_exclusion_inputs() -> None:
+    keys = applicability_profile_fact_keys(_rule_with())
+
+    assert keys == ("entity_type",)
+
+
+def _sii_sociedad(**facts: object) -> TaxpayerProfile:
+    return TaxpayerProfile.model_validate(
+        {
+            "tax_id": "B12345674",
+            "entity_type": EntityType.from_registry("legal_entity"),
+            "legal_entity_form": LegalEntityForm.from_registry("sl"),
+            "iva_regime": IVARegime("GENERAL"),
+            "third_party_transactions_above_347_threshold": True,
+            "iva": ModeloIVAProfile(
+                tax_territory=M303TaxTerritory.from_registry("COMMON_REGIME"),
+                regime_composition=M303RegimeComposition.from_registry("GENERAL"),
+                sii_enrolled=True,
+                redeme_enrolled=False,
+                cash_accounting_regime_enrolled=False,
+                voluntary_sii_enrolled=False,
+                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            ),
+            **facts,
+        },
+    )
+
+
+def test_explain_lists_the_facts_that_decide_347_for_an_sii_filer() -> None:
+    """RGAT art. 32.e excludes SII filers; explain must show every flag that establishes it."""
+
+    result = build_overview_explain(_sii_sociedad(), modelo="347", year=2025)
+
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert result.profile_facts["iva.sii_enrolled"] is True
+    assert result.profile_facts["iva.voluntary_sii_enrolled"] is False
+    assert result.profile_facts["iva.redeme_enrolled"] is False
+    assert result.profile_facts["enrollment.large_company"] is False
+    assert result.profile_facts["declaration_roles"] == ""
+    assert result.profile_facts["third_party_transactions_above_347_threshold"] is True
+
+
+def test_explain_renders_declared_347_roles_as_tokens() -> None:
+    profile = _sii_sociedad(
+        declaration_roles=frozenset({ThirdPartyDeclarationRole.from_registry("third_party_fee_collector")}),
+        enrollment=ModeloEnrollment(large_company=True),
+    )
+
+    result = build_overview_explain(profile, modelo="347", year=2025)
+
+    assert result.profile_facts["declaration_roles"] == "third_party_fee_collector"
+    assert result.profile_facts["enrollment.large_company"] is True
+
+
+def test_explain_of_a_modelo_without_exclusions_omits_347_exclusion_inputs() -> None:
+    result = build_overview_explain(_sii_sociedad(), modelo="303", year=2025)
+
+    assert "iva.sii_enrolled" not in result.profile_facts
+    assert "declaration_roles" not in result.profile_facts

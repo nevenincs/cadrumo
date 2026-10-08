@@ -1,14 +1,13 @@
 """The ``perf`` cohort's placement and ownership across the CI contract paths.
 
-``dev/packaging/tests/test_perf_gate_policy.py`` asks these questions of
-``dev/packaging/tests`` and only that directory. This file asks them of the
-three directories the CI contract lane runs, because the blind spot between
-them was not theoretical: all three CPU budgets in
+Asked of the three directories the CI contract lane runs, because the blind
+spot here was not theoretical: all three CPU budgets in
 ``test_ledger_scale_benchmark.py`` carried ``serial`` and no ``perf``, so the
 merge gate's serial leg selected them and asserted a calibrated CPU ceiling on
 a runner ``.github/ci-control-plane.md`` documents as shared with other
-tenants. Both ownership gates stayed green throughout, because neither looks
-here.
+tenants. The packaging ownership gates in
+``dev/packaging/tests/test_preflight_recipe_selection.py`` stayed green
+throughout, because neither looks here.
 
 The reading that would have caught it is the first one below, and it is the
 reason this file exists rather than a second copy of the placement checks: a
@@ -32,16 +31,6 @@ doing its job rather than an exemption list. An exemption list is what this
 file refuses to grow: every entry in one is a defect somebody decided not to
 fix, and the next reader cannot tell those from the ones that were genuinely
 fine.
-
-The overlap with the packaging file is DELIBERATE and was decided rather than
-overlooked. Two files asking the same questions of different trees catch
-distinct failures, which is the justification the quality gates require for
-overlapping coverage; the cost is maintenance, not detection. Sharing the
-machinery would mean a new module both can import, and that placement decision
-is not worth taking while this rule is still young -- it has already been
-corrected once, to require that the module actually read a clock. Revisit when
-a third directory needs the same policy, or when the two files' rules diverge
-in a way nobody intended.
 """
 
 from __future__ import annotations
@@ -56,7 +45,9 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..lane_reachability import Lane, declared_lanes, expression_selects, marker_sets_in
+from ..lane_contracts import Lane
+from ..lane_marker_inventory import expression_selects, marker_sets_in
+from ..lane_reachability import declared_lanes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -104,11 +95,9 @@ def _budget_constants(tree: ast.Module) -> frozenset[str]:
     return frozenset(names)
 
 
-#: Calls that read a clock. A constant named for seconds is a TIME budget only
-#: in a module that measures time -- ``test_ci_workflow.py`` declares
-#: ``_HARNESS_WALL_CEILING_SECONDS`` and asserts it against a recipe string and
-#: an ini value, which is configuration agreement and not a measurement, so
-#: requiring both conditions is what keeps this rule from reporting it.
+#: Calls that read a clock. A constant named for seconds can describe
+#: configuration alone. Requiring a clock read prevents configuration
+#: agreement assertions from being treated as performance measurements.
 _CLOCK_READS: Final[frozenset[str]] = frozenset({"process_time", "perf_counter", "monotonic"})
 
 #: The canonical home for load-immune measurement. A module that imports from

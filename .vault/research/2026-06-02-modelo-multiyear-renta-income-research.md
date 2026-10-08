@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#modelo-multiyear-renta-income'
 date: '2026-06-02'
-modified: '2026-07-17'
-body_hash: 'sha256:25c3821b4e8afb3fe1e437bc16ca050ff71e7d95c78214cdf47b1607b8cf0cb6'
+modified: '2026-10-03'
+body_hash: 'sha256:3c7dc7de427ad489cf1d1a663c08a33fec90e1cf0f0815418d5d74bc319f9af0'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
 ---
@@ -24,7 +24,6 @@ corpus and registry (RAG for discovery, `rg` and direct file reads for verificat
 
 ### Proven binding template (Modelo 130) — the shape every hook re-uses
 
-`src/aeat/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/0002-bindings.toml`
 declares a `source = "previous_filing"` binding with a selector of the form
 `{ source_modelo, filing_year_delta, period, source_casillas }` plus
 `aggregation = { op = "sum" }`, `legal_refs`, `source_refs`, and a `source_citations`
@@ -37,7 +36,7 @@ registry-authoring + formula work; **no resolver code is needed**.
 
 ### M200 — BIN compensation cross-year (highest value, fully grounded)
 
-Legal anchor confirmed in `src/aeat/_data/registry/aeat/legal/is.toml`: the
+Legal anchor confirmed : the
 `ley-27-2014:art-26` entry (reviewed, `reviewed_by = "operator"`) carries `corpus_ref`
 `corpus/normatives/html/ley-27-2014-art-26.html#a26`, the `notes` describing the 70%
 limit, the €1M absolute floor, and the 10-year prescription, and `required_text` anchors
@@ -77,7 +76,7 @@ so the cap calculation is groundable and non-tautological.
 
 ### M100 — savings-base loss carryforward (grounded at summary strength; flag resolved)
 
-Legal anchor: `ley-35-2006:art-49` in `src/aeat/_data/registry/aeat/legal/irpf.toml`
+Legal anchor: `ley-35-2006:art-49`
 (reviewed), `corpus_ref` `corpus/normatives/ley-35-2006.json#art-49`, `notes` binding it to
 the savings base and casillas 0429-0460, `required_text` anchors `"integración y
 compensación"`, `"base imponible del ahorro"`, `"saldos negativos"`.
@@ -162,6 +161,6 @@ M200 is not due until July:
   oracle; (b) M202 1/P year-offset is `-2` (confirmed), so the per-period delta must be
   encoded explicitly rather than assumed `-1` across the board.
 - Cross-renta primitives are already tested at both layers — domain
-  `src/aeat/domain/calculations/registry/test_modelo_130_registry.py` and application
+  the former source file and application
   `test_modelo_130_carry_forward_continuity.py` — so each enrollment E2E mirrors both layers
   by cloning the M130 continuity tests.

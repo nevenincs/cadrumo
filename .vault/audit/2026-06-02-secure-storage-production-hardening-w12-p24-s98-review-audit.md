@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:a25f190233550e903ecc973645e62c8d183cebdaf71e3b09bc76b2195d929808'
+modified: '2026-10-03'
+body_hash: 'sha256:da19c50a17196eacd336748042f2630e9c6517d9e91582c26a777cfa531710a5'
 related: []
 ---
 
@@ -16,8 +16,8 @@ related: []
 
 Validation evidence:
 
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/storage/_mirror_manifest.py src/aeat/adapters/outbound/storage/test_mirror_manifest.py src/aeat/adapters/outbound/storage/test_mirror_adverse_conditions.py src/aeat/entrypoints/cli/_config/test_google_sync_push.py` passed.
-- `uv run --no-sync pytest src/aeat/adapters/outbound/storage/test_mirror_manifest.py src/aeat/adapters/outbound/storage/test_mirror_adverse_conditions.py src/aeat/entrypoints/cli/_config/test_google_sync_push.py -q` passed with 24 tests.
+- the historical check passed.
+- the historical check passed with 24 tests.
 
 Residual tracking:
 

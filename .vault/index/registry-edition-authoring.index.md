@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-edition-authoring'
 date: '2026-09-09'
-modified: '2026-09-15'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:86b251752d955ee483d86effc4002fcb4ad89a6826d7b546a8e8bc14ebe3a17a'
+body_hash: 'sha256:a62f66b2773bfa58873ea61ecf4671831cb2833b017162cfcb58fb1e0b569153'
 related:
   - '[[2026-09-09-registry-edition-authoring-adr]]'
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
@@ -17,7 +17,6 @@ related:
   - '[[2026-09-13-registry-edition-authoring-completion-controls-audit]]'
   - '[[2026-09-14-registry-edition-authoring-continuity-enrollment-review-audit]]'
   - '[[2026-09-14-registry-edition-authoring-continuity-evidence-audit]]'
-  - '[[2026-09-14-registry-edition-authoring-excluded-family-delta-contract-research]]'
   - '[[2026-09-14-registry-edition-authoring-lane1-generalized-collapse-review-audit]]'
   - '[[2026-09-14-registry-edition-authoring-maintained-tooling-boundary-reference]]'
   - '[[2026-09-14-registry-edition-authoring-migration-gate-coupling-audit]]'
@@ -80,4 +79,3 @@ Auto-generated index of all documents tagged with `#registry-edition-authoring`.
 
 - `2026-09-09-registry-edition-authoring-edition-restatement-measurement-research` - `registry-edition-authoring` research: `edition restatement measurement`
 - `2026-09-09-registry-edition-authoring-registry-mechanics-audit-research` - `registry-edition-authoring` research: `registry mechanics audit`
-- `2026-09-14-registry-edition-authoring-excluded-family-delta-contract-research` - `registry-edition-authoring` research: `Excluded family delta fixtures and measurements`

@@ -3,45 +3,15 @@ tags:
   - '#plan'
   - '#obligation-coverage-completeness'
 date: '2026-06-30'
-modified: '2026-07-17'
-body_hash: 'sha256:8ede649f26edff767b4d58661d90457fd03bb181ec5f3e600c4750d15fb626d3'
 tier: L2
 related:
   - '[[2026-06-30-obligation-coverage-completeness-adr]]'
   - '[[2026-06-30-obligation-coverage-completeness-research]]'
+modified: '2026-10-03'
+body_hash: 'sha256:17c92b318980888ce8a82ffac9806bfd977f630781bb4de287c989152fb9c2a9'
 ---
 
 # `obligation-coverage-completeness` plan
-
-### Phase `P01` - structural coverage closure
-
-Reconcile the full registry modelo set against the surfaced obligations and surface a default advisory so no obligation is silently dropped.
-
-- [x] `P01.S01` - Add the OUT_OF_SCOPE_OBLIGATIONS central declaration; `src/aeat/core/_modelo.py`.; `src/aeat/core/_modelo.py`.
-- [x] `P01.S02` - Implement the build_obligation_coverage reconciliation; `src/aeat/application/overview/_coverage.py`.; `src/aeat/application/overview/_coverage.py`.
-- [x] `P01.S03` - Attach the coverage report to the calendar, agenda, and backlog read models.; `src/aeat/application/overview/_calendar.py`.
-- [x] `P01.S04` - Project the coverage advisory as a default-visible Notice on calendar, agenda, and backlog.; `src/aeat/entrypoints/cli/_overview.py`.
-- [x] `P01.S05` - Add the coverage-completeness invariant test.; `src/aeat/application/overview/tests/test_obligation_coverage.py`.
-
-### Phase `P02` - grounded promotions and locale
-
-Upgrade advised obligations to surfaced by authoring windows and seed rules with legal grounding, and complete the locale catalogue entry.
-
-- [x] `P02.S06` - Author the Modelo 190 annual deadline window with legal grounding verified against the bundled corpus.; `src/aeat/_data/registry/aeat/modelos/190`.
-- [x] `P02.S07` - Disposition the class-C window-but-no-seed modelos as seed rules or advisories.; `src/aeat/domain/calculations/registry/_applicability.py`.
-- [x] `P02.S08` - Scaffold the cli.overview.coverage.investigate locale key across the four catalogues once the peer duplicate key clears.; `src/aeat/locales`.
-
-### Phase `P03` - external universe gate and enrollment ratchet
-
-Bind the coverage invariant to the AEAT obligation universe so recognized-but-unmodeled obligations surface as advised, and harden the out-of-scope hatch.
-
-- [x] `P03.S09` - Add UNMODELED_OBLIGATIONS and grow the Modelo enum with recognized-unmodeled obligations (117, 216, 296) carried in NON_REGISTRY_MODELOS.; `src/aeat/core/_modelo.py`.
-- [x] `P03.S10` - Bind the reconciliation to the AEAT universe (registry union unmodeled) and advise unmodeled obligations with the REGISTRY_UNMODELED reason.; `src/aeat/application/overview/_coverage.py`.
-- [x] `P03.S11` - Harden the out-of-scope hatch with a gate asserting it cannot silence an applicability-decidable modelo.; `src/aeat/application/overview/tests/test_obligation_coverage.py`.
-- [x] `P03.S12` - Emit per-profile coverage advisories on the calendar --all-profiles surface.; `src/aeat/entrypoints/cli/_overview.py`.
-- [x] `P03.S13` - Ratchet UNMODELED_OBLIGATIONS toward AEATs full form set and promote each to a grounded registry definition.; `src/aeat/_data/registry/aeat/modelos`.
-- [x] `P03.S14` - Wire coverage onto overview status, explain, and the undeclared-profile path.; `src/aeat/entrypoints/cli/_overview.py`.
-- [x] `P03.S15` - Wire coverage onto the undeclared-profile path so it reconciles the full universe instead of returning empty.; `src/aeat/application/overview/_calendar.py`.
 
 ## Description
 
@@ -57,6 +27,36 @@ require, and completes the locale catalogue entry once an unrelated peer duplica
 key clears. The advisory already prevents silent under-filing in the interim.
 
 ## Steps
+
+### Phase `P01` - structural coverage closure
+
+Reconcile the full registry modelo set against the surfaced obligations and surface a default advisory so no obligation is silently dropped.
+
+- [x] `P01.S01` - Add the OUT_OF_SCOPE_OBLIGATIONS central declaration; `src/cadrumo/domain/calculations/registry/modelo_obligation_scope.py`.; `src/cadrumo/domain/calculations/registry/modelo_obligation_scope.py`.
+- [x] `P01.S02` - Implement the build_obligation_coverage reconciliation; `src/cadrumo/application/overview/coverage.py`.; `src/cadrumo/application/overview/coverage.py`.
+- [x] `P01.S03` - Attach the coverage report to the calendar, agenda, and backlog read models.; `src/cadrumo/application/overview/calendar.py`.
+- [x] `P01.S04` - Project the coverage advisory as a default-visible Notice on calendar, agenda, and backlog.; `src/cadrumo/entrypoints/cli/_overview.py`.
+- [x] `P01.S05` - Add the coverage-completeness invariant test.; `src/cadrumo/application/overview/tests/test_obligation_coverage.py`.
+
+### Phase `P02` - grounded promotions and locale
+
+Upgrade advised obligations to surfaced by authoring windows and seed rules with legal grounding, and complete the locale catalogue entry.
+
+- [x] `P02.S06` - Author the Modelo 190 annual deadline window with legal grounding verified against the bundled corpus.; `src/aeat/_data/registry/aeat/modelos/190`.
+- [x] `P02.S07` - Disposition the class-C window-but-no-seed modelos as seed rules or advisories.; `src/cadrumo/domain/calculations/registry/applicability.py`.
+- [x] `P02.S08` - Scaffold the cli.overview.coverage.investigate locale key across the four catalogues once the peer duplicate key clears.; `src/aeat/locales`.
+
+### Phase `P03` - external universe gate and enrollment ratchet
+
+Bind the coverage invariant to the AEAT obligation universe so recognized-but-unmodeled obligations surface as advised, and harden the out-of-scope hatch.
+
+- [x] `P03.S09` - Add UNMODELED_OBLIGATIONS and grow the Modelo enum with recognized-unmodeled obligations (117, 216, 296) carried in NON_REGISTRY_MODELOS.; `src/cadrumo/domain/calculations/registry/modelo_obligation_scope.py`.
+- [x] `P03.S10` - Bind the reconciliation to the AEAT universe (registry union unmodeled) and advise unmodeled obligations with the REGISTRY_UNMODELED reason.; `src/cadrumo/application/overview/coverage.py`.
+- [x] `P03.S11` - Harden the out-of-scope hatch with a gate asserting it cannot silence an applicability-decidable modelo.; `src/cadrumo/application/overview/tests/test_obligation_coverage.py`.
+- [x] `P03.S12` - Emit per-profile coverage advisories on the calendar --all-profiles surface.; `src/cadrumo/entrypoints/cli/_overview.py`.
+- [x] `P03.S13` - Ratchet UNMODELED_OBLIGATIONS toward AEATs full form set and promote each to a grounded registry definition.; `src/aeat/_data/registry/aeat/modelos`.
+- [x] `P03.S14` - Wire coverage onto overview status, explain, and the undeclared-profile path.; `src/cadrumo/entrypoints/cli/_overview.py`.
+- [x] `P03.S15` - Wire coverage onto the undeclared-profile path so it reconciles the full universe instead of returning empty.; `src/cadrumo/application/overview/calendar.py`.
 
 ## Parallelization
 

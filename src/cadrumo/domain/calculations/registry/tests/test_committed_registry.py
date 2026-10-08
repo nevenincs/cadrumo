@@ -16,7 +16,6 @@ from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..export import resolve_export_layout
 from ..export_parse import parse_export_payload
 from ..formula_runtime import calculate_registry_snapshot
-from ..relations import resolve_relation_values
 from ..schema import RegistrySnapshot
 from .authored_editions import authored_revisions
 from .published_authority import (
@@ -24,6 +23,7 @@ from .published_authority import (
     published_authored_revision,
     published_supported_filing_years,
 )
+from .relation_fixture import resolve_relation_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -51,7 +51,6 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
         ),
         date_context={"filing_period": date(2026, 3, 31)},
         binding_values={
-            "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("6000"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
@@ -423,13 +422,13 @@ _MODELO_180_EXPECTED_CASILLAS: tuple[tuple[CasillaId, object], ...] = (
     _expected_casilla_value("perc.nif", "12345678Z"),
     _expected_casilla_value("perc.nif-representante-legal", "87654321X"),
     _expected_casilla_value("perc.nombre", "ARRENDADOR EJEMPLO"),
-    _expected_casilla_value("perc.provincia", "28"),
-    _expected_casilla_value("perc.modalidad", "1"),
+    _expected_casilla_value("perc.provincia", Decimal("28")),
+    _expected_casilla_value("perc.modalidad", Decimal("1")),
     _expected_casilla_value("perc.base", Decimal("-25.00")),
     _expected_casilla_value("perc.porcentaje-retencion", Decimal("0.00")),
     _expected_casilla_value("perc.retenciones", Decimal("4.75")),
     _expected_casilla_value("perc.ejercicio-devengo", Decimal("2025")),
-    _expected_casilla_value("perc.situacion-inmueble", "1"),
+    _expected_casilla_value("perc.situacion-inmueble", Decimal("1")),
     _expected_casilla_value("perc.referencia-catastral", "1234567VK4713C0001XY"),
     _expected_casilla_value("perc.inmueble-tipo-via", "CL"),
     _expected_casilla_value("perc.inmueble-nombre-via", "CALLE MAYOR"),
@@ -445,7 +444,7 @@ _MODELO_180_EXPECTED_CASILLAS: tuple[tuple[CasillaId, object], ...] = (
     _expected_casilla_value("perc.inmueble-localidad", "MADRID"),
     _expected_casilla_value("perc.inmueble-municipio", "MADRID"),
     _expected_casilla_value("perc.inmueble-codigo-municipio", "28079"),
-    _expected_casilla_value("perc.inmueble-provincia", "28"),
+    _expected_casilla_value("perc.inmueble-provincia", Decimal("28")),
     _expected_casilla_value("perc.inmueble-codigo-postal", "28013"),
 )
 
@@ -479,6 +478,24 @@ def _modelo_180_parsed_casillas(
     declarante = _fixed_width_record(500, _MODELO_180_DECLARANTE_FIELDS)
     perceptor = _fixed_width_record(500, _MODELO_180_PERCEPTOR_FIELDS)
     parsed = parse_export_payload(layout, (declarante + perceptor).encode("latin-1"))
+    # These are declared integer/enumerated-digits slots, while identity
+    # and address text stay strings. The independent bytes also prove that
+    # semantic parsing has retained the submitted codes without rewriting them.
+    raw_by_field = {str(field.field_id): field.raw for field in parsed.fields}
+    assert {
+        name: raw_by_field[name]
+        for name in (
+            "modelo-180-perc-provincia",
+            "modelo-180-perc-modalidad",
+            "modelo-180-perc-situacion-inmueble",
+            "modelo-180-perc-inmueble-provincia",
+        )
+    } == {
+        "modelo-180-perc-provincia": "28",
+        "modelo-180-perc-modalidad": "1",
+        "modelo-180-perc-situacion-inmueble": "1",
+        "modelo-180-perc-inmueble-provincia": "28",
+    }
     values: dict[CasillaId, object] = {
         field.casilla_id: field.value for field in parsed.casillas if field.casilla_id is not None
     }

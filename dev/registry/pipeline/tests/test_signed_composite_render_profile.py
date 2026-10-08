@@ -14,31 +14,75 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import (
     ExportEncoding,
-    parse_fixed_width_export_field,
     render_fixed_width_export_field,
 )
+from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 
 from ...compiler.loader import load_catalogue_file
-from .. import _export_tree
+from ..export_tree_field_derivation import _normalise_cell
+from ..export_tree_models import ExportTreeTransportProfile
 from ..joined_record_design import JoinedRecordDesignField
 from ..record_design_intermediate import RecordDesignIntermediateField, load_record_design_intermediate
-from ..render_profile import (
-    RenderProfile,
-    RenderProfileAnchor,
-    RenderProfileDesignIdentity,
-    RenderProfileSourceEvidence,
-    ReviewedPolicyDecision,
-    SignedMonetaryCompositeRule,
-    SingletonNumericRule,
-    SourceStatedCompositeEvidence,
-    load_render_profile,
-    render_profile_digest,
-    validate_render_profile_authority,
-)
+from ..render_profile import render_profile_digest
+from ..render_profile_authority import _validate_signed_composite_source_agreement, validate_render_profile_authority
 from ..render_profile_eligibility import RenderProfileEligibility, project_render_profile_eligibility
-from ..semantic_map import SemanticMapEntry
+from ..render_profile_evidence import RenderProfileSourceEvidence, ReviewedPolicyDecision, SourceStatedCompositeEvidence
+from ..render_profile_loading import load_render_profile
+from ..render_profile_model import RenderProfile
+from ..render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity
+from ..render_profile_rules import SignedMonetaryCompositeRule, SingletonNumericRule
+from ..semantic_map import SemanticMap, SemanticMapEntry, load_semantic_map
+from ..source_defects import PrintedPartitionDefectDeclaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def _m190_total_source(epoch: str) -> tuple[SignedMonetaryCompositeRule, RecordDesignIntermediateField, RenderProfile]:
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "irpf.toml"))
+    intermediate = load_record_design_intermediate(
+        bundled_path(),
+        catalogues.sources,
+        source_ref=f"aeat-dr-190-{epoch}",
+        filing_year=2022 if epoch == "2020" else int(epoch),
+        design_epoch=epoch,
+    )
+    profile = load_render_profile(Path(__file__).parents[2] / f"render_profiles/modelo_190/{epoch}")
+    rule = next(rule for rule in profile.signed_composite_rules if rule.anchor.ordinal == "12")
+    field = next(
+        field
+        for sheet in intermediate.sheets
+        for field in sheet.fields
+        if field.source_row == rule.anchor.source_row and field.sheet == rule.anchor.sheet
+    )
+    return rule, field, profile
+
+
+@pytest.mark.parametrize("epoch", ("2020", "2023", "2024", "2025"))
+def test_m190_total_is_a_source_stated_signed_amount(epoch: str) -> None:
+    rule, field, profile = _m190_total_source(epoch)
+    _validate_signed_composite_source_agreement(rule, field, profile.design_identity)
+    assert (field.offset, field.length, rule.integer_digits, rule.decimal_digits) == (145, 16, 13, 2)
+
+
+@pytest.mark.parametrize(
+    ("original", "altered"),
+    (
+        ("sea menor de 0", "sea mayor de 0"),
+        ("sin coma decimal", "con coma decimal"),
+        ("con signo menos al totalizar", "con signo mas al totalizar"),
+        ("146-158 Parte entera", "146-159 Parte entera"),
+        ("159-160 Parte decimal", "158-160 Parte decimal"),
+        ("será un espacio", "será un cero"),
+    ),
+)
+def test_m190_total_refuses_changed_sign_magnitude_and_partition_clauses(original: str, altered: str) -> None:
+    rule, field, profile = _m190_total_source("2020")
+    assert original in (field.content or "")
+    changed = field.model_copy(update={"content": (field.content or "").replace(original, altered, 1)})
+    with pytest.raises(RegistryValidationError, match="signed monetary composite"):
+        _validate_signed_composite_source_agreement(rule, changed, profile.design_identity)
+
 
 _SOURCE_CONTENT = (
     "Se consignará la suma algebraica total. Este campo se subdivide en: "
@@ -122,7 +166,16 @@ def _eligibility(field: RecordDesignIntermediateField) -> RenderProfileEligibili
     return project_render_profile_eligibility(
         (field,),
         signed_composite_anchor_keys=frozenset(
-            ((anchor.sheet, anchor.source_row, anchor.source_cell, anchor.ordinal, anchor.record_identity),)
+            (
+                (
+                    anchor.sheet,
+                    anchor.source_row,
+                    anchor.source_cell,
+                    anchor.ordinal,
+                    anchor.record_identity,
+                    anchor.semantic_part_offset,
+                ),
+            )
         ),
     )
 
@@ -160,9 +213,9 @@ def test_reviewed_composite_projects_through_existing_money_codec_and_distinct_p
     profile = _profile()
     _validate(field, profile)
 
-    derived = _export_tree._normalise_cell(  # pyright: ignore[reportPrivateUsage]
+    derived = _normalise_cell(
         _joined_field(field),
-        _export_tree.ExportTreeTransportProfile(
+        ExportTreeTransportProfile(
             modelo="296",
             design_epoch="2024",
             source_ref="aeat-dr-296-2024",
@@ -340,6 +393,7 @@ def test_committed_modelo_296_profile_enrols_the_exact_hash_verified_parser_anch
             rule.anchor.source_cell,
             rule.anchor.ordinal,
             rule.anchor.record_identity,
+            rule.anchor.semantic_part_offset,
         )
         for rule in profile.signed_composite_rules
     )
@@ -353,9 +407,9 @@ def test_committed_modelo_296_profile_enrols_the_exact_hash_verified_parser_anch
         eligibility,
         RenderProfileSourceEvidence(design_identity=_identity(), entries=()),
     )
-    rendered = _export_tree._normalise_cell(  # pyright: ignore[reportPrivateUsage]
+    rendered = _normalise_cell(
         _joined_field(field),
-        _export_tree.ExportTreeTransportProfile(
+        ExportTreeTransportProfile(
             modelo="296",
             design_epoch="2024",
             source_ref="aeat-dr-296-2024",
@@ -377,3 +431,223 @@ def test_committed_modelo_296_profile_enrols_the_exact_hash_verified_parser_anch
     assert tuple(
         (rule.anchor.source_row, rule.integer_digits, rule.decimal_digits) for rule in profile.signed_composite_rules
     ) == ((177, 12, 2),)
+
+
+def _m180_composite(
+    epoch: str, row: int
+) -> tuple[SignedMonetaryCompositeRule, RecordDesignIntermediateField, RenderProfileDesignIdentity]:
+    root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "irpf.toml"))
+    intermediate = load_record_design_intermediate(
+        root,
+        catalogues.sources,
+        source_ref=f"aeat-dr-180-{epoch}",
+        filing_year=int(epoch),
+        design_epoch=epoch,
+    )
+    profile = load_render_profile(Path(__file__).parents[2] / f"render_profiles/modelo_180/{epoch}")
+    rule = next(rule for rule in profile.signed_composite_rules if rule.anchor.source_row == row)
+    field = next(field for sheet in intermediate.sheets for field in sheet.fields if field.source_row == row)
+    return rule, field, profile.design_identity
+
+
+@pytest.mark.parametrize("epoch, row", (("2014", 116), ("2014", 302), ("2023", 109), ("2023", 292)))
+def test_m180_composites_validate_through_the_one_composite_grammar(epoch: str, row: int) -> None:
+    rule, field, identity = _m180_composite(epoch, row)
+    _validate_signed_composite_source_agreement(rule, field, identity)
+
+    for changed_field in (
+        field.model_copy(update={"length": 17}),
+        field.model_copy(update={"content": (field.content or "") + " Se consignará con signo y con coma decimal."}),
+        field.model_copy(update={"content": (field.content or "").replace("SIGNO:", "SIGNO: Numérico.", 1)}),
+    ):
+        with pytest.raises(RegistryValidationError, match="signed monetary composite"):
+            _validate_signed_composite_source_agreement(rule, changed_field, identity)
+
+
+@pytest.mark.parametrize("epoch, row", (("2014", 116), ("2023", 109)))
+def test_m180_printed_partition_overlap_resolves_only_through_its_pinned_declaration(epoch: str, row: int) -> None:
+    rule, field, identity = _m180_composite(epoch, row)
+    assert "146-159 Parte entera" in (field.content or "")
+    assert "159-160 Parte decimal" in (field.content or "")
+
+    for changed_identity, changed_field in (
+        (identity.model_copy(update={"source_sha256": "0" * 64}), field),
+        (identity, field.model_copy(update={"source_row": row + 1})),
+        (identity, field.model_copy(update={"content": (field.content or "").replace("146-159", "146-157", 1)})),
+    ):
+        with pytest.raises(RegistryValidationError, match="do not exactly partition"):
+            _validate_signed_composite_source_agreement(rule, changed_field, changed_identity)
+
+
+def test_m180_printed_overlap_renders_signed_limits_losslessly() -> None:
+    root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "irpf.toml"))
+    intermediate = load_record_design_intermediate(
+        root,
+        catalogues.sources,
+        source_ref="aeat-dr-180-2023",
+        filing_year=2023,
+        design_epoch="2023",
+    )
+    profile = load_render_profile(Path(__file__).parents[2] / "render_profiles/modelo_180/2023")
+    semantic = load_semantic_map(Path(__file__).parents[2] / "mappings/modelo_180/2023")
+    field = next(field for sheet in intermediate.sheets for field in sheet.fields if field.source_row == 109)
+    entry = next(entry for entry in semantic.entries if entry.anchor.source_row == 109)
+    derived = _normalise_cell(
+        JoinedRecordDesignField(parser_field=field, semantic_entry=entry),
+        ExportTreeTransportProfile(
+            modelo="180",
+            design_epoch="2023",
+            source_ref="aeat-dr-180-2023",
+            source_sha256=profile.design_identity.source_sha256,
+            layout_id="generated-modelo-180-fichero",
+            format="fixed_width",
+            encoding=ExportEncoding.ISO_8859_1,
+            line_ending="crlf",
+            serializer_convention="rtoml-pretty-v1",
+        ),
+        profile,
+        export_record_id="modelo-180-t1",
+    )
+    for amount in (Decimal("9999999999999.99"), Decimal("-9999999999999.99"), Decimal("-0.01")):
+        wire = render_fixed_width_export_field(derived.field, amount)
+        assert len(wire) == 16
+        assert wire[0] == ("N" if amount < 0 else " ")
+        assert parse_fixed_width_export_field(derived.field, wire) == amount
+    with pytest.raises(RegistryValidationError, match="exceeds length"):
+        render_fixed_width_export_field(derived.field, Decimal("10000000000000.00"))
+
+
+_M347_DESIGNS = (("2025", "aeat-dr-347-2025", 2025), ("2011", "aeat-dr-347-2011", 2011))
+
+
+def _m347_design(
+    epoch: str, source_ref: str, filing_year: int
+) -> tuple[RenderProfile, tuple[RecordDesignIntermediateField, ...], SemanticMap]:
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "operaciones-terceros.toml"))
+    intermediate = load_record_design_intermediate(
+        bundled_path(),
+        catalogues.sources,
+        source_ref=source_ref,
+        filing_year=filing_year,
+        design_epoch=epoch,
+    )
+    profile = load_render_profile(Path(__file__).parents[2] / f"render_profiles/modelo_347/{epoch}")
+    semantic = load_semantic_map(Path(__file__).parents[2] / f"mappings/modelo_347/{epoch}")
+    return profile, tuple(field for sheet in intermediate.sheets for field in sheet.fields), semantic
+
+
+def _m347_composite_fields(epoch: str, source_ref: str, filing_year: int) -> tuple[ExportFieldDefinition, ...]:
+    profile, fields, semantic = _m347_design(epoch, source_ref, filing_year)
+    by_row = {field.source_row: field for field in fields}
+    entries = {entry.anchor.source_row: entry for entry in semantic.entries}
+    transport = ExportTreeTransportProfile(
+        modelo="347",
+        design_epoch=epoch,
+        source_ref=source_ref,
+        source_sha256=profile.design_identity.source_sha256,
+        layout_id=f"generated-modelo-347-{epoch}-fichero",
+        format="fixed_width",
+        encoding=ExportEncoding.ISO_8859_1,
+        line_ending="crlf",
+        serializer_convention="rtoml-pretty-v1",
+    )
+    derived = []
+    for rule in profile.signed_composite_rules:
+        field = by_row[rule.anchor.source_row]
+        _validate_signed_composite_source_agreement(rule, field, profile.design_identity)
+        joined = JoinedRecordDesignField(parser_field=field, semantic_entry=entries[rule.anchor.source_row])
+        derived.append(_normalise_cell(joined, transport, profile, export_record_id="m347-record").field)
+    return tuple(derived)
+
+
+@pytest.mark.parametrize(("epoch", "source_ref", "filing_year"), _M347_DESIGNS)
+def test_every_m347_signed_amount_renders_a_blank_or_n_sign_and_thirteen_plus_two_digits(
+    epoch: str, source_ref: str, filing_year: int
+) -> None:
+    """aeat-dr-347-2011/2025: "N" when the amount is below 0, otherwise a space, then 13+2 digits."""
+    fields = _m347_composite_fields(epoch, source_ref, filing_year)
+    offsets = {field.offset for field in fields}
+    assert {83, 116, 136, 145, 152, 168, 184, 200, 216, 232, 248} <= offsets
+    if epoch == "2025":
+        assert {99, 170, 284} <= offsets
+    for field in fields:
+        assert field.sign_position is not None
+        assert (field.data_type, field.length, field.signed, field.sign_position.value) == (
+            "money",
+            16,
+            True,
+            "blank_or_n",
+        )
+        assert render_fixed_width_export_field(field, Decimal("1234.56")) == " 000000000123456"
+        assert render_fixed_width_export_field(field, Decimal("-1234.56")) == "N000000000123456"
+        assert render_fixed_width_export_field(field, Decimal(0)) == " 000000000000000"
+        assert parse_fixed_width_export_field(field, "N000000000123456") == Decimal("-1234.56")
+
+
+def test_the_m347_inmueble_amount_is_a_signed_composite_although_its_type_column_prints_numeric() -> None:
+    """2025 inmueble pos. 99: '99 SIGNO ... se consignara una "N"' under a 'Numerico' naturaleza."""
+    profile, fields, _semantic = _m347_design("2025", "aeat-dr-347-2025", 2025)
+    rule = next(rule for rule in profile.signed_composite_rules if rule.anchor.sheet == "Tipo 2 - Registro De Inmueble")
+    field = next(field for field in fields if field.source_row == rule.anchor.source_row)
+    assert (field.offset, field.aeat_type) == (99, "Numérico")
+    assert all(singleton.anchor != rule.anchor for singleton in profile.singleton_rules)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    (
+        ("sea menor que 0", "sea mayor que 0"),
+        ("84-96 Parte entera", "84-95 Parte entera"),
+        ("campo numérico de 15 posiciones", "campo numérico de 14 posiciones"),
+        ("En cualquier otro caso el contenido", "En cualquier otro caso se consignará una cifra y el contenido"),
+        ("Los importes deben consignarse en EUROS.", "Los importes se consignarán con dos decimales."),
+    ),
+)
+def test_a_m347_amount_with_one_clause_altered_is_refused(mutation: tuple[str, str]) -> None:
+    profile, fields, _semantic = _m347_design("2025", "aeat-dr-347-2025", 2025)
+    rule = next(rule for rule in profile.signed_composite_rules if rule.anchor.source_row == 349)
+    field = next(field for field in fields if field.source_row == 349)
+    _validate_signed_composite_source_agreement(rule, field, profile.design_identity)
+    original, altered = mutation
+    assert original in (field.content or "")
+    with pytest.raises(RegistryValidationError, match="signed monetary composite"):
+        _validate_signed_composite_source_agreement(
+            rule,
+            field.model_copy(update={"content": (field.content or "").replace(original, altered, 1)}),
+            profile.design_identity,
+        )
+
+
+def test_only_exact_boe_page_furniture_is_removed_before_the_grammar_reads_a_cell() -> None:
+    """The 2011 Q3 cell carries a BOE running header mid-cell; a lookalike carrying a wire word is refused."""
+    profile, fields, _semantic = _m347_design("2011", "aeat-dr-347-2011", 2011)
+    rule = next(rule for rule in profile.signed_composite_rules if rule.anchor.source_row == 637)
+    field = next(field for field in fields if field.source_row == 637)
+    assert "cve: BOE-A-2011-19397" in (field.content or "")
+    _validate_signed_composite_source_agreement(rule, field, profile.design_identity)
+    lookalike = (field.content or "").replace("Pág. 132703", "Pág. 132703 con signo")
+    with pytest.raises(RegistryValidationError, match="signed monetary composite"):
+        _validate_signed_composite_source_agreement(
+            rule, field.model_copy(update={"content": lookalike}), profile.design_identity
+        )
+
+
+@pytest.mark.parametrize(
+    ("published", "adjudicated"),
+    (((146, 159), (147, 158)), ((146, 159), (146, 159)), ((146, 159), (146, 160))),
+)
+def test_a_printed_partition_declaration_can_only_withdraw_the_overlap(
+    published: tuple[int, int], adjudicated: tuple[int, int]
+) -> None:
+    with pytest.raises(ValueError, match="only withdraws the overlap"):
+        PrintedPartitionDefectDeclaration(
+            source_ref="aeat-dr-180-2023",
+            source_sha256="f" * 64,
+            sheet="Tipo 1",
+            source_row=109,
+            published_integer_range=published,
+            adjudicated_integer_range=adjudicated,
+            evidence="Detector control.",
+        )

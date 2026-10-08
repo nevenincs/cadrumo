@@ -62,10 +62,19 @@ _DOCS = _REPO_ROOT / "docs"
 # Four-language prorrata probes: each must surface the concept card. "pro rata"
 # is the English admitted alias; the ca/hu phrasings ride the combined-language
 # injection content.
+#
+# Each probe's words are words the card itself carries in that language. That is
+# a requirement rather than tidiness: the site has ONE index under one stemmer,
+# so a word only a language's OWN morphology would fold onto the card's text no
+# longer reaches it. The Catalan probe read "prorrata sectors" while the card's
+# Catalan says "sector", and it passed on the English stemmer's plural rule --
+# which is to say it never probed Catalan at all. "percentatge" is the Catalan
+# word in the card's own Catalan definition, absent from the Spanish one, so the
+# probe reaches the card through Catalan text and nothing else.
 _LANGUAGE_PROBES = (
     ("es", "prorrata"),
     ("en", "pro rata"),
-    ("ca", "prorrata sectors"),
+    ("ca", "prorrata percentatge"),
     ("hu", "aranyositas"),
 )
 
@@ -175,7 +184,6 @@ def test_prorrata_end_to_end_palette_smoke(tmp_path: Path) -> None:
     static.mkdir(parents=True, exist_ok=True)
     for name in ("cadrumo-docs.js", "cadrumo-docs.css"):
         (static / name).write_bytes((_DOCS / "_static" / name).read_bytes())
-    (build / "pagefind.yml").write_bytes((_DOCS / "pagefind.yml").read_bytes())
 
     materialised = _prorrata_records()
 

@@ -24,33 +24,31 @@ from cadrumo.domain.calculations.registry.revision_order import ordered_revision
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.lineage_totality import is_total
 
+from ..analysis import casilla_lineage_seed
 from ..analysis.casilla_lineage_ledger import load_ledger_refusals
-from ..analysis.casilla_lineage_seed import (
+from ..analysis.casilla_lineage_seed_corpus import load_corpus
+from ..analysis.casilla_lineage_seed_design import DesignOracle, parse_design_inventory
+from ..analysis.casilla_lineage_seed_ledger import (
+    carried_refusals,
+    load_previous_ledger,
+    render_ledger,
+    run_identifier,
+)
+from ..analysis.casilla_lineage_seed_planner import plan_corpus, plan_modelo, residual_plan
+from ..analysis.casilla_lineage_seed_rules import admit_bare_chain, judged_pairs, load_rulings
+from ..analysis.casilla_lineage_seed_types import (
     SCHEMA_EVIDENCE_LIMIT,
     CarriedRefusal,
-    DesignOracle,
     LineagePlan,
     LineageRefusalCategory,
     ModeloLoadFailure,
     PartialStamping,
     Ruling,
-    admit_bare_chain,
-    carried_refusals,
-    contradictions,
-    gate_regressions,
-    insert_lineage_keys,
-    judged_pairs,
-    load_corpus,
-    load_previous_ledger,
-    load_rulings,
-    parse_design_inventory,
-    plan_corpus,
-    plan_modelo,
-    render_ledger,
-    residual_plan,
-    run_identifier,
 )
+from ..analysis.casilla_lineage_seed_validation import contradictions, gate_regressions
+from ..analysis.casilla_lineage_seed_writer import insert_lineage_keys
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues
 from ..compiler.loader_cache import ModeloSource, discover_modelo_sources
 
@@ -408,9 +406,9 @@ def test_a_load_failure_with_nothing_to_carry_names_no_row(tmp_path: Path) -> No
 
     keys = set(load_ledger_refusals(path))
     assert {key.modelo for key in keys} == {_UNRESOLVED}
-    assert lineage_totality((modelo,), keys).is_total
+    assert is_total(lineage_totality((modelo,), keys))
     # The same ledger one row short is not total, so the assertion above is earned rather than vacuous.
-    assert not lineage_totality((modelo,), keys - {min(keys)}).is_total
+    assert not is_total(lineage_totality((modelo,), keys - {min(keys)}))
 
 
 # --------------------------------------------------------------------------- partly stamped identifiers
@@ -514,9 +512,9 @@ def test_a_partly_stamped_modelo_with_nothing_to_carry_names_no_row(tmp_path: Pa
 
     keys = set(load_ledger_refusals(path))
     assert {key.modelo for key in keys} == {_UNRESOLVED}
-    assert lineage_totality((modelo,), keys).is_total
+    assert is_total(lineage_totality((modelo,), keys))
     # The same ledger one row short is not total, so the assertion above is earned rather than vacuous.
-    assert not lineage_totality((modelo,), keys - {min(keys)}).is_total
+    assert not is_total(lineage_totality((modelo,), keys - {min(keys)}))
 
 
 # --------------------------------------------------------------------------- carrying forward
@@ -693,6 +691,13 @@ def _planted_modelo(*revisions: ModeloRevision) -> ModeloDefinition:
             "revisions": {revision.id: revision for revision in revisions},
         },
     )
+
+
+def test_lineage_command_rejects_unknown_arguments_before_loading_or_writing(capsys) -> None:
+    with pytest.raises(SystemExit) as failure:
+        casilla_lineage_seed.main(["--unrecognized-option"])
+    assert failure.value.code == 2
+    assert "unrecognized arguments" in capsys.readouterr().err
 
 
 def test_editions_whose_selectors_overlap_but_whose_validity_succeeds_are_paired() -> None:

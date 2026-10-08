@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:4b3aee9212d991d2891e625df433a42b295106ab85657932470cb4acfbf82443'
+modified: '2026-10-03'
+body_hash: 'sha256:0123b8646de124703326135d4edc7a5d18a37fddd43b51019bc8b91dd92df156'
 related: []
 ---
 
@@ -24,8 +24,8 @@ The focused tests cover the upstream Argon2id known-answer vector, output length
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/master_key/test_kdf.py src/aeat/adapters/persistence/storage/master_key/test_kdf_errors.py src/aeat/adapters/persistence/storage/master_key/test_kdf_params.py src/aeat/adapters/persistence/storage/test_hardening_convention_guards.py::test_profile_repository_kdf_defaults_flow_from_canonical_master_key_model` passed with 20 tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/master_key/_kdf.py src/aeat/adapters/persistence/storage/master_key/test_kdf.py src/aeat/adapters/persistence/storage/master_key/test_kdf_errors.py src/aeat/adapters/persistence/storage/master_key/test_kdf_params.py` passed.
+- the historical check passed with 20 tests.
+- the historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 - Touched-surface hygiene scan found no broad exception suppressions, direct settings construction, naked environment access, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, or naked encoding literals.
 

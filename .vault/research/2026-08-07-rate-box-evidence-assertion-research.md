@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#rate-box-evidence-assertion'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:a2b57162e64205c6594e0f2da465be6c06f7ac728107441fbe95f2f9c6640dc7'
+body_hash: 'sha256:80205ea1a4c07fd701a24b95ff792ed5db22f3655533b41e0e6737f1180340cb'
 related: []
 ---
 
@@ -57,7 +57,7 @@ box a value lands in. The mapping above holds for the ordinario segment.
 
 ### The tier merge is reproducible and mis-allocates across boxes
 
-On 2024-11-15 the rate lookup in `src/cadrumo/domain/iva/_lookup.py` returns
+On 2024-11-15 the rate lookup  returns
 `REDUCED` for both `0.10` and `0.075`, and `SUPER_REDUCED` for both `0.04` and
 `0.02` — the RDL 4/2024 temporary food rates share their tier with the ordinary
 rate. Driving a 10 % sale (cuota 10.00) and a 7,5 % sale (cuota 7.50) through
@@ -74,16 +74,16 @@ outside the application, so the false breakdown reaches the filing surface.
 ### Narrowing the binding deletes rows whose rate was never recorded
 
 The selector carries an `applied_rates` axis
-(`src/cadrumo/domain/calculations/registry/_ledger_bindings.py:488`) and it
+ and it
 works: narrowing `modelo-390-iva-repercutido-reducido-cuota` to
 `applied_rates=[0.10]` returns 10.00 instead of 17.50.
 
 It also deletes money. `IvaLedgerObservation.applied_rate` is `Decimal | None`
 (`_ledger_bindings.py:395`), populated directly from the transaction as
 `applied_rate=transaction.iva_rate`
-(`src/cadrumo/application/aggregation/_iva_ledger.py:1336`), and
+, and
 `RawTransaction.iva_rate` is itself `Decimal | None`
-(`src/cadrumo/domain/transactions/_models.py:803`). The match at
+. The match at
 `_ledger_bindings.py:725` tests `observation.applied_rate not in
 set(selector.applied_rates)`, and `None` is never a member, so a narrowed
 binding drops the row.
@@ -185,12 +185,4 @@ argument here rests on their being representable, not on their frequency.
 
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/_ledger_bindings.py:395`
-- `src/cadrumo/domain/calculations/registry/_ledger_bindings.py:488-503`
-- `src/cadrumo/domain/calculations/registry/_ledger_bindings.py:725`
-- `src/cadrumo/application/aggregation/_iva_ledger.py:1336`
-- `src/cadrumo/domain/transactions/_models.py:803`
-- `src/cadrumo/domain/iva/_lookup.py:119`
-- `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/export_layouts/0001-export_layouts.toml`
-- `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/casillas/civa.anual.repercutido.general__civa.anual.resultado-regimen-general.toml`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md`

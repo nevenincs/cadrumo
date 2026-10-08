@@ -35,7 +35,7 @@ import pytest
 from ....domain.calculations.registry.fixed_width_codec import ExportJustification, ExportPadding, pad_fixed_width_text
 from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-from .._record_field_renderer import render_record
+from ..record_field_renderer import render_record
 from ..record_types import RecordRenderRow
 from .export_support import _approved_registry_draft, _typed_producer_snapshot
 

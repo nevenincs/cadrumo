@@ -4,15 +4,13 @@ tags:
   - '#index'
   - '#claude-ecosystem-packaging'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:0d1230a23b35287780e86d78d9ae0e1b23d32fa6950c8681a6f31c0bed92becd'
+body_hash: 'sha256:8dd098fc6494b9c58b66a475681a3b9082674d8b350ed9c6231872ec525fe0c4'
 related:
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
   - '[[2026-07-03-claude-ecosystem-packaging-close-honesty-review-audit]]'
   - '[[2026-07-03-claude-ecosystem-packaging-code-review-audit]]'
-  - '[[2026-07-03-claude-ecosystem-packaging-ledger]]'
-  - '[[2026-07-03-claude-ecosystem-packaging-plan]]'
   - '[[2026-07-03-claude-ecosystem-packaging-research]]'
 ---
 
@@ -30,14 +28,6 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 
 - `2026-07-03-claude-ecosystem-packaging-close-honesty-review-audit` - `claude-ecosystem-packaging` audit: `campaign close honesty review`
 - `2026-07-03-claude-ecosystem-packaging-code-review-audit` - `claude-ecosystem-packaging` audit: `campaign code review`
-
-### exec
-
-- `2026-07-03-claude-ecosystem-packaging-ledger` - `claude-ecosystem-packaging` ledger
-
-### plan
-
-- `2026-07-03-claude-ecosystem-packaging-plan` - `claude-ecosystem-packaging` plan
 
 ### research
 

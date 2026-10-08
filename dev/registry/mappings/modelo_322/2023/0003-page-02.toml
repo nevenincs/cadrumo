@@ -277,8 +277,8 @@ source_cell = "A23"
 
 [[entries]]
 export_field_id = "m322-2023.page-02.f019"
-kind = "computed"
-computed_key = "m303_no_activity_marker"
+kind = "casilla"
+casilla_id = "decl.sin-actividad"
 legal_refs = ["orden-eha-3434-2007:art-1"]
 source_refs = ["aeat-dr-322-2023"]
 

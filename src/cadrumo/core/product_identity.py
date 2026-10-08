@@ -31,8 +31,14 @@ class ProductIdentity(NamedTuple):
     repository: str
     plugin_identifier: str
     environment_prefix: str
-    companion_distributions: tuple[str, str]
+    companion_distributions: tuple[str, str, str]
     companion_namespace: str
+    application_id: str
+
+    @property
+    def cohort_distributions(self) -> tuple[str, ...]:
+        """Every distribution one release publishes together, the product first."""
+        return (self.distribution, *self.companion_distributions)
 
 
 PRODUCT_IDENTITY: Final[ProductIdentity] = ProductIdentity(
@@ -44,12 +50,12 @@ PRODUCT_IDENTITY: Final[ProductIdentity] = ProductIdentity(
     repository="nevenincs/cadrumo",
     plugin_identifier="cadrumo",
     environment_prefix="CADRUMO_",
-    companion_distributions=("cadrumo-data-manuals", "cadrumo-data-official"),
+    companion_distributions=("cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-data-normatives"),
     companion_namespace="cadrumo_data",
+    application_id="md.neve.cadrumo",
 )
 
 #: Short legal name retained only for the external tax authority referent.
-AEAT_AUTHORITY_SHORT_NAME: Final[str] = "AEAT"
 
 _STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manual|--|<))")
 
@@ -60,7 +66,6 @@ def normalise_product_identity_references(value: str) -> str:
 
 
 __all__ = [
-    "AEAT_AUTHORITY_SHORT_NAME",
     "PRODUCT_IDENTITY",
     "ProductIdentity",
     "normalise_product_identity_references",

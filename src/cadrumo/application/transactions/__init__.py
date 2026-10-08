@@ -28,7 +28,7 @@ See Also:
     :func:`application.ledger.actions_import.import_ledger_transactions`
         Bucket-scoped import service that persists new transactions and emits
         ledger bucket events.
-    :func:`application.ledger.actions_import.import_ledger_source`
+    :func:`application.ledger.actions_import.prepare_ledger_source_import`
         CLI-facing source import orchestration that parses provider files before
         calling the persisting ledger import path.
 """

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b29c7bcd55e9869bcf6405cbcccc527a97bb06ea37e5ac4539c3d073fd0b2e9d'
+body_hash: 'sha256:cc93d4fdf9c29e4c92a17b407d9ea9f684f047d9bdefa3993ca44459e00d4d72'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
-  - '[[2026-08-03-canonical-storage-management-plan]]'
   - '[[2026-08-03-canonical-storage-management-honesty-review-audit]]'
   - '[[2026-08-03-canonical-storage-management-semantic-duplication-burndown-reference]]'
   - '[[2026-08-03-canonical-storage-management-enforcement-gates-reference]]'
@@ -52,7 +51,7 @@ rather than as duplication.
 ### grammar-root-token-is-polysemous | high | Three blob grammars anchor `<root>` at a different directory than every other grammar, and the campaign's new agreement gate reads all of them as if they were the same anchor
 
 `STORAGE_PATH_DEFINITIONS` in
-`src/cadrumo/adapters/persistence/storage/_storage_path_definitions.py` declares
+The retired module declared
 every filesystem shape against a `<root>` token. Sixteen of the nineteen
 filesystem entries mean the storage root by it, and the module says so: the
 `secret_index` comment at line 200 reasons that spelling `<root>/secrets/` out
@@ -61,7 +60,7 @@ here". Three entries are not consistent with it. `blob_manifest` (line 230),
 `blob_content_plaintext` (line 247) and `blob_content_ciphertext` (line 253)
 anchor `<root>` at the blob store's own `root_dir`, which production sets to
 `cadrumo_blob_store_dir` at
-`src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py:72` —
+The retired module —
 itself already `<storage_root>/blobs`, the `BLOBS` taxonomy member. The
 conformance test at
 `src/cadrumo/adapters/persistence/storage/blob_store/tests/test_blob_content_shape_conformance.py:42`
@@ -69,7 +68,7 @@ passes `root=store.root_dir`, confirming the reading; the outbound conformance
 test at
 `src/cadrumo/adapters/outbound/storage/tests/test_local_provider_object_shape_conformance.py:58`
 passes the full storage root. The helper's own docstring in
-`src/cadrumo/tests/_storage_path_grammar.py:104` concedes the ambiguity — "the
+The retired test concedes the ambiguity — "the
 helper does not assume which" — so no consumer can compute an absolute path from
 a grammar.
 
@@ -98,7 +97,7 @@ below a configured root as
 `local_provider_object_sidecar` grammar, pinned against a real write, declares
 `<root>/buckets/<bucket_id>/blobs/<namespace>/<hmac_prefix>--<label>.meta.json`.
 The literal omits the `<namespace>` directory. The provider genuinely creates it:
-`src/cadrumo/adapters/outbound/storage/_local.py:176` and `:292` write into
+The retired module and `:292` write into
 `self._root / namespace`, and the factory hands it the bucket's `blobs_dir`.
 Measured, the constant is 136 and the true suffix for the observed
 `ledger_transaction` namespace is 155 — `windows_storage_root_long_path_margin`
@@ -121,9 +120,9 @@ before it is executed.
 
 ### node-kind-declared-twice-in-two-layers | medium | Two enums answer file-versus-directory for the same hierarchy, share both string values, and nothing relates them
 
-`StorageNodeKind` in `src/cadrumo/core/_storage_taxonomy.py:60` declares
+`StorageNodeKind` in the retired module declared
 `directory` and `file`. `StoragePathKind` in
-`src/cadrumo/adapters/persistence/storage/_namespace_taxonomy.py:69` declares
+The retired module declared
 `directory`, `file`, `logical_sql` and `blob_object` — byte-identical values for
 the two shared members. Both classify nodes of the one on-disk hierarchy, and
 the directory-agreement gate consumes both in a single comparison: it reads
@@ -146,7 +145,7 @@ the campaign gave every other pair of spellings it could not physically merge.
 Commit `3a6ce7475d` moved `StoragePathDefinition`, `STORAGE_PATH_DEFINITIONS`
 and the eleven bucket and keystore layout constants into
 `_storage_path_definitions.py`, then imported them straight back into
-`src/cadrumo/adapters/persistence/storage/_namespace_registry.py:24-41`. The
+The retired module. The
 comment at line 50 states the intent: "re-exported below -- so every existing
 caller of `from .._namespace_registry import BUCKETS_DIRNAME` (etc.) keeps
 working unchanged". One import carries `# noqa: F401 - public re-export`,

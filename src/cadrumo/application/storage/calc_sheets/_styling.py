@@ -121,6 +121,16 @@ def _data_tab_ranges(
         ),
     ]
     if last_row >= 2:
+        ranges.append(
+            SheetStyledRange(
+                tab=tab,
+                start_row=2,
+                end_row=last_row,
+                start_column=_COL_CASILLA,
+                end_column=_COL_CASILLA,
+                role=StyleRole.CASILLA,
+            )
+        )
         ranges.extend(
             (
                 SheetStyledRange(
@@ -221,6 +231,18 @@ def compute_styling(
         last_row=calculos_last,
         value_role=StyleRole.COMPUTED,
         section_headers=section_headers,
+    )
+    styled.extend(
+        SheetStyledRange(
+            tab=row.tab,
+            start_row=row.row,
+            end_row=row.row,
+            start_column=_COL_VALUE,
+            end_column=_COL_VALUE,
+            role=StyleRole.COMPUTED,
+        )
+        for row in layout.binding_rows
+        if row.readonly
     )
     # Provenance header band + wrapped concepto / legal / source columns.
     styled.append(

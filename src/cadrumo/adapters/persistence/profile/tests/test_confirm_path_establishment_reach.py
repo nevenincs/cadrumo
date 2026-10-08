@@ -11,7 +11,7 @@ that is the property this module exists to hold.
 **So every case here drives the real confirm.** Bytes are written through the
 real encrypted evidence service, read back by the real extraction the CLI
 invokes, and handed to
-:func:`~application.ledger.invoice_confirmation.confirm_invoice_draft_from_evidence` --- the function
+:func:`~application.ledger.invoice_confirmation.prepare_invoice_confirmation_from_evidence` --- the function
 the ``aeat app ledger evidence confirm`` verb calls. Nothing constructs a draft,
 calls the ladder, or assembles criteria directly. A case that did would be
 green in exactly the state this module was written to detect.
@@ -46,7 +46,6 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.establishment_ladder import EstablishmentRung
-from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from cadrumo.core.config import Settings
 from cadrumo.domain.iva.classification import InvoiceKind, IvaTerritorialScope
 
@@ -61,6 +60,7 @@ from ._invoice_confirmation_test_support import (
 )
 from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
 from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]

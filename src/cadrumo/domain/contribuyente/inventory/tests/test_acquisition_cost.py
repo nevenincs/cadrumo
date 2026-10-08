@@ -9,10 +9,12 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
+from cadrumo.domain.iva.schema import IvaRateKind
 
+from ....calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ....filing_evidence import FilingEvidenceReference
 from ....iva.lookup import lookup_rate
+from ..closing_foundations import InventoryValidationError
 from ..records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
@@ -21,7 +23,6 @@ from ..records import (
     InventoryAttributableCostComponent,
     InventoryAttributableCostKind,
     InventoryLedger,
-    InventoryValidationError,
     MovementKind,
     MovementRecord,
     ValuationMethod,

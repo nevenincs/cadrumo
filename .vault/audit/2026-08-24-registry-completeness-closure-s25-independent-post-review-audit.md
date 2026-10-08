@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:a119948a08b428dd9810efd78a0c588b60c87edf7587d540c22c483c6e7edb5b'
-related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+body_hash: 'sha256:e13abfb2790d556b8f5720448bff992af4118c7398eca775a9322aa3639b42ed'
+related: []
 ---
 
 # `registry-completeness-closure` audit: `S25 Modelo 840 independent post-review`
@@ -24,21 +23,7 @@ records only and introduces no production-code redeclaration.
 
 ### live-emitter-canonicality | high | S25 names a non-substitutable codec as the required production emitter
 
-The source hash and the three parser measurements are correct: `aeat-dr-840`
-is `d0348a...4391a`; its records are 1,132, 1,165, and 1,067 bytes and each
-ends with the stated ten-byte identifier plus one CRLF row. The semantic-map
-join also correctly refuses an omitted terminal anchor, while the narrow
-fixed-width codec can append its declared `line_ending`. However, ordinary
-production filing reaches `render_layout_records` and
-`_render_record_bytes` in `src/cadrumo/application/filing/_record_renderer.py:132`, which
-independently maps `crlf` and `lf` before encoding. It supports producer,
-binding, draft, computed, and projection fields; the codec accepts only
-literal, filler, and casilla fields, so it is not a safe replacement under the
-constraint-shape test. The S25 reference's instruction that the future M840
-implementation must use the existing codec consequently omits the live
-emitter and leaves the pre-existing terminator redeclaration unresolved. This
-does not authorize an M840 writer: the correction belongs to the shared
-export route.
+The source hash and the three parser measurements are correct: `aeat-dr-840` is `d0348a...4391a`; its records are 1,132, 1,165, and 1,067 bytes and each ends with the stated ten-byte identifier plus one CRLF row. The semantic-map join also correctly refuses an omitted terminal anchor, while the narrow fixed-width codec can append its declared `line_ending`. It supports producer, binding, draft, computed, and projection fields; the codec accepts only literal, filler, and casilla fields, so it is not a safe replacement under the constraint-shape test. The S25 reference's instruction that the future M840 implementation must use the existing codec consequently omits the live emitter and leaves the pre-existing terminator redeclaration unresolved. This does not authorize an M840 writer: the correction belongs to the shared export route.
 
 ## Recommendations
 

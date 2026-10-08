@@ -5,7 +5,8 @@ from __future__ import annotations
 import pytest
 
 from .._paths import LOCALES_DIR, SRC_DIR
-from ..manager import LocaleManager, locale_catalogue_source
+from ..locale_yaml import locale_catalogue_source
+from ..manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -13,9 +14,9 @@ _LOCALES = ("en", "es", "ca", "hu")
 _ERRORS_PREFIX = "cli.config.custody.errors"
 _ACCEPTED_FD_ZERO_COPY = {
     "en": "use descriptor 0",
-    "es": "use el descriptor 0",
-    "ca": "useu el descriptor 0",
-    "hu": "használja a 0-s",
+    "es": "usa el descriptor 0",
+    "ca": "fes servir el descriptor 0",
+    "hu": "használd a 0-s",
 }
 _ROOT_ERRORS_PREFIX = "cli.config.custody.errors.profile_secrets"
 
@@ -39,6 +40,16 @@ def _leaf(catalogue: dict[str, object], key: str) -> str:
         node = node[segment]
     assert isinstance(node, str)
     return node
+
+
+@pytest.mark.parametrize("locale", _LOCALES)
+def test_missing_profile_passphrase_guidance_uses_root_channels_only(locale: str) -> None:
+    """Root authentication must never prescribe a leaf command's secret flags."""
+    copy = _leaf(_catalogue(locale), f"{_ERRORS_PREFIX}.profile_passphrase_channel_absent")
+    assert "--profile-secrets-stdin" in copy
+    assert "--profile-secrets-fd" in copy
+    assert "--secrets-stdin" not in copy
+    assert "--secrets-fd" not in copy
 
 
 @pytest.mark.parametrize("locale", _LOCALES)

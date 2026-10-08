@@ -25,9 +25,9 @@ import time
 from dataclasses import dataclass
 from typing import IO, TYPE_CHECKING
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import UTF_8
 
-from .paths import allocate_run_directory
+from .paths import allocate_run_directory, test_log_root
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -46,6 +46,16 @@ _NAME_WIDTH = 34
 #: Stable event vocabulary for why a lane exists. Callers declare specialized
 #: purposes explicitly; ordinary lanes remain generic commands.
 LANE_KINDS = frozenset({"collection", "command", "load"})
+
+
+def _validate_lane_requests(lanes: Sequence[str], preflight_count: int, lane_kinds: Mapping[str, str]) -> None:
+    """Validate lane requests."""
+    if not 0 <= preflight_count <= len(lanes):
+        raise ValueError("preflight_count must identify a prefix of the requested lanes")
+    if unknown_lanes := set(lane_kinds).difference(lanes):
+        raise ValueError(f"lane kinds name unrequested lanes: {sorted(unknown_lanes)!r}")
+    if unknown_kinds := set(lane_kinds.values()).difference(LANE_KINDS):
+        raise ValueError(f"unknown lane kinds: {sorted(unknown_kinds)!r}")
 
 
 @dataclass(frozen=True)
@@ -148,18 +158,11 @@ def _run_all(
     lane_kinds: Mapping[str, str],
 ) -> list[LaneResult | SkippedLane]:
     """Execute lanes, blocking the non-preflight suffix after a failed preflight."""
-    if not 0 <= preflight_count <= len(lanes):
-        raise ValueError("preflight_count must identify a prefix of the requested lanes")
-    if unknown_lanes := set(lane_kinds).difference(lanes):
-        raise ValueError(f"lane kinds name unrequested lanes: {sorted(unknown_lanes)!r}")
-    if unknown_kinds := set(lane_kinds.values()).difference(LANE_KINDS):
-        raise ValueError(f"unknown lane kinds: {sorted(unknown_kinds)!r}")
+    _validate_lane_requests(lanes, preflight_count, lane_kinds)
     results: list[LaneResult | SkippedLane] = []
     for index, lane in enumerate(lanes):
         kind = lane_kinds.get(lane, "command")
-        failed_preflights = tuple(
-            result.name for result in results[:preflight_count] if isinstance(result, LaneResult) and result.status != 0
-        )
+        failed_preflights = _failed_preflight_names(results, preflight_count)
         if index >= preflight_count and failed_preflights:
             blocked = SkippedLane(lane, failed_preflights)
             results.append(blocked)
@@ -211,7 +214,7 @@ def _run_all(
 
 def run_lanes(
     lanes: Sequence[str],
-    repository: Path = REPO_ROOT,
+    repository: Path | None = None,
     *,
     json_events: bool = False,
     persist_evidence: bool = True,
@@ -222,7 +225,8 @@ def run_lanes(
 
     Args:
         lanes: The just recipes to run, in order.
-        repository: The checkout the run evidence is written beneath.
+        repository: Optional injected base for run evidence. Production defaults
+            to ``CADRUMO_TEST_LOG_ROOT`` under the configured storage root.
         preflight_count: Number of leading lanes that must all pass before the
             remaining lanes may run. All leading lanes run even when one fails.
         lane_kinds: Explicit machine-readable purposes for specialized lanes.
@@ -246,7 +250,7 @@ def run_lanes(
         _summarise(results)
         return next((r.status for r in results if isinstance(r, LaneResult) and r.status != 0), 0)
 
-    run_root = allocate_run_directory(repository, family="lane-runs", label="lanes")
+    run_root = allocate_run_directory(repository or test_log_root(), family="lane-runs", label="lanes")
     for name in RUN_SUBDIRECTORIES:
         (run_root / name).mkdir(parents=True, exist_ok=True)
 
@@ -303,3 +307,11 @@ def lane_command_parser() -> argparse.ArgumentParser:
     )
     lanes.add_argument("lane", nargs="+", help="just recipe names")
     return parser
+
+
+def _failed_preflight_names(results: list[LaneResult | SkippedLane], preflight_count: int) -> tuple[str, ...]:
+    """Use completed nonzero preflight results to block only the execution suffix."""
+    failed_preflights = tuple(
+        result.name for result in results[:preflight_count] if isinstance(result, LaneResult) and result.status != 0
+    )
+    return failed_preflights

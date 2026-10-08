@@ -3,14 +3,14 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d00bde7e66ff61807a4ff02c3685badbbaf018ea1310d69f7ecbc6a94b7dca58'
+body_hash: 'sha256:5a3a914f8c1cee45aa4f2958e0cff891c3cc0f6876c66a38c5c8208e76c558dc'
 related:
-  - "[[2026-08-05-modelo-parity-rollup-plan]]"
   - "[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]"
   - "[[2026-08-05-modelo-parity-rollup-denominator-research]]"
 ---
+
 # `modelo-parity-rollup` audit: `S03 classification census review`
 
 ## Scope
@@ -29,7 +29,7 @@ The matrix still contains only `(100, 2025, 0A)` selected through the validating
 
 ### shared-test-typing | low | Existing unrelated test-file typing debt remains outside S03
 
-Manager typing is clean. The whole `dev/tests/test_registry_conformance_cli.py` still reports 11 pre-existing `CliRunner`/optional-value diagnostics at unrelated later lines; no S03-added typing errors remain. This is retained as a verification boundary and not repaired opportunistically.
+Manager typing is clean. The whole the retired test still reports 11 pre-existing `CliRunner`/optional-value diagnostics at unrelated later lines; no S03-added typing errors remain. This is retained as a verification boundary and not repaired opportunistically.
 
 ## Recommendations
 
@@ -39,10 +39,10 @@ Manager typing is clean. The whole `dev/tests/test_registry_conformance_cli.py` 
 
 ## Verification
 
-- `uv run --no-sync pytest -q -n0 dev/tests/test_registry_conformance_cli.py -k "annual_matrix_rejects"` â€” 3 passed; 87 deselected by the configured unit selector.
+- the historical check â€” 3 passed; 87 deselected by the configured unit selector.
 - A broader `-k annual_matrix` run reached 4 passed and 1 transient cache-fingerprint failure caused by concurrent registry churn; the new three validator tests all passed.
-- `uv run --no-sync ruff check dev/registry/conformance/manager.py dev/tests/test_registry_conformance_cli.py` â€” all checks passed.
-- `uv run --no-sync ruff format --check dev/registry/conformance/manager.py dev/tests/test_registry_conformance_cli.py` â€” 2 files already formatted.
+- the historical check â€” all checks passed.
+- the historical check â€” 2 files already formatted.
 - `uv run --no-sync basedpyright dev/registry/conformance/manager.py` â€” 0 errors, 0 warnings, 0 notes.
 - Whole test-file basedpyright remains bounded at 11 unrelated existing diagnostics; no new S03 diagnostics remain.
 - `git diff --check` on the owned files â€” clean.

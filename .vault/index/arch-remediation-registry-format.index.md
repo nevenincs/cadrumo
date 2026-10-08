@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#arch-remediation-registry-format'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a71e5dd1858f17e7fe94a25352a17f18ae153269326d4c1bec36dae38fff836d'
+body_hash: 'sha256:6c16405d59b5a8f6b47dffa8d4b0c55f87e9f367c9d2fe22979686df02c4183b'
 related:
   - '[[2026-07-02-arch-remediation-registry-format-adr]]'
-  - '[[2026-07-02-arch-remediation-registry-format-ledger]]'
-  - '[[2026-07-02-arch-remediation-registry-format-plan]]'
   - '[[2026-07-03-arch-remediation-registry-format-audit]]'
   - '[[2026-07-06-arch-remediation-registry-format-research]]'
   - '[[2026-08-05-arch-remediation-registry-format-casilla-fragment-content-naming-audit]]'
@@ -37,12 +35,10 @@ Auto-generated index of all documents tagged with `#arch-remediation-registry-fo
 
 ### exec
 
-- `2026-07-02-arch-remediation-registry-format-ledger` - `arch-remediation-registry-format` ledger
 - `2026-08-05-arch-remediation-registry-format-ledger` - `arch-remediation-registry-format` ledger
 
 ### plan
 
-- `2026-07-02-arch-remediation-registry-format-plan` - `arch-remediation-registry-format` plan
 - `2026-08-05-arch-remediation-registry-format-plan` - `arch-remediation-registry-format` plan
 
 ### research

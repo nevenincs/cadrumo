@@ -24,7 +24,6 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import ModeloLocalObservationError
-from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
@@ -41,6 +40,8 @@ from cadrumo.domain.modelos.calculation_revision import (
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
+from .....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_A = "3aa00000-0000-4000-8000-0000000000aa"
@@ -56,7 +57,7 @@ _DISPONIBLE_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _work_unit(bucket_id: str) -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(2026, "2T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
@@ -66,7 +67,7 @@ def _work_unit(bucket_id: str) -> WorkUnit:
             revision_id="2026-y-siguientes",
         ),
         bucket_id=bucket_id,
-        name="303-2026-1T",
+        name="303-2026-2T",
         modelo=Modelo("303").value,
         filing_year=2026,
         period=period,

@@ -1,8 +1,8 @@
 # Maintain Modelo 036 census facts in your profile
 
-Use this guide to keep your AEAT census facts - the {term}`censo` - correct in
-the active local profile. In Spain, the censo is tied to Modelo 036
-registration and changes.
+Use this guide to keep your AEAT census facts (the {term}`censo`) correct in the
+active local profile. In Spain, the censo is tied to Modelo 036 registration and
+changes.
 
 This guide covers Modelo 036. Modelo 037 is superseded and not used in this
 workflow.
@@ -22,9 +22,9 @@ You need:
 
 - an active taxpayer profile; see [Set up your taxpayer profile](profile-setup.md)
 - the taxpayer's fiscal ID (NIF or NIE) saved in that profile
-- your censo facts as AEAT holds them: activity description and start date,
-  tax regime, IVA regime, and enrollment facts. Read them from your Modelo 036
-  copy or from the AEAT sede.
+- your censo facts as AEAT holds them: activity description and start date, tax
+  regime, VAT regime, and enrollment facts. Read them from your Modelo 036 copy
+  or from the AEAT sede.
 
 Every command on this page needs your passphrase; the tool prompts for it.
 The examples in this documentation are recorded in English. `aeat` prints its
@@ -49,12 +49,12 @@ Census facts drive profile-dependent workflows:
 
 - the activity start date keeps the filing calendar from showing obligations
   before your registered activity start
-- the tax regime, IVA regime, and Renta/IRPF regime select which modelos and
+- the tax regime, VAT regime, and Renta/IRPF regime select which modelos and
   which calculation paths apply
 - enrollment facts feed the filing calendar's obligation derivation
 
 Enter them carefully. The application treats your entries as
-operator-declared facts, not as AEAT-verified facts. The filing calendar
+facts you declared, not as facts confirmed by AEAT. The filing calendar
 reports census-dependent obligations with a `censo.enrolment_unverified`
 warning and refuses strict projection until you accept that basis; see
 [Plan your filing calendar](filing-calendar.md).
@@ -126,7 +126,7 @@ reports these as the fields `contact.fiscal_address`, `contact.postcode`, and
 It does not fill your fiscal ID. It reads your fiscal ID to confirm the record
 AEAT returned is yours, and never writes it.
 
-It does not fill your regime facts: activity, tax regime, IVA regime,
+It does not fill your regime facts: activity, tax regime, VAT regime,
 enrollment. AEAT publishes no read-only surface that carries them. Enter those
 by hand as described in [Enter or correct census facts](#enter-or-correct-census-facts).
 
@@ -152,9 +152,9 @@ the second records:
 The command previews the census facts the certificate carries without writing
 anything. Add `--apply` to record them onto the active profile.
 
-Facts recorded this way carry a *non-official evidence* marker: they came from
-a document you supplied, not from an AEAT-confirmed read, so profile views show
-their provenance and the filing calendar's `censo.enrolment_unverified`
+Facts recorded this way carry a marker saying they are not official AEAT data:
+they came from a document you supplied, not from an AEAT-confirmed read, so
+profile views show where they came from and the filing calendar's `censo.enrolment_unverified`
 warning still applies. Where a certificate value disagrees with an answer you
 gave in setup, the profile keeps a record of the divergence and
 `aeat config profile view` warns you until you resolve it.
@@ -177,7 +177,7 @@ After you record a filing, update the profile fields the filing changed.
 
 ## Check the profile afterwards
 
-Validate the active profile after editing census facts:
+Check the active profile after editing census facts:
 
 ```{cli-sequence} censo-update-validate
 :verify: Confirm the active profile validates after the census edits.
@@ -200,9 +200,9 @@ that are still missing.
 
 ## Keep the facts current
 
-Your AEAT census can change - a new activity, a regime change, a baja.
+Your AEAT census can change: a new activity, a regime change, a baja.
 
-Pull again to catch drift in your address. The pull reports
+Pull again to catch changes in your address. The pull reports
 anything AEAT now holds that your profile does not.
 
 The pull cannot see a regime change, so re-check those fields against your

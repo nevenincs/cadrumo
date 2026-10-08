@@ -218,7 +218,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\n33d9a3995fec\t07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec\t3d88172f4204\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\tborrador\t2026-04-01T09:00:00+00:00\n"
+      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\n5016c2a6817e\t212336b104101527271ab3c2a83e59cf2cd231002ec98bca1a205016c2a6817e\t3d88172f4204\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\tborrador\t2026-04-01T09:00:00+00:00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -240,7 +240,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.revision\ncalculation_revision_id\t07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary Modelo 130 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\t03\t500.00\tNet yield\nkey_figure\t04\t100.00\tFractional payment amount\nkey_figure\t07\t100.00\tPartial result of Section I\nkey_figure\t09\t0.00\tFractional payment amount\nkey_figure\t11\t0.00\tPartial result of Section II\nkey_figure\t12\t100.00\tSum of partial results\nkey_figure\t13\t100.00\tReduction for net yields\nkey_figure\t14\t0.00\tNet amount after reduction\nkey_figure\t17\t0.00\tDifference\nkey_figure\t19\t0.00\tFinal result\ncasilla\t01\t1000\ncasilla\t02\t500\ncasilla\t03\t500.00\tsubtract(01, 02) = subtract(1000, 500) = 500.00\ncasilla\t04\t100.00\tmaximum(03, irpf.direct_estimation_fractional_payment_rate) = maximum(500.00, 20) = 100.00\ncasilla\t05\t0\ncasilla\t06\t0\ncasilla\t07\t100.00\tsubtract(04, 05, 06) = subtract(100.00, 0, 0) = 100.00\ncasilla\t08\t0\ncasilla\t09\t0.00\tpercentage(08, irpf.agriculture_fractional_payment_rate) = percentage(0, 2) = 0.00\ncasilla\t10\t0\ncasilla\t11\t0.00\tsubtract(09, 10) = subtract(0.00, 0) = 0.00\ncasilla\t12\t100.00\tmaximum(07, 11) = maximum(100.00, 0.00) = 100.00\ncasilla\t13\t100.00\tconditional(irpf.previous_year_economic_activity_net_income) = conditional(0) = 100.00\ncasilla\t14\t0.00\tsubtract(12, 13) = subtract(100.00, 100.00) = 0.00\ncasilla\t15\t0.00\tminimum(modelo-130-resultados-negativos-anteriores, 14) = minimum(0, 0.00) = 0.00\ncasilla\t16\t0\ncasilla\t17\t0.00\tsubtract(14, 15, 16) = subtract(0.00, 0.00, 0) = 0.00\ncasilla\t18\t0\ncasilla\t19\t0.00\tsubtract(17, 18) = subtract(0.00, 0) = 0.00\ncasilla\tsaldo-negativo-fin-periodo\t0.00\tmaximum(17) = maximum(0.00) = 0.00\n"
+      "text": "operation\tmodelo.work.revision\ncalculation_revision_id\t212336b104101527271ab3c2a83e59cf2cd231002ec98bca1a205016c2a6817e\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary Modelo 130 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\t03\t500.00\tNet yield\nkey_figure\t04\t100.00\tFractional payment amount\nkey_figure\t07\t100.00\tPartial result of Section I\nkey_figure\t09\t0.00\tFractional payment amount\nkey_figure\t11\t0.00\tPartial result of Section II\nkey_figure\t12\t100.00\tSum of partial results\nkey_figure\t13\t100.00\tReduction for net yields\nkey_figure\t14\t0.00\tNet amount after reduction\nkey_figure\t17\t0.00\tDifference\nkey_figure\t19\t0.00\tFinal result\ncasilla\t01\t1000\ncasilla\t02\t500\ncasilla\t03\t500.00\tsubtract(01, 02) = subtract(1000, 500) = 500.00\ncasilla\t04\t100.00\tmaximum(03, irpf.direct_estimation_fractional_payment_rate) = maximum(500.00, 20) = 100.00\ncasilla\t05\t0\ncasilla\t06\t0\ncasilla\t07\t100.00\tsubtract(04, 05, 06) = subtract(100.00, 0, 0) = 100.00\ncasilla\t08\t0\ncasilla\t09\t0.00\tpercentage(08, irpf.agriculture_fractional_payment_rate) = percentage(0, 2) = 0.00\ncasilla\t10\t0\ncasilla\t11\t0.00\tsubtract(09, 10) = subtract(0.00, 0) = 0.00\ncasilla\t12\t100.00\tmaximum(07, 11) = maximum(100.00, 0.00) = 100.00\ncasilla\t13\t100.00\tconditional(irpf.previous_year_economic_activity_net_income) = conditional(0) = 100.00\ncasilla\t14\t0.00\tsubtract(12, 13) = subtract(100.00, 100.00) = 0.00\ncasilla\t15\t0.00\tminimum(modelo-130-resultados-negativos-anteriores, 14) = minimum(0, 0.00) = 0.00\ncasilla\t16\t0\ncasilla\t17\t0.00\tsubtract(14, 15, 16) = subtract(0.00, 0.00, 0) = 0.00\ncasilla\t18\t0\ncasilla\t19\t0.00\tsubtract(17, 18) = subtract(0.00, 0) = 0.00\ncasilla\tsaldo-negativo-fin-periodo\t0.00\tmaximum(17) = maximum(0.00) = 0.00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -277,7 +277,7 @@
               "source_period": "0A",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+            "message": "Modelo 100 for 2025, period 0A, is not used here, because you said your activity started on 2026-01-01.",
             "severity": "warning"
           },
           {
@@ -292,12 +292,19 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
+            "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
             "severity": "warning"
           }
         ],
         "result": {
-          "calculation_revision_id": "07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec",
+          "calculation_revision_id": "212336b104101527271ab3c2a83e59cf2cd231002ec98bca1a205016c2a6817e",
           "completeness_status": "complete",
           "findings": [
             {
@@ -308,7 +315,7 @@
               "legal_refs": [
                 "rd-1065-2007:art-9"
               ],
-              "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
+              "message": "Modelo 100 for 2025, period 0A, is not used here, because you said your activity started on 2026-01-01.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -324,7 +331,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
+              "message": "An issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -343,7 +350,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "475fedcde9467701a4a5f9a29274e4a6db03e03b6971e85112a4c911fe7f2f4f",
+          "verification_report_id": "57cd222ce3899fafafade9df6b2a1266e9a3aed2e0069a98498e586b434de5ea",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

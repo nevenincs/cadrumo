@@ -17,7 +17,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\nperiod\t2026 1T\nchecked\t0\nissues\t0\nready\ttrue\nadvisory\tempty_ledger\tNo active ledger transactions were checked for this period.\nnotice\tledger.preflight.empty_period\tNo active ledger transactions were checked for this period.\n"
+      "text": "bucket\t<profile-id>\nperiod\t2026 1T\nchecked\t0\nissues\t0\nready\ttrue\nadvisory\tempty_ledger\tNo active transactions in your records were checked for this period.\nnotice\tledger.preflight.empty_period\tNo active transactions in your records were checked for this period.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -32,7 +32,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.status",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "active_count": 0,
           "archived_count": 0,
@@ -55,7 +63,7 @@
           "unconverted_currency_count": 0
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

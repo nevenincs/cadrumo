@@ -24,9 +24,10 @@ from ..common import (
     preserve_requested_cli_leaf,
     project_cli_policy_refusal,
 )
-from ..errors import CliRefusedBoundaryError, suspend_error_boundary
+from ..errors import CliRefusedBoundaryError
 from ..main import app
 from .cli_runner import cadrumo_click_command
+from .error_boundary_scope import suspend_error_boundary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -139,7 +140,7 @@ def test_real_root_fallback_refusal_attaches_the_typed_projection(tmp_path: Path
     assert projection is not None
     assert projection.requested_leaf is not None
     assert projection.requested_leaf.subject_leaf_key == "modelo.work.verify"
-    assert projection.precondition_action.failed_condition_id == "profile.active"
+    assert projection.precondition_action.failed_condition_id == "profile.active.available"
     assert projection.precondition_action.action is not None
     assert projection.precondition_action.action.action_id == "operator.profile.create"
 

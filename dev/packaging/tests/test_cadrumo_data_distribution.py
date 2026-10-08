@@ -1,27 +1,27 @@
-"""Packaging gate for the two ``cadrumo-data-*`` corpus companion distributions.
+"""Packaging gate for the three ``cadrumo-data-*`` corpus companion distributions.
 
 The wheel-split decision moves the corpus source binaries
 (``_data/corpus/**/*.{pdf,xls,xlsx}``) out of the compact ``cadrumo`` wheel. Because
 the full binary set exceeds PyPI's 100 MB per-file cap, it is split along the
-corpus directory seam into TWO sub-cap companions, each under the cap so no size
+corpus directory seam into THREE sub-cap companions, each under the cap so no size
 grant is needed:
 
 * ``cadrumo-data-manuals`` ships ``corpus/manuals``.
-* ``cadrumo-data-official`` ships ``corpus/aeat_official``, ``corpus/eu_official``,
-  and ``corpus/normatives``.
+* ``cadrumo-data-official`` ships ``corpus/aeat_official`` and ``corpus/eu_official``.
+* ``cadrumo-data-normatives`` ships ``corpus/normatives``.
 
-Both ship subtrees of the SAME ``cadrumo_data`` PEP 420 implicit namespace package
-(NEITHER ships ``cadrumo_data/__init__.py``, which would collide on a joint
+All ship subtrees of the SAME ``cadrumo_data`` PEP 420 implicit namespace package
+(NONE ships ``cadrumo_data/__init__.py``, which would collide on a joint
 install), so ``importlib.resources.files("cadrumo_data")`` resolves a
-``MultiplexedPath`` over both installed portions.
+``MultiplexedPath`` over all installed portions.
 
-This gate builds both real companion wheels and asserts:
+This gate builds all three real companion wheels and asserts:
 
 1. Each companion packages EXACTLY the repository-visible corpus source binaries under
    its owned subtree — no more, no fewer — each under the mirrored
    ``cadrumo_data/_data/corpus/<relative>`` path the runtime corpus-locator seam
    resolves.
-2. The two companions are DISJOINT and their union equals the FULL source-tree
+2. The three companions are DISJOINT and their union equals the FULL source-tree
    corpus-binary set — every binary the compact ``cadrumo`` wheel sheds is shipped by
    exactly one companion, and none twice.
 3. Neither ships ``cadrumo_data/__init__.py`` (the namespace-package invariant) nor
@@ -45,6 +45,7 @@ import subprocess
 import zipfile
 from dataclasses import dataclass
 from functools import cache
+from itertools import combinations
 from pathlib import Path
 
 import pytest
@@ -55,6 +56,7 @@ from dev._paths import REPO_ROOT
 from dev.source_tree import repository_files
 
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
+from ..hashing import sha256_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -89,7 +91,13 @@ _COMPANIONS = (
         dist_name="cadrumo-data-official",
         project_dir="cadrumo_data_official",
         wheel_glob="cadrumo_data_official-*.whl",
-        owned_subdirs=("aeat_official", "eu_official", "normatives"),
+        owned_subdirs=("aeat_official", "eu_official"),
+    ),
+    _Companion(
+        dist_name="cadrumo-data-normatives",
+        project_dir="cadrumo_data_normatives",
+        wheel_glob="cadrumo_data_normatives-*.whl",
+        owned_subdirs=("normatives",),
     ),
 )
 
@@ -100,6 +108,7 @@ class _BuiltWheel:
 
     members: frozenset[str]
     size_bytes: int
+    wheel_path: Path
 
 
 @cache
@@ -157,12 +166,12 @@ def _build_wheel(companion: _Companion, out_root: Path) -> _BuiltWheel:
     wheel = wheels[0]
     with zipfile.ZipFile(wheel) as archive:
         members = frozenset(info.filename for info in archive.infolist())
-    return _BuiltWheel(members=members, size_bytes=wheel.stat().st_size)
+    return _BuiltWheel(members=members, size_bytes=wheel.stat().st_size, wheel_path=wheel)
 
 
 @pytest.fixture(scope="module")
 def built_wheels(tmp_path_factory: pytest.TempPathFactory) -> dict[str, _BuiltWheel]:
-    """Build both companion wheels once and return them keyed by distribution name."""
+    """Build all three companion wheels once and return them keyed by distribution name."""
     if shutil.which("uv") is None:
         raise AssertionError(
             "uv binary not found on PATH; the Cadrumo-data distribution gate cannot run without the build driver",
@@ -194,13 +203,12 @@ def test_companion_packages_exactly_its_owned_subtree(built_wheels: dict[str, _B
 
 
 def test_companions_are_disjoint_and_exhaustive(built_wheels: dict[str, _BuiltWheel]) -> None:
-    """The two companions share no member and together ship the full source corpus set."""
-    manuals = _corpus_members(built_wheels["cadrumo-data-manuals"])
-    official = _corpus_members(built_wheels["cadrumo-data-official"])
-    overlap = sorted(manuals & official)
-    assert not overlap, f"the two companions ship {len(overlap)} shared corpus member(s): {overlap[:10]!r}"
-
-    union = manuals | official
+    """The three companions share no member and ship the full source corpus set."""
+    partitions = {name: _corpus_members(wheel) for name, wheel in built_wheels.items()}
+    for (left_name, left), (right_name, right) in combinations(partitions.items(), 2):
+        overlap = sorted(left & right)
+        assert not overlap, f"{left_name} and {right_name} share corpus members: {overlap[:10]!r}"
+    union = set().union(*partitions.values())
     expected_full = {_companion_member(path) for path in _source_corpus_binaries()}
     missing = sorted(expected_full - union)
     extra = sorted(union - expected_full)
@@ -218,7 +226,7 @@ def test_companion_ships_no_init_or_derived_member(built_wheels: dict[str, _Buil
     for companion in _COMPANIONS:
         members = built_wheels[companion.dist_name].members
         assert "cadrumo_data/__init__.py" not in members, (
-            f"{companion.dist_name} ships cadrumo_data/__init__.py; both companions must be PEP 420 namespace "
+            f"{companion.dist_name} ships cadrumo_data/__init__.py; all companions must be PEP 420 namespace "
             "portions or a joint install collides on that path"
         )
         foreign = sorted(
@@ -260,5 +268,20 @@ def test_companion_wheel_is_under_the_pypi_file_cap(built_wheels: dict[str, _Bui
         assert size_bytes < PYPI_FILE_CAP_BYTES, (
             f"{companion.dist_name} wheel is {size_mb:.1f} MB, at or over PyPI's 100 MB per-file cap; the split "
             "exists precisely to keep each companion sub-cap without a size grant — the corpus seam partition must "
-            "be rebalanced or a third companion carved"
+            "be revised without losing source bytes"
         )
+
+
+def test_companion_preserves_every_owned_source_byte(built_wheels: dict[str, _BuiltWheel]) -> None:
+    """Each built corpus member equals the independently enumerated source bytes."""
+    from hashlib import sha256
+
+    for companion in _COMPANIONS:
+        with zipfile.ZipFile(built_wheels[companion.dist_name].wheel_path) as archive:
+            for member in sorted(_expected_members(companion)):
+                digest = sha256()
+                with archive.open(member) as stream:
+                    for block in iter(lambda: stream.read(1024 * 1024), b""):
+                        digest.update(block)
+                source = _REPO_ROOT / _CORPUS_SOURCE_PREFIX / member.removeprefix(_COMPANION_CORPUS_PREFIX)
+                assert digest.hexdigest() == sha256_path(source), f"changed corpus bytes: {member}"

@@ -12,6 +12,9 @@ well under it as text, which is exactly the remedy the advisory recommends.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -19,6 +22,7 @@ from pydantic import JsonValue
 
 from cadrumo.tests.golden_comparison import canonicalise
 
+from .. import checks
 from ..checks import (
     READER_FRAME_OUTPUT_ADVISORY_BYTES,
     check_sequences,
@@ -27,8 +31,9 @@ from ..checks import (
     refresh_sequences,
 )
 from ..cli import main
-from ..golden_store import GoldenFrame, SequenceGolden
-from ..schema import FrameKind
+from ..golden_store import GoldenFrame, SequenceGolden, golden_path, read_golden, write_golden
+from ..runner import FrameExecution, SequenceTranscript
+from ..schema import FrameKind, ParsedSequence
 
 _PAGE = "tutorials/output-advisory-case"
 _SEQUENCE_ID = "output-advisory-case"
@@ -230,3 +235,180 @@ class TestBothModesReportTheAdvisory:
         assert len(advisory_lines) == 1
         assert advisory_lines[0].startswith("advisory: ")
         assert "reader-facing limit" not in captured.err
+
+
+_REFRESH_PAGE = "tutorials/refresh-readiness-case"
+_REFRESH_SEQUENCE_ID = "refresh-readiness-case"
+_READINESS_EXPECTATIONS = (
+    'result.modelo == "303"',
+    "result.filing_year == 2026",
+    'result.period.code == "1T"',
+    'result.revision_id == "2026-y-siguientes"',
+    "result.profile_ready == true",
+    "result.binding_ready == false",
+)
+
+
+def _readiness_transcript(
+    sequence: ParsedSequence,
+    root: Path,
+    *,
+    runtime_refusal: bool,
+) -> SequenceTranscript:
+    """Supply the two observed exit-two output families without native execution."""
+    envelope: dict[str, JsonValue] = {
+        "active_profile": "refresh-guard-profile",
+        "command": "modelo.readiness",
+        "schema_version": "2",
+        "status": "error" if runtime_refusal else "warning",
+        "notices": [],
+    }
+    if runtime_refusal:
+        envelope["error"] = {
+            "code": "REFUSED_LOCAL_RUNTIME",
+            "category": "REFUSED",
+            "context": {"reason": "runtime_deadline_exceeded"},
+            "message": "runtime_deadline_exceeded",
+            "retryable": False,
+            "action": None,
+            "runbook_id": None,
+            "trace_id": None,
+        }
+    else:
+        envelope["result"] = {
+            "modelo": "303",
+            "filing_year": 2026,
+            "period": {"code": "1T", "filing_year": 2026},
+            "revision_id": "2026-y-siguientes",
+            "profile_ready": True,
+            "binding_ready": False,
+            "ready": False,
+        }
+    frame = sequence.executed_frames[0]
+    rendered = json.dumps(envelope)
+    return SequenceTranscript(
+        sequence_id=sequence.sequence_id,
+        profile_id="refresh-guard-profile",
+        frozen_instant=datetime(2026, 4, 1, 9, tzinfo=UTC),
+        storage_root=str(root / "storage"),
+        workdir=str(root / "workdir"),
+        frames=(
+            FrameExecution(
+                kind=FrameKind.RESULT,
+                command_line=frame.command_line,
+                argv=frame.argv,
+                exit_code=2,
+                output="" if runtime_refusal else rendered,
+                stderr=rendered if runtime_refusal else "",
+                envelope=envelope,
+                envelope_source="stderr" if runtime_refusal else "stdout",
+            ),
+        ),
+    )
+
+
+def _refresh_readiness_fixture(
+    root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    runtime_refusal: bool,
+) -> tuple[Path, SequenceTranscript, list[str]]:
+    """Keep real discovery/evaluation/storage and substitute only external boundaries."""
+    docs_root = root / "docs"
+    page = docs_root / f"{_REFRESH_PAGE}.md"
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "# Refresh readiness case\n\n"
+        "Create a profile first with `aeat config profile create`.\n\n"
+        f"```{{cli-sequence}} {_REFRESH_SEQUENCE_ID}\n"
+        ":verify: Confirm the readiness check runs for the target modelo and period.\n"
+        "```\n",
+        encoding="utf-8",
+    )
+    contract = docs_root / "_sequences" / "contracts" / _REFRESH_PAGE / f"{_REFRESH_SEQUENCE_ID}.seq"
+    contract.parent.mkdir(parents=True)
+    contract.write_text(
+        "@result aeat --format json app modelo readiness --modelo 303 --year 2026 --period 1T\n"
+        + "".join(f"@expect {expectation}\n" for expectation in _READINESS_EXPECTATIONS)
+        + "@expect exit_code == 2\n",
+        encoding="utf-8",
+    )
+    discovered, problems = checks.discover_sequences(docs_root=docs_root)
+    assert problems == () and len(discovered) == 1
+    sequence = discovered[0].sequence
+    valid = _readiness_transcript(sequence, root, runtime_refusal=False)
+    supplied = _readiness_transcript(sequence, root, runtime_refusal=runtime_refusal)
+    events: list[str] = []
+
+    def current_authority() -> None:
+        events.append("authority")
+
+    @contextmanager
+    def execute_fresh(actual: ParsedSequence) -> Iterator[SequenceTranscript]:
+        assert actual == sequence
+        events.append("execute")
+        try:
+            yield supplied
+        finally:
+            events.append("retire")
+
+    monkeypatch.setattr(checks, "require_current_authority", current_authority)
+    monkeypatch.setattr(checks, "_execute_in_fresh_sandbox", execute_fresh)
+    return docs_root, valid, events
+
+
+@pytest.mark.unit
+@pytest.mark.hex_core
+@pytest.mark.docs
+class TestRefreshExpectationGuard:
+    @pytest.mark.parametrize("prior_golden", [False, True])
+    def test_same_exit_runtime_refusal_never_writes_or_replaces_business_golden(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        prior_golden: bool,
+    ) -> None:
+        docs_root, valid, events = _refresh_readiness_fixture(tmp_path, monkeypatch, runtime_refusal=True)
+        goldens_root = tmp_path / "goldens"
+        target = golden_path(_REFRESH_PAGE, _REFRESH_SEQUENCE_ID, goldens_root=goldens_root)
+        before: bytes | None = None
+        if prior_golden:
+            assert write_golden(valid, page=_REFRESH_PAGE, goldens_root=goldens_root) == target
+            before = target.read_bytes()
+
+        written, problems, _advisories = checks.refresh_sequences(docs_root=docs_root, goldens_root=goldens_root)
+
+        assert written == ()
+        assert len(problems) == len(_READINESS_EXPECTATIONS)
+        for expectation in _READINESS_EXPECTATIONS:
+            json_path = expectation.split(" == ", 1)[0]
+            assert any(f"@expect path {json_path!r} is missing" in problem for problem in problems), problems
+        assert all(
+            _REFRESH_PAGE in problem and _REFRESH_SEQUENCE_ID in problem and "frame 0" in problem
+            for problem in problems
+        )
+        assert events == ["authority", "execute", "retire"]
+        if before is None:
+            assert not target.exists()
+        else:
+            assert target.read_bytes() == before
+
+    def test_same_exit_business_warning_is_still_written_and_read_back(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        docs_root, valid, events = _refresh_readiness_fixture(tmp_path, monkeypatch, runtime_refusal=False)
+        goldens_root = tmp_path / "goldens"
+        target = golden_path(_REFRESH_PAGE, _REFRESH_SEQUENCE_ID, goldens_root=goldens_root)
+
+        written, problems, _advisories = checks.refresh_sequences(docs_root=docs_root, goldens_root=goldens_root)
+
+        assert problems == ()
+        assert written == (target,)
+        assert events == ["authority", "execute", "retire"]
+        loaded = read_golden(_REFRESH_PAGE, _REFRESH_SEQUENCE_ID, goldens_root=goldens_root)
+        assert loaded.frames[0].exit_code == 2
+        assert loaded.frames[0].envelope is not None
+        assert loaded.frames[0].envelope["status"] == "warning"
+        assert loaded.frames[0].envelope == valid.frames[0].envelope

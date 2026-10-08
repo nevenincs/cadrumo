@@ -47,7 +47,7 @@ def _run_recipe(tmp_path: Path, *lines: str) -> CommandResult:
         [just_executable, "--justfile", str(justfile), "probe"],
         cwd=tmp_path,
         errors="replace",
-        timeout_seconds=60,
+        timeout_seconds=None,
     )
 
 

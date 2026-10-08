@@ -82,9 +82,9 @@ RELEASE_COHORT_INTEGRATION_FAMILY: Final[ScratchFamily] = ScratchFamily(
 
 That test snapshots the repository so both of its builds see one immovable
 copy, and removes the snapshot in a ``finally`` block. The block covers a test
-that finishes; it covers neither a killed worker nor a killed session, and
-this suite's own ceiling documents that a worker parked in
-``subprocess.wait()`` exits uncleanly rather than unwinding.
+that finishes; it covers neither a killed worker nor a killed session.
+Forced process termination skips that cleanup, so a later owning session
+must observe and reclaim abandoned scratch.
 """
 
 RELEASE_STAGING_FAMILY: Final[ScratchFamily] = ScratchFamily(
@@ -280,10 +280,10 @@ def _is_reclaimable(
     to be running. That ordering is deliberate, and it is the backstop for
     process-identifier reuse: a recycled identifier makes an abandoned
     directory look owned, and with the liveness answer on top it would be
-    retained forever rather than for one more day. Nothing live reaches the
-    ceiling -- a release build runs in minutes, and the integration proof that
-    mints the largest family is capped at an hour by its own timeout -- and the
-    automatic callers never apply the ceiling at all.
+    retained forever rather than for one more day. An explicit age sweep can
+    therefore remove quiet scratch even while its named owner appears live.
+    Automatic callers never apply this age ceiling; they require observed
+    disappearance and the abandonment grace.
     """
     age = reference - candidate.stat().st_mtime
     if reclaim_by_age and age > _STALE_AFTER_SECONDS:
@@ -441,6 +441,44 @@ def _scratch_bytes(candidate: Path) -> int:
     return sum(entry.stat().st_size for entry in scan_directory(candidate, recursive=True) if entry.is_file())
 
 
+def _report_unclaimed_scratch(
+    stream: TextIO,
+    var_root: Path,
+    judged: set[str],
+    measure: Callable[[Path], int] | None,
+    bloat_threshold: int,
+) -> list[tuple[Path, int]]:
+    unclaimed = sorted(
+        (
+            (candidate, measure(candidate) if measure else 0)
+            for candidate in scan_directory(var_root)
+            if candidate.name not in judged
+        ),
+        key=lambda item: -item[1],
+    )
+    for candidate, size in unclaimed:
+        marker = "BLOAT" if bloat_threshold and size >= bloat_threshold else "     "
+        print(
+            f"  {marker} {size / 1_000_000_000:7.3f} GB  {candidate.name}  -- no registered scratch family", file=stream
+        )
+    return unclaimed
+
+
+def _report_spared_scratch(
+    stream: TextIO,
+    spared: tuple[Path, ...],
+    measure: Callable[[Path], int] | None,
+    bloat_threshold: int,
+) -> None:
+    sized = sorted(
+        ((candidate, measure(candidate) if measure else 0) for candidate in spared),
+        key=lambda item: -item[1],
+    )
+    for candidate, size in sized:
+        marker = "BLOAT" if bloat_threshold and size >= bloat_threshold else "SPARE"
+        print(f"  {marker} {size / 1_000_000_000:7.3f} GB  {candidate.name}", file=stream)
+
+
 def report_var_scratch(
     stream: TextIO,
     var_root: Path,
@@ -493,27 +531,8 @@ def report_var_scratch(
     # entitled to remove". They are listed, never touched, and never counted
     # into the reclaimable total.
     judged = {candidate.name for candidate in (*reclaimable, *spared)} | ignore_names
-    unclaimed = sorted(
-        (
-            (candidate, measure(candidate) if measure else 0)
-            for candidate in scan_directory(var_root)
-            if candidate.name not in judged
-        ),
-        key=lambda item: -item[1],
-    )
-    for candidate, size in unclaimed:
-        marker = "BLOAT" if bloat_threshold and size >= bloat_threshold else "     "
-        print(
-            f"  {marker} {size / 1_000_000_000:7.3f} GB  {candidate.name}  -- no registered scratch family", file=stream
-        )
-
-    sized = sorted(
-        ((candidate, measure(candidate) if measure else 0) for candidate in spared),
-        key=lambda item: -item[1],
-    )
-    for candidate, size in sized:
-        marker = "BLOAT" if bloat_threshold and size >= bloat_threshold else "SPARE"
-        print(f"  {marker} {size / 1_000_000_000:7.3f} GB  {candidate.name}", file=stream)
+    unclaimed = _report_unclaimed_scratch(stream, var_root, judged, measure, bloat_threshold)
+    _report_spared_scratch(stream, spared, measure, bloat_threshold)
 
     unclaimed_bytes = sum(size for _candidate, size in unclaimed)
     if unclaimed:

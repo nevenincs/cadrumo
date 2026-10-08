@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:edada4e7d452b80ed6e071395942e03eb3fc5cecd4b01f544e98702747fbb78d'
 related:
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
   - "[[2026-08-24-registry-completeness-closure-adr]]"
   - "[[2026-08-28-registry-narrow-mechanism-widening-adr]]"
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
   - "[[2026-09-07-registry-temporal-coverage-enrolment-versus-declared-projection-research]]"
 ---
 # `registry-temporal-coverage` audit: `S32 in-file enrolment census review`

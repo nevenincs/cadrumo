@@ -1,0 +1,712 @@
+[[revisions.2025.export_layouts]]
+id = 'modelo-714-fichero-aeat'
+
+[[revisions.2025.export_layouts.records]]
+id = 'modelo-714-page-02'
+record_type = '714-02'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-1'
+offset = 826
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-1'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-1'
+offset = 831
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-1'
+offset = 851
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-1'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-1'
+offset = 852
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-1'
+offset = 853
+length = 37
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-1'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-1'
+offset = 890
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-1'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-2'
+offset = 903
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-2'
+offset = 904
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-2'
+offset = 909
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-2'
+offset = 929
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-2'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-2'
+offset = 930
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-2'
+offset = 931
+length = 37
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-2'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-2'
+offset = 968
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-2'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-3'
+offset = 981
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-3'
+offset = 982
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-3'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-3'
+offset = 987
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-3'
+offset = 1007
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-3'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-3'
+offset = 1008
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-3'
+offset = 1009
+length = 37
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-3'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-3'
+offset = 1046
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-3'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-4'
+offset = 1059
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-4'
+offset = 1060
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-4'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-4'
+offset = 1065
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-4'
+offset = 1085
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-4'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-4'
+offset = 1086
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-4'
+offset = 1087
+length = 37
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-4'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-4'
+offset = 1124
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-4'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-5'
+offset = 1137
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-5'
+offset = 1138
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-5'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-5'
+offset = 1143
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-5'
+offset = 1163
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-5'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-5'
+offset = 1164
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-5'
+offset = 1165
+length = 37
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-5'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-5'
+offset = 1202
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-5'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-6'
+offset = 1215
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-clave-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-6'
+offset = 1216
+length = 5
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-porcentaje-titularidad-6'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+value_policy = 'implied-decimal'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-6'
+offset = 1221
+length = 20
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-referencia-catastral-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-6'
+offset = 1241
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-6'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+]
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-6'
+offset = 1242
+length = 1
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valor-utilizado-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-6'
+offset = 1243
+length = 37
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-situacion-del-inmueble-6'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-declared-bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-6'
+offset = 1280
+length = 13
+kind = 'binding'
+binding = 'modelo-714.714-02.bienes-y-derechos-b-bienes-inmuebles-naturaleza-rustica-valoracion-6'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-declaracion-02'
+offset = 1293
+length = 13
+kind = 'casilla'
+casilla_id = 'declaracion-02'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+design_type = 'N'
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-reserved-2'
+offset = 1306
+length = 183
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'modelo-714-page-02-end'
+offset = 1489
+length = 12
+kind = 'literal'
+literal = '</T71402000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hac-277-2026:art-4']
+source_refs = ['aeat-dr-714-2025']
+
+[revisions.2025.export_layouts.records.row_field_casilla_ids]

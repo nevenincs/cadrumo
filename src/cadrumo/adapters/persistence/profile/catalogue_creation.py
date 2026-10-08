@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import date
-from decimal import Decimal
 from typing import Protocol, override
 
 from ....application.invoices.catalogue_creation_ports import (
@@ -22,12 +21,14 @@ from ....application.invoices.catalogue_creation_ports import (
     CatalogueInvoiceRateProviderPort,
     CatalogueInvoiceRepositoryPort,
 )
+from ....application.invoices.catalogue_intake_operation_ports import InvoiceIntakeCommitConflictError
 from ....application.invoices.catalogue_lifecycle_ports import CatalogueLifecyclePorts
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.errors import BucketEventValidationError
 from ....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError, append_bucket_event
 from ....domain.currency.errors import ExchangeRateProviderError
+from ....domain.currency.models import EurRateLookup
 from ....domain.currency.service import ExchangeRateProvider
 from ....domain.invoices.errors import InvoicePersistenceError, InvoiceValidationError
 from ....domain.invoices.models import InvoiceCatalogue
@@ -186,10 +187,12 @@ class CatalogueCreationAuditCommitAdapter(CatalogueInvoiceAuditCommitPort):
         *,
         invoice_repository: _InvoiceAuditRepository,
         event_repository: _EventAuditRepository,
+        commit: Callable[[Callable[[], None]], None] | None = None,
     ) -> None:
         """Bind the two secure singleton catalogues that share each batch."""
         self._invoice_repository = invoice_repository
         self._event_repository = event_repository
+        self._commit = commit
 
     @override
     def mutate_with_event(
@@ -214,13 +217,15 @@ class CatalogueCreationAuditCommitAdapter(CatalogueInvoiceAuditCommitPort):
                     append_bucket_event(events, event),
                     expected_revision_id=event_revision_id,
                 )
-                self._invoice_repository.save_with_secure_object_writes(
-                    updated,
-                    expected_revision_id=invoice_revision_id,
-                    extra_writes=(event_write,),
-                )
+
+                self._commit_prepared_invoice_batch(updated, invoice_revision_id, event_write)
             except SecureObjectRevisionConflictError as exc:
                 last_conflict = exc
+                continue
+            except InvoiceIntakeCommitConflictError as exc:
+                if not isinstance(exc.__cause__, SecureObjectRevisionConflictError):
+                    raise
+                last_conflict = exc.__cause__
                 continue
             except InvoiceValidationError:
                 raise
@@ -230,6 +235,32 @@ class CatalogueCreationAuditCommitAdapter(CatalogueInvoiceAuditCommitPort):
         if last_conflict is not None:
             raise CatalogueInvoicePersistenceError("invoice_catalogue_and_event_commit_conflict") from last_conflict
         raise AssertionError("invoice audit co-commit exhausted without a conflict")
+
+    def _commit_prepared_invoice_batch(
+        self, updated: InvoiceCatalogue, invoice_revision_id: str, event_write: SecureObjectWrite
+    ) -> None:
+        """Submit one prepared co-write through the optional intake commit fence."""
+
+        def save(
+            prepared: InvoiceCatalogue = updated,
+            prepared_revision_id: str = invoice_revision_id,
+            prepared_event: SecureObjectWrite = event_write,
+        ) -> None:
+            try:
+                self._invoice_repository.save_with_secure_object_writes(
+                    prepared,
+                    expected_revision_id=prepared_revision_id,
+                    extra_writes=(prepared_event,),
+                )
+            except SecureObjectRevisionConflictError as exc:
+                if self._commit is None:
+                    raise
+                raise InvoiceIntakeCommitConflictError("prepared invoice batch lost its CAS revision") from exc
+
+        if self._commit is None:
+            save()
+        else:
+            self._commit(save)
 
 
 class CatalogueCreationRateProviderAdapter(CatalogueInvoiceRateProviderPort):
@@ -246,29 +277,41 @@ class CatalogueCreationRateProviderAdapter(CatalogueInvoiceRateProviderPort):
         return self._provider.rate_source_id
 
     @override
-    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
-        """Fetch a rate while hiding outbound-provider failure types."""
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        """Look up a rate while hiding outbound-provider failure types."""
         try:
-            return self._provider.get_eur_rate(currency, rate_date)
+            return self._provider.lookup_eur_rate(currency, rate_date)
         except (ExchangeRateProviderError, OSError) as exc:
             raise CatalogueInvoiceRateError("exchange_rate_lookup") from exc
 
 
-def build_catalogue_creation_ports(*, bucket_id: str) -> CatalogueCreationPorts:
-    """Bind the existing encrypted repositories and the host's rate provider for a bucket."""
-    from ....application.exchange_rate_provider import exchange_rate_provider
+def _catalogue_repositories(*, bucket_id: str) -> tuple[InvoiceCatalogueRepository, BucketEventHistoryRepository]:
+    """Bind local invoice and audit storage without resolving an outbound provider."""
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
     invoice_repository = InvoiceCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects)
     event_repository = BucketEventHistoryRepository(objects=objects)
+    return invoice_repository, event_repository
+
+
+def build_catalogue_creation_ports(
+    *,
+    bucket_id: str,
+    commit: Callable[[Callable[[], None]], None] | None = None,
+) -> CatalogueCreationPorts:
+    """Bind the existing encrypted repositories and the host's rate provider for a bucket."""
+    from ....application.exchange_rate_provider import exchange_rate_provider
+
+    invoice_repository, event_repository = _catalogue_repositories(bucket_id=bucket_id)
     return CatalogueCreationPorts(
         invoice_repository=CatalogueCreationInvoiceRepositoryAdapter(repository=invoice_repository),
         event_repository=CatalogueCreationEventRepositoryAdapter(repository=event_repository),
         audit_commit=CatalogueCreationAuditCommitAdapter(
             invoice_repository=invoice_repository,
             event_repository=event_repository,
+            commit=commit,
         ),
         rate_provider=CatalogueCreationRateProviderAdapter(provider=exchange_rate_provider()),
     )
@@ -277,12 +320,15 @@ def build_catalogue_creation_ports(*, bucket_id: str) -> CatalogueCreationPorts:
 def build_catalogue_lifecycle_ports(*, bucket_id: str) -> CatalogueLifecyclePorts:
     """Bind read, mutation, and audit adapters for one invoice bucket."""
     normalized_bucket_id = bucket_id.strip()
-    creation_ports = build_catalogue_creation_ports(bucket_id=normalized_bucket_id)
+    invoice_repository, event_repository = _catalogue_repositories(bucket_id=normalized_bucket_id)
     return CatalogueLifecyclePorts(
         read_ports=build_invoice_catalogue_read_ports(bucket_id=normalized_bucket_id),
-        invoice_repository=creation_ports.invoice_repository,
-        event_repository=creation_ports.event_repository,
-        audit_commit=creation_ports.audit_commit,
+        invoice_repository=CatalogueCreationInvoiceRepositoryAdapter(repository=invoice_repository),
+        event_repository=CatalogueCreationEventRepositoryAdapter(repository=event_repository),
+        audit_commit=CatalogueCreationAuditCommitAdapter(
+            invoice_repository=invoice_repository,
+            event_repository=event_repository,
+        ),
     )
 
 

@@ -3,16 +3,15 @@ tags:
   - '#audit'
   - '#semantic-consolidation'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:a9f20766a2ab4c6d4c1576893a71ac33bb45c2490c8cd411352715ab46566832'
+body_hash: 'sha256:9185d85b222df963354594b7db7c4eb28d94264c8f32a6c54a950c74975620ff'
 related: []
 ---
 
 # `semantic-consolidation` audit: non-inert package namespaces, censused by construct
 
-## Why this re-census was needed
-
+## Scope
 The lazy-export ADR assembled its population by grepping one identifier,
 `_LAZY_EXPORTS`, and a later sweep widened it to `__getattr__`. Both searches
 name a MECHANISM, and a mechanism census cannot see the same construct spelled
@@ -29,8 +28,7 @@ The rule this measures against does not mention laziness at all: package
 re-export project symbols". An eagerly re-exporting facade breaches it exactly
 as a lazy one does, and is harder to spot because it looks like ordinary code.
 
-## The population, by kind
-
+## Findings
 ### Eager re-export facades (the bulk)
 
 Twelve heaviest, by count of names re-exported through the namespace:
@@ -93,8 +91,7 @@ registry validator so the registry never imports renta. The inversion is sound;
 siting the trigger in a package namespace is what makes it a finding, because
 it converts "touch this package" into "import 613 modules".
 
-## What this changes about the campaign
-
+## Recommendations
 `P07` cannot close on the ten namespaces it names. Either its completion
 criterion widens to the censused 108, or the plan records explicitly what the
 standing goal still asks for that the narrower scope excludes -- a campaign may

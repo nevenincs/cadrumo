@@ -15,7 +15,7 @@ from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.profile_session import ProfileSessionRefusalReason
-from .._profile_authentication_gate import _preflight_sources
+from .._profile_authentication_gate import _preflight_sources, _uses_runtime_profile_client
 from .._profile_authentication_notice import (
     drain_profile_authentication_notices,
     stage_profile_session_not_persisted_notice,
@@ -37,6 +37,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def _leaf(identity: str):
     return COMMAND_GRAPH.by_schema_identity()[identity]
+
+
+def test_censo_file_preview_keeps_local_profile_admission_and_apply_uses_runtime() -> None:
+    spec = COMMAND_GRAPH.node("config_profile_censo_import").spec
+    assert not _uses_runtime_profile_client(spec, {"apply": False})
+    assert _uses_runtime_profile_client(spec, {"apply": True})
 
 
 @pytest.mark.parametrize(

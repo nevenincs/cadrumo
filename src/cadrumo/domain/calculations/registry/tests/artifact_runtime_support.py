@@ -27,7 +27,7 @@ from ..schema import (
     ModeloRevision,
     RegistryCatalogues,
 )
-from ..schema_base import EvidenceTier
+from ..schema_base import EvidenceTier, RegistrySourceKind
 from ..schema_exports import ExportLayoutDefinition
 from ..schema_input_kind import InputKind
 from ..schema_references import LegalReference, PeriodSelector, SourceReference
@@ -72,8 +72,13 @@ def minimal_catalogues() -> RegistryCatalogues:
         required_text=("art-1",),
     )
     source = _minimal_source_ref()
-    workbook = source.model_copy(
-        update={"id": _WORKBOOK_SOURCE_ID, "evidence_tier": "layout_authority", "kind": "record_design"}
+    workbook = SourceReference.model_validate(
+        {
+            **source.model_dump(mode="python"),
+            "id": _WORKBOOK_SOURCE_ID,
+            "evidence_tier": EvidenceTier.LAYOUT_AUTHORITY,
+            "kind": RegistrySourceKind.RECORD_DESIGN,
+        }
     )
     tax_id_format = GovernedFact.model_validate(
         {

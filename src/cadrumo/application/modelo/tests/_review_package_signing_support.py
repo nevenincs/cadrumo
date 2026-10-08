@@ -38,5 +38,10 @@ class InMemoryReviewPackageSigningKeypairCapability:
             self._keypairs[bucket_id] = keypair
             return keypair
 
+    def load_keypair(self, *, bucket_id: str) -> ReviewPackageSigningKeypair | None:
+        """Read an existing in-memory keypair without minting one."""
+        with self._lock:
+            return self._keypairs.get(bucket_id)
+
 
 __all__ = ["InMemoryReviewPackageSigningKeypairCapability"]

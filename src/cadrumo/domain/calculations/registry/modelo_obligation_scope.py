@@ -10,7 +10,7 @@ the registry merely to construct an identifier.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping, Set
+from collections.abc import Iterator, Mapping
 from datetime import date
 from typing import override
 
@@ -18,11 +18,10 @@ from ....core.errors.hierarchy import CoreValidationError
 from ....core.modelo import Modelo
 from ....core.time.clock import today_madrid
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
 __all__ = [
-    "NON_REGISTRY_MODELOS",
     "OUT_OF_SCOPE_OBLIGATIONS",
     "UNMODELED_OBLIGATIONS",
     "resolve_modelo_obligation_scope",
@@ -36,34 +35,14 @@ def _csv(value: str) -> tuple[str, ...]:
     return values
 
 
-def resolve_modelo_obligation_scope(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> tuple[Mapping[Modelo, str], frozenset[Modelo]]:
-    """Resolve the current Modelo obligation-scope partitions.
-
-    The authority owns publication identity and cache invalidation.  Resolving
-    on each view access therefore keeps the partitions aligned with the
-    current published artifact instead of introducing a second process-lifetime
-    cache in a value-type module.
-    """
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise CoreValidationError("Modelo obligation scope requires an explicit authority operation or scope")
-    resolved = selected_authority.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id="modelo-obligation-scope-mapping",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date or today_madrid(),
-        ),
-    )
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise CoreValidationError("Modelo obligation scope did not resolve as a mapping")
-    declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+def _scope_partitions(declarations: Mapping[str, str]) -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
     catalogue = frozenset(_csv(declarations["catalogue.codes"]))
     suppressed = frozenset(_csv(declarations["scope.suppressed.codes"]))
     registry_out = frozenset(_csv(declarations["scope.registry_out_of_scope.codes"]))
+    return catalogue, suppressed, registry_out
+
+
+def _scope_reasons(declarations: Mapping[str, str]) -> dict[str, str]:
     reasons: dict[str, str] = {}
     groups: dict[str, dict[str, str]] = {}
     for key, value in declarations.items():
@@ -80,11 +59,56 @@ def resolve_modelo_obligation_scope(
             if code in reasons and reasons[code] != reason:
                 raise CoreValidationError(f"Modelo scope code {code!r} has conflicting reasons")
             reasons[code] = reason
+    return reasons
+
+
+def _validate_scope_partitions(
+    reasons: Mapping[str, str],
+    catalogue: frozenset[str],
+    suppressed: frozenset[str],
+    registry_out: frozenset[str],
+) -> None:
     if not set(reasons).issubset(catalogue) or not suppressed.issubset(reasons) or not registry_out.issubset(reasons):
         raise CoreValidationError("Modelo scope partitions disagree with the published catalogue")
+
+
+def _scope_projection(
+    reasons: Mapping[str, str],
+    suppressed: frozenset[str],
+    registry_out: frozenset[str],
+) -> tuple[Mapping[Modelo, str], frozenset[Modelo]]:
     out_of_scope = {Modelo(code): reason for code, reason in reasons.items() if code not in suppressed}
     non_registry = frozenset(Modelo(code) for code in reasons if code not in registry_out)
     return out_of_scope, non_registry
+
+
+def resolve_modelo_obligation_scope(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> tuple[Mapping[Modelo, str], frozenset[Modelo]]:
+    """Resolve the current Modelo obligation-scope partitions.
+
+    The authority owns publication identity and cache invalidation.  Resolving
+    on each view access therefore keeps the partitions aligned with the
+    current published artifact instead of introducing a second process-lifetime
+    cache in a value-type module.
+    """
+    selected_authority = require_governed_fact_authority(authority, subject="Modelo obligation scope")
+    resolved = selected_authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="modelo-obligation-scope-mapping",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date or today_madrid(),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise CoreValidationError("Modelo obligation scope did not resolve as a mapping")
+    declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+    catalogue, suppressed, registry_out = _scope_partitions(declarations)
+    reasons = _scope_reasons(declarations)
+    _validate_scope_partitions(reasons, catalogue, suppressed, registry_out)
+    return _scope_projection(reasons, suppressed, registry_out)
 
 
 class _ScopeMapping(Mapping[Modelo, str]):
@@ -101,20 +125,5 @@ class _ScopeMapping(Mapping[Modelo, str]):
         return resolve_modelo_obligation_scope()[0][key]
 
 
-class _NonRegistryModelos(Set[Modelo]):
-    @override
-    def __contains__(self, value: object) -> bool:
-        return value in resolve_modelo_obligation_scope()[1]
-
-    @override
-    def __iter__(self) -> Iterator[Modelo]:
-        return iter(resolve_modelo_obligation_scope()[1])
-
-    @override
-    def __len__(self) -> int:
-        return len(resolve_modelo_obligation_scope()[1])
-
-
 OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = _ScopeMapping()
 UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = dict[Modelo, str]()
-NON_REGISTRY_MODELOS: Set[Modelo] = _NonRegistryModelos()

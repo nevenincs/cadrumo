@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:d3ba162ad56a543417ef6b8364f3d3425bc0a92ca3bf3363e4990f0354662b00'
+modified: '2026-10-03'
+body_hash: 'sha256:a13b5f7fc35f8e87cbdef8bc6d11d71460a34faa4ed3f3c82f48d70803e1a79c'
 related: []
 ---
 
@@ -50,8 +50,8 @@ The plan CLI again mutated adjacent rows while reporting success. The plan has b
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/blob_store/test_materialisation.py src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py -k "materialise or export or sensitive_direct_write"` passed with 26 selected tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/blob_store/_materialisation.py src/aeat/adapters/persistence/storage/blob_store/test_materialisation.py src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py` passed.
+- The historical check passed with 26 selected tests.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - Case-sensitive touched-file hygiene scan found no broad exception catches, suppressing pragmas, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, raw UTF-8 literals, local `Path("db://secure_objects")` construction, direct settings construction, or direct environment access.
 - Final S154 code review returned no findings. Residual risk is limited to direct OS write-failure injection being covered by inspection rather than patched fault injection, consistent with the no fake/monkeypatch test constraint.

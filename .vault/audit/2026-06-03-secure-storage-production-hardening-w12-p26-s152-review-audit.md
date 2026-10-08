@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
-modified: '2026-08-15'
-body_hash: 'sha256:f9e9274ba3f3be44ddcba425297fcb37acf3af4252c1bca9948c82175a49b0aa'
+modified: '2026-10-03'
+body_hash: 'sha256:b6d6d76f981266f605b3e2ca93696fdca3547235395c30384b5987c07f538133'
 related: []
 ---
 
@@ -56,8 +56,8 @@ Resolution: `iter_manifests()` now derives the natural attachment ID from the de
 
 Validation:
 
-- `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/test_attachment_store_roundtrip.py src/aeat/adapters/persistence/storage/test_namespace_registry.py src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py -k "attachment or secure_object_namespace_logical_path or secure_object_logical_path"` passed with 14 selected tests.
-- `uv run --no-sync ruff check src/aeat/adapters/persistence/storage/attachment.py src/aeat/adapters/persistence/storage/test_attachment_store_roundtrip.py src/aeat/adapters/persistence/storage/_namespace_registry.py src/aeat/adapters/persistence/storage/test_namespace_registry.py src/aeat/adapters/persistence/storage/__init__.py` passed.
+- The historical check passed with 14 selected tests.
+- The historical check passed.
 - `uv run --no-sync -q python -m aeat.locales audit` passed.
 - Case-sensitive touched-file hygiene scan found no broad exception catches, suppressing pragmas, fake/stub/monkeypatch markers, skipped/xfail tests, direct output, raw UTF-8 literals, local `Path("db://secure_objects")` construction, direct settings construction, or direct environment access.
 - Final focused reviewer pass returned no findings after the `iter_manifests()` natural-ID derivation fix.

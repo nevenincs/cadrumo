@@ -109,7 +109,7 @@ from .ledger.preflight import (
 )
 from .ledger.usage_ratio_repository import UsageRatioProfileLoader
 from .operator_actions.models import PreconditionVerdict
-from .producer_capture import ProducerCapture, ProducerCaptureScope
+from .producer_capture import ProducerCapture, ProducerCaptureCoordinate, ProducerCaptureScope
 from .state_projection_auth import ProjectionAuthReadiness, build_auth_readiness
 from .state_projection_ports import StateProjectionReadPorts
 from .user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement
@@ -456,16 +456,15 @@ CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
         BindingSourceKind.PAYABLE_INVOICE: "cli.app.modelo.bindings.readiness.factura_recibida",
         BindingSourceKind.COLLECTIBLE_INVOICE: "cli.app.modelo.bindings.readiness.factura_emitida",
         BindingSourceKind.M347_THIRD_PARTY_OPERATION: "cli.app.modelo.bindings.readiness.operacion_tercero",
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION: "cli.app.modelo.bindings.readiness.operacion_intracomunitaria",
         BindingSourceKind.LEDGER_TRANSACTION: "cli.app.modelo.bindings.readiness.datos_libro",
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: "cli.app.modelo.bindings.readiness.evidencia_factura_compra",
         BindingSourceKind.WITHHOLDING: "cli.app.modelo.bindings.readiness.retencion",
         BindingSourceKind.FOREIGN_ASSET: "cli.app.modelo.bindings.readiness.activo_extranjero",
-        BindingSourceKind.RELATED_PARTY_OPERATION: "cli.app.modelo.bindings.readiness.operacion_vinculada",
         BindingSourceKind.ATRIBUCION_MEMBER: "cli.app.modelo.bindings.readiness.miembro_atribucion",
-        BindingSourceKind.REFUND_OPERATION: "cli.app.modelo.bindings.readiness.operacion_reembolso",
-        BindingSourceKind.DONATIVO_DONOR: "cli.app.modelo.bindings.readiness.donante_donativo",
         BindingSourceKind.GASTO193_CONTRIBUTOR: "cli.app.modelo.bindings.readiness.gasto193_contribuyente",
         BindingSourceKind.WITHHOLDING296: "cli.app.modelo.bindings.readiness.withholding296_perceptor",
+        BindingSourceKind.AFILIADO_COTIZACION: "cli.app.modelo.bindings.readiness.afiliado_cotizacion",
     },
 )
 """Total locale-key projection for the noun describing each binding source."""
@@ -499,16 +498,15 @@ OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
         BindingSourceKind.PAYABLE_INVOICE: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.COLLECTIBLE_INVOICE: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.M347_THIRD_PARTY_OPERATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.LEDGER_TRANSACTION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.WITHHOLDING: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         BindingSourceKind.FOREIGN_ASSET: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
-        BindingSourceKind.RELATED_PARTY_OPERATION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
         BindingSourceKind.ATRIBUCION_MEMBER: OperatorActionAxis.SET_PROFILE_FACT,
-        BindingSourceKind.REFUND_OPERATION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
-        BindingSourceKind.DONATIVO_DONOR: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.GASTO193_CONTRIBUTOR: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.WITHHOLDING296: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        BindingSourceKind.AFILIADO_COTIZACION: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
     },
 )
 """Total action spine for a readiness ``missing_bindings`` source."""
@@ -587,6 +585,21 @@ _assert_total_action_projection(
 )
 
 
+class ModeloProfileRefusalCause(StrEnum):
+    """Closed cause of a profile readiness refusal, independent of display prose."""
+
+    SETUP_INCOMPLETE = "setup_incomplete"
+    NOT_APPLICABLE = "not_applicable"
+    PRE_ACTIVITY_PERIOD = "pre_activity_period"
+
+
+class ModeloRegistryRefusalCause(StrEnum):
+    """Closed cause of an unavailable modelo registry snapshot."""
+
+    SNAPSHOT_UNAVAILABLE = "snapshot_unavailable"
+    REVISION_MISMATCH = "revision_mismatch"
+
+
 class ProjectionModeloReadiness(BaseModel):
     """Readiness for one modelo target across all preflight axes.
 
@@ -649,9 +662,11 @@ class ProjectionModeloReadiness(BaseModel):
     profile_ready: bool
     per_operation_requirements_assessed: bool
     profile_refusal: str = ""
+    profile_refusal_cause: ModeloProfileRefusalCause | None = None
     profile_precondition_verdict: PreconditionVerdict | None = None
     registry_ready: bool = True
     registry_refusal: str = ""
+    registry_refusal_cause: ModeloRegistryRefusalCause | None = None
     binding_ready: bool = True
     missing_bindings: tuple[ProjectionModeloBindingRequirement, ...] = ()
     ledger_preflight_required: bool = False
@@ -666,6 +681,7 @@ class ProjectionModeloReadiness(BaseModel):
 class _ModeloReadinessRegistryResolution:
     snapshot: RegistrySnapshot | None
     refusal: str = ""
+    cause: ModeloRegistryRefusalCause | None = None
 
     @property
     def ready(self) -> bool:
@@ -697,6 +713,7 @@ class _ModeloReadinessEvaluation:
 
     profile_report: ProfilePreflightReport
     profile_refusal: str
+    profile_refusal_cause: ModeloProfileRefusalCause | None
     profile_precondition_verdict: PreconditionVerdict | None
     registry: _ModeloReadinessRegistryResolution
     period: Period
@@ -726,7 +743,7 @@ def _modelo_profile_refusal(
     request: ModeloReadinessRequest,
     period: Period,
     operation: PinnedAuthorityOperation,
-) -> tuple[str, PreconditionVerdict | None]:
+) -> tuple[str, PreconditionVerdict | None, ModeloProfileRefusalCause | None]:
     """Return the first profile refusal while evaluating every refusal limb.
 
     Only the setup-incomplete limb carries a typed recovery verdict: the
@@ -767,12 +784,16 @@ def _modelo_profile_refusal(
         period=period,
     )
     if setup_verdict is not None:
-        return tr("application.modelo.errors.profile_readiness_setup_incomplete"), setup_verdict
+        return (
+            tr("application.modelo.errors.profile_readiness_setup_incomplete"),
+            setup_verdict,
+            ModeloProfileRefusalCause.SETUP_INCOMPLETE,
+        )
     if applicability_refusal is not None:
-        return applicability_refusal[0], None
+        return applicability_refusal[0], None, ModeloProfileRefusalCause.NOT_APPLICABLE
     if pre_activity_refusal is not None:
-        return pre_activity_refusal[0], None
-    return "", None
+        return pre_activity_refusal[0], None, ModeloProfileRefusalCause.PRE_ACTIVITY_PERIOD
+    return "", None, None
 
 
 def _build_modelo_profile_stage(
@@ -782,7 +803,7 @@ def _build_modelo_profile_stage(
     period: Period,
     registry: _ModeloReadinessRegistryResolution,
     operation: PinnedAuthorityOperation,
-) -> tuple[ProfilePreflightReport, str, PreconditionVerdict | None]:
+) -> tuple[ProfilePreflightReport, str, PreconditionVerdict | None, ModeloProfileRefusalCause | None]:
     """Evaluate profile completeness and target-specific refusal limbs."""
     from .modelo.profile_readiness_gate import modelo_work_profile_preflight_report
 
@@ -799,14 +820,14 @@ def _build_modelo_profile_stage(
         profile_decode_context=operation.profile_decode_context(),
         operation=operation,
     )
-    profile_refusal, profile_verdict = _modelo_profile_refusal(
+    profile_refusal, profile_verdict, refusal_cause = _modelo_profile_refusal(
         record=context.record,
         bucket_id=context.bucket_id,
         request=request,
         period=period,
         operation=operation,
     )
-    return profile_report, profile_refusal, profile_verdict
+    return profile_report, profile_refusal, profile_verdict, refusal_cause
 
 
 def _build_modelo_ledger_stage(
@@ -845,7 +866,7 @@ def _evaluate_modelo_readiness(
     """Evaluate profile, registry, binding, and ledger axes for one request."""
     period = _ledger_period_for_modelo_readiness(request)
     registry = _resolve_modelo_readiness_registry(request, period=period, operation=operation)
-    profile_report, profile_refusal, profile_precondition_verdict = _build_modelo_profile_stage(
+    profile_report, profile_refusal, profile_precondition_verdict, profile_refusal_cause = _build_modelo_profile_stage(
         request,
         context=context,
         period=period,
@@ -875,6 +896,7 @@ def _evaluate_modelo_readiness(
     return _ModeloReadinessEvaluation(
         profile_report=profile_report,
         profile_refusal=profile_refusal,
+        profile_refusal_cause=profile_refusal_cause,
         profile_precondition_verdict=profile_precondition_verdict,
         registry=registry,
         period=period,
@@ -898,9 +920,11 @@ def _project_modelo_readiness(evaluation: _ModeloReadinessEvaluation) -> Project
         profile_ready=profile_ready,
         per_operation_requirements_assessed=profile_report.per_operation_requirements_assessed,
         profile_refusal=evaluation.profile_refusal,
+        profile_refusal_cause=evaluation.profile_refusal_cause,
         profile_precondition_verdict=evaluation.profile_precondition_verdict,
         registry_ready=evaluation.registry.ready,
         registry_refusal=evaluation.registry.refusal,
+        registry_refusal_cause=evaluation.registry.cause,
         binding_ready=not evaluation.missing_bindings,
         missing_bindings=evaluation.missing_bindings,
         ledger_preflight_required=ledger.required,
@@ -993,14 +1017,18 @@ def _resolve_modelo_readiness_registry(
             },
             exc_info=True,
         )
-        return _ModeloReadinessRegistryResolution(snapshot=None, refusal=refusal)
+        return _ModeloReadinessRegistryResolution(
+            snapshot=None, refusal=refusal, cause=ModeloRegistryRefusalCause.SNAPSHOT_UNAVAILABLE
+        )
     if request.revision_id and snapshot.revision.id != request.revision_id:
         refusal = _registry_readiness_revision_mismatch_refusal(
             request,
             period_token=period_token,
             resolved_revision_id=snapshot.revision.id,
         )
-        return _ModeloReadinessRegistryResolution(snapshot=None, refusal=refusal)
+        return _ModeloReadinessRegistryResolution(
+            snapshot=None, refusal=refusal, cause=ModeloRegistryRefusalCause.REVISION_MISMATCH
+        )
     return _ModeloReadinessRegistryResolution(snapshot=snapshot)
 
 
@@ -1427,6 +1455,19 @@ def capture_modelo_readiness(
     )
 
 
+def read_modelo_readiness_current_coordinate(
+    requests: tuple[ModeloReadinessRequest, ...],
+    *,
+    active_profile_id: str,
+    operation: PinnedAuthorityOperation,
+) -> ProducerCaptureCoordinate:
+    """Read the coordinate a later pass compares a readiness capture against."""
+    return _READINESS_CAPTURE_SCOPE.read_current_coordinate(
+        coordinate={"active_profile_id": active_profile_id, "requests": _readiness_request_coordinate(requests)},
+        observe=lambda: _readiness_owner_observation(active_profile_id, operation=operation),
+    )
+
+
 def _readiness_request_coordinate(requests: tuple[ModeloReadinessRequest, ...]) -> str:
     """Name the exact request set one readiness capture answers."""
     return content_hash_hex([request.model_dump(mode="json") for request in requests])
@@ -1450,4 +1491,5 @@ __all__ = [
     "build_operator_state_projection",
     "build_pending_obligations",
     "capture_modelo_readiness",
+    "read_modelo_readiness_current_coordinate",
 ]

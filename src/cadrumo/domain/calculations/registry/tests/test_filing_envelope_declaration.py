@@ -12,8 +12,14 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from ...export_field_kind import CasillaFieldKind
 from ..errors import RegistryValidationError
+from ..export_parse import _filing_envelope_body, parse_export_payload
+from ..schema_base import CasillaDataType
 from ..schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
     FilingEnvelopeCloserDerivation,
     FilingEnvelopeDefinition,
     FilingEnvelopePrefixFieldDeclaration,
@@ -70,6 +76,68 @@ def _declaration(
         closer_derivation=FilingEnvelopeCloserDerivation.RELATIVE_CLOSER_V1,
         total_derivation=FilingEnvelopeTotalDerivation.EMITTED_BYTE_TOTAL_V1,
     )
+
+
+def test_m232_source_declared_crlf_is_the_only_accepted_trailing_marker() -> None:
+    values = _declaration(_THIRTEEN_ROW).model_dump(mode="python")
+    values.update(
+        source_ref="aeat-dr-232-2016",
+        source_sha256="fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad",
+        record_identity="DR23200",
+        record_terminator="crlf",
+    )
+    declaration = FilingEnvelopeDefinition.model_validate(values)
+    prefix = b"<T232020160A0000>" + b" " * (328 - 17)
+    closer = b"</T232020160A0000>"
+    assert _filing_envelope_body(declaration, prefix + closer + b"\r\n") == (328, prefix)
+    for tail in (b"", b"\r", b"\n", b"\r\n\r\n", b"\r\n\n"):
+        with pytest.raises(RegistryValidationError):
+            _filing_envelope_body(declaration, prefix + closer + tail)
+
+    values.update(
+        source_ref="aeat-dr-232-2018",
+        source_sha256="a61485dfc480393ec1dfc926142fd0b6a9386e28e60746da3dfbf2fdaf3bffff",
+        record_terminator=None,
+    )
+    unterminated = FilingEnvelopeDefinition.model_validate(values)
+    assert _filing_envelope_body(unterminated, prefix + closer) == (328, prefix)
+    for tail in (b"\r", b"\n", b"\r\n", b"\r\n\r\n"):
+        with pytest.raises(RegistryValidationError, match="undeclared trailing record terminator"):
+            _filing_envelope_body(unterminated, prefix + closer + tail)
+
+    record = ExportRecordDefinition(
+        id="source-proof-body",
+        record_type="body",
+        order=0,
+        encoding="iso-8859-1",
+        line_ending="none",
+        fields=(
+            ExportFieldDefinition(
+                id="source-proof-body.marker",
+                kind=CasillaFieldKind.LITERAL,
+                literal="X",
+                offset=1,
+                length=1,
+                data_type=CasillaDataType.TEXT,
+                required=True,
+                padding="none",
+                justification="none",
+                signed=False,
+                legal_refs=("orden-hfp-816-2017:art-1",),
+                source_refs=("aeat-dr-232-2016",),
+            ),
+        ),
+    )
+    layout = ExportLayoutDefinition(
+        id="source-proof-layout",
+        source_refs=("aeat-dr-232-2016",),
+        legal_refs=("orden-hfp-816-2017:art-1",),
+        records=(record,),
+        filing_envelope=declaration.model_copy(update={"body_record_ids": (record.id,)}),
+    )
+    assert parse_export_payload(layout, prefix + b"X" + closer + b"\r\n").fields[0].raw == "X"
+    with pytest.raises(RegistryValidationError, match="undeclared body byte"):
+        parse_export_payload(layout, prefix + b"X\r\n" + closer + b"\r\n")
 
 
 @pytest.mark.parametrize(

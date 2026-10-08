@@ -10,7 +10,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 
 from ..compiler.authority import compiled_bundled_authority
 from ..export_proof import FilingExportProofAuthority
-from ..filing_export_proof import canonical_two_channel_filing_export_proof_authority
+from ..filing_export_proof_authority import canonical_two_channel_filing_export_proof_authority
 
 __all__ = [
     "RegistryClosureAuthorities",

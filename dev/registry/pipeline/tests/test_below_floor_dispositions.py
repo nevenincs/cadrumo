@@ -1,10 +1,10 @@
 """Proofs for the below-supported-floor generated-tree disposition class.
 
-A below-floor row explains a tree nobody can regenerate: every filing year its
-revision declares lies under the registry-wide floor, so revision selection
-admits no coordinate and the publisher refuses before comparing anything. The
-row must therefore be pinned to the floor the legal tree actually declares, and
-must fail the day that exclusion stops holding.
+A below-floor row describes a runtime selection limit: every filing year its
+revision declares lies under the registry-wide floor. An exact official source
+can still support a separately validated historical static target without
+granting a filing snapshot. A row must be pinned to the legal floor and retire
+when its claimed publication impediment is repaired.
 """
 
 from __future__ import annotations
@@ -17,7 +17,10 @@ from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
+from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
+from cadrumo.domain.calculations.registry.temporal import select_revision
 
+from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_modelo_directory
 from ..generated_tree_dispositions import (
     GeneratedTreeBelowSupportedFilingYearsDisposition,
@@ -98,3 +101,22 @@ def test_every_shipped_below_floor_row_names_the_declared_floor_and_its_revision
             f"{row.subject}: row pins {row.revision_last_filing_year}, the revision declares {declared_years}"
         )
         assert max(declared_years) < floor, f"{row.subject}: the revision is no longer below the floor"
+
+
+def test_repaired_m232_static_target_needs_no_drift_row_or_runtime_filing_admission() -> None:
+    """The enrolled static tree reproduces its source while private filing stays below floor."""
+    from ..generated_tree_inventory import generated_export_trees
+
+    assert _declared_floor() == 2022
+    assert all(row.subject != "232/2016-2017" for row in below_floor_dispositions())
+    trees = [tree for tree in generated_export_trees() if (tree.modelo, tree.revision) == ("232", "2016-2017")]
+    assert len(trees) == 1
+    assert (trees[0].filing_year, trees[0].period, trees[0].historical_static) == (2016, "0A", True)
+    authority = compiled_bundled_authority()
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
+        select_revision(
+            authority.modelo("232"),
+            filing_year=2016,
+            period="0A",
+            support=authority.catalogues.supported_filing_years,
+        )

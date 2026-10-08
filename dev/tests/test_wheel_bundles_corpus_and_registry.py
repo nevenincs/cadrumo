@@ -42,6 +42,7 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
+from dev.packaging.google_oauth import GOOGLE_OAUTH_RESOURCE
 from dev.source_tree import repository_files
 
 SRC_CADRUMO = REPO_ROOT / "src" / "cadrumo"
@@ -191,6 +192,10 @@ def test_wheel_archive_contains_every_runtime_data_file(built_wheel: Path) -> No
     """The wheel's complete data payload equals the policy-projected source tree."""
 
     expected = _expected_archive_paths(_source_data_files())
+    # The validated publisher client is generated from the admitted build
+    # configuration, so its exact runtime destination is part of this payload
+    # even when it has no tracked source counterpart.
+    expected.add(GOOGLE_OAUTH_RESOURCE.removeprefix("src/"))
     with zipfile.ZipFile(built_wheel) as archive:
         actual = {
             info.filename

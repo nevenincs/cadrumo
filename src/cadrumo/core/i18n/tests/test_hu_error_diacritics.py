@@ -28,19 +28,19 @@ _CASES: list[tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]]] = 
     (
         "cli.app.modelo.work.selector_not_found",
         {},
-        ("Nincs aktív munkaegység", "időszakhoz"),
+        ("Nincs aktív bevallás", "időszakhoz"),
         ("aktiv munkaegyseg", "idoszak"),
     ),
     (
         "cli.app.modelo.work.selector_ambiguous",
         {"candidates": "X"},
-        ("Több aktív munkaegység", "időszakra"),
+        ("Több aktív bevallás", "időszakra"),
         ("Tobb aktiv", "idoszakra"),
     ),
     (
         "application.modelo.errors.export_period_unmappable",
         {"work_unit_id": "wu", "period": "1T"},
-        ("munkaegység", "időszakot"),
+        ("bevallás", "időszakot"),
         ("munkaegyseg", "idoszakot"),
     ),
     (
@@ -53,20 +53,20 @@ _CASES: list[tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]]] = 
             "period": "1T",
             "law_revision": "r2",
         },
-        ("munkaegység", "nyilvántartási revízióval", "törvény által meghatározott"),
+        ("bevallás", "nyomtatványdefiníciók", "jogszabály szerint"),
         ("munkaegyseg", "nyilvantartasi revizioval", "torveny altal meghatarozott"),
     ),
     (
         "errors.refused.refused_storage_session_expired",
         {},
-        ("Az aktív munkamenet", "Aktiválja újra"),
-        ("aktiv munkamenet", "Aktivalja ujra"),
+        ("Az aktív munkamenet", "Aktiváld újra"),
+        ("aktiv munkamenet", "Aktivald ujra"),
     ),
     (
         "errors.refused.modelo_work_selector_no_active_bucket",
         {},
-        ("Válasszon aktív profilt", "munkaegység feloldása előtt"),
-        ("Valasszon aktiv profilt", "munkaegyseg feloldasa elott"),
+        ("Válassz aktív profilt", "bevallás feloldása előtt"),
+        ("Valassz aktiv profilt", "munkaegyseg feloldasa elott"),
     ),
 ]
 

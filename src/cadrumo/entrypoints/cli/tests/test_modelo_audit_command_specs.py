@@ -11,7 +11,8 @@ import pytest
 from .._modelo_audit_command_specs import MODELO_AUDIT_COMMAND_SPECS, MODELO_ROOT_COMMAND_SPEC
 from .._modelo_readiness_command_specs import MODELO_READINESS_COMMAND_SPECS
 from .._root_command_specs import ROOT_COMMAND_SPECS
-from ..command_spec import CommandSpecGraph, SchemaState
+from ..command_graph import CommandSpecGraph
+from ..command_shared_contracts import SchemaState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

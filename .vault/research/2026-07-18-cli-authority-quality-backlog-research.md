@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#cli-authority-quality-backlog'
 date: '2026-07-18'
-modified: '2026-07-18'
-body_hash: 'sha256:fd7a788e4f809d4929743bda4e48f6fa734e4e025cb3df34ecfb94649985591d'
+modified: '2026-10-05'
+body_hash: 'sha256:e1fc4ccc1e4cfd794654966e55c3469972ad703a1af604f5674803004f114ae0'
 related: []
 ---
 
@@ -56,7 +56,7 @@ layers (entrypoints > adapters > application > domain > core); no contract
 forbids `adapters.outbound -> adapters.persistence`. No allowlist entry needed.
 
 Abundant sanctioned precedent for the identical edge: `adapters/outbound/llm/_usage.py`,
-`_cache.py`, `_run_telemetry.py`; `adapters/outbound/aeat/auth/_session_store.py`;
+`_cache.py`; `adapters/outbound/aeat/auth/_session_store.py`;
 `adapters/outbound/aeat/sede/_observation_store.py`; and `_clave_movil_page_flow.py`
 already eagerly imports `secure_object_repository_for_active_bucket` from
 `persistence.storage` — the very file carrying the raw sensitivity/schema

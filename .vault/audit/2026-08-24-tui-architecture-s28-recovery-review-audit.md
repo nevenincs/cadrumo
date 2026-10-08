@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-26'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b21641903b8bfa36e90d41d7047be83592d12d7f4508450c9c9646a850152e59'
+body_hash: 'sha256:ad9605e5b3cdbb810e33a5e4d790fead208b5d336230af68223ba85779712523'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-08-11-tui-architecture-research]]"
 ---
@@ -16,12 +15,7 @@ related:
 
 ## Scope
 
-Independent read-only review of `W02.P05.S28`, commit `84686da7077`, the
-current `src/cadrumo/application/operations/tests/test_supervisor_recovery.py`,
-the production supervisor and operation persistence adapters, and the
-accepted supervisor, cursor, cancellation, deadline, and reconciliation
-authority. Production code, tests, the plan, and the existing execution record
-were not modified.
+Production code, tests, the plan, and the existing execution record were not modified.
 
 The focused real-adapter lane was rerun with the four S28 tests plus the three
 pre-existing cancellation and deadline tests cited by the execution record:

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-08-08'
+modified: '2026-10-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:feb293a7080f93d61812e2ff16671a5e04f9c054cae01aa8c80b93abe55eb599'
+body_hash: 'sha256:9aa0888fea27724a41df299a1e3451db62896034934e5a63c9acbcb8450d617a'
 related:
   - "[[2026-08-06-llm-package-split-research]]"
   - "[[2026-08-06-llm-package-split-enforcement-and-disposition-audit]]"
@@ -43,7 +43,7 @@ decided here is the boundary's shape, not whether inference is worth having.
   back in-process, and the product currently ships none (`pyproject.toml:181-187`, the
   retired `search` extra).
 - Every AST gate enforcing secure-storage-only persistence derives its corpus from
-  `SRC_CADRUMO`, hard-coded as `src/cadrumo` in `src/cadrumo/tests/_inventory.py:11`. Code
+  `SRC_CADRUMO`, hard-coded as `src/cadrumo`. Code
   in a sibling top-level package is invisible to all five. **But the five do not share one
   mechanism, and the difference is load-bearing** — see the fail-open finding below.
 - `.importlinter:2` sets `root_package = cadrumo`, so a sibling package is outside the
@@ -63,7 +63,7 @@ decided here is the boundary's shape, not whether inference is worth having.
   failure.** `_SENSITIVE_SURFACES`
   (`adapters/persistence/storage/tests/test_sensitive_persistence_policy.py:24-42`) is an
   enumerated tuple, not a walk. The iteration at `:353-354` feeds each entry to
-  `non_test_python_files_under` (`src/cadrumo/tests/_inventory.py:142-150`), which filters
+  `non_test_python_files_under`, which filters
   an rglob — so **a surface path that does not exist, or that has been emptied, yields the
   empty tuple with no error, no warning and no failure.** There is no existence check, no
   `is_dir()`, no non-vacuity assertion anywhere in either file. A named entry pointing at an
@@ -336,11 +336,9 @@ core, and returns a typed result; it holds no repository handle, constructs no
 `AttachmentStore`, and imports nothing from `adapters.persistence`. This is a discipline
 enforced by the gates and by an import contract, not by the type system — the research
 established the type system cannot carry it, since both `EvidenceInput.data` and a
-structural `AttachmentStoreProtocol` hand over bytes freely. The three inference-scoped
+structural `AttachmentStoreProtocol` hand over bytes freely. The two inference-scoped
 stores that today write through `secure_object_repository_for_active_bucket`
-(`_cache.py`, `_run_telemetry.py`, `_usage.py`) stay on the core side of the boundary,
-which also preserves `application/diagnostics_run_health.py:71` — a core, non-ledger
-consumer of run telemetry that must not become conditional on an optional install.
+(`_cache.py`, `_usage.py`) stay on the core side of the boundary.
 
 **D4 — the output shape is a typed validated payload, never free text.** The core accepts
 a single strict model (`extra="forbid"`, closed key set, `STRICT_FROZEN_CONFIG`) and
@@ -958,7 +956,7 @@ cloud-derived artefacts BY the transport segment, so an apparatus built on the c
 axis would survey for a value that can no longer be assumed.
 
 **This note is not self-executing, and the code it rules on has landed with it.** The
-minting-side gate in `src/cadrumo/tests/test_cloud_transport_fully_deleted.py` no longer
+minting-side gate no longer
 asserts that every reader stamps on-host. It partitions the readers instead: those whose
 constructor declares no provider parameter -- reachable with no consent token -- must stamp
 on-host, and those that accept one must stamp the transport the read actually used, never
@@ -972,7 +970,7 @@ section states that D5 removed the consent exception so it "no longer exists in 
 which was true of D5 alone and stopped being true when D8a landed. Amending only this
 record would have left the corpus self-contradictory in the opposite direction.
 
-## Status note
+## Acceptance-readiness update
 
 This record stays `proposed`. The quantitative precondition an honesty review placed on
 moving it off `proposed` — a full trace of every figure against the stamped key — **is now

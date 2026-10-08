@@ -16,8 +16,11 @@ from ..action_errors import (
 from ..edit_models import (
     ModeloEditCompatibilityRefusalV1,
     ModeloEditDomainRefusalV1,
+    ModeloEditParseReason,
+    ModeloEditParseRefusalV1,
     ModeloEditRefusalCode,
     ModeloEditRefusalV1,
+    ModeloEditScalarAddressV1,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditUnsupportedIntentReason,
     ModeloEditUnsupportedIntentRefusalV1,
@@ -69,6 +72,14 @@ _FAMILIES: tuple[tuple[ModeloEditRefusalV1, type[ModeloEditRefusedError], str], 
         "REFUSED_MODELO_EDIT_REFUSED",
     ),
     (
+        ModeloEditParseRefusalV1(
+            address=ModeloEditScalarAddressV1(casilla_id="06"),
+            reason=ModeloEditParseReason.AMBIGUOUS_SEPARATOR_READINGS,
+        ),
+        ModeloEditRefusedError,
+        "REFUSED_MODELO_EDIT_REFUSED",
+    ),
+    (
         ModeloEditVersionRefusalV1(requested_version=2),
         ModeloEditContractIncompatibleError,
         "REFUSED_MODELO_EDIT_CONTRACT_INCOMPATIBLE",
@@ -88,7 +99,15 @@ _FAMILIES: tuple[tuple[ModeloEditRefusalV1, type[ModeloEditRefusedError], str], 
 @pytest.mark.parametrize(
     ("refusal", "error_type", "code"),
     _FAMILIES,
-    ids=["stale-baseline", "unsupported-intent", "disallowed-intent", "parse-failed", "version", "compatibility"],
+    ids=[
+        "stale-baseline",
+        "unsupported-intent",
+        "disallowed-intent",
+        "parse-failed",
+        "parse",
+        "version",
+        "compatibility",
+    ],
 )
 def test_each_refusal_family_raises_its_registered_refusal(
     refusal: ModeloEditRefusalV1,

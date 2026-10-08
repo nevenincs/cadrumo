@@ -567,6 +567,7 @@ def _work_unit_in_repository_bucket(
     work_unit_id: str,
     *,
     repository: WorkUnitCatalogueRepositoryProtocol,
+    catalogue: WorkUnitCatalogue | None = None,
 ) -> WorkUnit:
     """Return the work unit addressed by ``work_unit_id`` within this bucket.
 
@@ -585,7 +586,8 @@ def _work_unit_in_repository_bucket(
     The check is skipped only when the repository resolved no bucket of its own,
     where there is no scope to compare against.
     """
-    catalogue = repository.load()
+    if catalogue is None:
+        catalogue = repository.load()
     unit = catalogue.get(work_unit_id)
     repository_bucket = repository.bucket_id
     if unit is None or (repository_bucket is not None and unit.bucket_id != repository_bucket):
@@ -698,6 +700,7 @@ def rename_work_unit(
     actor: str,
     ports: WorkLifecyclePorts,
     clock: datetime | None = None,
+    expected: WorkUnit | None = None,
 ) -> WorkUnit:
     """Update a :class:`WorkUnit` display name and emit a rename event.
 
@@ -705,18 +708,27 @@ def rename_work_unit(
     Successful renames preserve the content-addressed work-unit id and update
     only display metadata plus ``updated_at``.
 
+    When an operator approved an observed unit, ``expected`` must still equal
+    the loaded unit before any lifecycle event or encrypted write is prepared.
+    The catalogue revision guards a concurrent change after this comparison.
+
     Scoped to the repository's own bucket: a unit belonging to another bucket is
     not addressable here, so an A-bound caller cannot rename a B unit and emit a
     B-scoped rename event.
     """
     repo = ports.work_unit_repository
     bv_repo = ports.bucket_event_repository
-    existing = _work_unit_in_repository_bucket(work_unit_id, repository=repo)
     # Revisioned: the catalogue is composed into the co-commit below with the
     # lifecycle event, so it cannot use a self-committing mutation, and an
     # unguarded read rewrites the whole singleton row over a unit another
     # caller created or changed in between.
     catalogue, catalogue_revision_id = repo.load_revisioned()
+    existing = _work_unit_in_repository_bucket(work_unit_id, repository=repo, catalogue=catalogue)
+    if expected is not None and expected != existing:
+        raise WorkUnitMutationRefusedError(
+            translated_message="errors.refused.modelo_work_rename_approval_stale",
+            context={"work_unit_id": work_unit_id},
+        )
     if existing.state is WorkUnitState.DESCARTADO:
         evidence_values = _work_unit_lifecycle_facts(existing)
         raise WorkUnitMutationRefusedError(
@@ -770,6 +782,7 @@ def discard_work_unit(
     reason: str | None = None,
     ports: WorkLifecyclePorts,
     clock: datetime | None = None,
+    expected: WorkUnit | None = None,
 ) -> WorkUnit:
     """Transition a :class:`WorkUnit` to ``DESCARTADO`` and emit a discard event.
 
@@ -784,12 +797,17 @@ def discard_work_unit(
     """
     repo = ports.work_unit_repository
     bv_repo = ports.bucket_event_repository
-    existing = _work_unit_in_repository_bucket(work_unit_id, repository=repo)
     # Revisioned: the catalogue is composed into the co-commit below with the
     # lifecycle event, so it cannot use a self-committing mutation, and an
     # unguarded read rewrites the whole singleton row over a unit another
     # caller created or changed in between.
     catalogue, catalogue_revision_id = repo.load_revisioned()
+    existing = _work_unit_in_repository_bucket(work_unit_id, repository=repo, catalogue=catalogue)
+    if expected is not None and expected != existing:
+        raise WorkUnitMutationRefusedError(
+            translated_message="errors.refused.modelo_work_discard_approval_stale",
+            context={"work_unit_id": work_unit_id},
+        )
     if existing.state is WorkUnitState.DESCARTADO:
         evidence_values = _work_unit_lifecycle_facts(existing)
         raise WorkUnitAlreadyDiscardedError(

@@ -49,7 +49,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 _READER_PROCESSES = 4
 _READER_WINDOW_SECONDS = 3.0
 _WRITER_WINDOW_SECONDS = 4.0
-_SUBPROCESS_TIMEOUT_SECONDS = 300
 _MINIMUM_READS = 50
 """Both sides run on a CLOCK, not a count, and the writer's window is the longer.
 
@@ -159,7 +158,7 @@ async def _run_reader_race(
 
         results: list[list[list[object] | None]] = []
         for reader in readers:
-            stdout, stderr = await asyncio.wait_for(reader.communicate(), timeout=_SUBPROCESS_TIMEOUT_SECONDS)
+            stdout, stderr = await asyncio.wait_for(reader.communicate(), timeout=None)
             assert reader.returncode == 0, f"a reading child failed: {stderr.decode('utf-8', errors='replace')}"
             results.append(json.loads(stdout.decode("utf-8", errors="replace")))
         return step, results

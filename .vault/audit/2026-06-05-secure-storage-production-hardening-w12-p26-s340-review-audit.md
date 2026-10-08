@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:ce47809d0f16d2ed3bd314f1ada1c4b3e1078ecb0304a164dc699437221b7c71'
+modified: '2026-10-03'
+body_hash: 'sha256:2c64ae05791416e9220647d271c7020b0bf734257760d488a298b273b0b893ca'
 related: []
 ---
 
@@ -12,7 +12,7 @@ related: []
 
 ## S340-001 | FIXED | Filing runtime bucket refusal lacked structured context
 
-`src/aeat/domain/filing/_runtime_repository.py` already raised the correct project
+The retired module already raised the correct project
 exception with a locale key for missing bucket state, but it did not distinguish a blank
 explicit bucket id from a missing active profile bucket. Both branches now include a
 small structured `reason` context so CLI/error-envelope consumers can diagnose the route
@@ -34,7 +34,7 @@ changes were needed; `python -m aeat.locales audit` passed.
 
 Validation passed:
 
-- `uv run --no-sync ruff check src/aeat/domain/filing/_runtime_repository.py src/aeat/domain/filing/test_runtime_repository.py src/aeat/domain/filing/_repository.py src/aeat/domain/filing/_complementaria_repository.py`
-- `uv run --no-sync pytest -q src/aeat/domain/filing/test_runtime_repository.py src/aeat/domain/filing/test_secure_storage_roundtrip.py src/aeat/domain/filing/test_amendment_roundtrip.py`
+- the historical check
+- the historical check
 - `uv run --no-sync -q python -m aeat.locales audit`
 - `uv run --no-sync vaultspec-rag search "resolve_filing_repository_bucket_id secure_objects_for_filing_bucket active profile bucket StorageValidationError runtime route ModeloDraftError context" --type code --port 8766 --max-results 8`

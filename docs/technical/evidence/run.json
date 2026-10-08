@@ -1,0 +1,146 @@
+{
+  "snapshot_head": "3df7c143cc67663fadeacedb38a113df5aaac07e",
+  "scope": "On-disk src/ snapshot; pre-existing deleted tracked files excluded; no restoration or application execution",
+  "initial_deleted_tracked_files": 14307,
+  "stage_2": {
+    "model": "gpt-6-luna",
+    "reasoning_effort": "max",
+    "implementation_chunks": 187,
+    "reference_data_groups": 19,
+    "source_token_cap": 48000,
+    "proxy_tokenizer": "o200k_base",
+    "native_context_limit": "not exposed by runtime",
+    "execution": "Three sequential workers; one bounded source chunk at a time, durable per-chunk reports, context compaction as needed",
+    "assignments": {
+      "luna_001_069": [
+        1,
+        69
+      ],
+      "luna_070_138": [
+        70,
+        138
+      ],
+      "luna_139_206": [
+        139,
+        206
+      ]
+    },
+    "rebalanced_assignments": {
+      "luna_001_069": [
+        [
+          1,
+          66
+        ]
+      ],
+      "luna_070_138": [
+        [
+          70,
+          138
+        ],
+        [
+          67,
+          69
+        ]
+      ],
+      "luna_139_206": [
+        [
+          139,
+          206
+        ]
+      ]
+    },
+    "status": "Complete:206 reports; coverage and source hashes validated",
+    "validation": "map/stage-2-validation.json"
+  },
+  "stage_1": {
+    "model": "gpt-6-sol",
+    "reasoning_effort": "medium",
+    "status": "Complete",
+    "initial_topic_reports": 16,
+    "plan": "map/stage-1-plan.json",
+    "topic_packets": 18,
+    "body_input_tokens": 424830,
+    "largest_packet_tokens": 38062,
+    "input_cap": 40000,
+    "assignments": {
+      "sol_topics_a": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        13,
+        14,
+        15
+      ],
+      "sol_topics_b": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        18,
+        16,
+        17
+      ]
+    },
+    "execution": "Two Sol medium workers; one bounded topic packet at a time. Third fresh worker unavailable due runtime total agent-thread limit.",
+    "topic_output_tokens": 45491,
+    "brief_tokens": 12582,
+    "crosscut_packets": "map/crosscut-packets.json",
+    "crosscut_assignments": {
+      "sol_topics_a": [
+        "00-product-capability-map.md",
+        "00-architecture.md",
+        "00-knowledge-and-provenance.md"
+      ],
+      "sol_topics_b": [
+        "00-security-and-trust-boundaries.md",
+        "00-implementation-assessment.md"
+      ]
+    },
+    "topic_reports": 18,
+    "crosscut_reports": 5,
+    "compression_briefs": 18,
+    "report_index": "maps/stage-1/README.md"
+  },
+  "structural_checks": {
+    "python_files_parsed": 3025,
+    "parse_failures": 0,
+    "unresolved_internal_module_import_targets": 0,
+    "limitations": "Static AST only; conditional/type-only imports included; member names, dynamic imports, dependencies and runtime behavior not validated"
+  },
+  "paged_reader_validation": {
+    "implementation_chunks": 187,
+    "pages": 1412,
+    "coverage": "Every assigned range is represented contiguously and completely; page plan verification is not a claim of analyst reading"
+  },
+  "reference_review": {
+    "scope": "Full inventory plus representative content review of registry declarations and other reference assets",
+    "user_confirmed": true,
+    "registry_syntax_files": 2141,
+    "registry_syntax_errors": 0
+  },
+  "final_validation": {
+    "report": "map/validation.json",
+    "stage_2_reports": 206,
+    "stage_1_reports": 23,
+    "compression_briefs": 18,
+    "broken_links": 0,
+    "invalid_line_anchors": 0,
+    "missing_source_mentions": 0,
+    "uncited_stage_2_inputs": 0,
+    "source_hash_check": true,
+    "changed_sources": 0,
+    "added_sources": 0,
+    "stage_1_table_column_mismatches": 0,
+    "application_executed": false,
+    "tests_executed": false
+  },
+  "method_notes": [
+    "Stage2-205 original sampling used a byte estimate; coordinator measured a conservative10436 o200k_base-token upper bound, preserving the four unidentified-stub limitation in map/terminology-sample-bound.json.",
+    "Final Stage1 assessment table header was normalized by the coordinator; substantive synthesis was authored by Sol medium workers."
+  ]
+}

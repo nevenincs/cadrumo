@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#invoice-row-materialization-wiring'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:56525d848982b96cc8f55f43c19eebadfd95df1268cc71b89f09a385b18a502d'
+body_hash: 'sha256:2d24059c57ed40eae3f5bd14091c8131c90388f586f4cf52111b6a7f7cbaffd9'
 related:
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
   - "[[2026-08-24-modelo-edit-contract-adr]]"
@@ -25,7 +25,7 @@ The accepted M347 binding inventory anticipated this exact boundary when it reco
 
 ### The broad M349 claim is wrong for manual detail rows and correct for invoice-derived rectifications
 
-A persisted manual `Modelo349RectificacionRow` is converted into all eight indexed binding inputs and can reach the repeating rectification record. That path is explicitly covered, so changing the renderer or generic replay code would solve no observed defect. Evidence: `src/cadrumo/application/modelo/_revision_replay_inputs.py:245-284`, `src/cadrumo/application/modelo/tests/test_revision_replay_inputs.py:267-294`, `src/cadrumo/_data/registry/aeat/modelos/349/revisions/2020-y-siguientes/export_layouts/0004-record-rectificacion.toml:5-12`.
+A persisted manual `Modelo349RectificacionRow` is converted into all eight indexed binding inputs and can reach the repeating rectification record. That path is explicitly covered, so changing the renderer or generic replay code would solve no observed defect. Evidence: the former source file, `src/cadrumo/application/modelo/tests/test_revision_replay_inputs.py:267-294`, the former source file.
 
 The invoice-derived path is disconnected earlier. `Invoice` records that it is a rectificativa and names the corrected invoice, but carries no rectified filing year, period, or previous declared base. `_invoice_observation` copies none of the rectification axes required by the row bindings. Since `InvoiceObservation.is_rectification` defaults to false, a rectificativa that otherwise classifies as intracommunity is presented to the row resolver as an ordinary operation and `_m349_operador_rows_from_observations` retains only operador bindings. Evidence: `src/cadrumo/domain/invoices/models.py:236-245`, `src/cadrumo/domain/invoices/models.py:336`, `src/cadrumo/domain/calculations/registry/invoice_bindings.py:138-141`, `src/cadrumo/application/invoices/source_resolver.py:659-689`, `src/cadrumo/application/invoices/source_resolver.py:914-960`.
 
@@ -33,11 +33,11 @@ This is not authorized by the accepted canonical-invoice ADR. That decision requ
 
 ### Carrier choice and rectification-fact authority are separate decisions
 
-Option A is to make `row_binding_values` the canonical carrier for every invoice-derived repeating row, while keeping `detail_rows` as the operator-authored carrier and defining an explicit collision/refusal rule. It reuses the source-mesh and renderer handoff already present and closes M347 with the smallest architectural surface. Its cost is that existing invoice-derived M349 operador rows currently persist as typed detail rows, so migration to one carrier changes edit/read behavior and must preserve row identity and provenance. Evidence: `src/cadrumo/application/aggregation/_source_mesh.py:797-813`, `src/cadrumo/application/modelo/_revision_replay_inputs.py:77-116`.
+Option A is to make `row_binding_values` the canonical carrier for every invoice-derived repeating row, while keeping `detail_rows` as the operator-authored carrier and defining an explicit collision/refusal rule. It reuses the source-mesh and renderer handoff already present and closes M347 with the smallest architectural surface. Its cost is that existing invoice-derived M349 operador rows currently persist as typed detail rows, so migration to one carrier changes edit/read behavior and must preserve row identity and provenance. Evidence: the former source file, the former source file.
 
-Option B is to make typed `detail_rows` the canonical durable carrier for derived and manual rows, add an M347 contraparte replay projection, and extend the M349 projection to rectifications. It aligns with the accepted edit contract's typed row intents, but it makes the application reconstruct registry binding maps per modelo and leaves the mesh's existing generic indexed-row channel unused for invoice rows. Evidence: `2026-08-24-modelo-edit-contract-adr`, decisions D4 and D6; `src/cadrumo/application/modelo/_revision_replay_inputs.py:245-284`.
+Option B is to make typed `detail_rows` the canonical durable carrier for derived and manual rows, add an M347 contraparte replay projection, and extend the M349 projection to rectifications. It aligns with the accepted edit contract's typed row intents, but it makes the application reconstruct registry binding maps per modelo and leaves the mesh's existing generic indexed-row channel unused for invoice rows. Evidence: `2026-08-24-modelo-edit-contract-adr`, decisions D4 and D6; the former source file.
 
-Option C is to persist synchronized `row_binding_values` and typed `detail_rows` for derived rows. An accepted M184 precedent uses both carriers, but applying it here needs an enforced equality invariant, one ordering authority, one provenance owner, and a collision rule; otherwise replay precedence can conceal drift because M349 detail projections overwrite same-id row bindings. Evidence: `2026-07-07-cross-domain-continuity-adr`, Implementation; `src/cadrumo/application/modelo/_revision_replay_inputs.py:99-110`.
+Option C is to persist synchronized `row_binding_values` and typed `detail_rows` for derived rows. An accepted M184 precedent uses both carriers, but applying it here needs an enforced equality invariant, one ordering authority, one provenance owner, and a collision rule; otherwise replay precedence can conceal drift because M349 detail projections overwrite same-id row bindings. Evidence: `2026-07-07-cross-domain-continuity-adr`, Implementation; the former source file.
 
 The evidence favors Option A for the M347 handoff, but does not settle the cross-modelo carrier policy because M349 editing already depends on typed rows. The ADR must decide whether the carrier is uniform across invoice-derived families or deliberately modelo-specific, and must forbid two silent authorities.
 
@@ -70,14 +70,13 @@ This research did not determine the legally correct M349 correction method, sign
 - `src/cadrumo/domain/invoices/models.py:336`
 - `src/cadrumo/domain/calculations/registry/invoice_bindings.py:138-141`
 - `src/cadrumo/domain/calculations/registry/invoice_bindings.py:694-721`
-- `src/cadrumo/application/aggregation/_source_mesh.py:797-813`
+
 - `src/cadrumo/application/modelo/calculation_actions.py:1453-1491`
-- `src/cadrumo/application/modelo/_revision_replay_inputs.py:77-116`
-- `src/cadrumo/application/modelo/_revision_replay_inputs.py:245-284`
+
 - `src/cadrumo/application/filing/record_renderer.py:162-228`
 - `src/cadrumo/application/filing/tests/test_modelo_347_contraparte_export_parity.py:1-32`
 - `src/cadrumo/application/modelo/tests/test_revision_replay_inputs.py:267-294`
-- `src/cadrumo/_data/registry/aeat/modelos/349/revisions/2020-y-siguientes/export_layouts/0004-record-rectificacion.toml:5-12`
+
 - `2026-08-06-invoice-canonical-structure-adr`, decisions D-C, D-R, D-T
 - `2026-08-24-modelo-edit-contract-adr`, decisions D4, D6
 - `2026-08-26-tui-architecture-modelo-347-contraparte-binding-inventory-reference`, lines 220-279

@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#domain-boundary-audit'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:483cceac97f322dc377cf47f2d7c90cdbe62ee99f25d4f30f47b769a6caa64a0'
+body_hash: 'sha256:2506be6ea37d3acab9a484ab36cc3d27694702d88e3d7d6bb4bc4675cfbfd083'
 related:
   - '[[2026-06-01-domain-boundary-audit-adr]]'
   - '[[2026-06-01-domain-boundary-audit-audit]]'
-  - '[[2026-06-01-domain-boundary-audit-ledger]]'
-  - '[[2026-06-01-domain-boundary-audit-plan]]'
   - '[[2026-06-04-domain-boundary-audit-research]]'
 ---
 
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#domain-boundary-audit`.
 ### audit
 
 - `2026-06-01-domain-boundary-audit-audit` - `domain-boundary-audit` audit: `Domain ownership and cross-boundary outlier audit`
-
-### exec
-
-- `2026-06-01-domain-boundary-audit-ledger` - `domain-boundary-audit` ledger
-
-### plan
-
-- `2026-06-01-domain-boundary-audit-plan` - `domain-boundary-audit` `Domain boundary remediation` plan
 
 ### research
 

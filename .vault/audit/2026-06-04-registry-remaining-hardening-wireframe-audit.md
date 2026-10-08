@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#registry-hardening-next-work'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-10-03'
 body_hash: 'sha256:be75eba71fb004a0ae28b9afe2942fa1f51b714416e4f617c4952c3f02e71586'
-related:
-  - '[[2026-06-02-registry-hardening-next-work-plan]]'
+related: []
 ---
 
 # `registry-hardening-next-work` audit: `remaining hardening execution wireframe`

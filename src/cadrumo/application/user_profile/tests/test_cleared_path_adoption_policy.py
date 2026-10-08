@@ -57,11 +57,6 @@ _DECLARED_WRITERS: dict[str, str] = {
         "(namespace-replace on re-cotejo). An already-cleared row is absent, so it is "
         "not re-cleared, and no value is ever written at an absent path."
     ),
-    "application/wizard/_checkpoint_store.py": (
-        "Two reads, both safe. The descendant namespace-shrink clears only paths "
-        "PRESENT in the projection. The resume-answer seed treats an absent path as "
-        "unanswered and re-asks it, which is what clearing an answer should cause."
-    ),
     "application/user_profile/fact_write.py": (
         "Reads the projection of the record it has just published, only to mirror the "
         "output-language preference into the pre-login hint. The one fact it builds carries "
@@ -76,6 +71,21 @@ _DECLARED_WRITERS: dict[str, str] = {
         "The command reads the projection only to preserve the filing baseline before "
         "its CAS command. Every resulting fact comes from an explicit wizard answer or "
         "flag, never from an absent projected value, so a cleared path is not adopted."
+    ),
+    "application/auth/preferences.py": (
+        "Reads the value projection only to check that the provider an auth reset targets "
+        "owns the stored preference, and then writes a clearing fact. The configure path "
+        "writes the operator's explicit method and route; its one default, the Cl@ve Movil "
+        "route, is decided on the effective-fact projection, so a deliberately cleared "
+        "route stays cleared."
+    ),
+    "application/wizard/patch_edit.py": (
+        "Reads the projection only to merge it with the supplied patch for the filing-"
+        "baseline completeness check, which refuses rather than writes. Every constructed "
+        "fact's value comes from the supplied patch's own validated, non-blank answers, or "
+        "is an explicit clearing fact for a blank answer; neither path ever sources a "
+        "value from the current projection, so an absent (possibly cleared) path is never "
+        "adopted as a value."
     ),
 }
 

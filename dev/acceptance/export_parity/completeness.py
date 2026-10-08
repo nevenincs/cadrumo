@@ -26,12 +26,75 @@ from typing import Any, Final
 
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 
-from .scenario import ASSETS, QUARTERS, YEARS, build_year
+from .scenario import ASSETS, QUARTERS, YEARS, YearScenario, build_year
 
 REPORT_SCHEMA: Final = "export-parity.completeness/v1"
 _PERIODIC: Final = ("303", "130", "111", "115")
 _ANNUAL: Final = ("390", "190", "180", "100")
 _RETA_CATEGORY: Final = "cuotas_autonomos_ss"
+
+
+def _public_year_ledger_rows(reader: _StoreReader, prefix: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Public year ledger rows."""
+    invoices = [
+        row
+        for row in reader.rows("app", "ledger", "invoice", "list")
+        if str(row.get("issued_at", "")).startswith(prefix)
+    ]
+    transactions = [row for row in reader.rows("app", "ledger", "list") if str(row.get("date", "")).startswith(prefix)]
+    return invoices, transactions
+
+
+def _linked_invoice_count(invoices: list[dict[str, Any]]) -> int:
+    """Count invoices whose public readback exposes a reciprocal transaction link."""
+    return sum(1 for row in invoices if row.get("linked_transaction_ids"))
+
+
+def _ledger_total_checks(
+    year: int,
+    scenario: YearScenario,
+    invoices: list[dict[str, Any]],
+    issued: list[dict[str, Any]],
+    received: list[dict[str, Any]],
+    reta: list[dict[str, Any]],
+    evidenced: set[Any],
+) -> list[GateCheck]:
+    """Ledger total checks."""
+    return [
+        _check(year, "issued invoices", len(scenario.issued), len(issued)),
+        _check(
+            year,
+            "issued base total",
+            sum((item.base for item in scenario.issued), Decimal("0")),
+            _total([row.get("base_total") for row in issued]),
+        ),
+        _check(year, "received invoices", len(scenario.received), len(received)),
+        _check(
+            year,
+            "received base total",
+            sum((item.base for item in scenario.received), Decimal("0")),
+            _total([row.get("base_total") for row in received]),
+        ),
+        _check(
+            year,
+            "invoices linked to a transaction",
+            len(invoices),
+            _linked_invoice_count(invoices),
+        ),
+        _check(
+            year,
+            "received invoices with purchase evidence",
+            len(received),
+            sum(1 for row in received if row.get("invoice_id") in evidenced),
+        ),
+        _check(year, "RETA quotas", len(scenario.reta_months), len(reta)),
+        _check(
+            year,
+            "withholding recorded on received invoices",
+            sum((item.withholding for item in scenario.received), Decimal("0")),
+            _total([row.get("retention_amount") for row in received]),
+        ),
+    ]
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,51 +141,12 @@ def _check(year: int, name: str, expected: object, observed: object, reason: str
 def _ledger_checks(reader: _StoreReader, year: int) -> list[GateCheck]:
     scenario = build_year(year)
     prefix = f"{year}-"
-    invoices = [
-        row
-        for row in reader.rows("app", "ledger", "invoice", "list")
-        if str(row.get("issued_at", "")).startswith(prefix)
-    ]
-    transactions = [row for row in reader.rows("app", "ledger", "list") if str(row.get("date", "")).startswith(prefix)]
+    invoices, transactions = _public_year_ledger_rows(reader, prefix)
     issued = [row for row in invoices if row.get("kind") == "issued"]
     received = [row for row in invoices if row.get("kind") == "received"]
     reta = [row for row in transactions if row.get("category_id") == _RETA_CATEGORY]
     evidenced = {row.get("invoice_id") for row in transactions if row.get("purchase_invoice_evidence_id")}
-    return [
-        _check(year, "issued invoices", len(scenario.issued), len(issued)),
-        _check(
-            year,
-            "issued base total",
-            sum((item.base for item in scenario.issued), Decimal("0")),
-            _total([row.get("base_total") for row in issued]),
-        ),
-        _check(year, "received invoices", len(scenario.received), len(received)),
-        _check(
-            year,
-            "received base total",
-            sum((item.base for item in scenario.received), Decimal("0")),
-            _total([row.get("base_total") for row in received]),
-        ),
-        _check(
-            year,
-            "invoices linked to a transaction",
-            len(invoices),
-            sum(1 for row in invoices if row.get("linked_transaction_ids")),
-        ),
-        _check(
-            year,
-            "received invoices with purchase evidence",
-            len(received),
-            sum(1 for row in received if row.get("invoice_id") in evidenced),
-        ),
-        _check(year, "RETA quotas", len(scenario.reta_months), len(reta)),
-        _check(
-            year,
-            "withholding recorded on received invoices",
-            sum((item.withholding for item in scenario.received), Decimal("0")),
-            _total([row.get("retention_amount") for row in received]),
-        ),
-    ]
+    return _ledger_total_checks(year, scenario, invoices, issued, received, reta, evidenced)
 
 
 def _asset_checks(reader: _StoreReader, year: int, receipt: dict[str, Any]) -> list[GateCheck]:

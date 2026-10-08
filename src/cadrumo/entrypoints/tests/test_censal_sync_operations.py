@@ -23,15 +23,21 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 
+from ...application.user_profile.censal_readback import read_latest_censal_observation
 from ...application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, CENSO_SOURCE_TAG
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.projections import record_to_effective_facts
+from ...core.paths import effective_storage_root
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..censal_review import review_censal_with_services
+from . import test_registered_executor_conformance as conformance
+from .censal_review_test_support import review_censal_with_services
+from .test_censal_operation_operand import _operand
 from .test_registered_executor_conformance import _CloseWitness, _runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -189,3 +195,42 @@ def test_each_censal_acquisition_publishes_exactly_one_answerable_review(
     assert after_first.record_revision > 0
     assert first_cleanup.closed is True
     assert second_cleanup.closed is True
+
+
+@pytest.mark.parametrize("apply", [False, True])
+def test_complete_capture_is_readable_after_review_even_when_adoption_is_declined(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+    apply: bool,
+) -> None:
+    """Fresh journal/custody readers preserve all evidence independently of local adoption."""
+    from datetime import timedelta
+
+    observation = _operand().observation
+    monkeypatch.setattr(conformance, "_observation", lambda: observation)
+    with _runtime(tmp_path / "censal-readback", cleanup=_CloseWitness()) as (driver, _registry, profile_id):
+
+        def read():
+            return asyncio.run(
+                read_latest_censal_observation(
+                    profile_id,
+                    journal=OperationJournalRepository(storage_root=effective_storage_root() / "operations"),
+                    operands=operation_secure_reference_repository(),
+                )
+            )
+
+        assert read() is None
+        for _ in range(2):
+            result = asyncio.run(
+                review_censal_with_services(
+                    driver.services,
+                    operation=operation,
+                    actor_ref=_ACTOR,
+                    decide=lambda _projection: apply,
+                )
+            )
+            assert result.applied is apply
+            assert read() == observation
+            assert read() == observation
+            observation = observation.model_copy(update={"captured_at": observation.captured_at + timedelta(seconds=1)})

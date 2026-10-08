@@ -21,6 +21,7 @@ from .product_identity import PRODUCT_IDENTITY
 from .storage_taxonomy import (
     FingerprintParticipation,
     StorageCategory,
+    StorageDefaultAnchor,
     StorageGrouping,
     StorageLifecycle,
     StorageLocation,
@@ -41,7 +42,9 @@ def _location(
     settings_field: str | None = None,
     node_kind: StorageNodeKind = StorageNodeKind.DIRECTORY,
     scope: StorageScope = StorageScope.ROOT,
+    default_anchor: StorageDefaultAnchor = StorageDefaultAnchor.SCOPE,
     override_policy: StorageOverridePolicy = StorageOverridePolicy.OPERATOR_OVERRIDABLE,
+    create_explicit_directory: bool = False,
     fingerprint_participation: FingerprintParticipation = FingerprintParticipation.PARTICIPATING,
     derives_settings_default: bool = True,
 ) -> StorageLocation:
@@ -51,7 +54,9 @@ def _location(
         subpath=subpath,
         node_kind=node_kind,
         scope=scope,
+        default_anchor=default_anchor,
         override_policy=override_policy,
+        create_explicit_directory=create_explicit_directory,
         lifecycle=lifecycle,
         grouping=grouping,
         fingerprint_participation=fingerprint_participation,
@@ -86,6 +91,98 @@ orphan the file member nested inside it.
 
 
 _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
+    _location(
+        StorageCategory.OLLAMA_HOME,
+        "components/ollama/home",
+        consumer_module="application/provisioning_host.py",
+        settings_field="cadrumo_ollama_home_dir",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    _location(
+        StorageCategory.OLLAMA_MODELS,
+        "models/ollama",
+        consumer_module="application/provisioning_host.py",
+        settings_field="cadrumo_ollama_models_dir",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    _location(
+        StorageCategory.GNOME_EXTENSIONS,
+        "integrations/gnome/extensions",
+        consumer_module="adapters/local_runtime/linux_gnome_lock.py",
+        settings_field="cadrumo_gnome_extensions_dir",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    _location(
+        StorageCategory.DESKTOP_WEBVIEW,
+        "webview",
+        dormant_reason=(
+            "The native desktop host places its webview profile and window state here through its "
+            "storage projection query; no Python product module reads it."
+        ),
+        settings_field="cadrumo_webview_dir",
+        # The renderer evicts its own cache; generic reclaim must not delete a live profile.
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.CACHE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    _location(
+        StorageCategory.CONSOLE_WORKSPACE,
+        "workspace",
+        dormant_reason=(
+            "The native desktop host projects this operator workspace as the cwd for its console, "
+            "Python and TUI terminals; no Python product module reads it. It is not encrypted custody."
+        ),
+        override_policy=StorageOverridePolicy.FIXED,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.EXPORTS,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    _location(
+        StorageCategory.TEMPORARY_FILES,
+        "tmp",
+        create_explicit_directory=True,
+        consumer_module="adapters/persistence/storage/custody/_kdf_worker_supervision.py",
+        settings_field="cadrumo_temp_dir",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    _location(
+        StorageCategory.RUNTIME_SOCKETS,
+        "runtime",
+        default_anchor=StorageDefaultAnchor.DARWIN_TRANSIENT,
+        consumer_module="adapters/local_runtime/posix_endpoint.py",
+        settings_field="cadrumo_runtime_socket_dir",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    _location(
+        StorageCategory.PLAYWRIGHT_BROWSERS,
+        "components/playwright",
+        consumer_module="application/provisioning_browser.py",
+        settings_field="cadrumo_playwright_browsers_dir",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    _location(
+        StorageCategory.CHROMIUM_DATA,
+        "chromium-data",
+        consumer_module="adapters/outbound/aeat/browser/session.py",
+        settings_field="cadrumo_chromium_data_root",
+        # Browser owners remove their own working directories on close.
+        # Generic reclaim must not remove profiles belonging to live browsers.
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
     # ── State substrate and identity ────────────────────────────────────────
     _location(
         StorageCategory.TOKENS,
@@ -154,7 +251,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
-    # ── Diagnostic and append-only telemetry logs ───────────────────────────
+    # ── Diagnostic and append-only run-record logs ───────────────────────────
     _location(
         StorageCategory.LOGS,
         "logs",
@@ -186,10 +283,10 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
-        StorageCategory.LLM_RUN_TELEMETRY,
+        StorageCategory.LLM_RUN_RECORD,
         "llm-run-telemetry",
-        consumer_module="adapters/persistence/llm/run_telemetry.py",
-        settings_field="cadrumo_llm_run_telemetry_dir",
+        consumer_module="adapters/persistence/llm/run_records.py",
+        settings_field="cadrumo_llm_run_record_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.LOGS,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
@@ -232,6 +329,19 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         "cache/corpus-search/corpus.sqlite",
         consumer_module="application/corpus_search/runtime.py",
         node_kind=StorageNodeKind.FILE,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.CACHE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
+    _location(
+        StorageCategory.PYWIN32_GENERATED_CACHE,
+        "cache/pywin32/gen_py",
+        dormant_reason=(
+            "The packaged interpreter's reviewed pywin32 patch places win32com's generated COM cache "
+            "here beneath the pinned root; no Python product module reads it."
+        ),
+        # pywin32 regenerates and owns these files; no product retention policy bounds them.
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.CACHE,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
@@ -338,7 +448,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.FILED_DECLARATIONS,
         "filed-declarations",
-        consumer_module="entrypoints/cli/_overview_evidence.py",
+        consumer_module="entrypoints/overview_evidence_composition.py",
         settings_field="cadrumo_filed_declarations_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -561,6 +671,65 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         override_policy=StorageOverridePolicy.FIXED,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
+    _location(
+        # A supervised runtime's non-private identity claim, replaced on each
+        # boot and removed on a clean exit, so it is one bounded file. Reclaim
+        # must not delete a live runtime's record, and a boot must not move a
+        # replay's digest.
+        StorageCategory.RUNTIME_BOOT_RECORD,
+        ".runtime/boot.json",
+        consumer_module="adapters/local_runtime/boot_record.py",
+        node_kind=StorageNodeKind.FILE,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    *(
+        _location(
+            category,
+            subpath,
+            consumer_module="adapters/local_runtime/installation.py",
+            node_kind=node_kind,
+            lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+            grouping=StorageGrouping.STATE,
+            override_policy=StorageOverridePolicy.FIXED,
+            fingerprint_participation=FingerprintParticipation.EXCLUDED,
+        )
+        for category, subpath, node_kind in (
+            (StorageCategory.RUNTIME_COORDINATION, ".runtime", StorageNodeKind.DIRECTORY),
+            (StorageCategory.RUNTIME_INSTALLATION_RECORD, ".runtime/installation.json", StorageNodeKind.FILE),
+            (StorageCategory.RUNTIME_INSTALLATION_LOCK, ".runtime/installation.lock", StorageNodeKind.FILE),
+        )
+    ),
+    *(
+        _location(
+            category,
+            subpath,
+            dormant_reason="Native manager consumes the generated location projection; no Python writer.",
+            node_kind=StorageNodeKind.FILE,
+            lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+            grouping=StorageGrouping.STATE,
+            override_policy=StorageOverridePolicy.FIXED,
+            fingerprint_participation=FingerprintParticipation.EXCLUDED,
+        )
+        for category, subpath in (
+            (StorageCategory.MANAGER_START_CLAIM, ".runtime/manager-start.lock"),
+            (StorageCategory.MANAGER_QUIT_RECORD, ".runtime/manager-quit.json"),
+            (StorageCategory.MANAGER_FAILED_VERSIONS, ".runtime/manager-failed-versions.json"),
+            (StorageCategory.MANAGER_PREFERENCES, "manager-preferences.json"),
+        )
+    ),
+    _location(
+        StorageCategory.MANAGER_LOG_FILE,
+        f"logs/{PRODUCT_IDENTITY.python_package}-manager.log",
+        dormant_reason="Native manager consumes the generated location projection; no Python writer.",
+        node_kind=StorageNodeKind.FILE,
+        lifecycle=StorageLifecycle.ROTATION,
+        grouping=StorageGrouping.LOGS,
+        override_policy=StorageOverridePolicy.FIXED,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
 )
 
 
@@ -726,6 +895,19 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
+    _location(
+        # The durable revocation fence for receipt resume. Deleting it would
+        # let an undeleted receipt outlive a sign-out, so no lifecycle that
+        # reclaim may delete applies to it.
+        StorageCategory.KEYSTORE_SIGN_IN_GENERATION,
+        "sign-in-generation.json",
+        consumer_module="adapters/persistence/storage/storage_path_definitions.py",
+        node_kind=StorageNodeKind.FILE,
+        scope=StorageScope.KEYSTORE_RELATIVE,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
 )
 
 
@@ -737,14 +919,6 @@ STORAGE_TAXONOMY: Final[dict[StorageCategory, StorageLocation]] = {
 Total over :class:`StorageCategory`: a member without a declaration would be a
 name the application can pass around but never resolve.
 """
-
-
-STORAGE_FIELD_CATEGORIES: Final[dict[str, StorageCategory]] = {
-    location.settings_field: location.category
-    for location in STORAGE_TAXONOMY.values()
-    if location.settings_field is not None
-}
-"""Reverse index from a flat settings field name to the member that governs it."""
 
 
 ROOT_DERIVED_STORAGE_LOCATIONS: Final[tuple[StorageLocation, ...]] = tuple(
@@ -761,19 +935,6 @@ ROOT_DERIVED_STORAGE_FIELDS: Final[tuple[str, ...]] = tuple(
     location.settings_field for location in ROOT_DERIVED_STORAGE_LOCATIONS if location.settings_field is not None
 )
 """Settings fields whose default is computed from the storage root, in declaration order."""
-
-
-FINGERPRINT_EXCLUDED_STORAGE_FIELDS: Final[frozenset[str]] = frozenset(
-    location.settings_field
-    for location in STORAGE_TAXONOMY.values()
-    if location.settings_field is not None and location.fingerprint_participation is FingerprintParticipation.EXCLUDED
-)
-"""Settings fields whose contents are kept out of the data-root drift digest.
-
-Compared by field NAME wherever it is checked, never by resolved-path
-cardinality: two fields may legitimately be overridden onto one directory,
-which shrinks a resolved-path set while exactly the same fields are consulted.
-"""
 
 
 def storage_location(category: StorageCategory) -> StorageLocation:
@@ -810,11 +971,24 @@ def storage_path(category: StorageCategory, *, settings: Settings | None = None)
             "identifier; resolve it with bucket_scoped_storage_path instead.",
         )
     resolved = _effective_settings(settings)
+    if uses_external_transport(location, resolved):
+        from .darwin_transport import darwin_socket_directory
+
+        return darwin_socket_directory()
     if location.settings_field is not None:
         value = getattr(resolved, location.settings_field, None)
         if value is not None:
             return Path(value)
     return Path(resolved.cadrumo_local_storage_root) / location.relative_path()
+
+
+def uses_external_transport(location: StorageLocation, settings: Settings) -> bool:
+    """Identify the shared namespace that root materialisation/reclaim must not own."""
+    from .runtime_transport import uses_darwin_transport
+
+    return location.default_anchor is StorageDefaultAnchor.DARWIN_TRANSIENT and uses_darwin_transport(
+        explicit=location.settings_field in settings.model_fields_set
+    )
 
 
 def bucket_scoped_storage_path(
@@ -894,19 +1068,74 @@ def storage_tree_targets(
     """
     targets: list[Path] = []
     for location in _ROOT_LOCATIONS:
-        if location.settings_field is None:
-            continue
-        is_explicit = location.settings_field in settings.model_fields_set
-        if (is_explicit and not include_explicit) or (not is_explicit and not include_derived):
-            continue
-        if not is_explicit and derived_groupings is not None and location.grouping not in derived_groupings:
-            continue
-        value = getattr(settings, location.settings_field, None)
-        if value is None:
-            continue
-        candidate = Path(value)
-        targets.append(candidate.parent if location.node_kind is StorageNodeKind.FILE else candidate)
+        target = _storage_tree_target(
+            location,
+            settings,
+            include_explicit=include_explicit,
+            include_derived=include_derived,
+            derived_groupings=derived_groupings,
+        )
+        if target is not None:
+            targets.append(target)
     return tuple(targets)
+
+
+def _storage_tree_target(
+    location: StorageLocation,
+    settings: Settings,
+    *,
+    include_explicit: bool,
+    include_derived: bool,
+    derived_groupings: frozenset[StorageGrouping] | None,
+) -> Path | None:
+    field = location.settings_field
+    if field is None:
+        return None
+    if uses_external_transport(location, settings):
+        return None
+    if not _storage_location_is_selected(
+        location,
+        settings,
+        field=field,
+        include_explicit=include_explicit,
+        include_derived=include_derived,
+        derived_groupings=derived_groupings,
+    ):
+        return None
+    value = getattr(settings, field, None)
+    if value is None:
+        return None
+    candidate = Path(value)
+    return candidate.parent if location.node_kind is StorageNodeKind.FILE else candidate
+
+
+def _storage_location_is_selected(
+    location: StorageLocation,
+    settings: Settings,
+    *,
+    field: str,
+    include_explicit: bool,
+    include_derived: bool,
+    derived_groupings: frozenset[StorageGrouping] | None,
+) -> bool:
+    if field in settings.model_fields_set:
+        return include_explicit
+    if not include_derived:
+        return False
+    if derived_groupings is not None and location.dormant_reason is not None:
+        # A narrowed provisioning prepares what this process's work may fill.
+        # A dormant member has no Python consumer; its native owner creates it.
+        return False
+    return _matches_derived_grouping(location, derived_groupings)
+
+
+def _matches_derived_grouping(
+    location: StorageLocation,
+    derived_groupings: frozenset[StorageGrouping] | None,
+) -> bool:
+    if derived_groupings is None:
+        return True
+    return location.grouping in derived_groupings
 
 
 def _effective_settings(settings: Settings | None) -> Settings:

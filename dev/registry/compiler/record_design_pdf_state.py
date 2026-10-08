@@ -373,6 +373,11 @@ def _contiguity_failures(sheets: tuple[RecordDesignSheet, ...]) -> dict[str, str
     return failures
 
 
+def _pdf_sheets_have_content(sheets: tuple[RecordDesignSheet, ...]) -> bool:
+    """Determine whether parsed fields already supply the source content column."""
+    return any(existing.content for sheet in sheets for existing in sheet.fields)
+
+
 def _finalise_extraction(
     source_label: str,
     results: list[_PdfSheetResult],
@@ -399,7 +404,7 @@ def _finalise_extraction(
     # returned -- the contiguity pass below already routes it to `skipped`. Only
     # the moment it is judged moved, to after that routing, so a body the read
     # does not return can no longer refuse the whole document.
-    parsed_any_content = any(existing.content for sheet in read for existing in sheet.fields)
+    parsed_any_content = _pdf_sheets_have_content(read)
     read = apply_pdf_column_cells(read, column_rows)
     if not parsed_any_content:
         read = _recover_inline_constants(read)

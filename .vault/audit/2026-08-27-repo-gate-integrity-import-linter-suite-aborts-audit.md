@@ -3,21 +3,20 @@ tags:
   - '#audit'
   - '#repo-gate-integrity'
 date: '2026-08-27'
-modified: '2026-08-30'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:142daf971378edd3e15ea3e95e7487f4a593ecb8ce3fc5f0039f4e8fc46c2f4e'
+body_hash: 'sha256:66a06f1f4fb208a2faa50c3c999956b55c59e64923efa03e4961976126acb7aa'
 related: []
 ---
-
 # `repo-gate-integrity` audit: `the import-linter suite aborts, hiding five broken contracts`
 
 ## Scope
 
+Reproduce the import-linter suite failure from a clean HEAD and determine which contracts and ledger checks it hides.
+
 ## Findings
 
-## Recommendations
-
-## Finding
+### Finding
 
 `uv run --no-sync lint-imports` does not run. It aborts with:
 
@@ -27,7 +26,7 @@ This reproduces at CLEAN HEAD (`git archive HEAD` extraction), so it is not a
 working-tree artefact. The architecture contracts are therefore enforcing
 nothing, and have not been for as long as the abort has existed.
 
-## Which contract aborts, and what is behind it
+### Which contract aborts, and what is behind it
 
 The run dies while checking the eighth contract,
 `tui-feature-independence` ("TUI feature implementations share components
@@ -47,9 +46,9 @@ and `cadrumo.entrypoints.tui.operations` importing `cadrumo.adapters`.
 
 None of this surfaces today, because the abort happens first.
 
-## Why the ledger gates drift
+### Why the ledger gates drift
 
-`src/cadrumo/tests/test_importlinter_ledger.py` reads `.importlinter` and
+The retired test read `.importlinter` and
 reasons about its ignore edges. It is currently red on two counts: one
 production module (`cadrumo.application.auth.apoderado_service`) pins an
 adapters edge without being enrolled, and 31 reconciled entries no longer pin
@@ -65,7 +64,15 @@ missing is at least as likely to mean the contract stopped covering them.
 Dropping them on the strength of the gate's own message would record a win
 that has not been won.
 
-## Not remediated here, deliberately
+### Evidence
+
+Full report captured at `$CLAUDE_JOB_DIR/tmp/lint_report.txt` during this
+investigation. `entrypoints/adapter_composition.py`, added earlier this
+session, appears nowhere in it.
+
+## Recommendations
+
+### Not remediated here, deliberately
 
 Making the suite run again turns five broken contracts and 159 violations into
 a red gate on a shared tree with several peers mid-flight. That is an operator
@@ -73,12 +80,6 @@ call about sequencing, not a change to absorb inside an unrelated tick. The
 first step is small -- repair or narrow `tui-feature-independence` so the
 suite completes -- but the consequence is not.
 
-## Evidence
-
-Full report captured at `$CLAUDE_JOB_DIR/tmp/lint_report.txt` during this
-investigation. `entrypoints/adapter_composition.py`, added earlier this
-session, appears nowhere in it.
-
-## Status
+### Status
 
 Open.

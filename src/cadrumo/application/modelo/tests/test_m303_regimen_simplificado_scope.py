@@ -7,7 +7,7 @@ from collections.abc import Iterator
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
+from ....domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 from ....domain.deadlines.models import TaxpayerProfile
 from ..action_errors import ModeloProfileReadinessError
 from ..m303_regimen_simplificado_scope import (

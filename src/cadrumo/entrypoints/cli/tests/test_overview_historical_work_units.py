@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-import pytest
+import sys
+from collections.abc import Iterator, Sequence
+from contextvars import ContextVar
+from pathlib import Path
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+import pytest
+from click.testing import Result
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
-)
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.period import Period
 from ....core.time.clock import now
@@ -18,11 +19,46 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ._modelo_work_ux_support import _create_profile, _invoke
+from ._overview_native_support import invoke_native_overview
+from .runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
-__all__ = ["_isolated_cli_backend"]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+]
+_ACTIVE_NATIVE: ContextVar[NativeCliProfileFixture | None] = ContextVar("overview_historical_native", default=None)
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+@pytest.fixture(autouse=True)
+def _native_profile(tmp_path: Path) -> Iterator[None]:
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture.register(
+            label="Historical overview profile",
+            facts={
+                "withholding.has_employees": "false",
+                "withholding.pays_professionals_with_retencion": "false",
+                "irpf.art109_activity_income_withholding_ge_70pct": "false",
+                "withholding.pays_rent_with_retencion": "false",
+                "withholding.pays_capital_income_with_retencion": "false",
+                "iva.does_intracomunitario": "false",
+                "obligations.third_party_transactions_above_347_threshold": "false",
+            },
+        )
+        token = _ACTIVE_NATIVE.set(fixture)
+        try:
+            yield
+        finally:
+            _ACTIVE_NATIVE.reset(token)
+
+
+def _invoke(args: Sequence[str]) -> Result:
+    fixture = _ACTIVE_NATIVE.get()
+    if fixture is None:
+        raise AssertionError("historical native fixture is not active")
+    return invoke_native_overview(fixture, args)
+
 
 _FILED_CALCULATION_REVISION_ID = "a" * 64
 _CURRENT_FILING_RECORD_ID = "b" * 64
@@ -64,14 +100,12 @@ def _create_historical_work_unit(
         filed_calculation_revision_id=filed_calculation_revision_id,
         current_filing_record_id=current_filing_record_id,
     )
-    with open_test_profile_session(bucket_id):
-        repository = WorkUnitCatalogueRepository(bucket_id=bucket_id)
-        repository.save(upsert_work_unit(repository.load(), unit))
+    repository = WorkUnitCatalogueRepository(bucket_id=bucket_id)
+    repository.save(upsert_work_unit(repository.load(), unit))
     return work_unit_id
 
 
 def _seed_historical_m130_m303_work() -> dict[tuple[str, int, str], str]:
-    _create_profile()
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     targets = (
@@ -167,7 +201,6 @@ def test_backlog_default_surface_includes_created_historical_m130_m303_work_unit
 
 
 def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late() -> None:
-    _create_profile()
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     work_unit_id = _create_historical_work_unit(

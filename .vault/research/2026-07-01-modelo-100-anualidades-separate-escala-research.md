@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#modelo-100-anualidades-separate-escala'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:371a1c18defd3d118c2d198dce19b1c52bac209553a30f7ce1358f84b3b61612'
+modified: '2026-10-03'
+body_hash: 'sha256:c4d1629e155cd189fee70be484dec4f20573cc980217a344e6877d840cd3af58'
 related: []
 ---
 
@@ -21,7 +21,7 @@ ADR must decide, and the conditions under which the interim advisory is retired.
 ## The benefit, grounded in bundled authoritative corpus
 
 Both provisions are present verbatim in the bundled consolidated LIRPF
-(src/aeat/_data/corpus/normatives/html/ley-35-2006.html, 1.9 MB; the per-article
+(the former source file, 1.9 MB; the per-article
 snippet files such as ley-35-2006-art-1.html are anchor stubs and must not be
 used). Verified against that file (not a secondary source), per rule
 legal-grounding-verifies-bundled-authoritative-corpus:
@@ -103,7 +103,7 @@ full base (the benefit is real). Worked figures below.
 
 ## Formula-runtime capability -- the algorithm is fully expressible
 
-src/aeat/domain/calculations/registry/_formula_runtime.py (dispatch at
+the former source file (dispatch at
 _evaluate_expression, ~line 519) and _formula_runtime_ops.py::evaluate_args_op
 provide every primitive needed:
 
@@ -144,7 +144,6 @@ Base liq. general 14.896 EUR, anualidades 3.000 EUR, minimo 5.550 EUR. The 2024
 state escala first bracket is 9,5% (half the tarifa); verified against the
 existing test oracle values (escala(5.550)=527,25, escala(11.896)=1.130,12,
 escala(14.896)=1.476,27 in
-src/aeat/domain/calculations/registry/tests/test_modelo_100_tarifa_real.py:495-545):
 
 - no benefit (single escala, full base): 949,02 = escala(14.896) - escala(5.550)
 - current shortcut (defective): 602,87 = escala(11.896) - escala(5.550)

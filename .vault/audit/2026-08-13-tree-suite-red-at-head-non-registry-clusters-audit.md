@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#tree-suite-red-at-head'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6e96a53c30d0b98627561a9029474f4cc5085e7276ac02917ae82c23dc22ca76'
-related:
-  - "[[2026-08-13-registry-suite-red-at-head-audit]]"
+body_hash: 'sha256:bf6e6a6020945508668a44bd6c83f162e3209b1338cfe443635a380aa776b8b7'
+related: []
 ---
 
 # `tree-suite-red-at-head` audit: `Tree-wide unit suite red at HEAD: attribution and root-cause clustering`
@@ -56,9 +55,9 @@ independently corroborating the sibling audit's committed verdict. Of the 178
 distinct failing test modules in the 410, only four are themselves modified.
 
 The 35 DIRTY are an upper bound and mostly false positives on inspection: the
-10 in `src/cadrumo/application/modelo/tests/test_export_output_paths.py` and 3
+10 in the retired test and 3
 in `test_export_iva_wallet.py` route through the dirty
-`src/cadrumo/application/modelo/_export.py`, but their cause is a committed
+The retired module, but their cause is a committed
 registry withdrawal (see the export-withdrawal finding), not the working-copy
 edit. What is lost by not separating these: a closeout can blame peer WIP for
 breakage that is already merged and will survive every agent going home.
@@ -81,7 +80,7 @@ implicated source checked for dirtiness and for the commit that moved it.
 
 ### taxonomy-detector-self-test-couples-to-live-data | medium | an anti-tautology proof fails for a reason unrelated to the property it pins
 
-`src/cadrumo/tests/test_pinned_taxonomy_literal_conformance.py:512` asserts
+The retired test asserted
 `{"db", "blobs", "audit"} <= set(entry.used)` and fails with actual
 `{'blobs', 'db'}`. The test's name and docstring claim one property: that the
 scan sees a dict literal's values and a tuple literal's elements, not only a
@@ -89,8 +88,8 @@ scan sees a dict literal's values and a tuple literal's elements, not only a
 and `blobs` as a tuple element, from the same fixture
 `TABLE = {"a": "db", "b": ("blobs", "audit")}`. Only `audit` is missed, because
 the vocabulary is derived at runtime from `STORAGE_TAXONOMY`
-(`src/cadrumo/tests/test_pinned_taxonomy_literal_conformance.py:151`) and
-`"audit"` is no longer a member of `src/cadrumo/core/_storage_taxonomy_locations.py`
+ and
+`"audit"` is no longer a member of the retired module
 (clean, token absent).
 
 What is lost: an anti-tautology proof whose fixture is coupled to live
@@ -103,16 +102,16 @@ regresses; assert taxonomy membership separately if it is wanted at all.
 
 ### bucket-validation-refusal-crashes | critical | four production refusal paths raise TypeError instead of the typed localised error
 
-`src/cadrumo/application/user_profile/_repository.py:221`, `:240`, `:245` and
+The retired module, `:240`, `:245` and
 `:303` all raise `BucketValidationError(translated_message=..., context=...)`.
 That constructor, at
-`src/cadrumo/adapters/persistence/storage/bucket/_errors.py:25`, accepts only
+The retired module, accepts only
 `message` positionally plus keyword-only `context`, and hardcodes
 `translated_message` itself. Every one of those four raises therefore dies with
 `TypeError: BucketValidationError.__init__() got an unexpected keyword argument
 'translated_message'` **instead of raising the refusal**. Three are observed in
 the capture via
-`src/cadrumo/application/user_profile/tests/test_repository.py:92`; the fourth
+The retired test; the fourth
 path is simply not exercised.
 
 Both files are clean, so this is committed. What is lost: a blank `profile_id`
@@ -146,7 +145,6 @@ Forty-two non-registry failures share a single cause: the filing-grade
 fixed-width export layouts were withdrawn from the registry. Every Modelo 303
 revision and the Modelo 200 revision carry a `support_removal_decisions`
 fragment, for example
-`src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/support_removal_decisions/0001-export-layout-support-removal.toml`
 and the Modelo 200 equivalent, each `decision = "remove_from_filing_grade"`,
 `reason = "unsupported_official_format"`, carrying `legal_refs` and
 `source_refs`, with the stated rationale that the official record design
@@ -171,12 +169,11 @@ index with a guard that names the empty layout set.
 
 ### justificante-csv-fixture-drift | medium | 55 failures across nine modules from one grounded model constraint
 
-`Justificante.csv` (`src/cadrumo/domain/justificante/_schema.py:33`) is pinned to
+`Justificante.csv`  is pinned to
 the canonical `AEAT_CSV_PATTERN` — one complete run of 8 to 32 uppercase
-alphanumerics — declared at `src/cadrumo/core/_aeat_csv.py:23` and landed by
+alphanumerics — declared at the retired module and landed by
 `29fa2ca07b`. Fixtures across nine modules seed hyphenated synthetic values such
 as `JUST-322-A00000000`, for example at
-`src/cadrumo/application/calculations/tests/_cross_period_clean_state_support.py:296`.
 Every implicated file is clean, so all 55 are committed.
 
 The code is right and deliberately so: the module docstring reasons explicitly
@@ -191,7 +188,7 @@ add one negative case asserting a hyphenated value is refused.
 
 `src/cadrumo/adapters/outbound/aeat/export/tests/test_registry_record_renderer.py:60`
 constructs `ExportFieldDefinition(... header_key=None ...)`. The field no longer
-exists on the model (`src/cadrumo/domain/calculations/registry/_schema_surfaces.py`)
+exists on the model
 and the model is `extra="forbid"`, so every construction fails
 `extra_forbidden` and takes all 17 tests in the module with it. The export
 package is clean; committed. Remediation: drop `header_key` from the helper.
@@ -202,7 +199,7 @@ fixed-width layout guarantees are currently unexercised.
 
 Thirty-three failures are `pytest.raises(..., match=...)` misses where the
 actual message is a bare translation key, for example at
-`src/cadrumo/application/user_profile/tests/test_lifecycle.py:734`, expecting
+The retired test, expecting
 `'declares no schema_version'` and receiving
 `'errors.integrity.integrity_storage_envelope_version'`. This is intended
 design, not a regression: `src/cadrumo/core/errors/__init__.py:140` sets
@@ -224,16 +221,15 @@ defect and the test is right.
 
 ### import-hygiene-ratchet-regressed | medium | test-only private reaches grew 94 to 104, all in clean files
 
-`src/cadrumo/tests/test_import_hygiene_gate.py:354` reports `104 current > 94
+The retired test reported `104 current > 94
 documented`, and `:379` names nine undocumented sites, among them
-`src/cadrumo/application/calculations/tests/test_pull_path_calculate_path_casilla_parity.py:125`
 and `:126`,
 `src/cadrumo/application/calculations/tests/test_row_set_assembly.py:468` and
 `:505`, and
 `src/cadrumo/entrypoints/cli/tests/test_ledger_filer_precondition_projection.py:8`
 through `:10`. All five owning test files are clean, so the debt landed in
 commits, not in working copies. What is lost: the ratchet's contract is that a
-new site is added to `dev/quality/import_hygiene_test_debt.json` **in the same
+new site is added to the retired data file **in the same
 commit**; ten arrived without that, so the documented set no longer describes the
 tree. Remediation: for each of the nine, promote the symbol to the owning
 package's facade and rewrite the import, or add a reasoned entry; prefer
@@ -241,9 +237,9 @@ promotion.
 
 ### ecb-provider-branches-on-pytest | high | HEAD~1 landed production code that gates behaviour on the test-runner opt-in
 
-`src/cadrumo/tests/test_marker_integrity.py:1129` refuses production modules
+The retired test refused production modules
 that gate live reads on the pytest opt-in, and names exactly one violator:
-`src/cadrumo/adapters/outbound/fx/_ecb_provider.py`, which at `:229` evaluates
+The retired module, which at `:229` evaluates
 `_pytest_is_driving_this_call() and not settings.live_tests_enabled`. The file is
 clean and the token was introduced by `4b98e1dc09 fix(fx): refuse a
 pytest-driven live ECB lookup without explicit opt-in` — the second-most-recent
@@ -262,14 +258,14 @@ provider ignorant of pytest.
 
 ### environmental-residue | low | two meta-gates are red on filesystem residue and would be green on a clean checkout
 
-`src/cadrumo/tests/test_application_verification_dead_surface.py:22` asserts
+The retired test asserted
 `not package.exists()` and fails, but
 `src/cadrumo/application/verification` contains **zero files** — only two empty
 directories git cannot track. Its sibling assertion that no source, stub or
 config still names the dead module **passes**, so the deletion is genuinely
 complete; only empty directories survive.
 
-`src/cadrumo/tests/test_every_test_module_is_collectable.py:169` reports 26
+The retired test reported 26
 uncollectable modules, every one of them under
 `tmp/real-optional-overview-proof/pytest-anthropic/.../head/dev/`, a peer's
 scratch extraction of the repository. `tmp/` is gitignored at `.gitignore:310`
@@ -284,7 +280,7 @@ verbatim.
 
 ### mandatory-regime-composition-fanout | medium | one new fail-closed profile fact reddens two packages
 
-`src/cadrumo/domain/deadlines/_profiles.py:329` raises
+The retired module raises
 `ProfileError("iva.m303_regime_composition must be explicitly declared for
 Modelo IVA")` whenever an IVA block is present but the composition is not
 declared. Landed by `f644d84b32 feat(m303): close DP30301 scalar authorities`;
@@ -333,13 +329,13 @@ figure AEAT did not receive.
 Second-pass finding against the residual. Nine failures across the Modelo 145
 communication surface share one committed production defect in the shared
 fixed-width codec. At
-`src/cadrumo/domain/calculations/registry/_fixed_width_codec.py:226` an absent
+The retired module an absent
 casilla is defaulted to the empty string:
 `raw_value = field_values.get(field.casilla_id, "")`. The text branch tolerates
 that — `_render_text` at `:381` returns `""` for `None` and passes any `str`
 through. The numeric branches do not: `_render_integer` at `:419` calls
 `_coerce_numeric`, which delegates to `coerce_fixed_width_decimal` at
-`src/cadrumo/core/decimal/_fixed_width.py:31`, whose canonical-decimal regex does
+The retired module, whose canonical-decimal regex does
 not match `""`. The empty string therefore raises, and because the failure is
 raised per record rather than per field, **one absent optional numeric casilla
 refuses the entire export record**. Observed as
@@ -370,15 +366,14 @@ receive.
 Three residual clusters share one shape rather than one cause: the test drives a
 path expecting to reach a specific guard, and a newly-earlier precondition
 refuses first, so the guard the test exists to prove is never exercised. Eight
-failures at `src/cadrumo/application/auth/_sessions.py:682`
+failures at the retired module
 (`clave_route_missing`) preempt
 `src/cadrumo/application/auth/tests/test_blank_profile_identity_refusal.py:110`,
 whose stated purpose is proving no provider binds a session against a blank
 profile identity. Six at
-`src/cadrumo/application/modelo/_amendment_actions.py:145`
 (`AmendmentEvidenceMissingError`) preempt the rectificativa-kind refusal asserted
-at `src/cadrumo/application/modelo/tests/test_amend_kind_resolution.py:236`. Six
-at `src/cadrumo/application/flows/_scripted.py:115`
+at the retired test. Six
+at the retired module
 (`scripted_answer_rejected`) preempt the descendant-door lifecycle assertions.
 
 Attribution differs across the three and must not be collapsed:

@@ -43,7 +43,7 @@ from ...domain.invoices.enums import (
     invoice_class_rectificativa,
 )
 from ...domain.invoices.models import InvoiceLine
-from ...domain.iva.lookup import rate_kinds_for_declared_rate
+from ...domain.iva.lookup import unique_rate_kind_for_declared_rate
 from ...domain.iva.schema import IvaRateKind, spanish_eu_member_state
 from ..invoices.catalogue_creation import resolve_iva_rate_slot
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -188,10 +188,9 @@ def domestic_rate_tier_from_the_document(draft: InvoiceDraft, *, invoice_date: d
     keeps every one of the declines below and hands the answer to the table as
     a criteria axis, so the mapping is applied once, where the law is.
 
-    :func:`~domain.iva.lookup.rate_kinds_for_declared_rate` answers which tier a
-    declared rate WAS on a given date, against the registered rate records; it
-    returns a tuple because that question can legitimately have more than one
-    answer, so a caller detects ambiguity instead of picking one.
+    :func:`~domain.iva.lookup.unique_rate_kind_for_declared_rate` resolves the
+    registered rate records at that date and returns a tier only when the
+    published authority selects exactly one.
 
     The date is load-bearing and is the invoice's own issue date, not today's.
     A tier's rate changes by statute, so resolving a 2024 document against
@@ -236,15 +235,13 @@ def domestic_rate_tier_from_the_document(draft: InvoiceDraft, *, invoice_date: d
     # The lookup takes the rate as a FRACTION, matching how a transaction stores
     # it; the draft carries the bare percentage the document prints.
     with bundled_indexed_authority().operation() as operation:
-        tiers = rate_kinds_for_declared_rate(
-            spanish_eu_member_state(effective_date=invoice_date),
+        rate_kind = unique_rate_kind_for_declared_rate(
+            spanish_eu_member_state(effective_date=invoice_date, authority=operation),
             entry.iva_rate / Decimal("100"),
             invoice_date,
             operation=operation,
         )
-    if len(tiers) != 1:
-        return None
-    return tiers[0]
+    return rate_kind
 
 
 def rate_tier_the_document_charged(

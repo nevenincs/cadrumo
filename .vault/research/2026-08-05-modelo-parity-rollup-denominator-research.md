@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-15'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:8c88e58e7d54a78e1e74e34fce41162a5127bc2364d014a18f8a9bfc12fe06c7'
+body_hash: 'sha256:6750cb899bfdbbacc1047097ecf604274619cf83bf9ee7053b78a530be746889'
 related:
   - "[[2026-08-04-modelo-100-casilla-implementation-audit]]"
   - "[[2026-07-28-conformance-cli-first-conformance-measurement-audit]]"
@@ -24,13 +24,13 @@ The current registry can support an evidence-led parity campaign, but “full pa
 
 The conformance surface renders one row per modelo revision and separates calculation, verification, evidence grounding, export, and authorization signals in `dev/registry/conformance/manager.py:224` and `dev/registry/conformance/manager.py:957`. A live measurement on 2026-08-05 found 73 modelos and 90 revisions. It measured 52 revisions with a non-empty calculation grade, 51 with verification expectations, and 39 that reconcile nothing; these are coverage facts, not correctness scores.
 
-The model-law coverage implementation separately validates every revision through a validated snapshot and requires legal authority, official source guidance, and layout authority. It reports executable parity gaps when a formula-bearing revision lacks safe executable evidence: `src/cadrumo/domain/calculations/registry/_coverage.py:103` and `src/cadrumo/domain/calculations/registry/_coverage.py:121`. The current screen found no required evidence-tier gaps across the 90 revisions, but that floor does not establish formula correctness or complete behavioral parity.
+The model-law coverage implementation separately validates every revision through a validated snapshot and requires legal authority, official source guidance, and layout authority. It reports executable parity gaps when a formula-bearing revision lacks safe executable evidence: the former source file and the former source file. The current screen found no required evidence-tier gaps across the 90 revisions, but that floor does not establish formula correctness or complete behavioral parity.
 
 ### “Full parity” has five non-interchangeable denominators
 
 The evidence supports measuring five dimensions separately; the authorizing ADR must decide whether and how to make this contract binding.
 
-- Schema parity compares each exact `(modelo, ejercicio, period)` coordinate with the official form/layout for that year. The denominator is the year-specific form, not the newest or largest revision. This follows the schema-completeness boundary in `casilla-schema-completeness` and the revision-local identity rules in `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:210`.
+- Schema parity compares each exact `(modelo, ejercicio, period)` coordinate with the official form/layout for that year. The denominator is the year-specific form, not the newest or largest revision. This follows the schema-completeness boundary in `casilla-schema-completeness` and the revision-local identity rules .
 - Formula and provenance parity asks whether each legally deterministic casilla with authoritative inputs has exactly one typed producer, a matching formula back-reference, and preserved legal/source provenance. Manual or upstream values are not failures when their reason is explicit.
 - Legal/source parity asks whether every formula, parameter, binding, and relation cites the applicable authoritative corpus. Revision-level evidence-tier presence is a floor, not a per-casilla proof.
 - Cross-model handoff parity asks whether every legally required dependency has one canonical relation or aggregation path, correct period applicability, clean-state behavior, and provenance. The relevant mechanism taxonomy is `calculation-aggregation-taxonomy`.
@@ -46,7 +46,7 @@ The behavioral denominator should be an explicit finite set of exact `(modelo, f
 
 ### `D2025` is not a canonical repository coordinate
 
-Repository-wide exact-token search found no standalone `D2025` document, symbol, revision, or modelo identifier. The actual declaration coordinate is the tuple of modelo, exercise, period, template revision, and law-selected registry revision. The declaration schema exposes template revision identity in `src/cadrumo/adapters/inbound/declaracion/_schema.py:31`; the M100 annual revision declares `id = "2025"` in `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml:2`.
+Repository-wide exact-token search found no standalone `D2025` document, symbol, revision, or modelo identifier. The actual declaration coordinate is the tuple of modelo, exercise, period, template revision, and law-selected registry revision. The declaration schema exposes template revision identity ; the M100 annual revision declares `id = "2025"` in `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml:2`.
 
 For this research, the surrounding M100 evidence permits the provisional interpretation “Modelo 100, ejercicio 2025, annual period `0A`, registry revision `2025`.” That interpretation must not be generalized to all modelos, to Anexo D, or to a global revision class without an explicit user-facing qualification.
 
@@ -82,7 +82,7 @@ The live conformance reads classify the 90-row baseline as follows:
 | Cross-model handoff parity | 0 joined canonical-path comparisons | 90 revisions |
 | Behavioral independent checking | 59 independently checked `(revision, casilla)` pairs | 1,261 reconciled pairs |
 
-The same reads report 39 revisions with no reconciliation claim, 24 bundled oracle payloads with zero unattributed payloads and zero unmatched payloads, and all 90 governance rows pending review. These figures distinguish “not measured” from “failed”; they do not authorize filling any gap. The reproducible commands are `uv run --no-sync python -m dev.registry.conformance report --json`, `coverage --json`, and `audit --check`. Exact renderer and audit entrypoints are `src/cadrumo/application/registry/_conformance.py:317`, `src/cadrumo/application/registry/_conformance.py:715`, `src/cadrumo/domain/calculations/registry/_external_grounding.py:442`, and `src/cadrumo/domain/calculations/registry/_external_grounding.py:465`.
+The same reads report 39 revisions with no reconciliation claim, 24 bundled oracle payloads with zero unattributed payloads and zero unmatched payloads, and all 90 governance rows pending review. These figures distinguish “not measured” from “failed”; they do not authorize filling any gap. The reproducible commands are `uv run --no-sync python -m dev.registry.conformance report --json`, `coverage --json`, and `audit --check`. Exact renderer and audit entrypoints are the former source file, the former source file, the former source file, and the former source file.
 
 The safe oracle review found no additional enrollment candidate that could be certified from the evidence inspected without a fuller exact mapping pass. Existing evidenced paths include M100 2020 and 2024 manual-oracle tests for `0012/0017/0022/0025`, M200 2024 tests for `00562/00592/00611`, and dedicated manual-oracle paths for M303/M353/M390 whose canonical casilla lists still require extraction. These are existing evidence, not new claims. Any later enrollment belongs in the owning revision’s `verification_expectations/*.toml` and may add only `externally_grounded_casilla_ids`.
 
@@ -95,12 +95,8 @@ The current live reads therefore report 61 independently checked casillas out of
 The annual matrix remains intentionally small: one provisional D2025 coordinate classified `not_yet_measured`. No trustworthy year-specific official-layout comparator was found in the repository, and construct-level selector/producer evidence remains unprojected because its contract is not yet defined.
 ## Sources
 
-- `src/cadrumo/domain/calculations/registry/_coverage.py:103`
-- `src/cadrumo/domain/calculations/registry/_coverage.py:121`
-- `src/cadrumo/domain/calculations/registry/_schema_surfaces.py:210`
-- `src/cadrumo/adapters/inbound/declaracion/_schema.py:31`
 - `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml:2`
-- `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_drift_detection.py`
+
 - `dev/registry/conformance/manager.py:224`
 - `dev/registry/conformance/manager.py:248`
 - `dev/registry/conformance/manager.py:957`

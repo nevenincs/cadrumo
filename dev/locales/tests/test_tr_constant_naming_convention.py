@@ -25,7 +25,7 @@ import ast
 
 import pytest
 
-from .._ast_scanner import find_tr_constant_naming_violations, tr_constant_naming_violations_in_tree
+from .._ast_key_naming import find_tr_constant_naming_violations, tr_constant_naming_violations_in_tree
 from .._paths import SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -163,4 +163,16 @@ def test_rule_ignores_an_unrelated_uppercase_call_argument() -> None:
         "    other_call(SOME_MESSAGE)\n",
     )
 
+    assert list(tr_constant_naming_violations_in_tree(tree)) == []
+
+
+@pytest.mark.parametrize("reference", ("_HIDDEN_KEY", "values._HIDDEN_KEY", "Values.PUBLIC_KEY"))
+def test_rule_finds_private_and_qualified_constant_references(reference: str) -> None:
+    tree = ast.parse(f"from cadrumo.core.i18n.render import tr\ntr({reference})\n")
+    assert list(tr_constant_naming_violations_in_tree(tree)) == [(2, reference.rsplit(".", 1)[-1])]
+
+
+@pytest.mark.parametrize("reference", ("values._VISIBLE_LOCALE_KEY", "values.dynamic_key"))
+def test_rule_accepts_qualified_visible_and_dynamic_keys(reference: str) -> None:
+    tree = ast.parse(f"from cadrumo.core.i18n.render import tr\ntr({reference})\n")
     assert list(tr_constant_naming_violations_in_tree(tree)) == []

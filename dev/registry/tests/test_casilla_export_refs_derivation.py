@@ -100,7 +100,7 @@ def _row_binding(revision_id: str) -> str:
         'provider = { kind = "m347_third_party_operation", fact = "row_field", '
         f'row_field = "{_ROW_SLOT}", grouping = "contraparte_clave", claves = [], '
         'rectification_scope = "any", data_type = "text" }\n'
-        'value = { data_type = "text", channel = "row_set", row_grouping = "related_party" }\n'
+        'value = { data_type = "text", channel = "row_set" }\n'
         'aggregation = { op = "rows" }\n'
         f'legal_refs = ["{_ARTICLE}"]\n'
         f'source_refs = ["{_SOURCE}"]\n\n'

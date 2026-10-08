@@ -11,6 +11,12 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.binding_value_contract import (
+    BindingDataType,
+    BindingValueChannel,
+    BindingValueContract,
+)
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import RevisionId
 from ....domain.calculations.registry.ledger_renta_income_bindings import LedgerRentaIncomeProvider
 from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
@@ -25,21 +31,22 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from ...operations.registry import (
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-    OperationSchemaIdentityV1,
-)
+from ...operations.financial_operand_contract import OperationTransientFinancialOperandPublicDeclarationV1
+from ...operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
+from ...operations.schema_identity import OperationSchemaIdentityV1
 from ..edit_admission import admit_modelo_edit_baseline
 from ..edit_models import (
     ModeloEditAdmittedV1,
+    ModeloEditDomainRefusalV1,
     ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
+    ModeloEditNonWritableReason,
     ModeloEditNonWritableScalarSurfaceEntryV1,
     ModeloEditRefusalCode,
     ModeloEditRefusedV1,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
+from ..edit_transient_operand import modelo_edit_financial_operand
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -78,16 +85,23 @@ def _recording_operation(prepared: RegistrySnapshot) -> tuple[PinnedAuthorityOpe
     return _RecordingOperation.__new__(_RecordingOperation), calls
 
 
+_MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
+
+
 def _casilla(casilla_id: str, input_kind: InputKind, data_type: CasillaDataType) -> CasillaDefinition:
     return CasillaDefinition.model_construct(id=casilla_id, input_kind=input_kind, data_type=data_type)
 
 
 def _manual_binding(binding_id: str) -> BindingDefinition:
-    return BindingDefinition.model_construct(id=binding_id, provider=ManualInputProvider.model_construct())
+    return BindingDefinition.model_construct(
+        id=binding_id, provider=ManualInputProvider.model_construct(), value=_MONEY_VALUE
+    )
 
 
 def _ledger_binding(binding_id: str) -> BindingDefinition:
-    return BindingDefinition.model_construct(id=binding_id, provider=LedgerRentaIncomeProvider.model_construct())
+    return BindingDefinition.model_construct(
+        id=binding_id, provider=LedgerRentaIncomeProvider.model_construct(), value=_MONEY_VALUE
+    )
 
 
 def _modelo_100_snapshot(
@@ -138,6 +152,15 @@ def _snapshot() -> RegistrySnapshot:
     )
 
 
+_EDIT_DECLARATION = modelo_edit_financial_operand(None)
+#: The public projection of the real edit operand declaration admission pins.
+_EDIT_FINANCIAL_OPERAND = OperationTransientFinancialOperandPublicDeclarationV1(
+    operand_schema=_EDIT_DECLARATION.operand_schema,
+    baseline_schema=_EDIT_DECLARATION.baseline_schema,
+    lifetime_seconds=_EDIT_DECLARATION.lifetime.total_seconds(),
+)
+
+
 def _contracts(*, include_edit: bool = True) -> OperationPublicContractSetV1:
     schema = OperationSchemaIdentityV1(
         schema_id="modelo.edit.apply.request", schema_version=1, schema_fingerprint=_DIGEST
@@ -153,6 +176,7 @@ def _contracts(*, include_edit: bool = True) -> OperationPublicContractSetV1:
         workspace_refresh_target_schema=OperationSchemaIdentityV1(
             schema_id="modelo.workspace.refresh-target", schema_version=1, schema_fingerprint="c" * 64
         ),
+        transient_financial_operand=_EDIT_FINANCIAL_OPERAND,
         definition_contract_digest="d" * 64,
     )
     return OperationPublicContractSetV1.model_construct(
@@ -244,7 +268,7 @@ def test_admission_re_resolves_the_work_and_pinned_authority_into_a_value_free_f
             "period": "0A",
             "on": None,
             "revision_id": None,
-            "grade": RegistryAuthorityGrade.FILING,
+            "grade": RegistryAuthorityGrade.CALCULATION,
         }
     ]
     assert not any("value" in field for field in baseline.model_dump(mode="json"))
@@ -278,3 +302,48 @@ def test_admission_refuses_when_the_required_public_operation_contract_is_not_co
 
     assert isinstance(outcome, ModeloEditRefusedV1)
     assert outcome.refusal.kind == "unsupported_compatibility"
+
+
+def test_a_ledger_binding_is_locked_by_its_source_not_by_the_schema() -> None:
+    outcome, _ = _admit()
+
+    assert isinstance(outcome, ModeloEditAdmittedV1)
+    ledger = next(
+        entry
+        for entry in outcome.baseline.permitted_surface
+        if isinstance(entry, ModeloEditNonWritableBindingOverrideSurfaceEntryV1) and entry.binding_id == "renta-ledger"
+    )
+    assert ledger.reason is ModeloEditNonWritableReason.SOURCE_LOCKED
+
+
+def test_a_revision_below_calculation_grade_is_refused_not_raised() -> None:
+    """A revision that only declares applicability cannot be calculated, so it cannot be edited."""
+
+    class _ApplicabilityOnlyOperation(PinnedAuthorityOperation):
+        @override
+        def snapshot(
+            self,
+            modelo_id: str | Modelo,
+            *,
+            filing_year: int,
+            period: str,
+            on: date | None = None,
+            revision_id: RevisionId | None = None,
+            grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+        ) -> RegistrySnapshot:
+            raise RegistryValidationError("the revision cannot satisfy the requested calculation snapshot authority")
+
+    work_unit = _work_unit()
+    outcome = admit_modelo_edit_baseline(
+        work_unit_id=work_unit.work_unit_id,
+        work_catalogue=WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit}),
+        calculation_catalogue=CalculationRevisionCatalogue(),
+        operation=_ApplicabilityOnlyOperation.__new__(_ApplicabilityOnlyOperation),
+        operation_contracts=_contracts(),
+        issued_at=_NOW,
+    )
+
+    assert isinstance(outcome, ModeloEditRefusedV1)
+    assert isinstance(outcome.refusal, ModeloEditDomainRefusalV1)
+    assert outcome.refusal.code is ModeloEditRefusalCode.ADMISSION_DENIED
+    assert outcome.refusal.facts == ("registry_authority_grade",)

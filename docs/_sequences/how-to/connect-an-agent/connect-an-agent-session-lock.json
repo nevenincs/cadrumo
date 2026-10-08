@@ -1,0 +1,104 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "sessions"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "session\t<profile-id>\thuman\tactive\t900\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "lock"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "profile_id\t<profile-id>\nscope\tcurrent\nsession_id\t<profile-id>\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "lock",
+        "--all"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "profile_id\t<profile-id>\nscope\tprofile\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "profile",
+        "view"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.profile.view",
+        "error": {
+          "action": {
+            "action": null,
+            "argument_bindings": [],
+            "conditionality": "not_applicable",
+            "evidence": [
+              {
+                "condition_id": "cli.refusal.completed",
+                "evidence_id": "cli.refusal.completed.observation",
+                "provenance": "runtime_observation",
+                "values": {
+                  "boundary_error_type": "CliRefusedBoundaryError"
+                }
+              }
+            ],
+            "failed_condition_id": "cli.refusal.completed",
+            "missing_argument_names": [],
+            "no_recovery_outcome": "operator_decision"
+          },
+          "category": "REFUSED",
+          "code": "REFUSED_CLI_BOUNDARY",
+          "context": {
+            "reason": "profile_locked"
+          },
+          "message": "profile_locked",
+          "retryable": false,
+          "runbook_id": null,
+          "trace_id": null
+        },
+        "notices": [],
+        "schema_version": "2",
+        "status": "error"
+      },
+      "envelope_source": "stderr",
+      "exit_code": 2,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 2,
+  "sequence_id": "connect-an-agent-session-lock"
+}

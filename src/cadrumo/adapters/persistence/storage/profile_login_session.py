@@ -4,25 +4,26 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import TypeGuard
 from uuid import UUID
 
-from ....application.user_profile.login_handover import ProfileLoginHandoverJournal
+from ....application.user_profile.access_contracts import ProfileAccessBinding
+from ....application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ....application.user_profile.login_session_port import (
     ProfileBucketSessionPort,
     ProfileLoginSessionPort,
     ProfileLoginThrottleEvaluationPort,
     ProfilePersistedSessionPort,
     ProfileSessionResumeOutcomePort,
+    ProfileSignInGenerationPort,
 )
 from .custody.acceleration_receipt import (
-    advance_persisted_profile_session_idle_deadline,
+    borrow_profile_session_key,
     delete_profile_session,
     mint_profile_session,
     profile_session_path,
-    resume_profile_session,
+    resume_profile_session_with_key,
 )
-from .custody.acceleration_receipt_crypto import PersistedProfileSession
+from .custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from .custody.zeroise import zeroise
 from .master_key.active_session import (
     bind_active_bucket_session,
@@ -31,11 +32,6 @@ from .master_key.active_session import (
     session_serves_bucket,
 )
 from .master_key.bucket_session import BucketSession
-from .master_key.login_handover_journal import (
-    clear_handover_journal,
-    load_handover_journal,
-    save_handover_journal,
-)
 from .master_key.login_throttle import evaluate_login_throttle, record_login_failure, reset_login_throttle
 
 
@@ -45,33 +41,8 @@ def bucket_session(session: ProfileBucketSessionPort) -> BucketSession:
     return session
 
 
-def _persisted_receipt(record: ProfilePersistedSessionPort) -> PersistedProfileSession:
-    if not isinstance(record, PersistedProfileSession):
-        raise TypeError("acceleration receipt is not owned by the persistence substrate")
-    return record
-
-
 class _PersistenceProfileLoginSession:
     """Delegate the aggregate port to the canonical custody/session authorities."""
-
-    def load_handover_journal(self, *, storage_root: Path) -> ProfileLoginHandoverJournal | None:
-        return load_handover_journal(storage_root=storage_root)
-
-    def save_handover_journal(
-        self,
-        *,
-        storage_root: Path,
-        journal: ProfileLoginHandoverJournal,
-    ) -> None:
-        save_handover_journal(storage_root=storage_root, journal=journal)
-
-    def clear_handover_journal(
-        self,
-        *,
-        storage_root: Path,
-        journal: ProfileLoginHandoverJournal,
-    ) -> None:
-        clear_handover_journal(storage_root=storage_root, journal=journal)
 
     def current_session(self) -> ProfileBucketSessionPort | None:
         return current_active_bucket_session()
@@ -136,19 +107,42 @@ class _PersistenceProfileLoginSession:
         now: datetime,
         idle_minutes: int,
         absolute_minutes: int,
-    ) -> ProfilePersistedSessionPort:
-        return mint_profile_session(
-            storage_root=storage_root,
-            profile_id=profile_id,
-            custody_generation=custody_generation,
-            dek_epoch=dek_epoch,
-            dek=dek,
-            now=now,
-            idle_minutes=idle_minutes,
-            absolute_minutes=absolute_minutes,
-        )
+        login_id: str,
+        sign_in_binding: ProfileAccessBinding,
+        sign_in_generation: ProfileSignInGenerationPort,
+    ) -> ProfilePersistedSessionPort | None:
+        try:
+            return mint_profile_session(
+                storage_root=storage_root,
+                profile_id=profile_id,
+                custody_generation=custody_generation,
+                dek_epoch=dek_epoch,
+                dek=dek,
+                now=now,
+                idle_minutes=idle_minutes,
+                absolute_minutes=absolute_minutes,
+                login_id=login_id,
+                sign_in=SignInGenerationCustody(root=storage_root, binding=sign_in_binding),
+                generation=SignInGeneration(
+                    lineage=sign_in_generation.lineage, generation=sign_in_generation.generation
+                ),
+            )
+        except AutomationCustodyError as error:
+            # The mint checks the captured generation before any write, and
+            # nothing after that check raises CONFLICT.
+            if error.reason is not AutomationCustodyCode.CONFLICT:
+                raise
+            return None
 
-    def resume_acceleration_receipt(
+    def borrow_acceleration_receipt_key(
+        self,
+        *,
+        storage_root: Path,
+        profile_id: UUID,
+    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
+        return borrow_profile_session_key(storage_root=storage_root, profile_id=profile_id)
+
+    def resume_acceleration_receipt_with_key(
         self,
         *,
         storage_root: Path,
@@ -156,35 +150,23 @@ class _PersistenceProfileLoginSession:
         custody_generation: int,
         dek_epoch: str,
         now: datetime,
+        receipt_key: bytearray,
+        login_id: str,
+        sign_in_binding: ProfileAccessBinding,
     ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
-        return resume_profile_session(
+        return resume_profile_session_with_key(
             storage_root=storage_root,
             profile_id=profile_id,
             custody_generation=custody_generation,
             dek_epoch=dek_epoch,
             now=now,
+            receipt_key=receipt_key,
+            login_id=login_id,
+            sign_in=SignInGenerationCustody(root=storage_root, binding=sign_in_binding),
         )
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:
         delete_profile_session(storage_root=storage_root, profile_id=profile_id)
-
-    def advance_acceleration_idle_deadline(
-        self,
-        *,
-        storage_root: Path,
-        profile_id: UUID,
-        record: ProfilePersistedSessionPort,
-        new_idle_deadline: datetime,
-    ) -> ProfilePersistedSessionPort:
-        return advance_persisted_profile_session_idle_deadline(
-            storage_root=storage_root,
-            profile_id=profile_id,
-            record=_persisted_receipt(record),
-            new_idle_deadline=new_idle_deadline,
-        )
-
-    def is_persisted_receipt(self, record: object) -> TypeGuard[ProfilePersistedSessionPort]:
-        return isinstance(record, PersistedProfileSession)
 
     def zeroise_owned_buffer(self, buffer: bytearray) -> None:
         zeroise(buffer)

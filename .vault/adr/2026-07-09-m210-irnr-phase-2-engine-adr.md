@@ -7,8 +7,8 @@ related:
   - "[[2026-06-04-m210-irnr-phase-2-engine-research]]"
   - "[[2026-06-30-convenio-doble-imposicion-adr]]"
 superseded_by: '2026-07-10-m210-irnr-phase-2-engine-adr'
-modified: '2026-08-15'
-body_hash: 'sha256:eabafc82ac306ef84e1a632038d7ac6b39a825b21792878cc3038076ad425f84'
+modified: '2026-10-03'
+body_hash: 'sha256:f4d7535b6cb3d44888051a31586ce2a574a43b2d35c56f37c0888c3215264e05'
 ---
 # `m210-irnr-phase-2-engine` adr: `Phase 2 registry design, grounding strategy, and slice decomposition` | (**status:** `superseded`)
 
@@ -215,7 +215,7 @@ to bless.
 - `src/cadrumo/_data/registry/aeat/treaties/` plus
   `src/cadrumo/_data/registry/aeat/legal/irnr.toml` plus
   `src/cadrumo/_data/corpus/normatives/html/` (Slice D tranches)
-- `src/cadrumo/core/_irnr.py` (official-code axis projection; Slice A)
+- the former source file (official-code axis projection; Slice A)
 - the canonical period grammar home in `src/cadrumo/core/` (token `0A`; Slice B)
 - `src/cadrumo/domain/deadlines/` (M210 plazo windows; Slice B)
 - `src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py` plus

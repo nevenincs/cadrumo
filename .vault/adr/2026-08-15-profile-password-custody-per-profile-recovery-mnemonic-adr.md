@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-09-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:88c5c5e0155a395e6aa602a745d67150b09415bdc4ce03f4c9e32375e5b68345'
+body_hash: 'sha256:7629c0cbf3bb97b362ffcf75f04945fd4f703bf360348df1a810d3621ce950c4'
 related:
-  - "[[2026-08-13-profile-password-custody-plan]]"
   - '[[2026-08-15-profile-password-custody-deletion-without-consumer-sweep-detectability-audit]]'
 ---
 
@@ -15,8 +14,7 @@ related:
 
 ## Problem Statement
 
-The BIP-39 mnemonic codec and its bundled 2048-word canonical wordlist in
-`src/cadrumo/adapters/persistence/storage/master_key/_recovery.py` have no
+The BIP-39 mnemonic codec and its bundled 2048-word canonical wordlist  have no
 consumer anywhere in the tree. The originating row framed the choice as
 split-them-out or delete-both-halves, and asked for the product question to be
 ruled first: will per-profile recovery adopt the mnemonic at all.

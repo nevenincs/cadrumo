@@ -16,7 +16,6 @@ from ...errors import (
     ClassificationError,
     EnvelopeVersionError,
     SecureObjectRevisionConflictError,
-    SecureObjectUnreadableError,
     StorageValidationError,
 )
 from ...namespace_registry import STORAGE_NAMESPACE_REGISTRY
@@ -26,6 +25,14 @@ from ..secure_objects import SecureObjectRepository
 from ._secure_objects_support import (
     _ephemeral_secure_repo,
 )
+from .batch_failures import iter_many_with_failures
+from .raw_key_writer import save_with_raw_key
+
+
+def _refuse_batch_schema(keys: tuple[str, ...]) -> None:
+    assert keys == ("schema-row",)
+    raise ValueError("batch contains non-current schema rows")
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -82,7 +89,8 @@ def test_secure_object_save_with_raw_key_supports_expected_revision(tmp_path: Pa
     with _ephemeral_secure_repo(tmp_path, "revision-cas-raw-key.db") as (db_path, _, repo):
         raw_key = b"x" * 32
         namespace = "cadrumo.revision.cas.raw"
-        repo.save_with_raw_key(
+        save_with_raw_key(
+            repo,
             namespace=namespace,
             hashed_object_key=raw_key,
             classification=SensitivityClass.FINANCIAL,
@@ -96,7 +104,8 @@ def test_secure_object_save_with_raw_key_supports_expected_revision(tmp_path: Pa
                 (namespace,),
             ).fetchone()
 
-        repo.save_with_raw_key(
+        save_with_raw_key(
+            repo,
             namespace=namespace,
             hashed_object_key=raw_key,
             classification=SensitivityClass.FINANCIAL,
@@ -123,7 +132,8 @@ def test_secure_object_save_with_raw_key_stale_expected_revision_refuses_without
     with _ephemeral_secure_repo(tmp_path, "revision-cas-raw-key-stale.db") as (db_path, _, repo):
         raw_key = b"y" * 32
         namespace = "cadrumo.revision.cas.raw.stale"
-        repo.save_with_raw_key(
+        save_with_raw_key(
+            repo,
             namespace=namespace,
             hashed_object_key=raw_key,
             classification=SensitivityClass.FINANCIAL,
@@ -137,7 +147,8 @@ def test_secure_object_save_with_raw_key_stale_expected_revision_refuses_without
                 (namespace,),
             ).fetchone()
 
-        repo.save_with_raw_key(
+        save_with_raw_key(
+            repo,
             namespace=namespace,
             hashed_object_key=raw_key,
             classification=SensitivityClass.FINANCIAL,
@@ -152,7 +163,8 @@ def test_secure_object_save_with_raw_key_stale_expected_revision_refuses_without
             ).fetchone()
 
         with pytest.raises(SecureObjectRevisionConflictError) as raised:
-            repo.save_with_raw_key(
+            save_with_raw_key(
+                repo,
                 namespace=namespace,
                 hashed_object_key=raw_key,
                 classification=SensitivityClass.FINANCIAL,
@@ -222,11 +234,12 @@ def test_secure_object_load_many_matches_repeated_single_loads_and_uses_one_targ
         event.listen(engine, "before_cursor_execute", collect_statement)
         try:
             loaded = tuple(
-                repo.load_many(
+                repo.load_many_current(
                     namespace,
                     requested,
                     expected_class=SensitivityClass.FINANCIAL,
-                    max_supported_version=1,
+                    current_version=1,
+                    refuse_legacy=_refuse_batch_schema,
                 ),
             )
         finally:
@@ -281,7 +294,8 @@ def test_secure_object_load_many_failure_paths_match_single_load_contracts(tmp_p
             )
 
         items = tuple(
-            repo.iter_many_with_failures(
+            iter_many_with_failures(
+                repo,
                 namespace,
                 ("schema-row", "readable-row", "missing-row"),
                 expected_class=SensitivityClass.FINANCIAL,
@@ -289,13 +303,14 @@ def test_secure_object_load_many_failure_paths_match_single_load_contracts(tmp_p
             ),
         )
 
-        with pytest.raises(SecureObjectUnreadableError):
+        with pytest.raises(ValueError, match="batch contains non-current schema rows"):
             tuple(
-                repo.load_many(
+                repo.load_many_current(
                     namespace,
                     ("schema-row", "readable-row"),
                     expected_class=SensitivityClass.FINANCIAL,
-                    max_supported_version=1,
+                    current_version=1,
+                    refuse_legacy=_refuse_batch_schema,
                 ),
             )
 

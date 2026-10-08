@@ -1,8 +1,8 @@
 ---
 tags: ['#audit', '#secure-storage-production-hardening']
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:9dee844db97a26bcff53f996fc51f58e889d862e4ca0290d78405b72dfed39c4'
+modified: '2026-10-03'
+body_hash: 'sha256:037f4c4484a9a9e7364a0de5b70827e98517745957cd6c7a6bec3c27cfd5cca5'
 related: []
 ---
 
@@ -26,7 +26,7 @@ Resolved. `verify_pull_coverage` now includes `registry_sha` in metadata mismatc
 
 The S429 focused ruff gate passes. The registry-free structural subset passes:
 
-- `uv run --no-sync pytest src/aeat/adapters/outbound/google/test_verify_pull_coverage.py src/aeat/adapters/outbound/google/test_pull_result_roundtrip.py -q` - 11 passed.
+- the historical check - 11 passed.
 
 The full S429 registry-backed gate is blocked by an unrelated registry validation failure before the S429 assertions execute:
 

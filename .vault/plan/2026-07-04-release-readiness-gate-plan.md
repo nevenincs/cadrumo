@@ -3,13 +3,14 @@ tags:
   - '#plan'
   - '#release-readiness-gate'
 date: '2026-07-04'
-modified: '2026-07-17'
-body_hash: 'sha256:f343e29e848d311bdecaa17374839daf0adcc9dbb5bd9b49b9bfaf807f713bd1'
 tier: L1
 related:
   - '[[2026-07-04-release-readiness-gate-adr]]'
   - '[[2026-07-06-release-readiness-gate-research]]'
+modified: '2026-10-03'
+body_hash: 'sha256:6cedc31853794a38964051fb54fda943966a56c6c3edc405eaadec7ea16fd42a'
 ---
+
 # `release-readiness-gate` plan
 
 ## Description
@@ -29,7 +30,7 @@ release-rollback` prints that procedure without ever executing it.
 
 ## Steps
 
-- [x] `S01` - Implement the release audit-state gate, RC-soak procedure, and rollback procedure per GH issue #415; `dev/release/readiness.py, dev/release/tests/test_readiness.py, docs/_release_checklist.yaml, docs/_release_notes_template.md, justfile, RELEASING.md, src/aeat/tests/test_release_config.py`.
+- [x] `S01` - Implement the release audit-state gate, RC-soak procedure, and rollback procedure per GH issue #415; `dev/release/readiness.py, dev/release/tests/test_readiness.py, docs/_release_checklist.yaml, docs/_release_notes_template.md, justfile, RELEASING.md, src/cadrumo/tests/test_release_config.py`.
 
 ## Parallelization
 
@@ -37,9 +38,9 @@ Single Step; no parallelization applicable.
 
 ## Verification
 
-- `uv run --no-sync pytest dev/release/tests src/aeat/tests/test_release_config.py -q`
+- `uv run --no-sync pytest dev/release/tests src/cadrumo/tests/test_release_config.py -q`
   passes (25 real-behavior tests, no mocks/stubs).
-- `uv run --no-sync ruff check dev/release src/aeat/tests/test_release_config.py`
+- `uv run --no-sync ruff check dev/release src/cadrumo/tests/test_release_config.py`
   and `ruff format --check` pass.
 - `uv run --no-sync ty check dev/release` and
   `uv run --no-sync pyright dev/release` pass with zero diagnostics.

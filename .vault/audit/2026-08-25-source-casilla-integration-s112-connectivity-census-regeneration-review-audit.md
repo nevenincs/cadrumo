@@ -3,12 +3,12 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:8090f26700ec3d2752a381e3f095e0553549f933d655892293f73eb74ef8cf36'
-related:
-  - "[[2026-08-22-source-casilla-integration-plan]]"
+body_hash: 'sha256:1aa96b9ccf7ec6aa4b3d4a3b138bb8744316ab818c61d10159d6b941f84d4b68'
+related: []
 ---
+
 # `source-casilla-integration` audit: `S112 connectivity census regeneration review`
 
 ## Scope
@@ -22,16 +22,7 @@ concurrent TUI relocation affects structural discovery evidence.
 
 ### generator-and-selector-drift | pass | live regeneration matches the recorded bounded drift
 
-Direct generator execution finds 476 stable capability identities.  The frozen
-`remaining_calculation_helpers` selector is 265 at digest
-`sha256:3ddcba1760dbb46f65c8a1edd558516c24edb093348516bc01f1da73969aaddb`;
-the live helper remainder is 267 at
-`sha256:3b827ccf9f7fd2c3b30a37f042e9ede32be236d0b4600c8e3a09dcebbfeeeb6a`.
-The two live additions are exactly
-`calculation_helper:src/cadrumo/domain/calculations/registry/_temporal.py:revision_selection_coordinates`
-and
-`calculation_helper:src/cadrumo/domain/portals/_errors.py:portal_integrity_error`.
-The selector gate refuses the stale digest rather than silently rewriting it.
+Direct generator execution finds 476 stable capability identities. The frozen `remaining_calculation_helpers` selector is 265 at digest `sha256:3ddcba1760dbb46f65c8a1edd558516c24edb093348516bc01f1da73969aaddb`; the live helper remainder is 267 at `sha256:3b827ccf9f7fd2c3b30a37f042e9ede32be236d0b4600c8e3a09dcebbfeeeb6a`. The selector gate refuses the stale digest rather than silently rewriting it.
 
 ### census-integrity-and-handoff | pass | census was not mutated or reclassified
 

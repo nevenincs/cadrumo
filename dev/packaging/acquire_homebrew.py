@@ -15,13 +15,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
 
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
+from cadrumo.core.storage_environment import resolve_storage_path, storage_directory, tool_storage_environment
 from dev._paths import UTF_8
+from dev.packaging.homebrew_storage import require_homebrew_installation_prefix
 
 from .acquire_common import (
     AcquisitionError,
@@ -41,15 +45,13 @@ _UTF_8: Final[str] = UTF_8
 # published under this account, not a per-product tap.
 _DEFAULT_TAP: Final[str] = "nevenincs/tap"
 _FORMULA_NAME: Final[str] = "cadrumo"
-_DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
+_DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("distribution-install-readiness")
 
 # Homebrew formula source-archive name -> promoted cohort sdist digest name.
 # The formula ships the root as its stable archive and both data distributions
 # as named resources; every one is a source distribution in the cohort.
 _FORMULA_SOURCE_TO_COHORT: Final[dict[str, str]] = {
-    "cadrumo": "cadrumo-sdist",
-    "cadrumo-data-manuals": "cadrumo-data-manuals-sdist",
-    "cadrumo-data-official": "cadrumo-data-official-sdist",
+    distribution: f"{distribution}-sdist" for distribution in PRODUCT_IDENTITY.cohort_distributions
 }
 
 
@@ -111,6 +113,29 @@ def _resolve_brew(override: Path | None) -> Path:
     return Path(found).resolve(strict=True)
 
 
+def _homebrew_storage_environment() -> dict[str, str]:
+    """Bind Homebrew caches, logs and build scratch beneath Cadrumo storage."""
+    locations = {
+        name: Path(value)
+        for name, value in tool_storage_environment().items()
+        if name in {"HOMEBREW_CACHE", "HOMEBREW_LOGS", "HOMEBREW_TEMP"}
+    }
+    for path in locations.values():
+        path.mkdir(parents=True, exist_ok=True)
+    return {name: str(path) for name, path in locations.items()}
+
+
+def _require_homebrew_temp_volume(*, environment: dict[str, str], brew_prefix: Path) -> None:
+    """Refuse a Homebrew temp path on a different filesystem from its prefix."""
+    temporary_root = Path(environment["HOMEBREW_TEMP"])
+    if temporary_root.stat().st_dev != brew_prefix.stat().st_dev:
+        raise AcquisitionError(
+            "Homebrew build temporary storage must share a filesystem with its prefix; "
+            "set CADRUMO_HOMEBREW_TEMP_DIR to a writable directory on the Homebrew volume "
+            f"(prefix={brew_prefix}, temp={temporary_root})",
+        )
+
+
 def _run(brew: Path, arguments: list[str], *, cwd: Path, log: Path, timeout: float) -> CommandResult:
     """Run one brew subprocess, retaining its full output to a log file."""
     completed = run_command([str(brew), *arguments], cwd=cwd, timeout_seconds=timeout, errors="replace")
@@ -121,6 +146,16 @@ def _run(brew: Path, arguments: list[str], *, cwd: Path, log: Path, timeout: flo
         newline="\n",
     )
     return completed
+
+
+def _homebrew_formula(info: CommandResult, qualified: str) -> dict[str, Any]:
+    if info.returncode != 0:
+        raise AcquisitionError(f"brew info failed for {qualified}: {info.stderr.strip()[:200]}")
+    document = json.loads(info.stdout)
+    formulae = document.get("formulae") if isinstance(document, dict) else None
+    if not isinstance(formulae, list) or not formulae:
+        raise AcquisitionError(f"brew info returned no formula object for {qualified}")
+    return formulae[0]
 
 
 def run_homebrew_acquisition(
@@ -162,13 +197,28 @@ def run_homebrew_acquisition(
         raise AcquisitionError(f"Homebrew reacquisition requires macOS or Linux; got {platform.system()}")
     cohort = load_python_cohort(cohort_dir)
     brew = _resolve_brew(brew_executable)
+    os.environ["HOMEBREW_NO_AUTO_UPDATE"] = "1"
     qualified = f"{tap}/{_FORMULA_NAME}"
-    evidence_root = evidence_dir.resolve()
+    evidence_root = resolve_storage_path(evidence_dir)
     evidence_root.mkdir(parents=True, exist_ok=True)
     run_root = evidence_root / f"run-{datetime.now(UTC).strftime('%Y%m%dT%H%M%S%fZ')}"
     run_root.mkdir()
     logs = run_root / "logs"
     logs.mkdir()
+
+    homebrew_environment = _homebrew_storage_environment()
+    os.environ.update(homebrew_environment)
+    prefix_result = _run(
+        brew,
+        ["--prefix"],
+        cwd=run_root,
+        log=logs / "brew-prefix-root.log",
+        timeout=timeout_seconds,
+    )
+    if prefix_result.returncode != 0:
+        raise AcquisitionError(f"brew --prefix failed: {prefix_result.stderr.strip()[:200]}")
+    brew_prefix = require_homebrew_installation_prefix(prefix_result.stdout)
+    _require_homebrew_temp_volume(environment=homebrew_environment, brew_prefix=brew_prefix)
 
     tap_result = _run(brew, ["tap", tap], cwd=run_root, log=logs / "brew-tap.log", timeout=timeout_seconds)
     require_command_succeeded(
@@ -202,13 +252,7 @@ def run_homebrew_acquisition(
         log=logs / "brew-info.log",
         timeout=timeout_seconds,
     )
-    if info.returncode != 0:
-        raise AcquisitionError(f"brew info failed for {qualified}: {info.stderr.strip()[:200]}")
-    document = json.loads(info.stdout)
-    formulae = document.get("formulae") if isinstance(document, dict) else None
-    if not isinstance(formulae, list) or not formulae:
-        raise AcquisitionError(f"brew info returned no formula object for {qualified}")
-    verified_digests = verify_homebrew_formula_digests(formulae[0], cohort)
+    verified_digests = verify_homebrew_formula_digests(_homebrew_formula(info, qualified), cohort)
 
     prefix = _run(
         brew,
@@ -247,10 +291,6 @@ def run_homebrew_acquisition(
         "verified_formula_digests": verified_digests,
         "installed_prefix": str(installed_prefix),
         "installed_tax_oracle": tax_evidence.to_jsonable(),
-        # The formula installs the product wheel, which carries cadrumo-mcp
-        # alongside aeat. This lane proves the command surface; the agent
-        # surface is not exercised here.
-        "installed_mcp_oracle": None,
     }
     evidence_path = run_root / "acquire-homebrew-evidence.json"
     evidence_path.write_text(
@@ -262,7 +302,12 @@ def run_homebrew_acquisition(
     if release_cohort_dir is not None and row_id is not None:
         release_cohort = load_release_cohort(release_cohort_dir)
         emit_installed_oracle_evidence(
-            directory=(distribution_evidence_dir or _DEFAULT_DISTRIBUTION_EVIDENCE_DIR),
+            directory=(
+                resolve_storage_path(distribution_evidence_dir)
+                if distribution_evidence_dir is not None
+                else storage_directory("CADRUMO_HOMEBREW_ROOT", "development/releases/homebrew")
+                / _DEFAULT_DISTRIBUTION_EVIDENCE_DIR
+            ),
             row_id=row_id,
             cohort=release_cohort,
             tax_evidence=tax_evidence,

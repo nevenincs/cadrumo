@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..documents import IdentityDocument, IdentityError
+from ..documents import IdentityDocument, IdentityError, is_identity_structurally_shaped
 from ..documents import validate_identity as _validate_identity
 from .tax_id_format_support import SPANISH_TAX_ID_FORMAT
 
@@ -175,3 +175,16 @@ class TestErrorCodeBinding:
         assert bound is not None
         assert bound.code == "INTEGRITY_IDENTITY_DOCUMENT"
         assert bound.category.value == "INTEGRITY"
+
+
+def test_a_dotted_identity_the_shape_predicate_admits_also_validates() -> None:
+    for candidate, expected in (
+        ("12.345.678-Z", IdentityDocument.NIF),
+        ("X.1234567.L", IdentityDocument.NIE),
+        ("A-12.345.674", IdentityDocument.CIF),
+    ):
+        assert is_identity_structurally_shaped(candidate), candidate
+        assert validate_identity(candidate) is expected, candidate
+    # Normalisation strips separators only; the checksum still decides.
+    with pytest.raises(IdentityError):
+        validate_identity("12.345.678-A")

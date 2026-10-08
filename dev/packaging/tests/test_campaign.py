@@ -22,7 +22,9 @@ from ..campaign import (
     _attempt_step,
     _run_step,
     _test_worker_count,
+    campaign_pytest_argv,
     preflight_pass_failures,
+    pytest_pass_argv,
     resolve_form,
     serial_pass_modules,
 )
@@ -164,6 +166,47 @@ def test_preflight_test_workers_resolve_flag_then_env_then_local_auto() -> None:
         assert _test_worker_count(None) is None
 
 
+@pytest.mark.parametrize("test_workers", [None, 8], ids=["local-auto", "ci-width"])
+def test_campaign_passes_do_not_install_an_elapsed_cutoff(test_workers: int | None) -> None:
+    """All ordinary campaign passes run to completion at either worker width."""
+    invocations = campaign_pytest_argv(REPO_ROOT, test_workers)
+
+    assert tuple(label for label, _argv in invocations) == (
+        "preflight-tests",
+        "preflight-serial",
+        "installed-oracles",
+    )
+    assert all(
+        argument != "--timeout" and not argument.startswith("--timeout=")
+        for _label, argv in invocations
+        for argument in argv
+    )
+
+
+@pytest.mark.parametrize("timeout_seconds", [0, 17])
+def test_a_caller_can_still_request_a_pytest_timeout(timeout_seconds: int) -> None:
+    """Explicit caller settings retain pytest-timeout's zero and positive forms."""
+    requested = PytestPass(
+        label="caller-timeout",
+        markers="unit",
+        target="dev/packaging/tests/test_evidence.py",
+        parallel=False,
+        timeout_seconds=timeout_seconds,
+    )
+
+    assert pytest_pass_argv(requested, REPO_ROOT, None) == [
+        sys.executable,
+        "-m",
+        "pytest",
+        "-q",
+        f"--timeout={timeout_seconds}",
+        "-m",
+        "unit",
+        "dev/packaging/tests/test_evidence.py",
+        "-n0",
+    ]
+
+
 def test_aggregates_route_through_the_campaign_driver() -> None:
     """The two workflow aggregates invoke the driver with their profiles."""
     justfile = _JUSTFILE.read_text(encoding="utf-8")
@@ -287,9 +330,8 @@ def _doomed_pass(label: str) -> PytestPass:
 def test_a_failing_pass_does_not_stop_the_passes_after_it(tmp_path: Path) -> None:
     """The property the fix exists for, and the one the primitive cannot show.
 
-    Aborting on the first failure meant one wedged pass hid every later one,
-    so an invocation could surface at most one defect -- an hour of a
-    two-machine fleet per defect on CI. Both labels must come back.
+    Aborting on the first failure hid every later pass. Both labels must
+    come back so one invocation reports both failed passes.
     """
     failures = preflight_pass_failures((_doomed_pass("first"), _doomed_pass("second")), tmp_path, None)
 
@@ -303,7 +345,7 @@ def test_passes_that_all_succeed_report_nothing(tmp_path: Path) -> None:
     collected every pass as a failure regardless of its outcome.
     """
     # NOT this module: pointing a real pytest run at the file containing this
-    # test re-enters it, and the run hangs until the ceiling kills it. A small
+    # test re-enters it recursively. A small
     # sibling that parses yaml and spawns nothing is the honest fast target.
     # The marker must MATCH the target: that file is integration-marked, and
     # `-m unit` deselected everything, which pytest exits 5 for and the
@@ -329,11 +371,10 @@ def test_a_parallel_pass_is_never_split() -> None:
 def test_a_serial_pass_splits_across_every_module_it_would_have_collected() -> None:
     """The split must change the blast radius, not the selection.
 
-    One wedged test used to take the whole serial invocation with it, and on
-    Windows the timeout cannot interrupt a subprocess, so the session died
-    with no summary and the remaining modules never ran. Splitting bounds that
-    to one module -- but only if the union is still exactly what the whole-
-    directory pass would have collected, which is what this asserts.
+    A crash or forced termination can prevent later modules from running in
+    one serial invocation. Separate invocations let those modules report,
+    provided their union is exactly what the directory pass would have
+    collected, which is what this asserts.
     """
     serial = next(p for p in _PREFLIGHT_PASSES if not p.parallel)
     modules = serial_pass_modules(serial, REPO_ROOT)

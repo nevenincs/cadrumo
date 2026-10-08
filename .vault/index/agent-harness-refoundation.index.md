@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#agent-harness-refoundation'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-10-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:1f380808ce868f8bfc9794a40edb7c2945989aa0a2f7a93b997b4ade7d97ba2c'
+body_hash: 'sha256:48d5f6f11557b2fda760ef7f57aeccc551fbdff8485fc848b30c11972afb6825'
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-audit]]'
-  - '[[2026-07-02-agent-harness-refoundation-ledger]]'
-  - '[[2026-07-02-agent-harness-refoundation-plan]]'
   - '[[2026-07-02-agent-harness-refoundation-research]]'
 ---
 
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#agent-harness-refoundation`.
 ### audit
 
 - `2026-07-02-agent-harness-refoundation-audit` - `agent-harness-refoundation` audit: `campaign close honesty review and code review`
-
-### exec
-
-- `2026-07-02-agent-harness-refoundation-ledger` - `agent-harness-refoundation` ledger
-
-### plan
-
-- `2026-07-02-agent-harness-refoundation-plan` - `agent-harness-refoundation` plan
 
 ### research
 

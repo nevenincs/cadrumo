@@ -6,7 +6,7 @@ from datetime import date
 
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
 _RENTA_EXPENSE_POLICY_FACT_ID = "renta-expense-residence-policy"
@@ -18,9 +18,7 @@ def renta_expense_policy_declarations(
     authority: GovernedFactSource | None = None,
 ) -> dict[str, str]:
     """Resolve the dated territorial-policy declarations for a filing year."""
-    selected_authority = authority or governed_facts_in_scope()
-    if selected_authority is None:
-        raise RegistryValidationError("Renta expense policy requires an explicit authority operation or scope")
+    selected_authority = require_governed_fact_authority(authority, subject="Renta expense policy")
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_RENTA_EXPENSE_POLICY_FACT_ID,

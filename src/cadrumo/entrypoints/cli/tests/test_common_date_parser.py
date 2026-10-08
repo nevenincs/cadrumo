@@ -28,7 +28,19 @@ from .._date_parsing import _parse_iso_date, _parse_iso_date_str, _parse_optiona
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 # Non-ISO orderings that the gate MUST refuse for an ``invoice_date`` input.
-_REJECTED = ("15/01/2026", "01-15-2026", "2026/01/15", "15-01-2026", "2026.01.15", "not-a-date", "")
+# The compact and ISO week-date forms are what ``date.fromisoformat`` also admits.
+_REJECTED = (
+    "15/01/2026",
+    "01-15-2026",
+    "2026/01/15",
+    "15-01-2026",
+    "2026.01.15",
+    "not-a-date",
+    "",
+    "20260115",
+    "2026-W03-4",
+    "2026W034",
+)
 
 
 def test_parse_iso_date_refuses_non_iso() -> None:

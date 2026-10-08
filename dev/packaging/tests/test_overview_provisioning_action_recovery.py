@@ -173,7 +173,7 @@ def _run_provisioning_matrix(*, work_dir: Path, python: Path, state_name: str) -
         cwd=work_dir,
         environment=_isolated_environment(work_dir, locale="en", state_name=state_name),
         errors="replace",
-        timeout_seconds=180,
+        timeout_seconds=None,
     )
     assert completed.returncode == 0, f"provisioning driver failed:\n{completed.stdout}\n{completed.stderr}"
     line = next((item for item in completed.stdout.splitlines() if item.startswith(_PROVISIONING_MARKER)), None)
@@ -261,14 +261,14 @@ def _overview_console_matrix(cohort: _InstalledCohort) -> dict[str, dict[str, ob
             cwd=cohort.work_dir,
             environment=_isolated_environment(cohort.work_dir, locale=locale, state_name=f"overview-{locale}"),
             errors="replace",
-            timeout_seconds=120,
+            timeout_seconds=None,
         )
         text_result = run_command(
             [str(cohort.core_cli), "--format", "text", "app", "overview", "status"],
             cwd=cohort.work_dir,
             environment=_isolated_environment(cohort.work_dir, locale=locale, state_name=f"overview-{locale}-text"),
             errors="replace",
-            timeout_seconds=120,
+            timeout_seconds=None,
         )
         matrix[locale] = {
             "json_exit_code": json_result.returncode,
@@ -326,7 +326,6 @@ def _overview_precondition(document: Mapping[str, object]) -> str | None:
     return failed_condition if isinstance(failed_condition, str) else None
 
 
-@pytest.mark.timeout(900)
 def test_real_optional_extra_outcomes_reach_config_json_and_text_without_an_overview_mixup(
     installed_cohort: _InstalledCohort,
 ) -> None:

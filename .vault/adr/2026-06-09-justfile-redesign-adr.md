@@ -6,8 +6,8 @@ date: '2026-06-09'
 related:
   - "[[2026-06-09-justfile-redesign-research]]"
 superseded_by: '2026-09-11-justfile-design-adr'
-modified: '2026-09-11'
-body_hash: 'sha256:dddb7af6af2db6f725def0f08277dbbb0b496b670ecaad880b05fd429e45fd33'
+modified: '2026-10-03'
+body_hash: 'sha256:3e0b610782fda1bd1cbe01b751246f020d2bba3c534625174d1f0746cf51ed96'
 ---
 # `justfile-redesign` adr: Quality and Testing Harness Redesign | (**status:** `superseded`)
 
@@ -43,7 +43,7 @@ verify-only hook constraints used by that redesign.
 
 ## Constraints
 
-* **AST Integrity Checks:** The AST-based test marker verification gate `src/cadrumo/tests/test_marker_integrity.py` is the authority for allowed markers and is immutable. We must not attempt to register retired markers (such as `workbook_parity` or `live_read`) in `pyproject.toml` or attach them to tests.
+* **AST Integrity Checks:** The AST-based test marker verification gate the former source file is the authority for allowed markers and is immutable. We must not attempt to register retired markers (such as `workbook_parity` or `live_read`) in `pyproject.toml` or attach them to tests.
 * **Hexagonal Layering:** Production code boundaries and layer hierarchies defined in `.importlinter` must be fully respected and validated by the redesigned harness.
 * **No Git Stashing at Commit Time:** The pre-commit workflow in `prek.toml` must remain strictly verify-only.
 
@@ -60,11 +60,11 @@ following prefix-based taxonomy:
   * `check-format`: Runs `ruff format --check` to verify code layout without modifying files.
   * `check-types`: Runs `ty check` (project custom wrapper) and `pyright` to type-check.
   * `check-imports`: Runs `lint-imports` to verify hexagonal boundary coupling.
-  * `check-relative-imports`: Runs `scripts/check_relative_imports.py` to assert relative imports in package files.
+  * `check-relative-imports`: Runs the former source file to assert relative imports in package files.
   * `check-dependencies`: Runs `deptry` to inspect package declaration drift.
   * `check-security`: Runs `semgrep` vulnerability scans.
   * `check-rag`: Runs `vaultspec-rag server service status` (local workstation only; excluded from CI gates).
-  * `check-semantic`: Runs `scripts/audit_semantic.py` to assert programmatic semantic invariants against the local RAG daemon (local workstation only; excluded from CI gates).
+  * `check-semantic`: Runs the former source file to assert programmatic semantic invariants against the local RAG daemon (local workstation only; excluded from CI gates).
   * `check-pre-commit` (previously `hooks`): Runs prek verify-only hooks against all files.
   * `check-all`: Aggregates all fast static quality gates (excluding local-only RAG daemon and semantic checks).
 * **`fix-` (Mutate, Write):**
@@ -97,9 +97,9 @@ following prefix-based taxonomy:
 ### 2. Path-Based Isolation of Parity Tests
 To prevent slow LibreOffice workbook tests from running during the default unit suite without violating `test_marker_integrity.py` restrictions, isolation will be achieved using pytest path exclusion:
 * The `test-unit` command will explicitly ignore the workbook-parity test file:
-  `pytest -m unit --ignore=src/cadrumo/domain/calculations/registry/tests/test_workbook_parity.py`
+Historical command omitted; its target file was removed.
 * The `test-workbook-parity` command will target the file directly by path:
-  `pytest src/cadrumo/domain/calculations/registry/tests/test_workbook_parity.py`
+Historical command omitted; its target file was removed.
 
 ### 3. Deprecations and Removals
 * **Stale Commands:** `test-domain`, `test-live-read`, and `test-live-write` are retired and removed from the active command list.
@@ -107,7 +107,7 @@ To prevent slow LibreOffice workbook tests from running during the default unit 
 
 ### 4. Testing Framework and Marker Integrity Remediation
 To ensure local and CI harness execution reliability, pre-existing taxonomy contradictions in the test framework are resolved:
-* **`docs` Marker Conflict**: The `"docs"` marker is removed from `_FORBIDDEN_MARKERS` and added to `_EXPECTED_CONFIGURED_MARKERS` in `src/cadrumo/tests/test_marker_integrity.py` to reconcile it with its active use in 5 documentation-sweep files.
+* **`docs` Marker Conflict**: The `"docs"` marker is removed from `_FORBIDDEN_MARKERS` and added to `_EXPECTED_CONFIGURED_MARKERS` to reconcile it with its active use in 5 documentation-sweep files.
 * **Statement-Order Repair**: The file `src/cadrumo/tests/test_roundtrip_fixture_saturation.py` is corrected by moving its `pytestmark` assignment immediately after imports to pass the AST ordering gate.
 
 ### 5. Comment Wording Standards
@@ -115,12 +115,12 @@ To ensure local and CI harness execution reliability, pre-existing taxonomy cont
 * **Standardized Descriptions:** Recipes must have concise, imperative-mood comments explaining the command's prerequisites, dependencies, and side effects.
 
 ### 6. Script Extraction
-* The inline Python heredocs inside the complexity audit recipes will be extracted into a dedicated Python script `scripts/audit_complexity.py` to keep the build wrapper readable.
+* The inline Python heredocs inside the complexity audit recipes will be extracted into a dedicated Python script the former source file to keep the build wrapper readable.
 
 ### 7. Semantic Vector Index Lifecycle (vaultspec-rag)
 * The vector index daemon is integrated into the build wrapper as a built-in quality control:
   * Running `check-rag` and `check-semantic` are included in environment diagnostics (e.g. `env-doctor` warning if offline) and optional local workstation checks, but are strictly excluded from general CI verification sweeps (`check-all`) to avoid failures where the daemon is unavailable.
-  * Programmatic semantic assertions (`check-semantic` running `scripts/audit_semantic.py`) query the running daemon on port 8766. This script checks that core concepts (e.g., currency rounding, specific tax base calculations) only occur in their designated canonical paths and have not leaked into adapters or entrypoints.
+  * Programmatic semantic assertions (`check-semantic` running the former source file) query the running daemon on port 8766. This script checks that core concepts (e.g., currency rounding, specific tax base calculations) only occur in their designated canonical paths and have not leaked into adapters or entrypoints.
   * Querying and indexing commands (`audit-rag`, `fix-rag`) explicitly pass `--port 8766` to delegate to the loopback-bound daemon, preserving database lock boundaries and avoiding competing lock contention on the local Qdrant instance.
   * Process management commands (`env-rag-start`, `env-rag-stop`) delegate to the loopback-bound daemon to prevent concurrent write-locks on the Qdrant database, ensuring the filesystem watcher is the single authoritative compiler of file modifications.
 

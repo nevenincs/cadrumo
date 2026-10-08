@@ -45,7 +45,7 @@ from .....domain.calculations.registry.errors import (
 from .....domain.calculations.registry.export import resolve_export_layout, row_binding_casilla_ids_by_field
 from .....domain.calculations.registry.export_parse import (
     ParsedExportFieldValue,
-    parse_export_payload,
+    parse_filed_payload,
 )
 from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
@@ -197,21 +197,11 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
     listing_host = urlsplit(_LISTING_URL).hostname
     if listing_host is None:
         raise RegistryValidationError(f"invalid declarations listing URL: {_LISTING_URL!r}")
-    filed_read_ids = tuple(
-        decision.id
-        for decision in snapshot.revision.live_cross_references
-        if decision.id.endswith("-filed-declarations-read")
-    )
-    if len(filed_read_ids) != 1:
-        decision_ids = ", ".join(sorted(str(reference_id) for reference_id in filed_read_ids)) or "none"
-        raise RegistryValidationError(
-            f"expected exactly one authenticated declarations read surface for modelo "
-            f"{snapshot.modelo.id} revision {snapshot.revision.id}; found {decision_ids}",
-        )
-    decision = snapshot.live_cross_references.get(filed_read_ids[0])
+    filed_read_id = _filed_declarations_read_surface_id(snapshot)
+    decision = snapshot.live_cross_references.get(filed_read_id)
     if decision is None:
         raise RegistryValidationError(
-            f"declarations read surface {filed_read_ids[0]!r} is not present in the selected registry snapshot",
+            f"declarations read surface {filed_read_id!r} is not present in the selected registry snapshot",
         )
     if decision.surface != "authenticated_read_surface" or listing_host.lower() not in {
         host.lower() for host in decision.allowed_hosts
@@ -314,7 +304,7 @@ def observed_header_facts_from_submitted_file(
     resolved = resolve_export_layout(snapshot)
     source_payloads = published_layout_source_payloads(snapshot=snapshot, operation=operation)
     try:
-        parsed = parse_export_payload(
+        parsed = parse_filed_payload(
             resolved.layout,
             body,
             sources=snapshot.sources,
@@ -363,7 +353,7 @@ def observed_casillas_from_submitted_file(
     """
     try:
         resolved = resolve_export_layout(snapshot)
-        parsed = parse_export_payload(
+        parsed = parse_filed_payload(
             resolved.layout,
             body,
             sources=snapshot.sources,
@@ -472,14 +462,21 @@ def _submitted_file_coverage_for_casillas(
     resolved_layout = resolve_export_layout(snapshot)
     if resolved_layout.layout.format is ExportLayoutFormat.XML_DICTIONARY:
         return 1.0
-    parsed = parse_export_payload(
+    parsed = parse_filed_payload(
         resolved_layout.layout,
         body,
         sources=snapshot.sources,
         source_payloads=published_layout_source_payloads(snapshot=snapshot, operation=operation),
     )
     return _submitted_file_extraction_coverage(
-        parsed_field_ids=frozenset(field.field_id for field in parsed.fields),
+        # Optional blank slots have been parsed successfully but carry no
+        # value to observe. Required fields remain in the denominator even
+        # if a parser ever returns a missing value for them.
+        parsed_field_ids=frozenset(
+            field.field_id
+            for field in parsed.fields
+            if field.value is not None or resolved_layout.fields_by_id[field.field_id].required
+        ),
         observed_casillas=frozenset(casilla.casilla_id for casilla in casillas),
         fields_by_casilla=resolved_layout.fields_by_casilla,
     )
@@ -878,3 +875,19 @@ def _with_derived_303_compensation_available_observation(
         confidence=1.0,
     )
     return observation.model_copy(update={"casillas": (*observation.casillas, derived)})
+
+
+def _filed_declarations_read_surface_id(snapshot: RegistrySnapshot) -> str:
+    """Require one enrolled declarations-read surface before resolving its host policy."""
+    filed_read_ids = tuple(
+        decision.id
+        for decision in snapshot.revision.live_cross_references
+        if decision.id.endswith("-filed-declarations-read")
+    )
+    if len(filed_read_ids) != 1:
+        decision_ids = ", ".join(sorted(str(reference_id) for reference_id in filed_read_ids)) or "none"
+        raise RegistryValidationError(
+            f"expected exactly one authenticated declarations read surface for modelo "
+            f"{snapshot.modelo.id} revision {snapshot.revision.id}; found {decision_ids}",
+        )
+    return filed_read_ids[0]

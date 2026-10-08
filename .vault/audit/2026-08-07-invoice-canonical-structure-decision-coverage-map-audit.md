@@ -3,30 +3,26 @@ tags:
   - '#audit'
   - '#invoice-canonical-structure'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9f771071ff74cca2f2b1f5c3afeab79dbb575d129bc6406c4d3a3a8277dd457a'
+body_hash: 'sha256:b0f9c65d120eaa472bffb8bd19ce0c83ea3a3cfd0e7e37b02c617081fbfc0fd8'
 related:
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
-  - "[[2026-08-06-invoice-canonical-structure-plan]]"
   - "[[2026-08-07-invoice-canonical-structure-close-honesty-review-audit]]"
 ---
-
 # `invoice-canonical-structure` audit: `Decision-to-Step coverage: all 21 ADR decisions checked against the tree`
 
 ## Scope
 
-## Findings
-
-## Recommendations
-
-## Context
+### Context
 
 The plan closed at 38/38 with no decision-to-step map, so `100%` meant every Step ran and nothing showed whether every decision was discharged. This is that map. Each decision was checked against the tree at HEAD rather than against the plan, because a Step can run and still leave its decision undelivered.
 
 The headline: **every decision is discharged**, one by a better mechanism than the ADR specified, and the check surfaced one live defect that no Step owned.
 
-## Discharged as decided
+## Findings
+
+### Discharged as decided
 
 | Decision | Evidence at HEAD |
 | --- | --- |
@@ -51,7 +47,7 @@ The headline: **every decision is discharged**, one by a better mechanism than t
 | D-T writer parity before the fold | The four regime axes are writable, so a rectificativa is representable |
 | D-U decomposition keeps functioning | Its suite is green against the folded population |
 
-## Discharged by a better mechanism than the ADR specified
+### Discharged by a better mechanism than the ADR specified
 
 **D-O.** The decision required three fields to migrate onto the canonical aggregate before the slim store was deleted, and named `eu_iva_id` a **hard precondition** because the slim resolver preferred it as the declared Modelo 349 party id and derived the country prefix from it, including the Greek `EL` to `GR` mapping.
 
@@ -69,7 +65,7 @@ So the mapping survives, in the core identity layer, and the wrong prefix is ref
 
 What is missing is the record of that. D-O still reads as a hard precondition, and a reader checking it against the tree finds an absent field and no explanation. **The ADR needs an amendment saying the precondition was discharged by the coupling rather than by the migration.** That is the one piece of paperwork this map leaves open.
 
-## What the map found that no Step owned
+### What the map found that no Step owned
 
 Checking D-L led into the confirm boundary, where `counterparty_country` defaulted to `"ES"` on both the application function and its CLI verb -- while the option's own help string read "Required: it routes both informativas, so it is never assumed".
 
@@ -79,7 +75,7 @@ It failed loudly rather than mis-declaring, because the same country-to-tax-id c
 
 That is the argument for building this map. The defect sat between a Step that fixed one verb and a decision that governed another, which is exactly where step-by-step verification does not look.
 
-## Mutation results, and the duplication they exposed
+### Mutation results, and the duplication they exposed
 
 The close review recorded that zero-capability-loss was verified but not proven: the repointed tests were green, which shows the canonical path gives the right answer, not that a test would redden if it stopped. Two capabilities were mutation-tested to close that.
 
@@ -98,3 +94,7 @@ Re-running the same mutation against the single home now reddens the invoice tes
 **Left for adjudication, not swept.** The aggregation preview and the row-model validator still carry their own copies. They cite art. 33.1 where the bindings cite art. 31, and one is an inverse check, so whether they are the same rule or two related rules is a legal-grounding question rather than a refactor. Merging them on shape alone would be exactly the constraint-shape mistake the substitutability pre-filter exists to prevent.
 
 The general lesson is the one this map was built to test: a duplicated rule reports as covered because each copy has its own green test. Only a mutation asks whether the test is watching the code that runs.
+
+## Recommendations
+
+Add plan-step ownership for the uncovered behavior identified by the map, and keep capability-loss claims tied to a test that fails when the replacement path is absent.

@@ -78,11 +78,8 @@ from typing import TYPE_CHECKING, Annotated, NoReturn
 import typer
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import (
-    IndexedRegistryAuthority,
-    ValidatedRegistryAuthority,
-    bundled_authority_descriptor_path,
-)
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 
 from ..compiler.authority import compile_validated_authority
 from ..compiler.legal_grounding import verify_legal_catalogue_grounding

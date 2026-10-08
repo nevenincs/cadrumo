@@ -19,6 +19,7 @@ from ....core.remote_authority import (
     REMOTE_READ_SCHEME,
     canonical_remote_hostname,
     first_aeat_host,
+    host_is_under_suffixes,
     is_aeat_host,
     is_sanctioned_gov_idp_host,
 )
@@ -541,10 +542,9 @@ def _host_within_policy(policy: RemoteStateGuardPolicy, host: str) -> bool:
     refused. The suffix set is validated to AEAT-owned apexes at build
     time, so widening never admits a non-AEAT host.
     """
-    normalized = host.lower()
-    if normalized in policy.allowed_hosts:
+    if host.lower() in policy.allowed_hosts:
         return True
-    return any(normalized == suffix or normalized.endswith(f".{suffix}") for suffix in policy.allowed_host_suffixes)
+    return host_is_under_suffixes(host, policy.allowed_host_suffixes)
 
 
 def _blocked(policy: RemoteStateGuardPolicy, reason: str) -> RemoteStateGuardResult:

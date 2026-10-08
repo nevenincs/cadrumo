@@ -167,7 +167,19 @@ def drive_storage_app_properties(entry: dict[str, object]) -> DriveAppProperties
     from ..google.records import DriveAppProperties
 
     try:
-        return DriveAppProperties.model_validate(entry.get("appProperties"))
+        properties = entry.get("appProperties")
+        if isinstance(properties, dict):
+            # Creation identity is validated by shared admission before content
+            # access; storage metadata retains its own closed four-field shape.
+            identity_keys = {
+                "cadrumo_profile",
+                "cadrumo_creation",
+                "cadrumo_kind",
+                "cadrumo_root",
+                "cadrumo_publication",
+            }
+            properties = {key: value for key, value in properties.items() if key not in identity_keys}
+        return DriveAppProperties.model_validate(properties)
     except ValidationError as exc:
         raise OutboundStorageIntegrityError(
             "drive object appProperties do not match the storage metadata contract",

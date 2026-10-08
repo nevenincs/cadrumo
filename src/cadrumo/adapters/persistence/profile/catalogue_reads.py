@@ -23,6 +23,7 @@ from ....domain.transactions.errors import TransactionPersistenceError
 from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from ..storage.errors import StorageError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
+from ..storage.sql.secure_objects import SecureObjectRepository
 from .invoices import InvoiceCatalogueRepository
 from .transactions import TransactionCatalogueRepository
 
@@ -77,10 +78,16 @@ class TransactionCatalogueReadAdapter(TransactionCatalogueReader):
             raise InvoiceCatalogueReadPersistenceError("transaction_catalogue_partition") from exc
 
 
-def build_invoice_catalogue_read_ports(*, bucket_id: str) -> InvoiceCatalogueReadPorts:
-    """Bind both encrypted catalogue repositories to one profile bucket."""
+def build_invoice_catalogue_read_ports(
+    *, bucket_id: str, objects: SecureObjectRepository | None = None
+) -> InvoiceCatalogueReadPorts:
+    """Bind both encrypted catalogue repositories to one profile bucket.
+
+    Parameter types: ``objects``
+    (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
+    """
     normalized_bucket_id = bucket_id.strip()
-    objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    objects = objects if objects is not None else secure_object_repository_for_bucket(normalized_bucket_id)
     return InvoiceCatalogueReadPorts(
         invoice_reader=InvoiceCatalogueReadAdapter(
             repository=InvoiceCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),

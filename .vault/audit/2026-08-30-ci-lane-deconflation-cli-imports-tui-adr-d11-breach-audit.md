@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-30'
-modified: '2026-08-31'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:4ed69ac54b7dcec22b1bcf5a15b8b14239a21242f07ef150d272d4209b7be37f'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
-  - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
 
 # `ci-lane-deconflation` audit: `CLI imports TUI in breach of ADR D11`

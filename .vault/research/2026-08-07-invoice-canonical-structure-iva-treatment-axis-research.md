@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#invoice-canonical-structure'
 date: '2026-08-07'
-modified: '2026-08-08'
+modified: '2026-10-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:41334f8b56c4a2f7132460beb105182874430a61c1940eec924062a30e0c7e9c'
+body_hash: 'sha256:a384db9ce6b66dcf304938b96729b82e4fc0ca486ec0f716d713f4fae802e3d6'
 related:
   - "[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-adr]]"
 ---
@@ -486,19 +486,19 @@ here, and the wizard's guard is currently stricter than the one the old confirm 
 
 ## Sources
 
-- `src/cadrumo/domain/invoices/_decomposition.py` - the decomposition contract and its
+- the former source file - the decomposition contract and its
   defect set.
-- `src/cadrumo/domain/iva/_components.py` - the Axis-A component table and the shared
+- the former source file - the Axis-A component table and the shared
   domestic-rated factory.
-- `src/cadrumo/domain/iva/_invoice_classification.py` - the line-to-observation helper
+- the former source file - the line-to-observation helper
   that classifies from the rate slot.
-- `src/cadrumo/domain/iva/_classification.py` - the tier-to-category map and its unused
+- the former source file - the tier-to-category map and its unused
   reverse accessor.
-- `src/cadrumo/application/aggregation/_modelo_bindings.py` - the invoice IVA screen loop.
-- `src/cadrumo/application/aggregation/_invoice_retencion.py` and
-  `src/cadrumo/application/invoices/_source_resolver.py` - the other two invoice-level
+- the former source file - the invoice IVA screen loop.
+- the former source file and
+  the former source file - the other two invoice-level
   consumers.
-- `src/cadrumo/application/calculations/_prorrata_regularizacion.py` - the con-derecho set,
+- the former source file - the con-derecho set,
   the volume-side classifier, and the divergence diagnostic.
 - Modelo 303 registry, revisions `2009-y-siguientes` and `2023-y-siguientes`: casilla
   definitions for the prorrata volumes and percentage; bindings for casillas 59 and 60.

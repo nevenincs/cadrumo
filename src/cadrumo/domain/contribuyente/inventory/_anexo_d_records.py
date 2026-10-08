@@ -1,9 +1,4 @@
-"""Canonical Anexo D projection records for inventory ledgers.
-
-The public projection model and closing resolver are loaded by the records
-facade after the foundational ledger records exist. Their public module
-identity remains the historical records module.
-"""
+"""Canonical inventory Anexo D projection records and resolver."""
 
 from __future__ import annotations
 
@@ -27,15 +22,14 @@ from .closing_authority_records import (
     InventoryClosingResolution,
     PriorAuthoritativeClosingLink,
 )
-from .records import (
+from .closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingValuationBasis,
-    InventoryLedger,
     InventoryLedgerError,
     InventoryValidationError,
     PhysicalClosingObservation,
-    ValuationMethod,
 )
+from .records import InventoryLedger, ValuationMethod
 
 if TYPE_CHECKING:
     from ...calculations.registry.authority import PinnedAuthorityOperation

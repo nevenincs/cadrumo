@@ -69,11 +69,6 @@ class ActiveProfilePointerTransaction:
         self._assert_live_ownership()
         return self._publish(expected=expected, bucket_id=bucket_id)
 
-    def compare_and_restore(self, *, expected: BucketPointer, captured: BucketPointer) -> BucketPointer:
-        """Restore a prior selection without ever restoring its old revision."""
-        self._assert_live_ownership()
-        return self._publish(expected=expected, bucket_id=captured.bucket_id)
-
     def clear(self) -> BucketPointer:
         """Persist an absent tombstone unless the selection is already absent."""
         self._assert_live_ownership()

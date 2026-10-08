@@ -3,14 +3,13 @@ tags:
   - '#adr'
   - '#registry-revision-stamp-coverage'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-10-03'
 body_schema: 'body-v2'
 body_hash: 'sha256:8bde73ee0f5df796ac5eabf763d2694c38d1730701915f982b3e46ad3daefc4e'
 related:
   - "[[2026-09-07-registry-revision-stamp-coverage-research]]"
   - "[[2026-09-07-registry-revision-stamp-coverage-reference]]"
   - "[[2026-06-10-period-revision-resolution-adr]]"
-  - "[[2026-06-10-calculation-engine-foundations-plan]]"
   - "[[2026-09-02-registry-declaration-hardening-identifier-grammar-adr]]"
 ---
 

@@ -27,17 +27,18 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 )
 
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-from .._export_tree import ExportTreeTransportProfile
 from .._tree_check import (
     GeneratedExportTreeCheckContext,
     check_generated_export_tree,
     refuse_repeat_the_candidate_would_drop,
 )
+from .._tree_validation import ValidatedGeneratedExportTree
 from ..export_fragment_provenance import (
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
-    normalised_loader_semantics,
 )
+from ..export_fragment_provenance_projection import normalised_loader_semantics
+from ..export_tree_models import ExportTreeTransportProfile
 from ..joined_record_design import JoinedRecordDesign
 from ..semantic_map import SemanticMap
 from ._generated_tree_test_support import (
@@ -208,6 +209,7 @@ def test_check_regenerates_in_isolation_and_preserves_published_hashes(tmp_path:
 
     assert observer.seen == frozenset(), f"check mode created publication artifacts: {sorted(observer.seen)}"
     assert _tree_hashes(context.target_registry_root) == before
+    assert isinstance(checked.candidate, ValidatedGeneratedExportTree)
     assert checked.candidate.snapshot.revision.export_layouts == (checked.candidate.layout,)
     assert checked.published_manifest == checked.candidate.provenance_manifest
     assert normalised_loader_semantics(checked.published_layout) == normalised_loader_semantics(

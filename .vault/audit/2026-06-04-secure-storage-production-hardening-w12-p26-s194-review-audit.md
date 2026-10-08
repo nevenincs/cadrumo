@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:f2c2d10ada7d08ee729c377755782e8e30e7ce6c015c7d4169fd8df7a1c6d6dc'
+modified: '2026-10-03'
+body_hash: 'sha256:0b715e51deda00457f631309c0d34d29640e0c517c81edd109619a82daa23da2'
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
   - '[[2026-06-03-modelo-export-workbook-parity-adr]]'
@@ -48,10 +48,10 @@ moving storage ownership into source-mesh contract code.
 
 Validation:
 
-- `uv run --no-sync ruff check src/aeat/application/aggregation/_source_profile.py src/aeat/application/aggregation/test_source_mesh_profile_live.py src/aeat/application/modelo/_profile_binding.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/aggregation/test_source_mesh_profile_live.py` passed with 4 tests.
-- `uv run --no-sync pytest -q src/aeat/application/modelo/test_profile_binding.py` passed with 14 tests.
-- `uv run --no-sync pytest -q src/aeat/application/modelo/test_profile_binding_real_path.py` passed with 8 tests.
+- the historical check passed.
+- the historical check passed with 4 tests.
+- the historical check passed with 14 tests.
+- the historical check passed with 8 tests.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 
 Reviewer note: initial S194 review found one HIGH and one LOW issue; both were

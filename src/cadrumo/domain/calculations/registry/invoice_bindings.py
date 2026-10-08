@@ -19,7 +19,6 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ._invoice_row_materialization import (
     InvoiceGrouping,
     build_invoice_rows,
-    m349_public_row_union,
     normalise_m349_nif_export_rows,
 )
 from .binding_aggregation import binding_aggregation_op
@@ -36,7 +35,7 @@ from .binding_selector_utils import (
 )
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .m347_threshold import m347_clave_c_declarable_party_ids, m347_declarable_party_ids
+from .m347_threshold import M347DeclarableSet, m347_declarable_party_buckets
 from .schema_base import coerce_enum_member
 from .schema_exports import ExportFieldDataType
 
@@ -79,6 +78,16 @@ _InvoiceRowField = Literal[
     "rectified_year",
     "rectified_period",
     "rectified_base_previous",
+    "declarado_tax_id",
+    "residence_country_code",
+    "community_iva_number",
+    "provincia_code",
+    "cash_accounting_mark",
+    "reverse_charge_mark",
+    "business_premises_lease_mark",
+    "situacion_inmueble",
+    "referencia_catastral",
+    "premises_address",
 ]
 
 # Canonical invoice-shaped binding source kinds, imported from
@@ -88,7 +97,7 @@ _InvoiceRowField = Literal[
 # taxonomy from its defining core module.
 __all__ = [
     "InvoiceObservation",
-    "is_m347_declarante_summary_invoice_binding",
+    "m347_declarable_set",
     "m347_operation_clave",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
@@ -138,6 +147,36 @@ class InvoiceObservation(BaseModel):
     rectified_period: str | None = Field(default=None, max_length=8)
     rectified_base_previous: Decimal | None = None
     party_legal_name: str | None = Field(default=None, max_length=200)
+    cash_accounting_operation: bool = False
+    """The operation falls under the régimen especial del criterio de caja (LIVA arts. 163 decies ff.).
+
+    Modelo 347 relates such operations "separadamente de otras operaciones"
+    (RD 1065/2007 art. 34.1.j), so it is part of the declarado record key.
+    """
+    reverse_charge_recipient: bool = False
+    """The declarant is the destinatario who is sujeto pasivo of the operation (LIVA art. 84.Uno.2º).
+
+    Modelo 347 relates such operations separately (RD 1065/2007 art. 34.1.k).
+    """
+    annual_computation_basis: bool = False
+    """The operation is reported on an annual basis, so its quarterly amounts carry no content.
+
+    RD 1065/2007 art. 33.1: criterio de caja filers, propiedad horizontal
+    entities, and the destinatarios of criterio de caja operations for those
+    operations "suministrarán ... sobre una base de cómputo anual".
+    """
+
+    arrendamiento_local_negocio: bool = False
+    """The operation is the lease of a local de negocio the declarant lets (RD 1065/2007 art. 34.1.d).
+
+    Modelo 347 relates it "separadamente de otras operaciones" with the same
+    tenant, so it is part of the declarado record key, and each leased premises
+    also files its own inmueble record.
+    """
+    situacion_inmueble: str | None = Field(default=None, min_length=1, max_length=1)
+    """The leased premises' SITUACIÓN DEL INMUEBLE code, when the lease records it."""
+    referencia_catastral: str | None = Field(default=None, min_length=1, max_length=25)
+    """The leased premises' referencia catastral, when the lease records it."""
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
@@ -270,31 +309,10 @@ class M347ThirdPartyOperationProvider(InvoiceProviderBase):
     kind: Literal[BindingSourceKind.M347_THIRD_PARTY_OPERATION] = BindingSourceKind.M347_THIRD_PARTY_OPERATION
 
 
-def _invoice_selector(binding: BindingDefinition) -> InvoiceProviderBase:
-    try:
-        return provider_member(binding, InvoiceProviderBase)
-    except ValueError as exc:
-        raise RegistryValidationError(f"binding {binding.id!r} has malformed invoice selector") from exc
+class M349IntracommunityOperationProvider(InvoiceProviderBase):
+    """The combined-direction M349 intra-community operation, one record per operator, clave and period."""
 
-
-def is_m347_declarante_summary_invoice_binding(binding: BindingDefinition) -> bool:
-    """Return whether ``binding`` is the M347 declarante-summary invoice binding.
-
-    The canonical, single-defined predicate over ``_M347_DECLARANTE_SUMMARY_RECORD``,
-    read through the typed :func:`_invoice_selector` rather than a raw
-    ``selector_as_dict(binding).get("record")``: a caller outside this module
-    (``application/invoices/source_resolver.py``) once carried its own copy of
-    both the literal and a ``.get()`` read, so a rename of the ``record`` field
-    would have silently, permanently misclassified the M347 declarante-summary
-    binding as absent rather than raising.
-
-    ``binding.source`` is checked first because :class:`InvoiceProviderBase`
-    validates only invoice-family selectors; a non-invoice binding's selector
-    shape is a different family's concept entirely, never this one's business.
-    """
-    if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
-        return False
-    return _invoice_selector(binding).record == _M347_DECLARANTE_SUMMARY_RECORD
+    kind: Literal[BindingSourceKind.M349_INTRACOMMUNITY_OPERATION] = BindingSourceKind.M349_INTRACOMMUNITY_OPERATION
 
 
 def m347_operation_clave(source_kind: BindingSourceKind | str) -> str | None:
@@ -371,7 +389,17 @@ _INVOICE_FACTS: frozenset[_InvoiceFact] = frozenset(
 #: declared quantity, not a third reading of the invoice's magnitude, so a revision
 #: declaring either magnitude measure still needs it drawn separately.
 
-_M347_DECLARANTE_SUMMARY_RECORD = "m347_declarante_summary"
+_M347_SUMMARY_RECORD_GROUPINGS: Mapping[str, InvoiceGrouping] = {
+    "m347_declarante_summary": "contraparte_clave",
+    "m347_inmueble_summary": "arrendamiento_inmueble",
+}
+"""The Modelo 347 type 1 totals, each read off the type 2 records it summarises.
+
+Positions 136-160 summarise the declarado records and positions 161-185 the
+inmueble records ("Número de registros de tipo 2" and the sum of their "IMPORTE
+DE LA OPERACION", aeat-dr-347-2025 type 1), so each summary record names the row
+grouping that builds the records it counts and sums.
+"""
 
 _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
     {"rectified_year", "rectified_period", "rectified_base_previous"},
@@ -405,7 +433,7 @@ def validate_invoice_binding(binding: BindingDefinition) -> list[str]:
 
 
 def _validated_invoice_selector(binding: BindingDefinition) -> InvoiceProviderBase:
-    selector = _invoice_selector(binding)
+    selector = provider_member(binding, InvoiceProviderBase)
     validate_invoice_family_fact_and_aggregation(binding, selector, family_label="invoice", strict_scalar_shape=True)
     return selector
 
@@ -445,7 +473,7 @@ def _validate_invoice_fact_and_op(
         )
     op = binding_aggregation_op(binding)
     _validate_scalar_invoice_fact_op(binding, selector, op)
-    if selector.record == _M347_DECLARANTE_SUMMARY_RECORD and selector.fact not in {
+    if selector.record in _M347_SUMMARY_RECORD_GROUPINGS and selector.fact not in {
         "operator_count",
         "invoice_total_sum",
     }:
@@ -590,9 +618,11 @@ def resolve_invoice_family_row_values(
     grouping-keyed exception: every ``contraparte_clave`` binding declares the
     combined-direction :attr:`~core.aggregation.BindingSourceKind.M347_THIRD_PARTY_OPERATION`
     source (see that member's docstring), so ``binding.source`` is already
-    identical across claves and the cohort key naturally coincides. M349's own
-    two groupings, which still declare distinct ``payable_invoice`` /
-    ``collectible_invoice`` sources per binding, are unaffected.
+    identical across claves and the cohort key naturally coincides. M349's two
+    groupings declare the combined-direction
+    :attr:`~core.aggregation.BindingSourceKind.M349_INTRACOMMUNITY_OPERATION`
+    source the same way, so supplies and acquisitions share one operador and one
+    rectificacion row sequence.
     """
     cohorts = _collect_invoice_row_cohorts(
         revision,
@@ -765,22 +795,24 @@ def resolve_invoice_binding_row_values(
             effective_date=_require_m347_effective_date(effective_date),
         ),
     )
-    return m349_public_row_union(normalise_m349_nif_export_rows(rows))
+    return normalise_m349_nif_export_rows(rows)
 
 
 def _observations_for_binding_source(
     observations: tuple[InvoiceObservation, ...],
     binding: BindingDefinition,
 ) -> tuple[InvoiceObservation, ...]:
-    if binding.source == BindingSourceKind.M347_THIRD_PARTY_OPERATION:
-        # A binding declaring the combined-direction source reads BOTH
+    if binding.source in (
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
+    ):
+        # A binding declaring a combined-direction source reads BOTH
         # underlying invoice directions: each InvoiceObservation still
         # carries its own true PAYABLE_INVOICE/COLLECTIBLE_INVOICE direction
-        # as its own source_kind (see M347_THIRD_PARTY_OPERATION's
-        # docstring), so this union is the resolver honouring what the
-        # binding's own declared source now truthfully claims to consume --
-        # the M347 declarante-summary totals and the per-counterparty
-        # contraparte_clave row family both declare this source.
+        # as its own source_kind (see the members' docstrings), so this union
+        # is the resolver honouring what the binding's own declared source
+        # truthfully claims to consume -- the M347 declarante-summary totals
+        # and contraparte_clave rows, and every M349 total and record.
         return tuple(
             observation
             for observation in observations
@@ -795,6 +827,20 @@ def _resolve_m347_declarante_summary_values(
     *,
     effective_date: date | None = None,
 ) -> tuple[dict[BindingId, Decimal], ModeloRevision]:
+    """Resolve the Modelo 347 type 1 totals from the type 2 records they summarise.
+
+    Both 347 record designs (aeat-dr-347-2011 and aeat-dr-347-2025, type 1) define the
+    totals over the emitted type 2 records: positions 136-144 count the declarado
+    records ("si un mismo declarado figura en varios registros, se computará tantas
+    veces como figure relacionado"), and positions 145-160 sum their annual amounts,
+    a negative record counting with minus; positions 161-169 count the inmueble
+    records ("Si un mismo inmueble figura en varios registros, se computará tantas
+    veces como figure relacionado") and positions 170-185 sum their "IMPORTE DE LA
+    OPERACION", again with minus for a negative one. The records are therefore built
+    here exactly as the row family named by the summary record builds them,
+    threshold included where that family applies one, and the totals are read off
+    those records rather than recomputed per party.
+    """
     summary_bindings: list[BindingDefinition] = []
     invoice_family_bindings: list[BindingDefinition] = []
     for binding in revision.bindings:
@@ -802,7 +848,7 @@ def _resolve_m347_declarante_summary_values(
             invoice_family_bindings.append(binding)
             continue
         selector = _validated_invoice_selector(binding)
-        if selector.record == _M347_DECLARANTE_SUMMARY_RECORD:
+        if selector.record in _M347_SUMMARY_RECORD_GROUPINGS:
             summary_bindings.append(binding)
             continue
         invoice_family_bindings.append(binding)
@@ -810,33 +856,47 @@ def _resolve_m347_declarante_summary_values(
     if not summary_bindings:
         return {}, revision
 
-    declarable_party_ids = _m347_declarable_party_ids(
-        available,
-        effective_date=_require_m347_effective_date(effective_date),
-    )
-    thresholded = tuple(observation for observation in available if observation.party_tax_id in declarable_party_ids)
+    filing_date = _require_m347_effective_date(effective_date)
     resolved: dict[BindingId, Decimal] = {}
     for binding in summary_bindings:
         selector = _validated_invoice_selector(binding)
-        resolved[binding.id] = _aggregate_invoice_binding(
-            binding,
-            selector,
-            tuple(_filter_invoice_observations(thresholded, selector)),
+        if selector.record is None:
+            raise RegistryValidationError(f"binding {binding.id!r} M347 summary names no record")
+        records = build_invoice_rows(
+            _M347_SUMMARY_RECORD_GROUPINGS[selector.record],
+            tuple(_filter_invoice_observations(_observations_for_binding_source(available, binding), selector)),
+            m347_threshold_filter=lambda candidates: _m347_row_family_threshold_filter(
+                candidates,
+                effective_date=filing_date,
+            ),
         )
+        resolved[binding.id] = _m347_declarante_total(binding, selector, records)
     return resolved, revision.model_copy(update={"bindings": tuple(invoice_family_bindings)})
 
 
-def _m347_declarable_party_ids(
-    observations: tuple[InvoiceObservation, ...],
-    *,
-    effective_date: date,
-) -> frozenset[str]:
-    totals: dict[str, Decimal] = {}
-    for observation in observations:
-        totals[observation.party_tax_id] = totals.get(observation.party_tax_id, Decimal("0")) + _invoice_total_amount(
-            observation,
-        )
-    return m347_declarable_party_ids(totals, effective_date=effective_date)
+def _m347_declarante_total(
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
+    records: tuple[Mapping[str, Decimal | str], ...],
+) -> Decimal:
+    """Read one type 1 total off the declarado records it summarises."""
+    if selector.fact == "operator_count":
+        _require_invoice_aggregation_op(binding, selector, BindingAggregationOp.COUNT_DISTINCT)
+        return Decimal(len(records))
+    if selector.fact == "invoice_total_sum":
+        _require_invoice_aggregation_op(binding, selector, BindingAggregationOp.SUM)
+        total = Decimal("0")
+        for record in records:
+            amount = record["importe_total"]
+            if not isinstance(amount, Decimal):
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} declarado record carries a non-decimal importe_total",
+                )
+            total += amount
+        return total
+    raise RegistryValidationError(
+        f"binding {binding.id!r} M347 declarant summary must use operator_count or invoice_total_sum",
+    )
 
 
 def _m347_row_family_threshold_filter(
@@ -844,35 +904,55 @@ def _m347_row_family_threshold_filter(
     *,
     effective_date: date,
 ) -> tuple[InvoiceObservation, ...]:
-    """Filter the per-row family's observations, clave C judged on its own floor.
+    """Keep the observations whose (counterparty, threshold bucket) passes its floor.
 
-    Clave C carries its OWN, lower 300,51 EUR floor (RD 1065/2007 arts. 32.c,
-    33.4), applied ALONGSIDE -- never instead of -- the general 3.005,06 EUR
-    floor every other clave shares: the same party can carry both ordinary
-    operations and a clave-C collection in the same year, and each must be
-    judged against its own figure.
+    RD 1065/2007 art. 33.1 computes "de forma separada las entregas y las
+    adquisiciones", and arts. 32.c and 33.4 give clave C its own 300,51 EUR
+    floor, so a party's total is never one sum across every clave: the dated
+    clave-bucket fact groups the claves (entregas B+F, adquisiciones A+G, C,
+    D and E each apart) and :func:`~.m347_threshold.m347_declarable_party_buckets`
+    judges each bucket against its own floor. Filtering observation by
+    observation on that (party, bucket) pair means a party that clears one
+    bucket keeps none of its below-floor operations in another.
 
-    Filters observation-by-observation on a (party, clave-bucket) pair
-    rather than returning a flat party-id set: a beneficiary who clears the
-    LOWER clave-C floor but not the general floor must still lose their
-    below-floor ORDINARY rows, and a flat "party is declarable" set would
-    let those through once the party cleared either floor at all.
+    An observation without an operation_clave is not an M347 operation: it
+    adds to no bucket and is dropped, exactly as the row builder skips it.
     """
-    clave_c_totals: dict[str, Decimal] = {}
-    general_totals: dict[str, Decimal] = {}
-    for observation in observations:
-        totals = clave_c_totals if observation.operation_clave == "C" else general_totals
-        totals[observation.party_tax_id] = totals.get(observation.party_tax_id, Decimal("0")) + _invoice_total_amount(
-            observation,
-        )
-    clave_c_declarable = m347_clave_c_declarable_party_ids(clave_c_totals, effective_date=effective_date)
-    general_declarable = m347_declarable_party_ids(general_totals, effective_date=effective_date)
+    declarable = m347_declarable_set(observations, effective_date=effective_date)
     return tuple(
         observation
         for observation in observations
-        if (observation.operation_clave == "C" and observation.party_tax_id in clave_c_declarable)
-        or (observation.operation_clave != "C" and observation.party_tax_id in general_declarable)
+        if observation.operation_clave is not None
+        and declarable.admits(observation.party_tax_id, observation.operation_clave)
     )
+
+
+def m347_declarable_set(
+    observations: tuple[InvoiceObservation, ...],
+    *,
+    effective_date: date,
+) -> M347DeclarableSet:
+    """Sum each counterparty's gross M347 amount per clave and judge it by bucket.
+
+    The one place the row family, the declarante summary and the source
+    resolver's advisories obtain the declarable set from, so every consumer
+    reads the same per-(party, clave) totals the floor was compared against.
+
+    Args:
+        observations: Invoice observations; those without an operation_clave
+            are not M347 operations and add to no total.
+        effective_date: Filing-period date selecting the bucket and floor facts.
+
+    Returns:
+        The declarable set for these observations.
+    """
+    clave_totals: dict[tuple[str, str], Decimal] = {}
+    for observation in observations:
+        if observation.operation_clave is None:
+            continue
+        key = (observation.party_tax_id, observation.operation_clave)
+        clave_totals[key] = clave_totals.get(key, Decimal("0")) + _invoice_total_amount(observation)
+    return m347_declarable_party_buckets(clave_totals, effective_date=effective_date)
 
 
 def _require_m347_effective_date(effective_date: date | None) -> date:
@@ -948,8 +1028,6 @@ def _aggregate_operator_count(
 ) -> Decimal:
     """Count the AEAT operator records represented by selected observations."""
     _require_invoice_aggregation_op(binding, selector, BindingAggregationOp.COUNT_DISTINCT)
-    if selector.record == _M347_DECLARANTE_SUMMARY_RECORD:
-        return Decimal(len({observation.party_tax_id for observation in observations}))
     # AEAT defines this count as the number of Tipo 2 records (one per
     # (operator, clave) pair for the operador grouping; one per (operator,
     # clave, ejercicio, periodo) for the rectificacion grouping). Per
@@ -1043,7 +1121,6 @@ def _aggregate_invoice_binding(
 
 
 InvoiceProviderBase = InvoiceProviderBase
-invoice_selector = _invoice_selector
 
 
 # ---------------------------------------------------------------------------

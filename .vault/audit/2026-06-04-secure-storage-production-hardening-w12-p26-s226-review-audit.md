@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-08-15'
-body_hash: 'sha256:d6a3055ec32ca31657e736c1735664e8835e63758d1664df874eadd000b5c7af'
+modified: '2026-10-03'
+body_hash: 'sha256:d1b24df8e90c6d91df041db42ea279d7abcfa1af7338949851817575326515a5'
 related: []
 ---
 
@@ -31,8 +31,8 @@ PERSONAL; the text now matches the registry and the round-trip tests.
 
 ## S226-004 | PASS | Validation
 
-- `uv run --no-sync ruff check src/aeat/application/live/_borrador_100.py src/aeat/application/live/test_borrador_100.py src/aeat/application/live/test_borrador_100_roundtrip.py` passed.
-- `uv run --no-sync pytest -q src/aeat/application/live/test_borrador_100.py src/aeat/application/live/test_borrador_100_roundtrip.py` passed.
+- the historical check passed.
+- the historical check passed.
 - `$env:PYTHONPATH='src'; uv run --no-sync -q python -m aeat.locales audit` passed.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` returned only the existing monotonic-order warning.
 

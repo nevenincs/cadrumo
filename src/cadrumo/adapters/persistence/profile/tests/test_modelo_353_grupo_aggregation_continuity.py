@@ -4,7 +4,8 @@ Exercises the LANDED A2 ``per_grupo_member`` cross-member aggregation (contract)
 ``PreviousFilingProvider`` ``grouping = "per_grupo_member"`` axis, the opt-in
 enumerate-then-sum resolver branch, the three ``modelo-353-prev-322-*``
 bindings, and the member-NIF-widened observation storage
-(:func:`save_observation` ``member_nif=...``). Distinct members' 322 filings
+(:meth:`CalculationObservationRepository.save_observation` ``member_nif=...``).
+Distinct members' 322 filings
 for the same ``(modelo, filing_year, period)`` are persisted member-distinctly
 via :func:`_save_member_322_observation`; the resolver enumerates and sums them.
 

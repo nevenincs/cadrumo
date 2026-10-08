@@ -35,12 +35,18 @@ from __future__ import annotations
 import json
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.design_constant_bindings import (
+    DesignConstantProvider,
+    validate_design_constant_binding,
+)
+from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_CONTENT,
@@ -125,20 +131,30 @@ def test_every_range_start_admission_still_describes_a_real_hole() -> None:
 
 
 def test_the_design_constant_admission_is_not_an_empty_filter() -> None:
-    """A source kind no binding declares is an orphan the taxonomy gate also refuses.
+    """Both supported constant representations contribute to record identity.
 
-    Asserted here as well because the two gates fail for different reasons and a
-    reader of THIS module should not have to know the other exists: there, an
-    orphan is a taxonomy defect; here, it means the constant channel the
-    coverage checker reads is empty and its join contribution is silently nil.
+    Generated Modelo 720 exports moved their source-fixed markers into literal
+    fields. Exercise the retained binding representation independently instead
+    of demanding an obsolete live binding just to make a filter nonempty.
     """
-    declared = _design_constant_bindings()
-
-    assert declared, (
-        "no binding declares BindingSourceKind.DESIGN_CONSTANT. The coverage checker reads that "
-        "channel when identifying a record, so an empty set makes `_design_constant_values` a "
-        "map that never contributes -- passing, and contributing nothing"
+    revision = compiled_bundled_authority().modelo("720").revisions["2013-y-siguientes"]
+    constants = [
+        field
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.kind == "literal" and field.literal in {"1", "720"}
+    ]
+    assert {field.literal for field in constants} == {"1", "720"}
+    provider = DesignConstantProvider(
+        record="declaracion", field="modelo", offset=2, length=3, data_type=CasillaDataType.TEXT, value="720"
     )
+    binding = revision.bindings[0].model_copy(update={"provider": provider})
+    assert validate_design_constant_binding(binding) == []
+    with pytest.raises(ValidationError, match="fill its run exactly"):
+        DesignConstantProvider(
+            record="declaracion", field="modelo", offset=2, length=4, data_type=CasillaDataType.TEXT, value="720"
+        )
 
 
 def test_every_design_constant_carries_a_value_that_fills_its_run() -> None:

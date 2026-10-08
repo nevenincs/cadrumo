@@ -26,13 +26,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.i18n.render import extract_placeholders
 
-from .manager import (
-    LocaleManager,
-    _covered_by_namespace,
-    _flatten_raw_locale_leaves,
-    discover_locale_codes,
-    locale_catalogue_source,
-)
+from .locale_audit import _covered_by_namespace
+from .locale_tree import _flatten_raw_locale_leaves
+from .locale_yaml import discover_locale_codes, locale_catalogue_source
+from .manager import LocaleManager
 
 # tr() consumes these kwargs as rendering directives and strips them from the
 # interpolation map, so a catalogue token carrying one of these names can

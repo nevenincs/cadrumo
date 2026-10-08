@@ -16,26 +16,24 @@ from typing import Literal, TypedDict
 import pytest
 from pydantic import ValidationError
 
+from .....core.config_google_client import OAuthClient
 from ..errors import (
     GoogleAuthBrowserOpenError,
-    GoogleAuthClientNotRegisteredError,
+    GoogleAuthClientMetadataUnavailableError,
     GoogleAuthClientRevokedError,
     GoogleAuthError,
-    GoogleAuthExpiredError,
     GoogleAuthKeychainLockedError,
     GoogleAuthLoopbackBindError,
     GoogleAuthNetworkError,
     GoogleAuthProfileUnboundError,
-    GoogleAuthRevokedError,
     GoogleAuthScopeInsufficientError,
+    GoogleAuthSignInRequiredError,
     GoogleAuthValidationError,
 )
 from ..records import (
     DRIVE_FILE_SCOPE,
     REQUIRED_SCOPES,
-    SHEETS_SCOPE,
     DriveAppProperties,
-    OAuthClient,
     OAuthMetadata,
     OAuthToken,
 )
@@ -57,7 +55,6 @@ class _MetadataKwargs(TypedDict):
     account_email: str
     granted_scopes: tuple[str, ...]
     issued_at: datetime
-    last_refresh_at: datetime
 
 
 def _valid_client_kwargs() -> _ClientKwargs:
@@ -77,14 +74,15 @@ def _valid_metadata_kwargs() -> _MetadataKwargs:
         "account_email": "operator@example.com",
         "granted_scopes": REQUIRED_SCOPES,
         "issued_at": datetime(2026, 5, 14, 9, 0, tzinfo=UTC),
-        "last_refresh_at": datetime(2026, 5, 14, 12, 0, tzinfo=UTC),
     }
 
 
-def test_required_scopes_contains_drive_and_sheets() -> None:
-    assert DRIVE_FILE_SCOPE in REQUIRED_SCOPES
-    assert SHEETS_SCOPE in REQUIRED_SCOPES
-    assert len(REQUIRED_SCOPES) == 4
+def test_required_scopes_are_exactly_the_three_non_sensitive_scopes() -> None:
+    assert REQUIRED_SCOPES == (
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/drive.file",
+    )
 
 
 def test_oauth_client_round_trips_through_strict_validation() -> None:
@@ -144,9 +142,24 @@ def test_oauth_client_rejects_empty_client_secret() -> None:
         OAuthClient(**kwargs)
 
 
+_CLIENT_ID = "desktop-client.apps.googleusercontent.com"
+
+
 def test_oauth_token_minimum_shape() -> None:
-    token = OAuthToken(refresh_token="1//deadbeef", token_uri="https://oauth2.googleapis.com/token")
+    token = OAuthToken(
+        refresh_token="1//deadbeef", client_id=_CLIENT_ID, token_uri="https://oauth2.googleapis.com/token"
+    )
     assert token.refresh_token == "1//deadbeef"
+    assert token.client_id == _CLIENT_ID
+
+
+@pytest.mark.parametrize("fields", ({}, {"client_id": ""}), ids=("absent", "blank"))
+def test_oauth_token_requires_the_client_that_minted_it(fields: dict[str, str]) -> None:
+    """A token that names no client cannot be stored, so none can be used with the wrong one."""
+    with pytest.raises(ValidationError):
+        OAuthToken.model_validate(
+            {"refresh_token": "1//deadbeef", "token_uri": "https://oauth2.googleapis.com/token", **fields}
+        )
 
 
 @pytest.mark.parametrize(
@@ -156,18 +169,20 @@ def test_oauth_token_refuses_untrusted_or_malformed_token_endpoint(endpoint: str
     """A refresh token may never persist an endpoint outside Google OAuth's canonical origin."""
 
     with pytest.raises(ValidationError):
-        OAuthToken(refresh_token="1//deadbeef", token_uri=endpoint)
+        OAuthToken(refresh_token="1//deadbeef", client_id=_CLIENT_ID, token_uri=endpoint)
 
 
 def test_oauth_token_is_frozen() -> None:
-    token = OAuthToken(refresh_token="1//deadbeef", token_uri="https://oauth2.googleapis.com/token")
+    token = OAuthToken(
+        refresh_token="1//deadbeef", client_id=_CLIENT_ID, token_uri="https://oauth2.googleapis.com/token"
+    )
     with pytest.raises(ValidationError, match="frozen"):
         token.refresh_token = "1//rotated"
 
 
 def test_oauth_token_rejects_empty_refresh() -> None:
     with pytest.raises(ValidationError, match="at least 1"):
-        OAuthToken(refresh_token="", token_uri="https://oauth2.googleapis.com/token")
+        OAuthToken(refresh_token="", client_id=_CLIENT_ID, token_uri="https://oauth2.googleapis.com/token")
 
 
 @pytest.mark.parametrize("refresh_token", (" ", "\t\r\n"))
@@ -175,7 +190,7 @@ def test_oauth_token_rejects_whitespace_only_refresh(refresh_token: str) -> None
     """A refresh credential must carry opaque token bytes, not only whitespace."""
 
     with pytest.raises(ValidationError, match="non-whitespace"):
-        OAuthToken(refresh_token=refresh_token, token_uri="https://oauth2.googleapis.com/token")
+        OAuthToken(refresh_token=refresh_token, client_id=_CLIENT_ID, token_uri="https://oauth2.googleapis.com/token")
 
 
 def test_oauth_metadata_round_trip() -> None:
@@ -183,10 +198,8 @@ def test_oauth_metadata_round_trip() -> None:
     reloaded = OAuthMetadata.model_validate_json(metadata.model_dump_json())
 
     assert reloaded == metadata
-    assert metadata.reauth_required is False
-    assert SHEETS_SCOPE in metadata.granted_scopes
+    assert DRIVE_FILE_SCOPE in metadata.granted_scopes
     assert metadata.issued_at.isoformat() == "2026-05-14T09:00:00+00:00"
-    assert metadata.last_refresh_at.isoformat() == "2026-05-14T12:00:00+00:00"
 
 
 @pytest.mark.parametrize(
@@ -194,12 +207,10 @@ def test_oauth_metadata_round_trip() -> None:
     (
         ("issued_at", datetime(2026, 5, 14, 9, 0)),
         ("issued_at", datetime(2026, 5, 14, 10, 0, tzinfo=timezone(timedelta(hours=1)))),
-        ("last_refresh_at", datetime(2026, 5, 14, 9, 0)),
-        ("last_refresh_at", datetime(2026, 5, 14, 10, 0, tzinfo=timezone(timedelta(hours=1)))),
     ),
 )
 def test_oauth_metadata_refuses_ambiguous_audit_instants(field: str, invalid_instant: datetime) -> None:
-    """Both persisted OAuth audit instants must be explicitly UTC."""
+    """The persisted OAuth audit instant must be explicitly UTC."""
 
     payload: dict[str, object] = dict(_valid_metadata_kwargs())
     payload[field] = invalid_instant
@@ -208,7 +219,7 @@ def test_oauth_metadata_refuses_ambiguous_audit_instants(field: str, invalid_ins
         OAuthMetadata.model_validate(payload)
 
 
-def test_oauth_metadata_requires_drive_and_sheets_scopes() -> None:
+def test_oauth_metadata_requires_every_required_scope() -> None:
     kwargs = _valid_metadata_kwargs()
     kwargs["granted_scopes"] = (DRIVE_FILE_SCOPE,)
     with pytest.raises(ValidationError, match="missing required scopes"):
@@ -222,10 +233,14 @@ def test_oauth_metadata_rejects_empty_scope_tuple() -> None:
         OAuthMetadata(**kwargs)
 
 
-def test_oauth_metadata_reauth_required_round_trips() -> None:
-    base = _valid_metadata_kwargs()
-    metadata = OAuthMetadata(**base, reauth_required=True)
-    assert metadata.reauth_required is True
+@pytest.mark.parametrize("field", ("last_refresh_at", "reauth_required"))
+def test_oauth_metadata_does_not_accept_the_refresh_lifecycle_fields_nothing_maintains(field: str) -> None:
+    """A stored record of the earlier shape is refused, not read with stale values."""
+    payload: dict[str, object] = dict(_valid_metadata_kwargs())
+    payload[field] = True if field == "reauth_required" else datetime(2026, 5, 14, 12, 0, tzinfo=UTC)
+
+    with pytest.raises(ValidationError):
+        OAuthMetadata.model_validate(payload)
 
 
 def test_drive_app_properties_round_trip() -> None:
@@ -256,14 +271,13 @@ def test_google_auth_error_hierarchy_is_unified() -> None:
 
     for leaf in (
         GoogleAuthBrowserOpenError,
-        GoogleAuthClientNotRegisteredError,
+        GoogleAuthClientMetadataUnavailableError,
         GoogleAuthClientRevokedError,
-        GoogleAuthExpiredError,
         GoogleAuthKeychainLockedError,
         GoogleAuthLoopbackBindError,
         GoogleAuthNetworkError,
         GoogleAuthProfileUnboundError,
-        GoogleAuthRevokedError,
+        GoogleAuthSignInRequiredError,
         GoogleAuthScopeInsufficientError,
         GoogleAuthValidationError,
     ):
@@ -282,10 +296,9 @@ def test_every_leaf_carries_a_registered_error_code() -> None:
     leaves = (
         GoogleAuthError,
         GoogleAuthValidationError,
-        GoogleAuthClientNotRegisteredError,
+        GoogleAuthClientMetadataUnavailableError,
         GoogleAuthClientRevokedError,
-        GoogleAuthRevokedError,
-        GoogleAuthExpiredError,
+        GoogleAuthSignInRequiredError,
         GoogleAuthScopeInsufficientError,
         GoogleAuthNetworkError,
         GoogleAuthLoopbackBindError,
@@ -302,7 +315,7 @@ def test_every_leaf_carries_a_registered_error_code() -> None:
 def test_google_auth_error_constructs_with_factual_context_only() -> None:
     """Google adapter errors retain facts without a legacy recovery field."""
 
-    err = GoogleAuthRevokedError(
+    err = GoogleAuthSignInRequiredError(
         "Refresh token revoked",
         context={"profile": "default"},
     )

@@ -25,12 +25,18 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
-from ...core.hashing import canonical_json_bytes, sha256_hex
+from ...core.hashing import canonical_json_bytes, prefixed_digest
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.operator_action_enums import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+)
 from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
-from ..operator_actions.models import PreconditionVerdict
+from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
 from .diagnostics_ports import AuthDiagnosticPersistencePort
 from .errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
@@ -231,20 +237,48 @@ def load_auth_diagnostic(
     )
 
 
-def record_auth_diagnostic_phone_state(
+def auth_diagnostic_view_verdict(diagnostic_id: str) -> PreconditionVerdict:
+    """Point a failed live authentication at the encrypted diagnostic it captured."""
+    condition_id = "auth.login.completed"
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id="auth.diagnostics.captured",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values={"diagnostic_available": True},
+            ),
+        ),
+        action=ActionReference(action_id="operator.auth.diagnostics.view"),
+        argument_bindings=(
+            ActionArgumentBinding(
+                argument_name="diagnostic_id",
+                status=ActionArgumentStatus.RESOLVED,
+                value=diagnostic_id,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="diagnostic_id",
+            ),
+        ),
+        conditionality=ActionConditionality.IMMEDIATE,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedAuthDiagnosticPhoneStateReport:
+    """Validated encrypted-record update awaiting its one guarded save."""
+
+    result: AuthDiagnosticReportResult
+    payload: bytes
+
+
+def prepare_auth_diagnostic_phone_state(
     diagnostic_id: str,
     phone_state: str,
     *,
     persistence: AuthDiagnosticPersistencePort,
-) -> AuthDiagnosticReportResult | None:
-    """Attach the operator-observed Cl@ve app state to an encrypted diagnostic.
-
-    The update writes the selected closed phone-state token back into the same
-    encrypted diagnostic payload. It does not create a plaintext report file.
-
-    Returns an :class:`AuthDiagnosticReportResult`, or ``None`` when the
-    diagnostic is not found.
-    """
+) -> PreparedAuthDiagnosticPhoneStateReport | None:
+    """Read and validate the canonical report update without persisting it."""
     try:
         AuthDiagnosticPhoneState(phone_state)
     except ValueError as exc:
@@ -265,15 +299,26 @@ def record_auth_diagnostic_phone_state(
             },
         },
     )
-    persistence.save_record(
-        diagnostic_id,
-        canonical_json_bytes(updated.model_dump(mode="json")),
-        written_at=reported_at,
+    return PreparedAuthDiagnosticPhoneStateReport(
+        result=AuthDiagnosticReportResult(
+            diagnostic_id=diagnostic_id,
+            phone_state=AuthDiagnosticPhoneState(phone_state),
+            reported_at=reported_at,
+        ),
+        payload=canonical_json_bytes(updated.model_dump(mode="json")),
     )
-    return AuthDiagnosticReportResult(
-        diagnostic_id=diagnostic_id,
-        phone_state=AuthDiagnosticPhoneState(phone_state),
-        reported_at=reported_at,
+
+
+def persist_auth_diagnostic_phone_state(
+    prepared: PreparedAuthDiagnosticPhoneStateReport,
+    *,
+    persistence: AuthDiagnosticPersistencePort,
+) -> None:
+    """Commit only the already validated encrypted diagnostic update."""
+    persistence.save_record(
+        prepared.result.diagnostic_id,
+        prepared.payload,
+        written_at=prepared.result.reported_at,
     )
 
 
@@ -445,7 +490,7 @@ def _redacted_ref(value: object) -> str:
         return ""
     if text.startswith("sha256:"):
         return text
-    return f"sha256:{sha256_hex(text.encode(UTF_8_ENCODING))}"
+    return prefixed_digest(text.encode(UTF_8_ENCODING))
 
 
 def _optional_bool(value: object) -> bool | None:
@@ -522,7 +567,10 @@ __all__ = [
     "AuthDiagnosticPhoneStateSource",
     "AuthDiagnosticReportResult",
     "AuthDiagnosticSummary",
+    "PreparedAuthDiagnosticPhoneStateReport",
+    "auth_diagnostic_view_verdict",
     "list_auth_diagnostics",
     "load_auth_diagnostic",
-    "record_auth_diagnostic_phone_state",
+    "persist_auth_diagnostic_phone_state",
+    "prepare_auth_diagnostic_phone_state",
 ]

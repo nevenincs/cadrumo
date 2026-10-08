@@ -31,10 +31,10 @@ from ..values import (
     ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
-    UserProfileSnapshot,
     create_user_profile_record,
     decode_user_profile_record,
 )
+from .snapshot_factory import create_user_profile_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -86,7 +86,7 @@ def test_snapshot_refuses_a_non_utc_created_at(instant: datetime) -> None:
     record = _record()
 
     with pytest.raises(ValidationError):
-        UserProfileSnapshot.from_profile(record, context=_CREATE, created_at=instant)
+        create_user_profile_snapshot(record, context=_CREATE, created_at=instant)
 
 
 def test_record_refuses_a_non_utc_instant_from_serialized_text() -> None:

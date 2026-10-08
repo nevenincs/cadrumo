@@ -6,10 +6,7 @@ temp directory's pytest, session and test-run storage
 (:mod:`dev.env.temp_reaper`). Each family keeps its rules where they are
 reasoned about; this file decides only which sections run and in what order.
 
-``.git`` is reported on and never modified. Loose-object accrual, stray lock
-files and an interrupted rebase are all things an operator wants to know about
-and none of them are things a cleanup should decide for them; the remedy for
-each is a git command with its own consequences.
+Version-control metadata is protected and never inspected or modified.
 
 The command always exits 0. It is a maintenance report whose removals are a
 side effect, not a gate: there is no state of a developer's worktree that this
@@ -44,9 +41,7 @@ size and left alone. ``--include PATH`` promotes one entry into the removal set
 for a single run, which is how an operator says "that one, yes" without this
 module having guessed it.
 
-Untracked files that are NOT ignored are in-flight work by definition -- git
-reports them in ``status`` -- and are counted, never touched. So is anything
-tracked and modified.
+Files not excluded by the filesystem ignore policy are never cleanup targets.
 """
 
 from __future__ import annotations
@@ -63,7 +58,7 @@ from typing import Final, TextIO
 from cadrumo.core.link_safety import is_link_like
 from dev._paths import REPO_ROOT
 from dev.packaging.build_scratch_reclaim import report_var_scratch
-from dev.packaging.command_execution import run_command
+from dev.source_tree import ignored_paths
 from dev.test_runs.reaper import assess_run_directories
 
 from .temp_reaper import report_temporary_storage
@@ -97,15 +92,6 @@ between "an ignored file" and "the reason the volume is full". Ten megabytes is
 larger than any scratch note, any captured command output and any one-shot
 script, and smaller than every accrual family that has actually filled a disk
 in this repository.
-"""
-
-LOOSE_OBJECT_CEILING: Final = 5000
-"""Loose objects past which the git object store is worth repacking.
-
-Git's own automatic threshold, which it applies only when a command happens to
-trigger ``gc --auto``. A worktree driven mostly by tooling can sit above it for
-a long time without any command triggering that check, which is the whole
-reason this report names the number instead of assuming git noticed.
 """
 
 PROTECTED_SEGMENTS: Final[frozenset[str]] = frozenset(
@@ -343,29 +329,57 @@ CACHE_FILE_NAMES: Final[frozenset[str]] = frozenset(
     }
 )
 
-GIT_IN_PROGRESS_MARKERS: Final[tuple[str, ...]] = (
-    "rebase-merge",
-    "rebase-apply",
-    "MERGE_HEAD",
-    "CHERRY_PICK_HEAD",
-    "REVERT_HEAD",
-    "BISECT_LOG",
-    "sequencer",
-)
-"""Paths under the git directory that mean an operation is half-finished.
-
-Reported, never removed. Each one is the state a git command is resuming from,
-and a cleanup that deletes it turns a resumable rebase into a lost one.
-"""
-
-GIT_TIMEOUT_SECONDS: Final = 300
-
 SPARED_LISTING_LIMIT: Final = 12
 """How many below-threshold spared entries are listed before the tail is summed.
 
 Only the tail is folded; every entry over :data:`BLOAT_THRESHOLD_BYTES` is
 printed whatever this says, because those are the lines the section exists for.
 """
+
+
+def _partition_worktree_entries(entries: list[Entry]) -> tuple[list[Entry], list[Entry], list[Entry], int]:
+    """Partition worktree entries."""
+    reap = sorted((entry for entry in entries if entry.verdict is Verdict.REAP), key=lambda item: -item.total_bytes)
+    spared = sorted((entry for entry in entries if entry.verdict is Verdict.FLAG), key=lambda item: -item.total_bytes)
+    keep = [entry for entry in entries if entry.verdict is Verdict.KEEP]
+    reap_bytes = sum(entry.total_bytes for entry in reap)
+    return (reap, spared, keep, reap_bytes)
+
+
+def _print_spared_tail(rest: list[Entry], verbose: bool, stream: TextIO) -> None:
+    """Print spared tail."""
+    shown = rest if verbose else rest[:SPARED_LISTING_LIMIT]
+    for entry in shown:
+        print(f"        {_human(entry.total_bytes)}  {entry.relative}", file=stream)
+    remainder = rest[len(shown) :]
+    if remainder:
+        total = sum(entry.total_bytes for entry in remainder)
+        print(f"        ... and {len(remainder)} smaller entries, {_human(total)} (--verbose lists them)", file=stream)
+
+
+def _print_reap_families(reap: list[Entry], reap_bytes: int, applying: bool, verbose: bool, stream: TextIO) -> None:
+    """Print reap families."""
+    families = {reason: [entry for entry in reap if entry.reason == reason] for reason in {e.reason for e in reap}}
+    for reason, family in sorted(families.items(), key=lambda item: -sum(e.total_bytes for e in item[1])):
+        _print_reap_family(reason, family, verbose, stream)
+    if reap:
+        verb = "reclaimed" if applying else "reclaimable"
+        print(f"  {verb}: {_human(reap_bytes)} across {len(reap)} entries", file=stream)
+
+
+def _report_worktree(
+    repo_root: Path, selected: frozenset[str], promoted: frozenset[str], applying: bool, verbose: bool
+) -> tuple[int, list[Entry]]:
+    """Report worktree."""
+    reap_bytes = 0
+    spared: list[Entry] = []
+    if WORKTREE_FAMILY in selected:
+        entries = assess(repo_root, promoted=promoted)
+        reap_bytes, spared = _report(entries, applying=applying, verbose=verbose, stream=sys.stdout)
+        if applying:
+            reclaimed, removed = reclaim(repo_root, entries)
+            print(f"\n  removed {removed} entries, {_human(reclaimed)}", file=sys.stdout)
+    return (reap_bytes, spared)
 
 
 class Verdict(Enum):
@@ -389,72 +403,6 @@ class Entry:
     def bloated(self) -> bool:
         """Is this a spared entry large enough to be worth an operator's attention?"""
         return self.verdict is Verdict.FLAG and self.total_bytes >= BLOAT_THRESHOLD_BYTES
-
-
-def _git(repo_root: Path, *arguments: str) -> str:
-    """Return the stdout of one read-only git invocation over ``repo_root``.
-
-    The executable is resolved rather than left to the argv shorthand, so a
-    machine without git gets one sentence instead of a traceback from inside a
-    reclamation pass, and no PATH entry can point the enumeration at a
-    different tree than the one being cleaned.
-
-    A non-zero status is absorbed and returns whatever was written to stdout.
-    Every caller here is asking a question with a defensible empty answer -- no
-    ignored files, no prunable worktrees -- and this command's contract is that
-    it exits 0 and reports what it could establish.
-    """
-    executable = shutil.which("git")
-    if executable is None:
-        raise SystemExit("git is not on PATH, so the worktree cannot be enumerated")
-    # --no-optional-locks: `status` would otherwise take the shared index lock to
-    # refresh stat data, and an interrupted run leaves it behind for every writer.
-    completed = run_command(
-        [executable, "--no-optional-locks", *arguments],
-        cwd=repo_root,
-        errors="replace",
-        timeout_seconds=GIT_TIMEOUT_SECONDS,
-    )
-    return completed.stdout
-
-
-def _listing(repo_root: Path, *arguments: str) -> list[str]:
-    """Return a NUL-delimited git listing as repository-relative POSIX paths."""
-    return [line for line in _git(repo_root, *arguments, "-z").split("\0") if line]
-
-
-def ignored_entries(repo_root: Path) -> list[str]:
-    """Every ignored path, with a wholly-ignored directory collapsed to one entry.
-
-    ``--directory`` is what keeps this affordable: without it the enumeration
-    walks into ``.venv`` and returns tens of thousands of paths that the
-    protection rules then discard one at a time. With it, git stops at the
-    directory whose ignore rule matched, and ``.venv/`` is a single string this
-    module refuses in a single comparison.
-    """
-    return _listing(
-        repo_root,
-        "ls-files",
-        "--others",
-        "--ignored",
-        "--exclude-standard",
-        "--directory",
-        "--no-empty-directory",
-    )
-
-
-def in_flight(repo_root: Path) -> tuple[int, int]:
-    """Return ``(untracked-but-not-ignored, tracked-and-changed)`` counts.
-
-    Both populations are in-flight work by construction, and neither is
-    reachable from the ignored enumeration above, so this is a report rather
-    than a filter. It exists so an operator reading a clean result can see that
-    the clean result was not achieved by removing what they were in the middle
-    of.
-    """
-    untracked = _listing(repo_root, "ls-files", "--others", "--exclude-standard")
-    changed = [line for line in _git(repo_root, "status", "--porcelain=v1").splitlines() if line]
-    return len(untracked), len(changed)
 
 
 def _protection(relative: str) -> str | None:
@@ -667,7 +615,7 @@ def assess(repo_root: Path, *, promoted: frozenset[str] = frozenset()) -> list[E
     that cost is what stops a maintenance command from being run at all.
     """
     entries: list[Entry] = []
-    enumerated = [child for relative in ignored_entries(repo_root) for child in expand(repo_root, relative)]
+    enumerated = [child for relative in ignored_paths(repo_root) for child in expand(repo_root, relative)]
     for relative in enumerated:
         verdict, reason = classify(repo_root, relative, promoted=promoted)
         measured = 0 if verdict is Verdict.KEEP else measure(repo_root / relative.strip("/"))
@@ -709,75 +657,6 @@ def reclaim(repo_root: Path, entries: list[Entry]) -> tuple[int, int]:
     return reclaimed, removed
 
 
-def git_observations(repo_root: Path) -> list[str]:
-    """Report on the git directory without modifying one byte of it.
-
-    Every condition below has a remedy, and every remedy is a git command with
-    consequences an operator should choose deliberately: repacking rewrites the
-    object store, removing a lock file overrides another process's claim, and
-    deleting an interrupted rebase discards the work it was resuming. Naming the
-    condition is the useful half; deciding it is not this command's.
-    """
-    resolved = _git(repo_root, "rev-parse", "--git-dir").strip()
-    if not resolved:
-        return ["the git directory could not be resolved, so nothing was inspected"]
-    git_dir = Path(resolved)
-    if not git_dir.is_absolute():
-        git_dir = repo_root / git_dir
-
-    counts = {
-        key.strip(): value.strip()
-        for key, _, value in (line.partition(":") for line in _git(repo_root, "count-objects", "-v").splitlines())
-        if key.strip()
-    }
-
-    def number(field: str) -> int:
-        try:
-            return int(counts.get(field, "0") or 0)
-        except ValueError:
-            return 0
-
-    # `count-objects -v` reports every size in KiB, so each one is scaled here
-    # rather than handed to a byte formatter that would divide it a second time.
-    loose = number("count")
-    observations = [
-        f"objects: {loose} loose ({_human(number('size') * 1024)}),"
-        f" {number('packs')} pack(s) ({_human(number('size-pack') * 1024)})"
-    ]
-    if loose > LOOSE_OBJECT_CEILING:
-        observations.append(
-            f"BLOAT  {loose} loose objects have accrued past git's own {LOOSE_OBJECT_CEILING} threshold;"
-            " `git gc` repacks them (not run here: it rewrites the object store)"
-        )
-    if number("garbage") or number("size-garbage"):
-        observations.append(
-            f"BLOAT  {number('garbage')} unrecognised file(s)"
-            f" ({_human(number('size-garbage') * 1024)}) sit in the object store"
-        )
-    if (git_dir / "gc.log").is_file():
-        observations.append("NOTE   gc.log is present: a previous `git gc` failed and git has stopped retrying")
-
-    locks = sorted(path.name for path in git_dir.glob("*.lock") if path.is_file())
-    if locks:
-        observations.append(
-            f"HELD   {len(locks)} lock file(s) in the git directory ({', '.join(locks)})."
-            " A live git process holds these; leftovers from a killed one look identical,"
-            " and overriding another process's claim is an operator decision, so none was removed."
-        )
-
-    observations.extend(
-        f"INFLGT {marker} exists: a git operation is half-finished and was left alone"
-        for marker in GIT_IN_PROGRESS_MARKERS
-        if (git_dir / marker).exists()
-    )
-    observations.extend(
-        f"NOTE   {line}"
-        for line in _git(repo_root, "worktree", "prune", "--dry-run", "--verbose").splitlines()
-        if line.strip()
-    )
-    return observations
-
-
 def _human(value: int) -> str:
     """Render a byte count in the largest unit that keeps it above 1.
 
@@ -804,13 +683,7 @@ def _print_spared(spared: list[Entry], *, verbose: bool, stream: TextIO) -> None
     rest = [entry for entry in spared if not entry.bloated]
     for entry in bloated:
         print(f"  BLOAT {_human(entry.total_bytes)}  {entry.relative}", file=stream)
-    shown = rest if verbose else rest[:SPARED_LISTING_LIMIT]
-    for entry in shown:
-        print(f"        {_human(entry.total_bytes)}  {entry.relative}", file=stream)
-    remainder = rest[len(shown) :]
-    if remainder:
-        total = sum(entry.total_bytes for entry in remainder)
-        print(f"        ... and {len(remainder)} smaller entries, {_human(total)} (--verbose lists them)", file=stream)
+    _print_spared_tail(rest, verbose, stream)
     if bloated:
         print(
             f"  {len(bloated)} entr{'y' if len(bloated) == 1 else 'ies'} above"
@@ -828,24 +701,12 @@ def _report(entries: list[Entry], *, applying: bool, verbose: bool, stream: Text
     hundred, and a per-path listing of them pushes the spared and git sections
     off the operator's screen.
     """
-    reap = sorted((entry for entry in entries if entry.verdict is Verdict.REAP), key=lambda item: -item.total_bytes)
-    spared = sorted((entry for entry in entries if entry.verdict is Verdict.FLAG), key=lambda item: -item.total_bytes)
-    keep = [entry for entry in entries if entry.verdict is Verdict.KEEP]
-    reap_bytes = sum(entry.total_bytes for entry in reap)
+    reap, spared, keep, reap_bytes = _partition_worktree_entries(entries)
 
     print("\nRegenerable build and cache output", file=stream)
     if not reap:
         print("  none present", file=stream)
-    families = {reason: [entry for entry in reap if entry.reason == reason] for reason in {e.reason for e in reap}}
-    for reason, family in sorted(families.items(), key=lambda item: -sum(e.total_bytes for e in item[1])):
-        total = sum(entry.total_bytes for entry in family)
-        print(f"  REAP {_human(total)}  {len(family):4d} entries  {reason}", file=stream)
-        if verbose:
-            for entry in family:
-                print(f"                  {_human(entry.total_bytes)}  {entry.relative}", file=stream)
-    if reap:
-        verb = "reclaimed" if applying else "reclaimable"
-        print(f"  {verb}: {_human(reap_bytes)} across {len(reap)} entries", file=stream)
+    _print_reap_families(reap, reap_bytes, applying, verbose, stream)
 
     total_spared = sum(entry.total_bytes for entry in spared)
     print(f"\nIgnored, spared, not provably regenerable: {len(spared)} entries, {_human(total_spared)}", file=stream)
@@ -896,18 +757,12 @@ def main(argv: list[str] | None = None) -> int:
     promoted = frozenset(path.replace("\\", "/").strip("/") for path in arguments.include)
 
     repo_root = REPO_ROOT
-    untracked, changed = in_flight(repo_root)
     print(f"Worktree {repo_root}", file=sys.stdout)
-    print(f"  in-flight work left untouched: {untracked} untracked file(s), {changed} tracked change(s)")
+    print("  Source files and local state remain outside the removal set.")
 
     reap_bytes = 0
     spared: list[Entry] = []
-    if WORKTREE_FAMILY in selected:
-        entries = assess(repo_root, promoted=promoted)
-        reap_bytes, spared = _report(entries, applying=arguments.apply, verbose=arguments.verbose, stream=sys.stdout)
-        if arguments.apply:
-            reclaimed, removed = reclaim(repo_root, entries)
-            print(f"\n  removed {removed} entries, {_human(reclaimed)}", file=sys.stdout)
+    reap_bytes, spared = _report_worktree(repo_root, selected, promoted, arguments.apply, arguments.verbose)
 
     if VAR_SCRATCH_FAMILY in selected:
         report_var_scratch(
@@ -925,13 +780,18 @@ def main(argv: list[str] | None = None) -> int:
     if not arguments.apply:
         print("\nNothing was deleted; pass --apply to act on the REAP lines above.", file=sys.stdout)
 
-    print("\nGit directory (reported only, never modified)", file=sys.stdout)
-    for observation in git_observations(repo_root):
-        print(f"  {observation}", file=sys.stdout)
-
     if WORKTREE_FAMILY in selected and not reap_bytes and not spared:
         print("\nClean: no regenerable output, and nothing ignored that needs a decision.", file=sys.stdout)
     return 0
+
+
+def _print_reap_family(reason: str, family: list[Entry], verbose: bool, stream: TextIO) -> None:
+    """Print reap family."""
+    total = sum(entry.total_bytes for entry in family)
+    print(f"  REAP {_human(total)}  {len(family):4d} entries  {reason}", file=stream)
+    if verbose:
+        for entry in family:
+            print(f"                  {_human(entry.total_bytes)}  {entry.relative}", file=stream)
 
 
 if __name__ == "__main__":

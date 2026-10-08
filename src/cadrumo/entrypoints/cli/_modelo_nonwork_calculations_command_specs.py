@@ -20,13 +20,11 @@ from ._modelo_nonwork_common_command_parameters import (
     _required_text_option,
     _required_whole_number_option,
 )
-from .command_spec import (
+from .command_parameter_contracts import OptionSpec
+from .command_shared_contracts import (
     FLAG_VALUE,
-    CommandSpec,
     DeferredTarget,
-    InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ParameterConstraint,
     ParameterDefault,
     ResultSchemaSpec,
@@ -34,6 +32,7 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
+from .command_spec import CommandSpec, InvocationSpec
 
 MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

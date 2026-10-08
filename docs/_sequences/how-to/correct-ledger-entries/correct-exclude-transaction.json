@@ -31,7 +31,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.add",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_event_ids": [
             "9d3bc95f257097f0f6dc037eb822fae76216a9009897919a06e932af6f3fa784"
@@ -79,7 +87,7 @@
           "transaction_id": "9b1723d9305fa35a2cd3a56c478dcd72c5a0482f8c852cbc4c2bc7a99c4aaffb"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
@@ -104,7 +112,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\t9b1723d9305fa35a2cd3a56c478dcd72c5a0482f8c852cbc4c2bc7a99c4aaffb\nDate\t2026-03-18\nAmount\t200\nDescription\tPrivate transfer\nReview status\texcluded\n"
+      "text": "ID\t9b1723d9305fa35a2cd3a56c478dcd72c5a0482f8c852cbc4c2bc7a99c4aaffb\nDate\t2026-03-18\nAmount\t200\nDescription\tPrivate transfer\nReview status\texcluded\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -120,7 +128,15 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "ledger.view",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "bucket_id": "<bucket-id>",
           "review_status": "excluded",
@@ -165,7 +181,7 @@
           "transaction_id": "9b1723d9305fa35a2cd3a56c478dcd72c5a0482f8c852cbc4c2bc7a99c4aaffb"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,
