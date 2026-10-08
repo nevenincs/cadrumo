@@ -589,6 +589,8 @@
         "dev.packaging.native.verification_paths",
         "dev.packaging.native.verify",
         "dev.packaging.native.windows_msi",
+        "dev.packaging.native.windows_msi_build",
+        "dev.packaging.native.windows_msi_database",
         "dev.packaging.native.windows_msi_identity",
         "dev.packaging.oracle_emit_cohort",
         "dev.packaging.proof_ledger",
