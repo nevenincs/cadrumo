@@ -28,7 +28,8 @@ from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
-from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
+from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -38,6 +39,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
+    VerificationReportCatalogue,
 )
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.cross_period_clean_state import evaluate_cross_period_clean_state
@@ -100,6 +102,9 @@ def cross_period_clean_state_verdict_for_work_unit(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     justificante_repository: JustificanteRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
+    filing_catalogue: ModeloRecordCatalogue | None = None,
+    verification_catalogue: VerificationReportCatalogue | None = None,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
     activity_start_date: date | None = None,
@@ -132,6 +137,9 @@ def cross_period_clean_state_verdict_for_work_unit(
                 calculation_repository=calculation_repository,
                 verification_repository=verification_repository,
                 justificante_repository=justificante_repository,
+                calculation_catalogue=calculation_catalogue,
+                filing_catalogue=filing_catalogue,
+                verification_catalogue=verification_catalogue,
                 expected_member_sets=expected_member_sets,
                 taxpayer_tax_id=taxpayer_tax_id,
                 activity_start_date=activity_start_date,
@@ -173,6 +181,9 @@ def cross_period_clean_state_verdict_for_work_unit(
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
         justificante_repository=justificante_repository,
+        calculation_catalogue=calculation_catalogue,
+        filing_catalogue=filing_catalogue,
+        verification_catalogue=verification_catalogue,
         expected_member_sets=expected_member_sets,
         taxpayer_tax_id=taxpayer_tax_id,
         activity_start_date=activity_start_date,
@@ -589,6 +600,9 @@ def require_cross_period_clean_state(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     justificante_repository: JustificanteRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
+    filing_catalogue: ModeloRecordCatalogue | None = None,
+    verification_catalogue: VerificationReportCatalogue | None = None,
     iva_compensation_decision: object | None = None,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
@@ -613,6 +627,9 @@ def require_cross_period_clean_state(
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
         justificante_repository=justificante_repository,
+        calculation_catalogue=calculation_catalogue,
+        filing_catalogue=filing_catalogue,
+        verification_catalogue=verification_catalogue,
         expected_member_sets=expected_member_sets,
         taxpayer_tax_id=taxpayer_tax_id,
         activity_start_date=activity_start_date,

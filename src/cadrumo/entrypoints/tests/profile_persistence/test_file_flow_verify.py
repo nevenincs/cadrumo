@@ -28,7 +28,7 @@ from cadrumo.domain.modelos.calculation_repository import (
     CalculationRevisionPersistenceError,
     upsert_calculation_revision,
 )
-from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
@@ -144,7 +144,7 @@ def test_verify_refuses_persisted_registry_revision_divergence(repos: Repos) -> 
     assert refusal.value.context == {"reason": "invalid_payload"}
 
 
-def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos) -> None:
+def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos, monkeypatch: pytest.MonkeyPatch) -> None:
     """``work verify`` is independent of the AEAT filing calendar.
 
     A modelo 130 calculation for 2024 Q1 — whose filing window closed
@@ -156,7 +156,7 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos) -> N
     sound and verification does not depend on the filing window.
     """
 
-    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, _, _vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2024)
 
     with bundled_indexed_authority().operation() as operation:
@@ -168,17 +168,46 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos) -> N
             clock=T1,
         )
 
-    report = verify_revision(
-        revision.calculation_revision_id,
-        revision=revision,
-        work_unit=work_unit,
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T2,
-    )
+    reads: list[str] = []
+    load = cr_repo.load
+    load_revisioned = cr_repo.load_revisioned
+
+    def counted_load(*, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue:
+        reads.append("load")
+        return load(operation=operation)
+
+    def counted_load_revisioned(
+        *, operation: PinnedAuthorityOperation | None = None
+    ) -> tuple[CalculationRevisionCatalogue, str]:
+        reads.append("load_revisioned")
+        return load_revisioned(operation=operation)
+
+    with bundled_indexed_authority().operation() as operation:
+        seed_clean_cross_period_sources(
+            work_unit,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=repos[2],
+            bucket_event_repository=bv_repo,
+            operation=operation,
+        )
+        gate = workflow_gate(revision=revision, work_unit=work_unit, clock=T2, operation=operation)
+        with monkeypatch.context() as scoped:
+            scoped.setattr(cr_repo, "load", counted_load)
+            scoped.setattr(cr_repo, "load_revisioned", counted_load_revisioned)
+            report = verify_modelo_revision_with_preconditions(
+                revision.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=_verification_repositories_for_test(repos),
+                actor="operator-A",
+                workflow_profile=gate.profile,
+                workflow_engine=gate.engine,
+                clock=T2,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            ).report
+
+    assert reads == ["load_revisioned"], reads
 
     assert report.granted_verificado_completo is True
     assert report.completeness_status is VerificationCompletenessStatus.COMPLETE

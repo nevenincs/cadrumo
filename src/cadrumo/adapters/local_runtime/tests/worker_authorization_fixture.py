@@ -6,13 +6,12 @@ import asyncio
 import os
 import subprocess
 import sys
-import time
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
 
-from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
 from cadrumo.application.runtime.worker_authorization import WorkerAuthorizationRequest
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
@@ -34,12 +33,9 @@ async def exercise(root: Path, seed: Seed) -> int:
     candidate.write_text(str(os.getpid()), encoding="ascii")
     candidate.replace(root / "worker.pid")
     client = WorkerAuthorizationClient(identity=seed.identity, root=root, parent_pid=seed.parent_pid)
-    deadline = time.monotonic() + 10
+    while not (root / "listening").exists():
+        await asyncio.sleep(0.01)
     if seed.mode == "cancel":
-        while not (root / "listening").exists():
-            if time.monotonic() >= deadline:
-                return 2
-            await asyncio.sleep(0.01)
 
         async def cancelled_body() -> None:
             async with client.guard(seed.request):
@@ -47,7 +43,8 @@ async def exercise(root: Path, seed: Seed) -> int:
 
         attempt = asyncio.create_task(cancelled_body())
         while not (root / "authorizing").exists():
-            if time.monotonic() >= deadline:
+            if attempt.done():
+                await attempt
                 return 2
             await asyncio.sleep(0.01)
         attempt.cancel()
@@ -60,31 +57,28 @@ async def exercise(root: Path, seed: Seed) -> int:
             (root / "cancelled").write_text("1", encoding="ascii")
             return 0
         return 3
-    while True:
-        try:
-            async with client.guard(seed.request):
-                child = subprocess.Popen(
-                    [sys.executable, "-I", "-c", "import time; time.sleep(15)"],
-                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
-                )
-                (root / "descendant").write_text(str(child.pid), encoding="ascii")
-                (root / "inside").write_text("1", encoding="ascii")
-                while not (root / "release").exists():
-                    await asyncio.sleep(0.01)
-                if seed.mode == "disconnect":
-                    os._exit(4)
-                child.terminate()
-                child.wait(timeout=3)
-            (root / "done").write_text("1", encoding="ascii")
-            return 0
-        except ProfileAccessRefusedError:
-            (root / "denied").write_text("1", encoding="ascii")
-            return 0
-        except RuntimeRefusalError as error:
-            if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
-                (root / "refusal").write_text(error.reason.value, encoding="ascii")
-                return 2
-            await asyncio.sleep(0.02)
+    try:
+        async with client.guard(seed.request):
+            child = subprocess.Popen(
+                [sys.executable, "-I", "-c", "import threading; threading.Event().wait()"],
+                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+            )
+            (root / "descendant").write_text(str(child.pid), encoding="ascii")
+            (root / "inside").write_text("1", encoding="ascii")
+            while not (root / "release").exists():
+                await asyncio.sleep(0.01)
+            if seed.mode == "disconnect":
+                os._exit(4)
+            child.terminate()
+            child.wait()
+        (root / "done").write_text("1", encoding="ascii")
+        return 0
+    except ProfileAccessRefusedError:
+        (root / "denied").write_text("1", encoding="ascii")
+        return 0
+    except RuntimeRefusalError as error:
+        (root / "refusal").write_text(error.reason.value, encoding="ascii")
+        return 2
 
 
 if __name__ == "__main__":

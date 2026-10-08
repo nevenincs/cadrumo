@@ -507,7 +507,9 @@ class TestDirectAuthenticatedEntry:
 
     @pytest.mark.asyncio
     async def test_unrecognised_landing_is_the_bad_landing_refusal(self) -> None:
-        boundary = _SedeDocuments(_bouncing_to(f"{_AEAT.domains.www6}{OTHER_APPLICATION_START_PATH_CANARY}", _OTHER_HTML))
+        boundary = _SedeDocuments(
+            _bouncing_to(f"{_AEAT.domains.www6}{OTHER_APPLICATION_START_PATH_CANARY}", _OTHER_HTML)
+        )
         try:
             with pytest.raises(SedeNavigationError) as excinfo:
                 await _read(boundary, "censal-unrecognised")

@@ -232,7 +232,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "d33597344c0ae0902c0cb7a84c980d5a094ebdeb13a1c18b35fd308067b9ce92",
+          "calculation_revision_id": "94910367a24dfacab0e9ad4b4699b4a910bf9f7a7893912bbb2e435830acec96",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -368,7 +368,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision d33597344c0ae0902c0cb7a84c980d5a094ebdeb13a1c18b35fd308067b9ce92 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 94910367a24dfacab0e9ad4b4699b4a910bf9f7a7893912bbb2e435830acec96 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",

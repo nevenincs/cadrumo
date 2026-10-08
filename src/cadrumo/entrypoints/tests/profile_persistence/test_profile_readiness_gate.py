@@ -381,7 +381,7 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
             "modelo": Modelo("130").value,
             "filing_year": 2025,
             "period": "1T",
-            "missing": expected_label,
+            "profile_requirements": expected_label,
         }
         assert len(repository.load()) == 0
 
@@ -561,7 +561,7 @@ def test_calculate_service_refusal_carries_grounded_legal_refs_for_missing_tax_i
             )
 
         assert excinfo.value.context is not None
-        missing_text = excinfo.value.context["missing"]
+        missing_text = excinfo.value.context["profile_requirements"]
         assert isinstance(missing_text, str)
         assert "orden-hac-242-2025:art-3" in missing_text or "orden-hac-277-2026:art-3" in missing_text
 
@@ -896,8 +896,21 @@ def test_stale_pre_activity_m130_calculate_refuses_before_revision_mutation(tmp_
     ),
 )
 def test_first_active_m303_period_allows_create_and_calculate(
-    tmp_path: Path, period_code: str, *, operation: PinnedAuthorityOperation
+    tmp_path: Path, period_code: str, monkeypatch: pytest.MonkeyPatch, *, operation: PinnedAuthorityOperation
 ) -> None:
+    from collections.abc import Mapping
+
+    from cadrumo.application.user_profile import preflight
+    from cadrumo.domain.calculations.registry.profile_grounding import ProfileKeyGrounding
+
+    build = preflight.build_profile_grounding_index
+    grounding_reads: list[PinnedAuthorityOperation] = []
+
+    def counted(pin: PinnedAuthorityOperation) -> Mapping[str, ProfileKeyGrounding]:
+        grounding_reads.append(pin)
+        return build(pin)
+
+    monkeypatch.setattr(preflight, "build_profile_grounding_index", counted)
     period = Period.from_year_and_code(2026, period_code)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
         _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 5, 1))
@@ -942,6 +955,7 @@ def test_first_active_m303_period_allows_create_and_calculate(
         decisions = wallet_repository.list_decisions()
         assert len(decisions) == 1
         assert decisions[0].target_period == period
+        assert grounding_reads == []
 
 
 def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tmp_path: Path) -> None:
@@ -1092,7 +1106,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
         missing_count = verdict.evidence[0].values["missing_required_field_count"]
         assert isinstance(missing_count, int) and missing_count > 0
         assert excinfo.value.context is not None
-        missing_text = excinfo.value.context["missing"]
+        missing_text = excinfo.value.context["profile_requirements"]
         assert isinstance(missing_text, str)
         assert missing_text
         # Never a raw dotted path once a catalogue label is available.

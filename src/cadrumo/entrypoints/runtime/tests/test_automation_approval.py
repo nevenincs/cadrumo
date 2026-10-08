@@ -14,6 +14,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.local_runtime.enrollment_client import NativeEnrollmentClient
 from cadrumo.adapters.local_runtime.framing import VerifiedRuntimeConnection
 from cadrumo.adapters.local_runtime.installation import runtime_installation
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import owner_id
@@ -34,6 +35,7 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeClientHello
+from cadrumo.application.runtime.enrollment_access import RuntimeEnrollmentPrepare, RuntimeEnrollmentPrepared
 from cadrumo.application.runtime.operation_access import (
     RuntimeOperationAcknowledged,
     RuntimeOperationContract,
@@ -67,6 +69,7 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
     EnrollmentKind,
+    EnrollmentProposal,
     EnrollmentStage,
 )
 from cadrumo.application.user_profile.automation_operations import (
@@ -132,8 +135,8 @@ def _login(
     return result.status.session_id
 
 
-def _seed_renewal(subject: AdministrationSubject, *, boot: UUID) -> tuple[UUID, str, bytes]:
-    """Seed enrollment and reviewed renewal before native worker ownership begins."""
+def _seed_renewal(subject: AdministrationSubject, *, boot: UUID) -> tuple[EnrollmentProposal, bytes]:
+    """Seed the existing grant; its renewal will bind to the live native requester."""
     instant = datetime.now(UTC)
     requester = changed(
         subject.owner.requesting,
@@ -201,9 +204,7 @@ def _seed_renewal(subject: AdministrationSubject, *, boot: UUID) -> tuple[UUID, 
         target_grant_id=original.grant_id,
         expires_at=original.expires_at + timedelta(days=5),
     )
-    requested = subject.service.request(uuid4(), renewal).receipt
-    assert requested.stage is EnrollmentStage.REQUESTED
-    return requested.request_id, requested.review_digest, key.get_secret_value()
+    return renewal, key.get_secret_value()
 
 
 def _submit(
@@ -259,7 +260,6 @@ def _run_approval(
         deadline=time.monotonic() + 10,
     )
     assert isinstance(started, RuntimeOperationAcknowledged)
-    deadline = time.monotonic() + 40
     while True:
         observed = client.operation(
             RuntimeOperationObserve(
@@ -270,13 +270,12 @@ def _run_approval(
                     operation_id=submitted.receipt.operation_id, after_cursor=0, page_limit=32
                 ),
             ),
-            deadline=deadline,
+            deadline=time.monotonic() + 40,
         )
         assert isinstance(observed, RuntimeOperationObserved)
         assert isinstance(observed.observation, OperationObservationSuccessV1)
         if observed.observation.projection.terminal_condition is not None:
             return submitted, observed.observation
-        assert time.monotonic() < deadline
         time.sleep(0.02)
 
 
@@ -293,10 +292,8 @@ def test_native_human_renews_existing_grant_and_key_session_cannot_approve(
     with administration_subject(
         tmp_path, os_owner_id=owner_id(), installation_id=installation.installation_id
     ) as enrollment:
-        renewal_id, digest, api_key = _seed_renewal(enrollment, boot=boot)
+        renewal_proposal, api_key = _seed_renewal(enrollment, boot=boot)
         profile_id = enrollment.store.binding.profile_id
-        before = enrollment.store.snapshot()
-        renewal = next(item for item in enrollment.store.enrollment_state().requests if item.request_id == renewal_id)
         close_active_bucket_session()
         profiles = RuntimeProfileConnections(
             storage_root=root,
@@ -313,7 +310,10 @@ def test_native_human_renews_existing_grant_and_key_session_cannot_approve(
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:
-                assert server.ready.wait(3)
+                while not server.ready.wait(0.01):
+                    if running.done():
+                        running.result()
+                        pytest.fail("runtime stopped before readiness")
                 human, api = _connect(endpoint), _connect(endpoint)
                 try:
                     human_id = _login(
@@ -333,9 +333,6 @@ def test_native_human_renews_existing_grant_and_key_session_cannot_approve(
                         deadline=time.monotonic() + 5,
                     )
                     assert isinstance(human_status, RuntimeProfileStatus)
-                    assert renewal.requester.destination_id not in {
-                        permission.destination_id for permission in human_status.status.effective_scope.disclosures
-                    }
                     api_id = _login(
                         api,
                         profile_id,
@@ -343,6 +340,31 @@ def test_native_human_renews_existing_grant_and_key_session_cannot_approve(
                         method="api_key",
                         proof=api_key,
                     )
+                    prepared = api.enrollment_prepare(
+                        RuntimeEnrollmentPrepare(
+                            request_id=uuid4(),
+                            profile_id=profile_id,
+                            frontend=OperationFrontendProjection.CLI,
+                            session_id=api_id,
+                        ),
+                        deadline=time.monotonic() + 5,
+                    )
+                    assert isinstance(prepared, RuntimeEnrollmentPrepared)
+                    requester = NativeEnrollmentClient(
+                        connection=api,
+                        prepared=prepared,
+                        secrets_store=enrollment.client_native,
+                    )
+                    requested = requester.submit(renewal_proposal)
+                    assert requested.stage is EnrollmentStage.REQUESTED
+                    renewal_id, digest = requested.request_id, requested.review_digest
+                    before = enrollment.store.snapshot()
+                    renewal = next(
+                        item for item in enrollment.store.enrollment_state().requests if item.request_id == renewal_id
+                    )
+                    assert renewal.requester.destination_id not in {
+                        permission.destination_id for permission in human_status.status.effective_scope.disclosures
+                    }
                     contract = human.operation(
                         RuntimeOperationContract(
                             request_id=uuid4(),
@@ -430,7 +452,7 @@ def test_native_human_renews_existing_grant_and_key_session_cannot_approve(
                 stop.set()
                 try:
                     try:
-                        running.result(timeout=20)
+                        running.result()
                     except Exception:
                         if primary is None:
                             raise

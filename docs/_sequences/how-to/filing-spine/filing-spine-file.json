@@ -255,13 +255,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "bc62c76cc9d86a02cce13064fe9be6688f3246205d5c6949c75336bfde789229",
+          "calculation_revision_id": "5926c154302784c506f3ad54e865a936e5a8c5dcebacfec7307fd80bb078a377",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "9d8e5980141242a91b7409f17c975e17f63f199630e07dfba90b9d977b04ece9",
+          "filing_record_id": "4a887405012df537baabc6d3d3ad8ef3596d814f0805be1c1baa2d0d2a742900",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
@@ -277,7 +277,7 @@
           "status": "vigente",
           "superseded_at": null,
           "superseded_by_filing_record_id": null,
-          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+          "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
         },
         "schema_version": "2",
         "status": "warning"

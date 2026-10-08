@@ -47,6 +47,7 @@ from ...core.storage_taxonomy_locations import (
     bucket_scoped_storage_path,
     storage_location,
     storage_path,
+    uses_external_transport,
 )
 from .errors import StorageReclaimRefusedError, StorageReclaimUnconfirmedError
 from .models import (
@@ -223,6 +224,8 @@ def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeChec
     for category, location in STORAGE_TAXONOMY.items():
         if location.scope is not StorageScope.ROOT or location.settings_field is None:
             continue
+        if uses_external_transport(location, resolved):
+            continue
         if getattr(resolved, location.settings_field, None) is None:
             continue
         target = storage_path(category, settings=resolved)
@@ -275,7 +278,9 @@ def _reclaim_candidates(
     return tuple(
         (category, location, storage_path(category, settings=settings))
         for category, location in STORAGE_TAXONOMY.items()
-        if location.grouping.value == area.value and location.lifecycle in RECLAIMABLE_LIFECYCLES
+        if location.grouping.value == area.value
+        and location.lifecycle in RECLAIMABLE_LIFECYCLES
+        and not uses_external_transport(location, settings)
     )
 
 
@@ -517,6 +522,13 @@ def _inventory_row(
     """Build one inventory row for ``category``."""
     location = storage_location(category)
     path: Path | None = None
+
+    if uses_external_transport(location, settings):
+        # Shared transport custody is not data-root occupancy. Do not enumerate
+        # another installed channel's sockets or its persistent lock inodes.
+        return _InventoryRow(
+            grouping=location.grouping, path=None, occupancy=StorageOccupancy.UNRESOLVED, reclaimable=False
+        )
 
     if location.scope is StorageScope.ROOT:
         path = storage_path(category, settings=settings)

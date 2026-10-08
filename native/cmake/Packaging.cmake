@@ -154,6 +154,9 @@ add_custom_target(bundle ALL
   BYPRODUCTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" VERBATIM)
 add_dependencies(bundle rust_application)
+if(TARGET desktop-headless-test)
+  add_dependencies(desktop-headless-test bundle)
+endif()
 if(BUILD_TESTING)
   add_test(NAME bundle.python COMMAND "${CMAKE_COMMAND}" -E env
     "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"

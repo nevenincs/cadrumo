@@ -53,6 +53,9 @@ dependencies = [
 [[package]]
 name = "cadrumo-platform"
 version = "0.1.0"
+dependencies = [
+ "libc",
+]
 
 [[package]]
 name = "cc"

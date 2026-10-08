@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, replace
@@ -59,9 +60,13 @@ from ...application.workbench_generation_operation import (
     WorkbenchGenerationOperationRequest,
 )
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.diagnostic_log import diagnostic_scope, diagnostic_timing_event
 from ...core.hashing import content_hash_hex
+from ...core.logging import get_logger
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+
+_LOGGER = get_logger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -421,20 +426,57 @@ class ProfileWorkerOperationAuthority:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         request = await self._resolve_binding_off_loop(identity, action, binding)
         async with self.client.guard(request) as lease:
-            with self.custody.section(request.session_id), validating_governed_facts(self._authority_operation):
-                self._held[task] = (identity, action)
-                self._held_leases[task] = lease
-                try:
-                    yield request
-                finally:
-                    del self._held[task]
-                    del self._held_leases[task]
+            custody_exit_started = False
+            try:
+                if action is AccessAction.COMMIT:
+                    diagnostic_timing_event(
+                        _LOGGER,
+                        "worker_commit_phase",
+                        fields={"stage": "custody_enter_begin", "transition": action.value},
+                        primary_error=sys.exception(),
+                    )
+                with self.custody.section(request.session_id), validating_governed_facts(self._authority_operation):
+                    self._held[task] = (identity, action)
+                    self._held_leases[task] = lease
+                    try:
+                        if action is AccessAction.COMMIT:
+                            diagnostic_timing_event(
+                                _LOGGER,
+                                "worker_commit_phase",
+                                fields={"stage": "custody_enter_end", "transition": action.value},
+                                primary_error=sys.exception(),
+                            )
+                        yield request
+                    finally:
+                        del self._held[task]
+                        del self._held_leases[task]
+                        custody_exit_started = action is AccessAction.COMMIT
+                        if action is AccessAction.COMMIT:
+                            diagnostic_timing_event(
+                                _LOGGER,
+                                "worker_commit_phase",
+                                fields={"stage": "custody_exit_begin", "transition": action.value},
+                                primary_error=sys.exception(),
+                            )
+            finally:
+                if custody_exit_started:
+                    diagnostic_timing_event(
+                        _LOGGER,
+                        "worker_commit_phase",
+                        fields={
+                            "stage": "custody_exit_end",
+                            "transition": action.value,
+                            "outcome": "raised" if sys.exception() is not None else "returned",
+                        },
+                        primary_error=sys.exception(),
+                    )
 
     @asynccontextmanager
     async def commit_guard(self, identity: OperationIdentity) -> AsyncGenerator[None]:
         """Hold native authority and stable local custody through the effect body."""
-        async with self.guard(identity, AccessAction.COMMIT):
-            yield
+        with diagnostic_scope(new=True):
+            async with self.guard(identity, AccessAction.COMMIT):
+                yield
 
     def retire_password_successor(self, identity: OperationIdentity, outcome: ProfilePassphraseRotationOutcome) -> None:
         """Retire a proven replacement only within its original task's COMMIT.

@@ -8,8 +8,8 @@ import shutil
 import subprocess
 import sys
 import threading
-from collections.abc import Iterator
-from contextlib import nullcontext, suppress
+from collections.abc import Callable, Iterator
+from contextlib import suppress
 from pathlib import Path
 from uuid import UUID
 
@@ -46,6 +46,7 @@ from ._machine_secret_channels_support import (
     bootstrap_interpreter,
     cleanup_keychain,
 )
+from ._machine_secret_channels_support import host_profile_runtime as host_profile_runtime
 from .password_only_profile import FIXTURE_PROFILE_INPUT, register_password_only_profile
 from .subprocess_cli import as_text_completed_process, subprocess_cli_env
 
@@ -74,9 +75,12 @@ def _authority_root_environment() -> dict[str, str]:
 
 
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
-def test_login_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
+def test_login_succeeds_through_each_leaf_channel(
+    tmp_path: Path, channel: str, host_profile_runtime: Callable[[Path], None]
+) -> None:
     root = tmp_path / "login"
     register_password_only_profile(root)
+    host_profile_runtime(root)
     payload = json.dumps({"passphrase": FIXTURE_PROFILE_INPUT})
     args = ["--format", "json", "config", "login", "s13-operator"]
     result = (
@@ -308,9 +312,10 @@ def test_restore_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str
     assert document["result"]["recovery_enrolled"] is False
 
 
-def test_fd_zero_is_a_real_leaf_secret_channel(tmp_path: Path) -> None:
+def test_fd_zero_is_a_real_leaf_secret_channel(tmp_path: Path, host_profile_runtime: Callable[[Path], None]) -> None:
     root = tmp_path / "fd-zero"
     outcome = register_password_only_profile(root)
+    host_profile_runtime(root)
     result = _run(
         root,
         ["--format", "json", "config", "login", outcome.profile_id, "--secrets-fd", "0"],
@@ -321,9 +326,12 @@ def test_fd_zero_is_a_real_leaf_secret_channel(tmp_path: Path) -> None:
     assert "S13_DESCRIPTOR_CLOSED" in result.stderr
 
 
-def test_keychain_free_root_auth_succeeds_for_real_read_via_stdin(tmp_path: Path) -> None:
+def test_keychain_free_root_auth_succeeds_for_real_read_via_stdin(
+    tmp_path: Path, host_profile_runtime: Callable[[Path], None]
+) -> None:
     root = tmp_path / "root-read"
     register_password_only_profile(root, label="root-reader")
+    host_profile_runtime(root)
     result = _run(
         root,
         ["--format", "json", "--profile-secrets-stdin", "config", "profile", "history", "root-reader"],
@@ -338,10 +346,11 @@ def test_keychain_free_root_auth_succeeds_for_real_read_via_stdin(tmp_path: Path
     "sources", (("profile-fd", "leaf-stdin"), ("profile-stdin", "leaf-fd"), ("profile-fd", "leaf-fd"))
 )
 def test_certificate_write_accepts_every_valid_dual_source_combination(
-    tmp_path: Path, sources: tuple[str, str]
+    tmp_path: Path, sources: tuple[str, str], host_profile_runtime: Callable[[Path], None]
 ) -> None:
     root = tmp_path / "certificate"
     register_password_only_profile(root, label="cert-operator")
+    host_profile_runtime(root)
     _register_certificate_source(root, name="s13-cert")
     profile_payload = json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT})
     leaf_payload = json.dumps({"certificate_passphrase": _CERTIFICATE_INPUT})
@@ -375,10 +384,13 @@ def test_certificate_write_accepts_every_valid_dual_source_combination(
     assert result.stderr.count("S13_DESCRIPTOR_CLOSED") == len(inherited)
 
 
-def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -> None:
+def test_platform_descriptor_bootstrap_authenticates_real_read(
+    tmp_path: Path, host_profile_runtime: Callable[[Path], None]
+) -> None:
     if sys.platform != "win32":
         root = tmp_path / "posix-descriptor-reader"
         register_password_only_profile(root, label="posix-reader")
+        host_profile_runtime(root)
         result = _run(
             root,
             [
@@ -403,6 +415,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
 
     root = tmp_path / "windows-handle"
     register_password_only_profile(root, label="windows-reader")
+    host_profile_runtime(root)
     reader, writer = os.pipe()
     try:
         os.write(writer, json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}).encode())
@@ -662,11 +675,13 @@ def test_platform_recovery_descriptors_complete_real_headless_enrolment(tmp_path
 
 def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_write(
     tmp_path: Path,
+    host_profile_runtime: Callable[[Path], None],
 ) -> None:
     """The platform descriptor route composes with portable leaf stdin."""
     if sys.platform != "win32":
         root = tmp_path / "posix-descriptor-certificate"
         register_password_only_profile(root, label="posix-writer")
+        host_profile_runtime(root)
         _register_certificate_source(root, name="s13-posix-cert")
         result = _run(
             root,
@@ -698,6 +713,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
 
     root = tmp_path / "windows-certificate"
     register_password_only_profile(root, label="windows-writer")
+    host_profile_runtime(root)
     _register_certificate_source(root, name="s13-windows-cert")
     reader, writer = os.pipe()
     try:
@@ -887,6 +903,7 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
     leaf: str,
     argv: tuple[str, ...],
     stdin: str | None,
+    host_profile_runtime: Callable[[Path], None],
 ) -> None:
     """No profile leaf may depend on an earlier command having warmed the process.
 
@@ -908,6 +925,7 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
         return {".runtime"} if Path(source).resolve() == template.resolve() and ".runtime" in names else set()
 
     shutil.copytree(template, root, ignore=omit_template_runtime)
+    host_profile_runtime(root)
     archive = tmp_path / "profile.cadrumo-bucket.tar.gz"
     if leaf == "archive-inspect":
         exported = _run(
@@ -927,27 +945,11 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
         )
         assert exported.returncode == 0, _combined(exported)
 
-    runtime = (
-        native_profile_view_server(root)
-        if leaf
-        in {
-            "descendiente-list",
-            "edit",
-            "plantilla-media-list",
-            "plantilla-media-remove",
-            "plantilla-media-set",
-            "status",
-            "validate",
-            "view",
-        }
-        else nullcontext()
+    result = _run(
+        root,
+        ["--format", "json", *(str(archive) if argument == "{archive}" else argument for argument in argv)],
+        stdin=stdin,
     )
-    with runtime:
-        result = _run(
-            root,
-            ["--format", "json", *(str(archive) if argument == "{archive}" else argument for argument in argv)],
-            stdin=stdin,
-        )
 
     envelope = _envelope(result)
     error_code = str((envelope.get("error") or {}).get("code", ""))

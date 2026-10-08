@@ -56,7 +56,7 @@
             {"cadence":"annual","code":"270","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":2,"tax_domain":"informative","title":"Resumen anual de retenciones del gravamen especial sobre premios de loterías"},
             {"cadence":"annual","code":"280","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":2,"tax_domain":"irpf","title":"Declaración informativa anual de Planes de Ahorro a Largo Plazo"},
             {"cadence":"annual","code":"296","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":4,"tax_domain":"irnr","title":"IRNR resumen anual de retenciones e ingresos a cuenta"},
-            {"cadence":"quarterly","code":"303","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":6,"tax_domain":"iva","title":"IVA. Autoliquidación (trimestral)"},
+            {"cadence":"quarterly","code":"303","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":7,"tax_domain":"iva","title":"IVA. Autoliquidación (trimestral)"},
             {"cadence":"ad_hoc","code":"308","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":4,"tax_domain":"iva","title":"IVA. Solicitud de devolución (recargo de equivalencia, art 30 bis, sujetos pasivos ocasionales)"},
             {"cadence":"ad_hoc","code":"309","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":4,"tax_domain":"iva","title":"IVA. Declaración-liquidación no periódica"},
             {"cadence":"monthly","code":"322","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":4,"tax_domain":"iva","title":"IVA. Grupo de entidades. Modelo individual. Autoliquidación mensual"},
@@ -145,7 +145,7 @@
             {"cadence":"annual","code":"270","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":2,"tax_domain":"informative","title":"Resumen anual de retenciones del gravamen especial sobre premios de loterías"},
             {"cadence":"annual","code":"280","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":2,"tax_domain":"irpf","title":"Declaración informativa anual de Planes de Ahorro a Largo Plazo"},
             {"cadence":"annual","code":"296","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":4,"tax_domain":"irnr","title":"IRNR resumen anual de retenciones e ingresos a cuenta"},
-            {"cadence":"quarterly","code":"303","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":6,"tax_domain":"iva","title":"IVA. Autoliquidación (trimestral)"},
+            {"cadence":"quarterly","code":"303","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":7,"tax_domain":"iva","title":"IVA. Autoliquidación (trimestral)"},
             {"cadence":"ad_hoc","code":"308","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":4,"tax_domain":"iva","title":"IVA. Solicitud de devolución (recargo de equivalencia, art 30 bis, sujetos pasivos ocasionales)"},
             {"cadence":"ad_hoc","code":"309","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":4,"tax_domain":"iva","title":"IVA. Declaración-liquidación no periódica"},
             {"cadence":"monthly","code":"322","local_work_guidance":null,"local_work_status":"supported-model-level","local_work_supported":true,"revision_count":4,"tax_domain":"iva","title":"IVA. Grupo de entidades. Modelo individual. Autoliquidación mensual"},
@@ -238,6 +238,7 @@
             "2024-hasta-08-y-2t",
             "2024-desde-09-y-3t",
             "2025",
+            "2026-hasta-01-y-1t",
             "2026-y-siguientes"
           ],
           "source_refs": [
@@ -248,7 +249,7 @@
           ],
           "tax_domain": "iva",
           "title": "VAT. Self-assessment (quarterly)",
-          "valid_from": "2026-01-01",
+          "valid_from": "2026-02-01",
           "valid_to": null
         },
         "schema_version": "2",

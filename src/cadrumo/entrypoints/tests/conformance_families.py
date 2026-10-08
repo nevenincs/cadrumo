@@ -26,6 +26,7 @@ from .conformance_profile_archive_support import PROFILE_ARCHIVE_CONFORMANCE_FAM
 from .conformance_profile_history_support import PROFILE_HISTORY_CONFORMANCE_FAMILY
 from .conformance_quickfile_support import QUICKFILE_CONFORMANCE_FAMILY
 from .conformance_review_package_exchange_support import REVIEW_PACKAGE_EXCHANGE_CONFORMANCE_FAMILY
+from .conformance_saved_review_export_support import SAVED_REVIEW_EXPORT_CONFORMANCE_FAMILY
 from .conformance_workstation_check_support import WORKSTATION_CHECK_CONFORMANCE_FAMILY
 
 CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
@@ -47,6 +48,7 @@ CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     PROFILE_HISTORY_CONFORMANCE_FAMILY,
     QUICKFILE_CONFORMANCE_FAMILY,
     REVIEW_PACKAGE_EXCHANGE_CONFORMANCE_FAMILY,
+    SAVED_REVIEW_EXPORT_CONFORMANCE_FAMILY,
     WORKSTATION_CHECK_CONFORMANCE_FAMILY,
 )
 

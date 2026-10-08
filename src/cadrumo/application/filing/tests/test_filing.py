@@ -202,6 +202,7 @@ def test_build_draft_refuses_negative_modelo_130_retenciones() -> None:
     with pytest.raises(CasillaConstraintViolationError) as refused:
         _draft(retenciones=Decimal("-100"))
 
+    assert refused.value.context is not None
     assert refused.value.context["casilla_id"] == _M130_CASILLA_06
     assert refused.value.context["value"] == "-100"
 
@@ -279,6 +280,7 @@ def test_build_draft_refuses_negative_modelo_111_retenciones() -> None:
             schema_provider=_unscoped_schema_provider(),
         )
 
+    assert refused.value.context is not None
     assert refused.value.context["casilla_id"] == _M111_CASILLA_06
     assert refused.value.context["value"] == "-12.10"
 

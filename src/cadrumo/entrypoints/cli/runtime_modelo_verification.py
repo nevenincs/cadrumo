@@ -37,6 +37,10 @@ from .registered_operation_errors import invalid_completion_error
 from .runtime_profile_binding import require_profile_client
 from .runtime_registered_operation import run_registered_operation
 
+#: Annual verification checks the stored quarterly chain and workflow gates.
+#: Like calculation, it can outlast a transport exchange without being stuck.
+_VERIFICATION_SETTLEMENT_SECONDS = 1800.0
+
 #: Filing checks the reviewed revision and commits its local record.
 #: Keep its settlement horizon separate from each bounded transport exchange.
 _FILING_SETTLEMENT_SECONDS = 1800.0
@@ -104,7 +108,12 @@ def select_modelo_work_revision_for_cli(
 
 
 def run_modelo_work_verification(
-    client: RuntimeFrontendClient, *, work_unit_id: str, request: ModeloWorkVerifyRequest, timeout: float = 60
+    client: RuntimeFrontendClient,
+    *,
+    work_unit_id: str,
+    request: ModeloWorkVerifyRequest,
+    timeout: float = 60,
+    settlement_timeout: float = _VERIFICATION_SETTLEMENT_SECONDS,
 ) -> RegisteredOperationCompletion[ModeloWorkVerifyPublicResultV2]:
     """Submit one selected exact revision to the canonical verify executor."""
     completed = run_registered_operation(
@@ -116,6 +125,7 @@ def run_modelo_work_verification(
         request_version=1,
         result_version=2,
         timeout=timeout,
+        settlement_timeout=settlement_timeout,
     )
     projection = completed.projection
     if (

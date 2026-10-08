@@ -1355,13 +1355,13 @@ application:
         no calculation resolver handles. Add a resolver or mark it as deferred before
         calculating.'
       profile_readiness_missing: 'Profile is incomplete for Modelo %{modelo} %{filing_year}
-        %{period}; complete these profile facts first: %{missing}.'
+        %{period}; complete these profile facts first: %{profile_requirements}.'
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
       profile_readiness_setup_incomplete: Profile setup has not yet been declared
         complete; declare the profile setup complete before working on modelos.
       profile_readiness_setup_incomplete_missing: 'Profile setup is incomplete; finish
-        the setup flow before working on modelos. Outstanding fields: %{missing}.'
+        the setup flow before working on modelos. Outstanding fields: %{profile_requirements}.'
       recipient_decryption_failed: The recipient-encrypted package could not be decrypted;
         the key does not match or the package was tampered with.
       recipient_encryption_invalid_key: The recipient's public key is not a well-formed

@@ -571,13 +571,15 @@ def test_candidate_preparation_does_not_hold_the_destination_lock(
 ) -> None:
     """A barrier-held validation leaves the publication lock available to another publisher."""
     preparation_started = Event()
+    preparation_ready = Event()
     finish_preparation = Event()
     prepared_candidate = SimpleNamespace(descriptor_path=tmp_path / "staged" / "authority.current.json")
     published_descriptor = object()
 
     def prepare_candidate(**_kwargs: object) -> object:
         preparation_started.set()
-        assert finish_preparation.wait(timeout=5)
+        preparation_ready.set()
+        assert finish_preparation.wait()
         return prepared_candidate
 
     monkeypatch.setattr(authority_publication, "prepare_authority_candidate", prepare_candidate)
@@ -603,10 +605,17 @@ def test_candidate_preparation_does_not_hold_the_destination_lock(
             profile_schema_path=tmp_path / "schema.toml",
             destination=destination,
         )
-        assert preparation_started.wait(timeout=5)
-        with exclusive_file_lock(descriptor_path, timeout=0, retry_backoff=0.01):
+        publication.add_done_callback(lambda _completed: preparation_ready.set())
+        try:
+            assert preparation_ready.wait()
+            if publication.done():
+                publication.result()
+            assert preparation_started.is_set(), "publication settled without candidate preparation"
+            with exclusive_file_lock(descriptor_path, timeout=0, retry_backoff=0.01):
+                finish_preparation.set()
+        finally:
             finish_preparation.set()
-        assert publication.result(timeout=5) is published_descriptor
+        assert publication.result() is published_descriptor
 
 
 def test_receipt_drift_after_preparation_refuses_before_installation(

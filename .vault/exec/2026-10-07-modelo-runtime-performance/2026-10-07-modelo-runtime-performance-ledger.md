@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:a85c9c5785b1dbdc58b05d494298278b68dc727d5b91c4909a0d47a6de211d75'
+body_hash: 'sha256:da3b3d8100ff0864391a2821b27459595fa0ac96bd8624d7847518ff2a9204dc'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
 ---
@@ -616,6 +616,84 @@ related:
 - `S10` `verify:` `python -I -B .tmp/s25-final-native-capture-research-01/refresh-proposal-04/refresh.py prepare --output .tmp/s25-final-native-capture-research-01/refresh-proposal-04/plan-01` -> `pass`
 - `S10` `verify:` `python -I -B .tmp/s25-final-native-capture-research-01/refresh-proposal-04/refresh.py apply --output .tmp/s25-final-native-capture-research-01/refresh-proposal-04/plan-01 --approved-plan-sha b5e6d322d26b3fdf58b4ae6d3b5e2abff2d643eef193766fb1a14ce2e51096ba` -> `pass`
 - `S10` `verify:` `frozen2130 Python -I -B refresh-proposal-04/verify_currency.py --output refresh-proposal-04/currency-01` -> `pass`
+- `S10` `M` `dev/docs/tests/test_sequence_goldens.py`
+- `S10` `verify:` `unchanged full34 default8 native capture session79939` -> `fail`
+- `S19` `M` `src/cadrumo/application/modelo/export.py`
+- `S19` `M` `src/cadrumo/application/calculations/bienes_inversion_regularizacion.py`
+- `S19` `M` `src/cadrumo/application/modelo/tests/test_export_bienes_inversion_bucket_binding.py`
+- `S19` `M` `src/cadrumo/adapters/persistence/profile/tests/test_bienes_inversion_regularizacion.py`
+- `S19` `M` `docs/_sequences/contracts/how-to/censo-update/censo-update-preflight.seq`
+- `S19` `verify:` `guarded BI four-owner and Censo one-literal application` -> `pass`
+- `S19` `verify:` `Ruff check and format check plus ty linux win32 darwin on four Python owners` -> `pass`
+- `S19` `verify:` `real owning exporter and encrypted register plus domain parameters and axis tripwire tests` -> `pass`
+- `S30` `M` `dev/registry/registry_collapse_comparison.py`
+- `S30` `verify:` `22 scoped comparison tests` -> `pass`
+- `S30` `verify:` `public whole-projection A/B complete-byte parity` -> `pass`
+- `S29` `M` `src/cadrumo/core/diagnostic_log.py`
+- `S29` `M` `src/cadrumo/core/tests/test_diagnostic_log.py`
+- `S29` `M` `src/cadrumo/application/operations/_execution_context.py`
+- `S29` `M` `src/cadrumo/adapters/local_runtime/worker_authorization_lease.py`
+- `S29` `M` `src/cadrumo/entrypoints/runtime/operation_authority.py`
+- `S29` `M` `src/cadrumo/adapters/persistence/operations/tests/test_execution_authority.py`
+- `S29` `verify:` `41 diagnostic and durable authority tests` -> `pass`
+- `S29` `verify:` `14 native task and scope authority regressions` -> `pass`
+- `S29` `verify:` `scoped style format and all applicable type engines across three platforms` -> `pass`
+- `S29` `verify:` `stable-source instrumented M390 acceptance` -> `fail`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/test_worker_authorization.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/worker_authorization_fixture.py`
+- `S09` `verify:` `14 native task and scope authority regressions` -> `pass`
+- `S09` `verify:` `current 55-case authority run 50 pass and5 PID assertion failures` -> `fail`
+- `S09` `verify:` `corrected actual-worker native handle five cases` -> `pass`
+- `S31` `M` `src/cadrumo/application/modelo/filing_actions.py`
+- `S31` `M` `src/cadrumo/application/modelo/verification_cross_period.py`
+- `S31` `M` `src/cadrumo/application/calculations/cross_period_clean_state.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_filing.py`
+- `S31` `A` `src/cadrumo/adapters/persistence/profile/tests/test_cross_period_catalogue_reuse.py`
+- `S31` `verify:` `S31 real encrypted filing counted loads baseline 3 versus optimized 2 with independent revisioned reread retained` -> `pass`
+- `S31` `verify:` `S31 reuse byte parity and fresh fallback plus existing cross-period enforcement and idempotent filing 21 tests` -> `pass`
+- `S31` `verify:` `S31 Ruff check and format five owners` -> `pass`
+- `S31` `verify:` `S31 ty five owners plus pyrefly and basedpyright three production owners Windows Linux Darwin` -> `pass`
+- `S31` `verify:` `pytest dev/quality/tests/test_no_git_cli.py -n 0: 25 passed in .tmp/s31-no-git-cli.txt` -> `pass`
+- `S31` `M` `src/cadrumo/adapters/persistence/profile/tests/test_cross_period_catalogue_reuse.py`
+- `S09` `A` `src/cadrumo/adapters/local_runtime/tests/worker_completion.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/test_worker_approval_channel.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/test_worker_approval_phases.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/worker_approval_fixture.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/worker_approval_phase_fixture.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_approval_sessions.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_approval.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_decision_client.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_enrollment.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_optional_automation_custody.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/config/tests/isolated_storage_fixture.py`
+- `S14` `M` `src/cadrumo/adapters/local_runtime/tests/test_posix.py`
+- `S14` `M` `dev/quality/metadata/import_load_targets.json`
+- `S14` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S14` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
+- `S14` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S14` `M` `dev/quality/metadata/import_load_targets.docs.json`
+- `S32` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S32` `M` `src/cadrumo/application/modelo/verification_gate_findings.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_verify.py`
+- `S28` `M` `src/cadrumo/domain/modelos/calculation_revision_rendering.py`
+- `S28` `M` `src/cadrumo/adapters/persistence/profile/modelos_calculation.py`
+- `S28` `M` `src/cadrumo/adapters/persistence/profile/_secure_enveloped_document.py`
+- `S28` `M` `src/cadrumo/domain/modelos/tests/test_calculation_rendering_serializer_scope.py`
+- `S28` `verify:` `pytest -n 0 --basetemp .tmp/pytest-s28-serializer-scope-02 src/cadrumo/domain/modelos/tests/test_calculation_rendering_serializer_scope.py src/cadrumo/domain/modelos/tests/test_calculation_revision_rendering.py src/cadrumo/adapters/persistence/profile/tests/test_calculation_repository_roundtrip.py --tb=short` -> `pass`
+- `S33` `M` `src/cadrumo/application/user_profile/preflight.py`
+- `S33` `M` `src/cadrumo/application/modelo/profile_readiness_gate.py`
+- `S33` `M` `src/cadrumo/entrypoints/overview_read_composition.py`
+- `S33` `M` `src/cadrumo/application/user_profile/tests/test_services.py`
+- `S33` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_profile_readiness_gate.py`
+- `S33` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_readiness_blocks_modelo_work.py`
+- `S33` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_operation_error_detail.py`
+- `S33` `M` `src/cadrumo/locales/en/application.yml`
+- `S33` `M` `src/cadrumo/locales/es/application.yml`
+- `S33` `M` `src/cadrumo/locales/ca/application.yml`
+- `S33` `M` `src/cadrumo/locales/hu/application.yml`
+- `S33` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_runtime_operation_error_detail.py::test_profile_requirement_explanation_survives_recorded_detail` -> `pass`
+- `S33` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_overview_profile_refusal_end_to_end.py` -> `pass`
 
 ## Notes
 
@@ -687,3 +765,17 @@ related:
 - `S27` Actual root rerun03: only two changed CLI cases PASS41.11s, stdout .tmp/s27-cli-profile-delete-focused-03.txt, durable run20261008T045909.676530Z-pytest-89760-67549c0b. Retain run01 2FAIL2PASS1existingOSskip107.70s and run02 2FAIL2PASS1existingOSskip111.38s. Run02 completed the native absent-receipt and direct human-sign-out proof; only new bare pointer observations failed because package calibration `override_settings` restores a collection-root ContextVar. Root supplied six explicit actual fixture roots, preserved all125assertions and19unrelated function ASTs, and corrected three prose lines. Applied independent followup02 review781f3593f098ab8d905ba5cc71219c79c26d4fde6826a53f5afeb2699a7b2aa6 current owner bf6311b7b7ca2f059fa7743d3bece2da264d5cdad68aa294436f4500cf18d9c2. Reuse unchanged two PASS subjects and one existing OS-store skip from run02 separately; no single allgreen five-case run, no skipped OS-store behavior claim, no successful receipt-less fresh CLI logout claim, no product change. Latest Ruff03 format04 ty02 three-platform PASS; full12 blocking gates remain separately active.
 - `S27` Root actual fresh final aggregate session49998 completed exit0 at2026-10-08T05:22:30Z, started05:02:14Z. All12 configured blocking gates completed, including all configured type engines/platforms and deterministic reachability/usage/export/write-path ratchets. Quiet stdout .tmp/modelo-performance-final-repaired-check-code-02.txt is empty by successful suite design. Applies to final S19/S20/S26/S27 source population and preserved earlier performance/ordinary completion repairs. No cap, kill, narrowed gate population, advisory audits or partial success claim. Shared final frozen/native/golden/global acceptance remains pending.
 - `S10` Actual root prepare40619/apply20941/currency99674 all exit0. Complete23940enrolledrecord snapshot,99changedowners with all changed paths/root and target/absence inventory reviewed, no deletion/symlink. Root approved exact planSHA b5e6d322d26b3fdf58b4ae6d3b5e2abff2d643eef193766fb1a14ce2e51096ba; preparedHEAD718809d070bf93cd88cb36bdcffc8e2dfd0e53e8 captures peer current sources without claiming root authorship or peer semantic review. Full before/after source guards, archive guards and actual staged/copied bfdb DB118349824digest verified; canonical descriptor installed last. Existing environment binding receipts/old authority/history preserved, no whole companion byte-equivalence claim. Complete frozen canonical currency PASS41858e/bfdb, owner origin frozen; no publisher/native in currency helper. Evidence .tmp/s25-final-native-refresh04-prepare-01.txt, apply-01.txt, currency-01.txt and refresh-proposal-04/plan-01/root-reviewed-plan.json. Bare full34/default8pool/defaultnativeworker/timeoutNone capture is now separately active79939; no final native/golden acceptance claimed.
+- `S10` Actual tool exit-1 before final capture receipt. Retained root stdout witnesses33 completed pages12PASS21FAIL and M390 completion is unwitnessed. Closing source authority and baseline guards are unwitnessed. Termination cause unknown. Frozen2130 path subsequently unavailable and root performed no move or deletion. No committed goldens adopted and no full native acceptance claim. Durable .tmp/s25-native-capture-incomplete-receipt-01.json preserves retained stdout SHA and actual page results.
+- `S19` Actual guarded source application exit0. Two filing-date arguments now use actual `Period.end_date` and source unused date import removed. Parameter provenance `resolved_on` intentionally changes to that date and bundle/result equality remains exact. Annual math definitive-prorrata and out-of-window domain refusals unchanged. Existing28functions69assertions preserved. Fresh uncapped owning pytest session70534 actualexit0 with68PASS33.99s including16new cases. Censo2026/1T exact expectation now early revision and all7asserts remain. Ruff formatting only two testowners. Independent pre-apply review41112c5f6a6501de61aae3451a3ae8a3e9a62eb59872f0387838e3d5726273c1. Logs .tmp/s19-bienes-period-date-focused-01.txt and matching applied/type/style receipts. Full two genuine native application exports and shared whole gates/capture/goldens acceptance still pending. Missing frozen subject and partial capture are not acceptance and no failed golden adopted.
+- `S30` Warm projection median 1.674409s to 1.416345s; full registry acceptance pending; .tmp/s29-projection-benchmark-session01.json
+- `S29` M390 journey assertions passed538.77s, but8 concurrent source edits invalidate stable acceptance. Q4 commit24.026565s includes23.977838s body; .tmp/s29-native-commit-session01/commit-phase-summary.json. Original expiry repair and final broad gates remain open.
+- `S09` Ordinary readiness and completion are uncapped; explicit authority expiry and containment/cleanup bounds preserved.
+- `S09` Concurrent fixture edits superseded earlier helpers. Preserve job membership and retain actual worker handle, separate from Windows venv launcher. .tmp/s29-current-authority-tests-session02.txt and .tmp/s29-native-authority-pid-session03.txt; earlier50 passing cases reused.
+- `S31` Focused evidence is in .tmp/s31-filing-read-baseline-serial.txt, s31-filing-read-after.txt and s31-reuse-regression.txt. Baseline count assertion deliberately failed at three reads. No whole-journey latency improvement claimed. Final native corpus and blocking gates remain pending.
+- `S31` Current scoped checks and exact durable logs are recorded in the audit filing-reuse-and-completion-followup. All twelve code gates have applicable passing evidence across the aggregate eleven-pass result and stable targeted import gate 20261008T133422.707733Z-check-import-boundaries-54200-11e29da2; stable native timing, final34 and registry acceptance remain open. No Step closure or repository commit measurement is claimed.
+- `S09` Current scoped checks and exact durable logs are recorded in the audit filing-reuse-and-completion-followup. All twelve code gates have applicable passing evidence across the aggregate eleven-pass result and stable targeted import gate 20261008T133422.707733Z-check-import-boundaries-54200-11e29da2; stable native timing, final34 and registry acceptance remain open. No Step closure or repository commit measurement is claimed.
+- `S27` Current scoped checks and exact durable logs are recorded in the audit filing-reuse-and-completion-followup. All twelve code gates have applicable passing evidence across the aggregate eleven-pass result and stable targeted import gate 20261008T133422.707733Z-check-import-boundaries-54200-11e29da2; stable native timing, final34 and registry acceptance remain open. No Step closure or repository commit measurement is claimed.
+- `S14` Current scoped checks and exact durable logs are recorded in the audit filing-reuse-and-completion-followup. All twelve code gates have applicable passing evidence across the aggregate eleven-pass result and stable targeted import gate 20261008T133422.707733Z-check-import-boundaries-54200-11e29da2; stable native timing, final34 and registry acceptance remain open. No Step closure or repository commit measurement is claimed.
+- `S32` The counted encrypted verification baseline proved `load_revisioned` plus load. Candidate uses `load_revisioned` once, retains current report read and guarded publication, and passes all13 owning tests plus Ruff and ty/Pyrefly/BasedPyright on all3 platforms. Exact source hashes and logs: .tmp/s32-focused-verification01/verification.json. Native M390 verification and final corpus acceptance remain pending.
+- `S28` Backfill actual retained 41-case receipt 20261008T085521.923318Z-pytest-73992-ab5174d0, not a rerun. Complete-byte A/B/B/A parity 16/16 over 9669805 bytes in .tmp/s28-public-rendering-production-cost-01.json. Median decode 1.281854s to 1.153843s and encode 0.323158s to 0.203421s are local warm diagnostics. Review records scoped Ruff/format and three-platform ty passes without retained invocation strings. Final native corpus and consolidated source closure remain pending; no step close.
+- `S33` Actual commands, per-case runs, owner hashes and scoped style/types are in .tmp/s33-focused-verification01/verification.json. Ready profiles avoid whole-registry grounding; missing reports retain eager-path JSON parity and public label/citation explanations across recorded errors while internal wizard fields stay suppressed. Five native readiness cases have passing per-case receipts, not one final whole-file pass; fixture now supplies per-command credentials and public language hint. Standalone check-locales exits1 on unrelated inventory findings with zero placeholder/data issues, outside canonical12. Diagnostic02 all8 functional expectations/export checks pass but source guard detects concurrent native-transport edits. No stable performance claim or step closure; final corpus and gates pending.

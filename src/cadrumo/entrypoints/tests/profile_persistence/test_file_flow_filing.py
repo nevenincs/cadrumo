@@ -22,13 +22,14 @@ from cadrumo.application.workflow.abort import WorkflowAbortReason
 from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowStage
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
-from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
     FilingOrigin,
+    ModeloRecord,
     ModeloRecordStatus,
 )
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
@@ -114,7 +115,12 @@ def test_file_requires_verificado_completo_state(repos: Repos) -> None:
     assert failure.verdict.argument_bindings[0].value == work_unit.work_unit_id
 
 
-def test_file_creates_filing_record_and_advances_pointers(repos: Repos) -> None:
+@pytest.mark.parametrize("reject_final_read", [False, True])
+def test_file_creates_filing_record_and_advances_pointers(
+    repos: Repos,
+    monkeypatch: pytest.MonkeyPatch,
+    reject_final_read: bool,
+) -> None:
     """The happy-path file flow: calculate → verify
     → file. After file: a ModeloRecord exists, the revision is in
     FILED state, the work unit's filed_calculation_revision_id and
@@ -148,19 +154,57 @@ def test_file_creates_filing_record_and_advances_pointers(repos: Repos) -> None:
         bucket_event_repository=bv_repo,
         clock=T2,
     )
-    filing = file_revision(
-        revision.calculation_revision_id,
-        revision=revision,
-        work_unit=work_unit,
-        actor="operator-A",
-        notes="Q1 IVA",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T3,
-    )
+    reads: list[str] = []
+    load = cr_repo.load
+    load_revisioned = cr_repo.load_revisioned
+    before_revisions = load()
+    before_filings = fr_repo.load()
+    before_work_units = wu_repo.load()
 
+    def counted_load(*, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue:
+        reads.append("load")
+        return load(operation=operation)
+
+    def counted_load_revisioned(
+        *,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> tuple[CalculationRevisionCatalogue, str]:
+        reads.append("load_revisioned")
+        if reject_final_read:
+            raise ValueError("final catalogue read refused")
+        return load_revisioned(operation=operation)
+
+    monkeypatch.setattr(cr_repo, "load", counted_load)
+    monkeypatch.setattr(cr_repo, "load_revisioned", counted_load_revisioned)
+
+    def publish() -> ModeloRecord:
+        record = file_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            actor="operator-A",
+            notes="Q1 IVA",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=T3,
+        )
+        assert isinstance(record, ModeloRecord)
+        return record
+
+    if reject_final_read:
+        with pytest.raises(ValueError, match="final catalogue read refused"):
+            publish()
+        assert reads == ["load", "load_revisioned"]
+        assert fr_repo.load() == before_filings
+        assert wu_repo.load() == before_work_units
+        assert load() == before_revisions
+        return
+
+    filing = publish()
+
+    assert reads == ["load", "load_revisioned"], f"filing catalogue reads: {reads}"
     assert filing.status is ModeloRecordStatus.VIGENTE
     assert filing.aeat_accepted is False
     assert filing.notes == "Q1 IVA"

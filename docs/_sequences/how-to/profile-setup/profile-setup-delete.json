@@ -97,7 +97,7 @@
           "display_name": "docs-sequence-sandbox",
           "earliest_safe_erase_date": null,
           "fingerprint": {
-            "digest": "ac4c6c2678ecb1340c3a5ccfc7c13fe2c96159145e3161536230eb92413515b4",
+            "digest": "e060391dc5d185ecdacdbdf7858445271884d4e22ec042212e4b356688f0ea14",
             "file_count": 4,
             "schema_version": 1,
             "total_bytes": 1850

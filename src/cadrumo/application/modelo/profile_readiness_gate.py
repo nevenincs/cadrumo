@@ -40,7 +40,6 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
 from ...domain.calculations.registry.profile_grounding import (
     ProfileKeyGrounding,
-    build_profile_grounding_index,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
@@ -53,6 +52,7 @@ from ..user_profile.completeness import missing_required_field_paths
 from ..user_profile.preflight import (
     ProfilePreflightService,
     build_profile_preflight_requirement,
+    deferred_profile_grounding_index,
     format_profile_preflight_requirement,
 )
 from ..user_profile.profile_record_repository import ProfileRecordRepository, take_invocation_profile_record
@@ -273,7 +273,7 @@ def modelo_work_profile_preflight_report(
             period=period,
             revision=revision,
         )
-    grounding_index = build_profile_grounding_index(operation)
+    grounding_index = deferred_profile_grounding_index(operation)
     baseline = tuple(
         _requirement_for_profile_path(
             path,
@@ -507,13 +507,17 @@ def _require_profile_filing_ready(
             missing.append(requirement)
     if not missing:
         return
+    # These are public schema labels/citations, not the private wizard question
+    # ids stored under "missing" and stripped from recorded runtime errors.
     raise ModeloProfileReadinessError(
         translated_message="application.modelo.errors.profile_readiness_missing",
         context={
             "modelo": modelo,
             "filing_year": filing_year,
             "period": period.registry_token,
-            "missing": ", ".join(format_profile_preflight_requirement(requirement) for requirement in missing),
+            "profile_requirements": ", ".join(
+                format_profile_preflight_requirement(requirement) for requirement in missing
+            ),
         },
     )
 
@@ -588,7 +592,7 @@ def _require_profile_setup_complete(
         )
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_setup_incomplete_missing",
-            context={"bucket_id": bucket_id, "modelo": modelo, "missing": missing_labels},
+            context={"bucket_id": bucket_id, "modelo": modelo, "profile_requirements": missing_labels},
             profile_precondition_verdict=profile_setup_incomplete_verdict(
                 modelo=modelo,
                 missing_required_field_count=len(missing_paths),
@@ -619,7 +623,9 @@ def _raise_if_profile_preflight_missing(
             "modelo": modelo,
             "filing_year": filing_year,
             "period": period.registry_token,
-            "missing": ", ".join(format_profile_preflight_requirement(requirement) for requirement in report.missing),
+            "profile_requirements": ", ".join(
+                format_profile_preflight_requirement(requirement) for requirement in report.missing
+            ),
         },
     )
 
@@ -647,9 +653,9 @@ def require_profile_ready_for_modelo_work(
     passes the live registry authority through both the baseline/validation
     refusal and the full preflight report, so a raised
     :class:`ModeloProfileReadinessError` carries real ``legal_refs`` for every
-    missing field the registry grounds - the memoised
-    ``build_profile_grounding_index`` keeps the added per-call cost bounded on
-    this hot path. ``profile`` is the record the calling command already
+    missing field the registry grounds. The complete grounding index is loaded
+    only when a missing field actually needs an explanation. ``profile`` is the
+    record the calling command already
     loaded for this target; when omitted the gate loads it. Returns the record
     the gate checked, so a caller that let the gate load it passes that same
     record on instead of decrypting it again.
@@ -660,14 +666,14 @@ def require_profile_ready_for_modelo_work(
         profile=profile,
     )
     record, resolved_profile_decode_context = loaded.record, loaded.profile_decode_context
+    grounding_index = deferred_profile_grounding_index(operation)
     _require_profile_setup_complete(
         record=record,
         bucket_id=bucket_id,
         modelo=modelo,
         profile_decode_context=resolved_profile_decode_context,
-        grounding_index=build_profile_grounding_index(operation),
+        grounding_index=grounding_index,
     )
-    grounding_index: Mapping[str, ProfileKeyGrounding] = build_profile_grounding_index(operation)
     applicability_first = enforce_applicability and modelo.strip() in _PRE_ACTIVITY_LIFECYCLE_MODELOS
     if applicability_first:
         _require_modelo_applicable_for_local_work(

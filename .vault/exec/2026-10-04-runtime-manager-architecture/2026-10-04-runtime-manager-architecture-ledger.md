@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:5f7416c1e38e49bbd9ffbe05c53383162d076fca6c7e20009c28011912e0dc59'
+body_hash: 'sha256:b0716341dc5b2bde051d75973a7e323336da96b7582b2059ac6684ac6ffffd53'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -623,6 +623,52 @@ related:
 - `S19` `verify:` `four affected vault feature checks (zero errors)` -> `pass`
 - `S19` `verify:` `scoped git diff --check` -> `pass`
 - `S19` `by:` `root`
+- `S19` `A` `src/cadrumo/core/runtime_transport.py`
+- `S19` `A` `src/cadrumo/core/darwin_transport.py`
+- `S19` `A` `src/cadrumo/core/tests/test_runtime_transport.py`
+- `S19` `M` `src/cadrumo/core/storage_taxonomy.py`
+- `S19` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S19` `M` `src/cadrumo/core/storage_materialization.py`
+- `S19` `M` `src/cadrumo/adapters/local_runtime/posix_endpoint.py`
+- `S19` `A` `src/cadrumo/adapters/local_runtime/tests/test_darwin_transport.py`
+- `S19` `M` `src/cadrumo/adapters/persistence/storage/tests/secure_sql.py`
+- `S19` `M` `src/cadrumo/application/storage_management/service.py`
+- `S19` `M` `dev/packaging/native/generate.py`
+- `S19` `A` `dev/packaging/native/transport_contract.py`
+- `S19` `A` `dev/packaging/native/tests/test_transport_contract.py`
+- `S19` `A` `dev/docs/tests/test_transport_namespace.py`
+- `S19` `A` `native/platform/src/transport.rs`
+- `S19` `A` `native/platform/src/transport/tests.rs`
+- `S19` `M` `native/platform/src/lib.rs`
+- `S19` `M` `native/platform/Cargo.toml`
+- `S19` `M` `native/platform/Cargo.lock`
+- `S19` `M` `native/application/Cargo.lock`
+- `S19` `M` `native/desktop/src-tauri/Cargo.lock`
+- `S19` `M` `native/manager/Cargo.toml`
+- `S19` `M` `native/manager/Cargo.lock`
+- `S19` `A` `native/manager/src/macos/naming.rs`
+- `S19` `M` `native/manager/src/macos/ipc.rs`
+- `S19` `M` `native/manager/src/macos/ipc/socket.rs`
+- `S19` `M` `native/cmake/Contract.cmake`
+- `S19` `M` `native/CONTRACT.md`
+- `S19` `verify:` `native Mac platform 32 and manager 78 tests` -> `pass`
+- `S19` `verify:` `native Mac platform and manager all-target Clippy` -> `pass`
+- `S19` `verify:` `configured Windows manager tests and toolchain-pinned Clippy` -> `pass`
+- `S19` `verify:` `Linux Python transport owning tests 63` -> `pass`
+- `S19` `verify:` `native Mac Python unit/integration tests 59` -> `pass`
+- `S19` `verify:` `native Mac read-only default path/custody probe` -> `pass`
+- `S19` `verify:` `scoped Python Ruff format and ty` -> `pass`
+- `S19` `verify:` `CMake configure and native_contract build` -> `pass`
+- `S19` `verify:` `integrated transport source review` -> `pass`
+- `S19` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S19` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S19` `M` `dev/quality/metadata/import_load_targets.json`
+- `S19` `verify:` `initial full import and platform type gates` -> `fail`
+- `S19` `verify:` `corrected full just check-import-boundaries` -> `pass`
+- `S19` `verify:` `corrected full just check-types (one concurrent unrelated test diagnostic)` -> `fail`
+- `S19` `verify:` `corrected transport Pyrefly and BasedPyright Windows Linux Darwin` -> `pass`
+- `S19` `verify:` `corrected native Mac Python 59 and Linux Python 29 tests` -> `pass`
+- `S19` `verify:` `corrective source review and unchanged generated Rust contract` -> `pass`
 
 ## Notes
 
@@ -672,3 +718,5 @@ related:
 - `S19` S19 remains open. Native IPC component execution now verified, but SSH refusal is not graphical positive admission or installed lifecycle acceptance. Initial native fixture failures from symlinked SSH TMPDIR were retained; corrected private canonical path passed without weakening custody.
 - `S19` High installed-default socket path blocker remains unresolved. Feasibility probes establish that fd aliases fail ENOENT and the user cache is only a candidate; no namespace decision or product activation is claimed.
 - `S19` Accepted transport-only exception under explicit all-code/build advance authorization; source implementation and native verification pending, S19 remains open. Bounded crossref used as advisory, not complete corpus proof.
+- `S19` S19 remains open for platform activation/lifecycle/registration and acceptance. Frozen package builds unchanged; non-disposable hosts used only for isolated tests/builds and read-only native probes.
+- `S19` Transport-specific findings repaired; remaining full type diagnostic belongs to concurrently edited worker cleanup test. S19 remains open.

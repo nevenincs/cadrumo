@@ -8,8 +8,8 @@ record does not yet carry.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
-from typing import TYPE_CHECKING
+from collections.abc import Iterable, Iterator, Mapping
+from typing import TYPE_CHECKING, cast, overload, override
 
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -31,6 +31,59 @@ from .projections import record_to_path_values
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import ModeloRevision
+
+
+class _DeferredProfileGrounding(Mapping[str, ProfileKeyGrounding]):
+    """Read public grounding once, only if this invocation needs an explanation."""
+
+    def __init__(self, operation: PinnedAuthorityOperation) -> None:
+        self._operation = operation
+        self._index: Mapping[str, ProfileKeyGrounding] | None = None
+
+    def _loaded(self) -> Mapping[str, ProfileKeyGrounding]:
+        if self._index is None:
+            self._index = build_profile_grounding_index(self._operation)
+        return self._index
+
+    @override
+    def __getitem__(self, key: str) -> ProfileKeyGrounding:
+        return self._loaded()[key]
+
+    @overload
+    def get(self, key: object, /, default: None = None) -> ProfileKeyGrounding | None: ...
+
+    @overload
+    def get(self, key: object, /, default: ProfileKeyGrounding) -> ProfileKeyGrounding: ...
+
+    @overload
+    def get[T](self, key: object, /, default: T) -> ProfileKeyGrounding | T: ...
+
+    @override
+    def get[T](self, key: object, /, default: T | None = None) -> ProfileKeyGrounding | T | None:
+        # Mapping.get would also catch a loader's KeyError, turning unavailable
+        # grounding into an apparently absent key. Only the loaded index owns
+        # missing-key semantics; errors while obtaining it must propagate.
+        # Lookup accepts arbitrary keys without widening the stored key type.
+        index = cast(Mapping[object, ProfileKeyGrounding], cast(object, self._loaded()))
+        return index.get(key, default)
+
+    @override
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._loaded())
+
+    @override
+    def __len__(self) -> int:
+        return len(self._loaded())
+
+
+def deferred_profile_grounding_index(operation: PinnedAuthorityOperation) -> Mapping[str, ProfileKeyGrounding]:
+    """Keep a ready profile from loading every revision just to explain no missing fields.
+
+    The returned mapping belongs to this synchronous invocation. Its first
+    lookup uses the existing complete, generation-pinned grounding owner;
+    subsequent lookups reuse that same public index, including an empty one.
+    """
+    return _DeferredProfileGrounding(operation)
 
 
 def _profile_requirement_address(path: str) -> tuple[str, str, str]:
@@ -285,7 +338,7 @@ class ProfilePreflightService:
         """
         values = record_to_path_values(record)
         grounding_index: Mapping[str, ProfileKeyGrounding] = (
-            build_profile_grounding_index(operation) if operation is not None else dict[str, ProfileKeyGrounding]()
+            deferred_profile_grounding_index(operation) if operation is not None else dict[str, ProfileKeyGrounding]()
         )
         missing: list[ProfilePreflightRequirement] = []
         target = self._selector_prefix(modelo)
@@ -384,6 +437,7 @@ class ProfilePreflightService:
 __all__ = [
     "ProfilePreflightService",
     "build_profile_preflight_requirement",
+    "deferred_profile_grounding_index",
     "format_profile_path_requirements",
     "format_profile_preflight_requirement",
     "format_profile_selector_requirements",

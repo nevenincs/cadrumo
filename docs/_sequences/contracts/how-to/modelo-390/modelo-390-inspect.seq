@@ -19,5 +19,5 @@ aeat app modelo work revision --modelo 390 --year 2025 --period 0A
 aeat app modelo iva-wallet balance --as-of-year 2025
 @step Explain how each annual formula is computed, with its legal references.
 @result aeat --format json app modelo formulas 390 --period 0A --explain
-@expect result.formula_count == 19
+@expect result.formula_count == 26
 @expect exit_code == 0

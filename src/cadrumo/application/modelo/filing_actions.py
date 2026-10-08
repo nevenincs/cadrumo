@@ -42,7 +42,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.config import Settings
+from ...core.diagnostic_log import diagnostic_timing_event
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
+from ...core.logging import get_logger
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
@@ -60,6 +62,7 @@ from ...domain.modelos.calculation_revision import (
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus
+from ...domain.modelos.verification_report import VerificationReportCatalogue
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.cross_period_models import CrossPeriodExpectedMemberSet
 from ..calculations.m303_regimen_simplificado_annual_summary import (
@@ -110,6 +113,13 @@ if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_scope_ports import OperatorScopePorts
     from .work_profile import ModeloWorkProfile
+
+_LOGGER = get_logger(__name__)
+
+
+def _filing_phase(stage: str) -> None:
+    """Record bounded stage labels without filing identities or payloads."""
+    diagnostic_timing_event(_LOGGER, "modelo_filing_phase", fields={"stage": stage})
 
 
 class ModeloFilingEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError):
@@ -279,7 +289,9 @@ def file_modelo_revision(
         )
     run_repo = ports.workflow_run_repository
 
+    _filing_phase("load_begin")
     revisions = cr_repo.load(operation=operation)
+    _filing_phase("load_end")
     target = revisions.get(calculation_revision_id)
     if target is None:
         raise CalculationRevisionNotFoundError(
@@ -372,10 +384,11 @@ def file_modelo_revision(
             ),
         )
 
+    reports = ports.verification_repository.load(operation=operation)
     require_approved_verification_report(
         target=target,
         approved_verification_report_id=approved_verification_report_id,
-        catalogue=ports.verification_repository.load(operation=operation),
+        catalogue=reports,
         operation=operation,
     )
 
@@ -387,10 +400,14 @@ def file_modelo_revision(
         revisions=revisions,
         filing_catalogue=filing_baseline,
     )
+    _filing_phase("preconditions_begin")
     _require_filing_preconditions(
         evaluated_at=now,
         work_unit=work_unit,
         target=target,
+        calculation_catalogue=revisions,
+        filing_catalogue=filing_baseline,
+        verification_catalogue=reports,
         workflow_profile=workflow_profile,
         ports=ports,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
@@ -398,6 +415,8 @@ def file_modelo_revision(
         profile=profile,
     )
 
+    _filing_phase("preconditions_end")
+    _filing_phase("workflow_begin")
     gate_engine = workflow_engine or _build_revision_workflow_engine(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         operator_scope_ports=operator_scope_ports,
@@ -420,6 +439,7 @@ def file_modelo_revision(
         run_repository=run_repo,
     )
 
+    _filing_phase("workflow_end")
     result_disposition = _filed_revision_result_disposition(
         work_unit=work_unit,
         target=target,
@@ -436,6 +456,7 @@ def file_modelo_revision(
         operation=operation,
     )
 
+    _filing_phase("persistence_begin")
     record = persist_filed_revision(
         target=target,
         approved_verification_report_id=approved_verification_report_id,
@@ -460,6 +481,7 @@ def file_modelo_revision(
         taxpayer_nif=workflow_profile.tax_id,
         justificante_repository=ports.justificante_repository,
     )
+    _filing_phase("persistence_end")
     return ModeloFilingResult(record=record, published=True)
 
 
@@ -518,6 +540,9 @@ def _require_filing_preconditions(
     evaluated_at: datetime,
     work_unit: WorkUnit,
     target: CalculationRevision,
+    calculation_catalogue: CalculationRevisionCatalogue,
+    filing_catalogue: ModeloRecordCatalogue,
+    verification_catalogue: VerificationReportCatalogue,
     workflow_profile: TaxpayerProfile,
     ports: FilingActionPorts,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
@@ -555,6 +580,9 @@ def _require_filing_preconditions(
         observation_repository=ports.observation_repository,
         filing_repository=ports.filing_repository,
         calculation_repository=ports.calculation_repository,
+        calculation_catalogue=calculation_catalogue,
+        filing_catalogue=filing_catalogue,
+        verification_catalogue=verification_catalogue,
         verification_repository=ports.verification_repository,
         justificante_repository=ports.justificante_repository,
         iva_compensation_decision=iva_compensation_decision,
@@ -572,6 +600,7 @@ def _require_filing_preconditions(
         workflow_profile=workflow_profile,
         target_revision=target,
         subject_leaf_key="modelo.work.file",
+        operation=operation,
     )
 
 

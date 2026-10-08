@@ -38,6 +38,7 @@ from cadrumo.application.runtime.profile_access import (
     RuntimeSessionRequest,
     RuntimeSessionsLocked,
 )
+from cadrumo.application.runtime.session_events import RuntimeSessionEvent
 from cadrumo.application.runtime.sign_in import (
     RuntimeHumanSignedOut,
     RuntimeSignInStatusReply,
@@ -266,7 +267,11 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                     assert second_human_id is not None and second_human_id != first_human_id
                     retired_notice = Event()
                     stranger.subscribe_session_events(
-                        lambda event: retired_notice.set() if event.session_id == second_human_id else None
+                        lambda event: (
+                            retired_notice.set()
+                            if isinstance(event, RuntimeSessionEvent) and event.session_id == second_human_id
+                            else None
+                        )
                     )
                     assert second.status.session_expires_at == accepted.status.session_expires_at
                     assert second.human_login == accepted.human_login

@@ -32,7 +32,12 @@ def _typed_projection(value: object) -> object:
     """
     dump = getattr(value, "model_dump", None)
     if callable(dump):
-        dumped = dump(mode="python")
+        if type(value) is ModeloDefinition:
+            dumped = dump(mode="python", exclude={"revisions"})
+        elif type(value) is RegistrySnapshot:
+            dumped = dump(mode="python", exclude={"modelo", "revision"})
+        else:
+            dumped = dump(mode="python")
         if isinstance(value, ModeloRevision):
             # Defaults are already bound onto each resolved member. Only the
             # actual revision declaration owns their representation-only role.

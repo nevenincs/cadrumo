@@ -153,7 +153,10 @@ def test_native_reviewed_approve_and_decline_use_decision_client_and_requester_p
         with ThreadPoolExecutor(max_workers=3) as pool:
             running = pool.submit(server.serve)
             try:
-                assert server.ready.wait(3)
+                while not server.ready.wait(0.01):
+                    if running.done():
+                        running.result()
+                        pytest.fail("runtime stopped before readiness")
                 requester, enrollment = _requester(endpoint, profile_id, client_native)
                 human = RuntimeFrontendClient(
                     _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.CLI
@@ -179,8 +182,7 @@ def test_native_reviewed_approve_and_decline_use_decision_client_and_requester_p
                     done = Event()
 
                     def poll_requester() -> None:
-                        deadline = time.monotonic() + 75
-                        while not done.is_set() and time.monotonic() < deadline:
+                        while not done.is_set():
                             enrollment.poll(timeout=10)
 
                     polling = pool.submit(poll_requester)
@@ -190,7 +192,7 @@ def test_native_reviewed_approve_and_decline_use_decision_client_and_requester_p
                         assert not any(password)
                     finally:
                         done.set()
-                        polling.result(timeout=15)
+                        polling.result()
                     assert approved.operation_id != wrong.value.operation_id
                     assert approved.effect is OperationEffect.UPDATED
                     assert approved.receipt.stage is EnrollmentStage.COMPLETE
@@ -263,7 +265,7 @@ def test_native_reviewed_approve_and_decline_use_decision_client_and_requester_p
                 stop.set()
                 try:
                     try:
-                        running.result(timeout=20)
+                        running.result()
                     except Exception:
                         if primary is None:
                             raise

@@ -9,15 +9,60 @@ package build takes, and count how often it had to be produced.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import NoReturn
 
 import pytest
 
+from .. import docs_build
 from ..action_cache import completed, current, fingerprint
 from ..docs_build import shared_site_identity, take_shared_site
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _LANGUAGES = ("en", "es")
+
+
+def test_local_compile_avoids_a_busy_shared_cache_and_preserves_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    shared = tmp_path / "cache" / "user-docs"
+    take_shared_site(tmp_path / "first", shared, "old", _Site("old"), validate_inputs=lambda: None)
+    kept = _pages(shared)
+
+    def unavailable_lock(*args: object, **kwargs: object) -> NoReturn:
+        raise AssertionError("another build owns the shared cache")
+
+    monkeypatch.setattr(docs_build, "action_lock", unavailable_lock)
+    destination = tmp_path / "local"
+    validations: list[bool] = []
+    assert take_shared_site(
+        destination,
+        shared,
+        "new",
+        _Site("new"),
+        validate_inputs=lambda: validations.append(True),
+        reuse_shared=False,
+    )
+    assert _pages(destination) == {"html/en/index.html": "new en", "html/es/index.html": "new es"}
+    assert _pages(shared) == kept
+    assert validations == [True]
+
+
+def test_local_compile_still_refuses_changed_inputs(tmp_path: Path) -> None:
+    def changed_inputs() -> NoReturn:
+        raise docs_build.DocsPackagingError("inputs changed")
+
+    with pytest.raises(docs_build.DocsPackagingError, match="inputs changed"):
+        take_shared_site(
+            tmp_path / "local",
+            tmp_path / "cache",
+            "identity",
+            _Site("site"),
+            validate_inputs=changed_inputs,
+            reuse_shared=False,
+        )
+    assert not (tmp_path / "cache").exists()
+    assert not (tmp_path / "local" / "ready").exists()
 
 
 class _Site:

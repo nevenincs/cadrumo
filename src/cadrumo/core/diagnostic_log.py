@@ -6,7 +6,8 @@ import json
 import logging
 import math
 import os
-from collections.abc import Generator, Mapping
+import time
+from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import UTC, datetime
@@ -52,6 +53,7 @@ _LIFECYCLE_FIELDS = tuple(
             "outcome",
             "parent_process_id",
             "persist_receipt_requested",
+            "phase_monotonic_ns",
             "profile_count",
             "profile_persisted",
             "reason_code",
@@ -123,6 +125,37 @@ def diagnostic_event(
     """Emit safe scalar diagnostics without displacing an existing primary."""
     try:
         logger.log(level, event, extra=dict(fields or {}))
+    except Exception:
+        return
+    except BaseException:
+        if primary_error is None:
+            raise
+
+
+def diagnostic_timing_event(
+    logger: logging.Logger,
+    event: str,
+    *,
+    fields: Mapping[str, DiagnosticValue] | None = None,
+    clock: Callable[[], int] | None = None,
+    primary_error: BaseException | None = None,
+) -> None:
+    """Stamp one bounded monotonic observation without changing a business clock.
+
+    Ordinary clock and sink failures omit the observation. Nonordinary
+    interruptions retain the existing diagnostic-event behavior: they propagate
+    on success, but never replace an exception already unwinding.
+    """
+    try:
+        observed = clock() if clock is not None else time.monotonic_ns()
+        if type(observed) is not int or not 0 <= observed <= (1 << 63) - 1:
+            return
+        diagnostic_event(
+            logger,
+            event,
+            fields={**(fields or {}), "phase_monotonic_ns": observed},
+            primary_error=primary_error,
+        )
     except Exception:
         return
     except BaseException:

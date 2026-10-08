@@ -127,7 +127,29 @@ class _NativeLogin:
 
 
 @contextmanager
-def native_profile_view_server(storage_root: Path, *, allow_unavailable_shutdown: bool = False) -> Iterator[None]:
+def _keyring_backend(name: str | None) -> Iterator[None]:
+    """Apply the declared keychain refusal to the process owning runtime login."""
+    if name is None:
+        yield
+        return
+    import keyring
+    from keyring.core import load_keyring
+
+    previous = keyring.get_keyring()
+    keyring.set_keyring(load_keyring(name))
+    try:
+        yield
+    finally:
+        keyring.set_keyring(previous)
+
+
+@contextmanager
+def native_profile_view_server(
+    storage_root: Path,
+    *,
+    allow_unavailable_shutdown: bool = False,
+    keychain_backend: str | None = None,
+) -> Iterator[None]:
     """Host real native profile workers for explicit password-backed CLI reads."""
     if sys.platform != "win32":
         pytest.skip("requires native Windows profile workers")
@@ -146,16 +168,19 @@ def native_profile_view_server(storage_root: Path, *, allow_unavailable_shutdown
     server = RetainedRuntimeTransportServer(
         endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
     )
-    with ThreadPoolExecutor(max_workers=1) as pool:
+    with _keyring_backend(keychain_backend), ThreadPoolExecutor(max_workers=1) as pool:
         running = pool.submit(server.serve)
         try:
-            assert server.ready.wait(3)
+            while not server.ready.wait(0.01):
+                if running.done():
+                    running.result()
+                    pytest.fail("runtime stopped before readiness")
             yield
         finally:
             stop.set()
             try:
                 try:
-                    running.result(timeout=15)
+                    running.result()
                 except RuntimeRefusalError as error:
                     if not allow_unavailable_shutdown or error.reason is not RuntimeRefusalCode.UNAVAILABLE:
                         raise

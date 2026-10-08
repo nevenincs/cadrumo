@@ -18,6 +18,8 @@ pub mod installation;
 #[cfg(all(test, unix))]
 mod posix_tests;
 pub mod storage;
+#[cfg(target_os = "macos")]
+pub mod transport;
 
 use storage::Profile;
 

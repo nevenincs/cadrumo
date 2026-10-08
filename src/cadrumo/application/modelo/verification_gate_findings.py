@@ -32,6 +32,7 @@ from ...domain.iva.components import registry_category_projection
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
+    CalculationRevisionCatalogue,
 )
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.protocols import (
@@ -267,6 +268,7 @@ def collect_verification_gate_findings(
     work_profile: ModeloWorkProfile,
     ledger_membership_ports: LedgerMembershipPorts,
     evaluated_at: datetime | None = None,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
 ) -> tuple[
     list[ModeloVerificationFinding],
     list[CasillaId],
@@ -330,6 +332,7 @@ def collect_verification_gate_findings(
         observation_repository=observation_repository,
         filing_repository=filing_repository,
         calculation_repository=calculation_repository,
+        calculation_catalogue=calculation_catalogue,
         verification_repository=verification_repository,
         justificante_repository=justificante_repository,
         expected_member_sets=cross_period_expected_member_sets_from_profile(

@@ -122,6 +122,9 @@ from .calendar_models import (
     OverviewCalendarRange as _OverviewCalendarRange,
 )
 from .calendar_models import (
+    OverviewCensoEnrolmentState as _OverviewCensoEnrolmentState,
+)
+from .calendar_models import (
     OverviewLocalFilingState as _OverviewLocalFilingState,
 )
 from .calendar_models import (
@@ -948,6 +951,7 @@ def _calendar_entry_from_obligation(
     today: date,
     due_soon_days: int,
     operation: PinnedAuthorityOperation,
+    censo_enrolment_states: dict[str, _OverviewCensoEnrolmentState] | None = None,
 ) -> _OverviewCalendarEntry:
     deadline = _effective_filing_deadline(
         obligation.closes_on,
@@ -987,6 +991,17 @@ def _calendar_entry_from_obligation(
                     "error_type": type(exc).__name__,
                 },
             )
+    censo_enrolment_state = (
+        None if censo_enrolment_states is None else censo_enrolment_states.get(obligation.modelo)
+    )
+    if censo_enrolment_state is None:
+        censo_enrolment_state = _calendar_censo_enrolment_state(
+            modelo=obligation.modelo,
+            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+            operation=operation,
+        )
+        if censo_enrolment_states is not None:
+            censo_enrolment_states[obligation.modelo] = censo_enrolment_state
     return _OverviewCalendarEntry(
         modelo=obligation.modelo,
         period=period,
@@ -1020,11 +1035,7 @@ def _calendar_entry_from_obligation(
             else None
         ),
         filing_year=period.filing_year,
-        censo_enrolment_state=_calendar_censo_enrolment_state(
-            modelo=obligation.modelo,
-            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
-            operation=operation,
-        ),
+        censo_enrolment_state=censo_enrolment_state,
         filing_evidence=evidence,
     )
 
@@ -1079,6 +1090,7 @@ def _calendar_obligation_projection(
     today: date,
     due_soon_days: int,
     operation: PinnedAuthorityOperation,
+    censo_enrolment_states: dict[str, _OverviewCensoEnrolmentState],
     applicability_evidence: FilingYearApplicabilityEvidence | None = None,
 ) -> tuple[
     _OverviewCalendarEntry | None,
@@ -1128,6 +1140,7 @@ def _calendar_obligation_projection(
             today=today,
             due_soon_days=due_soon_days,
             operation=operation,
+            censo_enrolment_states=censo_enrolment_states,
         )
         if intersects_range
         else None
@@ -1171,6 +1184,9 @@ def _entries_and_suppressed_from_schedules(
     suppressed: list[_SuppressedCalendarEntry] = []
     coverage_surface_modelos: set[str] = set()
     disagreeing_modelos: set[str] = set()
+    # Every row shares this pinned authority and live-censo tuple. Resolve
+    # enrolment once per modelo, rather than reloading rules for each period.
+    censo_enrolment_states: dict[str, _OverviewCensoEnrolmentState] = {}
     obligations = chain.from_iterable(schedule.obligations for schedule in schedules)
     for obligation in obligations:
         entry, suppressed_entry, covered_modelo, disagreeing_modelo = _calendar_obligation_projection(
@@ -1183,6 +1199,7 @@ def _entries_and_suppressed_from_schedules(
             today=today,
             due_soon_days=due_soon_days,
             operation=operation,
+            censo_enrolment_states=censo_enrolment_states,
             applicability_evidence=applicability_evidence,
         )
         if entry is not None:

@@ -94,6 +94,8 @@ def test_socket_chmod_substitution_never_changes_replacement(
         endpoint._path.symlink_to(target)
 
     def intercepted_open(path: str, flags: int, mode: int = 0o777, *, dir_fd: int) -> int:
+        if sys.platform != "linux":
+            pytest.skip("requires Linux O_PATH")
         if flags & os.O_PATH:
             replace()
         return original_open(path, flags, mode, dir_fd=dir_fd)

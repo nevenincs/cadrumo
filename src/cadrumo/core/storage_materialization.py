@@ -28,13 +28,22 @@ def ensure_storage_tree(
     defaults are provisioned idempotently. ``derived_groupings`` narrows which
     defaults are provisioned; every explicit dependency is still validated.
     """
-    from .storage_taxonomy_locations import storage_path, storage_tree_targets
+    from .storage_taxonomy_locations import (
+        storage_location,
+        storage_path,
+        storage_tree_targets,
+        uses_external_transport,
+    )
 
     resolved = settings if settings is not None else load_settings()
     root = Path(resolved.cadrumo_local_storage_root)
     explicit_targets = storage_tree_targets(resolved, include_derived=False)
     derived_targets = storage_tree_targets(resolved, include_explicit=False, derived_groupings=derived_groupings)
-    runtime_namespace = storage_path(StorageCategory.RUNTIME_SOCKETS, settings=resolved)
+    runtime_namespace = (
+        None
+        if uses_external_transport(storage_location(StorageCategory.RUNTIME_SOCKETS), resolved)
+        else storage_path(StorageCategory.RUNTIME_SOCKETS, settings=resolved)
+    )
     # Create an owned namespace before another derived target can create it
     # incidentally as a parent. Existing and operator-selected namespaces are
     # left intact for the endpoint's ownership/permission admission checks.

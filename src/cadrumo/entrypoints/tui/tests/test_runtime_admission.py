@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager, AbstractContextManager, nullcontext
 from datetime import UTC, datetime, timedelta
 from types import TracebackType
@@ -19,6 +20,7 @@ from ....adapters.local_runtime.runtime_transport_cleanup import RuntimeTranspor
 from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....application.runtime.profile_access import RuntimeProfileStatus
+from ....application.runtime.session_events import RuntimeLifecycleNotice
 from ....application.user_profile.access_contracts import AccessScope, AuthorityState, Availability, ProfileAccessStatus
 from ....application.user_profile.automation_operations import (
     build_automation_operation_definitions,
@@ -30,6 +32,8 @@ from ....application.user_profile.login_interaction import (
     ProfileLoginInventoryV1,
 )
 from ....core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from ....core.i18n.render import tr
+from ....core.product_identity import PRODUCT_IDENTITY
 from ... import operation_composition
 from .. import installed_session
 from ..runtime_admission import runtime_login_session
@@ -53,6 +57,11 @@ class _OwnedClient(RuntimeFrontendClient):
         self._frontend = OperationFrontendProjection.TUI
         self._session_id: UUID | None = None
         self.closed = 0
+
+    @override
+    def subscribe_lifecycle_notices(self, receive: Callable[[RuntimeLifecycleNotice], None]) -> Callable[[], None]:
+        """Expose the no-event subscription port of this synthetic transport."""
+        return lambda: None
 
     @override
     def login_password(
@@ -225,8 +234,11 @@ async def test_stored_reference_handoff_stays_owned_through_restricted_session_s
     async def open_client(_selected: UUID) -> RuntimeFrontendClient:
         raise AssertionError("reference mode must not open the password connection")
 
-    async def open_reference(selected: UUID, credential_reference: UUID) -> RuntimeFrontendClient:
+    async def open_reference(
+        selected: UUID, credential_reference: UUID, on_connected: Callable[[RuntimeFrontendClient], None]
+    ) -> RuntimeFrontendClient:
         calls.append((selected, credential_reference))
+        on_connected(client)
         client._session_id = uuid4()
         return client
 
@@ -407,8 +419,14 @@ def test_installed_exit_mapping_preserves_cleanup_bearing_refusal(
     monkeypatch.setattr(installed_session, "runtime_login_session", refuse_login)
     if attachment is None:
         assert installed_session.run_installed_workbench_session() == installed_session.SESSION_INVENTORY_UNAVAILABLE
-        assert capsys.readouterr().err.strip() == (
+        output = capsys.readouterr().err.splitlines()
+        assert output[0] == (
             primary.reason if isinstance(primary, RuntimeFrontendRefusedError) else primary.reason.value
+        )
+        assert output[1:] == (
+            []
+            if frontend_refusal
+            else [tr("common.runtime.manager_unavailable_remedy", product=PRODUCT_IDENTITY.prose_name)]
         )
         assert native.attempts == 0
     else:

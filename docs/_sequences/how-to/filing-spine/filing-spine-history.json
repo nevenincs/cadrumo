@@ -168,7 +168,7 @@
         {
           "json_path": "result.work_unit_id",
           "name": "history_work_unit_id",
-          "value": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+          "value": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
         }
       ],
       "envelope": null,
@@ -212,7 +212,7 @@
         "modelo",
         "work",
         "history",
-        "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+        "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
       ],
       "captures": [],
       "envelope": {
@@ -238,14 +238,14 @@
                   "source_evidence_id": null,
                   "source_key": "work_unit_id",
                   "status": "resolved",
-                  "value": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+                  "value": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
                 }
               ]
             },
             "code": "modelo.work.history.next_action",
             "context": {
               "continuation_outcome": "action_available",
-              "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+              "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
             },
             "message": "Review this declaration's current state.",
             "severity": "info"
@@ -264,9 +264,9 @@
           "events": [
             {
               "actor": "docs-sequence-sandbox",
-              "event_id": "4756356f3409e5c92c58beab15127a6ac141fe955f21e8867e0ef0221cb92a29",
+              "event_id": "065c58e0a141ab6c4b86cdccba8468ff213db63465ef8bfa930f9b910dc936a4",
               "event_type": "modelo.work_unit.created",
-              "object_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
+              "object_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53",
               "object_type": "work_unit",
               "occurred_at": "2026-04-01T09:00:00+00:00",
               "payload": {
@@ -274,14 +274,14 @@
                 "modelo": "303",
                 "name": "303-2026-1T",
                 "period": "1T",
-                "revision_id": "2026-y-siguientes"
+                "revision_id": "2026-hasta-01-y-1t"
               }
             },
             {
               "actor": "docs-sequence-sandbox",
-              "event_id": "b69aecc9f3f8e5dc0bae008acbed600f5f7bcef0e37c89e18133aef538acffc5",
+              "event_id": "b7d4f421ea3a4fab6cf0a1d6be36f8dd50439d426d92bd7a219904e25750f19d",
               "event_type": "modelo.calculation.created",
-              "object_id": "bc62c76cc9d86a02cce13064fe9be6688f3246205d5c6949c75336bfde789229",
+              "object_id": "5926c154302784c506f3ad54e865a936e5a8c5dcebacfec7307fd80bb078a377",
               "object_type": "calculation_revision",
               "occurred_at": "2026-04-01T09:00:00+00:00",
               "payload": {
@@ -289,7 +289,7 @@
                 "borrador_bindings_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                 "borrador_participated": "false",
                 "borrador_snapshot_id": "",
-                "calculation_revision_id": "bc62c76cc9d86a02cce13064fe9be6688f3246205d5c6949c75336bfde789229",
+                "calculation_revision_id": "5926c154302784c506f3ad54e865a936e5a8c5dcebacfec7307fd80bb078a377",
                 "casilla_count": "167",
                 "filing_year": "2026",
                 "formula_count": "40",
@@ -302,12 +302,12 @@
                 "source_provenance_count": "3",
                 "source_provenance_trace_sha256": "9cf169d9ce731bb7a2ff8e305f6ef7acf1482ebab0997e41c54760a7b95acc3b",
                 "source_transaction_count": "2",
-                "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+                "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
               }
             }
           ],
           "operation": "modelo.work.history",
-          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+          "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
         },
         "schema_version": "2",
         "status": "warning"

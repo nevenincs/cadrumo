@@ -34,11 +34,7 @@ from .declarations.routes import declarations_screen_factory
 from .google_saved_review import GoogleSavedReviewScreen
 from .historical_export import HistoricalFilingExportScreen
 from .home import HomeScreen
-from .ledger.routes import actividad_asset_tui_actions, ledger_screen_factory
-from .ledger.runtime_evidence import RuntimeEvidenceTuiDoorV1
-from .ledger.runtime_invoice_add import compose_runtime_invoice_add_door
-from .ledger.runtime_ledger_import import compose_runtime_ledger_import_door
-from .ledger.runtime_own_accounts import compose_runtime_own_account_door
+from .ledger.routes import ledger_screen_factory
 from .modelo.lifecycle import ModeloWorkspaceLifecycleDoor
 from .modelo.runtime_lifecycle import compose_runtime_modelo_lifecycle_door
 from .modelo.runtime_work_create import compose_runtime_calendar_create_handoff, compose_runtime_work_create_handoff
@@ -50,6 +46,11 @@ from .profile.runtime_overview import read_runtime_profile_overview
 from .reconciliation_export import ReconciliationExportScreen
 from .runtime_account import compose_runtime_account_factories
 from .runtime_account_session import read_runtime_account_session, runtime_account_session_reader
+from .runtime_actividad_asset import compose_runtime_activity_asset_actions
+from .runtime_evidence import RuntimeEvidenceTuiDoorV1
+from .runtime_invoice_add import compose_runtime_invoice_add_door
+from .runtime_ledger_import import compose_runtime_ledger_import_door
+from .runtime_own_accounts import compose_runtime_own_account_door
 
 if TYPE_CHECKING:
     from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
@@ -280,7 +281,7 @@ class RuntimeWorkbenchRoot:
             generation.ledger.projection,
             review_action=_action("operator.ledger.review"),
             evidence_action=_action("operator.ledger.evidence.review.list"),
-            activity_asset_actions=actividad_asset_tui_actions(client=self._client, profile_label=self._label),
+            activity_asset_actions=compose_runtime_activity_asset_actions(self._client, profile_label=self._label),
             invoice_add_door=compose_runtime_invoice_add_door(
                 client=self._client,
                 profile_label=self._label,

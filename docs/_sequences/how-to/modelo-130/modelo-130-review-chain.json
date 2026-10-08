@@ -217,7 +217,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "e9e9a9c7769e3e7bc477122f773583071f76047a735c5cc27cce72c26d1afc47",
+          "calculation_revision_id": "212336b104101527271ab3c2a83e59cf2cd231002ec98bca1a205016c2a6817e",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -353,7 +353,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision e9e9a9c7769e3e7bc477122f773583071f76047a735c5cc27cce72c26d1afc47 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 212336b104101527271ab3c2a83e59cf2cd231002ec98bca1a205016c2a6817e (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -443,7 +443,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "e9e9a9c7769e3e7bc477122f773583071f76047a735c5cc27cce72c26d1afc47",
+          "calculation_revision_id": "212336b104101527271ab3c2a83e59cf2cd231002ec98bca1a205016c2a6817e",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -683,7 +683,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "e9e9a9c7769e3e7bc477122f773583071f76047a735c5cc27cce72c26d1afc47",
+          "calculation_revision_id": "212336b104101527271ab3c2a83e59cf2cd231002ec98bca1a205016c2a6817e",
           "completeness_status": "complete",
           "findings": [
             {
@@ -729,7 +729,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "de807b2447e118da37346579d489361a572c7497ec0d3121209c378ecfe65594",
+          "verification_report_id": "57cd222ce3899fafafade9df6b2a1266e9a3aed2e0069a98498e586b434de5ea",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

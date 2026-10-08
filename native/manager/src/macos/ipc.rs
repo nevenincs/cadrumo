@@ -10,7 +10,7 @@ use crate::ipc::{
     Request, Response, decode,
     framing::{Frame, encode, write_some},
 };
-use socket::{Directory, Socket, configure, connect_now, effective_uid};
+use socket::{Directory, Socket, configure, connect_now};
 use std::{
     fs, io,
     os::unix::net::UnixStream,
@@ -21,19 +21,6 @@ use std::{
 
 const TIMEOUT: Duration = Duration::from_secs(2);
 const POLL: Duration = Duration::from_millis(10);
-
-/// The caller supplies the canonical runtime socket directory, never a storage override.
-pub fn endpoint(directory: &Path, session: &Session) -> io::Result<PathBuf> {
-    if !directory.is_absolute() || session.uid() != effective_uid() {
-        return Err(io::ErrorKind::InvalidInput.into());
-    }
-    Ok(directory.join(format!(
-        "{}.{}.session.{}.sock",
-        crate::identity::MANAGER_ID,
-        session.uid(),
-        session.id()
-    )))
-}
 
 struct Peer {
     process: Process,
@@ -99,7 +86,6 @@ pub struct Server {
 impl Server {
     /// Package admission and the session lock precede this call.
     pub fn bind_installed(
-        directory: &Path,
         package: &Path,
         _session_lock: &crate::session::instance::SessionLock,
     ) -> io::Result<Self> {
@@ -142,7 +128,13 @@ impl Server {
             stream: None,
         };
         owner.revalidate(&session)?;
-        let socket = Socket::bind(&endpoint(directory, &session)?)?;
+        let directory = Directory::installed(true)?;
+        let name = super::naming::socket_name(
+            crate::identity::MANAGER_ID,
+            &session.uid().to_string(),
+            &session.id().to_string(),
+        )?;
+        let socket = Socket::bind_in(directory, &name)?;
         Ok(Self {
             socket,
             state: None,
@@ -159,6 +151,7 @@ impl Server {
         mut handle: impl FnMut(&Process, Request) -> Response,
     ) -> io::Result<()> {
         self.owner.revalidate(&self.session)?;
+        self.socket.verify()?;
         for _ in 0..4 {
             if self.state.is_none() {
                 let (stream, _) = match self.socket.listener.accept() {
@@ -276,19 +269,19 @@ impl Server {
 }
 
 /// Bounded client exchange; authenticate the manager before transmitting a request.
-pub fn request(directory: &Path, manager: &Path, request: &Request) -> io::Result<Response> {
+pub fn request(manager: &Path, request: &Request) -> io::Result<Response> {
     let owner = Process::open(std::process::id())?;
     let session = Login::open()?.current(&owner)?;
-    let path = endpoint(directory, &session)?;
-    let directory = Directory::open(directory)?;
-    let name = path
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or(io::ErrorKind::InvalidInput)?;
-    let identity = directory.private_socket(name)?;
+    let directory = Directory::installed(false)?;
+    let name = super::naming::socket_name(
+        crate::identity::MANAGER_ID,
+        &session.uid().to_string(),
+        &session.id().to_string(),
+    )?;
+    let identity = directory.private_socket(&name)?;
     let deadline = Instant::now() + TIMEOUT;
     let mut stream = loop {
-        match connect_now(&directory.leaf(name)) {
+        match connect_now(&directory.leaf(&name)) {
             Ok(stream) => break stream,
             Err(error) if error.kind() == io::ErrorKind::WouldBlock => {}
             Err(error) => return Err(error),
@@ -298,7 +291,7 @@ pub fn request(directory: &Path, manager: &Path, request: &Request) -> io::Resul
         }
         thread::sleep(POLL);
     };
-    if directory.private_socket(name)? != identity {
+    if directory.private_socket(&name)? != identity {
         return Err(io::ErrorKind::PermissionDenied.into());
     }
     let peer = Peer::inspect(&stream, &session, &[fs::canonicalize(manager)?])?;
@@ -314,11 +307,17 @@ pub fn request(directory: &Path, manager: &Path, request: &Request) -> io::Resul
         if Login::open()?.current(&owner)? != session {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
+        if directory.private_socket(&name)? != identity {
+            return Err(io::ErrorKind::PermissionDenied.into());
+        }
         peer.revalidate(&session)?;
         if written != bytes.len() {
             write_some(&mut stream, &bytes, &mut written)?;
         } else if let Some(bytes) = frame.read(&mut stream)? {
             peer.revalidate(&session)?;
+            if directory.private_socket(&name)? != identity {
+                return Err(io::ErrorKind::PermissionDenied.into());
+            }
             let response: Response = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
             if response.schema != 1 {
                 return Err(io::ErrorKind::InvalidData.into());

@@ -54,7 +54,6 @@ from ..core.time.clock import today_madrid
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from ..domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ..domain.calculations.registry.profile_grounding import build_profile_grounding_index
 from ..domain.calculations.registry.schema_base import DateAxis
 from ..domain.contribuyente.entity_type import entity_type_natural_person_token
 from ..domain.deadlines.models import TaxpayerProfile
@@ -104,7 +103,10 @@ def _refusal_requirements(
     warning_codes: tuple[str, ...],
 ) -> tuple[str, ...]:
     """Render the existing selector guidance with the worker's retained authority."""
-    from ..application.user_profile.preflight import format_profile_selector_requirements
+    from ..application.user_profile.preflight import (
+        deferred_profile_grounding_index,
+        format_profile_selector_requirements,
+    )
 
     if not taxpayer_model_declared:
         if taxpayer.entity_type is None:
@@ -120,7 +122,7 @@ def _refusal_requirements(
     return format_profile_selector_requirements(
         selectors,
         schema=operation.profile_decode_context().schema,
-        grounding_index=build_profile_grounding_index(operation),
+        grounding_index=deferred_profile_grounding_index(operation),
     )
 
 

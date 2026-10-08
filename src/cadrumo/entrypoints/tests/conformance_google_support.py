@@ -28,6 +28,7 @@ from ...application.operations.frontend_requests import OperationPublicEffectEve
 from ...application.operator_actions.preconditions import no_action_precondition_verdict
 from ...application.operator_actions.projection import PreconditionVerdictSnapshot
 from ...application.user_profile.google_configuration_operation_contracts import (
+    GOOGLE_FOLDER_ORGANIZE_OPERATION_DEFINITION_ID,
     GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID,
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID,
     GOOGLE_LOGOUT_OPERATION_DEFINITION_ID,
@@ -35,6 +36,7 @@ from ...application.user_profile.google_configuration_operation_contracts import
     GOOGLE_STATUS_OPERATION_DEFINITION_ID,
     GoogleConfigurationOutcome,
     GoogleConfigurationProjection,
+    GoogleFolderOrganizeRequest,
     GoogleFolderViewProjection,
     GoogleFolderViewRequest,
     GoogleLoginRequest,
@@ -107,6 +109,31 @@ def _prepare_folder_view(context: ConformanceFamilyContext) -> ConformancePrepar
     )
     request = GoogleFolderViewRequest(profile_id=context.profile_id)
     return _preparation(context, request, _succeeded(context.profile_id, expected))
+
+
+def _prepare_folder_organize(context: ConformanceFamilyContext) -> ConformancePreparation:
+    """A recorded folder without its creation receipt is refused before any credential or Drive call."""
+    profile = str(context.profile_id)
+    save_drive_config(profile, DriveConfig(root_folder_id=_ROOT_FOLDER_ID))
+    refusal = GoogleConfigurationRefusalProjection(
+        profile_id=context.profile_id,
+        provider_code="REFUSED_OUTBOUND_STORAGE_CONFLICT",
+        message_key="errors.refused.refused_outbound_storage_conflict",
+        facts=GoogleConfigurationPresentationFacts(profile=context.profile_id),
+        verdict=None,
+    )
+
+    def verify(_outcome: ConformanceOutcome) -> None:
+        assert load_drive_config(profile) == DriveConfig(root_folder_id=_ROOT_FOLDER_ID)
+        assert load_token(profile) is None
+
+    request = GoogleFolderOrganizeRequest(profile_id=context.profile_id)
+    return _preparation(
+        context,
+        request,
+        GoogleConfigurationOutcome(profile_id=context.profile_id, outcome="refused", refusal=refusal),
+        verify=verify,
+    )
 
 
 def _client_metadata_unavailable(profile_id: UUID) -> GoogleConfigurationRefusalProjection:
@@ -187,6 +214,7 @@ def _prepare_status(context: ConformanceFamilyContext) -> ConformancePreparation
 
 
 _PREPARERS: dict[str, Callable[[ConformanceFamilyContext], ConformancePreparation]] = {
+    GOOGLE_FOLDER_ORGANIZE_OPERATION_DEFINITION_ID: _prepare_folder_organize,
     GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID: _prepare_folder_view,
     GOOGLE_LOGIN_OPERATION_DEFINITION_ID: _prepare_login,
     GOOGLE_LOGOUT_OPERATION_DEFINITION_ID: _prepare_logout,
@@ -214,6 +242,12 @@ _SUCCEEDED = OperationTerminalCondition.SUCCEEDED
 _REFUSED = OperationTerminalCondition.REFUSED
 GOOGLE_CONFORMANCE_FAMILY = ConformanceFamily(
     cases=(
+        _case(
+            GOOGLE_FOLDER_ORGANIZE_OPERATION_DEFINITION_ID,
+            _REFUSED,
+            OperationEffect.NONE,
+            GOOGLE_CONFIGURATION_REFUSAL_CODE,
+        ),
         _case(GOOGLE_FOLDER_VIEW_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.NONE),
         _case(GOOGLE_LOGIN_OPERATION_DEFINITION_ID, _REFUSED, OperationEffect.NONE, GOOGLE_CONFIGURATION_REFUSAL_CODE),
         _case(GOOGLE_LOGOUT_OPERATION_DEFINITION_ID, _SUCCEEDED, OperationEffect.UPDATED),

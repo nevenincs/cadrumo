@@ -7,12 +7,14 @@ import os
 import subprocess
 import sys
 import tempfile
-from collections.abc import Iterator, Sequence
-from contextlib import contextmanager, suppress
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import ExitStack, contextmanager, suppress
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
 from uuid import UUID
+
+import pytest
 
 from cadrumo.tests.audited_process import WindowsStartupInfo, run_audited_process
 
@@ -20,6 +22,7 @@ from ....adapters.persistence.storage.tests.secure_sql import reap_profile_sessi
 from ....core.config import load_settings
 from ....core.external_constants import OutputLanguage
 from ....tests.inventory import SRC_CADRUMO
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
 from .password_only_profile import FIXTURE_PROFILE_INPUT, register_password_only_profile
 from .subprocess_cli import as_text_completed_process, subprocess_cli_env
 
@@ -608,6 +611,19 @@ def _register_certificate_source(storage_root: Path, *, name: str) -> None:
         stdin=json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),
     )
     assert result.returncode == 0, _combined(result)
+
+
+@pytest.fixture
+def host_profile_runtime() -> Iterator[Callable[[Path], None]]:
+    """Host the native runtime that admits profile authentication for one storage root.
+
+    Profile sign-in and profile-authenticated reads and writes are admitted only
+    by the installed runtime, so a subprocess CLI without one refuses as
+    unavailable before its secret channel is examined. Callers host it before
+    any storage snapshot, because hosting writes the runtime installation record.
+    """
+    with ExitStack() as hosted:
+        yield lambda storage_root: hosted.enter_context(native_profile_view_server(storage_root))
 
 
 def cleanup_keychain(tmp_path: Path) -> None:

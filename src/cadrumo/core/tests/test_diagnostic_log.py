@@ -18,6 +18,7 @@ from ..diagnostic_log import (
     DiagnosticFormatter,
     diagnostic_process,
     diagnostic_scope,
+    diagnostic_timing_event,
     stamp_diagnostic_record,
     stamp_diagnostic_scalar_fields,
 )
@@ -445,3 +446,121 @@ def test_failed_header_format_restores_message_for_a_later_handler() -> None:
     rendered = DiagnosticFormatter(LOG_FILE_FORMAT).format(record)
     assert rendered.splitlines()[0].split(" | ", 1)[0].endswith(": first line")
     assert rendered.splitlines()[1:] == ["second line"]
+
+
+@pytest.mark.parametrize("observed", (-1, True, 1 << 63, 0, (1 << 63) - 1))
+def test_timing_observations_are_bounded_and_keep_only_scalar_diagnostic_context(
+    caplog: pytest.LogCaptureFixture, observed: int
+) -> None:
+    logger = get_logger("cadrumo.tests.timing_bounds")
+    with caplog.at_level(logging.INFO, logger=logger.name), diagnostic_scope(new=True) as identifier:
+        diagnostic_timing_event(
+            logger,
+            "synthetic_timing",
+            fields={
+                "stage": "synthetic_phase",
+                "phase_monotonic_ns": 123,
+                "profile_id": _PRIVATE_INPUT_CANARY,
+            },
+            clock=lambda: observed,
+        )
+    records = [record for record in caplog.records if record.name == logger.name]
+    if isinstance(observed, bool) or not 0 <= observed <= (1 << 63) - 1:
+        assert records == []
+        return
+    assert len(records) == 1
+    _, context = _context(records[0])
+    assert context["phase_monotonic_ns"] == observed
+    assert context["diagnostic_id"] == identifier
+    assert "profile_id" not in context
+    assert _PRIVATE_INPUT_CANARY not in records[0].__dict__["diagnostic_context"]
+    assert len(context) <= 32
+
+
+@pytest.mark.parametrize("failure_site", ("clock", "log"))
+def test_ordinary_timing_failure_never_changes_success_or_the_business_primary(
+    monkeypatch: pytest.MonkeyPatch, failure_site: str
+) -> None:
+    logger = get_logger("cadrumo.tests.timing_failure")
+
+    def failed_clock() -> int:
+        raise OSError("synthetic diagnostic clock failure")
+
+    def failed_log(*_args: object, **_kwargs: object) -> None:
+        raise OSError("synthetic diagnostic sink failure")
+
+    if failure_site == "log":
+        monkeypatch.setattr(logger, "log", failed_log)
+    clock = failed_clock if failure_site == "clock" else lambda: 1
+    assert diagnostic_timing_event(logger, "synthetic_timing", clock=clock) is None
+    primary = ValueError("synthetic business failure")
+    with pytest.raises(ValueError) as caught:
+        try:
+            raise primary
+        finally:
+            diagnostic_timing_event(logger, "synthetic_timing", clock=clock, primary_error=sys.exception())
+    assert caught.value is primary
+
+
+@pytest.mark.parametrize("failure_site", ("clock", "log"))
+def test_timing_interruptions_preserve_the_existing_primary_exception_contract(
+    monkeypatch: pytest.MonkeyPatch, failure_site: str
+) -> None:
+    class TimingInterrupt(BaseException):
+        pass
+
+    logger = get_logger("cadrumo.tests.timing_interrupt")
+    interruption = TimingInterrupt()
+
+    def interrupted_clock() -> int:
+        raise interruption
+
+    def interrupted_log(*_args: object, **_kwargs: object) -> None:
+        raise interruption
+
+    if failure_site == "log":
+        monkeypatch.setattr(logger, "log", interrupted_log)
+    clock = interrupted_clock if failure_site == "clock" else lambda: 1
+    with pytest.raises(TimingInterrupt) as interrupted:
+        diagnostic_timing_event(logger, "synthetic_timing", clock=clock)
+    assert interrupted.value is interruption
+    primary = ValueError("synthetic business failure")
+    with pytest.raises(ValueError) as caught:
+        try:
+            raise primary
+        finally:
+            diagnostic_timing_event(logger, "synthetic_timing", clock=clock, primary_error=sys.exception())
+    assert caught.value is primary
+
+
+@pytest.mark.asyncio
+async def test_timed_task_scopes_cross_threads_and_restore_the_parent_after_failure(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = get_logger("cadrumo.tests.timed_context")
+    identifiers: list[str] = []
+
+    async def observe(index: int, *, fail: bool) -> str:
+        with diagnostic_scope(new=True) as identifier:
+            identifiers.append(identifier)
+            diagnostic_timing_event(logger, "synthetic_timing", clock=lambda: index)
+            await asyncio.sleep(0)
+            await asyncio.to_thread(diagnostic_timing_event, logger, "synthetic_timing", clock=lambda: index + 10)
+            if fail:
+                raise ValueError("synthetic task failure")
+            return identifier
+
+    with caplog.at_level(logging.INFO, logger=logger.name), diagnostic_scope(new=True) as parent:
+        results = await asyncio.gather(observe(1, fail=False), observe(2, fail=True), return_exceptions=True)
+        diagnostic_timing_event(logger, "synthetic_timing", clock=lambda: 100)
+    records = [record for record in caplog.records if record.name == logger.name]
+    assert len(set(identifiers)) == 2 and parent not in identifiers
+    assert results[0] == identifiers[0] and isinstance(results[1], ValueError)
+    contexts = [_context(record)[1] for record in records]
+    for index, identifier in enumerate(identifiers, start=1):
+        assert [context["phase_monotonic_ns"] for context in contexts if context["diagnostic_id"] == identifier] == [
+            index,
+            index + 10,
+        ]
+    assert contexts[-1]["diagnostic_id"] == parent
+    assert contexts[-1]["phase_monotonic_ns"] == 100

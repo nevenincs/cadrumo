@@ -27,7 +27,7 @@ from ....application.ledger.invoice_evidence_operation_dtos import (
 from ....core.config import override_settings
 from ....core.operations import OperationEffect
 from ..ledger.evidence_draft import draft_lines
-from ..ledger.runtime_evidence import RuntimeEvidenceTuiDoorV1
+from ..runtime_evidence import RuntimeEvidenceTuiDoorV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

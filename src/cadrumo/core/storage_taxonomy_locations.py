@@ -21,6 +21,7 @@ from .product_identity import PRODUCT_IDENTITY
 from .storage_taxonomy import (
     FingerprintParticipation,
     StorageCategory,
+    StorageDefaultAnchor,
     StorageGrouping,
     StorageLifecycle,
     StorageLocation,
@@ -41,6 +42,7 @@ def _location(
     settings_field: str | None = None,
     node_kind: StorageNodeKind = StorageNodeKind.DIRECTORY,
     scope: StorageScope = StorageScope.ROOT,
+    default_anchor: StorageDefaultAnchor = StorageDefaultAnchor.SCOPE,
     override_policy: StorageOverridePolicy = StorageOverridePolicy.OPERATOR_OVERRIDABLE,
     create_explicit_directory: bool = False,
     fingerprint_participation: FingerprintParticipation = FingerprintParticipation.PARTICIPATING,
@@ -52,6 +54,7 @@ def _location(
         subpath=subpath,
         node_kind=node_kind,
         scope=scope,
+        default_anchor=default_anchor,
         override_policy=override_policy,
         create_explicit_directory=create_explicit_directory,
         lifecycle=lifecycle,
@@ -153,6 +156,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.RUNTIME_SOCKETS,
         "runtime",
+        default_anchor=StorageDefaultAnchor.DARWIN_TRANSIENT,
         consumer_module="adapters/local_runtime/posix_endpoint.py",
         settings_field="cadrumo_runtime_socket_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -967,11 +971,24 @@ def storage_path(category: StorageCategory, *, settings: Settings | None = None)
             "identifier; resolve it with bucket_scoped_storage_path instead.",
         )
     resolved = _effective_settings(settings)
+    if uses_external_transport(location, resolved):
+        from .darwin_transport import darwin_socket_directory
+
+        return darwin_socket_directory()
     if location.settings_field is not None:
         value = getattr(resolved, location.settings_field, None)
         if value is not None:
             return Path(value)
     return Path(resolved.cadrumo_local_storage_root) / location.relative_path()
+
+
+def uses_external_transport(location: StorageLocation, settings: Settings) -> bool:
+    """Identify the shared namespace that root materialisation/reclaim must not own."""
+    from .runtime_transport import uses_darwin_transport
+
+    return location.default_anchor is StorageDefaultAnchor.DARWIN_TRANSIENT and uses_darwin_transport(
+        explicit=location.settings_field in settings.model_fields_set
+    )
 
 
 def bucket_scoped_storage_path(
@@ -1073,6 +1090,8 @@ def _storage_tree_target(
 ) -> Path | None:
     field = location.settings_field
     if field is None:
+        return None
+    if uses_external_transport(location, settings):
         return None
     if not _storage_location_is_selected(
         location,

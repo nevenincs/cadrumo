@@ -50,7 +50,7 @@
           }
         ],
         "result": {
-          "authority_generation": "42e62ee73726f19454b09145623dc2de95adf043cd60d8d42ba97d926b65e7b3",
+          "authority_generation": "41858e7155f27bc30e74bdc6342f05299bb5a773593b972cb5fab3b79d99b2b3",
           "binding_ready": false,
           "filing_year": 2026,
           "ledger_checked_transaction_count": 0,
@@ -96,7 +96,7 @@
           "ready": false,
           "registry_ready": true,
           "registry_refusal": "",
-          "revision_id": "2026-y-siguientes"
+          "revision_id": "2026-hasta-01-y-1t"
         },
         "schema_version": "2",
         "status": "warning"

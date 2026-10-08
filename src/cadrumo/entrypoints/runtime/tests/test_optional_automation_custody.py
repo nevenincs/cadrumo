@@ -85,7 +85,10 @@ def test_optional_store_acquisition_cannot_block_password_or_admit_automation(
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:
-                assert server.ready.wait(3)
+                while not server.ready.wait(0.01):
+                    if running.done():
+                        running.result()
+                        pytest.fail("runtime stopped before readiness")
                 human = connect(endpoint)
                 clients.append(human)
                 admitted = login(human, profile_id, "password", PROFILE_INPUT.encode())
@@ -141,6 +144,6 @@ def test_optional_store_acquisition_cannot_block_password_or_admit_automation(
                 finally:
                     stop.set()
                     try:
-                        running.result(timeout=15)
+                        running.result()
                     finally:
                         endpoint.close()

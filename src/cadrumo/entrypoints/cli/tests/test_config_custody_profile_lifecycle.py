@@ -450,27 +450,28 @@ def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_pat
     )
     passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
 
-    shown = _run_cadrumo(
-        tmp_path,
-        ("--profile-secrets-stdin", "config", "profile", "view", "custody"),
-        extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
-        stdin_payload=json.dumps({"profile_passphrase": passphrase}),
-    )
-
-    assert shown.returncode == 0, _combined_output(shown)
-    assert "display_name\tcustody" in shown.stdout
-    assert "config.login.session_not_persisted" in shown.stdout
-    assert passphrase not in _combined_output(shown)
-
-    for command in (("config", "profile", "validate", "custody"), ("config", "profile", "history", "custody")):
-        result = _run_cadrumo(
+    with native_profile_view_server(tmp_path, keychain_backend=keychain_backend):
+        shown = _run_cadrumo(
             tmp_path,
-            ("--profile-secrets-stdin", *command),
+            ("--profile-secrets-stdin", "config", "profile", "view", "custody"),
             extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
             stdin_payload=json.dumps({"profile_passphrase": passphrase}),
         )
-        assert result.returncode == 0, _combined_output(result)
-        assert passphrase not in _combined_output(result)
+
+        assert shown.returncode == 0, _combined_output(shown)
+        assert "display_name\tcustody" in shown.stdout
+        assert "config.login.session_not_persisted" in shown.stdout
+        assert passphrase not in _combined_output(shown)
+
+        for command in (("config", "profile", "validate", "custody"), ("config", "profile", "history", "custody")):
+            result = _run_cadrumo(
+                tmp_path,
+                ("--profile-secrets-stdin", *command),
+                extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
+                stdin_payload=json.dumps({"profile_passphrase": passphrase}),
+            )
+            assert result.returncode == 0, _combined_output(result)
+            assert passphrase not in _combined_output(result)
 
 
 @_KEYCHAIN_REFUSALS
@@ -479,27 +480,28 @@ def test_keychain_free_root_login_notice_survives_a_real_leaf_refusal(tmp_path: 
     _register_profile(tmp_path, "custody")
     passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
 
-    refused = _run_cadrumo(
-        tmp_path,
-        (
-            "--format",
-            "json",
-            "--profile-secrets-stdin",
-            "app",
-            "ledger",
-            "view",
-            "transaction-does-not-exist",
-        ),
-        extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
-        stdin_payload=json.dumps({"profile_passphrase": passphrase}),
-    )
+    with native_profile_view_server(tmp_path, keychain_backend=keychain_backend):
+        refused = _run_cadrumo(
+            tmp_path,
+            (
+                "--format",
+                "json",
+                "--profile-secrets-stdin",
+                "app",
+                "ledger",
+                "view",
+                "transaction-does-not-exist",
+            ),
+            extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
+            stdin_payload=json.dumps({"profile_passphrase": passphrase}),
+        )
 
-    output = _combined_output(refused)
-    assert refused.returncode != 0, output
-    envelope = json.loads(refused.stderr)
-    assert envelope["command"] == "ledger.view"
-    assert [notice["code"] for notice in envelope["notices"]] == ["config.login.session_not_persisted"]
-    assert passphrase not in output
+        output = _combined_output(refused)
+        assert refused.returncode != 0, output
+        envelope = json.loads(refused.stderr)
+        assert envelope["command"] == "ledger.view"
+        assert [notice["code"] for notice in envelope["notices"]] == ["config.login.session_not_persisted"]
+        assert passphrase not in output
 
 
 def test_keychain_free_root_login_notice_survives_callback_bad_parameter(tmp_path: Path) -> None:
@@ -507,30 +509,31 @@ def test_keychain_free_root_login_notice_survives_callback_bad_parameter(tmp_pat
     _register_profile(tmp_path, "custody")
     passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
 
-    refused = _run_cadrumo(
-        tmp_path,
-        (
-            "--format",
-            "json",
-            "--profile-secrets-stdin",
-            "config",
-            "profile",
-            "history",
-            "custody",
-            "--since",
-            "2026-02-01",
-            "--until",
-            "2026-01-01",
-        ),
-        extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
-        stdin_payload=json.dumps({"profile_passphrase": passphrase}),
-    )
+    with native_profile_view_server(tmp_path, keychain_backend="keyring.backends.fail.Keyring"):
+        refused = _run_cadrumo(
+            tmp_path,
+            (
+                "--format",
+                "json",
+                "--profile-secrets-stdin",
+                "config",
+                "profile",
+                "history",
+                "custody",
+                "--since",
+                "2026-02-01",
+                "--until",
+                "2026-01-01",
+            ),
+            extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
+            stdin_payload=json.dumps({"profile_passphrase": passphrase}),
+        )
 
-    output = _combined_output(refused)
-    assert refused.returncode == 2, output
-    envelope = json.loads(refused.stderr)
-    assert [notice["code"] for notice in envelope["notices"]] == ["config.login.session_not_persisted"]
-    assert passphrase not in output
+        output = _combined_output(refused)
+        assert refused.returncode == 2, output
+        envelope = json.loads(refused.stderr)
+        assert [notice["code"] for notice in envelope["notices"]] == ["config.login.session_not_persisted"]
+        assert passphrase not in output
 
 
 def test_root_and_leaf_stdin_collision_refuses_before_fresh_tree_mutation(tmp_path: Path) -> None:
@@ -764,129 +767,138 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
             stdin_payload=profile_secret_payload,
         )
 
-    pointer_default = _run_authenticated(("config", "profile", "view"))
-    assert pointer_default.returncode == 0, _combined_output(pointer_default)
-    assert "identity.name\tBeta Operator" in pointer_default.stdout
+    with native_profile_view_server(tmp_path):
+        pointer_default = _run_authenticated(("config", "profile", "view"))
+        assert pointer_default.returncode == 0, _combined_output(pointer_default)
+        assert "identity.name\tBeta Operator" in pointer_default.stdout
 
-    # A set environment variable cannot displace the pointer: the pointer
-    # still selects beta even while the shell names alpha.
-    env_inert = _run_authenticated(
-        ("config", "profile", "view"),
-        extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
-    )
-    assert env_inert.returncode == 0, _combined_output(env_inert)
-    assert "identity.name\tBeta Operator" in env_inert.stdout
-
-    # The flag is the selection channel that does win over the pointer.
-    flag_default = _run_authenticated(("--profile", "alpha", "config", "profile", "view"))
-    assert flag_default.returncode == 0, _combined_output(flag_default)
-    assert "identity.name\tAlpha Operator" in flag_default.stdout
-
-    # An explicit NAME outranks ``--profile``. Explicit root authentication
-    # keeps custody availability constant, so the rendered profile identity
-    # directly proves which selector won: beta, not the alpha requested by the
-    # flag and environment. A precedence regression would render alpha.
-    explicit_name = _run_authenticated(
-        ("--profile", "alpha", "config", "profile", "view", "beta"),
-        extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
-    )
-    resolved_explicit_name = _combined_output(explicit_name)
-    assert explicit_name.returncode == 0, resolved_explicit_name
-    assert "display_name\tbeta" in resolved_explicit_name, resolved_explicit_name
-    assert "identity.name\tBeta Operator" in resolved_explicit_name, resolved_explicit_name
-    assert "display_name\talpha" not in resolved_explicit_name, resolved_explicit_name
-
-    explicit_root = _run_authenticated(
-        ("--profile", "alpha", "config", "profile", "view"),
-        extra_env={
-            "CADRUMO_ACTIVE_PROFILE": next(bucket_id for bucket_id, label in labels_by_id.items() if label == "beta"),
-        },
-    )
-    assert explicit_root.returncode == 0, _combined_output(explicit_root)
-    assert "identity.name\tAlpha Operator" in explicit_root.stdout
-
-    explicit_root_by_id = _run_authenticated(
-        ("--profile", alpha_id, "config", "profile", "view"),
-        extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
-    )
-    assert explicit_root_by_id.returncode == 0, _combined_output(explicit_root_by_id)
-    assert "identity.name\tAlpha Operator" in explicit_root_by_id.stdout
-
-    # Write-side precedence: configure-auth writes an
-    # ``AUTH_PROVIDER_CONFIGURED`` event into the resolved bucket's
-    # event history. The configure verb's stdout redacts the bucket id
-    # to a literal ``<profile-id>`` placeholder (security: bucket ids
-    # are sha256 fingerprints that must never reach stdout), so the
-    # stdout cannot distinguish alpha from beta. Each write therefore runs
-    # inside a recorded time window, and the two buckets' histories are read
-    # once at the end: every configure event must fall inside exactly one
-    # window, and that window's write must be the only one that bucket gained
-    # in it. Reading both histories after every write proved the same
-    # attribution with ten more processes.
-    write_windows: list[tuple[str, datetime, datetime]] = []
-
-    def _configure(label: str, prefix: tuple[str, ...], extra_env: dict[str, str] | None = None) -> None:
-        opened = datetime.now(UTC)
-        result = _run_authenticated(
-            (*prefix, "config", "auth", "configure", "--provider", "clave_movil"),
-            extra_env=extra_env,
+        # A set environment variable cannot displace the pointer: the pointer
+        # still selects beta even while the shell names alpha.
+        env_inert = _run_authenticated(
+            ("config", "profile", "view"),
+            extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
         )
-        closed = datetime.now(UTC)
-        assert result.returncode == 0, _combined_output(result)
-        assert "No active profile" not in _combined_output(result)
-        write_windows.append((label, opened, closed))
+        assert env_inert.returncode == 0, _combined_output(env_inert)
+        assert "identity.name\tBeta Operator" in env_inert.stdout
 
-    # Pointer-default precedence: pointer points at beta (last create wins).
-    _configure("pointer", ())
-    # The environment is INERT: a stale exported CADRUMO_ACTIVE_PROFILE naming
-    # alpha must not redirect the write, so it still lands in the pointer's
-    # beta. This is the write-side half of the retired env precedence, and it
-    # is asserted rather than deleted because a selection mechanism that
-    # silently redirected WRITES is the failure worth guarding against.
-    _configure("environment", (), extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id})
-    # Flag precedence: --profile IS the surviving override and does win.
-    _configure("flag", ("--profile", "alpha"))
-    # The flag still decides even while a contradicting variable is exported:
-    # --profile names beta, the environment names alpha, and beta wins.
-    _configure("flag-over-environment", ("--profile", "beta"), extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id})
+        # The flag is the selection channel that does win over the pointer.
+        flag_default = _run_authenticated(("--profile", "alpha", "config", "profile", "view"))
+        assert flag_default.returncode == 0, _combined_output(flag_default)
+        assert "identity.name\tAlpha Operator" in flag_default.stdout
 
-    landed: dict[str, str] = {}
-    for bucket_id in (alpha_id, beta_id):
-        profile_name = labels_by_id[bucket_id]
-        result = _run_authenticated(
-            (
-                "--profile",
-                bucket_id,
-                "config",
-                "profile",
-                "history",
-                profile_name,
-                "--event-type",
-                "auth.provider.configured",
-            ),
+        # An explicit NAME outranks ``--profile``. Explicit root authentication
+        # keeps custody availability constant, so the rendered profile identity
+        # directly proves which selector won: beta, not the alpha requested by the
+        # flag and environment. A precedence regression would render alpha.
+        explicit_name = _run_authenticated(
+            ("--profile", "alpha", "config", "profile", "view", "beta"),
+            extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
         )
-        assert result.returncode == 0, _combined_output(result)
-        assert f"profile\t{profile_name}" in result.stdout
-        assert f"bucket_id\t{bucket_id}" not in result.stdout
-        for line in result.stdout.splitlines():
-            if "\tauth.provider.configured\t" not in line:
-                continue
-            occurred = datetime.fromisoformat(line.split("\t", 1)[0])
-            windows = [label for label, opened, closed in write_windows if opened <= occurred <= closed]
-            assert len(windows) == 1, f"{profile_name} event at {occurred} matches write windows {windows}"
-            assert windows[0] not in landed, f"the {windows[0]} write landed more than once"
-            landed[windows[0]] = profile_name
+        resolved_explicit_name = _combined_output(explicit_name)
+        assert explicit_name.returncode == 0, resolved_explicit_name
+        assert "display_name\tbeta" in resolved_explicit_name, resolved_explicit_name
+        assert "identity.name\tBeta Operator" in resolved_explicit_name, resolved_explicit_name
+        assert "display_name\talpha" not in resolved_explicit_name, resolved_explicit_name
 
-    assert landed == {
-        "pointer": "beta",
-        "environment": "beta",
-        "flag": "alpha",
-        "flag-over-environment": "beta",
-    }, (
-        "the pointer default and a stale exported variable must write to beta, "
-        "and --profile must win over both; writes landed as "
-        f"{landed}"
-    )
+        explicit_root = _run_authenticated(
+            ("--profile", "alpha", "config", "profile", "view"),
+            extra_env={
+                "CADRUMO_ACTIVE_PROFILE": next(
+                    bucket_id for bucket_id, label in labels_by_id.items() if label == "beta"
+                ),
+            },
+        )
+        assert explicit_root.returncode == 0, _combined_output(explicit_root)
+        assert "identity.name\tAlpha Operator" in explicit_root.stdout
+
+        explicit_root_by_id = _run_authenticated(
+            ("--profile", alpha_id, "config", "profile", "view"),
+            extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
+        )
+        assert explicit_root_by_id.returncode == 0, _combined_output(explicit_root_by_id)
+        assert "identity.name\tAlpha Operator" in explicit_root_by_id.stdout
+
+        # Write-side precedence: configure-auth writes an
+        # ``AUTH_PROVIDER_CONFIGURED`` event into the resolved bucket's
+        # event history. The configure verb's stdout redacts the bucket id
+        # to a literal ``<profile-id>`` placeholder (security: bucket ids
+        # are sha256 fingerprints that must never reach stdout), so the
+        # stdout cannot distinguish alpha from beta. Each write therefore runs
+        # inside a recorded time window, and the two buckets' histories are read
+        # once at the end: every configure event must fall inside exactly one
+        # window, and that window's write must be the only one that bucket gained
+        # in it. Reading both histories after every write proved the same
+        # attribution with ten more processes.
+        write_windows: list[tuple[str, datetime, datetime]] = []
+
+        def _configure(
+            label: str,
+            prefix: tuple[str, ...],
+            extra_env: dict[str, str] | None = None,
+            *,
+            route: str = "app_request",
+        ) -> None:
+            opened = datetime.now(UTC)
+            result = _run_authenticated(
+                (*prefix, "config", "auth", "configure", "--provider", "clave_movil", "--clave-movil-route", route),
+                extra_env=extra_env,
+            )
+            closed = datetime.now(UTC)
+            assert result.returncode == 0, _combined_output(result)
+            assert "No active profile" not in _combined_output(result)
+            write_windows.append((label, opened, closed))
+
+        # Pointer-default precedence: pointer points at beta (last create wins).
+        _configure("pointer", ())
+        # The environment is INERT: a stale exported CADRUMO_ACTIVE_PROFILE naming
+        # alpha must not redirect the write, so it still lands in the pointer's
+        # beta. This is the write-side half of the retired env precedence, and it
+        # is asserted rather than deleted because a selection mechanism that
+        # silently redirected WRITES is the failure worth guarding against.
+        _configure("environment", (), extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id}, route="qr")
+        # Flag precedence: --profile IS the surviving override and does win.
+        _configure("flag", ("--profile", "alpha"), route="qr")
+        # The flag still decides even while a contradicting variable is exported:
+        # --profile names beta, the environment names alpha, and beta wins.
+        _configure("flag-over-environment", ("--profile", "beta"), extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id})
+
+        landed: dict[str, str] = {}
+        for bucket_id in (alpha_id, beta_id):
+            profile_name = labels_by_id[bucket_id]
+            result = _run_authenticated(
+                (
+                    "--profile",
+                    bucket_id,
+                    "config",
+                    "profile",
+                    "history",
+                    profile_name,
+                    "--event-type",
+                    "auth.provider.configured",
+                ),
+            )
+            assert result.returncode == 0, _combined_output(result)
+            assert f"profile\t{profile_name}" in result.stdout
+            assert f"bucket_id\t{bucket_id}" not in result.stdout
+            for line in result.stdout.splitlines():
+                if "\tauth.provider.configured\t" not in line:
+                    continue
+                occurred = datetime.fromisoformat(line.split("\t", 1)[0])
+                windows = [label for label, opened, closed in write_windows if opened <= occurred <= closed]
+                assert len(windows) == 1, f"{profile_name} event at {occurred} matches write windows {windows}"
+                assert windows[0] not in landed, f"the {windows[0]} write landed more than once"
+                landed[windows[0]] = profile_name
+
+        assert landed == {
+            "pointer": "beta",
+            "environment": "beta",
+            "flag": "alpha",
+            "flag-over-environment": "beta",
+        }, (
+            "the pointer default and a stale exported variable must write to beta, "
+            "and --profile must win over both; writes landed as "
+            f"{landed}"
+        )
 
 
 def test_profile_lifecycle_storage_spans_are_application_owned() -> None:

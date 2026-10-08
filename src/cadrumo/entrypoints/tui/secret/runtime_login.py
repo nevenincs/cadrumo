@@ -12,6 +12,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Checkbox, Input, Select
 from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 
+from ....application.operator_output.runtime_remedies import runtime_unavailable_remedy
 from ....application.user_profile.login_interaction import ProfileLoginChoice
 from ....core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 from ....core.i18n.render import tr
@@ -173,6 +174,8 @@ class RuntimeLoginScreen(
                 if remaining_seconds is not None
                 else tr("tui.runtime_login.refused")
             )
+            if remedy := runtime_unavailable_remedy(code):
+                message = f"{message} {remedy}"
             self.query_one("#runtime-login-status", PinnedStatusBar).show_error(
                 message if code is None else f"{message} ({code})"
             )

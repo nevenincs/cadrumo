@@ -6,8 +6,8 @@ from decimal import Decimal
 from typing import NoReturn
 from uuid import UUID
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....application.invoices.catalogue_add_contracts import (
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
     InvoiceAddBusinessPremisesLease,
@@ -15,20 +15,20 @@ from ....application.invoices.catalogue_add_contracts import (
     InvoiceAddRequest,
     InvoiceAddResult,
 )
-from ....application.operations.frontend_projection import OperationPublicProjectionV1
-from ....application.operations.public_scalar import PublicDecimal
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....core.operations import (
+from ...application.operations.frontend_projection import OperationPublicProjectionV1
+from ...application.operations.public_scalar import PublicDecimal
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...core.operations import (
     OperationEffect,
     OperationTerminalCondition,
 )
-from ....domain.invoices.business_premises import business_premises_lease_from_inputs
-from ....domain.invoices.errors import InvoiceValidationError
-from ....entrypoints.tui.ledger.models import (
+from ...domain.invoices.business_premises import business_premises_lease_from_inputs
+from ...domain.invoices.errors import InvoiceValidationError
+from .ledger.models import (
     LedgerInvoiceAddResultV1,
     LedgerInvoiceEntryV1,
 )
-from ....entrypoints.tui.operations.runtime_profile_session import RuntimeProfileSession
+from .operations.runtime_profile_session import RuntimeProfileSession
 
 _DUPLICATE_INVOICE_TRANSLATION = "application.invoices.creation.errors.duplicate_invoice"
 _INVALID_INVOICE_TRANSLATION = "errors.refused.refused_cli_validation_boundary"

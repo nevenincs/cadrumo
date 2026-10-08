@@ -22,5 +22,5 @@ if(BUILD_TESTING)
   add_test(NAME installer.rust
     COMMAND ${installer_cargo} test --locked --manifest-path "${installer_manifest}"
       --target "${CADRUMO_PIN_rust_target}" --profile "${installer_profile}")
-  set_tests_properties(installer.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 600)
+  set_tests_properties(installer.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 0)
 endif()

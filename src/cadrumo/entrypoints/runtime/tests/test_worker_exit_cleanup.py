@@ -27,6 +27,7 @@ from cadrumo.application.runtime.contracts import (
     RuntimeServerHello,
 )
 from cadrumo.application.runtime.profile_worker import (
+    ProfileWorkerContractRequest,
     ProfileWorkerControlRequest,
     ProfileWorkerIdentity,
     ProfileWorkerLeaseTransferRequest,
@@ -39,6 +40,61 @@ from cadrumo.entrypoints.runtime.operation_host import ProfileWorkerOperationHos
 from cadrumo.entrypoints.runtime.profile_login import ProfileWorkerHumanLogin
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def test_description_keeps_loop_responsive_and_retains_host_until_thread_settles() -> None:
+    """A cancelled description cannot leave its host in use after cleanup."""
+
+    async def scenario() -> None:
+        loop = asyncio.get_running_loop()
+        loop_thread = threading.get_ident()
+        entered = asyncio.Event()
+        release = threading.Event()
+        finished = threading.Event()
+        refusal = RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        request = ProfileWorkerContractRequest(
+            request_id=uuid4(), session_id=uuid4(), definition_id="user-profile.field-mutation"
+        )
+
+        def describe(session_id: UUID, definition_id: str) -> None:
+            assert threading.get_ident() != loop_thread
+            assert (session_id, definition_id) == (request.session_id, request.definition_id)
+            loop.call_soon_threadsafe(entered.set)
+            release.wait()
+            finished.set()
+            raise refusal
+
+        context = cast(
+            worker_service._WorkerControl,
+            SimpleNamespace(operations=SimpleNamespace(describe=describe)),
+        )
+        handler = asyncio.create_task(worker_service._handle_metadata_control(context, request))
+        started = asyncio.create_task(entered.wait())
+        try:
+            await asyncio.wait((handler, started), return_when=asyncio.FIRST_COMPLETED)
+            if handler.done():
+                await handler
+                pytest.fail("Description returned before the release handoff")
+            assert entered.is_set() and not finished.is_set()
+            handler.cancel()
+            await asyncio.sleep(0)
+            handler.cancel()
+            await asyncio.sleep(0)
+            assert not handler.done() and not finished.is_set()
+            release.set()
+            with pytest.raises(asyncio.CancelledError) as caught:
+                await handler
+            assert finished.is_set()
+            assert caught.value.__dict__["cleanup_error"] is refusal
+        finally:
+            release.set()
+            started.cancel()
+            with suppress(asyncio.CancelledError):
+                await started
+            with suppress(asyncio.CancelledError, RuntimeRefusalError, AssertionError):
+                await handler
+
+    asyncio.run(scenario())
 
 
 class _Release:

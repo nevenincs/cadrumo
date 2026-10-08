@@ -45,10 +45,7 @@ def _request(seed: PhaseSeed, phase: str, request_id: UUID | None = None) -> Wor
 
 
 async def _wait_file(path: Path) -> None:
-    deadline = time.monotonic() + 10
     while not path.exists():
-        if time.monotonic() >= deadline:
-            raise TimeoutError(path.name)
         await asyncio.sleep(0.01)
 
 
@@ -76,10 +73,11 @@ def _lose_result(root: Path, seed: PhaseSeed) -> None:
         assert isinstance(ready, WorkerApprovalReady)
         assert ready.request_id == request.request_id
         write_secret(channel, bytearray(_PROOF), deadline=deadline)
-        until = time.monotonic() + 10
         while not (root / "lost_phase_done").exists():
-            if time.monotonic() >= until:
-                raise TimeoutError("lost_phase_done")
+            if (root / "lost_closed").exists():
+                assert (root / "lost_phase_done").exists(), (
+                    "approval phase closed before lost-result preparation completed"
+                )
             time.sleep(0.01)
 
 

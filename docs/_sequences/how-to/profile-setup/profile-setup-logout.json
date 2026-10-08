@@ -31,22 +31,39 @@
         "command": "config.profile.status",
         "error": {
           "action": {
-            "action": null,
-            "argument_bindings": [],
-            "conditionality": "not_applicable",
+            "action": {
+              "action_id": "operator.profile.login",
+              "cli_path": [
+                "config",
+                "login"
+              ],
+              "target_command_key": "config.login"
+            },
+            "argument_bindings": [
+              {
+                "argument_name": "name",
+                "source": "operator_action.verdict_context",
+                "source_evidence_id": null,
+                "source_key": "name",
+                "status": "resolved",
+                "value": "<profile-id>"
+              }
+            ],
+            "conditionality": "immediate",
             "evidence": [
               {
-                "condition_id": "cli.refusal.completed",
-                "evidence_id": "cli.refusal.completed.observation",
+                "condition_id": "profile.human.input_channel_available",
+                "evidence_id": "profile.human.input_channel",
                 "provenance": "runtime_observation",
                 "values": {
-                  "boundary_error_type": "CliRefusedBoundaryError"
+                  "password_channel_available": false,
+                  "profile_name": "<profile-id>"
                 }
               }
             ],
-            "failed_condition_id": "cli.refusal.completed",
+            "failed_condition_id": "profile.human.input_channel_available",
             "missing_argument_names": [],
-            "no_recovery_outcome": "operator_decision"
+            "no_recovery_outcome": null
           },
           "category": "REFUSED",
           "code": "REFUSED_CLI_BOUNDARY",

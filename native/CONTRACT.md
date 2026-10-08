@@ -176,6 +176,7 @@ other, such as `cadrumo-preview`; the channel comes from the identity projection
 | Immutable resources | `P/data/`, `P/docs/` | `P/data/`, `P/docs/` | `P/data/`, `P/docs/` |
 | Mutable root | `%LOCALAPPDATA%\<name>`; checkout `var/storage`; delivered-artifact tests supply an explicit root | `$XDG_DATA_HOME/<name>` when `XDG_DATA_HOME` is absolute, else `$HOME/.local/share/<name>` | `$HOME/Library/Application Support/<name>` |
 | Secure state | Existing Settings/taxonomy beneath the selected root | Same logical owner | Same logical owner |
+| Transient IPC sockets | Native named pipes | Canonical runtime socket directory | Installed default: private product-family directory beneath the native per-user cache base |
 | Loader | Static bootstrap CRT; explicit absolute DLL load with restricted search, then registered bundle directories | Relative ELF RUNPATH for every transitive dependency; audit LD_* and libc floor | Relative install names and rpaths; signing and hardened-runtime validation |
 
 This table describes assembled artifact mappings. Installer/AppImage formats and
@@ -183,6 +184,17 @@ the macOS application wrapper have their own distribution definitions and native
 acceptance; they do not change the current ZIP map. Linux new outputs use the
 reviewed manylinux_2_28 builder, and macOS retains the canonical 14.0 product
 floor. SDK enrollment does not prove deployment-floor or signing acceptance.
+
+On macOS, installed runtime and manager sockets use the canonical transient
+transport declaration to avoid Unix socket pathname limits. Persistent data
+stays under `U`. Storage-root pins do not select the socket directory; explicit
+operator socket overrides and development namespaces retain their isolation.
+Both Python and Rust retain private directory identities and refuse replacement.
+Generic storage materialization, inventory and reclaim exclude this shared
+namespace, whose ownership lock files survive socket cleanup. The manager uses
+compact channel/owner/session names from the generated contract. This transport
+implementation does not establish installed manager lifecycle acceptance.
+
 Windows relocation passed real package-qualified extensions and transitive-DLL
 artifact tests, including public pywin32 COM imports and pikepdf/qpdf.
 Library-owned resources retain their wheel locations; assembly projects the
@@ -1163,6 +1175,18 @@ only when a desktop image is staged, which requires the documentation; a `bundle
 with the documentation then stages `cadrumo.exe` at the package root as an
 [application image](#application-images). Without it, configuring the source build
 needs neither Node.js nor npm.
+
+In the full source build, an unset `CADRUMO_DESKTOP_PACKAGE_ROOT` resolves to
+the configured stage directory's `<Config>/app`. The `desktop-headless-test`
+target depends on `bundle`, so it assembles the package before checking the
+executable against its bundled interpreter. No manual package path is needed.
+`desktop-host-build` compiles the executable independently of the documentation;
+`bundle` retains the documentation dependency before package assembly.
+
+Configure with `-DCADRUMO_DOCS_SHARED_CACHE=OFF` to compile documentation in the
+selected build directory without waiting for another configuration's shared
+cache. Strict compilation, sequence checks, input validation and package
+validation remain enabled. Shared-cache reuse defaults to `ON`.
 
 | Target | Operation |
 | --- | --- |

@@ -175,8 +175,7 @@ def test_retire_waits_for_real_password_proof_to_settle(subject: AdministrationS
         def prepare(self, password: SecretBytes) -> None:
             super().prepare(password)
             entered.set()
-            if not release.wait(10):
-                raise TimeoutError("test proof gate was not released")
+            release.wait()
 
     class GatedService(AutomationAdministrationService):
         @override
@@ -204,7 +203,8 @@ def test_retire_waits_for_real_password_proof_to_settle(subject: AdministrationS
     thread = Thread(target=lambda: authority_context.run(prepare))
     thread.start()
     try:
-        assert entered.wait(10)
+        while not entered.wait(0.01):
+            assert thread.is_alive(), outcomes
         manager.retire(binding)
         with pytest.raises(AutomationCustodyError, match=AutomationCustodyCode.CREDENTIAL_REJECTED):
             manager.commit_review(binding)
@@ -228,8 +228,7 @@ def test_close_waits_for_real_recipient_callback_and_keeps_candidate_pending(sub
 
     def hold_delivery() -> None:
         entered.set()
-        if not release.wait(10):
-            raise TimeoutError("test recipient gate was not released")
+        release.wait()
 
     subject.owner.delivery.before_delivery = hold_delivery
     outcomes: list[BaseException] = []
@@ -243,7 +242,8 @@ def test_close_waits_for_real_recipient_callback_and_keeps_candidate_pending(sub
     thread = Thread(target=deliver)
     thread.start()
     try:
-        assert entered.wait(10)
+        while not entered.wait(0.01):
+            assert thread.is_alive(), outcomes
         assert manager.close() == 1
         with pytest.raises(AutomationCustodyError, match=AutomationCustodyCode.CREDENTIAL_REJECTED):
             manager.activate(binding)

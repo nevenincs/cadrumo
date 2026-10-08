@@ -95,10 +95,12 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
 ) -> RegisteredOperationCompletion[ResultT] | RegisteredOperationReviewCompletion[ReviewT]:
     """Run one registered operation with exact contract and result correlation.
 
-    ``timeout`` bounds every single exchange; ``settlement_timeout`` bounds how
-    long the command waits for the admitted operation to settle. When that
-    wait ends first, the operation is reported still running with its
-    identity and unknown effect, never as a refusal of work that may commit.
+    ``timeout`` bounds contract, submission, control and observation exchanges;
+    ``settlement_timeout`` bounds how long the command waits for settlement.
+    With an explicit settlement wait, settled result/error documents and their
+    page exchanges use the later of its deadline or a fresh ``timeout``.
+    When settlement waiting ends first, the operation is reported still running
+    with its identity and unknown effect, never as a refusal of work that may commit.
     Any one-shot secret is wiped on every exit.
     """
     try:

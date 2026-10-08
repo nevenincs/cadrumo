@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:fa1593a5c24813ca970f0e0d2839a09b76c9e04a374a32acf78c77897764ca12'
+body_hash: 'sha256:cf2b409b926e4d58f3bb4041132d22d3e76f88cd72582bc84de71145799811cb'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -231,6 +231,14 @@ The full Mac native-installer run ended with exit 1 at the documentation gate. I
 The recorded multilingual switcher reused the source build's absolute language-root URI while subtracting the carried language's prefix depth. dev/docs/language_switcher.py now derives the shared absolute site base using the source language, rebases it for each carried language, and normalizes absolute links. Relative page-depth behavior is unchanged. Eight regression cases cover source English/Spanish, desktop/website layout and host-apex/subpath deployment with actual compile-slot recording. They failed before the fix. All 47 owning switcher checks pass in 79.84 seconds; scoped Ruff, formatting, ty and diff checks pass; independent source review is PASS. The eight new cases also pass on the native Mac builder in 4.54 seconds.
 
 Only the reviewed switcher module and its new test were overlaid into the stopped frozen Mac tree, with before/after hashes. Existing snapshots and ready markers were left intact. The full CMake native-installer build has been relaunched with the existing secure build-input helper. Full build verification remains PENDING. The concurrently running frozen Windows build has not received this overlay.
+
+### 2026-10-08 Mac documentation runtime failure and focused diagnostic
+
+The frozen native-installer build failed during modelo-390-supply-binding seed iva-year-2025 verification with runtime_connection_closed and unknown effect (operation cd75b55faba9792d4e284242ade95be727b98ab8b402ecd26a75970af8b3e864). No DMG was produced. Compile, installer and Sphinx traceback logs were preserved under the Mac task's evidence/docs-runtime-failure before retry.
+
+An isolated retained-sandbox diagnostic of that exact sequence, using unchanged frozen source, authority, goldens and deadlines, passed in 198.84 seconds. All 27 completed connection futures had no exception; drain returned one receipt, no missing receipts, no uncontained or unsettled work; fixture release completed. Repeated zero-time guardian wait deadline refusals represent live-process polling, not exit failures; the held kqueue API does not supply a native exit status. Bounded observer evidence is retained locally under build/macos-process-typecheck/docs-runtime-forensics/result and remotely in the task's evidence/docs-runtime-forensics. Existing fixture-owned transient launchd containment ran; no product/login registration or host session transition occurred.
+
+The original full-build failure remains unexplained. One full native-installer retry is running with the same frozen inputs. The current Darwin transport source correction is separately tested and has not been overlaid into that build. Windows full package validation is also running; neither active build constitutes installer, upgrade or graphical-session acceptance.
 
 ## Recommendations
 

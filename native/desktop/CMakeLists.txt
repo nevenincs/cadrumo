@@ -33,6 +33,9 @@ string(JSON desktop_server SET "${desktop_server}" previewPort ${CADRUMO_DESKTOP
 file(CONFIGURE OUTPUT "${CADRUMO_PATH_GENERATED}/desktop-server.json" CONTENT "@desktop_server@\n" @ONLY)
 set(CADRUMO_NATIVE_CONTRACT "${CADRUMO_PATH_GENERATED}/contract.json" CACHE FILEPATH "Generated native package contract")
 set(CADRUMO_DESKTOP_PACKAGE_ROOT "" CACHE PATH "Existing native package for desktop development")
+if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND NOT CADRUMO_DESKTOP_PACKAGE_ROOT)
+  set(CADRUMO_DESKTOP_PACKAGE_ROOT "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
+endif()
 if(NOT DEFINED CADRUMO_STORAGE_ROOT_VARIABLE)
   # The source build reads this from the storage declaration; the standalone project reads it the same way.
   execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
@@ -133,7 +136,7 @@ add_custom_target(desktop-host-build
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "CADRUMO_DESKTOP_HOST_EXECUTABLE=${CADRUMO_DESKTOP_HOST_EXECUTABLE}"
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs"
-  DEPENDS desktop-frontend-build user_docs
+  DEPENDS desktop-frontend-build
   BYPRODUCTS "${CADRUMO_DESKTOP_HOST_EXECUTABLE}"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" VERBATIM)
 if(TARGET native_contract)

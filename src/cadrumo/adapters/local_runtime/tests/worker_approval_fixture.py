@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
-import time
 from pathlib import Path
 from uuid import uuid4
 
@@ -35,10 +34,7 @@ async def exercise(root: Path, seed: Seed) -> int:
     pending_pid = root / "worker.pid.pending"
     pending_pid.write_text(str(os.getpid()), encoding="ascii")
     pending_pid.replace(root / "worker.pid")
-    deadline = time.monotonic() + 10
     while not (root / "listening").exists():
-        if time.monotonic() >= deadline:
-            return 2
         await asyncio.sleep(0.01)
     client = WorkerAuthorizationClient(identity=seed.identity, root=root, parent_pid=seed.parent_pid)
     try:

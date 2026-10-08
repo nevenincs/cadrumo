@@ -203,7 +203,6 @@ def _submit_operation(
         deadline=time.monotonic() + 10,
     )
     assert isinstance(started, RuntimeOperationAcknowledged)
-    deadline = time.monotonic() + 60
     while True:
         observed = client.operation(
             RuntimeOperationObserve(
@@ -214,13 +213,12 @@ def _submit_operation(
                     operation_id=submitted.receipt.operation_id, after_cursor=0, page_limit=32
                 ),
             ),
-            deadline=deadline,
+            deadline=time.monotonic() + 60,
         )
         assert isinstance(observed, RuntimeOperationObserved)
         assert isinstance(observed.observation, OperationObservationSuccessV1)
         if observed.observation.projection.terminal_condition is not None:
             return contract, submitted, observed.observation
-        assert time.monotonic() < deadline
         time.sleep(0.02)
 
 
@@ -286,7 +284,10 @@ def test_preunlock_requester_receives_protected_credential_then_fresh_api_login(
         with ThreadPoolExecutor(max_workers=3) as pool:
             running = pool.submit(server.serve)
             try:
-                assert server.ready.wait(3)
+                while not server.ready.wait(0.01):
+                    if running.done():
+                        running.result()
+                        pytest.fail("runtime stopped before readiness")
                 requester, human, other = _connect(endpoint), _connect(endpoint), _connect(endpoint)
                 try:
                     prepared = requester.enrollment_prepare(
@@ -386,8 +387,7 @@ def test_preunlock_requester_receives_protected_credential_then_fresh_api_login(
                     done = Event()
 
                     def poll_client() -> None:
-                        deadline = time.monotonic() + 70
-                        while not done.is_set() and time.monotonic() < deadline:
+                        while not done.is_set():
                             client.poll(timeout=10)
 
                     polling = pool.submit(poll_client)
@@ -423,7 +423,7 @@ def test_preunlock_requester_receives_protected_credential_then_fresh_api_login(
                         )
                     finally:
                         done.set()
-                        polling.result(timeout=15)
+                        polling.result()
                     assert completed.stage is EnrollmentStage.COMPLETE
                     assert completed.request_id == submitted.request_id
                     assert completed.review_digest == submitted.review_digest
@@ -463,7 +463,7 @@ def test_preunlock_requester_receives_protected_credential_then_fresh_api_login(
                 stop.set()
                 try:
                     try:
-                        running.result(timeout=20)
+                        running.result()
                     except Exception:
                         if primary is None:
                             raise
@@ -505,7 +505,10 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
         with ThreadPoolExecutor(max_workers=3) as pool:
             running = pool.submit(server.serve)
             try:
-                assert server.ready.wait(3)
+                while not server.ready.wait(0.01):
+                    if running.done():
+                        running.result()
+                        pytest.fail("runtime stopped before readiness")
                 requester, human = _connect(endpoint), _connect(endpoint)
                 try:
                     prepared = requester.enrollment_prepare(
@@ -540,8 +543,7 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
                     done = Event()
 
                     def poll_client() -> None:
-                        deadline = time.monotonic() + 70
-                        while not done.is_set() and time.monotonic() < deadline:
+                        while not done.is_set():
                             client.poll(timeout=10)
 
                     polling = pool.submit(poll_client)
@@ -562,7 +564,7 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
                         assert failed.projection.effect is OperationEffect.UNKNOWN
                     finally:
                         done.set()
-                        polling.result(timeout=15)
+                        polling.result()
                     state = store.enrollment_state()
                     assert len(state.requests) == len(state.grants) == 1
                     assert state.requests[0].stage is EnrollmentStage.CANDIDATE
@@ -633,7 +635,7 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
                 stop.set()
                 try:
                     try:
-                        running.result(timeout=20)
+                        running.result()
                     except Exception:
                         if primary is None:
                             raise

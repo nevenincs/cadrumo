@@ -46,8 +46,8 @@ from cadrumo.entrypoints.tui.ledger.models import (
     LedgerImportSourceBindingV1,
     LedgerImportSourceKind,
 )
-from cadrumo.entrypoints.tui.ledger.runtime_ledger_import import RuntimeLedgerImportTuiDoorV1
 from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
+from cadrumo.entrypoints.tui.runtime_ledger_import import RuntimeLedgerImportTuiDoorV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import sys
-import time
 from collections.abc import Generator
 from contextlib import AbstractContextManager, contextmanager
 from pathlib import Path
@@ -16,6 +15,7 @@ from pydantic import SecretBytes, ValidationError
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.approval_binding import RuntimeApprovalBinding
+from cadrumo.application.runtime.contracts import RuntimeByteChannel, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
 from cadrumo.application.runtime.worker_authorization import (
     WorkerAuthorityRequest,
@@ -37,10 +37,12 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_APPROVE_OPERATION_DEFINITION_ID
 
+from .. import worker_authorization
 from ..windows_process import WindowsProcessScope
 from ..worker_authorization import WorkerAuthorizationServer
 from .profile_worker_support import owner_id
 from .worker_approval_phase_fixture import PhaseSeed
+from .worker_completion import wait_file, wait_process
 
 pytestmark = [
     pytest.mark.integration,
@@ -115,13 +117,6 @@ class PhaseAuthority:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
-def _wait_file(path: Path) -> None:
-    deadline = time.monotonic() + 10
-    while not path.exists():
-        assert time.monotonic() < deadline, path.name
-        time.sleep(0.01)
-
-
 def test_approval_phase_schema_rejects_wrong_action_and_mismatched_binding() -> None:
     profile_id = uuid4()
     binding = RuntimeApprovalBinding(
@@ -181,7 +176,10 @@ def test_approval_phase_schema_rejects_wrong_action_and_mismatched_binding() -> 
         WorkerApprovalRequest.model_validate(valid.model_copy(update={"connection_id": uuid4()}).model_dump())
 
 
-def test_protected_approval_phase_preflight_and_lost_result_cleanup(tmp_path: Path) -> None:
+@pytest.mark.parametrize("refuse_lost_proof", [False, True])
+def test_protected_approval_phase_preflight_and_lost_result_cleanup(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, refuse_lost_proof: bool
+) -> None:
     identity = ProfileWorkerIdentity(
         worker_id=uuid4(),
         runtime_boot_id=uuid4(),
@@ -247,10 +245,23 @@ def test_protected_approval_phase_preflight_and_lost_result_cleanup(tmp_path: Pa
             directory=tmp_path,
             environment=os.environ.copy(),
         )
-        _wait_file(tmp_path / "worker.pid")
+        wait_file(tmp_path / "worker.pid", process)
         worker_pid = int((tmp_path / "worker.pid").read_text(encoding="ascii"))
         assert worker_pid in scope.active_process_ids()
         authority = PhaseAuthority(seed, tmp_path)
+        refused_proofs: list[UUID] = []
+        if refuse_lost_proof:
+            read_secret = worker_authorization.read_secret
+
+            @contextmanager
+            def read_proof(channel: RuntimeByteChannel, *, deadline: float) -> Generator[bytearray]:
+                with read_secret(channel, deadline=deadline) as proof:
+                    if authority.preflights[-1] == seed.lost_id:
+                        refused_proofs.append(seed.lost_id)
+                        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                    yield proof
+
+            monkeypatch.setattr(worker_authorization, "read_secret", read_proof)
         server = WorkerAuthorizationServer(
             identity=identity,
             root=tmp_path,
@@ -261,10 +272,21 @@ def test_protected_approval_phase_preflight_and_lost_result_cleanup(tmp_path: Pa
         )
         servers.append(server)
         (tmp_path / "listening").write_text("1", encoding="ascii")
-        assert process.wait(timeout=60) == 0, (tmp_path / "failure").read_text(encoding="ascii")
-        assert (tmp_path / "done").is_file()
+        result = wait_process(process)
+        if refuse_lost_proof:
+            assert result == 6
+            assert (tmp_path / "failure").read_text(encoding="ascii") == "AssertionError"
+            assert (tmp_path / "lost_closed").is_file()
+            assert not (tmp_path / "lost_phase_done").exists()
+            assert not (tmp_path / "done").exists()
+            assert refused_proofs == [seed.lost_id]
+            assert authority.proof_count == 2
+            assert (seed.lost_id, "prepare") not in authority.phase_calls
+        else:
+            assert result == 0, (tmp_path / "failure").read_text(encoding="ascii")
+            assert (tmp_path / "done").is_file()
+            assert authority.proof_count == 3  # successful, refused, and lost-result proof
         assert authority.authorize_calls == 0
-        assert authority.proof_count == 3  # successful, refused, and lost-result proof
         assert (seed.denied_id, "prepare") not in authority.phase_calls
         for request_id in (seed.denied_id, seed.failed_id, seed.lost_id):
             assert (request_id, "close") in authority.phase_calls
@@ -275,3 +297,4 @@ def test_protected_approval_phase_preflight_and_lost_result_cleanup(tmp_path: Pa
         scope.terminate()
         for server in servers:
             server.settle(timeout=6)
+    assert not scope.active_process_ids()

@@ -101,13 +101,13 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
         reason="the lifecycle door invokes attestation admission through asyncio.to_thread",
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/ledger/runtime_actividad_asset.py",
+        path="src/cadrumo/entrypoints/tui/runtime_actividad_asset.py",
         owner="RuntimeActivityAssetTuiActionsV1._call",
         construct="asyncio.run",
         reason="the activity-asset screen dispatches these synchronous actions through asyncio.to_thread",
     ),
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/ledger/runtime_evidence.py",
+        path="src/cadrumo/entrypoints/tui/runtime_evidence.py",
         owner="RuntimeEvidenceTuiDoorV1._call_sync",
         construct="asyncio.run",
         reason="the evidence screen reads records and reader readiness through asyncio.to_thread",

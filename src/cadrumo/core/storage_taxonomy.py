@@ -120,6 +120,13 @@ class StorageOverridePolicy(StrEnum):
     FIXED = "fixed"
 
 
+class StorageDefaultAnchor(StrEnum):
+    """Physical default anchor; transient namespaces are owned by their endpoint."""
+
+    SCOPE = "scope"
+    DARWIN_TRANSIENT = "darwin_transient"
+
+
 class StorageLifecycle(StrEnum):
     """How a member's contents are bounded over time.
 
@@ -329,6 +336,7 @@ class StorageLocation(BaseModel):
 
     node_kind: StorageNodeKind
     scope: StorageScope
+    default_anchor: StorageDefaultAnchor = StorageDefaultAnchor.SCOPE
     override_policy: StorageOverridePolicy
     lifecycle: StorageLifecycle
     grouping: StorageGrouping
@@ -453,6 +461,7 @@ __all__ = [
     "StorageArea",
     "StorageCategory",
     "StorageCustodyProfile",
+    "StorageDefaultAnchor",
     "StorageGrouping",
     "StorageLifecycle",
     "StorageLocation",

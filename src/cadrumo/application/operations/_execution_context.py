@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import AsyncExitStack, asynccontextmanager
 from datetime import datetime
 
 from ...core.async_cleanup import AsyncCloseable
+from ...core.diagnostic_log import diagnostic_timing_event
 from ...core.errors.hierarchy import InternalInvariantError
+from ...core.logging import get_logger
 from ...core.operations import OperationEffect, OperationLifecycle
 from ...core.operator_progress import OperatorDisplayCode
+from ..user_profile.access_contracts import AccessAction
 from .authorization import OperationExecutionAuthority
 from .capabilities import OperationOwnedResource
 from .errors import OperationDeclarationError
@@ -29,6 +33,8 @@ from .persistence.events import (
 )
 from .persistence.journal import OperationPersistedSnapshot, OperationSecureReferenceStore
 from .registry import OperationRegistry
+
+_LOGGER = get_logger(__name__)
 
 
 class _Cancellation:
@@ -63,6 +69,15 @@ class _Cancellation:
             raise ValueError("cancellation request identity does not match executor context")
         self._context.snapshot = snapshot
 
+    def _commit_phase(self, stage: str) -> None:
+        if self._context.execution_authority is not None:
+            diagnostic_timing_event(
+                _LOGGER,
+                "operation_commit_phase",
+                fields={"stage": stage, "transition": AccessAction.COMMIT.value},
+                primary_error=sys.exception(),
+            )
+
     @asynccontextmanager
     async def irreversible_section(self) -> AsyncGenerator[None]:
         """Protect one executor-owned mutation boundary from an unsafe stop."""
@@ -79,16 +94,25 @@ class _Cancellation:
                     await authority.enter_async_context(
                         self._context.execution_authority.commit_guard(self._context.identity)
                     )
+                self._commit_phase("deferred_true_begin")
                 self._context.snapshot = await self._set_deferred(self._context.snapshot, True)
                 self._irreversible_owner = task
             self._irreversible_section_depth += 1
             try:
+                if self._irreversible_section_depth == 1:
+                    self._commit_phase("deferred_true_end")
+                    self._commit_phase("body_enter")
                 yield
             finally:
                 self._irreversible_section_depth -= 1
                 if self._irreversible_section_depth == 0:
                     try:
-                        self._context.snapshot = await self._set_deferred(self._context.snapshot, False)
+                        try:
+                            self._commit_phase("body_exit")
+                            self._commit_phase("deferred_false_begin")
+                        finally:
+                            self._context.snapshot = await self._set_deferred(self._context.snapshot, False)
+                        self._commit_phase("deferred_false_end")
                     finally:
                         self._irreversible_owner = None
 

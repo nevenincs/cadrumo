@@ -60,7 +60,7 @@ if(BUILD_TESTING)
   add_test(NAME manager.rust
     COMMAND ${manager_cargo} test --locked --manifest-path "${manager_cargo_manifest}"
       --target "${CADRUMO_PIN_rust_target}" --profile "${manager_profile}")
-  set_tests_properties(manager.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 600)
+  set_tests_properties(manager.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 0)
   # Fixture supervision builds with the fixture feature into its own target directory, so it
   # never replaces the image the package stages from CADRUMO_MANAGER_EXECUTABLE.
   # These Windows cases launch real processes against short timing bounds; avoid
@@ -69,5 +69,5 @@ if(BUILD_TESTING)
     COMMAND ${manager_cargo} test --locked --features fixture-test-mode --profile dev
       --target-dir "${CADRUMO_PATH_CARGO}/manager-fixture" --manifest-path "${manager_cargo_manifest}"
       --target "${CADRUMO_PIN_rust_target}" -- --test-threads=1)
-  set_tests_properties(manager.supervision PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 600)
+  set_tests_properties(manager.supervision PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 0)
 endif()

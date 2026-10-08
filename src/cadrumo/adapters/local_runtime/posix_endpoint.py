@@ -14,9 +14,7 @@ from uuid import UUID
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.hashing import sha256_hex
-from ...core.storage_environment import storage_directory
-from ...core.storage_taxonomy import StorageCategory
-from ...core.storage_taxonomy_locations import storage_location
+from ...core.runtime_transport import RUNTIME_SOCKET_PATH_LIMIT, runtime_socket_directory
 from .posix import (
     _accept_socket,
     _lock_exclusive,
@@ -180,12 +178,17 @@ class PosixRuntimeEndpoint:
         if sys.platform == "win32":
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         self.storage_identity = posix_storage_identity(storage_root)
-        namespace = namespace or storage_directory(
-            "CADRUMO_RUNTIME_SOCKET_DIR", storage_location(StorageCategory.RUNTIME_SOCKETS).subpath, root=storage_root
-        )
+        self._external_namespace = False
+        if namespace is None:
+            try:
+                namespace, self._external_namespace = runtime_socket_directory(storage_root, create=create_namespace)
+            except OSError:
+                raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
         self._create_namespace = create_namespace
         self._closed = False
-        self._directory, self._directory_fd = open_private_namespace(namespace, create=create_namespace)
+        self._directory, self._directory_fd = open_private_namespace(
+            namespace, create=create_namespace and not self._external_namespace
+        )
         endpoint_identity = self.storage_identity
         if worker_namespace is not None:
             endpoint_identity = sha256_hex(f"{endpoint_identity}:{worker_namespace.hex}".encode("ascii"))
@@ -194,15 +197,29 @@ class PosixRuntimeEndpoint:
         self._lock_fd: int | None = None
         self._listener: socket.socket | None = None
         self._socket_identity: tuple[int, int] | None = None
-        if len(os.fsencode(self._path)) >= 104:
+        if len(os.fsencode(self._path)) >= RUNTIME_SOCKET_PATH_LIMIT:
             self.close()
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        if self._external_namespace and create_namespace:
+            try:
+                self._verify_namespace()
+            except RuntimeRefusalError:
+                self.close()
+                raise
 
     def _verify_namespace(self) -> None:
         if sys.platform == "win32":
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         if self._closed:
             raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+        if self._external_namespace:
+            from ...core.darwin_transport import darwin_socket_directory
+
+            try:
+                if darwin_socket_directory() != self._directory:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
+            except OSError:
+                raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
         _restore_namespace_descriptor(self)
         _verify_namespace_identity(self)
 

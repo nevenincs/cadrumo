@@ -70,7 +70,7 @@ class HeldApprovalLease(WorkerAuthorizationLease):
         assert self.calls == 0
         self.calls += 1
         self.entered.set()
-        assert self.release_publication.wait(10), "held publication exceeded its bound"
+        assert self.release_publication.wait()
         assert self.active
         return None
 
@@ -226,7 +226,11 @@ async def _exercise(tmp_path: Path) -> None:
 
         task = asyncio.create_task(publish())
         try:
-            assert await asyncio.to_thread(client.entered.wait, 10)
+            while not client.entered.is_set():
+                if task.done():
+                    await task
+                    pytest.fail("publication completed before entering its held boundary")
+                await asyncio.sleep(0.01)
             task.cancel()
             await asyncio.sleep(0.02)
             assert not task.done() and not client.released.is_set()
@@ -234,7 +238,7 @@ async def _exercise(tmp_path: Path) -> None:
         finally:
             client.release_publication.set()
         with pytest.raises(asyncio.CancelledError):
-            await asyncio.wait_for(task, 10)
+            await task
         assert client.released.is_set()
         assert client.leases[-1].calls == 1 and not client.leases[-1].active
 

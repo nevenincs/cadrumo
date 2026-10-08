@@ -152,7 +152,8 @@ async def test_opener_failure_transfers_retained_cleanup_to_adapter(
             expected_code = (
                 RuntimeRefusalCode.UNAVAILABLE.value if without_reference else AutomationCustodyCode.UNAVAILABLE.value
             )
-            assert reply == {"outcome": "refused", "code": expected_code}
+            assert reply["outcome"] == "refused" and reply["code"] == expected_code
+            assert ("remedy" in reply) is without_reference
         else:
             with pytest.raises(asyncio.CancelledError) as caught:
                 await adapter.call(calling_tool, args)
@@ -263,7 +264,8 @@ async def test_reauthentication_keeps_candidate_and_retries_failed_predecessor_c
     adapter = _adapter(original)
     try:
         reply = await adapter.call("authenticate", {"credential_reference": str(uuid4())})
-        assert reply == {"outcome": "refused", "code": "runtime_unavailable"}
+        assert reply["outcome"] == "refused" and reply["code"] == "runtime_unavailable"
+        assert isinstance(reply["remedy"], str)
         assert adapter.client is candidate
         assert not original.closed and not candidate.closed
         await adapter.close()
@@ -311,7 +313,8 @@ async def test_previous_enrollment_close_failure_remains_retryable_after_slots_c
     )
     try:
         reply = await adapter.call("authorization_prepare", {})
-        assert reply == {"outcome": "refused", "code": "runtime_unavailable"}
+        assert reply["outcome"] == "refused" and reply["code"] == "runtime_unavailable"
+        assert isinstance(reply["remedy"], str)
         assert adapter._enrollment_client is None
         assert adapter._enrollment is None
         assert adapter.client is original

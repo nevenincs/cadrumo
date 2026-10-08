@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import sys
-import time
 from collections.abc import Generator
 from contextlib import AbstractContextManager, contextmanager
 from datetime import timedelta
@@ -48,6 +47,7 @@ from ..windows_process import WindowsProcessScope
 from ..worker_authorization import WorkerAuthorizationServer
 from .profile_worker_support import owner_id
 from .worker_approval_fixture import Seed
+from .worker_completion import wait_file, wait_process
 
 pytestmark = [
     pytest.mark.integration,
@@ -120,13 +120,6 @@ class ApprovalAuthority:
             return EnrollmentTransition(receipt=receipt, published=False)
 
 
-def _wait_file(path: Path) -> None:
-    deadline = time.monotonic() + 10
-    while not path.exists():
-        assert time.monotonic() < deadline, path.name
-        time.sleep(0.01)
-
-
 def test_held_commit_publication_reenters_owner_and_known_refusals_release(tmp_path: Path) -> None:
     identity = ProfileWorkerIdentity(
         worker_id=uuid4(),
@@ -184,7 +177,7 @@ def test_held_commit_publication_reenters_owner_and_known_refusals_release(tmp_p
             directory=tmp_path,
             environment=os.environ.copy(),
         )
-        _wait_file(tmp_path / "worker.pid")
+        wait_file(tmp_path / "worker.pid", process)
         worker_pid = int((tmp_path / "worker.pid").read_text(encoding="ascii"))
         assert worker_pid in scope.active_process_ids()
         authority = ApprovalAuthority(seed)
@@ -198,7 +191,7 @@ def test_held_commit_publication_reenters_owner_and_known_refusals_release(tmp_p
         )
         servers.append(server)
         (tmp_path / "listening").write_text("1", encoding="ascii")
-        assert process.wait(timeout=55) == 0, (tmp_path / "failure").read_text(encoding="ascii")
+        assert wait_process(process) == 0, (tmp_path / "failure").read_text(encoding="ascii")
         assert (tmp_path / "done").is_file()
         assert authority.publications == 5
         assert authority.exits == 5

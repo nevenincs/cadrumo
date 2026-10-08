@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import timedelta
@@ -16,10 +17,12 @@ from cadrumo.application.operations.capabilities import OperationReplayPolicy
 from cadrumo.application.operations.composition import OperationSubmissionService
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.projection_services import OperationResponseAuthorityBroker
 from cadrumo.application.operations.registry import OperationReconciliationPolicy
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import (
     OperationDurability,
     OperationEffect,
@@ -40,6 +43,77 @@ from .test_supervisor import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+
+
+@pytest.mark.parametrize("fail_body", (False, True))
+@pytest.mark.parametrize("fail_diagnostics", (False, True))
+def test_commit_timing_keeps_nested_durable_effect_and_failure_boundaries(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    fail_body: bool,
+    fail_diagnostics: bool,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "operations", profile_objects=profile.repository
+        )
+        effects: list[str] = []
+
+        class TimingExecutor:
+            async def execute(self, request: OperationRequest[BaseModel], context: OperationExecutorContext) -> str:
+                del request
+                async with context.cancellation.irreversible_section(), context.cancellation.irreversible_section():
+                    assert (await journal.load(context.identity.operation_id)).cancellation_deferred is True
+                    effects.append("effect body")
+                    if fail_body:
+                        raise ValueError("synthetic effect failure")
+                return "result:synthetic-effect"
+
+        def failed_log(*_args: object, **_kwargs: object) -> None:
+            raise OSError("synthetic diagnostic sink failure")
+
+        logger = get_logger("cadrumo.application.operations._execution_context")
+        if fail_diagnostics:
+            monkeypatch.setattr(logger, "log", failed_log)
+        authority = Authorization()
+        supervisor = _supervisor(
+            registry=_registry(executor_type=TimingExecutor, build=TimingExecutor),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            execution_authority=authority,
+        )
+
+        async def exercise() -> None:
+            try:
+                operation_id = await supervisor.submit(_request())
+                await supervisor.start(operation_id)
+                settled = await supervisor.settled(operation_id)
+                expected = OperationTerminalCondition.FAILED if fail_body else OperationTerminalCondition.SUCCEEDED
+                assert settled.terminal_condition is expected
+                assert (await journal.load(operation_id)).cancellation_deferred is False
+                assert authority.guard_attempts == 1
+                assert authority.calls.count("guard_enter") == authority.calls.count("guard_leave") == 1
+                assert effects == ["effect body"]
+            finally:
+                await supervisor.shutdown()
+
+        with caplog.at_level(logging.INFO, logger=logger.name):
+            asyncio.run(exercise())
+        records = [
+            record for record in caplog.records if record.name == logger.name and record.msg == "operation_commit_phase"
+        ]
+        if fail_diagnostics:
+            assert records == []
+        else:
+            assert len(records) == 6
+            stages = [record.__dict__["stage"] for record in records]
+            assert stages.count("body_enter") == stages.count("body_exit") == 1
+            assert all(record.__dict__["transition"] == AccessAction.COMMIT.value for record in records)
+            assert all(0 <= record.__dict__["phase_monotonic_ns"] <= (1 << 63) - 1 for record in records)
 
 
 class Authorization:
@@ -88,6 +162,20 @@ class Executor:
         return "result:synthetic-effect"
 
 
+async def wait_for_executor_entry(entered: asyncio.Event, settlement: asyncio.Task[OperationPersistedSnapshot]) -> None:
+    """Observe actual entry or propagate the owned operation's earlier settlement."""
+    waiting = asyncio.create_task(entered.wait())
+    try:
+        done, _pending = await asyncio.wait((waiting, settlement), return_when=asyncio.FIRST_COMPLETED)
+        if settlement in done:
+            await settlement
+            assert entered.is_set(), "operation settled before executor entry"
+        await waiting
+    finally:
+        waiting.cancel()
+        await asyncio.gather(waiting, return_exceptions=True)
+
+
 @pytest.mark.parametrize("boundary", [AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, None])
 def test_refusal_prevents_the_corresponding_supervisor_boundary(tmp_path: Path, boundary: AccessAction | None) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
@@ -121,10 +209,11 @@ def test_refusal_prevents_the_corresponding_supervisor_boundary(tmp_path: Path, 
                 assert not executor.entered.is_set()
                 return
             await supervisor.start(operation_id)
-            await asyncio.wait_for(executor.entered.wait(), timeout=3)
+            settlement = asyncio.create_task(supervisor.settled(operation_id))
+            await wait_for_executor_entry(executor.entered, settlement)
             authority.denied = boundary
             executor.proceed.set()
-            settled = await supervisor.settled(operation_id)
+            settled = await settlement
             if boundary is AccessAction.COMMIT:
                 assert settled.terminal_condition is OperationTerminalCondition.REFUSED
                 assert executor.effects == []
@@ -251,7 +340,7 @@ def test_concurrent_sections_do_not_inherit_another_tasks_guard(tmp_path: Path) 
         async def exercise() -> None:
             operation_id = await supervisor.submit(_request())
             await supervisor.start(operation_id)
-            settled = await asyncio.wait_for(supervisor.settled(operation_id), timeout=5)
+            settled = await supervisor.settled(operation_id)
             assert settled.terminal_condition is OperationTerminalCondition.SUCCEEDED
             assert executor.effects == ["first"] and authority.guard_attempts == 2
             await supervisor.shutdown()
@@ -352,13 +441,14 @@ def test_continuation_respects_exact_owner_then_rechecks_executor_authority(tmp_
             assert not executor.entered.is_set()
             authority.denied = None
             await recovery.continue_operation(operation_id)
-            await asyncio.wait_for(executor.entered.wait(), 3)
+            settlement = asyncio.create_task(recovery.settled(operation_id))
+            await wait_for_executor_entry(executor.entered, settlement)
             with pytest.raises(ValueError, match="live local"):
                 await recovery.stored_invocation(operation_id, require_idle=True)
             with pytest.raises(ValueError, match="live local"):
                 await recovery.continue_operation(operation_id)
             executor.proceed.set()
-            settled = await recovery.settled(operation_id)
+            settled = await settlement
             assert settled.terminal_condition is OperationTerminalCondition.SUCCEEDED
             assert await recovery.continue_operation(operation_id) == settled
             assert executor.effects == ["effect body"]

@@ -60,7 +60,6 @@ from cadrumo.entrypoints.tui.ledger.models import (
     LedgerInvoiceEntryV1,
     LedgerInvoiceLineEntryV1,
 )
-from cadrumo.entrypoints.tui.ledger.runtime_invoice_add import RuntimeInvoiceAddTuiDoorV1, _request_from_entry
 from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
     ledger_context,
     ledger_projection,
@@ -68,8 +67,9 @@ from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
 )
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
 from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
+from cadrumo.entrypoints.tui.runtime_invoice_add import RuntimeInvoiceAddTuiDoorV1, _request_from_entry
 
-from .....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
+from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
 
 pytestmark = pytest.mark.hex_entrypoint
 

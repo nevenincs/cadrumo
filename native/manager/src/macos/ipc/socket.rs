@@ -1,6 +1,7 @@
 //! Darwin socket namespace and channel primitives; no session policy lives here.
 #![allow(unsafe_code)]
 use crate::custody::LocalLock;
+use cadrumo_platform::transport::DarwinTransport;
 use std::{
     ffi::CString,
     fs::File,
@@ -21,7 +22,7 @@ pub(super) fn effective_uid() -> u32 {
     unsafe { libc::geteuid() }
 }
 
-pub(super) struct Directory(File, PathBuf);
+pub(super) struct Directory(File, PathBuf, Option<DarwinTransport>);
 
 impl Directory {
     pub(super) fn open(path: &Path) -> io::Result<Self> {
@@ -67,10 +68,21 @@ impl Directory {
         if metadata.uid() != effective_uid() || metadata.mode() & 0o7777 != 0o700 {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
-        Ok(Self(current, path.to_owned()))
+        Ok(Self(current, path.to_owned(), None))
+    }
+
+    pub(super) fn installed(create: bool) -> io::Result<Self> {
+        let transport = DarwinTransport::installed(create)?;
+        let mut directory = Self::open(transport.directory())?;
+        directory.2 = Some(transport);
+        directory.verify()?;
+        Ok(directory)
     }
 
     fn verify(&self) -> io::Result<()> {
+        if let Some(transport) = &self.2 {
+            transport.verify()?;
+        }
         let current = Self::open(&self.1)?;
         let before = self.0.metadata()?;
         let after = current.0.metadata()?;
@@ -168,14 +180,21 @@ pub(super) struct Socket {
 }
 
 impl Socket {
+    #[cfg(test)]
     pub(super) fn bind(path: &Path) -> io::Result<Self> {
-        socket_address(path)?;
         let directory = Directory::open(path.parent().ok_or(io::ErrorKind::InvalidInput)?)?;
         let name = path
             .file_name()
             .and_then(|name| name.to_str())
-            .ok_or(io::ErrorKind::InvalidInput)?
-            .to_owned();
+            .ok_or(io::ErrorKind::InvalidInput)?;
+        Self::bind_in(directory, name)
+    }
+
+    pub(super) fn bind_in(directory: Directory, name: &str) -> io::Result<Self> {
+        let path = directory.leaf(name);
+        socket_address(&path)?;
+        directory.verify()?;
+        let name = name.to_owned();
         // The canonical no-follow custody path pins its own parent. Recheck its identity
         // against our socket anchor before using the lock to reclaim a stale leaf.
         let lock =
@@ -213,6 +232,13 @@ impl Socket {
         socket.directory.restrict(&socket.name, socket.identity)?;
         socket.listener.set_nonblocking(true)?;
         Ok(socket)
+    }
+
+    pub(super) fn verify(&self) -> io::Result<()> {
+        if self.directory.private_socket(&self.name)? != self.identity {
+            return Err(io::ErrorKind::PermissionDenied.into());
+        }
+        Ok(())
     }
 }
 

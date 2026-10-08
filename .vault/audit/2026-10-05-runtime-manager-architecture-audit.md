@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:8dd0e685115a452626305a1adfa7c9e10a52e9f3b06c243dd719413e1946948e'
+body_hash: 'sha256:42a02ff778eeb2b049ac41eb53a468888eda8797dff14922c7f038a9cbef4b40'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -264,6 +264,22 @@ Evidence and commands are retained locally in build/macos-process-typecheck/nati
 Read-only native HOME confirmation and canonical declaration inspection establish 104-byte stable and 112-byte preview runtime socket paths under the supplied Mac's normal installed data directories. PosixRuntimeEndpoint refuses lengths at or above 104 before bind; the new manager socket name is longer still. Short synthetic native IPC tests do not cover this installed-default defect. S19 remains open and activation stays gated.
 
 The complete comparative evidence is 2026-10-08-runtime-manager-architecture-darwin-socket-paths-research. Native /dev/fd directory-alias lookup, connect and bind failed ENOENT, while the ordinary connection retained correct peer identity. The public user cache directory is a validated 0700, current-user-owned candidate independent of HOME length, but its use would require a canonical location exception and compact channel-qualified naming; no such choice has been accepted or implemented. Research consistency review found no factual corrections. Both supplied hosts remain preserved; no product directories or login registrations were created.
+
+### 2026-10-08 S19 Darwin transport path correction
+
+Implemented the accepted transient namespace exception: installed Darwin socket defaults use the canonical native per-user cache base and channel-independent product-family directory, while persistent data roots remain unchanged. Explicit member/fixture namespaces and development roots retain isolation. Python and Rust retain owner-only base/product directory handles, refuse namespace replacement without recreation, preserve lock inodes, and share compact manager naming vectors. Generic storage materialisation, inventory and reclaim exclude the shared namespace. CMake now tracks both added declaration/projection inputs.
+
+Review found and corrected two integration races before this checkpoint: repeated Rust resolution could adopt a replacement product directory; Python endpoint opening could recreate a namespace after its canonical resolver retained the removed inode. New regressions cover both. Integrated source review passes for this bounded transport slice.
+
+Evidence: native Mac final snapshot 3e5536db4e500322a1ddcefc1f39ee4842de87346545bb1c97ab4ea461efa8f8 passed 32 platform tests, 78 manager tests and both all-target Clippy checks. Windows manager tests and Clippy passed; an initial check-harness compiler mismatch was corrected by selecting the configured Rust 1.96 toolchain. Linux Python owning tests passed 63 cases. The isolated Mac Python snapshot passed 59 unit/integration cases, including real POSIX endpoints; its frozen baseline has 29 endpoint cases versus the current shared Linux owner's 33. Native read-only lookup confirmed private canonical cache-base custody and default runtime/manager socket lengths of 102/100 bytes, both below 104, without creating a product directory. Scoped Python Ruff/format/ty, native formatting, CMake configure and native_contract build passed. Evidence is retained under build/macos-process-typecheck/native-transport-final-evidence and python-transport-evidence.
+
+The measured default pathname blocker is corrected in source. Existing frozen package builds do not yet contain this slice. S19 remains open: manager activation, session ownership/lifecycle integration, registration and disposable-host acceptance still require work; these tests do not establish installed login or upgrade behavior.
+
+### 2026-10-08 transport broad-check corrections
+
+Configured full checks caught Windows-stub access in the lazy POSIX provider and a noncanonical Python constant alias. Positive platform guards now contain native-only attributes; provider and projection consume the defining product identity directly. Generated Rust contract bytes are unchanged. Owning metadata regeneration enrolled both new core modules and the transport projection, preserving concurrent module inventory edits. Review passes. Pyrefly and BasedPyright pass for Windows, Linux and Darwin; scoped ty, Ruff and format pass; corrected native Mac tests pass all 59 cases and focused Linux tests pass 29. Corrective Mac evidence is build/macos-process-typecheck/python-transport-corrective-evidence.
+
+Full just check-import-boundaries now passes: authoritative stable graph, 4,541 modules loaded, zero hard findings and zero architectural debt (run 20261008T170335.401661Z-check-import-boundaries-53292-611d4abd). Full just check-types now reports only the unrelated concurrent disjoint-cast diagnostic in entrypoints/runtime/tests/test_worker_exit_cleanup.py; no transport diagnostics remain. The full type gate is not claimed passing. Earlier failing checks and corrected verification are retained. S19 and platform acceptance remain open.
 
 ## Recommendations
 

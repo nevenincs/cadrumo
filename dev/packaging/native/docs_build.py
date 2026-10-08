@@ -102,7 +102,7 @@ def require_host_product_metadata(expected_version: str) -> None:
         )
 
 
-def build_roots(build: Path, inputs: Path, *, target: str | None = None) -> None:
+def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_cache: bool = True) -> None:
     """Build every declared root with the owning driver unless its enrolled inputs are unchanged."""
     layout = load_layout(target)
     require_host_product_metadata(identity(distribution_target(layout)).version)
@@ -140,6 +140,7 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None) -> None
             shared_site_identity(shared_inputs, languages),
             produce,
             validate_inputs=validate_inputs,
+            reuse_shared=shared_cache,
         )
         if not built:
             print("Reusing the user documentation another build configuration built from the same inputs", flush=True)
@@ -165,6 +166,7 @@ def take_shared_site(
     produce: Callable[[Path], None],
     *,
     validate_inputs: Callable[[], None],
+    reuse_shared: bool = True,
 ) -> bool:
     """Fill *build_root* with the site of *identity*, producing it only if no configuration has.
 
@@ -180,10 +182,15 @@ def take_shared_site(
         identity: What the wanted site depends on.
         produce: Builds the site into the directory it is given.
         validate_inputs: Refuses changed source or authority before publication or reuse.
+        reuse_shared: When false, compile locally without accessing the shared cache or its lock.
 
     Returns:
         Whether the site was produced here rather than copied.
     """
+    if not reuse_shared:
+        produce(build_root)
+        validate_inputs()
+        return True
     shared.parent.mkdir(parents=True, exist_ok=True)
     with action_lock(shared.parent, shared.name):
         if current(shared, identity):
@@ -324,9 +331,15 @@ def main() -> None:
     parser.add_argument("--build", type=Path, required=True)
     parser.add_argument("--inputs", type=Path, required=True)
     parser.add_argument("--target")
+    parser.add_argument("--no-shared-cache", action="store_true")
     arguments = parser.parse_args()
     try:
-        build_roots(arguments.build.resolve(strict=True), arguments.inputs, target=arguments.target)
+        build_roots(
+            arguments.build.resolve(strict=True),
+            arguments.inputs,
+            target=arguments.target,
+            shared_cache=not arguments.no_shared_cache,
+        )
     except DocsPackagingError as error:
         raise SystemExit(str(error)) from None
 

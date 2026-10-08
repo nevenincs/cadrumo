@@ -37,6 +37,28 @@ _OBJECT_MAPPING_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(dict[ob
 _OBJECT_SEQUENCE_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
 _STRING_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
+CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY = "calculation_rendering_serializer"
+
+
+class CalculationRenderingSerializerScope:
+    """Compile public registry serialization once for one complete catalogue call.
+
+    The caller owns this scope in its validation or serialization context. It
+    retains only the public compiled schema, never a snapshot or its payload.
+    """
+
+    __slots__ = ("_serializer",)
+
+    def __init__(self) -> None:
+        """Start a fresh scope with no compiled schema or captured values."""
+        self._serializer: SchemaSerializer | None = None
+
+    def serializer(self) -> SchemaSerializer:
+        """Compile lazily so catalogues without saved rendering pay no build cost."""
+        if self._serializer is None:
+            self._serializer = _compile_registry_serializer()
+        return self._serializer
+
 
 def _complete_registry_value(value: object) -> object:
     if isinstance(value, DeclaredPredecessor | NoPredecessor):
@@ -71,16 +93,23 @@ def _retain_registry_schema_fields(value: object, *, predecessor: bool = False) 
             _retain_registry_schema_fields(item, predecessor=predecessor)
 
 
-def _registry_payload(snapshot: RegistrySnapshot) -> dict[str, object]:
-    # Compile from the live public schema for this call. Neither the original
-    # schema nor a decoded private snapshot is mutated or retained between reads.
+def _compile_registry_serializer() -> SchemaSerializer:
+    """Compile a complete serializer from an independent copy of the current public schema."""
     adapter = TypeAdapter(RegistrySnapshot)
     adapter.rebuild()
     schema = deepcopy(adapter.core_schema)
     _retain_registry_schema_fields(schema)
     # The original prebuilt serializers omit presentation fields. Reusing them
     # here would silently discard the modifications on this schema copy.
-    serializer = SchemaSerializer(schema, _use_prebuilt=False)
+    return SchemaSerializer(schema, _use_prebuilt=False)
+
+
+def _registry_payload(snapshot: RegistrySnapshot, *, context: object = None) -> dict[str, object]:
+    scope = context.get(CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY) if is_object_mapping(context) else None
+    if isinstance(scope, CalculationRenderingSerializerScope):
+        serializer = scope.serializer()
+    else:
+        serializer = _compile_registry_serializer()
     return _STRING_MAPPING_ADAPTER.validate_python(
         serializer.to_python(snapshot, mode="json", by_alias=False, exclude_computed_fields=True)
     )
@@ -156,10 +185,10 @@ class CalculationRenderingSnapshot(BaseModel):
         """Persist excluded localization/schema fields required to decode original geometry."""
         if info.mode == "python":
             return _STRING_MAPPING_ADAPTER.validate_python(_complete_registry_value(value))
-        return _registry_payload(value)
+        return _registry_payload(value, context=info.context)
 
     @model_validator(mode="after")
-    def _registry_digest_matches(self) -> Self:
+    def _registry_digest_matches(self, info: ValidationInfo) -> Self:
         if len({label.key for label in self.labels}) != len(self.labels):
             raise ValueError("saved rendering labels contain duplicate identities")
         if content_hash_hex(self.registry_snapshot.model_dump(mode="json")) != self.registry_digest:
@@ -169,7 +198,11 @@ class CalculationRenderingSnapshot(BaseModel):
         ):
             raise ValueError("saved rendering directory identities disagree with its captured snapshot")
         if (
-            content_hash_hex(_rendering_payload(self.registry_snapshot, self.labels, self.revision_directory_ids))
+            content_hash_hex(
+                _rendering_payload(
+                    self.registry_snapshot, self.labels, self.revision_directory_ids, context=info.context
+                )
+            )
             != self.rendering_digest
         ):
             raise ValueError("saved rendering metadata digest does not match its captured schema and labels")
@@ -203,9 +236,11 @@ def _rendering_payload(
     snapshot: RegistrySnapshot,
     labels: tuple[SavedRenderingLabel, ...],
     directory_ids: tuple[RevisionId, ...] | None,
+    *,
+    context: object = None,
 ) -> dict[str, object]:
     payload: dict[str, object] = {
-        "registry": _registry_payload(snapshot),
+        "registry": _registry_payload(snapshot, context=context),
         "labels": [label.model_dump(mode="json") for label in labels],
     }
     if directory_ids is not None:

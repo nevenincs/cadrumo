@@ -288,6 +288,7 @@ def verify_modelo_revision_with_preconditions(
             filing_repository=repos.filing,
             calculation_repository=cr_repo,
             verification_repository=vr_repo,
+            calculation_catalogue=revisions,
             justificante_repository=repos.justificante,
             transaction_repository=repos.transaction,
             invoice_repository=repos.draft_review_ports.invoice_repository,

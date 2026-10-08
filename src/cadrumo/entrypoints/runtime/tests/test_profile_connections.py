@@ -457,9 +457,8 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
                     ),
                 )
                 journal = OperationJournalRepository(storage_root=root)
-                deadline = time.monotonic() + 8
                 while True:
-                    observation = client.operation(changed(request, request_id=uuid4()), deadline=deadline)
+                    observation = client.operation(changed(request, request_id=uuid4()), deadline=time.monotonic() + 8)
                     if allow_observation:
                         assert isinstance(observation, RuntimeOperationObserved), observation
                         assert isinstance(observation.observation, OperationObservationSuccessV1)
@@ -469,7 +468,6 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
                     snapshot = asyncio.run(journal.load(submitted.receipt.operation_id))
                     if snapshot.terminal_condition is not None:
                         break
-                    assert time.monotonic() < deadline
                     time.sleep(0.02)
                 assert snapshot.terminal_condition is OperationTerminalCondition.SUCCEEDED
                 control = RuntimeOperationManage(

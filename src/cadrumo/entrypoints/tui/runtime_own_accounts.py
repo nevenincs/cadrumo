@@ -4,17 +4,17 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....application.ledger.own_account_operation import (
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...application.ledger.own_account_operation import (
     LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
     LedgerOwnAccountRequest,
     LedgerOwnAccountResult,
 )
-from ....application.operations.frontend_projection import OperationPublicProjectionV1
-from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ....core.operations import OperationEffect, OperationTerminalCondition
-from ..operations.runtime_profile_session import RuntimeProfileSession
-from .own_accounts import LedgerOwnAccountDoorV1
+from ...application.operations.frontend_projection import OperationPublicProjectionV1
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...core.operations import OperationEffect, OperationTerminalCondition
+from .ledger.own_accounts import LedgerOwnAccountDoorV1
+from .operations.runtime_profile_session import RuntimeProfileSession
 
 _READ_ACTIONS = frozenset({"list", "show"})
 

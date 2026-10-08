@@ -144,7 +144,13 @@ async def _handle_custody_control(context: _WorkerControl, request: object) -> _
 
 async def _handle_metadata_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:
     if isinstance(request, ProfileWorkerContractRequest):
-        description = context.operations.describe(request.session_id, request.definition_id)
+        # Admission prepares the host before publishing custody. Keep warm
+        # schema projection off the service loop, and retain its ownership if
+        # shutdown cancels this handler while the thread still uses the host.
+        description = await await_cancellation_complete(
+            asyncio.to_thread(context.operations.describe, request.session_id, request.definition_id),
+            task_name="profile-worker-description",
+        )
         write_document(
             context.channel,
             ProfileWorkerOperationContract(

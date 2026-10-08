@@ -21,6 +21,7 @@ from .....core.config import Settings, load_settings, override_settings
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.errors.hierarchy import CadrumoError
 from .....core.storage_taxonomy import StorageCategory
+from .....tests.env_scope import scoped_env_var
 from .....tests.storage_scope import storage_overrides
 from ..bucket.directory_layout import BucketPaths
 from ..crypto.encrypted_columns import (
@@ -325,24 +326,31 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
     secret_overrides = storage_overrides(tmp_path, StorageCategory.SECRETS)
     for dependency in secret_overrides.values():
         dependency.mkdir(parents=True, exist_ok=True)
-    with override_settings(
-        cadrumo_local_storage_root=storage_root,
-        cadrumo_active_profile=None,
-        cadrumo_secret_passphrase=passphrase,
-        # Enrolment calibrates the KDF grid by MEASURING real supervised
-        # derivations -- one child process per warmup and per sample. That is
-        # the right price once, on an operator's machine, and the wrong one on
-        # a host that enrols a profile per test: measured at 15.5s of a 17.4s
-        # registration. Declining to measure adopts the fixed point the
-        # calibrator already falls back to, which is STRONGER than the measured
-        # band's floor, so the wrap does not weaken and every derivation is
-        # still a real Argon2id through the same supervised worker.
-        cadrumo_profile_kdf_measure_calibration=False,
-        # Anchored on ``tmp_path``, not on the storage root, so the secret
-        # substrate stays a sibling of the bucket tree rather than nesting
-        # inside it -- the production custody split.
-        **secret_overrides,
-    ) as settings:
+    socket_overrides = storage_overrides(storage_root, StorageCategory.RUNTIME_SOCKETS)
+    socket_field, socket_path = next(iter(socket_overrides.items()))
+    socket_path.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with (
+        scoped_env_var(socket_field.upper(), str(socket_path)),
+        override_settings(
+            cadrumo_local_storage_root=storage_root,
+            cadrumo_active_profile=None,
+            cadrumo_secret_passphrase=passphrase,
+            # Enrolment calibrates the KDF grid by MEASURING real supervised
+            # derivations -- one child process per warmup and per sample. That is
+            # the right price once, on an operator's machine, and the wrong one on
+            # a host that enrols a profile per test: measured at 15.5s of a 17.4s
+            # registration. Declining to measure adopts the fixed point the
+            # calibrator already falls back to, which is STRONGER than the measured
+            # band's floor, so the wrap does not weaken and every derivation is
+            # still a real Argon2id through the same supervised worker.
+            cadrumo_profile_kdf_measure_calibration=False,
+            # Anchored on ``tmp_path``, not on the storage root, so the secret
+            # substrate stays a sibling of the bucket tree rather than nesting
+            # inside it -- the production custody split.
+            **secret_overrides,
+            **socket_overrides,
+        ) as settings,
+    ):
         dispose_engine(settings)
         try:
             yield storage_root

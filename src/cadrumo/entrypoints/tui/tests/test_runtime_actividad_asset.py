@@ -54,8 +54,8 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningHistoryStatus,
 )
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
-from cadrumo.entrypoints.tui.ledger.runtime_actividad_asset import RuntimeActivityAssetTuiActionsV1
 from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
+from cadrumo.entrypoints.tui.runtime_actividad_asset import RuntimeActivityAssetTuiActionsV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -39,8 +39,8 @@ from cadrumo.core.operations import (
 )
 from cadrumo.domain.transactions.own_accounts import OwnAccountHolding
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
-from cadrumo.entrypoints.tui.ledger.runtime_own_accounts import RuntimeOwnAccountTuiDoorV1
 from cadrumo.entrypoints.tui.operations.runtime_controller import RuntimeOperationController
+from cadrumo.entrypoints.tui.runtime_own_accounts import RuntimeOwnAccountTuiDoorV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

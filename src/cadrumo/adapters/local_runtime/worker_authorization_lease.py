@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 import time
 from importlib.metadata import version
 from pathlib import Path
@@ -39,6 +40,8 @@ from ...application.user_profile.automation_operations import (
     AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
     AUTOMATION_DECLINE_OPERATION_DEFINITION_ID,
 )
+from ...core.diagnostic_log import diagnostic_timing_event
+from ...core.logging import get_logger
 from ...core.time.clock import now
 from .framing import VerifiedRuntimeConnection
 from .posix_channel import PosixRuntimeChannel
@@ -46,6 +49,8 @@ from .runtime_frame_io import read_document, write_document
 from .worker_authorization import worker_authorization_namespace
 from .worker_authorization_refusals import raise_worker_access_refusal
 from .worker_transport import WorkerChannel, worker_endpoint
+
+_LOGGER = get_logger(__name__)
 
 
 class WorkerAuthorizationLease:
@@ -67,6 +72,15 @@ class WorkerAuthorizationLease:
         )
         self._deadline = 0.0
         self._publication_sent = False
+
+    def _commit_phase(self, stage: str) -> None:
+        if isinstance(self.request, WorkerAuthorizationRequest) and self.request.request.action is AccessAction.COMMIT:
+            diagnostic_timing_event(
+                _LOGGER,
+                "worker_commit_phase",
+                fields={"stage": stage, "transition": AccessAction.COMMIT.value},
+                primary_error=sys.exception(),
+            )
 
     def acquire(self) -> None:
         """Authenticate the retained native parent before requesting a held fence."""
@@ -111,6 +125,7 @@ class WorkerAuthorizationLease:
             self._deadline = time.monotonic() + remaining
             self._permit, self._channel = reply, channel
             channel = None
+            self._commit_phase("permit_validated")
         finally:
             if channel is not None:
                 channel.close()
@@ -158,13 +173,16 @@ class WorkerAuthorizationLease:
         if channel is None:
             return
         try:
+            self._commit_phase("release_executor_start")
             if permit is None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            self._commit_phase("release_write_begin")
             write_document(
                 channel,
                 WorkerAuthorizationRelease(request_id=self.request.request_id, permit_id=permit.permit_id),
                 deadline=self._deadline,
             )
+            self._commit_phase("release_write_end")
             reply = read_document(channel, WorkerAuthorizationReply, deadline=self._deadline).root
             if (
                 not isinstance(reply, WorkerAuthorizationReleased)
@@ -180,7 +198,10 @@ class WorkerAuthorizationLease:
 
     async def close(self) -> None:
         """Complete blocking native release through the existing cleanup owner."""
-        await asyncio.to_thread(self.release)
+        try:
+            self._commit_phase("release_scheduled")
+        finally:
+            await asyncio.to_thread(self.release)
 
     def _publication_channel(
         self, binding: RuntimeApprovalBinding, phase: WorkerApprovalPublicationPhase

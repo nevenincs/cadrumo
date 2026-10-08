@@ -442,13 +442,20 @@ def _load_clean_state_repositories(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     justificante_repository: JustificanteRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogue | None,
+    filing_catalogue: ModeloRecordCatalogue | None,
+    verification_catalogue: VerificationReportCatalogue | None,
 ) -> _CleanStateRepositories:
     """Load all persistence inputs once for a clean-state evaluation."""
     return _CleanStateRepositories(
-        filing_catalogue=filing_repository.load(),
-        calculation_catalogue=calculation_repository.load(operation=operation),
+        filing_catalogue=filing_repository.load() if filing_catalogue is None else filing_catalogue,
+        calculation_catalogue=(
+            calculation_repository.load(operation=operation) if calculation_catalogue is None else calculation_catalogue
+        ),
         verification_catalogue=require_verification_report_coordinates_current(
-            verification_repository.load(operation=operation),
+            verification_repository.load(operation=operation)
+            if verification_catalogue is None
+            else verification_catalogue,
             operation=operation,
         ),
         justificante_repository=justificante_repository,
@@ -663,6 +670,9 @@ def evaluate_cross_period_clean_state(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     justificante_repository: JustificanteRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
+    filing_catalogue: ModeloRecordCatalogue | None = None,
+    verification_catalogue: VerificationReportCatalogue | None = None,
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
     activity_start_date: date | None = None,
@@ -680,6 +690,10 @@ def evaluate_cross_period_clean_state(
     The supplied :class:`RegistrySnapshot` is
     the authority for target revision, filing period, and dependency
     requirements.
+
+    The optional catalogues may reuse the caller's freshly validated catalogues
+    within the same synchronous invocation and pinned operation. Omission loads
+    it here. This does not replace an independent persistence/currentness read.
 
     ``activity_start_date`` is the operator-declared activity-start date carried on
     the profile (the same field the deadline engine consumes for pre-start
@@ -727,6 +741,9 @@ def evaluate_cross_period_clean_state(
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
         justificante_repository=justificante_repository,
+        calculation_catalogue=calculation_catalogue,
+        filing_catalogue=filing_catalogue,
+        verification_catalogue=verification_catalogue,
     )
     expected_member_sets_by_key = _expected_member_sets_by_key(expected_member_sets)
     scope = _clean_state_requirement_scope(

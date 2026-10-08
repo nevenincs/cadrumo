@@ -37,6 +37,7 @@ from .storage_vectors import (
     storage_path_vectors,
     storage_root_vectors,
 )
+from .transport_contract import rust_transport, transport_section
 
 CONTRACT_SCHEMA = 1
 
@@ -111,6 +112,7 @@ def _locations_section() -> list[dict[str, Any]]:
             "variable": None if location.settings_field is None else location.settings_field.upper(),
             "override_policy": location.override_policy.value,
             "scope": location.scope.value,
+            "default_anchor": location.default_anchor.value,
             "node_kind": location.node_kind.value,
             "grouping": location.grouping.value,
             "lifecycle": location.lifecycle.value,
@@ -322,6 +324,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
         "storage_environment_allowlist": sorted(product),
         "storage": [item.model_dump(mode="json") for item in STORAGE_TAXONOMY.values()],
         "root": _root_section(),
+        "runtime_transport": transport_section(),
         "locations": _locations_section(),
         "environment": _environment_section(fields),
         "mode": _mode_section(layout),
@@ -377,6 +380,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
     entrypoints = [Path(relative).name for relative in entrypoint_files(layout).values()]
     rust.append(f"pub const ENTRYPOINT_FILES: &[&str] = {_rust_strings(entrypoints)};")
     rust.extend(_rust_root_and_environment(contract))
+    rust.extend(rust_transport(contract["runtime_transport"]))
     rust.extend(rust_runtime_exit_reasons(contract["runtime_exit"]))
     destination.mkdir(parents=True, exist_ok=True)
     write_text(destination / "contract.rs", "\n".join(rust) + "\n")

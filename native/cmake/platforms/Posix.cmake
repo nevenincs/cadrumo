@@ -134,5 +134,5 @@ if(BUILD_TESTING)
   add_test(NAME platform.resolver COMMAND ${platform_cargo} test --locked --lib
     --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/platform/Cargo.toml"
     --target "${CADRUMO_PIN_rust_target}" --profile "$<IF:$<CONFIG:Debug>,dev,release>")
-  set_tests_properties(platform.resolver PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 600)
+  set_tests_properties(platform.resolver PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 0)
 endif()

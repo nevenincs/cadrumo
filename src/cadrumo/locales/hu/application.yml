@@ -1409,7 +1409,7 @@ application:
         deklarálnak, amelyet egyetlen számítási feloldó sem kezel. Adj hozzá egy feloldót,
         vagy jelöld halasztottként a számítás előtt.'
       profile_readiness_missing: 'A profil hiányos a Modelo %{modelo} (%{filing_year},
-        %{period}) bevalláshoz; előbb töltsd ki ezeket a profiladatokat: %{missing}.'
+        %{period}) bevalláshoz; előbb töltsd ki ezeket a profiladatokat: %{profile_requirements}.'
       profile_readiness_profile_missing: Nincs mentett aktív profil ehhez a bevalláshoz;
         folytatás előtt hozd létre vagy javítsd a profilt.
       profile_readiness_setup_incomplete: A profil beállítását még nem nyilvánították
@@ -1417,7 +1417,7 @@ application:
         dolgoznál.
       profile_readiness_setup_incomplete_missing: 'A profil beállítása nincs befejezve;
         fejezd be a beállítási folyamatot, mielőtt bevallásokkal dolgoznál. Hiányzó
-        mezők: %{missing}.'
+        mezők: %{profile_requirements}.'
       recipient_decryption_failed: A címzett számára titkosított csomagot nem sikerült
         megfejteni; a kulcs nem megfelelő, vagy a csomagot módosították.
       recipient_encryption_invalid_key: A címzett nyilvános kulcsa nem egy érvényes
