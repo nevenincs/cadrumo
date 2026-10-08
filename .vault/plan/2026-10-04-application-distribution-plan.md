@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:159e842b273a70fbd22a35c12b68fe5431d7542b3038b899d5561a0a3ba6d018'
+body_hash: 'sha256:1c22263b858b28e9f0225ec03f31b5dd901750ad554c82be093619d7aff098d6'
 ---
 
 # Application distribution
@@ -58,6 +58,16 @@ Execute sequentially. Preserve independent application-core and desktop edits in
 
 
 2026-10-08 native macOS builder integration: after completing native component evidence, linux_manager may own a repository Darwin toolchain file, its focused admission checks and isolated verification on the actual Mac. Translate the working explicit compiler/SDK selection into reproducible CMake inputs without hardcoding the operator's home directory, changing the canonical target/deployment floor or inventing release signing. Preserve explicit Rust linker configuration and exact builder/SDK identity. Coordinate shared CMake enrollment with root; root owns full-package build sessions, documentation source edits, vault and commits.
+
+
+2026-10-08 stable Windows build recovery: after the live-checkout full docs attempt failed with deadline/connection outcomes, msi_maintenance may prepare an isolated canonical Windows source snapshot and pinned builder, then run the four failing documentation pages against those fixed inputs. Preserve existing Windows host/product/services and all unrelated working-tree edits. Never copy dotenv/private credentials into the snapshot. Root owns any source fixes, shared build decisions and commits; a full frozen native-installer retry requires those focused pages to pass first and coordination with root. WSL and Mac frozen runs may continue independently.
+
+
+Frozen Windows diagnostic follow-up: notice_review owns ignored payload-free timing instrumentation and one coordinated Renta page reproduction after msi_maintenance releases the focused four-page lane. Record operation definition, settlement time, remaining result budget and per-page latency/count; no production edits, deadline increases or golden changes. Root chooses any correction only after this evidence and coordinates with unrelated runtime/performance owners.
+
+
+Timing follow-up scheduling correction: because the Modelo390 page contains eleven long scenarios, root authorizes one Renta diagnostic concurrently in its own diagnostic-storage and diagnostic-temp. Its evidence must record concurrent Windows Modelo390 and WSL docs activity; timings establish the observed code/budget path, not isolated performance causality. Sources, golden files and deadlines remain unchanged.
+
 
 ## Verification
 

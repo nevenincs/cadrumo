@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:b7febfabde1593942dacc43cf930c9ba29525d0d73b95ff52abae82672c434dd'
+body_hash: 'sha256:6e5e5a3802f6a5a882702588c9b9ce45bfba043bb9ec7a3d6aa2c8ad458d3011'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -303,6 +303,10 @@ related:
 - `S05` `verify:` `scoped Ruff format ty` -> `pass`
 - `S05` `verify:` `independent docs cache mutation corrective review` -> `pass`
 - `S05` `verify:` `Windows full native-installer documentation compile (4673s)` -> `fail`
+- `S05` `verify:` `frozen Windows Renta page 349.03s runtime_deadline_exceeded` -> `fail`
+- `S05` `verify:` `frozen Windows Modelo036 page 121.85s` -> `pass`
+- `S05` `verify:` `instrumented unchanged frozen Windows Renta page 238.23s` -> `pass`
+- `S05` `verify:` `vault check application-distribution zero errors four warnings` -> `pass`
 
 ## Notes
 
@@ -329,3 +333,4 @@ related:
 - `S05` Full documentation/package runs remain active; native host installation and session-ending acceptance are not authorized on the existing non-disposable hosts.
 - `S05` S05 remains open; full-product build currently retains its earlier explicit experiment toolchain, and native installation acceptance remains gated.
 - `S05` S05 remains open. Full Windows documentation execution failed; other hosts are running frozen builds. Input revalidation does not replace immutable-source discipline.
+- `S05` Build recovery evidence only; original Renta deadline failure unresolved. Windows Modelo390 and verification reports and WSL strict docs still pending. Mac full build final status unknown while SSH unavailable. Both provided hosts are non-disposable: preserve product installations/login/session state.

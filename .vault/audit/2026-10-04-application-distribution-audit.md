@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:0157fa57089c6f874b085a4df5fe7bd644df341b989bebb35a6072efe6e8556e'
+body_hash: 'sha256:4e675567f2be853a51a019d4e1382a52e4bac35ce26112bc1ff341c9f97a94d1'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -190,6 +190,15 @@ Portable admission tests pass (4 passed, 1 native-only skipped; 8.55s), with Ruf
 Independent review confirmed that docs_build previously captured source identity before a long compilation, then published shared and local completion markers without checking whether source or selected authority had changed. A failed compile did not publish a marker, but a successful mixed-revision run could publish under stale input identity; the two initial fingerprints could also observe different revisions. The correction checks both initial identities and selected authority before reuse, after production, around shared-site copying and before local publication. All take_shared_site callers now supply the owning validation callback. Real filesystem regression tests cover unchanged success, source mutation, authority-byte mutation, authority-selection replacement and mutation during shared copying. Eleven cache/publication tests pass in 3.83s, with scoped Ruff/format/ty and independent corrective review passing. This is endpoint fingerprint validation, not an immutable source snapshot: transient edit-and-restore remains outside its guarantees, so full builds still require stable sources.
 
 The live Windows full native-installer attempt reported its docs compile failure after 4673s: runtime_deadline_exceeded in renta observations and Modelo036, still-running/connection-closed outcomes in Modelo390, and connection-closed in verification-reports. Those are executable sequence failures, not evidence to refresh goldens. Other source owners have ongoing runtime/performance edits in the shared checkout. No full MSI acceptance or new package success is claimed; focused/frozen investigation must precede another expensive full retry.
+
+
+2026-10-08 frozen Windows continuation: source snapshot 2a4396effdcc3aa68fab7374efec9885bc7851f0c0dc819481af3d8194d3d8db and selected authority 9db202fd630f35654c984a5b656ddd4be59dffd03927d6f520316af6e9222a92 reproduce the Renta documentation failure sequentially in 349.03 seconds. The retained error reports SUCCEEDED/NONE followed by runtime_deadline_exceeded; it does not establish calculation failure. Static tracing finds repeated whole-result retrieval/projection/canonicalization for each bounded page under a shared residual deadline, but no retained failing-operation journal establishes exact operation definition, page count or timing. Instrumented reproduction is pending; no deadline or golden change is justified by current evidence. Modelo036 passes on the same frozen inputs in 121.85 seconds; Modelo390 and verification reports remain pending. Evidence is under build/windows-docs-frozen-20261008/evidence.
+
+Host preservation: the operator explicitly identifies both this Windows runner and gergely.wootsch@gw-laptop as non-disposable. Only isolated builds, tests and read-only native probes are authorized in this execution; no product install/uninstall, login registration or session-ending acceptance is performed. The existing Mac build connection remains open without a final result, while fresh SSH probes time out; its completion status is unknown. Native lifecycle acceptance remains open.
+
+
+Renta timing follow-up: one instrumented reproduction passes unchanged frozen sources/goldens in 238.23 seconds, with 131 observed page calls. Two revision_snapshot results each contain 997,173 bytes over 31 pages; their retrievals take 12.710/11.675 seconds from initial result budgets 42.582/40.595 seconds. Settlement polling takes about three seconds, with admission/prior exchanges consuming approximately 14.27/16.42 seconds first. Concurrent Windows Modelo390 and WSL documentation work is explicitly recorded. This successful run does not explain or fix the original 349-second deadline failure. No production changes or deadline increases follow from it; retain the ignored timing harness and result logs for a future failing run.
+
 
 ## Recommendations
 
