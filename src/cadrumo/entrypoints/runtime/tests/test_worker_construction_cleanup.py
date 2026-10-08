@@ -319,6 +319,49 @@ def test_api_preparation_queue_timeout_preserves_only_the_nonstopping_original_w
         owner.settle()
 
 
+@pytest.mark.parametrize("outcome", ["fenced", "containment_failure", "queue_timeout"])
+def test_retiring_into_a_fenced_worker_completes_once_the_worker_is_contained(tmp_path: Path, outcome: str) -> None:
+    owner = _owner(tmp_path)
+    session_id = uuid4()
+
+    class FencedWorker(_Candidate):
+        """Answer retirement as the adapter does after an earlier exchange failed."""
+
+        @property
+        @override
+        def stopping(self) -> bool:
+            return outcome != "queue_timeout"
+
+        @override
+        def retire(self, session_id: UUID) -> None:
+            if outcome == "queue_timeout":
+                raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED)
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+
+    worker = FencedWorker(owner.identity, owner._guard, failures=1 if outcome == "containment_failure" else 0)
+    owner._worker = worker
+    try:
+        if outcome == "fenced":
+            owner.retire(session_id)
+            assert owner.lost and owner._worker is None and owner._retiring == [worker]
+            assert worker.close_calls == 1
+            # Later lineages of the contained worker retire without a new worker.
+            owner.retire(uuid4())
+            assert worker.close_calls == 1
+        elif outcome == "containment_failure":
+            with pytest.raises(ExceptionGroup, match="worker containment failed"):
+                owner.retire(session_id)
+            assert owner.lost and owner._retiring == [worker]
+        else:
+            with pytest.raises(RuntimeRefusalError) as caught:
+                owner.retire(session_id)
+            assert caught.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+            assert not owner.lost and owner._worker is worker and worker.close_calls == 0
+    finally:
+        owner.close()
+        owner.settle()
+
+
 def _owner(root: Path) -> ProfileWorkerSessionOwner:
     identity = ProfileWorkerIdentity(
         worker_id=uuid4(),

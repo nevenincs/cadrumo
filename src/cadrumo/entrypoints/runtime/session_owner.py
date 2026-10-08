@@ -377,9 +377,18 @@ class ProfileWorkerSessionOwner:
         self._human_receipts.pop(session_id, None)
         self._pending_human_receipts.pop(session_id, None)
         self._human_sign_ins.pop(session_id, None)
-        if self._worker is not None:
+        if self._worker is None:
+            return
+        try:
             with self._custody() as worker:
                 worker.retire(session_id)
+        except (RuntimeRefusalError, AutomationCustodyError):
+            # A dispatched failure fences this owner and contains its worker;
+            # containment failure raises from ``close`` instead. No lease of
+            # this lineage survives a contained worker, so retirement is done.
+            # A queue timeout leaves the healthy worker holding the lease.
+            if not self._lost:
+                raise
 
     def close(self) -> None:
         """Fence old leases before terminating all owned profile processes."""
