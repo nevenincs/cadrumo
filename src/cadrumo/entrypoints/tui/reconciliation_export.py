@@ -9,24 +9,24 @@ from textual.app import ComposeResult
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, Checkbox, Input, Static
 
-from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ....application.modelo.reconciliation_export_operation import (
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ...application.modelo.reconciliation_export_operation import (
     RECONCILIATION_EXPORT_XLSX_OPERATION_DEFINITION_ID,
     ReconciliationExportXlsxProjection,
     ReconciliationExportXlsxRequest,
 )
-from ....core.errors.error_codes import resolve_error_message
-from ....core.errors.hierarchy import CadrumoError
-from ....core.external_constants import OutputLanguage
-from ....core.i18n.render import output_language, tr
-from ....core.modelo_export_artefact import ModeloExportArtefact
-from ....core.operations import OperationTerminalCondition, profile_operation_subject
-from ....core.payment_election import PaymentElection
-from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....core.refund_election import RefundElection
-from ..modelo.workbench.ports import WorkbenchExportRequest
-from ..operations.modal import OperationModal, OperationModalSettledOutcomeV1
-from ..operations.runtime_controller import RuntimeOperationController
+from ...core.errors.error_codes import resolve_error_message
+from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language, tr
+from ...core.modelo_export_artefact import ModeloExportArtefact
+from ...core.operations import OperationTerminalCondition, profile_operation_subject
+from ...core.payment_election import PaymentElection
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
+from ...core.refund_election import RefundElection
+from .modelo.workbench.ports import WorkbenchExportRequest
+from .operations.modal import OperationModal, OperationModalSettledOutcomeV1
+from .operations.runtime_controller import RuntimeOperationController
 
 
 class ReconciliationDestinationScreen(ModalScreen[WorkbenchExportRequest | None]):

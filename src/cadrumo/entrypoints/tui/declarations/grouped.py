@@ -60,14 +60,10 @@ class GroupedDeclarationsScreen(DeclarationsWorkspaceScreen):
     #declarations-links { height: auto; }
     #declarations-links Button { width: 1fr; min-width: $cadrumo-control-min-width; }
     #declarations-search { height: auto; }
-    #declarations-list-context { margin: 0; }
     /* Reset the table's inherited default cap in the default CSS layer. */
     #declarations-list { max-height: initial; }
     #declarations-keys { height: auto; padding-left: $cadrumo-cell-padding; }
     #declarations-technical { height: auto; display: none; }
-    """)
-    CSS = DeclarationsWorkspaceScreen.CSS + tokenised("""
-    #declarations-list-context { margin: 0; }
     """)
 
     def __init__(
