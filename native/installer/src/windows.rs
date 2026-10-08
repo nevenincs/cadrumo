@@ -176,17 +176,23 @@ impl Transaction {
     pub fn ownership(&self) -> crate::ownership::Ownership {
         self.ownership.clone()
     }
-    pub fn install(&self, package: &Path, prefix: &Path, endpoint: &str) -> Result<(), Refusal> {
+    pub fn install(
+        &self,
+        package: &Path,
+        owner: &NativeOwner,
+        endpoint: &str,
+    ) -> Result<(), Refusal> {
         self.ownership.current()?;
         local_regular_file(package)?;
         let package = wide(package.to_str().ok_or(Refusal::InvalidRequest)?)?;
-        let prefix = prefix.to_str().ok_or(Refusal::InvalidRequest)?;
-        if prefix.contains(['"', '\r', '\n', '\0']) || endpoint.contains(['"', '\r', '\n', '\0']) {
-            return Err(Refusal::InvalidRequest);
-        }
-        let properties = wide(&format!(
-            "INSTALL_ROOT=\"{prefix}\" CADRUMO_MSI_OWNER=\"{endpoint}\" REBOOT=ReallySuppress MSIRESTARTMANAGERCONTROL=Disable"
-        ))?;
+        let observed = MsiInventory
+            .locate(owner)
+            .map_err(|_| Refusal::IncompleteInventory)?;
+        let properties = wide(&installation_properties(
+            owner,
+            endpoint,
+            observed.as_ref(),
+        )?)?;
         // SAFETY: This process owns the transaction; terminated strings remain live.
         // Reboot-required and other nonzero results remain failures, never implicit success.
         let installed =
@@ -226,6 +232,31 @@ impl Transaction {
         self.active = false;
         Ok(())
     }
+}
+
+fn installation_properties(
+    owner: &NativeOwner,
+    endpoint: &str,
+    observed: Option<&NativeOwner>,
+) -> Result<String, Refusal> {
+    let prefix = owner.prefix().to_str().ok_or(Refusal::InvalidRequest)?;
+    if prefix.contains(['"', '\r', '\n', '\0'])
+        || endpoint.contains(['"', '\r', '\n', '\0'])
+        || observed.is_some_and(|native| native != owner)
+    {
+        return Err(Refusal::InvalidRequest);
+    }
+    // REINSTALL on an absent product performs no installation. Only exact native
+    // presence enables forced file/registry/shortcut repair. No recache ('v') is
+    // requested: the independently verified native cache remains authoritative.
+    let repair = if observed.is_some() {
+        " REINSTALL=ALL REINSTALLMODE=amus"
+    } else {
+        ""
+    };
+    Ok(format!(
+        "INSTALL_ROOT=\"{prefix}\" CADRUMO_MSI_OWNER=\"{endpoint}\" REBOOT=ReallySuppress MSIRESTARTMANAGERCONTROL=Disable{repair}"
+    ))
 }
 impl Drop for Transaction {
     fn drop(&mut self) {
@@ -1069,4 +1100,33 @@ mod tests {
             MsiSetInternalUI(initial, ptr::null_mut());
         }
     }
+}
+#[test]
+fn reinstall_properties_require_exact_native_presence_and_never_skip_fresh_install() {
+    let root = tempfile::tempdir().unwrap();
+    let owner = NativeOwner::new(
+        "12345678-1234-1234-1234-123456789ABC".into(),
+        NativeContext::Machine,
+        root.path().to_owned(),
+    )
+    .unwrap();
+    let fresh = installation_properties(&owner, "endpoint", None).unwrap();
+    assert!(!fresh.contains("REINSTALL"));
+    assert!(fresh.contains("REBOOT=ReallySuppress"));
+    let repair = installation_properties(&owner, "endpoint", Some(&owner)).unwrap();
+    assert!(repair.ends_with(" REINSTALL=ALL REINSTALLMODE=amus"));
+    let foreign = NativeOwner::new(
+        owner.product_code().into(),
+        NativeContext::Machine,
+        root.path().join("other-prefix"),
+    )
+    .unwrap();
+    assert_eq!(
+        installation_properties(&owner, "endpoint", Some(&foreign)),
+        Err(Refusal::InvalidRequest)
+    );
+    assert_eq!(
+        installation_properties(&owner, "endpoint\" REINSTALL=ALL", None),
+        Err(Refusal::InvalidRequest)
+    );
 }

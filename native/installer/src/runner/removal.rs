@@ -94,8 +94,9 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
         Err(_) => return report(Outcome::Refused, "native_transaction_unavailable"),
     };
     let namespace = (|| -> Result<_, Error> {
-        existing_native_registration(&plan, &request, &context)?;
-        crate::publication::admit_existing(
+        let inventory = windows::inventory(plan.scope).map_err(native_error)?;
+        crate::admission::validate_inventory(&inventory).map_err(native_error)?;
+        let namespace = crate::publication::admit_existing(
             &plan.prefix,
             &plan
                 .contract
@@ -107,9 +108,10 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
                 .under(&plan.prefix),
             &context,
         )
-        .map_err(native_error)
+        .map_err(native_error)?;
+        Ok((namespace, inventory))
     })();
-    let _namespace = match namespace {
+    let (_namespace, inventory) = match namespace {
         Ok(namespace) => namespace,
         Err(_) => return rollback(transaction, "native_removal_admission_refused"),
     };
@@ -143,6 +145,9 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
         if owner.context() != &context || owner.prefix() != plan.prefix {
             return Err(Error::Integrity("removal owner differs".into()));
         }
+        request
+            .admit_removal(&inventory, owner)
+            .map_err(native_error)?;
         let (definition, custody) = windows::cached_product(owner)?;
         let snapshot = store.snapshot()?;
         let selected = release

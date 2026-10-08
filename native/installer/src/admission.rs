@@ -1,4 +1,5 @@
 //! Scope policy over a complete native inventory; no registry-name heuristics.
+use cadrumo_application::installation::maintenance::{NativeContext, NativeOwner};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
@@ -104,20 +105,8 @@ impl Request {
     /// Call only after the native enumerator reaches ERROR_NO_MORE_ITEMS. Failure,
     /// truncation and inaccessible cached ownership are never an empty inventory.
     pub fn admit(&self, products: &[Product]) -> Result<(), Refusal> {
-        if products.len() > MAX_PRODUCTS {
-            return Err(Refusal::IncompleteInventory);
-        }
-        let mut seen = BTreeSet::new();
+        validate_inventory(products)?;
         for product in products {
-            let code = canonical_guid(&product.code).map_err(|_| Refusal::AmbiguousOwnership)?;
-            match (product.scope, product.sid.as_deref()) {
-                (Scope::Machine, None) => {}
-                (Scope::User, Some(sid)) if sid.starts_with("S-1-") && sid.len() <= 184 => {}
-                _ => return Err(Refusal::AmbiguousOwnership),
-            }
-            if !seen.insert((code, product.sid.clone())) {
-                return Err(Refusal::AmbiguousOwnership);
-            }
             let Some(family) = &product.family else {
                 continue;
             };
@@ -131,6 +120,61 @@ impl Request {
         }
         Ok(())
     }
+
+    /// Cleanup may resolve conflicting installations. It still requires a complete
+    /// inventory and the exact target's native scope/account/family. The caller must
+    /// separately bind its installed prefix and cached immutable role metadata.
+    pub fn admit_removal(&self, products: &[Product], owner: &NativeOwner) -> Result<(), Refusal> {
+        validate_inventory(products)?;
+        let (scope, sid) = match owner.context() {
+            NativeContext::Machine => (Scope::Machine, None),
+            NativeContext::User { sid } => (Scope::User, Some(sid.as_str())),
+        };
+        if scope != self.scope {
+            return Err(Refusal::AmbiguousOwnership);
+        }
+        let target = products
+            .iter()
+            .find(|product| {
+                canonical_guid(&product.code).is_ok_and(|code| code == owner.product_code())
+                    && product.scope == scope
+                    && product.sid.as_deref() == sid
+            })
+            .ok_or(Refusal::IncompleteInventory)?;
+        let family = canonical_guid(
+            target
+                .family
+                .as_deref()
+                .ok_or(Refusal::AmbiguousOwnership)?,
+        )?;
+        if !self.permitted_families.contains(&family) {
+            return Err(Refusal::AmbiguousOwnership);
+        }
+        Ok(())
+    }
+}
+
+pub(crate) fn validate_inventory(products: &[Product]) -> Result<(), Refusal> {
+    if products.len() > MAX_PRODUCTS {
+        return Err(Refusal::IncompleteInventory);
+    }
+    let mut seen = BTreeSet::new();
+    for product in products {
+        let code = canonical_guid(&product.code).map_err(|_| Refusal::AmbiguousOwnership)?;
+        match (product.scope, product.sid.as_deref()) {
+            (Scope::Machine, None) => {}
+            (Scope::User, Some(sid)) if sid.starts_with("S-1-") && sid.len() <= 184 => {}
+            _ => return Err(Refusal::AmbiguousOwnership),
+        }
+        if !seen.insert((code, product.sid.clone())) {
+            return Err(Refusal::AmbiguousOwnership);
+        }
+        let Some(family) = &product.family else {
+            continue;
+        };
+        canonical_guid(family).map_err(|_| Refusal::AmbiguousOwnership)?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -149,6 +193,52 @@ mod tests {
             } else {
                 None
             },
+        }
+    }
+    #[test]
+    fn explicit_cleanup_resolves_scope_conflict_without_cross_account_or_unknown_owner_removal() {
+        let root = tempfile::tempdir().unwrap();
+        for scope in [Scope::User, Scope::Machine] {
+            let mut request = request();
+            request.scope = scope;
+            let target = product(request.permitted_families[0].clone(), scope);
+            let context = if scope == Scope::Machine {
+                NativeContext::Machine
+            } else {
+                NativeContext::User {
+                    sid: target.sid.clone().unwrap(),
+                }
+            };
+            let owner =
+                NativeOwner::new(target.code.clone(), context, root.path().to_owned()).unwrap();
+            let opposite = if scope == Scope::Machine {
+                Scope::User
+            } else {
+                Scope::Machine
+            };
+            let mut conflict = product(request.conflicting_families[0].clone(), opposite);
+            conflict.code = "B0000000-0000-0000-0000-000000000000".into();
+            let inventory = vec![target.clone(), conflict.clone()];
+            assert_eq!(request.admit(&inventory), Err(Refusal::ConflictingScope));
+            assert_eq!(request.admit_removal(&inventory, &owner), Ok(()));
+            let other_account = NativeOwner::new(
+                target.code.clone(),
+                NativeContext::User {
+                    sid: "S-1-5-21-9999".into(),
+                },
+                root.path().to_owned(),
+            )
+            .unwrap();
+            assert!(request.admit_removal(&inventory, &other_account).is_err());
+            assert!(request.admit_removal(&[conflict], &owner).is_err());
+            assert!(
+                request
+                    .admit_removal(&[target.clone(), target.clone()], &owner)
+                    .is_err()
+            );
+            let mut unknown = target;
+            unknown.family = None;
+            assert!(request.admit_removal(&[unknown], &owner).is_err());
         }
     }
     #[test]

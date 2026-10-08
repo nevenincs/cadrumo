@@ -22,6 +22,7 @@ use std::{
 const PLAN_LIMIT: u64 = 64 * 1024;
 const ARTIFACT_LIMIT: u64 = 16 * 1024 * 1024 * 1024;
 
+mod recovery;
 mod removal;
 pub use removal::{remove_version, unregister};
 
@@ -428,9 +429,9 @@ pub fn install(path: &Path) -> MaintenanceResult {
             Ok(value) => value,
             Err(_) => return report(Outcome::Refused, "artifact_or_owner_refused"),
         };
-    // Until authenticated owner callbacks and protected publication-directory
-    // creation are integrated, real artifacts contain an unconditional Launch
-    // gate. Refuse before creating state or starting a native transaction.
+    // Native lifecycle protections must pass disposable-host acceptance before
+    // the unconditional MSI Launch gate can open. Refuse before creating state
+    // or starting a native transaction; implemented source is not that evidence.
     if windows::standalone_gate_present(&plan.version_product.path).unwrap_or(true)
         || windows::standalone_gate_present(&plan.registration_product.path).unwrap_or(true)
     {
@@ -456,15 +457,64 @@ pub fn install(path: &Path) -> MaintenanceResult {
             .map_err(native_error)?;
         store.initialize()?;
         let maintenance = store.exclusive_maintenance()?;
-        let previous = previous_registration(&plan, &admission, &store, native_registration)?;
+        let snapshot = store.snapshot()?;
+        let pending = snapshot
+            .versions()
+            .find(|(release, _)| *release == plan.version)
+            .map(|(_, product)| product);
+        let transition = recovery::registration_transition(
+            snapshot.registration(),
+            native_registration.as_ref(),
+            &registration_owner,
+            pending,
+            &owner,
+            &plan.manifest_sha256,
+        )?;
+        let previous = if transition == recovery::RegistrationTransition::Consistent {
+            previous_registration(&plan, &admission, &store, native_registration)?
+        } else {
+            if let Some(published) = snapshot.registration()
+                && published.owner != registration_owner
+                && MsiInventory.locate(&published.owner)?.is_some()
+            {
+                return Err(Error::Integrity(
+                    "interrupted registration still has another native owner".into(),
+                ));
+            }
+            None
+        };
+        let version_cache =
+            recovery::current_product(&plan, &admission, &owner, crate::owner::Role::Version)?;
+        let registration_cache = recovery::current_product(
+            &plan,
+            &admission,
+            &registration_owner,
+            crate::owner::Role::Registration,
+        )?;
         let version = store.prepare_transaction(
             &plan.version,
             owner.clone(),
             plan.manifest_sha256.clone(),
         )?;
-        Ok((maintenance, version, namespace, previous))
+        Ok((
+            maintenance,
+            version,
+            namespace,
+            previous,
+            version_cache,
+            registration_cache,
+            transition,
+        ))
     })();
-    let (_maintenance, reservation, _namespace, previous) = match prepared {
+    let (
+        _maintenance,
+        reservation,
+        _namespace,
+        previous,
+        _version_cache,
+        _registration_cache,
+        transition,
+    ) = match prepared {
         Ok(guards) => guards,
         Err(_) => return rollback(transaction, "native_preparation_refused"),
     };
@@ -508,8 +558,36 @@ pub fn install(path: &Path) -> MaintenanceResult {
             claims.push(claim.clone());
         }
         let _active = broker.activate_claims(claims)?;
-        transaction.install(&artifact.path, &plan.prefix, broker.endpoint())
+        let product_owner = if role == crate::owner::Role::Version {
+            &owner
+        } else {
+            &registration_owner
+        };
+        transaction.install(&artifact.path, product_owner, broker.endpoint())
     };
+    let package = plan
+        .contract
+        .layout
+        .installation
+        .versions
+        .under(&plan.prefix)
+        .join(&plan.version);
+    let idle = (|| -> Result<(), Error> {
+        for files in recovery::existing_package_files(&package)?.chunks(256) {
+            if !windows::file_users(files).map_err(native_error)?.is_empty() {
+                return Err(Error::Busy);
+            }
+        }
+        Ok(())
+    })();
+    if idle.is_err() {
+        return rollback_prepared(
+            transaction,
+            reservation,
+            &plan.contract,
+            "version_in_use_or_unknown",
+        );
+    }
     if install(&plan.version_product, crate::owner::Role::Version).is_err() {
         return rollback_prepared(
             transaction,
@@ -518,13 +596,6 @@ pub fn install(path: &Path) -> MaintenanceResult {
             "version_installation_failed",
         );
     }
-    let package = plan
-        .contract
-        .layout
-        .installation
-        .versions
-        .under(&plan.prefix)
-        .join(&plan.version);
     // Verify while Pending. Publication is deliberately deferred until commit.
     if plan
         .contract
@@ -611,7 +682,14 @@ pub fn install(path: &Path) -> MaintenanceResult {
             "native_publication_incomplete",
         )
     } else {
-        report(Outcome::Published, "installation_published")
+        report(
+            Outcome::Published,
+            if transition == recovery::RegistrationTransition::ReconcilePending {
+                "installation_recovered"
+            } else {
+                "installation_published"
+            },
+        )
     }
 }
 

@@ -1546,6 +1546,14 @@ currently fails with the outstanding lifecycle and runner requirements, independ
 of compiler availability. No CMake switch bypasses that refusal. Direct CPack and
 its `package` target still refuse the combined manager MSI; use `msi` or `msi-verify`.
 
+The distribution graph also exposes `install-msi`, `remove-msi-version` and
+`unregister-msi`. These invoke the native maintenance runner after `msi-verify`
+and require explicit `CADRUMO_MSI_SCOPE` and `CADRUMO_MSI_PREFIX` configuration.
+Version removal additionally requires `CADRUMO_MSI_REMOVE_VERSION`, the exact
+unanchored installed release. Unregistration removes shared registration;
+version removal targets one immutable version. All three operations retain the
+installation readiness gate; exposing a target does not enable native maintenance.
+
 The compiled products retain `installable: false` in their build
 descriptor and a literal-false launch condition. Native transaction publication,
 scope admission, same-version byte checks, retained anchors and safe in-use

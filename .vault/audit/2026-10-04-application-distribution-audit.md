@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0a5401434c2e92012a603afaf4ef51937c540824d97443936c40733bd450682'
+body_hash: 'sha256:7356b35e1aac424834150a73ec0a1902b2368ccec4005c13e7ae8d6c6ae3ec74'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -143,6 +143,14 @@ Resolved the earlier RPM build-postprocessing finding in native/cmake/distributi
 Verification: native Linux package tests passed all five cases (10.99s), including actual CMake-generated gated DEB/RPM fixtures. Windows CMake installer flow passes (3.79s); three native Linux tests correctly require Linux and are covered by the Linux run. Source-to-installer full Windows build and full Linux desktop build remain in progress. New CMake remove-msi-version and unregister-msi targets call the existing gated native maintenance runner with explicit scope/prefix and exact removal version; no native product was installed.
 
 Independent source review of aaba50749c and a8531538a4 found no new concrete defect in launch-lifetime leases, native removal admission, custody or rollback publication. Review reused applicable tests and preserves PENDING for interrupted settlement recovery and disposable interactive two-release acceptance.
+
+### 2026-10-08 interrupted install recovery and conflict cleanup | low | Fresh transaction settlement and exact-target removal pass source checks
+
+S09 recovery now permits registration/publication disagreement only with the exact intended Pending version reservation, digest, native scope/account/prefix and no foreign registration owner. Existing current products require independently validated cached role/payload metadata. A retry begins a new native transaction, repairs actually installed products with REINSTALL=ALL and REINSTALLMODE=amus, and publishes only after a new successful native commit and full verification. Preexisting Pending remains fenced on rollback; prior anchors are retained. Before forced repair, bounded traversal of all existing version files (including files omitted from a damaged manifest) undergoes in-use checks under the exclusive version lease.
+
+The source review also identified that install-conflict admission prevented explicit uninstall from resolving opposite-scope conflicts. Removal now uses complete native inventory validation and exact target account/scope/family admission, followed by the existing prefix, context, cached-role, namespace and lease checks. It does not require unrelated conflicting products to be absent. The existing MSI scope callback excludes REMOVE=ALL. Focused tests cover successful conflict cleanup admission and wrong-account, missing, duplicate and unknown-target refusal.
+
+Verification: 19 native installer tests passed (43.01s), pinned Rust 1.96 all-target Clippy with warnings denied passed (12.00s), Release adapter/runner built (33.02s), and the real four-product owner-CA MSI compile/decompile/refusal regression passed (7.61s; var/storage/development/.logs/test-runs/2026-10-08/20261008T124106.504754Z-pytest-85552-126f4706/run.log). Independent combined source review PASS, no material findings. Native installation gates remain false. Post-removal crash recovery, anchored same-version repair policy and real interactive two-release native acceptance remain unresolved; no product was installed or removed.
 
 ## Recommendations
 

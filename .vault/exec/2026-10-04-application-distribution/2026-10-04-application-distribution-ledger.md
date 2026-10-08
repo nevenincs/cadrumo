@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:68f0cae32a47a3a9aa986dd1d0a4f65b1c72e82b92fffda4ef041457f74ff259'
+body_hash: 'sha256:b85096aad54bc9d3ae80331d098d928337f556be831b08a50874879e1ca3d9e7'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -256,6 +256,15 @@ related:
 - `S05` `verify:` `actual DEB and RPM 17403 payload hashes each` -> `pass`
 - `S05` `verify:` `native Linux package pytest (5 tests 10.99s)` -> `pass`
 - `S05` `verify:` `Windows CMake installer flow (3.79s)` -> `pass`
+- `S09` `M` `native/installer/src/admission.rs`
+- `S09` `A` `native/installer/src/runner/recovery.rs`
+- `S09` `M` `native/CONTRACT.md`
+- `S09` `M` `.vault/audit/2026-10-04-application-distribution-audit.md`
+- `S09` `verify:` `installer.rust 19 tests (43.01s)` -> `pass`
+- `S09` `verify:` `installer pinned Clippy all-targets (12.00s)` -> `pass`
+- `S09` `verify:` `installer Release DLL and runner (33.02s)` -> `pass`
+- `S09` `verify:` `real four-product MSI owner gate regression (7.61s)` -> `pass`
+- `S09` `verify:` `independent combined recovery and cleanup review` -> `pass`
 
 ## Notes
 
@@ -275,3 +284,4 @@ related:
 - `S09` Partial S09: protected exact native owner record and cached-registration claims, independent ACL/custody/peer process creation and image verification, sticky owner-loss revocation, exact native family prefix/account and role admission. Explicit native launch policy added; portable writer and lifetime launch fencing are a concurrent workstream. Literal MSI gate remains closed. Native removal runner, rollback/recovery, inherited MSI UI policy, relocated cached-uninstall behavior and disposable interactive two-release acceptance remain open. Session 0 and fixture MSIs are not lifecycle evidence; no certificates or signing. Independent full implementation review not claimed.
 - `S09` Partial checkpoint: native-owned removal, quiet UI, cached native custody and typed publication rollback. Literal gate remains. Positive native execution, interrupted native commit recovery, relocated upgrade and disposable two-release acceptance are pending. CMake operation targets are authored in the shared distribution integration file and will checkpoint with its concurrent RPM payload-preservation fix under S05.
 - `S05` Partial S05 checkpoint: runtime-only native packages; desktop/docs/full lifecycle acceptance remain pending. All installation gates retained.
+- `S09` Partial S09: post-removal interrupted settlement and native interactive two-release acceptance remain pending; installation gates retained.
