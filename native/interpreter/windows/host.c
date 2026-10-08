@@ -6,6 +6,7 @@
 #include "cadrumo_platform.h"
 #include "contract.h"
 #include "build_metadata.h"
+#include "launch_guard.h"
 #ifndef CADRUMO_DEVELOPMENT
 #define CADRUMO_DEVELOPMENT 0
 #endif
@@ -86,15 +87,8 @@ static int run_entrypoint(bridge_main run, int argc, wchar_t **argv, wchar_t **p
 #endif
 
 int wmain(int argc, wchar_t **argv) {
-#ifndef CADRUMO_ENTRYPOINT
-    if (argc == 2 && (!wcscmp(argv[1], L"--version") || !wcscmp(argv[1], L"-V"))) {
-        printf("CADRUMO %s build %s (%s), Python %s [%s]\n", CADRUMO_VERSION,
-            CADRUMO_BUILD_NUMBER, CADRUMO_BUILD_DATE, CADRUMO_PYTHON_VERSION,
-            CADRUMO_DEVELOPMENT ? "development" : "production");
-        return 0;
-    }
-#endif
     cadrumo_context *ctx = NULL;
+    cadrumo_launch_guard *version_guard = NULL;
     cadrumo_buffer error = {0};
     wchar_t *paths[CADRUMO_PATH_KEYS] = {0};
     wchar_t library[32768];
@@ -105,6 +99,19 @@ int wmain(int argc, wchar_t **argv) {
         paths[i] = path(ctx, i);
         if (!paths[i]) goto failure;
     }
+    if (!acquire_launch_guard(ctx, &version_guard)) {
+        fprintf(stderr, "CADRUMO: installed package is unavailable for launch\n");
+        goto done;
+    }
+#ifndef CADRUMO_ENTRYPOINT
+    if (argc == 2 && (!wcscmp(argv[1], L"--version") || !wcscmp(argv[1], L"-V"))) {
+        printf("CADRUMO %s build %s (%s), Python %s [%s]\n", CADRUMO_VERSION,
+            CADRUMO_BUILD_NUMBER, CADRUMO_BUILD_DATE, CADRUMO_PYTHON_VERSION,
+            CADRUMO_DEVELOPMENT ? "development" : "production");
+        result = 0;
+        goto done;
+    }
+#endif
     if (!SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32 | LOAD_LIBRARY_SEARCH_USER_DIRS) ||
         !AddDllDirectory(paths[5])) goto failure;
     if (swprintf_s(library, 32768, L"%ls\\%ls", paths[5], WIDE_LITERAL(CADRUMO_RUNTIME)) < 0) goto failure;
@@ -139,6 +146,8 @@ failure:
     if (error.data) fprintf(stderr, "CADRUMO: %.*s\n", (int)error.len, error.data);
     else fprintf(stderr, "CADRUMO: native bootstrap failed (Windows error %lu)\n", GetLastError());
 done:
+    /* Keep the single version guard alive through DLL detach and process exit.
+     * The OS closes its lease handle after all package exit code has finished. */
     cadrumo_platform_release(&error);
     cadrumo_platform_destroy(ctx);
     for (int i = 0; i < CADRUMO_PATH_KEYS; ++i) free(paths[i]);

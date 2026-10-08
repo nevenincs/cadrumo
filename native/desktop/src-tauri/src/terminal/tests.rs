@@ -375,6 +375,7 @@ fn unit_launch() -> crate::environment::Launch {
         .join(contract["layout"]["paths"]["executable"].as_str().unwrap());
     assert!(!executable.exists());
     crate::environment::Launch {
+        _publication: None,
         child: ChildConfiguration::new(executable, directory.clone(), Default::default()).unwrap(),
         working_directory: directory.parent().unwrap().to_owned(),
         webview: directory.clone(),

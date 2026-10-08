@@ -231,6 +231,7 @@ def _prepare_fresh(payload: Path, identity_file: Path, root: Path, build: Path, 
                     "channel": value["channel"],
                     "platform": manifest["layout"]["platform"],
                     "abi": manifest["layout"]["abi"],
+                    "launch_policy": "portable",
                 },
                 indent=2,
             )

@@ -1,5 +1,6 @@
 //! Read-only discovery of complete immutable versions beneath an explicit install prefix.
 //! Metadata and hashes establish package consistency, not publisher authenticity.
+mod launch_guard;
 pub mod maintenance;
 use crate::{
     binary::{self, BinaryExpectation},
@@ -64,6 +65,14 @@ struct Marker {
     abi: u32,
     #[serde(default)]
     publication: Option<RelativePath>,
+    #[serde(default)]
+    launch_policy: Option<LaunchPolicy>,
+}
+#[derive(Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+enum LaunchPolicy {
+    Portable,
+    Native,
 }
 #[derive(Deserialize)]
 struct VersionManifest {

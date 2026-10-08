@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:3a82f3a4cfe1b3cbb34b631c798885da068465bb5391ea0ce222a4ea2081a332'
+body_hash: 'sha256:15e4aa22e15b05c993aeac0912564e893072fa398ccaaf58735b6c51e5eb29ed'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -194,6 +194,13 @@ This is source integration evidence, not attended native acceptance. Existing hi
 
 2026-10-08 corrective notice review: PASS for the source/check scope. The preceding high deadline finding is resolved by one retained read-only observation worker per runtime connection owner; the command reader consumes only this attempt's result within its remaining deadline, retries cannot accumulate workers, and late results have no event-queue or stop authority. Fresh attempts discard prior completed results and require fresh native observation. The idle inventory checks deadline expiry again. Independent re-review covered all four corrective paths and reused 25 passing lifecycle/supervisor tests, Ruff and type checks; no additional material finding. Earlier reviewed notice transport, pre-login/restricted TUI and human CLI presentation coverage remains applicable. Legacy clients can use the new server without new event variants; opted-in clients deliberately refuse an older strict server, with no silent downgrade. Installed interactive two-release notice acceptance remains pending.
 
+### S17 native process lifetime exclusion | high | Interpreter and desktop processes could outlive their manager lease
+
+2026-10-08 source review found that the manager retained a version lease but Python hosts and the desktop did not retain an independent lease for their entire process lifetime. Parent termination could therefore leave a live package consumer outside safe-removal exclusion. S17 remains open. The corrective implementation introduces one shared exact-package admission API and a C ABI bridge, holds the lease before Python loading or desktop dispatch, and retains it through OS process cleanup, including native unload handlers. Explicit portable/native launch policy prevents missing publication from silently admitting a structurally versioned native package as portable. Windows CMake configure and both release Python host static links passed; shared Rust regression checks and desktop compilation are in progress. Native removal acceptance still requires a disposable interactive runner; this source correction does not remove the MSI gate.
+
+### S17 lifetime exclusion corrective review | low | Windows launch boundaries and regressions pass; native removal acceptance remains pending
+
+2026-10-08 source review traced the shared exact-package API through the new static C ABI bridge, both native interpreter hosts, and desktop startup. Production callers retain the admitted lease through OS process cleanup; tests retain normal RAII disposal. The metadata-only --version/-V shortcut now also follows admission. Explicit portable policy is required for structurally versioned unmanaged packages, and canonical native policy binds identity, manifest digest, Ready publication and native owner prefix. Windows CMake release links passed. CMake's real python.exe/python_d.exe admission tests passed (4.55s), including missing-marker refusal and metadata gating; launch_guard.rust and application.rust passed again after shared rollback changes (12.75s and 11.29s). Application/guard all-target Clippy passed; desktop backend 210 tests passed and pinned snapshot Clippy passed (6.35s). Portable installation fixtures passed 25 tests with two POSIX cases excluded by host. Linux shared API/host checks are in progress. This resolves the source defect with Windows evidence, not disposable installed-process acceptance. Review status PENDING for the full S17 step; MSI admission stays closed.
 
 ## Recommendations
 

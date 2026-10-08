@@ -7,6 +7,7 @@
 #include "cadrumo_platform.h"
 #include "contract.h"
 #include "build_metadata.h"
+#include "launch_guard.h"
 
 #ifndef CADRUMO_DEVELOPMENT
 #define CADRUMO_DEVELOPMENT 0
@@ -55,15 +56,8 @@ int main(int argc, char **argv) {
             return 120;
         }
     }
-#ifndef CADRUMO_ENTRYPOINT
-    if (argc == 2 && (!strcmp(argv[1], "--version") || !strcmp(argv[1], "-V"))) {
-        printf("CADRUMO %s build %s (%s), Python %s [%s]\n", CADRUMO_VERSION,
-            CADRUMO_BUILD_NUMBER, CADRUMO_BUILD_DATE, CADRUMO_PYTHON_VERSION,
-            CADRUMO_DEVELOPMENT ? "development" : "production");
-        return 0;
-    }
-#endif
     cadrumo_context *ctx = NULL;
+    cadrumo_launch_guard *version_guard = NULL;
     cadrumo_buffer error = {0};
     char *paths[CADRUMO_PATH_KEYS] = {0};
     int result = 120;
@@ -73,6 +67,19 @@ int main(int argc, char **argv) {
         paths[i] = path(ctx, i);
         if (!paths[i]) goto failure;
     }
+    if (!acquire_launch_guard(ctx, &version_guard)) {
+        fprintf(stderr, "CADRUMO: installed package is unavailable for launch\n");
+        goto done;
+    }
+#ifndef CADRUMO_ENTRYPOINT
+    if (argc == 2 && (!strcmp(argv[1], "--version") || !strcmp(argv[1], "-V"))) {
+        printf("CADRUMO %s build %s (%s), Python %s [%s]\n", CADRUMO_VERSION,
+            CADRUMO_BUILD_NUMBER, CADRUMO_BUILD_DATE, CADRUMO_PYTHON_VERSION,
+            CADRUMO_DEVELOPMENT ? "development" : "production");
+        result = 0;
+        goto done;
+    }
+#endif
     /* libpython must export symbols to subsequently loaded extension modules. */
     if (!load(paths[5], CADRUMO_RUNTIME, RTLD_GLOBAL)) goto done;
     void *bridge = load(paths[5], CADRUMO_BRIDGE, RTLD_LOCAL);
@@ -111,6 +118,8 @@ failure:
     if (error.data) fprintf(stderr, "CADRUMO: %.*s\n", (int)error.len, error.data);
     else fprintf(stderr, "CADRUMO: native bootstrap failed\n");
 done:
+    /* Keep the single version guard alive through loader destructors and exit.
+     * The kernel closes its lease descriptor when this process finishes. */
     cadrumo_platform_release(&error);
     cadrumo_platform_destroy(ctx);
     for (int i = 0; i < CADRUMO_PATH_KEYS; ++i) free(paths[i]);

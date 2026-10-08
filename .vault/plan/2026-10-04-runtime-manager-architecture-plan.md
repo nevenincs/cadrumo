@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:a28c3b1d2802648c69cbceb14d3cb862dcf569701eead77e807a3315d3dc7780'
+body_hash: 'sha256:9fc99108ab8836f74e10600b3a18f91e7f3b32a050e2d41b436b6819c97d46c1'
 ---
 
 # `runtime-manager-architecture` plan
@@ -142,6 +142,9 @@ B5 initial checkpoint (2026-10-05, shared working tree): `SupervisedController._
 
 
 2026-10-08 continuation assignment: manager_remedies owns S16 connected-frontend upgrade notifications across the existing typed runtime session-event producer, verified transport demultiplexer, CLI binding, and TUI account/restricted shells, with focused tests. This work may run alongside msi_maintenance's S09 native transaction/publication protections because the owned source modules are disjoint. Check existing diffs before editing and preserve concurrent frontend work. Notifications convey no management authority or authentication retirement; delivery must be bounded and coalesced, distinguish enqueue from successful flush, and preserve legacy-client protocol compatibility. Root owns integration, verification coordination, vault records, and commits. Interactive two-release acceptance remains required.
+
+
+2026-10-08 S17 launch-fence correction: manager_remedies owns the shared exact-current-package Ready/lease admission API in native/application, a narrow native/launch_guard static C ABI crate/header, and desktop Launch lifetime custody with focused tests. Root owns C interpreter host calls and CMake static-library orchestration. msi_maintenance continues native transaction-owner records and safe removal; it must not treat RM snapshots as launch exclusion before these entry boundaries participate. Coordinate any maintenance.rs changes with its installer owner. Keep the existing platform/application dependency direction: the new ABI bridge may depend on application but platform must not depend cyclically on it. Missing native marker/publication for a structurally versioned package is refusal, never a portable fallback. Every Python child independently holds its own package lease through process lifetime; no Python/environment bypass grants admission. Root owns combined verification, source snapshots, vault and commits.
 
 
 ## Verification

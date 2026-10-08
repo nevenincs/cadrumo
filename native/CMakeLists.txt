@@ -90,6 +90,7 @@ if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET rust_platform_consumer PATHS "${platform_consumer}")
 endif()
 add_subdirectory(application)
+include("${PROJECT_SOURCE_DIR}/native/cmake/LaunchGuard.cmake")
 # Defines rust_manager and CADRUMO_MANAGER_EXECUTABLE in this directory scope for Packaging.cmake.
 include("${PROJECT_SOURCE_DIR}/native/cmake/Manager.cmake")
 include("${PROJECT_SOURCE_DIR}/native/cmake/Installer.cmake")

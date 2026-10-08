@@ -62,6 +62,12 @@ fn run(diagnostics: Arc<Diagnostics>) -> Result<i32> {
                 diagnostics.host_failure(HostStage::Environment, error.clone());
             })?;
     diagnostics.host_outcome(HostStage::Environment, HostOutcome::Ready);
+    // Package libraries may execute unload handlers after main returns. Keep
+    // one independent lease until OS resource cleanup; resolve-only tests retain
+    // ordinary RAII cleanup instead of accumulating process-lifetime guards.
+    if let Some(lease) = launch._publication.as_ref() {
+        std::mem::forget(lease.clone());
+    }
     match mode? {
         launch::Mode::Gui => app::run(launch),
         launch::Mode::Cli(arguments) => {

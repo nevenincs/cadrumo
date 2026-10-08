@@ -136,6 +136,7 @@ def test_windows_manager_stage_has_stable_entry_and_unmodified_version_inventory
         "channel": "stable",
         "platform": "windows-x64",
         "abi": 1,
+        "launch_policy": "portable",
     }
     namespaces = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
     wix = ElementTree.parse(tmp_path / "build/installation/metadata/Desktop.wxs")

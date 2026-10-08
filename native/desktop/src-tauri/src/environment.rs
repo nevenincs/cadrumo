@@ -3,6 +3,7 @@ use cadrumo_application::{
     child::ChildConfiguration,
     diagnostics::Diagnostics,
     error::application::{ApplicationError, ErrorCode, Operation, Result},
+    installation::{DiscoveryContract, maintenance::Lease},
     package::PackageManifest,
     process::status::{ProcessPhase, ProcessRole, Stream},
     value::RelativePath,
@@ -78,6 +79,8 @@ struct Projection {
 }
 
 pub struct Launch {
+    /// This process's independent removal fence, retained through GUI/headless use.
+    pub(crate) _publication: Option<Arc<Lease>>,
     pub child: ChildConfiguration,
     /// The projected storage root; the child environment pins Settings to it.
     pub working_directory: PathBuf,
@@ -127,6 +130,12 @@ pub async fn resolve(
     parent: &Parent,
     diagnostics: Arc<Diagnostics>,
 ) -> Result<Launch> {
+    let admission: DiscoveryContract =
+        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
+            .map_err(|e| failure(ErrorCode::PackageUnavailable).caused_by(e))?;
+    let publication = admission
+        .acquire_package(&root)
+        .map_err(|e| failure(ErrorCode::PackageUnavailable).caused_by(e))?;
     let (executable, projection, layout) = project(&root, parent, &diagnostics).await?;
     let docs_root = layout
         .user_docs
@@ -151,6 +160,7 @@ pub async fn resolve(
     )
     .map_err(|e| failure(ErrorCode::EnvironmentFailed).caused_by(e))?;
     Ok(Launch {
+        _publication: publication,
         child,
         working_directory: projection.storage,
         webview: projection.webview,

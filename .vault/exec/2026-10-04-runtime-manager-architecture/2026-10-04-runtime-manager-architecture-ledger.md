@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:39b1855fb6e9119be8d8123bda46cc16d658f3582f608e221474967973f4e118'
+body_hash: 'sha256:9ca77aa529c4dee10ca2141e45f3187ba7194f34cbeec8e114a68dc1a86fba1d'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -508,6 +508,37 @@ related:
 - `S18` `verify:` `Windows pinned Rust 1.96 all-target Clippy -D warnings (10.46s)` -> `pass`
 - `S18` `verify:` `Linux manylinux_2_28 frozen source manager.rust CTest (9.75s)` -> `pass`
 - `S18` `verify:` `Linux pinned Rust 1.96 all-target Clippy -D warnings (18.92s)` -> `pass`
+- `S17` `M` `dev/packaging/native/installation.py`
+- `S17` `M` `dev/packaging/native/launch_guard_check.py`
+- `S17` `M` `dev/packaging/tests/test_native_installation.py`
+- `S17` `M` `native/CMakeLists.txt`
+- `S17` `M` `native/CONTRACT.md`
+- `S17` `M` `native/application/src/installation.rs`
+- `S17` `M` `native/application/src/installation/launch_guard.rs`
+- `S17` `M` `native/application/tests/installation_launch_guard.rs`
+- `S17` `M` `native/cmake/LaunchGuard.cmake`
+- `S17` `M` `native/desktop/src-tauri/src/environment.rs`
+- `S17` `M` `native/desktop/src-tauri/src/main.rs`
+- `S17` `M` `native/desktop/src-tauri/src/terminal/tests.rs`
+- `S17` `M` `native/interpreter/launch_guard.h`
+- `S17` `M` `native/interpreter/posix/host.c`
+- `S17` `M` `native/interpreter/windows/host.c`
+- `S17` `M` `native/launch_guard/Cargo.toml`
+- `S17` `M` `native/launch_guard/Cargo.lock`
+- `S17` `M` `native/launch_guard/build.rs`
+- `S17` `M` `native/launch_guard/include/cadrumo_launch_guard.h`
+- `S17` `M` `native/launch_guard/src/lib.rs`
+- `S17` `verify:` `Windows CMake release interpreter hosts static link` -> `pass`
+- `S17` `verify:` `Windows CTest launch_guard native host admission (1.47s)` -> `pass`
+- `S17` `verify:` `Windows launch_guard.rust/application.rust after recovery API (12.75s/11.29s)` -> `pass`
+- `S17` `verify:` `Windows desktop 210 backend tests and pinned snapshot Clippy (6.35s)` -> `pass`
+- `S17` `verify:` `Application and launch guard all-target Clippy pinned Rust 1.96` -> `pass`
+- `S17` `verify:` `Portable installation Python fixtures 25 tests two POSIX host skips (6.40s)` -> `pass`
+- `S17` `verify:` `Linux release host and console entrypoint static links` -> `pass`
+- `S17` `verify:` `Linux launch_guard.rust/application.rust (2.02s/16.36s)` -> `pass`
+- `S17` `verify:` `Linux real host admission with SDK loader variables removed from test child (1.60s)` -> `pass`
+- `S17` `verify:` `Ruff format lint and ty launch_guard_check` -> `pass`
+- `S17` `by:` `Codex`
 
 ## Notes
 
@@ -545,3 +576,4 @@ related:
 - `S18` Partial S18 checkpoint only: probe is an opt-in disposable graphical-runner experiment, not runtime acceptance. Current WSL process has no authoritative graphical logind membership and correctly refuses despite display environment variables. Linux manager entrypoint remains gated pending placement/session identity and native installation ownership evidence. Full latest Linux native suite must be rerun after cutover contract regeneration.
 - `S16` Partial S16 checkpoint: localized notices use existing typed E-frame stream and sole writer with complete-frame flush witnesses, pre-login and restricted TUI plus human CLI consumers. One retained read-only observation worker enforces bounded StopIfIdle and rejects expired results. Legacy client to new server compatible; opted-in client to older strict server deliberately refuses without downgrade. Real installed interactive two-release notice acceptance remains outstanding; native reference-login integration was adapted/typechecked but not rerun.
 - `S18` Partial S18 portability checkpoint: canonical generated platform replaces Windows-only package inspection; integrity tests cover missing/changed inventories and incompatible target. Native Linux entry remains gated; no graphical session, install, upgrade or uninstall acceptance claimed.
+- `S17` Partial S17 corrective checkpoint; independent interpreter and desktop lifetime leases, explicit native/portable launch policy, metadata commands included. Initial Linux host test correctly refused inherited SDK `LD_` settings before reaching subject; child test environment now excludes them, production refusal unchanged. Native installed removal and two-release interactive acceptance remain pending; all MSI gates retained.
