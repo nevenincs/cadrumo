@@ -35,6 +35,7 @@ from .account import (
     AccountSessionExpiredError,
     AccountSessionReaderV1,
     AccountSessionRetired,
+    RuntimeUpgradePending,
     WorkbenchAccountProviderV1,
 )
 from .app_navigation import RootNavigationMixin
@@ -181,6 +182,7 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
         self._refresh_destination_catalogue = refresh_destination_catalogue
         self._account_factories = account_factories
         self._unsubscribe_retirement: Callable[[], None] | None = None
+        self._unsubscribe_notices: Callable[[], None] | None = None
         self._home_refresh_refusal_code: str | None = None
         """Why the last Home refresh was refused, or ``None`` when it succeeded."""
         self._workbench_search_refusal_code: str | None = (
@@ -279,6 +281,8 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
 
     def _start_session(self) -> None:
         factories = self._account_factories
+        if factories is not None and factories.subscribe_notices is not None:
+            self._unsubscribe_notices = factories.subscribe_notices(self._post_upgrade_notice)
         if factories is not None and factories.subscribe_retirement is not None:
             self._unsubscribe_retirement = factories.subscribe_retirement(self._post_session_retired)
         if self._read_account_session is not None:
@@ -296,11 +300,21 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
         """Clear on the UI thread; the transport callback never waits for rendering."""
         self._request_recompose(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
 
+    def on_runtime_upgrade_pending(self, _: RuntimeUpgradePending) -> None:
+        """Render a manager upgrade notice on the existing UI thread."""
+        self.notify(tr("common.manager.update_pending"), timeout=10)
+
+    def _post_upgrade_notice(self, _notice: object) -> None:
+        self.post_message(RuntimeUpgradePending())
+
     def on_unmount(self) -> None:
         """Release the event subscription when this profile-bound root leaves."""
         self._stop_session_events()
 
     def _stop_session_events(self) -> None:
+        unsubscribe_notice, self._unsubscribe_notices = self._unsubscribe_notices, None
+        if unsubscribe_notice is not None:
+            unsubscribe_notice()
         unsubscribe, self._unsubscribe_retirement = self._unsubscribe_retirement, None
         if unsubscribe is not None:
             unsubscribe()

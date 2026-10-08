@@ -1,9 +1,9 @@
 """Nonsecret retirement frames on the connection that owned the retired lease."""
 
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, RootModel, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..user_profile.access_contracts import AccessDenialCode
@@ -30,3 +30,22 @@ class RuntimeSessionEvent(BaseModel):
         if (self.generation_lineage is None) != (self.generation is None):
             raise ValueError("generation requires both lineage and counter")
         return self
+
+
+class RuntimeLifecycleNotice(BaseModel):
+    """Nonsecret presentation information, never session or management authority."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["lifecycle_notice"] = "lifecycle_notice"
+    runtime_boot_id: UUID
+    connection_id: UUID
+    notice_id: UUID
+    event: Literal["upgrade_pending"] = "upgrade_pending"
+
+
+type RuntimeConnectionEvent = RuntimeSessionEvent | RuntimeLifecycleNotice
+
+
+class RuntimeEventFrame(RootModel[Annotated[RuntimeConnectionEvent, Field(discriminator="kind")]]):
+    """Closed event variants on the existing verified connection stream."""

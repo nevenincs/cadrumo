@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:7f9edc8fa1ee5c95529235b15bee279d736d13f0208d92a23fa37dcb899acfa8'
+body_hash: 'sha256:3a82f3a4cfe1b3cbb34b631c798885da068465bb5391ea0ce222a4ea2081a332'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -182,6 +182,18 @@ All reported high/high/medium source findings are corrected in the frozen S16/S1
 Independent re-review reports no residual material issue in these corrected paths. Latest manager CTest passes in 13.74s; configured pinned all-target Clippy passes; final Release binary rebuild passes. Evidence: build/windows-installers-x64/verification/manager-cutover-native-tests.log. Thirteen canonical projection/taxonomy tests pass. Native/application tests also pass against the additive catalogue/specific-version APIs and publication state. Sixteen passive CLI/TUI/MCP remedy cases pass in the explicit selected lane; scoped Ruff/ty pass.
 
 This is source integration evidence, not attended native acceptance. Existing hidden-window tests do not exercise a complete installed two-release Coordinator cancellation. Connected-frontend update notifications, obsolete native-product cleanup and the completed native removal emitter remain explicit work. S12/S13/S15/S16/S17 retain their broader verification/acceptance obligations; no release or installation gate is lifted.
+
+
+2026-10-08 unsigned macOS source verification: generated canonical macos-arm64 contract and identity in build/macos-source-check; pinned Rust 1.96.0 `cargo check --locked --all-targets --manifest-path native/platform/Cargo.toml --target aarch64-apple-darwin` passed on the Windows host. The matching manager all-target cross-check stopped while compiling ring 0.17.14 because no Apple-capable C compiler/SDK is configured (cc unavailable). This is partial source evidence only: no linked macOS manager, native app bundle, DMG, SMAppService registration or interactive acceptance is established. Certificate exclusion does not supply the missing native Apple toolchain. The macOS manager backend remains unfinished.
+
+
+### Connected frontend notices | high | Native attendance observation exceeds the stop deadline
+
+2026-10-08 independent review: REVISION REQUIRED. RuntimeProfileConnections._notify_upgrade calls login.observe synchronously on the sole supervisor command-reader thread; the native observation interface accepts no timeout. An isolated 150 ms witness with a 10 ms deadline returned True after 150 ms. Slow WTS/native or bus observation can also delay subsequent Ping, Stop and SessionEnd. The deadline check before observation is insufficient. Return the authorized S16 work to execution: retain bounded observation work without retry-driven worker accumulation, prevent late results from publishing or admitting stop after expiry, and verify with a slow-witness regression. S16 remains open. Other scoped notice paths were reviewed with no material finding; supplied queue/flush, protocol, CLI/TUI and login checks were reused. Installed interactive acceptance remains pending.
+
+
+2026-10-08 corrective notice review: PASS for the source/check scope. The preceding high deadline finding is resolved by one retained read-only observation worker per runtime connection owner; the command reader consumes only this attempt's result within its remaining deadline, retries cannot accumulate workers, and late results have no event-queue or stop authority. Fresh attempts discard prior completed results and require fresh native observation. The idle inventory checks deadline expiry again. Independent re-review covered all four corrective paths and reused 25 passing lifecycle/supervisor tests, Ruff and type checks; no additional material finding. Earlier reviewed notice transport, pre-login/restricted TUI and human CLI presentation coverage remains applicable. Legacy clients can use the new server without new event variants; opted-in clients deliberately refuse an older strict server, with no silent downgrade. Installed interactive two-release notice acceptance remains pending.
+
 
 ## Recommendations
 

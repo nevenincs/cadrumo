@@ -24,7 +24,7 @@ from ...application.runtime.profile_access import (
     RuntimeReply,
     RuntimeSecretReady,
 )
-from ...application.runtime.session_events import RuntimeSessionEvent
+from ...application.runtime.session_events import RuntimeConnectionEvent, RuntimeLifecycleNotice, RuntimeSessionEvent
 from .runtime_frame_io import (
     SecretBearingRequest,
     read_profile_status,
@@ -44,16 +44,19 @@ class RuntimeVerifiedTransport:
     _closed: bool
     _channel_closed: bool
     _connection_id: UUID | None
+    _lifecycle_notices: bool
     hello: RuntimeServerHello
 
     def subscribe_session_events(
-        self, receive: Callable[[RuntimeSessionEvent], None], *, disconnected: Callable[[], None] | None = None
+        self, receive: Callable[[RuntimeConnectionEvent], None], *, disconnected: Callable[[], None] | None = None
     ) -> Callable[[], None]:
         """Observe this connection without giving a second thread concurrent read authority."""
         with self._exchange_lock:
             if self._closed:
                 raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
             self._event_receivers.append(receive)
+            if self._retained_notice is not None:
+                receive(self._retained_notice)
             if disconnected is not None:
                 self._disconnect_receivers.append(disconnected)
             if self._event_reader is None:
@@ -70,17 +73,22 @@ class RuntimeVerifiedTransport:
         return unsubscribe
 
     def _initialize_session_events(self) -> None:
-        self._event_receivers: list[Callable[[RuntimeSessionEvent], None]] = []
+        self._event_receivers: list[Callable[[RuntimeConnectionEvent], None]] = []
         self._disconnect_receivers: list[Callable[[], None]] = []
         self._event_reader: Thread | None = None
         self._event_stop = Event()
+        self._retained_notice: RuntimeLifecycleNotice | None = None
 
-    def _receive_event(self, event: RuntimeSessionEvent) -> None:
+    def _receive_event(self, event: RuntimeConnectionEvent) -> None:
+        if isinstance(event, RuntimeLifecycleNotice) and not self._lifecycle_notices:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         if event.runtime_boot_id != self.hello.boot_id or (
             self._connection_id is not None and event.connection_id != self._connection_id
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         self._connection_id = event.connection_id
+        if isinstance(event, RuntimeLifecycleNotice):
+            self._retained_notice = event
         for receive in tuple(self._event_receivers):
             receive(event)
 
@@ -94,7 +102,7 @@ class RuntimeVerifiedTransport:
                 if not self._channel.read_ready():
                     continue
                 received = read_reply_or_event(self._channel, RuntimeReply, deadline=time.monotonic() + 5)
-                if not isinstance(received, RuntimeSessionEvent):
+                if not isinstance(received, (RuntimeSessionEvent, RuntimeLifecycleNotice)):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 self._receive_event(received)
             except BaseException as error:
@@ -158,7 +166,7 @@ class RuntimeVerifiedTransport:
             raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
         while True:
             result = read_reply_or_event(self._channel, RuntimeReply, deadline=deadline)
-            if not isinstance(result, RuntimeSessionEvent):
+            if not isinstance(result, (RuntimeSessionEvent, RuntimeLifecycleNotice)):
                 break
             self._receive_event(result)
         self._verify_reply(request_id, result.root.request_id, result.root.runtime_boot_id, result.root.connection_id)

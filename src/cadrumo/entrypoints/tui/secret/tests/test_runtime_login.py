@@ -20,6 +20,7 @@ from .....adapters.local_runtime.frontend_client_contracts import RuntimeFronten
 from .....application.operations.registry import OperationFrontendProjection
 from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from .....application.runtime.profile_access import RuntimeProfileStatus
+from .....application.runtime.session_events import RuntimeLifecycleNotice
 from .....application.user_profile.access_contracts import (
     AccessScope,
     AuthorityState,
@@ -30,6 +31,7 @@ from .....application.user_profile.automation_lifecycle_service import Automatio
 from .....application.user_profile.login_interaction import ProfileLoginChoice
 from .....application.user_profile.login_session import ProfileReceiptRefusedError
 from .....core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from .....core.config import override_settings
 from .....core.profile_session import ProfileSessionRefusalReason
 from ...components.status import PinnedStatusBar
 from ..runtime_login import RuntimeLoginScreen
@@ -44,8 +46,32 @@ from ..runtime_login_contracts import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+@pytest.mark.asyncio
+async def test_unavailable_login_shows_manager_remedy_without_retrying() -> None:
+    attempts = 0
+
+    async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
+        nonlocal attempts
+        attempts += 1
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+    owner = _HandoffOwner()
+    screen = RuntimeLoginScreen(choices=_choices(), open_client=open_client, accept_handoff=owner.accept)
+    with override_settings(cadrumo_output_language="en"):
+        async with _Host(screen).run_test(size=(120, 40)) as pilot:
+            await pilot.pause()
+            screen._status_refused(RuntimeRefusalCode.UNAVAILABLE.value)
+            status = screen.query_one("#runtime-login-status", PinnedStatusBar)
+            assert "manager" in status.message and "runtime_unavailable" in status.message
+            assert attempts == 0
+
+
 class _Client(RuntimeFrontendClient):
     """An explicit UI fault port; native admission has separate acceptance."""
+
+    @override
+    def subscribe_lifecycle_notices(self, receive: Callable[[RuntimeLifecycleNotice], None]) -> Callable[[], None]:
+        return lambda: None
 
     def __init__(self, profile_id: UUID) -> None:
         self._profile_id = profile_id
@@ -387,7 +413,9 @@ async def test_stored_api_reference_uses_only_its_separate_opener_and_restricted
     async def open_client(_selected: UUID) -> RuntimeFrontendClient:
         raise AssertionError("stored-reference mode must not open the unadmitted proof path")
 
-    async def open_reference(profile_id: UUID, credential_reference: UUID) -> RuntimeFrontendClient:
+    async def open_reference(
+        profile_id: UUID, credential_reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
+    ) -> RuntimeFrontendClient:
         opened.append((profile_id, credential_reference))
         return client
 
@@ -436,7 +464,9 @@ async def test_stored_reference_refusal_does_not_open_other_proof_method() -> No
     async def open_client(_selected: UUID) -> RuntimeFrontendClient:
         raise AssertionError("stored-reference refusal must not fall back")
 
-    async def open_reference(profile_id: UUID, _reference: UUID) -> RuntimeFrontendClient:
+    async def open_reference(
+        profile_id: UUID, _reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
+    ) -> RuntimeFrontendClient:
         attempted.append(profile_id)
         raise RuntimeFrontendRefusedError("credential_rejected")
 
@@ -469,7 +499,9 @@ async def test_unmount_during_stored_reference_open_closes_after_open_settles() 
     async def open_client(_selected: UUID) -> RuntimeFrontendClient:
         raise AssertionError("stored-reference opening must not use the password path")
 
-    async def open_reference(_selected: UUID, _reference: UUID) -> RuntimeFrontendClient:
+    async def open_reference(
+        _selected: UUID, _reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
+    ) -> RuntimeFrontendClient:
         started.set()
         await release.wait()
         return client
@@ -754,7 +786,9 @@ async def test_reference_refusal_retains_failed_owner_without_closing_later_hand
     async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
         raise AssertionError("reference admission cannot fall back")
 
-    async def open_reference(_profile_id: UUID, _reference: UUID) -> RuntimeFrontendClient:
+    async def open_reference(
+        _profile_id: UUID, _reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
+    ) -> RuntimeFrontendClient:
         nonlocal attempts
         attempts += 1
         if attempts == 1:
@@ -806,7 +840,9 @@ async def test_repeated_cancellation_of_failed_reference_open_preserves_cleanup_
     async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
         raise AssertionError("reference admission cannot fall back")
 
-    async def open_reference(_profile_id: UUID, _reference: UUID) -> RuntimeFrontendClient:
+    async def open_reference(
+        _profile_id: UUID, _reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
+    ) -> RuntimeFrontendClient:
         started.set()
         await release.wait()
         return await _failed_reference_admission(failed, refusal)
@@ -850,7 +886,9 @@ async def test_unmount_during_failed_reference_open_drains_then_retries_cleanup(
     async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
         raise AssertionError("reference admission cannot fall back")
 
-    async def open_reference(_profile_id: UUID, _reference: UUID) -> RuntimeFrontendClient:
+    async def open_reference(
+        _profile_id: UUID, _reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
+    ) -> RuntimeFrontendClient:
         started.set()
         await release.wait()
         return await _failed_reference_admission(failed, refusal)
@@ -897,7 +935,9 @@ async def test_returned_reference_status_refusal_keeps_primary_and_retries_faile
     async def open_client(_profile_id: UUID) -> RuntimeFrontendClient:
         raise AssertionError("reference admission cannot fall back")
 
-    async def open_reference(_profile_id: UUID, _reference: UUID) -> RuntimeFrontendClient:
+    async def open_reference(
+        _profile_id: UUID, _reference: UUID, _on_connected: Callable[[RuntimeFrontendClient], None]
+    ) -> RuntimeFrontendClient:
         return client
 
     owner = _HandoffOwner()

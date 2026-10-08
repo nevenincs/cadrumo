@@ -70,3 +70,4 @@ class LoginAttemptState:
     client: RuntimeFrontendClient | None = None
     transferred: bool = False
     primary_error: BaseException | None = None
+    unsubscribe_notice: Callable[[], None] | None = None

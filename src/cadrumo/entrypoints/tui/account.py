@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, ClassVar, override
 from textual.command import DiscoveryHit, Hit, Hits, Provider
 from textual.message import Message
 
+from ...application.runtime.session_events import RuntimeLifecycleNotice
 from ...core.errors.hierarchy import CadrumoError
 from .components.account_chrome import AccountActionV1, TuiAccountHostV1, account_action_help, account_action_label
 from .navigation import TuiScreenContextV1
@@ -100,6 +101,11 @@ class AccountFactoriesV1:
     onboarding_pending: bool = False
     """Whether the profile still needs setup, so the session opens on the setup walk."""
     subscribe_retirement: Callable[[Callable[[], None]], Callable[[], None]] | None = None
+    subscribe_notices: Callable[[Callable[[RuntimeLifecycleNotice], None]], Callable[[], None]] | None = None
+
+
+class RuntimeUpgradePending(Message):
+    """Presentation only; this message changes no session or operation authority."""
 
 
 class WorkbenchAccountProviderV1(Provider):

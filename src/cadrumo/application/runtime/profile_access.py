@@ -45,7 +45,7 @@ from .enrollment_access import (
     RuntimeEnrollmentRequest,
 )
 from .operation_access import RuntimeOperationReply, RuntimeOperationRequest
-from .session_events import RuntimeSessionEvent
+from .session_events import RuntimeConnectionEvent
 from .sign_in import RuntimeHumanSignedOut, RuntimeSignInStatusReply, RuntimeSignInStatusRequest
 from .transport import RuntimeConnectionContext
 
@@ -260,12 +260,16 @@ class RuntimeProfileDrainResult:
 class RuntimeProfileHandler(Protocol):
     """Host-owned profile admission and lifetime hooks after the native handshake."""
 
-    def connect_events(self, context: RuntimeConnectionContext) -> None:
+    def connect_events(self, context: RuntimeConnectionContext, channel: RuntimeByteChannel | None = None) -> None:
         """Register an already verified stream for bounded retirement notices."""
         ...
 
-    def take_events(self, context: RuntimeConnectionContext) -> tuple[RuntimeSessionEvent, ...]:
+    def take_events(self, context: RuntimeConnectionContext) -> tuple[RuntimeConnectionEvent, ...]:
         """Take one bounded batch, or refuse an overflowed connection."""
+        ...
+
+    def event_flushed(self, context: RuntimeConnectionContext, event: RuntimeConnectionEvent) -> None:
+        """Record successful writing by this connection's sole writer, not user acknowledgement."""
         ...
 
     def handle(

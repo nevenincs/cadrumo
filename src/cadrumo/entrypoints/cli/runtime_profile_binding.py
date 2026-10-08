@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from collections.abc import Callable, Generator
 from concurrent.futures import Future
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from contextvars import copy_context
 from threading import Thread
 from typing import Never
@@ -18,9 +19,17 @@ from ...adapters.local_runtime.runtime_transport_cleanup import RuntimeTransport
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from ...core.click_context import json_output_requested
 from ...core.errors.hierarchy import CadrumoError
+from ...core.i18n.render import tr
 
 _CONTEXT_KEY = "cadrumo.cli.runtime_profile_client"
+_NOTICE_KEY = "cadrumo.cli.runtime_notice_clients"
+
+
+class _NoticeSubscriptions:
+    def __init__(self) -> None:
+        self.clients: set[RuntimeFrontendClient] = set()
 
 
 def _has_retained_cleanup(error: BaseException) -> bool:
@@ -104,6 +113,25 @@ def bind_profile_client(ctx: typer.Context, client: RuntimeFrontendClient, *, pr
     if _CONTEXT_KEY in ctx.meta:
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     ctx.meta[_CONTEXT_KEY] = ctx.with_resource(_owned_profile_client(client))
+    subscribe_profile_notices(ctx, client)
+
+
+def subscribe_profile_notices(ctx: typer.Context, client: RuntimeFrontendClient) -> None:
+    """Attach human-only presentation before authentication, once per invocation client."""
+    if not json_output_requested() and sys.stdin.isatty() and sys.stderr.isatty():
+        subscriptions = ctx.meta.setdefault(_NOTICE_KEY, _NoticeSubscriptions())
+        if not isinstance(subscriptions, _NoticeSubscriptions):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        if client in subscriptions.clients:
+            return
+        message = tr("common.manager.update_pending")
+
+        def notice(_event: object) -> None:
+            with suppress(OSError):
+                typer.echo(message, err=True)
+
+        ctx.call_on_close(client.subscribe_lifecycle_notices(notice))
+        subscriptions.clients.add(client)
 
 
 def bound_profile_client(ctx: typer.Context) -> RuntimeFrontendClient:

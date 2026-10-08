@@ -40,7 +40,7 @@ from .config.secure_input import (
     terminal_can_prompt_for_secrets,
 )
 from .errors import CliRefusedBoundaryError
-from .runtime_profile_binding import bind_profile_client
+from .runtime_profile_binding import bind_profile_client, subscribe_profile_notices
 
 
 def parsed_root_profile_source(ctx: typer.Context) -> ProfileSecretSourceOptions:
@@ -166,13 +166,14 @@ def activate_runtime_profile(
             raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_missing_target")
         raise no_active_profile_refusal()
     if credential_reference is not None:
-        client = _open_profile_credential_client(bucket_id, credential_reference, root_selection, method)
+        client = _open_profile_credential_client(bucket_id, credential_reference, root_selection, method, ctx)
     else:
         client = asyncio.run(
             open_installed_runtime_client(profile_id=UUID(bucket_id), frontend=OperationFrontendProjection.CLI)
         )
     try:
         if credential_reference is None:
+            subscribe_profile_notices(ctx, client)
             _authenticate(ctx, client, root_selection=root_selection, profile_label=target_profile_label, method=method)
         bind_profile_target(ctx, bucket_id=bucket_id)
         bind_profile_client(ctx, client, profile_id=UUID(bucket_id))
@@ -216,6 +217,7 @@ def _open_profile_credential_client(
     credential_reference: UUID,
     root_selection: ProfileSecretSelection | None,
     method: ProfileAuthenticationMethod,
+    ctx: typer.Context,
 ) -> RuntimeFrontendClient:
     """Refuse conflicting credential inputs before opening the installed credential connection."""
     if root_selection is not None:
@@ -229,6 +231,7 @@ def _open_profile_credential_client(
             profile_id=UUID(bucket_id),
             credential_reference=credential_reference,
             frontend=OperationFrontendProjection.CLI,
+            on_connected=lambda client: subscribe_profile_notices(ctx, client),
         )
     )
     return client

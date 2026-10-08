@@ -134,9 +134,15 @@ class RuntimeConnectionHandling:
         cleanup_deferred = False
         try:
             context = RuntimeConnectionContext(uuid4(), self.identity.boot_id, channel.peer)
-            accept_runtime_handshake(channel, identity=self.identity, deadline=time.monotonic() + 5)
+            hello = accept_runtime_handshake(channel, identity=self.identity, deadline=time.monotonic() + 5)
+            context = RuntimeConnectionContext(
+                context.connection_id,
+                context.runtime_boot_id,
+                context.peer,
+                lifecycle_notices=hello.lifecycle_notices == "v1",
+            )
             if self.profiles is not None:
-                self.profiles.connect_events(context)
+                self.profiles.connect_events(context, channel)
             self._serve_connection_requests(channel, context)
         except RuntimeRefusalError as error:
             retained = self._retain_channel_cleanup(error, channel=channel)
@@ -172,6 +178,7 @@ class RuntimeConnectionHandling:
             if self.profiles is not None:
                 for event in self.profiles.take_events(context):
                     write_session_event(channel, event, deadline=time.monotonic() + 5)
+                    self.profiles.event_flushed(context, event)
             if not channel.read_ready():
                 # Short waits after activity avoid a fixed 50ms round-trip tax.
                 # Idle connections quickly return to the existing bounded rate;

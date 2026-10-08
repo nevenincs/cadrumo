@@ -340,3 +340,4 @@ class ProfileConnectionSessionMixin:
                 host.approvals.retire_connection(context.connection_id)
             with self._guard:
                 self._connections.pop(context.connection_id, None)
+                self._notice_connections.pop(context.connection_id, None)

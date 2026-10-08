@@ -15,3 +15,4 @@ class RuntimeConnectionContext:
     connection_id: UUID
     runtime_boot_id: UUID
     peer: RuntimePeer
+    lifecycle_notices: bool = False

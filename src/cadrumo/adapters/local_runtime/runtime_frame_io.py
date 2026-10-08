@@ -18,6 +18,7 @@ from ...application.runtime.access_management import (
 from ...application.runtime.bootstrap import RuntimePasswordReset
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
+    RuntimeClientHello,
     RuntimeRefusalCode,
     RuntimeRefusalError,
 )
@@ -32,7 +33,7 @@ from ...application.runtime.profile_access import (
     RuntimeProfileStatus,
     RuntimeProfileStatusTransfer,
 )
-from ...application.runtime.session_events import RuntimeSessionEvent
+from ...application.runtime.session_events import RuntimeConnectionEvent, RuntimeEventFrame
 from ...application.runtime.submission_payload import (
     SUBMISSION_PAYLOAD_CHUNK_BYTES,
     SubmissionPayloadBuffer,
@@ -101,7 +102,7 @@ def read_document[Model: BaseModel](channel: RuntimeByteChannel, model: type[Mod
 
 def read_reply_or_event[Model: BaseModel](
     channel: RuntimeByteChannel, model: type[Model], *, deadline: float
-) -> Model | RuntimeSessionEvent:
+) -> Model | RuntimeConnectionEvent:
     """Demultiplex only at a complete reply boundary, never inside a secret or transfer."""
     try:
         header = channel.read_exact(5, deadline=deadline)
@@ -110,14 +111,14 @@ def read_reply_or_event[Model: BaseModel](
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         payload = channel.read_exact(size, deadline=deadline)
         if header[:1] == SESSION_EVENT_FRAME_KIND:
-            return decode_document(payload, RuntimeSessionEvent)
+            return decode_document(payload, RuntimeEventFrame).root
         return decode_document(payload, model)
     except BaseException as error:
         close_runtime_transport_after_failure(channel, error)
         raise
 
 
-def write_session_event(channel: RuntimeByteChannel, event: RuntimeSessionEvent, *, deadline: float) -> None:
+def write_session_event(channel: RuntimeByteChannel, event: RuntimeConnectionEvent, *, deadline: float) -> None:
     """Write a bounded event using the connection's existing sole writer."""
     frame = SESSION_EVENT_FRAME_KIND + document_frame(event)[1:]
     try:
@@ -129,7 +130,12 @@ def write_session_event(channel: RuntimeByteChannel, event: RuntimeSessionEvent,
 
 def document_frame(document: BaseModel) -> bytes:
     """Build one bounded credential-free JSON frame before channel ownership changes."""
-    payload = canonical_json_bytes(document.model_dump(mode="json"))
+    excluded = (
+        {"lifecycle_notices"}
+        if isinstance(document, RuntimeClientHello) and document.lifecycle_notices is None
+        else set()
+    )
+    payload = canonical_json_bytes(document.model_dump(mode="json", exclude=excluded))
     if not 0 < len(payload) <= MAXIMUM_FRAME_BYTES:
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     return DOCUMENT_FRAME_KIND + struct.pack("!I", len(payload)) + payload

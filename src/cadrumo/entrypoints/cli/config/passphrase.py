@@ -70,9 +70,21 @@ def _rotation_lines(outcome: ProfilePassphraseRotationOutcome) -> tuple[str, ...
     )
 
 
-def _open_rotation_client(profile_id: UUID) -> RuntimeFrontendClient:
+def _open_rotation_client(profile_id: UUID, ctx: typer.Context | None = None) -> RuntimeFrontendClient:
     """Open one exact CLI connection without local profile custody."""
-    return asyncio.run(open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
+    from ..runtime_profile_binding import subscribe_profile_notices
+
+    client = asyncio.run(open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
+    try:
+        if ctx is not None:
+            subscribe_profile_notices(ctx, client)
+    except BaseException as primary:
+        try:
+            client.close()
+        except Exception:
+            primary.add_note("Runtime connection cleanup did not complete.")
+        raise
+    return client
 
 
 def passphrase_change(
@@ -100,7 +112,7 @@ def passphrase_change(
             confirmation.extend(secrets.new_passphrase_confirmation.get_secret_value().encode("utf-8"))
         finally:
             del secrets
-        client = _open_rotation_client(profile_id)
+        client = _open_rotation_client(profile_id, ctx)
         try:
             proof = bytearray(current)
             try:
@@ -114,7 +126,7 @@ def passphrase_change(
                 current_passphrase=current,
                 new_passphrase=replacement,
                 new_passphrase_confirmation=confirmation,
-                fresh_client=lambda: _open_rotation_client(profile_id),
+                fresh_client=lambda: _open_rotation_client(profile_id, ctx),
             )
             outcome = completion.outcome
         except BaseException as primary:
@@ -192,7 +204,7 @@ def passphrase_reset(
             confirmation.extend(secrets.new_passphrase_confirmation.get_secret_value().encode("utf-8"))
         finally:
             del secrets
-        client = _open_rotation_client(profile_id)
+        client = _open_rotation_client(profile_id, ctx)
         try:
             completion = client.reset_password(
                 recovery_code=code,

@@ -56,7 +56,7 @@ from ...application.runtime.profile_access import (
     RuntimeSessionRequest,
     RuntimeSessionsLocked,
 )
-from ...application.runtime.session_events import RuntimeSessionEvent
+from ...application.runtime.session_events import RuntimeConnectionEvent, RuntimeLifecycleNotice
 from ...application.runtime.sign_in import RuntimeHumanSignedOut, RuntimeSignInStatusReply, RuntimeSignInStatusRequest
 from ...application.user_profile.access_contracts import AccessDenialCode
 from ...application.user_profile.access_projections import PublicAccessSession
@@ -106,8 +106,17 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         self._retirement_epoch = 0
         self._retirement_receivers: list[Callable[[], None]] = []
         self._event_subscription: Callable[[], None] | None = None
+        self._notice_receivers: list[Callable[[RuntimeLifecycleNotice], None]] = []
+        self._lifecycle_notice: RuntimeLifecycleNotice | None = None
 
-    def _session_retired(self, event: RuntimeSessionEvent) -> None:
+    def _session_retired(self, event: RuntimeConnectionEvent) -> None:
+        if isinstance(event, RuntimeLifecycleNotice):
+            with self._event_guard:
+                self._lifecycle_notice = event
+                receivers = tuple(self._notice_receivers)
+            for receive_notice in receivers:
+                receive_notice(event)
+            return
         if event.profile_id != self.profile_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         with self._event_guard:
@@ -143,6 +152,25 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
             with self._event_guard:
                 if receive in self._retirement_receivers:
                     self._retirement_receivers.remove(receive)
+
+        return unsubscribe
+
+    def subscribe_lifecycle_notices(self, receive: Callable[[RuntimeLifecycleNotice], None]) -> Callable[[], None]:
+        """Observe nonsecret notices without changing authentication or requesting manager actions."""
+        if self._event_subscription is None:
+            self._event_subscription = self._connection.subscribe_session_events(
+                self._session_retired, disconnected=self._connection_failed
+            )
+        with self._event_guard:
+            self._notice_receivers.append(receive)
+            retained = self._lifecycle_notice
+        if retained is not None:
+            receive(retained)
+
+        def unsubscribe() -> None:
+            with self._event_guard:
+                if receive in self._notice_receivers:
+                    self._notice_receivers.remove(receive)
 
         return unsubscribe
 

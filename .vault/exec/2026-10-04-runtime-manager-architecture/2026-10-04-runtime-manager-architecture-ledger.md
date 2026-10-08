@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:a143ab28e9f0c35a77ad31d83e85e6ef60150ffebc5c9407cca6189018907fc2'
+body_hash: 'sha256:8fe05b7a8c07a9c86c6f28ae160a05945dfe0535e27593fe335f6900e02f1c9f'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -458,6 +458,51 @@ related:
 - `S18` `verify:` `Linux placement probe Ruff and ty` -> `pass`
 - `S18` `verify:` `Pinned manylinux platform/application/manager all-target Clippy before subsequent cutover contract regeneration` -> `pass`
 - `S18` `by:` `Codex`
+- `S16` `M` `src/cadrumo/application/runtime/session_events.py`
+- `S16` `M` `src/cadrumo/application/runtime/contracts.py`
+- `S16` `M` `src/cadrumo/application/runtime/transport.py`
+- `S16` `M` `src/cadrumo/application/runtime/profile_access.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/runtime_client.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/runtime_frame_io.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/runtime_verified_transport.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/server_connection_handling.py`
+- `S16` `M` `src/cadrumo/entrypoints/runtime/session_events.py`
+- `S16` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/account.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/runtime_account.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/runtime_session.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/runtime_profile_binding.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/framing.py`
+- `S16` `A` `src/cadrumo/entrypoints/runtime/tests/test_lifecycle_notices.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/tests/test_session_events.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_session.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/tests/test_app.py`
+- `S16` `M` `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_attempt.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_session.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login.py`
+- `S16` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_lifecycle_notice.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/custody.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/passphrase.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/runtime_automation_request.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/runtime_credentials.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/tests/test_runtime_credentials_cleanup.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/config/tests/test_passphrase_runtime_change.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_contracts.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_reference_login.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_credential_reference_admission.py`
+- `S16` `A` `src/cadrumo/entrypoints/runtime/notice_observation.py`
+- `S16` `verify:` `Focused runtime/frontend notice unit suite (69 tests)` -> `pass`
+- `S16` `verify:` `TUI login integration suite (35 tests)` -> `pass`
+- `S16` `verify:` `Affected CLI credential-admission suite after stale fixture correction (9 tests)` -> `pass`
+- `S16` `verify:` `Corrective lifecycle/supervisor deadline suite (25 tests)` -> `pass`
+- `S16` `verify:` `Scoped notice Ruff lint and formatting plus type checks` -> `pass`
+- `S16` `verify:` `Independent notice review and corrective deadline re-review` -> `pass`
 
 ## Notes
 
@@ -493,3 +538,4 @@ related:
 - `S15` Localized passive guidance; no manager request or business-code change. Repository-wide import gate previously blocked by unrelated concurrent module removals; S15 broader gate remains open.
 - `S16` S16/S17 coherent integration checkpoint. Attended installed two-release upgrade/rollback/cancelled-shutdown evidence, connected-frontend notices, obsolete native-product cleanup and native removal emitter remain open. No acceptance or signing claim.
 - `S18` Partial S18 checkpoint only: probe is an opt-in disposable graphical-runner experiment, not runtime acceptance. Current WSL process has no authoritative graphical logind membership and correctly refuses despite display environment variables. Linux manager entrypoint remains gated pending placement/session identity and native installation ownership evidence. Full latest Linux native suite must be rerun after cutover contract regeneration.
+- `S16` Partial S16 checkpoint: localized notices use existing typed E-frame stream and sole writer with complete-frame flush witnesses, pre-login and restricted TUI plus human CLI consumers. One retained read-only observation worker enforces bounded StopIfIdle and rejects expired results. Legacy client to new server compatible; opted-in client to older strict server deliberately refuses without downgrade. Real installed interactive two-release notice acceptance remains outstanding; native reference-login integration was adapted/typechecked but not rerun.

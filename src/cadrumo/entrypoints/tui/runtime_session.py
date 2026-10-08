@@ -22,7 +22,7 @@ from ...application.user_profile.access_contracts import ProfileAccessStatus
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.i18n.render import tr
 from ...core.time.clock import now
-from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1, AccountSessionRetired
+from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1, AccountSessionRetired, RuntimeUpgradePending
 from .components.theme import BASE_CSS, install_cadrumo_themes, tokenised
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
 
@@ -101,6 +101,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         self._locking = False
         self._reading = False
         self._unsubscribe_retirement: Callable[[], None] | None = None
+        self._unsubscribe_notices: Callable[[], None] | None = None
 
     @override
     def compose(self) -> ComposeResult:
@@ -127,18 +128,29 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         """Start non-touching status observation after the shell has mounted."""
         install_cadrumo_themes(self)
         self._unsubscribe_retirement = self._client.subscribe_session_retirement(self._post_retirement)
+        self._unsubscribe_notices = self._client.subscribe_lifecycle_notices(self._post_upgrade_notice)
         self.set_interval(_STATUS_INTERVAL_SECONDS, self._start_status_read)
         self._start_status_read()
 
     def on_unmount(self) -> None:
         """Fence late status results when the borrowed shell is discarded."""
         self._cleared = True
+        if self._unsubscribe_notices is not None:
+            self._unsubscribe_notices()
+            self._unsubscribe_notices = None
         if self._unsubscribe_retirement is not None:
             self._unsubscribe_retirement()
             self._unsubscribe_retirement = None
 
     def _post_retirement(self) -> None:
         self.post_message(AccountSessionRetired())
+
+    def on_runtime_upgrade_pending(self, _: RuntimeUpgradePending) -> None:
+        """Display information without altering the admitted API session."""
+        self.notify(tr("common.manager.update_pending"), timeout=10)
+
+    def _post_upgrade_notice(self, _notice: object) -> None:
+        self.post_message(RuntimeUpgradePending())
 
     def on_account_session_retired(self, _: AccountSessionRetired) -> None:
         """Discard restricted private metadata on pushed lease retirement."""

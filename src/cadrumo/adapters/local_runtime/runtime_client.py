@@ -75,6 +75,9 @@ async def open_installed_runtime_client(
         launch = RuntimeLaunchDoor(
             endpoint,
             expected=RuntimeClientHello(
+                lifecycle_notices="v1"
+                if frontend in {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
+                else None,
                 product_version=product_version,
                 storage_identity=endpoint.storage_identity,
                 authority_generation=published_authority_generation(),

@@ -32,5 +32,7 @@ class RuntimeLoginHandoff:
 
 
 type RuntimeClientOpener = Callable[[UUID], Awaitable[RuntimeFrontendClient]]
-type RuntimeCredentialClientOpener = Callable[[UUID, UUID], Awaitable[RuntimeFrontendClient]]
+type RuntimeCredentialClientOpener = Callable[
+    [UUID, UUID, Callable[[RuntimeFrontendClient], None]], Awaitable[RuntimeFrontendClient]
+]
 type RuntimeLoginAcceptor = Callable[[RuntimeLoginHandoff], bool]

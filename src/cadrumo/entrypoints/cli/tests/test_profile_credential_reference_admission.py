@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import cast
 from uuid import UUID, uuid4
 
@@ -151,9 +152,14 @@ def test_reference_uses_installed_credential_door_and_binds_exact_profile(
     bound: list[tuple[str, object]] = []
 
     async def open_credential(
-        *, profile_id: UUID, credential_reference: UUID, frontend: OperationFrontendProjection
+        *,
+        profile_id: UUID,
+        credential_reference: UUID,
+        frontend: OperationFrontendProjection,
+        on_connected: Callable[[RuntimeFrontendClient], None],
     ) -> RuntimeFrontendClient:
         opened.append((profile_id, credential_reference, frontend))
+        on_connected(cast(RuntimeFrontendClient, client))
         return cast(RuntimeFrontendClient, client)
 
     monkeypatch.setattr(runtime_profile_admission, "open_installed_credential_client", open_credential)

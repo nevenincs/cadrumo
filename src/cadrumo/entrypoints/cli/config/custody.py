@@ -196,6 +196,9 @@ def _login_through_the_prompt(
     )
     try:
         admitted = None
+        from ..runtime_profile_binding import subscribe_profile_notices
+
+        subscribe_profile_notices(ctx, client)
         if machine_secret is None and interactive:
             with suppress(ProfileReceiptRefusedError):
                 admitted = client.resume_receipt()
@@ -306,6 +309,9 @@ def config_sign_in_status(
             open_installed_runtime_client(profile_id=UUID(captured.bucket_id), frontend=OperationFrontendProjection.CLI)
         )
         try:
+            from ..runtime_profile_binding import subscribe_profile_notices
+
+            subscribe_profile_notices(ctx, client)
             status = client.sign_in_status().status
         finally:
             client.close()
@@ -346,6 +352,9 @@ def config_logout(
             open_installed_runtime_client(profile_id=UUID(captured.bucket_id), frontend=OperationFrontendProjection.CLI)
         )
         try:
+            from ..runtime_profile_binding import subscribe_profile_notices
+
+            subscribe_profile_notices(ctx, client)
             outcome = client.human_sign_out()
         except (RuntimeFrontendRefusedError, ProfileReceiptRefusedError) as error:
             raise CliRefusedBoundaryError(str(error.reason), context={"reason": str(error.reason)}) from None

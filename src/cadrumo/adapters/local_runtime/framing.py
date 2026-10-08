@@ -41,6 +41,7 @@ class VerifiedRuntimeConnection(RuntimeOperationTransport):
         self._closed = True
         self._channel_closed = False
         self._connection_id: UUID | None = None
+        self._lifecycle_notices = expected.lifecycle_notices == "v1"
         try:
             # This constructor owns failed-handshake cleanup. The public frame
             # helpers close failed exchanges, before an owner can be returned.

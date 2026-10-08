@@ -119,4 +119,5 @@ def compose_runtime_account_factories(
         access=access,
         onboarding_pending=onboarding_pending,
         subscribe_retirement=client.subscribe_session_retirement,
+        subscribe_notices=client.subscribe_lifecycle_notices,
     )

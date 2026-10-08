@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import sys
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from importlib.metadata import version
 from pathlib import Path
@@ -112,13 +113,16 @@ def test_stored_reference_enters_restricted_shell_without_human_fallback(tmp_pat
             opened_plain.append(selected)
             raise AssertionError("reference login must never open a password/API-key form client")
 
-        async def open_reference(selected: UUID, reference: UUID) -> RuntimeFrontendClient:
+        async def open_reference(
+            selected: UUID, reference: UUID, on_connected: Callable[[RuntimeFrontendClient], None]
+        ) -> RuntimeFrontendClient:
             opened_references.append((selected, reference))
             return await open_installed_credential_client(
                 profile_id=selected,
                 credential_reference=reference,
                 frontend=OperationFrontendProjection.TUI,
                 secrets_store=subject.client_native,
+                on_connected=on_connected,
             )
 
         async def drive_success(pilot: Pilot[object]) -> None:

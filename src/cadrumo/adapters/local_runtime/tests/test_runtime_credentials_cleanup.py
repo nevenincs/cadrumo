@@ -120,14 +120,19 @@ async def test_admission_refusal_preserves_identity_and_retains_failed_native_cl
 ) -> None:
     client, channel = connection
     refusal = AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+    connected: list[RuntimeFrontendClient] = []
 
     def refuse() -> None:
+        assert connected == [client]
         raise refusal
 
     reference = _admission_ports(monkeypatch, tmp_path, client, refuse)
     with pytest.raises(AutomationCustodyError) as caught:
         await open_installed_credential_client(
-            profile_id=client.profile_id, credential_reference=reference, frontend=client.frontend
+            profile_id=client.profile_id,
+            credential_reference=reference,
+            frontend=client.frontend,
+            on_connected=connected.append,
         )
     assert caught.value is refusal
     cleanup = refusal.__dict__.get("async_cleanup_error")

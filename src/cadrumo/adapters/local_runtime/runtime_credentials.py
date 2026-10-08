@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID
@@ -78,6 +79,7 @@ async def open_installed_credential_client(
     frontend: OperationFrontendProjection,
     timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS,
     secrets_store: AutomationSecretStore | None = None,
+    on_connected: Callable[[RuntimeFrontendClient], None] | None = None,
 ) -> RuntimeFrontendClient:
     """Own a newly admitted exact-profile client without exporting its key.
 
@@ -95,6 +97,8 @@ async def open_installed_credential_client(
         profile_id=profile_id, frontend=frontend, timeout=remaining_budget(deadline)
     )
     try:
+        if on_connected is not None:
+            on_connected(client)
         await await_cancellation_complete(
             asyncio.to_thread(
                 _authenticate_reference,

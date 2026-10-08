@@ -126,6 +126,9 @@ def automation_create(
     try:
         language = resolve_runtime_profile_output_language(client, requested=output_language)
         activate_subcommand_output_language(ctx, language)
+        from ..runtime_profile_binding import subscribe_profile_notices
+
+        subscribe_profile_notices(ctx, client)
         try:
             enrollment = client.prepare_enrollment(store)
         except RuntimeFrontendRefusedError as error:

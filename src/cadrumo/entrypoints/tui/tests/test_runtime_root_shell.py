@@ -54,6 +54,7 @@ def _root(*, child_factory: Callable[[object], Screen[None]] | None = None) -> R
     )
     account = object.__new__(AccountFactoriesV1)
     object.__setattr__(account, "subscribe_retirement", None)
+    object.__setattr__(account, "subscribe_notices", None)
     object.__setattr__(account, "profile", _screen)
     object.__setattr__(account, "password", lambda: Screen())
     object.__setattr__(account, "access", None)

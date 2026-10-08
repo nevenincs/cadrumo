@@ -98,11 +98,16 @@ async def _open_client(profile_id: UUID) -> RuntimeFrontendClient:
     return await open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
 
 
-async def _open_credential_client(profile_id: UUID, credential_reference: UUID) -> RuntimeFrontendClient:
+async def _open_credential_client(
+    profile_id: UUID,
+    credential_reference: UUID,
+    on_connected: Callable[[RuntimeFrontendClient], None],
+) -> RuntimeFrontendClient:
     return await open_installed_credential_client(
         profile_id=profile_id,
         credential_reference=credential_reference,
         frontend=OperationFrontendProjection.TUI,
+        on_connected=on_connected,
     )
 
 

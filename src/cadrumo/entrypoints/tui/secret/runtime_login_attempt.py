@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import sys
 import time
+from collections.abc import Callable
 from logging import ERROR, INFO, WARNING
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -22,8 +23,10 @@ from ....core.async_cleanup import (
     close_async_resources,
 )
 from ....core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_scope
+from ....core.i18n.render import tr
 from ....core.logging import get_logger
 from ....core.time.clock import now
+from ..account import RuntimeUpgradePending
 from .runtime_login_contracts import RuntimeLoginHandoff, RuntimeLoginMethod
 from .runtime_login_session import LoginAttemptState, open_to_completion
 
@@ -35,6 +38,14 @@ _LOGGER = get_logger(__name__)
 
 class RuntimeLoginAttemptMixin:
     """Own proof execution, admission, cancellation, and connection custody."""
+
+    def _post_upgrade_notice(self: RuntimeLoginScreen, _notice: object) -> None:
+        self.post_message(RuntimeUpgradePending())
+
+    def on_runtime_upgrade_pending(self: RuntimeLoginScreen, message: RuntimeUpgradePending) -> None:
+        """Show information during login without altering a credential or session."""
+        message.stop()
+        self.notify(tr("common.manager.update_pending"), timeout=10)
 
     async def _close_untransferred(
         self: RuntimeLoginScreen, client: RuntimeFrontendClient, *, primary_error: BaseException | None
@@ -97,11 +108,20 @@ class RuntimeLoginAttemptMixin:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
         async def open_reference(selected: UUID) -> RuntimeFrontendClient:
+            unsubscribe: Callable[[], None] | None = None
+
+            def connected(client: RuntimeFrontendClient) -> None:
+                nonlocal unsubscribe
+                unsubscribe = client.subscribe_lifecycle_notices(self._post_upgrade_notice)
+
             try:
-                return await opener(selected, reference)
+                return await opener(selected, reference, connected)
             except BaseException as error:
                 self._retain_reference_cleanup(error)
                 raise
+            finally:
+                if unsubscribe is not None:
+                    unsubscribe()
 
         return await open_to_completion(open_reference, profile_id)
 
@@ -182,6 +202,7 @@ class RuntimeLoginAttemptMixin:
             diagnostic_event(_LOGGER, "tui_login_abandoned", fields={"stage": "connected", "outcome": "abandoned"})
             return
         client = state.client
+        state.unsubscribe_notice = client.subscribe_lifecycle_notices(self._post_upgrade_notice)
         if client.profile_id != profile_id or client.frontend is not OperationFrontendProjection.TUI:
             diagnostic_event(
                 _LOGGER,
@@ -312,6 +333,8 @@ class RuntimeLoginAttemptMixin:
                 if self._handle_login_failure(error, transferred=state.transferred):
                     raise
             finally:
+                if state.unsubscribe_notice is not None:
+                    state.unsubscribe_notice()
                 if proof is not None:
                     proof[:] = bytes(len(proof))
                     if self._pending_proof is proof:

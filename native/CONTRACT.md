@@ -1398,8 +1398,29 @@ recorded complete previous version. Uninstall detection requires a completed nat
 registration-removal record for the admitted prefix and scope, missing registration
 hint and missing stable entry. Update gaps and unknown evidence remain observational.
 
-Connected-frontend update notification, obsolete native-product cleanup and
-interactive two-release installer acceptance remain separate completion evidence.
+Before private `StopIfIdle` admission, the runtime queues a coalesced
+`lifecycle_notice` / `upgrade_pending` E-frame for opted-in connections whose
+native login witness remains active and unlocked, including pre-login connections.
+One notice is retained per connection; taking it from the queue does not prove
+delivery. The sole connection writer records delivery only after its frame write
+succeeds. Waiting shares the existing bounded stop deadline; an unflushed attended
+notice defers that stop attempt. This presentation event neither retires a session
+nor grants runtime or manager authority. TUI renders the canonical localized notice;
+CLI renders it only on attended human stderr, preserving machine output.
+Native eligibility reads run in one retained read-only worker, outside the
+supervisor command reader. A stalled read refuses retries without accumulating
+workers; expired results cannot enqueue notices or authorize stop. A later
+attempt requires a fresh observation, within its own existing stop deadline.
+
+The optional ClientHello `lifecycle_notices: "v1"` capability is omitted for legacy
+clients and unattended MCP composition. Legacy clients can connect to this server
+and receive only their existing event grammar. An opted-in client is refused by an
+older strict protocol-3 server; there is no silent capability downgrade. Unknown
+event kinds and mismatched connection/boot identity remain protocol failures.
+
+Obsolete native-product cleanup and interactive two-release installer acceptance
+remain separate completion evidence. Headless notice checks do not prove attended
+OS delivery during a real installed upgrade.
 GUI-subsystem startup failure is visible after interactive admission;
 session 0 remains refused without UI. Tests of the hidden window's own queue do
 not constitute real session-1 logoff or desktop package acceptance.

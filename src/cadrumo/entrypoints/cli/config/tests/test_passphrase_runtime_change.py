@@ -52,7 +52,7 @@ def test_runtime_change_uses_exact_target_and_wipes_all_buffers(
     captured: dict[str, object] = {}
     buffers: list[bytearray] = []
 
-    def open_client(target: UUID) -> _Client:
+    def open_client(target: UUID, _ctx: typer.Context) -> _Client:
         assert target == profile_id
         client = _Client(target)
         if not clients:
@@ -127,7 +127,7 @@ def test_missing_active_profile_refuses_before_collecting_a_secret(monkeypatch: 
         raise AssertionError("missing target consumed a secret")
 
     monkeypatch.setattr(passphrase, "_collect_passphrases", forbidden)
-    monkeypatch.setattr(passphrase, "_open_rotation_client", lambda _target: forbidden())
+    monkeypatch.setattr(passphrase, "_open_rotation_client", lambda _target, _ctx: forbidden())
     with pytest.raises(CliRefusedBoundaryError):
         passphrase.passphrase_change(_context())
 
@@ -148,7 +148,7 @@ def test_post_submit_uncertainty_keeps_operation_identity_and_wipes_proofs(monke
 
     monkeypatch.setattr(passphrase, "_resolve_active_bucket_id", lambda: str(profile_id))
     monkeypatch.setattr(passphrase, "_activate_subcommand_output_language", lambda *_args: None)
-    monkeypatch.setattr(passphrase, "_open_rotation_client", lambda _profile_id: client)
+    monkeypatch.setattr(passphrase, "_open_rotation_client", lambda _profile_id, _ctx: client)
     monkeypatch.setattr(
         passphrase,
         "_collect_passphrases",

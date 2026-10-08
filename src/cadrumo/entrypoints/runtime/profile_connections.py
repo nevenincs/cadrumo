@@ -27,7 +27,7 @@ from ...application.runtime.login import RuntimeLoginEvidence, RuntimeLoginInven
 from ...application.runtime.profile_access import (
     RuntimeProfileDrainResult,
 )
-from ...application.runtime.session_events import RuntimeSessionEvent
+from ...application.runtime.session_events import RuntimeConnectionEvent
 from ...application.runtime.transport import RuntimeConnectionContext
 from ...application.user_profile.access_contracts import (
     Availability,
@@ -48,6 +48,7 @@ from .bootstrap_delete import RuntimeBootstrapDeleteMixin
 from .bootstrap_reset import RuntimeBootstrapMixin
 from .enrollment_connections import RuntimeEnrollmentConnections
 from .lifecycle_guard import RuntimeLifecycleGuard
+from .notice_observation import NoticeObservation, start_notice_observation
 from .profile_connection_access import ProfileConnectionAccessMixin
 from .profile_connection_admission import ProfileConnectionAdmissionMixin
 from .profile_connection_drain import ProfileConnectionDrainMixin, ProfileDrainRecord
@@ -105,6 +106,8 @@ class RuntimeProfileConnections(
         self._submission_slots = BoundedSemaphore(4)
         self._connections: dict[UUID, ProfileConnection] = {}
         self._events = RuntimeSessionEvents()
+        self._notice_connections: dict[UUID, tuple[RuntimeConnectionContext, RuntimeLoginEvidence]] = {}
+        self._notice_observation: NoticeObservation | None = None
         self._logins: dict[str, RuntimeLoginEvidence] = {}
         self._closed = False
         self._idle_fenced = False
@@ -119,13 +122,58 @@ class RuntimeProfileConnections(
             synchronize=self._synchronize_profile_sessions,
         )
 
-    def connect_events(self, context: RuntimeConnectionContext) -> None:
+    def connect_events(self, context: RuntimeConnectionContext, channel: RuntimeByteChannel | None = None) -> None:
         """Register a native-verified connection without admitting profile access."""
         self._events.connect(context)
+        if context.lifecycle_notices and channel is not None:
+            if channel.peer != context.peer:
+                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            login = self._capture(channel)
+            if login.observe(credential_facilities=Availability.UNAVAILABLE).os_owner_id != context.peer.os_owner_id:
+                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            with self._guard:
+                self._notice_connections[context.connection_id] = context, login
 
-    def take_events(self, context: RuntimeConnectionContext) -> tuple[RuntimeSessionEvent, ...]:
+    def take_events(self, context: RuntimeConnectionContext) -> tuple[RuntimeConnectionEvent, ...]:
         """Let the connection's sole writer drain its bounded event queue."""
         return self._events.take(context)
+
+    def event_flushed(self, context: RuntimeConnectionContext, event: RuntimeConnectionEvent) -> None:
+        """Record transport completion without granting session or user acknowledgement."""
+        self._events.flushed(context, event)
+
+    def _notify_upgrade(self, deadline: float) -> bool:
+        if not self._guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
+            return False
+        try:
+            if self._closed or time.monotonic() >= deadline:
+                return False
+            if self._notice_observation is not None and not self._notice_observation.done():
+                return False
+            connections = tuple(self._notice_connections.values())
+            # Completed earlier attempts are discarded: only this attempt's
+            # fresh observation may influence its bounded notification fence.
+            observation = start_notice_observation(connections, deadline=deadline)
+            self._notice_observation = observation
+        finally:
+            self._guard.release()
+        try:
+            eligible = observation.result(timeout=max(0.0, deadline - time.monotonic()))
+        except Exception:
+            return False
+        if eligible is None or time.monotonic() >= deadline:
+            return False
+        pending: list[Event] = []
+        for context in eligible:
+            if time.monotonic() >= deadline:
+                return False
+            flushed = self._events.upgrade_pending(context)
+            if flushed is not None:
+                pending.append(flushed)
+        return (
+            all(flushed.wait(max(0.0, deadline - time.monotonic())) for flushed in pending)
+            and time.monotonic() < deadline
+        )
 
     def _connected(self, connection_id: UUID) -> ProfileConnection:
         with self._guard:
@@ -254,6 +302,8 @@ class RuntimeProfileConnections(
     def stop_if_idle(self, reason: RuntimeExitReason, *, timeout: float) -> bool:
         """Fence new submissions and stop only with a confirmed empty work inventory."""
         deadline = time.monotonic() + timeout
+        if not self._notify_upgrade(deadline):
+            return False
         if not self._guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
             return False
         try:
@@ -266,7 +316,7 @@ class RuntimeProfileConnections(
             # Worker callbacks borrow the admission guard: never hold it while
             # waiting for status. The separate fence rejects new submissions.
             count = self.in_flight_operation_count(timeout=max(0.0, deadline - time.monotonic()))
-            if count != 0:
+            if count != 0 or time.monotonic() >= deadline:
                 return False
             request_runtime_stop(self.stop, reason)
             return True

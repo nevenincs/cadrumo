@@ -140,6 +140,7 @@ class RuntimeClientHello(BaseModel):
     product_version: Annotated[str, Field(min_length=1, max_length=64)]
     storage_identity: ContentDigest
     authority_generation: RuntimeAuthorityGeneration | None = None
+    lifecycle_notices: Literal["v1"] | None = None
 
 
 class RuntimeServerHello(BaseModel):

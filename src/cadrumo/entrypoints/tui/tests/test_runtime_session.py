@@ -17,6 +17,7 @@ from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.operations.registry import OperationFrontendProjection
 from ....application.runtime.profile_access import RuntimeProfileStatus, RuntimeSessionsLocked
+from ....application.runtime.session_events import RuntimeLifecycleNotice
 from ....application.user_profile.access_contracts import (
     AccessAction,
     AccessScope,
@@ -34,6 +35,26 @@ from ..account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from ..runtime_session import RuntimeRestrictedSessionApp
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+@pytest.mark.asyncio
+async def test_upgrade_notice_renders_without_retiring_the_restricted_session(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = _Client()
+    session = client.session_id
+    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic private profile")
+    notices: list[str] = []
+    monkeypatch.setattr(app, "notify", lambda message, **_: notices.append(str(message)))
+    async with app.run_test() as pilot:
+        await _shown(app, pilot)
+        assert client.notice_callback is not None
+        client.notice_callback(
+            RuntimeLifecycleNotice(runtime_boot_id=uuid4(), connection_id=uuid4(), notice_id=uuid4())
+        )
+        await pilot.pause()
+        assert notices == [tr("common.manager.update_pending")]
+        assert not app._cleared
+        assert client.session_id == session
+    assert client.notice_callback is None
 
 
 @pytest.mark.asyncio
@@ -58,6 +79,7 @@ class _Client(RuntimeFrontendClient):
         self._session_id = uuid4()
         self._frontend = OperationFrontendProjection.TUI
         self.retirement_callback: Callable[[], None] | None = None
+        self.notice_callback: Callable[[RuntimeLifecycleNotice], None] | None = None
         self.status_calls = 0
         self.lock_calls = 0
         self.close_calls = 0
@@ -85,6 +107,15 @@ class _Client(RuntimeFrontendClient):
 
         def unsubscribe() -> None:
             self.retirement_callback = None
+
+        return unsubscribe
+
+    @override
+    def subscribe_lifecycle_notices(self, receive: Callable[[RuntimeLifecycleNotice], None]) -> Callable[[], None]:
+        self.notice_callback = receive
+
+        def unsubscribe() -> None:
+            self.notice_callback = None
 
         return unsubscribe
 
