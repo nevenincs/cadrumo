@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:6af47457a7d22d821709264ef74f98ed4afaa37b3a2882dc30451b56cba29194'
+body_hash: 'sha256:a143ab28e9f0c35a77ad31d83e85e6ef60150ffebc5c9407cca6189018907fc2'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -451,6 +451,13 @@ related:
 - `S16` `verify:` `13 canonical projection/taxonomy tests` -> `pass`
 - `S16` `verify:` `Independent corrective source review` -> `pass`
 - `S16` `by:` `Codex`
+- `S18` `A` `dev/packaging/native/linux_manager_probe.py`
+- `S18` `A` `dev/packaging/native/tests/test_linux_manager_probe.py`
+- `S18` `M` `native/manager/src/linux/tray.rs`
+- `S18` `verify:` `Linux placement probe focused preflight test (1 test)` -> `pass`
+- `S18` `verify:` `Linux placement probe Ruff and ty` -> `pass`
+- `S18` `verify:` `Pinned manylinux platform/application/manager all-target Clippy before subsequent cutover contract regeneration` -> `pass`
+- `S18` `by:` `Codex`
 
 ## Notes
 
@@ -485,3 +492,4 @@ related:
 - `S19` Unsigned metadata/source checkpoint only. No login registration, ad-hoc substitute, Apple SDK/Mach-O build, DMG or native SMAppService acceptance. S19 stays open. Shared distribution cache input enrollment follows in S09 graph checkpoint.
 - `S15` Localized passive guidance; no manager request or business-code change. Repository-wide import gate previously blocked by unrelated concurrent module removals; S15 broader gate remains open.
 - `S16` S16/S17 coherent integration checkpoint. Attended installed two-release upgrade/rollback/cancelled-shutdown evidence, connected-frontend notices, obsolete native-product cleanup and native removal emitter remain open. No acceptance or signing claim.
+- `S18` Partial S18 checkpoint only: probe is an opt-in disposable graphical-runner experiment, not runtime acceptance. Current WSL process has no authoritative graphical logind membership and correctly refuses despite display environment variables. Linux manager entrypoint remains gated pending placement/session identity and native installation ownership evidence. Full latest Linux native suite must be rerun after cutover contract regeneration.

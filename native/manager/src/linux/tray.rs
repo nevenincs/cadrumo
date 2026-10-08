@@ -254,41 +254,6 @@ pub struct Tray {
     watcher: Option<String>,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn destructive_actions_require_the_warning_submenu_confirmation_item() {
-        let (send, receive) = mpsc::sync_channel(16);
-        let menu = Menu {
-            state: Arc::new(Mutex::new(State {
-                status: "Active".into(),
-                sign_in: true,
-            })),
-            strings: Strings::current().unwrap(),
-            actions: send,
-        };
-        for id in [4, 5, 40, 50] {
-            menu.event(id, "clicked", Value::from(0i32), 0);
-        }
-        assert!(receive.try_recv().is_err());
-        menu.event(41, "clicked", Value::from(0i32), 0);
-        assert_eq!(receive.try_recv().unwrap(), Action::Restart);
-        menu.event(51, "clicked", Value::from(0i32), 0);
-        assert_eq!(receive.try_recv().unwrap(), Action::Quit);
-        assert_eq!(menu.layout(4).unwrap().2.len(), 2);
-        assert!(menu.layout(99).is_none());
-        let (_, properties, children) = menu.layout_depth(4, 0, &["label".into()]).unwrap();
-        assert!(children.is_empty());
-        assert_eq!(properties.len(), 1);
-        assert!(properties.contains_key("label"));
-        assert!(menu.get_layout(0, -2, vec![]).is_err());
-        menu.event(6, "clicked", Value::from(0i32), 0);
-        assert_eq!(receive.try_recv().unwrap(), Action::Retry);
-    }
-}
-
 impl Tray {
     pub fn connect(sign_in: bool) -> io::Result<Self> {
         let state = Arc::new(Mutex::new(State {
@@ -397,5 +362,40 @@ impl Tray {
                 &(1u32, 0i32),
             )
             .map_err(io::Error::other)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn destructive_actions_require_the_warning_submenu_confirmation_item() {
+        let (send, receive) = mpsc::sync_channel(16);
+        let menu = Menu {
+            state: Arc::new(Mutex::new(State {
+                status: "Active".into(),
+                sign_in: true,
+            })),
+            strings: Strings::current().unwrap(),
+            actions: send,
+        };
+        for id in [4, 5, 40, 50] {
+            menu.event(id, "clicked", Value::from(0i32), 0);
+        }
+        assert!(receive.try_recv().is_err());
+        menu.event(41, "clicked", Value::from(0i32), 0);
+        assert_eq!(receive.try_recv().unwrap(), Action::Restart);
+        menu.event(51, "clicked", Value::from(0i32), 0);
+        assert_eq!(receive.try_recv().unwrap(), Action::Quit);
+        assert_eq!(menu.layout(4).unwrap().2.len(), 2);
+        assert!(menu.layout(99).is_none());
+        let (_, properties, children) = menu.layout_depth(4, 0, &["label".into()]).unwrap();
+        assert!(children.is_empty());
+        assert_eq!(properties.len(), 1);
+        assert!(properties.contains_key("label"));
+        assert!(menu.get_layout(0, -2, vec![]).is_err());
+        menu.event(6, "clicked", Value::from(0i32), 0);
+        assert_eq!(receive.try_recv().unwrap(), Action::Retry);
     }
 }

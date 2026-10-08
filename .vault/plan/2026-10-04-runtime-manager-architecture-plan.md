@@ -11,7 +11,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:0e49fccce62905835b16530f47930ad1a5037da4bb5db4fd1cb7ca6061cdc6fc'
+body_hash: 'sha256:a28c3b1d2802648c69cbceb14d3cb862dcf569701eead77e807a3315d3dc7780'
 ---
 
 # `runtime-manager-architecture` plan
@@ -139,6 +139,10 @@ B5 initial checkpoint (2026-10-05, shared working tree): `SupervisedController._
 2026-10-08 Linux continuation: P05.S18 may proceed on existing POSIX platform/custody code alongside the Windows tray and MSI lanes. A Linux worker owns new Linux manager backend modules and focused tests plus Linux-only service/desktop registration sources. Coordinate main.rs/lib.rs inclusion with the Windows manager owner instead of editing their ongoing startup changes. Root owns CMake Linux toolchain, configure/build and vault records; Linux native tests use the separate Linux binary directory. Do not enroll macOS signing-dependent acceptance or claim desktop/session acceptance from container checks.
 
 2026-10-08 unsigned platform continuation: the operator explicitly requested all code/build work except signing certificates. Signing therefore does not block unsigned macOS source authoring and static/bundle checks for P05.S19; native Apple SDK/build and SMAppService acceptance still require their own evidence. The platform worker may own macOS LaunchAgent metadata authoring and focused tests plus a grounded account of unsigned SMAppService constraints while Windows cutover and MSI ownership remain with their existing workers. Coordinate any shared installation.py/CMake integration with root. Do not claim native macOS compilation or login acceptance without an Apple runner.
+
+
+2026-10-08 continuation assignment: manager_remedies owns S16 connected-frontend upgrade notifications across the existing typed runtime session-event producer, verified transport demultiplexer, CLI binding, and TUI account/restricted shells, with focused tests. This work may run alongside msi_maintenance's S09 native transaction/publication protections because the owned source modules are disjoint. Check existing diffs before editing and preserve concurrent frontend work. Notifications convey no management authority or authentication retirement; delivery must be bounded and coalesced, distinguish enqueue from successful flush, and preserve legacy-client protocol compatibility. Root owns integration, verification coordination, vault records, and commits. Interactive two-release acceptance remains required.
+
 
 ## Verification
 
