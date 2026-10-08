@@ -130,6 +130,11 @@ elseif(CADRUMO_TARGET MATCHES "^linux-")
   set(CPACK_RPM_PACKAGE_REQUIRES "glibc >= ${glibc_floor}")
   set(CPACK_RPM_PACKAGE_AUTOREQPROV ON)
   set(CPACK_RPM_PACKAGE_RELOCATABLE OFF)
+  # Assembly owns every payload byte, ELF edit and Python bootstrap. Distro
+  # post-install build scripts must not strip, relink, bytecompile or rewrite it.
+  # Keep RPM's native dependency generation and build-root checks enabled.
+  set(CPACK_RPM_SPEC_MORE_DEFINE
+    "%define __os_install_post %{nil}\n%define __debug_install_post %{nil}\n%define debug_package %{nil}\n%define _build_id_links none")
   set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /opt)
   if(CADRUMO_TARGET STREQUAL "linux-aarch64")
     set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE arm64)
@@ -197,6 +202,16 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
     set(CADRUMO_MSI_PREFIX "" CACHE PATH "Explicit native MSI installation prefix")
     add_custom_target(install-msi
       COMMAND ${msi_build_helper} install ${msi_build_arguments}
+        --scope "${CADRUMO_MSI_SCOPE}" --prefix "${CADRUMO_MSI_PREFIX}"
+      DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
+    set(CADRUMO_MSI_REMOVE_VERSION "" CACHE STRING "Exact unanchored installed release to remove")
+    add_custom_target(remove-msi-version
+      COMMAND ${msi_build_helper} remove-version ${msi_build_arguments}
+        --scope "${CADRUMO_MSI_SCOPE}" --prefix "${CADRUMO_MSI_PREFIX}"
+        --version "${CADRUMO_MSI_REMOVE_VERSION}"
+      DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
+    add_custom_target(unregister-msi
+      COMMAND ${msi_build_helper} unregister ${msi_build_arguments}
         --scope "${CADRUMO_MSI_SCOPE}" --prefix "${CADRUMO_MSI_PREFIX}"
       DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
     # Readiness is an independent refusal, so missing compilers do not hide the

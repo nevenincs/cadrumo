@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:31304d471b1f7195235b3f23370ef8c1d27c53808fdb967e218f13c855b1e446'
+body_hash: 'sha256:a0a5401434c2e92012a603afaf4ef51937c540824d97443936c40733bd450682'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -135,6 +135,14 @@ S09 remains open: protected publication-directory ACL custody, authenticated cal
 2026-10-08 the explicit maintenance runner now implements remove-version and unregister. Current verified source artifacts still carry the unconditional MSI gate, checked before native transactions or publication mutation for every operation. Behind that gate, version removal retains global maintenance and exact version exclusion, preserves anchors, admits exact cached product/context/manifest identity, verifies package bytes, checks Restart Manager use and issues native-owned removal only. Registration removal preserves versions and publishes Absent only after native commit plus exact absence. Failure distinguishes native rollback, unsettled settlement, and publication remaining fenced. Shared install rollback restores only prior Ready bytes/owner or removes a newly absent reservation; preexisting Pending remains explicitly pending. Native UI is serialized as NONE and restored; Session 0 normalization is observed rather than guessed by its test. Cached native MSI custody permits native cache unlink while denying writes and admitting protected ancestor/file ACLs; incoming source MSI custody remains deny-delete.
 
 Windows installer tests pass (15 tests; latest 9.46s); shared application tests passed on Windows and Linux; pinned installer all-target Clippy passed (20.83s); release DLL/runner built (35.16s). Python ownership/source tests passed 20 tests (13.67s), and all three actual native compiler tests passed (27.78s), including four owner-CA MSIs with install/unregister/remove-version gate and invalid-version/role-swap refusal, plus eight other scope/role fixtures. No product was installed or removed on this host. The positive transaction path, relocated nested upgrade removal, interrupted commit/registration recovery, and two-release interactive acceptance remain unverified. S09 and installation gates remain open; review verdict PENDING for integrated native acceptance.
+
+### 2026-10-08 native RPM payload preservation | low | Actual DEB and RPM payload hashes agree with assembly
+
+Resolved the earlier RPM build-postprocessing finding in native/cmake/distribution/CMakeLists.txt: disable distro stripping, byte-compilation/shebang rewriting, debug splitting and generated build-id links for the already assembled immutable payload. Native dependency generation and build-root checks remain enabled. The pinned manylinux_2_28 x86-64 builder generated both native packages; rpm-verify passes after the build-id correction. A separate read-only stream inspection (dpkg-deb --fsys-tarfile and rpm2cpio, without extracting or installing files) checks all 17,403 actual payload file hashes in each archive against the staged installation inventory. Evidence: /builder/source-installers-20261008/build/distribution-linux-x86-64/packages/linux-inspection/payload-byte-proof.json in cadrumo-manylinux-packages-20261008. These artifacts contain the runtime-only payload; desktop and user docs were disabled. Inspection receipts retain their existing claim boundaries, and installability remains false.
+
+Verification: native Linux package tests passed all five cases (10.99s), including actual CMake-generated gated DEB/RPM fixtures. Windows CMake installer flow passes (3.79s); three native Linux tests correctly require Linux and are covered by the Linux run. Source-to-installer full Windows build and full Linux desktop build remain in progress. New CMake remove-msi-version and unregister-msi targets call the existing gated native maintenance runner with explicit scope/prefix and exact removal version; no native product was installed.
+
+Independent source review of aaba50749c and a8531538a4 found no new concrete defect in launch-lifetime leases, native removal admission, custody or rollback publication. Review reused applicable tests and preserves PENDING for interrupted settlement recovery and disposable interactive two-release acceptance.
 
 ## Recommendations
 
