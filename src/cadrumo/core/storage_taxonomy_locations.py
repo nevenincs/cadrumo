@@ -1103,6 +1103,10 @@ def _storage_location_is_selected(
         return include_explicit
     if not include_derived:
         return False
+    if derived_groupings is not None and location.dormant_reason is not None:
+        # A narrowed provisioning prepares what this process's work may fill.
+        # A dormant member has no Python consumer; its native owner creates it.
+        return False
     return _matches_derived_grouping(location, derived_groupings)
 
 
