@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:05d53b2b3ba488adc501257a80dadfaf680d14776d84dde7a8faac410e5b6bd9'
+body_hash: 'sha256:1f8bebd49548a144528ca30fea3ebd4db08e7979b7f7ace8dbde77dbd66b32f6'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -246,6 +246,7 @@ The original full-build failure remains unexplained. One full native-installer r
 
 2026-10-08 Mac full attempt 28180: the strict documentation owner completed four languages in 3112 seconds, then native package relocation refused WebKit because the canonical system-library declaration omitted actual desktop dependencies. Read-only inspection parsed all 52 staged Mach-O images with no parser errors and found eight missing direct install names, all on cadrumo: WebKit, ApplicationServices, Carbon, CoreVideo, QuartzCore, ColorSync, CoreServices and libobjc.A.dylib. Each exact install name is corroborated by the selected public SDK stub; no missing non-system dependency was observed. The fix adds only those exact names and extends real-parser relocation tests to retain rejection of ambient framework paths and undeclared versions. Focused 22 tests, Ruff, format and ty passed. Evidence is retained under build/macos-process-typecheck/relocation-failure-evidence; original full log SHA256 7af45fdc2d8fe1df6467c0af787aebf2047975d2ed966a7099234c5c858dfe68. Native relocation and full build retry remain pending. No DMG or installation acceptance is claimed.
 
+2026-10-08 relocation correction verification: PASS on isolated native copies. The real frozen relocation backend processed all 52 images using 138 install_name_tool/codesign commands, strict ad-hoc signature verification and loader-relative closure validation; original stage hashes remained unchanged. Evidence: build/macos-process-typecheck/isolated-relocation-evidence. The reviewed declaration and its regression test from 04a0faa151 were then applied to the stopped Mac snapshot with before/after hashes; native tests passed all 22 cases. Full native-installer retry 74299 is running. This is native image verification, not full Python package or installation acceptance. Windows and WSL build snapshots remain independent and unchanged.
 
 ## Recommendations
 

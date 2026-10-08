@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:1f2b8711ed7d16b7327a5d447d0424a759b777248fa40da01a7297894e65bbff'
+body_hash: 'sha256:89648362961a761a861084512bf3f9b680b3efe480b0ffdde96a301a96d365dc'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -339,6 +339,8 @@ related:
 - `S05` `verify:` `focused platform enrollment22 tests` -> `pass`
 - `S05` `verify:` `focused Ruff format and ty` -> `pass`
 - `S05` `verify:` `native52-image dependency inspection against Apple SDK stubs` -> `pass`
+- `S05` `verify:` `native isolated relocation: 52 images, 138 tool commands and strict ad-hoc verification` -> `pass`
+- `S05` `verify:` `native platform enrollment: 22 tests` -> `pass`
 
 ## Notes
 
@@ -373,3 +375,4 @@ related:
 - `S05` Failure logs retained before one unchanged-input full retry. Diagnostic passed 27 connection futures and complete cleanup in 198.84s; original connection failure remains unexplained. No DMG or lifecycle acceptance claimed.
 - `S05` S05 remains open. Portable documentation identity retains canonical enrollment, selected authority roles, languages, mutation fences and output inventory. Actual generated Windows inputs include all six previously excluded fixture helper modules. WSL/manylinux native producer handoff remains pending; active Windows/Mac builds retain frozen inputs.
 - `S05` Mac full attempt28180 completed strict four-language docs in3112s, then failed package relocation: eight actual Apple system install-names absent from canonical allowlist. Exact SDK-corroborated entries added; ambient paths and undeclared versions remain refused. Original failure log SHA2567af45fdc2d8fe1df6467c0af787aebf2047975d2ed966a7099234c5c858dfe68 preserved. Native relocation and full installer retry pending; no DMG acceptance claim.
+- `S05` Committed 04a0faa151 was applied with before/after hashes to the stopped Mac snapshot after preserving failure evidence. All 52 original stage image hashes were unchanged by isolated relocation. Full CMake native-installer retry 74299 is running; native platform JSON changes correctly invalidate the enrolled documentation input graph. Windows 55091 and WSL 91625 retain independent frozen sources. No signing credentials, product installation or acceptance claimed.
