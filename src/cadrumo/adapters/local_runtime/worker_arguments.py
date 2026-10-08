@@ -7,7 +7,7 @@ from pathlib import Path
 
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 
-_INSTALLED_WORKER_ARGUMENTS = ("-I", "-m", "cadrumo.entrypoints.runtime.worker")
+_INSTALLED_WORKER_ARGUMENTS = ("-I", "-B", "-m", "cadrumo.entrypoints.runtime.worker")
 
 
 def validated_worker_arguments(
@@ -32,7 +32,7 @@ def validated_worker_arguments(
                 raise ValueError
         except (OSError, ValueError):
             raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE) from None
-        prefix = ("-I", str(selected))
+        prefix = ("-I", "-B", str(selected))
     if arguments is None:
         return prefix
     command = tuple(arguments)

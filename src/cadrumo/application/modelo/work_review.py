@@ -33,7 +33,11 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaConstraints
 from ...domain.filing.schema import ModeloScalar, ModeloValueKind
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+)
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -272,8 +276,9 @@ def build_modelo_work_review(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
 ) -> ModeloWorkReview:
-    """Assemble one work review from the caller's pinned authority operation."""
+    """Assemble a work review, optionally using this assembly's fresh calculation read."""
     from ._work_review_assembly import assemble_modelo_work_review
 
     return assemble_modelo_work_review(
@@ -285,6 +290,7 @@ def build_modelo_work_review(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
+        calculation_catalogue=calculation_catalogue,
     )
 
 

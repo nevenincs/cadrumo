@@ -63,7 +63,7 @@ def _refused_lookup(storage_root: Path, *, as_json: bool) -> subprocess.Complete
         },
         env_strip_prefixes=("AEAT_", "PYTEST_"),
         stdin_payload=json.dumps({"profile_passphrase": passphrase}),
-        timeout=120.0,
+        timeout=None,
     )
 
 

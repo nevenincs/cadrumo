@@ -19,6 +19,9 @@ import pytest
 from pydantic import BaseModel
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....tests.aeat_literal_fixtures import (
+    SEDE_EXAMPLE_URL_FIXTURE,
+)
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.operation_definition import OperationDefinition
 from ...operations.registry import OperationPublicDefinitionRegistrationV1
@@ -148,7 +151,7 @@ def test_notifications_capture_releases_a_session_only_refresh(monkeypatch: pyte
         snapshot_id="d" * 64,
         bucket_id=str(_PROFILE_ID),
         captured_at=_NOW,
-        source_url="https://sede.agenciatributaria.gob.es/example",
+        source_url=SEDE_EXAMPLE_URL_FIXTURE,
         rows=(),
         persisted_at=_NOW,
     )
@@ -180,7 +183,7 @@ def test_notification_document_capture_releases_a_session_only_refresh(monkeypat
         attachment_id="a" * 64,
         document_sha256="a" * 64,
         byte_size=47,
-        source_url="https://sede.agenciatributaria.gob.es/example",
+        source_url=SEDE_EXAMPLE_URL_FIXTURE,
         fetched_at=_NOW,
         sancion=None,
         parse_refusal="no text layer",

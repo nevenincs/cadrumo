@@ -1182,6 +1182,30 @@ sheets:
       contract_relation_clave: Contract or relation
       contributor_legal_name: Contributor's surnames and name
       contributor_tax_id: Contributor NIF
+      cotizacion_01_importe: January contribution amount
+      cotizacion_01_situacion: January contribution status
+      cotizacion_02_importe: February contribution amount
+      cotizacion_02_situacion: February contribution status
+      cotizacion_03_importe: March contribution amount
+      cotizacion_03_situacion: March contribution status
+      cotizacion_04_importe: April contribution amount
+      cotizacion_04_situacion: April contribution status
+      cotizacion_05_importe: May contribution amount
+      cotizacion_05_situacion: May contribution status
+      cotizacion_06_importe: June contribution amount
+      cotizacion_06_situacion: June contribution status
+      cotizacion_07_importe: July contribution amount
+      cotizacion_07_situacion: July contribution status
+      cotizacion_08_importe: August contribution amount
+      cotizacion_08_situacion: August contribution status
+      cotizacion_09_importe: September contribution amount
+      cotizacion_09_situacion: September contribution status
+      cotizacion_10_importe: October contribution amount
+      cotizacion_10_situacion: October contribution status
+      cotizacion_11_importe: November contribution amount
+      cotizacion_11_situacion: November contribution status
+      cotizacion_12_importe: December contribution amount
+      cotizacion_12_situacion: December contribution status
       counterparty_legal_name: Counterparty legal name
       counterparty_tax_id: Counterparty tax id
       country_code: Country code
@@ -1211,6 +1235,10 @@ sheets:
       fecha_devengo: Accrual date
       fecha_inicio_prestamo: Loan start date
       fecha_vencimiento_prestamo: Loan maturity date
+      financial_asset_acquisition_value: Financial asset acquisition value
+      financial_asset_disposal_value: Financial asset disposal value
+      financial_asset_origin: Financial asset origin
+      financial_asset_related_entity: Financial asset related entity
       first_child_compute: 1st child computation
       floor: Floor
       foral_retention_araba: Withholdings and payments on account paid to Araba/Álava
@@ -1249,9 +1277,12 @@ sheets:
       naturaleza: Nature
       naturaleza_declarante: Declarant's nature
       naturaleza_inmueble: Property nature
+      nif: Tax identification number
       nif_pagador_anterior: Previous payer NIF
+      nombre: Name
       number_qualifier: Number qualifier
       number_type: Number type
+      numero_afiliacion: Membership number
       numero_orden: Order number
       opening_minus_closing_positive: Positive opening-minus-closing difference
       operation_date: Operation date
@@ -2399,6 +2430,7 @@ tui:
         bank_city: bank city
         bank_country_code: bank country
         bank_name: bank name
+        closed_on: Closing date
         currency: currency
         holding: holding
         iban: IBAN

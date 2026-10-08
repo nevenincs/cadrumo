@@ -270,6 +270,22 @@ class ProfileWorkerOperationAuthority:
         self._require_current_scope(action, resolution, provenance)
         return self._authorization_request(identity, action, lease, resolution)
 
+    async def _resolve_binding_off_loop(
+        self, identity: OperationIdentity, action: AccessAction, binding: WorkerOperationBinding
+    ) -> WorkerAuthorityRequest:
+        """Finish one fresh scope read without blocking custody control requests.
+
+        The caller captures the immutable binding on its own task. A scope read
+        can decode a complete private catalogue, so its thread must settle before
+        cancellation unwinds the caller. Retirement may proceed meanwhile; check
+        custody again before returning any request to the native authority guard.
+        """
+        request = await await_cancellation_complete(
+            asyncio.to_thread(self._resolve_binding, identity, action, binding), task_name="worker-authority-scope-read"
+        )
+        self.custody.require(binding.session_id)
+        return request
+
     @staticmethod
     def _require_binding_identity(identity: OperationIdentity, request: OperationRequest[BaseModel]) -> None:
         if identity.definition_id != request.definition_id or identity.subject_ref != request.subject_ref:
@@ -380,10 +396,10 @@ class ProfileWorkerOperationAuthority:
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         task = asyncio.current_task()
+        authorization = await self._resolve_binding_off_loop(identity, action, binding)
         if task is not None and self._held.get(task) == (identity, action):
-            self._resolve(identity, action)
             return
-        async with self.client.guard(self._resolve(identity, action)):
+        async with self.client.guard(authorization):
             pass
 
     @asynccontextmanager
@@ -403,7 +419,7 @@ class ProfileWorkerOperationAuthority:
         task = asyncio.current_task()
         if task is None or task in self._held:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        request = self._resolve_binding(identity, action, binding)
+        request = await self._resolve_binding_off_loop(identity, action, binding)
         async with self.client.guard(request) as lease:
             with self.custody.section(request.session_id), validating_governed_facts(self._authority_operation):
                 self._held[task] = (identity, action)

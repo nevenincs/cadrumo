@@ -1602,8 +1602,6 @@ modelo:
         title: IVA. Éves összesítő bevallás
       form:
         authored:
-          accrual:
-            heading: 2. Adómegállapítási időszak
           activities:
             heading: 3. Statisztikai adatok · Tevékenységek
           activity-code:
@@ -1614,8 +1612,6 @@ modelo:
             heading: Adóegyüttható
           activity-input-tax:
             heading: Előzetesen felszámított áfa
-          activity-order:
-            heading: Sorrend
           activity-output-tax:
             heading: Fizetendő áfa
           activity-result:
@@ -1688,8 +1684,6 @@ modelo:
             heading: 4. egyéb tevékenység
           other-5:
             heading: 5. egyéb tevékenység
-          page-one:
-            heading: 1. oldal
           principal:
             heading: Főtevékenység
           prior-receipt:
@@ -1698,15 +1692,11 @@ modelo:
             heading: 11. Egyedi ügyletek
           surname:
             heading: Családi név vagy cégnév
-          taxpayer:
-            heading: 1. Adóalany
           territorial-settlement:
             heading: 8. Adózás több adóhatóságnál
           year:
             heading: Adóév
         column:
-          actividad-desarrollada:
-            heading: Folytatott tevékenység
           fecha-poder-ddmmaaaa:
             heading: Meghatalmazás kelte
           nif:
@@ -1719,10 +1709,6 @@ modelo:
             heading: Csökkentés a DANA vihar sújtotta településeken folytatott tevékenységre
           reducciones-total:
             heading: Csökkentések (összesen)
-          regularizacion-de-inversiones:
-            heading: Beruházások korrekciója
-          suma-de-deducciones:
-            heading: Levonások összesen
         page:
           pag-1:
             heading: 1. oldal
@@ -1757,12 +1743,6 @@ modelo:
             heading: 1. tevékenység
           actividad-2:
             heading: 2. tevékenység
-          bienes-corrientes:
-            heading: Forgóeszközök
-          bienes-inversion:
-            heading: Beruházási javak
-          bienes-y-servic:
-            heading: Forgóeszközök és szolgáltatások
           compensac-reg-especial-agric-ganad-pesca:
             heading: Mezőgazdasági, állattenyésztési és halászati különleges rendszer
               kompenzációi
@@ -1849,48 +1829,12 @@ modelo:
             heading: 1. Adóalany
           10-volumen-de-operaciones:
             heading: 10. Forgalom
-          11-oper-especificas:
-            heading: 11. Egyedi ügyletek
           12-prorratas:
             heading: 12. Arányosítás
-          13-reg-deducc-diferenc:
-            heading: Elkülönített levonások
-          13-reg-deducc-diferenc-1:
-            heading: Elkülönített levonások · 1. ágazat
-          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
-            heading: 1. ágazat · Közösségen belüli beszerzések levonható áfája
-          13-reg-deducc-diferenc-1-iva-ded-importaciones:
-            heading: 1. ágazat · importok levonható áfája
-          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
-            heading: 1. ágazat · belföldi ügyletek levonható áfája
-          13-reg-deducc-diferenc-2:
-            heading: Elkülönített levonások · 2. ágazat
-          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
-            heading: 2. ágazat · Közösségen belüli beszerzések levonható áfája
-          13-reg-deducc-diferenc-2-iva-ded-importaciones:
-            heading: 2. ágazat · importok levonható áfája
-          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
-            heading: 2. ágazat · belföldi ügyletek levonható áfája
-          13-reg-deducc-diferenc-3:
-            heading: Elkülönített levonások · 3. ágazat
-          13-reg-deducc-diferenc-3-iva-ded-adquisic-92440f:
-            heading: 3. ágazat · Közösségen belüli beszerzések levonható áfája
-          13-reg-deducc-diferenc-3-iva-ded-importaciones:
-            heading: 3. ágazat · importok levonható áfája
-          13-reg-deducc-diferenc-3-iva-ded-operac-i-5ea9dc:
-            heading: 3. ágazat · belföldi ügyletek levonható áfája
           2-devengo:
             heading: 2. Adókötelezettség időpontja
           3-datos-estadisticos:
             heading: 3. Statisztikai adatok
-          3-datos-estadisticos-a:
-            heading: 3. Statisztikai adatok · A
-          3-datos-estadisticos-a-actividades:
-            heading: 3. Statisztikai adatok · A · Tevékenységek
-          3-datos-estadisticos-b:
-            heading: 3. Statisztikai adatok · B
-          3-datos-estadisticos-c:
-            heading: 3. Statisztikai adatok · C
           4-representante-personas-fisicas-comunid-bienes:
             heading: 4. Képviselő · Természetes személyek és közös tulajdonok
           4-representante-personas-juridicas:
@@ -1949,10 +1893,6 @@ modelo:
             heading: 6. Egyszerűsített rendszer · 1. tevékenység
           6-operaciones-reg-simplificado-actividad-2:
             heading: 6. Egyszerűsített rendszer · 2. tevékenység
-          7-resultado-liquidacion-anual:
-            heading: 7. Éves elszámolás eredménye
-          8-tributacion-razon-de-territorio:
-            heading: 8. Területi adózás
           9-resultado-de-las-liquidaciones:
             heading: 9. Elszámolások eredménye
       revision:

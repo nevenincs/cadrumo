@@ -140,14 +140,6 @@ modelo:
             help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
               éves bevallásán bevallott adat.
             label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
-          resumen-importe-arrendamientos:
-            label: null
-          resumen-importe-operaciones:
-            label: null
-          resumen-inmuebles:
-            label: null
-          resumen-personas-entidades:
-            label: null
           situacion-inmueble:
             help: A Modelo 347 nyomtatványon, a harmadik felekkel folytatott ügyletek
               éves bevallásán bevallott adat.

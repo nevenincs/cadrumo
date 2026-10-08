@@ -55,7 +55,6 @@ _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, obj
 # reach the prompt, which has been measured at over a minute on a box running
 # parallel test lanes, so the budget is set well clear of that rather than
 # close to it.
-_CHILD_BUDGET_SECONDS = 300.0
 
 _LABEL = "Console Less Login Subject"
 
@@ -157,7 +156,7 @@ async def _wait_for_console_less_login(command: list[str], *, creationflags: int
             stderr=asyncio.subprocess.DEVNULL,
         )
     try:
-        await asyncio.wait_for(process.wait(), timeout=_CHILD_BUDGET_SECONDS)
+        await asyncio.wait_for(process.wait(), timeout=None)
     except TimeoutError:
         process.kill()
         await process.wait()

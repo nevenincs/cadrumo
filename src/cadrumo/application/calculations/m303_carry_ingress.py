@@ -144,14 +144,15 @@ def _selected_registry_mapping(
         if str(revision.id).strip() == "":
             raise ValueError("selected M303 modelo revision does not match the filing scope")
 
-        # This fact is revision/date-scoped and declares no period_selector, so
-        # the fact resolver's supported coordinate is the effective date. The
-        # filing year and period are still validated above by the model report.
+        # Monthly and quarterly periods can share an end date while selecting
+        # different revisions, so resolve the fact at the full filing scope.
         resolved = operation.resolve_governed_fact(
             MappingFactQuery(
                 fact_id="modelo-303-carry-disposition-verification-mapping",
                 date_axis=DateAxis.FILING_PERIOD,
                 effective_date=effective_date,
+                filing_year=filing_year,
+                period=normalized_period,
             ),
         )
         resolved = _require_carry_mapping_coordinate(resolved, effective_date)

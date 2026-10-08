@@ -3,6 +3,9 @@
 Machine identity stays in the in-memory plan. It is not shipped in cells,
 comments or document properties. Missing display authority is a refusal, never
 an invitation to prettify an internal identifier.
+
+:class:`ModeloRevision` declares the form and its value contracts.
+:class:`RegistrySnapshot` pins the registry declarations used by the projection.
 """
 
 from __future__ import annotations
@@ -71,7 +74,11 @@ def _leaves(expression: FormulaExpression) -> set[str]:
 def human_workbook[M: (SheetExportMetadata, SheetReviewMetadata)](
     plan: SheetExportPlan[M], snapshot: RegistrySnapshot
 ) -> SheetExportPlan[M]:
-    """Replace technical support surfaces, preserving all data and formula cells."""
+    """Replace technical support surfaces, preserving all data and formula cells.
+
+    The ``snapshot`` parameter uses :class:`RegistrySnapshot`, which pins
+    the registry declarations used by the projection.
+    """
     if isinstance(plan.metadata, SheetReviewMetadata):
         raise CalcSheetsEngineError("human form presentation requires a verified scenario plan")
     if plan.human_presentation:

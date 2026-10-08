@@ -66,8 +66,6 @@ modelo:
             heading: Identificación del afiliado o mutualista
           contacto:
             heading: Persona de contacto
-          cotizaciones:
-            heading: Cotizaciones mensuales
           declaracion:
             heading: Declaración complementaria o sustitutiva
           domicilio:

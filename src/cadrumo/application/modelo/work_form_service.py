@@ -44,7 +44,11 @@ from ...core.time.clock import today_madrid
 from ...domain.buckets.event import BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.deadlines.festivos import CalendarCCAA
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+)
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -116,11 +120,15 @@ def _head(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     *,
     operation: PinnedAuthorityOperation,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
 ) -> tuple[bool, CalculationRevision | None]:
     """Return whether the head resolved, and the head; no calculation resolves to ``None``."""
     if calculation_revision_id is None:
         return True, None
-    head = calculation_repository.load(operation=operation).get(calculation_revision_id)
+    catalogue = (
+        calculation_catalogue if calculation_catalogue is not None else calculation_repository.load(operation=operation)
+    )
+    head = catalogue.get(calculation_revision_id)
     return head is not None, head
 
 
@@ -199,6 +207,7 @@ def load_modelo_work_form(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
     admission: ModeloEditAdmissionResultV1 | None,
     language: OutputLanguage,
     borrador_snapshots: Borrador100SnapshotRepository | None = None,
@@ -211,6 +220,10 @@ def load_modelo_work_form(
     ``admission`` is the edit admission the caller holds for this declaration,
     or ``None`` when none was sought; a refused admission, or one for another
     work unit, offers nothing for editing.
+
+    ``calculation_catalogue`` may carry the caller's freshly validated read
+    from this same synchronous form assembly. The review and operator layer
+    then use that one read; standalone callers retain their repository reads.
 
     ``borrador_snapshots`` is the profile's AEAT draft store, read only for
     when the replayed draft was imported; without it the form still says the
@@ -230,10 +243,16 @@ def load_modelo_work_form(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
+        calculation_catalogue=calculation_catalogue,
     )
     snapshot = modelo_form_snapshot(operation, modelo, filing_year, period, review.registry_revision_id)
     layout = operation.form_layout(str(modelo), review.registry_revision_id)
-    resolved, head = _head(review.calculation_revision_id, calculation_repository, operation=operation)
+    resolved, head = _head(
+        review.calculation_revision_id,
+        calculation_repository,
+        operation=operation,
+        calculation_catalogue=calculation_catalogue,
+    )
     context = caller_context_of(head)
     layer = context.operator_layer if resolved else None
     surface = (

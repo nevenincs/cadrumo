@@ -160,7 +160,7 @@ modelo:
           payee-name:
             label: Recipient's surnames and given name, or legal name
           payee-nif:
-            label: Recipient's tax ID (NIF)
+            label: Recipient's NIF
           payee-pension-compensatoria:
             label: Compensatory pensions
           payee-prestamos-vivienda-clave:
@@ -222,7 +222,7 @@ modelo:
             label: Employment income from managing funds linked to entrepreneurship,
               innovation and economic activity development
           representante-legal-nif:
-            label: NIF of the legal representative
+            label: Legal representative's NIF
           retenciones-ingresos-a-cuenta:
             label: Total amount of withholdings and advance payments
           total-percepciones-amount:
@@ -238,6 +238,10 @@ modelo:
           account. Employment and business income, prizes and certain capital gains
           and income attributions. Annual summary.
         title: Annual summary of withholdings on employment and business income
+      form:
+        context:
+          ejercicio:
+            heading: Tax year
       revision:
         '2022':
           field:

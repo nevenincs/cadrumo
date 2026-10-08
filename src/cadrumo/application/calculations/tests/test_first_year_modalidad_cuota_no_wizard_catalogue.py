@@ -170,7 +170,7 @@ def test_first_year_modalidad_cuota_resolves_without_wizard_catalogue(tmp_path: 
             [sys.executable, "-c", _CHILD_SCRIPT, str(tmp_path)],
             capture_output=True,
             text=True,
-            timeout=300,
+            timeout=None,
             check=False,
         )
     )

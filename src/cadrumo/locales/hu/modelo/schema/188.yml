@@ -3,26 +3,99 @@ modelo:
     '188':
       casilla:
         continuidad:
+          capitalizacion-seguros-declarante-complementaria:
+            label: 'Kiegészítő: C a kihagyott jövedelemkifizetések hozzáadásához'
+          capitalizacion-seguros-declarante-contacto:
+            label: A kapcsolattartó vezetékneve és utóneve
+          capitalizacion-seguros-declarante-ejercicio:
+            label: Adóév
+          capitalizacion-seguros-declarante-justificante-anterior:
+            label: Korábbi igazolás (csak helyettesítő bevallás esetén)
+          capitalizacion-seguros-declarante-nif:
+            label: A bevalló NIF-azonosítója
+          capitalizacion-seguros-declarante-nombre:
+            label: Vezetéknév és utónév vagy cégnév
+          capitalizacion-seguros-declarante-numero-justificante:
+            label: Igazolásszám (13 számjegy; 188-cal kezdődik)
+          capitalizacion-seguros-declarante-sustitutiva:
+            label: 'Helyettesítő: S egy korábbi bevallás helyettesítéséhez'
+          capitalizacion-seguros-declarante-telefono:
+            label: Kapcsolattartási telefonszám
+          capitalizacion-seguros-perceptor-base-retenciones:
+            help: IRPF esetén a hozam az alkalmazandó csökkentésekkel csökkentve.
+              IS és állandó telephellyel rendelkező IRNR esetén a hozaméval azonos
+              összeg és előjel. Bevallott érték; automatikus számítás még nincs.
+            label: A levonások és adóelőlegek alapja
+          capitalizacion-seguros-perceptor-clave:
+            label: 'B kód: PIAS korai visszaváltása'
+          capitalizacion-seguros-perceptor-ejercicio-devengo:
+            help: Csak a korábbi adóévekben keletkezett összegekre. Minden keletkezési
+              adóévet külön rekordban kell bevallani.
+            label: Korábbi keletkezési adóév
+          capitalizacion-seguros-perceptor-informacion-adicional:
+            help: A PIAS életjáradék létrehozásakor közölt adómentes jövedelem, amelyet
+              gazdasági jogainak teljes vagy részleges korai visszaváltásakor kell
+              bevallani.
+            label: PIAS korai visszaváltása miatt közölt adómentes jövedelem
+          capitalizacion-seguros-perceptor-modalidad:
+            label: 'Forma: 1 pénzbeli; 2 természetbeni'
+          capitalizacion-seguros-perceptor-nif:
+            label: A jövedelemszerző NIF-azonosítója
+          capitalizacion-seguros-perceptor-nombre:
+            label: A jövedelemszerző vezetékneve és utóneve vagy cégneve
+          capitalizacion-seguros-perceptor-porcentaje-retencion:
+            help: 'Százalékpontban megadott mérték: 19 jelentése 19 %. Ha az adóév
+              során több mértéket alkalmaztak, csak az utolsót kell bevallani.'
+            label: Levonási mérték (%)
+          capitalizacion-seguros-perceptor-prima:
+            label: Befizetett biztosítási díj
+          capitalizacion-seguros-perceptor-provincia:
+            label: Tartománykód
+          capitalizacion-seguros-perceptor-reducciones:
+            help: Csak IRPF esetén. Negatív hozamnál nullát kell bevallani; IS és
+              állandó telephellyel rendelkező IRNR esetén nem alkalmazandó.
+            label: A negyedik átmeneti rendelkezés szerinti csökkentések
+          capitalizacion-seguros-perceptor-rendimiento-acreedor-hipotecario:
+            label: Olyan biztosítás hozama, amelynek kedvezményezettje a jelzáloghitelező
+          capitalizacion-seguros-perceptor-renta-vitalicia-clave:
+            label: 'Művelet: A létrehozás; B korai visszaváltás'
+          capitalizacion-seguros-perceptor-renta-vitalicia-fecha:
+            help: Ha az adóév során létrehozás és korai visszaváltás is történt, minden
+              műveletet külön rekordban kell megadni.
+            label: A létrehozás vagy a korai visszaváltás dátuma
+          capitalizacion-seguros-perceptor-renta-vitalicia-identificacion:
+            label: A biztosított életjáradék azonosítója
+          capitalizacion-seguros-perceptor-rentas:
+            help: Összeg euróban, előjellel. Az eltérő előjelű hozamokat külön rekordokban
+              kell bevallani.
+            label: Ingó tőkéből származó jövedelmek vagy hozamok
+          capitalizacion-seguros-perceptor-representante-nif:
+            label: A törvényes képviselő NIF-azonosítója
+          capitalizacion-seguros-perceptor-retenciones:
+            help: Bevallott összeg. Negatív alap esetén nullának kell lennie. A mezők
+              közötti ellenőrzés és az automatikus számítás még nem készült el.
+            label: Levonások és adóelőlegek
           capitalizacion-seguros-resumen-base-negativa:
-            help: A negatív alapú kedvezményezettek rekordjaiban feltüntetett levonási
-              és elszámolt előleg alapok összege.
-            label: A levonások és előlegfizetések negatív alapja
+            help: A negatív alapú jövedelemszerzői rekordokban szereplő levonási és
+              adóelőleg-alapok összege.
+            label: A levonások és adóelőlegek negatív alapja
           capitalizacion-seguros-resumen-base-positiva:
-            help: A pozitív alapú kedvezményezettek rekordjaiban feltüntetett levonási
-              és elszámolt előleg alapok összege.
-            label: A levonások és előlegfizetések alapja
+            help: A pozitív alapú jövedelemszerzői rekordokban szereplő levonási és
+              adóelőleg-alapok összege.
+            label: A levonások és adóelőlegek alapja
           capitalizacion-seguros-resumen-perceptores-base-negativa:
-            help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási és elszámolt
-              előleg alapja negatív.
-            label: Negatív adóalappal rendelkező kedvezményezettek teljes száma
+            help: Azon rekordok száma, amelyeknél a levonások és adóelőlegek alapja
+              negatív vagy nulla. A több rekordban szereplő jövedelemszerzőt minden
+              rekordnál egyszer kell számolni.
+            label: Negatív vagy nulla alappal rendelkező jövedelemszerzők összesített
+              száma
           capitalizacion-seguros-resumen-perceptores-base-positiva:
-            help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási és elszámolt
-              előleg alapja pozitív.
-            label: Pozitív adóalappal rendelkező kedvezményezettek teljes száma
+            help: Azon jövedelemszerzők (rekordok) száma, akiknek a levonások és adóelőlegek
+              alapja pozitív.
+            label: Pozitív alappal rendelkező jövedelemszerzők összesített száma
           capitalizacion-seguros-resumen-retenciones:
-            help: A bevallott jövedelmek után teljesített levonások és elszámolt előlegek
-              összege.
-            label: Forrásadó és részletfizetés
+            help: A bevallott jövedelmekre alkalmazott levonások és adóelőlegek összege.
+            label: Levonások és adóelőlegek
       field:
         official_name: Modelo 188. Adóelőleg-levonások és -befizetések. Tőkésítési
           műveletekből, valamint élet- vagy rokkantsági biztosítási szerződésekből
@@ -37,6 +110,38 @@ modelo:
             heading: Azonosítás és kapcsolattartás
       revision:
         '2022':
+          casilla:
+            x-e1in4or5e1q6ushecdm62tj5:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2017 rekordterv,
+                16. oldal.'
+            x-e1in4or5e1q6ushedlnm8obcd5i62p0:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2017 rekordterv,
+                11. oldal.'
+            x-e1in4or5e1q6ushedpkmc:
+              help: A történeti rekordterv szerint, ha a kiskorúnak nincs NIF-azonosítója,
+                a törvényes képviselő NIF-azonosítóját kell a megfelelő mezőben megadni.
+            x-e1in4or5e1q6ushedpnmqojick:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2017 rekordterv,
+                10. oldal.'
+            x-e1in4or5e1q6ushee1p6irb1:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2017 rekordterv,
+                18. oldal.'
+            x-e1in4or5e1q6ushee1p6utj9dphmio8:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2017 rekordterv,
+                10. oldal.'
+            x-e1in4or5e1q6ushee9imsp39dlkmarjkdsmm2oriclim8rri5lk6is3fehim6obid5ng:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2017 rekordterv,
+                18. oldal.'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lhmoobmck:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2017 rekordterv,
+                16. oldal.'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lkm8pbeehkmcqb3c5hmirre:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2017 rekordterv,
+                17. oldal.'
+            x-e1in4or5e1q6ushee9in0sj5edimst31dpq6abbed5j0:
+              help: A történeti rekordterv szerint a képviselő NIF-azonosítóját kell
+                megadni, ha a jövedelemszerző kiskorú. Egyéb esetekben adat nélkül
+                marad.
           construct:
             modelo-188-calculation-construct:
               field:
@@ -46,24 +151,36 @@ modelo:
             label: 188-as modelo, 2022. adóév
         2023-y-siguientes:
           casilla:
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              label: 'Kiegészítő: C a kihagyott kifizetések hozzáadásához'
-            x-chim6r1ecdnmst31cdq6u:
-              label: Kapcsolattartó teljes neve
-            x-chim6r1ecll6asj3d5hmiro:
-              label: Adóév
-            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              label: Korábbi azonosító (csak helyettesítő bevallásnál)
-            x-chim6r1edpkmc:
-              label: Bevalló adóazonosítója
-            x-chim6r1edpnmqojick:
-              label: Teljes név vagy cégnév
-            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
-              label: Bevallás azonosítója (13 számjegy; 188-cal kezdődik)
-            x-chim6r1eedqn6t39ehqn8qbmc4:
-              label: 'Helyettesítő: S egy korábbi bevallás lecseréléséhez'
-            x-chim6r1eehimopb6dtn6u:
-              label: Kapcsolattartó telefonszáma
+            x-e1in4or5e1q6ushecdm62tj5:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2023 rekordterv,
+                16. oldal.'
+            x-e1in4or5e1q6ushedlnm8obcd5i62p0:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2023 rekordterv,
+                11. oldal.'
+            x-e1in4or5e1q6ushedpkmc:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2023 rekordterv,
+                8. oldal.'
+            x-e1in4or5e1q6ushedpnmqojick:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2023 rekordterv,
+                10. oldal.'
+            x-e1in4or5e1q6ushee1p6irb1:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2023 rekordterv,
+                18. oldal.'
+            x-e1in4or5e1q6ushee1p6utj9dphmio8:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2023 rekordterv,
+                10. oldal.'
+            x-e1in4or5e1q6ushee9imsp39dlkmarjkdsmm2oriclim8rri5lk6is3fehim6obid5ng:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2023 rekordterv,
+                18. oldal.'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lhmoobmck:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2023 rekordterv,
+                16. oldal.'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lkm8pbeehkmcqb3c5hmirre:
+              help: 'Jövedelemszerzőnként bevallott adat. Forrás: AEAT 2023 rekordterv,
+                17. oldal.'
+            x-e1in4or5e1q6ushee9in0sj5edimst31dpq6abbed5j0:
+              help: Akkor kell megadni, ha a jövedelemszerző 14 év alatti. Egyéb esetekben
+                adat nélkül marad.
           construct:
             modelo-188-calculation-construct:
               field:

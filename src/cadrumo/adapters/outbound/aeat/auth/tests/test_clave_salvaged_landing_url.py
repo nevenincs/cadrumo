@@ -28,6 +28,9 @@ import pytest
 
 from ......application.auth.protocols import BrowserContextPort, BrowserPagePort
 from ......core.config import Settings
+from ......tests.aeat_literal_fixtures import (
+    DOTTED_AEAT_HOST_SUFFIX_FIXTURE,
+)
 from ..clave_movil import ClaveMovilAuthProvider
 from ._clave_movil_support import _CLAVE_SURFACE, _DOMAINS, _aeat_url, _settings_for
 
@@ -121,7 +124,10 @@ def test_no_observed_url_records_nothing(tmp_path: Path, observed: str | None) -
 
 class _FailedLoginContext:
     async def storage_state(self) -> dict[str, object]:
-        return {"cookies": [{"name": "synthetic", "value": "x", "domain": ".agenciatributaria.gob.es"}], "origins": []}
+        return {
+            "cookies": [{"name": "synthetic", "value": "x", "domain": DOTTED_AEAT_HOST_SUFFIX_FIXTURE}],
+            "origins": [],
+        }
 
 
 class _WaitingPage:

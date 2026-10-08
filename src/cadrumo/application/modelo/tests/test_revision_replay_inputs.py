@@ -198,6 +198,21 @@ def test_revision_replay_never_turns_a_text_casilla_placeholder_into_zero_text()
     assert _M390_TIPO_DECLARACION_CASILLA not in replay_inputs
 
 
+def test_revision_replay_preserves_a_stated_date_and_omits_an_absent_date_placeholder() -> None:
+    """M347's unfilled signature date never becomes an invalid filed date ``0``."""
+    work_unit = _work_unit(modelo="347", filing_year=2025, period_code="0A")
+    signature_date = validated_casilla_id("firma-fecha")
+    absent = _revision(work_unit, casilla_values={signature_date: Decimal("0")})
+    stated = _revision(
+        work_unit,
+        input_values_by_casilla_id={signature_date: "2026-02-01"},
+        casilla_values={signature_date: Decimal("0")},
+    )
+
+    assert signature_date not in revision_filing_replay_inputs(revision=absent, work_unit=work_unit)
+    assert revision_filing_replay_inputs(revision=stated, work_unit=work_unit)[signature_date] == "2026-02-01"
+
+
 def test_revision_replay_inputs_do_not_replay_required_manual_defaults() -> None:
     work_unit = _work_unit(modelo="180", filing_year=2024, period_code="0A")
     revision = _resolved_revision(modelo="180", filing_year=2024, period_code="0A")

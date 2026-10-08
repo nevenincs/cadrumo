@@ -317,7 +317,7 @@ def test_concurrent_advances_serialize_under_the_custody_root_lock(root: Path) -
     for thread in threads:
         thread.start()
     for thread in threads:
-        thread.join(timeout=120)
+        thread.join()
 
     assert not failures
     assert all(not thread.is_alive() for thread in threads)

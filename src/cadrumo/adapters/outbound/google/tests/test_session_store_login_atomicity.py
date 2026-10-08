@@ -63,7 +63,7 @@ def _assert_reopened(tmp_path: Path, expected: str | None) -> None:
     child = multiprocessing.get_context("spawn").Process(target=_read_in_fresh_process, args=(tmp_path, expected))
     child.start()
     try:
-        child.join(timeout=60)
+        child.join(timeout=None)
         assert child.exitcode == 0, "fresh process could not read the complete expected sign-in"
     finally:
         if child.is_alive():

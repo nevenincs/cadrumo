@@ -128,6 +128,7 @@ def _observation(
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
+        applied_rate=Decimal("0.21"),
         category=IvaCategory("domestic_general"),
         rate_kind=IvaRateKind("general"),
         flow_direction=flow,

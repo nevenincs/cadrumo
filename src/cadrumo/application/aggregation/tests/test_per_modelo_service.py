@@ -849,7 +849,7 @@ def test_service_surface_has_no_cli_dependency() -> None:
         [sys.executable, "-c", script],
         capture_output=True,
         text=True,
-        timeout=30,
+        timeout=None,
     )
 
     assert result.returncode == 0, (

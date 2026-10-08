@@ -136,12 +136,6 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "carry a policy its non-optional siblings cannot; prepare_invoice_"
         "confirmation_from_evidence reaches the domain Invoice that owns it"
     ),
-    "application/modelo/modelo_spreadsheet_observations.py::currency_code": (
-        "the public wire mirror of Modelo720RowObservation.currency_code, "
-        "which IS IsoCurrencyCode; the operation schema contract forbids the "
-        "canonical annotation on this mirror, and the mirror projects an "
-        "already-validated row"
-    ),
     "application/modelo/aggregate_public.py::currency_code": (
         "a public projection of ForeignAssetIngestObservation.currency_code, "
         "which is IsoCurrencyCode, under the same operation schema contract; "

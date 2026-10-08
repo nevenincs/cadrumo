@@ -1,4 +1,7 @@
-"""Original calculation authority retained for later immutable form presentation."""
+"""Original calculation authority retained for later immutable form presentation.
+
+:class:`RegistrySnapshot` pins the registry declarations used by the projection.
+"""
 
 from __future__ import annotations
 
@@ -174,7 +177,11 @@ class CalculationRenderingSnapshot(BaseModel):
 
     @classmethod
     def capture(cls, snapshot: RegistrySnapshot, *, authority_generation: Hex64Str) -> Self:
-        """Capture the actual calculation snapshot; never resolve another authority generation."""
+        """Capture the actual calculation snapshot; never resolve another authority generation.
+
+        The ``snapshot`` parameter uses :class:`RegistrySnapshot`, which pins
+        the registry declarations used by the projection.
+        """
         labels = tuple(
             SavedRenderingLabel(key=key, text=text)
             for key in sorted(_label_keys(snapshot))

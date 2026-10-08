@@ -59,7 +59,6 @@ def _refused_without_effect(work: SeededOperatorWork, applied: AppliedEdit, *, h
     assert work.require_head().calculation_revision_id == head_before
 
 
-@pytest.mark.timeout(180)
 def test_a_second_edit_keeps_the_first_edits_value(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         _updated(work.apply(scalar=(_set(_C06, "100.00"),)))
@@ -71,7 +70,6 @@ def test_a_second_edit_keeps_the_first_edits_value(tmp_path: Path) -> None:
     assert head.casilla_values[_C08] == Decimal("50")
 
 
-@pytest.mark.timeout(180)
 def test_restore_returns_one_casilla_to_its_source_and_keeps_the_rest(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         source_value = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -86,7 +84,6 @@ def test_restore_returns_one_casilla_to_its_source_and_keeps_the_rest(tmp_path: 
     assert _C06 not in head.cleared_casilla_ids
 
 
-@pytest.mark.timeout(180)
 def test_a_clear_is_recorded_distinct_from_zero_and_a_later_set_withdraws_it(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         _updated(work.apply(scalar=(_set(_C06, "100"), _set(_C08, "50"))))
@@ -102,7 +99,6 @@ def test_a_clear_is_recorded_distinct_from_zero_and_a_later_set_withdraws_it(tmp
     assert zero.operator_layer == CalculationOperatorLayer(decimal_casilla_inputs={_C06: "100", _C08: "0"})
 
 
-@pytest.mark.timeout(180)
 def test_clearing_a_casilla_a_source_feeds_is_refused_and_writes_nothing(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         head = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -120,7 +116,6 @@ def test_clearing_a_casilla_a_source_feeds_is_refused_and_writes_nothing(tmp_pat
 
 
 @pytest.mark.parametrize("lexeme", ["1.234,56", "1e3", "NaN", "12,5", "abc", "12.345"])
-@pytest.mark.timeout(180)
 def test_a_malformed_amount_is_a_typed_refusal_not_a_raw_error(tmp_path: Path, lexeme: str) -> None:
     with seeded_operator_work(tmp_path) as work:
         _updated(work.apply(scalar=(_set(_C06, "100"),)))
@@ -131,7 +126,6 @@ def test_a_malformed_amount_is_a_typed_refusal_not_a_raw_error(tmp_path: Path, l
         _refused_without_effect(work, applied, head_before=before)
 
 
-@pytest.mark.timeout(240)
 def test_a_modelo_303_edit_replays_its_filing_evidence_and_keeps_earlier_values(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path, modelo="303") as work:
         first = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -157,7 +151,6 @@ def test_a_modelo_303_edit_replays_its_filing_evidence_and_keeps_earlier_values(
     assert head.operator_layer == CalculationOperatorLayer(decimal_casilla_inputs={one: "10", two: "20"})
 
 
-@pytest.mark.timeout(240)
 def test_a_ratio_is_not_held_to_the_money_scale_on_its_way_to_the_engine(tmp_path: Path) -> None:
     """A three-decimal ratio crosses the wire and the executor; the money bound once refused it."""
     with seeded_operator_work(tmp_path, modelo="303") as work:

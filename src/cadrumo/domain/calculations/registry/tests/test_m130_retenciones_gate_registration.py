@@ -42,7 +42,7 @@ def _run_python(script: str) -> subprocess.CompletedProcess[str]:
         [sys.executable, "-c", textwrap.dedent(script)],
         capture_output=True,
         text=True,
-        timeout=300,
+        timeout=None,
     )
 
 

@@ -1,4 +1,7 @@
-"""Publish an immutable saved calculation review through the profile worker."""
+"""Publish an immutable saved calculation review through the profile worker.
+
+:class:`OutputSchema` defines the public result envelope.
+"""
 
 from __future__ import annotations
 

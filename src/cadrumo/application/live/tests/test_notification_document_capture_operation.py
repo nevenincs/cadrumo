@@ -14,6 +14,9 @@ import pytest
 from pydantic import BaseModel
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....tests.aeat_literal_fixtures import (
+    SEDE_EXAMPLE_URL_FIXTURE,
+)
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ..notification_document_capture_operation import (
     NOTIFICATION_DOCUMENT_CAPTURE_DEFINITION_ID,
@@ -43,7 +46,7 @@ def _record() -> NotificationDocumentRecord:
         attachment_id="a" * 64,
         document_sha256="a" * 64,
         byte_size=47,
-        source_url="https://sede.agenciatributaria.gob.es/example",
+        source_url=SEDE_EXAMPLE_URL_FIXTURE,
         fetched_at=_NOW,
         sancion=None,
         parse_refusal="no text layer",

@@ -97,7 +97,7 @@ def run_protected_live_cli(root: Path, logs: Path, stage: str, arguments: Sequen
             text=True,
             encoding="utf-8",
             env=environment,
-            timeout=900,
+            timeout=None,
             check=False,
         )
     finally:

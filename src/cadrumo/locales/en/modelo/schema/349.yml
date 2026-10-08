@@ -57,45 +57,6 @@ modelo:
             heading: Replacement recipient VAT number
           sustituto-nombre:
             heading: Replacement recipient name
-        column:
-          op-apellidos-razon-social:
-            heading: Surname and forename, or company name, of the intra-community
-              trader
-          op-base-imponible:
-            heading: Taxable base or amount
-          op-clave-operacion:
-            heading: Transaction code
-          op-codigo-pais:
-            heading: Country code
-          op-nif-comunitario:
-            heading: NIF of the intra-community trader
-          rect-base-anterior:
-            heading: Taxable base previously declared
-          rect-base-rectificada:
-            heading: Corrected taxable base or amounts
-          rect-ejercicio-rectificado:
-            heading: Tax year
-          rect-periodo-rectificado:
-            heading: Period
-          sustituto-apellidos-razon-social:
-            heading: Surname and forename, or company name, of the substitute taxable
-              person
-          sustituto-nif:
-            heading: NIF of the substitute final recipient trader or professional
-        page:
-          modelo-349-declarante:
-            heading: Declarant record
-          modelo-349-operador:
-            heading: Intra-community trader record
-          modelo-349-rectificacion:
-            heading: Corrections record
-        section:
-          datos-identificativos-y-hoja-resumen-de-l-26252f:
-            heading: Identification details and summary sheet of the declaration
-          operadores-intracomunitarios:
-            heading: Intra-community traders
-          rectificaciones:
-            heading: Corrections
       revision:
         2020-y-siguientes:
           casilla:

@@ -556,7 +556,8 @@ def test_native_bus_constructor_preserves_primary_when_socket_close_fails(
             raise primary
 
         monkeypatch.setattr(jeepney, "Parser", failed_parser)
-    with pytest.raises(BaseException) as caught:
+    expected = AutomationCustodyError if mode == "typed" else asyncio.CancelledError if mode == "cancel" else OSError
+    with pytest.raises(expected) as caught:
         secret_transport.DeadlineSecretBus(Path("/synthetic/bus"), time.monotonic() + 1)
     assert caught.value is primary
     assert caught.value.__dict__["cleanup_error"] is cleanup
@@ -597,7 +598,8 @@ def test_native_bus_body_failure_preserves_primary_and_close_diagnostic(
 
     monkeypatch.setattr(replies, "call", fail)
     _failing_bus_close(monkeypatch, replies, cleanup)
-    with pytest.raises(BaseException) as caught:
+    expected = asyncio.CancelledError if mode == "cancel" else AutomationCustodyError
+    with pytest.raises(expected) as caught:
         LinuxSecretServiceAutomationSecretStore().delete(_NAMESPACE, _ACCOUNT)
     if mode == "native":
         assert isinstance(caught.value, AutomationCustodyError)
@@ -662,7 +664,8 @@ def test_bus_close_failure_keeps_only_the_earlier_actual_retry_owner(
     monkeypatch.setattr(replies, "call", fail)
     cleanup = OSError("synthetic consumed socket close failure")
     _failing_bus_close(monkeypatch, replies, cleanup)
-    with pytest.raises(BaseException) as caught:
+    expected = asyncio.CancelledError if mode == "cancel" else AutomationCustodyError
+    with pytest.raises(expected) as caught:
         LinuxSecretServiceAutomationSecretStore().replace(_NAMESPACE, _ACCOUNT, SecretBytes(b"synthetic-value"))
     assert caught.value is primary
     retained = caught.value.__dict__[field]
@@ -775,8 +778,9 @@ def test_encrypted_session_close_preserves_body_primary_and_wipes_keys(mode: str
     )
     bus = _FailingSessionClose(cleanup)
     captured: list[Any] = []
+    expected = AutomationCustodyError if mode == "typed" else asyncio.CancelledError if mode == "cancel" else OSError
     with (
-        pytest.raises(BaseException) as caught,
+        pytest.raises(expected) as caught,
         native._session(cast(secret_transport.DeadlineSecretBus, bus)) as session,
     ):
         captured.append(session)
@@ -807,8 +811,9 @@ def test_encrypted_session_close_retains_previous_cleanup_identity(kind: str) ->
     cleanup = asyncio.CancelledError("synthetic terminal session close cancellation")
     bus = _FailingSessionClose(cleanup)
     captured: list[Any] = []
+    expected = AsyncResourceCleanupError if kind == "aggregate" else AutomationCustodyError
     with (
-        pytest.raises(BaseException) as caught,
+        pytest.raises(expected) as caught,
         native._session(cast(secret_transport.DeadlineSecretBus, bus)) as session,
     ):
         captured.append(session)

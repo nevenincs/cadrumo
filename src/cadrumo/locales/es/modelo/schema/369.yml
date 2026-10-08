@@ -3873,6 +3873,16 @@ modelo:
           help: 'Indica cómo se paga: ingreso total, ingreso parcial, sin ingreso,
             negativa o pago cero, o ingreso por transferencia.'
           label: Tipo de pago
+      construct:
+        modelo-369-exterior-resultado:
+          field:
+            title: Resultado por Estado miembro de consumo
+        modelo-369-importacion-resultado:
+          field:
+            title: Resultado por Estado miembro de consumo
+        modelo-369-union-resultado:
+          field:
+            title: Resultado por Estado miembro de consumo
       field:
         official_name: Modelo 369. Impuesto sobre el Valor Añadido. Autoliquidación
           de los regímenes especiales aplicables a los sujetos pasivos que presten
@@ -3955,8 +3965,6 @@ modelo:
             heading: '8'
           fila-9:
             heading: '9'
-          identificacion:
-            heading: Identificación, período y pago
           importaciones:
             heading: 3. Importaciones de bienes de menos de 150 €
           nif:
@@ -4445,9 +4453,6 @@ modelo:
               field:
                 title: Modelo 369 - Esquema Exterior (régimen especial servicios prestados
                   por no establecidos)
-            modelo-369-exterior-resultado:
-              field:
-                title: Resultado por Estado miembro de consumo
           field:
             label: Modelo 369 - Esquema Exterior - régimen especial de servicios prestados
               por sujetos pasivos no establecidos en la Comunidad (LIVA art. 163 octiesdecies
@@ -4917,9 +4922,6 @@ modelo:
             modelo-369:
               field:
                 title: Modelo 369 - Esquema Importación (régimen especial IOSS)
-            modelo-369-importacion-resultado:
-              field:
-                title: Resultado por Estado miembro de consumo
           field:
             label: Modelo 369 - Esquema Importación (IOSS) - régimen especial de ventas
               a distancia de bienes importados (LIVA art. 163 quinvicies a octovicies).
@@ -5223,686 +5225,683 @@ modelo:
               label: Cuota IVA OSS Unión al destino FR - servicios prestados (LIVA
                 art 163 unvicies)
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2soj9cln6aspdclpn0obec4:
-              label: AT — Bienes desde España
+              label: 'AT: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2soj9cln6aspddtq74rrj:
-              label: AT — Bienes desde otros Estados miembros
+              label: 'AT: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: AT — Correcciones negativas
+              label: 'AT: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: AT — Correcciones positivas
+              label: 'AT: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sp35epnmotj5e8:
-              label: AT — A devolver por el Estado miembro
+              label: 'AT: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sqbectp6asr1e8:
-              label: AT — A ingresar en España
+              label: 'AT: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssj5edqmot31chng:
-              label: AT — Resultado por Estado miembro
+              label: 'AT: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: AT — Servicios desde España
+              label: 'AT: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: AT — Servicios desde otros Estados miembros
+              label: 'AT: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobb5edo62rj1:
-              label: AT — Total desde España
+              label: 'AT: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobbfehp6uso:
-              label: AT — Total desde otros Estados miembros
+              label: 'AT: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobbgclp6irr4ds:
-              label: AT — Total cuotas del período
+              label: 'AT: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisoj9cln6aspdclpn0obec4:
-              label: BE — Bienes desde España
+              label: 'BE: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisoj9cln6aspddtq74rrj:
-              label: BE — Bienes desde otros Estados miembros
+              label: 'BE: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: BE — Correcciones negativas
+              label: 'BE: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: BE — Correcciones positivas
+              label: 'BE: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisp35epnmotj5e8:
-              label: BE — A devolver por el Estado miembro
+              label: 'BE: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisqbectp6asr1e8:
-              label: BE — A ingresar en España
+              label: 'BE: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissj5edqmot31chng:
-              label: BE — Resultado por Estado miembro
+              label: 'BE: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissr5e9r6ior9dtpiqpbje1gmso8:
-              label: BE — Servicios desde España
+              label: 'BE: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissr5e9r6ior9dtpiqrrke9nn6:
-              label: BE — Servicios desde otros Estados miembros
+              label: 'BE: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobb5edo62rj1:
-              label: BE — Total desde España
+              label: 'BE: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobbfehp6uso:
-              label: BE — Total desde otros Estados miembros
+              label: 'BE: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobbgclp6irr4ds:
-              label: BE — Total cuotas del período
+              label: 'BE: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisoj9cln6aspdclpn0obec4:
-              label: BG — Bienes desde España
+              label: 'BG: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisoj9cln6aspddtq74rrj:
-              label: BG — Bienes desde otros Estados miembros
+              label: 'BG: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: BG — Correcciones negativas
+              label: 'BG: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: BG — Correcciones positivas
+              label: 'BG: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisp35epnmotj5e8:
-              label: BG — A devolver por el Estado miembro
+              label: 'BG: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisqbectp6asr1e8:
-              label: BG — A ingresar en España
+              label: 'BG: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissj5edqmot31chng:
-              label: BG — Resultado por Estado miembro
+              label: 'BG: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissr5e9r6ior9dtpiqpbje1gmso8:
-              label: BG — Servicios desde España
+              label: 'BG: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissr5e9r6ior9dtpiqrrke9nn6:
-              label: BG — Servicios desde otros Estados miembros
+              label: 'BG: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobb5edo62rj1:
-              label: BG — Total desde España
+              label: 'BG: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobbfehp6uso:
-              label: BG — Total desde otros Estados miembros
+              label: 'BG: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobbgclp6irr4ds:
-              label: BG — Total cuotas del período
+              label: 'BG: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisoj9cln6aspdclpn0obec4:
-              label: CY — Bienes desde España
+              label: 'CY: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisoj9cln6aspddtq74rrj:
-              label: CY — Bienes desde otros Estados miembros
+              label: 'CY: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: CY — Correcciones negativas
+              label: 'CY: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: CY — Correcciones positivas
+              label: 'CY: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisp35epnmotj5e8:
-              label: CY — A devolver por el Estado miembro
+              label: 'CY: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisqbectp6asr1e8:
-              label: CY — A ingresar en España
+              label: 'CY: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissj5edqmot31chng:
-              label: CY — Resultado por Estado miembro
+              label: 'CY: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissr5e9r6ior9dtpiqpbje1gmso8:
-              label: CY — Servicios desde España
+              label: 'CY: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissr5e9r6ior9dtpiqrrke9nn6:
-              label: CY — Servicios desde otros Estados miembros
+              label: 'CY: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobb5edo62rj1:
-              label: CY — Total desde España
+              label: 'CY: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobbfehp6uso:
-              label: CY — Total desde otros Estados miembros
+              label: 'CY: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobbgclp6irr4ds:
-              label: CY — Total cuotas del período
+              label: 'CY: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2soj9cln6aspdclpn0obec4:
-              label: CZ — Bienes desde España
+              label: 'CZ: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2soj9cln6aspddtq74rrj:
-              label: CZ — Bienes desde otros Estados miembros
+              label: 'CZ: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: CZ — Correcciones negativas
+              label: 'CZ: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: CZ — Correcciones positivas
+              label: 'CZ: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sp35epnmotj5e8:
-              label: CZ — A devolver por el Estado miembro
+              label: 'CZ: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sqbectp6asr1e8:
-              label: CZ — A ingresar en España
+              label: 'CZ: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssj5edqmot31chng:
-              label: CZ — Resultado por Estado miembro
+              label: 'CZ: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: CZ — Servicios desde España
+              label: 'CZ: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: CZ — Servicios desde otros Estados miembros
+              label: 'CZ: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobb5edo62rj1:
-              label: CZ — Total desde España
+              label: 'CZ: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobbfehp6uso:
-              label: CZ — Total desde otros Estados miembros
+              label: 'CZ: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobbgclp6irr4ds:
-              label: CZ — Total cuotas del período
+              label: 'CZ: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisoj9cln6aspdclpn0obec4:
-              label: DE — Bienes desde España
+              label: 'DE: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisoj9cln6aspddtq74rrj:
-              label: DE — Bienes desde otros Estados miembros
+              label: 'DE: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: DE — Correcciones negativas
+              label: 'DE: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: DE — Correcciones positivas
+              label: 'DE: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisp35epnmotj5e8:
-              label: DE — A devolver por el Estado miembro
+              label: 'DE: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisqbectp6asr1e8:
-              label: DE — A ingresar en España
+              label: 'DE: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissj5edqmot31chng:
-              label: DE — Resultado por Estado miembro
+              label: 'DE: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissr5e9r6ior9dtpiqpbje1gmso8:
-              label: DE — Servicios desde España
+              label: 'DE: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissr5e9r6ior9dtpiqrrke9nn6:
-              label: DE — Servicios desde otros Estados miembros
+              label: 'DE: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobb5edo62rj1:
-              label: DE — Total desde España
+              label: 'DE: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobbfehp6uso:
-              label: DE — Total desde otros Estados miembros
+              label: 'DE: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobbgclp6irr4ds:
-              label: DE — Total cuotas del período
+              label: 'DE: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisoj9cln6aspdclpn0obec4:
-              label: DK — Bienes desde España
+              label: 'DK: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisoj9cln6aspddtq74rrj:
-              label: DK — Bienes desde otros Estados miembros
+              label: 'DK: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: DK — Correcciones negativas
+              label: 'DK: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: DK — Correcciones positivas
+              label: 'DK: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisp35epnmotj5e8:
-              label: DK — A devolver por el Estado miembro
+              label: 'DK: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisqbectp6asr1e8:
-              label: DK — A ingresar en España
+              label: 'DK: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissj5edqmot31chng:
-              label: DK — Resultado por Estado miembro
+              label: 'DK: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissr5e9r6ior9dtpiqpbje1gmso8:
-              label: DK — Servicios desde España
+              label: 'DK: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissr5e9r6ior9dtpiqrrke9nn6:
-              label: DK — Servicios desde otros Estados miembros
+              label: 'DK: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobb5edo62rj1:
-              label: DK — Total desde España
+              label: 'DK: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobbfehp6uso:
-              label: DK — Total desde otros Estados miembros
+              label: 'DK: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobbgclp6irr4ds:
-              label: DK — Total cuotas del período
+              label: 'DK: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisoj9cln6aspdclpn0obec4:
-              label: EE — Bienes desde España
+              label: 'EE: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisoj9cln6aspddtq74rrj:
-              label: EE — Bienes desde otros Estados miembros
+              label: 'EE: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: EE — Correcciones negativas
+              label: 'EE: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: EE — Correcciones positivas
+              label: 'EE: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisp35epnmotj5e8:
-              label: EE — A devolver por el Estado miembro
+              label: 'EE: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisqbectp6asr1e8:
-              label: EE — A ingresar en España
+              label: 'EE: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissj5edqmot31chng:
-              label: EE — Resultado por Estado miembro
+              label: 'EE: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissr5e9r6ior9dtpiqpbje1gmso8:
-              label: EE — Servicios desde España
+              label: 'EE: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissr5e9r6ior9dtpiqrrke9nn6:
-              label: EE — Servicios desde otros Estados miembros
+              label: 'EE: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobb5edo62rj1:
-              label: EE — Total desde España
+              label: 'EE: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobbfehp6uso:
-              label: EE — Total desde otros Estados miembros
+              label: 'EE: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobbgclp6irr4ds:
-              label: EE — Total cuotas del período
+              label: 'EE: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisoj9cln6aspdclpn0obec4:
-              label: ES — Bienes desde España
+              label: 'ES: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisoj9cln6aspddtq74rrj:
-              label: ES — Bienes desde otros Estados miembros
+              label: 'ES: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: ES — Correcciones negativas
+              label: 'ES: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: ES — Correcciones positivas
+              label: 'ES: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisp35epnmotj5e8:
-              label: ES — A devolver por el Estado miembro
+              label: 'ES: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisqbectp6asr1e8:
-              label: ES — A ingresar en España
+              label: 'ES: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissj5edqmot31chng:
-              label: ES — Resultado por Estado miembro
+              label: 'ES: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissr5e9r6ior9dtpiqpbje1gmso8:
-              label: ES — Servicios desde España
+              label: 'ES: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissr5e9r6ior9dtpiqrrke9nn6:
-              label: ES — Servicios desde otros Estados miembros
+              label: 'ES: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobb5edo62rj1:
-              label: ES — Total desde España
+              label: 'ES: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobbfehp6uso:
-              label: ES — Total desde otros Estados miembros
+              label: 'ES: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobbgclp6irr4ds:
-              label: ES — Total cuotas del período
+              label: 'ES: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisoj9cln6aspdclpn0obec4:
-              label: FI — Bienes desde España
+              label: 'FI: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisoj9cln6aspddtq74rrj:
-              label: FI — Bienes desde otros Estados miembros
+              label: 'FI: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: FI — Correcciones negativas
+              label: 'FI: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: FI — Correcciones positivas
+              label: 'FI: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisp35epnmotj5e8:
-              label: FI — A devolver por el Estado miembro
+              label: 'FI: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisqbectp6asr1e8:
-              label: FI — A ingresar en España
+              label: 'FI: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissj5edqmot31chng:
-              label: FI — Resultado por Estado miembro
+              label: 'FI: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissr5e9r6ior9dtpiqpbje1gmso8:
-              label: FI — Servicios desde España
+              label: 'FI: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissr5e9r6ior9dtpiqrrke9nn6:
-              label: FI — Servicios desde otros Estados miembros
+              label: 'FI: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobb5edo62rj1:
-              label: FI — Total desde España
+              label: 'FI: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobbfehp6uso:
-              label: FI — Total desde otros Estados miembros
+              label: 'FI: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobbgclp6irr4ds:
-              label: FI — Total cuotas del período
+              label: 'FI: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2soj9cln6aspdclpn0obec4:
-              label: FR — Bienes desde España
+              label: 'FR: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2soj9cln6aspddtq74rrj:
-              label: FR — Bienes desde otros Estados miembros
+              label: 'FR: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: FR — Correcciones negativas
+              label: 'FR: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: FR — Correcciones positivas
+              label: 'FR: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sp35epnmotj5e8:
-              label: FR — A devolver por el Estado miembro
+              label: 'FR: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sqbectp6asr1e8:
-              label: FR — A ingresar en España
+              label: 'FR: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssj5edqmot31chng:
-              label: FR — Resultado por Estado miembro
+              label: 'FR: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: FR — Servicios desde España
+              label: 'FR: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: FR — Servicios desde otros Estados miembros
+              label: 'FR: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobb5edo62rj1:
-              label: FR — Total desde España
+              label: 'FR: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobbfehp6uso:
-              label: FR — Total desde otros Estados miembros
+              label: 'FR: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobbgclp6irr4ds:
-              label: FR — Total cuotas del período
+              label: 'FR: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2soj9cln6aspdclpn0obec4:
-              label: GR — Bienes desde España
+              label: 'GR: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2soj9cln6aspddtq74rrj:
-              label: GR — Bienes desde otros Estados miembros
+              label: 'GR: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: GR — Correcciones negativas
+              label: 'GR: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: GR — Correcciones positivas
+              label: 'GR: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sp35epnmotj5e8:
-              label: GR — A devolver por el Estado miembro
+              label: 'GR: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sqbectp6asr1e8:
-              label: GR — A ingresar en España
+              label: 'GR: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssj5edqmot31chng:
-              label: GR — Resultado por Estado miembro
+              label: 'GR: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: GR — Servicios desde España
+              label: 'GR: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: GR — Servicios desde otros Estados miembros
+              label: 'GR: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobb5edo62rj1:
-              label: GR — Total desde España
+              label: 'GR: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobbfehp6uso:
-              label: GR — Total desde otros Estados miembros
+              label: 'GR: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobbgclp6irr4ds:
-              label: GR — Total cuotas del período
+              label: 'GR: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2soj9cln6aspdclpn0obec4:
-              label: HR — Bienes desde España
+              label: 'HR: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2soj9cln6aspddtq74rrj:
-              label: HR — Bienes desde otros Estados miembros
+              label: 'HR: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: HR — Correcciones negativas
+              label: 'HR: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: HR — Correcciones positivas
+              label: 'HR: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sp35epnmotj5e8:
-              label: HR — A devolver por el Estado miembro
+              label: 'HR: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sqbectp6asr1e8:
-              label: HR — A ingresar en España
+              label: 'HR: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssj5edqmot31chng:
-              label: HR — Resultado por Estado miembro
+              label: 'HR: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: HR — Servicios desde España
+              label: 'HR: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: HR — Servicios desde otros Estados miembros
+              label: 'HR: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobb5edo62rj1:
-              label: HR — Total desde España
+              label: 'HR: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobbfehp6uso:
-              label: HR — Total desde otros Estados miembros
+              label: 'HR: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobbgclp6irr4ds:
-              label: HR — Total cuotas del período
+              label: 'HR: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisoj9cln6aspdclpn0obec4:
-              label: HU — Bienes desde España
+              label: 'HU: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisoj9cln6aspddtq74rrj:
-              label: HU — Bienes desde otros Estados miembros
+              label: 'HU: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: HU — Correcciones negativas
+              label: 'HU: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: HU — Correcciones positivas
+              label: 'HU: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisp35epnmotj5e8:
-              label: HU — A devolver por el Estado miembro
+              label: 'HU: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisqbectp6asr1e8:
-              label: HU — A ingresar en España
+              label: 'HU: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissj5edqmot31chng:
-              label: HU — Resultado por Estado miembro
+              label: 'HU: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissr5e9r6ior9dtpiqpbje1gmso8:
-              label: HU — Servicios desde España
+              label: 'HU: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissr5e9r6ior9dtpiqrrke9nn6:
-              label: HU — Servicios desde otros Estados miembros
+              label: 'HU: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobb5edo62rj1:
-              label: HU — Total desde España
+              label: 'HU: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobbfehp6uso:
-              label: HU — Total desde otros Estados miembros
+              label: 'HU: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobbgclp6irr4ds:
-              label: HU — Total cuotas del período
+              label: 'HU: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisoj9cln6aspdclpn0obec4:
-              label: IE — Bienes desde España
+              label: 'IE: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisoj9cln6aspddtq74rrj:
-              label: IE — Bienes desde otros Estados miembros
+              label: 'IE: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: IE — Correcciones negativas
+              label: 'IE: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: IE — Correcciones positivas
+              label: 'IE: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisp35epnmotj5e8:
-              label: IE — A devolver por el Estado miembro
+              label: 'IE: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisqbectp6asr1e8:
-              label: IE — A ingresar en España
+              label: 'IE: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissj5edqmot31chng:
-              label: IE — Resultado por Estado miembro
+              label: 'IE: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissr5e9r6ior9dtpiqpbje1gmso8:
-              label: IE — Servicios desde España
+              label: 'IE: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissr5e9r6ior9dtpiqrrke9nn6:
-              label: IE — Servicios desde otros Estados miembros
+              label: 'IE: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobb5edo62rj1:
-              label: IE — Total desde España
+              label: 'IE: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobbfehp6uso:
-              label: IE — Total desde otros Estados miembros
+              label: 'IE: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobbgclp6irr4ds:
-              label: IE — Total cuotas del período
+              label: 'IE: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2soj9cln6aspdclpn0obec4:
-              label: IT — Bienes desde España
+              label: 'IT: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2soj9cln6aspddtq74rrj:
-              label: IT — Bienes desde otros Estados miembros
+              label: 'IT: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: IT — Correcciones negativas
+              label: 'IT: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: IT — Correcciones positivas
+              label: 'IT: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sp35epnmotj5e8:
-              label: IT — A devolver por el Estado miembro
+              label: 'IT: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sqbectp6asr1e8:
-              label: IT — A ingresar en España
+              label: 'IT: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssj5edqmot31chng:
-              label: IT — Resultado por Estado miembro
+              label: 'IT: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: IT — Servicios desde España
+              label: 'IT: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: IT — Servicios desde otros Estados miembros
+              label: 'IT: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobb5edo62rj1:
-              label: IT — Total desde España
+              label: 'IT: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobbfehp6uso:
-              label: IT — Total desde otros Estados miembros
+              label: 'IT: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobbgclp6irr4ds:
-              label: IT — Total cuotas del período
+              label: 'IT: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2soj9cln6aspdclpn0obec4:
-              label: LT — Bienes desde España
+              label: 'LT: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2soj9cln6aspddtq74rrj:
-              label: LT — Bienes desde otros Estados miembros
+              label: 'LT: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: LT — Correcciones negativas
+              label: 'LT: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: LT — Correcciones positivas
+              label: 'LT: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sp35epnmotj5e8:
-              label: LT — A devolver por el Estado miembro
+              label: 'LT: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sqbectp6asr1e8:
-              label: LT — A ingresar en España
+              label: 'LT: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssj5edqmot31chng:
-              label: LT — Resultado por Estado miembro
+              label: 'LT: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: LT — Servicios desde España
+              label: 'LT: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: LT — Servicios desde otros Estados miembros
+              label: 'LT: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobb5edo62rj1:
-              label: LT — Total desde España
+              label: 'LT: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobbfehp6uso:
-              label: LT — Total desde otros Estados miembros
+              label: 'LT: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobbgclp6irr4ds:
-              label: LT — Total cuotas del período
+              label: 'LT: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisoj9cln6aspdclpn0obec4:
-              label: LU — Bienes desde España
+              label: 'LU: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisoj9cln6aspddtq74rrj:
-              label: LU — Bienes desde otros Estados miembros
+              label: 'LU: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: LU — Correcciones negativas
+              label: 'LU: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: LU — Correcciones positivas
+              label: 'LU: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisp35epnmotj5e8:
-              label: LU — A devolver por el Estado miembro
+              label: 'LU: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisqbectp6asr1e8:
-              label: LU — A ingresar en España
+              label: 'LU: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissj5edqmot31chng:
-              label: LU — Resultado por Estado miembro
+              label: 'LU: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissr5e9r6ior9dtpiqpbje1gmso8:
-              label: LU — Servicios desde España
+              label: 'LU: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissr5e9r6ior9dtpiqrrke9nn6:
-              label: LU — Servicios desde otros Estados miembros
+              label: 'LU: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobb5edo62rj1:
-              label: LU — Total desde España
+              label: 'LU: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobbfehp6uso:
-              label: LU — Total desde otros Estados miembros
+              label: 'LU: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobbgclp6irr4ds:
-              label: LU — Total cuotas del período
+              label: 'LU: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2soj9cln6aspdclpn0obec4:
-              label: LV — Bienes desde España
+              label: 'LV: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2soj9cln6aspddtq74rrj:
-              label: LV — Bienes desde otros Estados miembros
+              label: 'LV: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: LV — Correcciones negativas
+              label: 'LV: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: LV — Correcciones positivas
+              label: 'LV: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sp35epnmotj5e8:
-              label: LV — A devolver por el Estado miembro
+              label: 'LV: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sqbectp6asr1e8:
-              label: LV — A ingresar en España
+              label: 'LV: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssj5edqmot31chng:
-              label: LV — Resultado por Estado miembro
+              label: 'LV: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: LV — Servicios desde España
+              label: 'LV: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: LV — Servicios desde otros Estados miembros
+              label: 'LV: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobb5edo62rj1:
-              label: LV — Total desde España
+              label: 'LV: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobbfehp6uso:
-              label: LV — Total desde otros Estados miembros
+              label: 'LV: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobbgclp6irr4ds:
-              label: LV — Total cuotas del período
+              label: 'LV: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2soj9cln6aspdclpn0obec4:
-              label: MT — Bienes desde España
+              label: 'MT: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2soj9cln6aspddtq74rrj:
-              label: MT — Bienes desde otros Estados miembros
+              label: 'MT: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: MT — Correcciones negativas
+              label: 'MT: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: MT — Correcciones positivas
+              label: 'MT: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sp35epnmotj5e8:
-              label: MT — A devolver por el Estado miembro
+              label: 'MT: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sqbectp6asr1e8:
-              label: MT — A ingresar en España
+              label: 'MT: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssj5edqmot31chng:
-              label: MT — Resultado por Estado miembro
+              label: 'MT: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: MT — Servicios desde España
+              label: 'MT: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: MT — Servicios desde otros Estados miembros
+              label: 'MT: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobb5edo62rj1:
-              label: MT — Total desde España
+              label: 'MT: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobbfehp6uso:
-              label: MT — Total desde otros Estados miembros
+              label: 'MT: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobbgclp6irr4ds:
-              label: MT — Total cuotas del período
+              label: 'MT: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2soj9cln6aspdclpn0obec4:
-              label: NL — Bienes desde España
+              label: 'NL: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2soj9cln6aspddtq74rrj:
-              label: NL — Bienes desde otros Estados miembros
+              label: 'NL: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: NL — Correcciones negativas
+              label: 'NL: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: NL — Correcciones positivas
+              label: 'NL: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sp35epnmotj5e8:
-              label: NL — A devolver por el Estado miembro
+              label: 'NL: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sqbectp6asr1e8:
-              label: NL — A ingresar en España
+              label: 'NL: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssj5edqmot31chng:
-              label: NL — Resultado por Estado miembro
+              label: 'NL: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: NL — Servicios desde España
+              label: 'NL: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: NL — Servicios desde otros Estados miembros
+              label: 'NL: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobb5edo62rj1:
-              label: NL — Total desde España
+              label: 'NL: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobbfehp6uso:
-              label: NL — Total desde otros Estados miembros
+              label: 'NL: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobbgclp6irr4ds:
-              label: NL — Total cuotas del período
+              label: 'NL: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2soj9cln6aspdclpn0obec4:
-              label: PL — Bienes desde España
+              label: 'PL: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2soj9cln6aspddtq74rrj:
-              label: PL — Bienes desde otros Estados miembros
+              label: 'PL: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: PL — Correcciones negativas
+              label: 'PL: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: PL — Correcciones positivas
+              label: 'PL: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sp35epnmotj5e8:
-              label: PL — A devolver por el Estado miembro
+              label: 'PL: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sqbectp6asr1e8:
-              label: PL — A ingresar en España
+              label: 'PL: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssj5edqmot31chng:
-              label: PL — Resultado por Estado miembro
+              label: 'PL: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: PL — Servicios desde España
+              label: 'PL: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: PL — Servicios desde otros Estados miembros
+              label: 'PL: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobb5edo62rj1:
-              label: PL — Total desde España
+              label: 'PL: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobbfehp6uso:
-              label: PL — Total desde otros Estados miembros
+              label: 'PL: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobbgclp6irr4ds:
-              label: PL — Total cuotas del período
+              label: 'PL: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2soj9cln6aspdclpn0obec4:
-              label: PT — Bienes desde España
+              label: 'PT: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2soj9cln6aspddtq74rrj:
-              label: PT — Bienes desde otros Estados miembros
+              label: 'PT: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: PT — Correcciones negativas
+              label: 'PT: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: PT — Correcciones positivas
+              label: 'PT: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sp35epnmotj5e8:
-              label: PT — A devolver por el Estado miembro
+              label: 'PT: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sqbectp6asr1e8:
-              label: PT — A ingresar en España
+              label: 'PT: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssj5edqmot31chng:
-              label: PT — Resultado por Estado miembro
+              label: 'PT: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: PT — Servicios desde España
+              label: 'PT: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: PT — Servicios desde otros Estados miembros
+              label: 'PT: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobb5edo62rj1:
-              label: PT — Total desde España
+              label: 'PT: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobbfehp6uso:
-              label: PT — Total desde otros Estados miembros
+              label: 'PT: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobbgclp6irr4ds:
-              label: PT — Total cuotas del período
+              label: 'PT: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisoj9cln6aspdclpn0obec4:
-              label: RO — Bienes desde España
+              label: 'RO: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisoj9cln6aspddtq74rrj:
-              label: RO — Bienes desde otros Estados miembros
+              label: 'RO: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: RO — Correcciones negativas
+              label: 'RO: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: RO — Correcciones positivas
+              label: 'RO: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisp35epnmotj5e8:
-              label: RO — A devolver por el Estado miembro
+              label: 'RO: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisqbectp6asr1e8:
-              label: RO — A ingresar en España
+              label: 'RO: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissj5edqmot31chng:
-              label: RO — Resultado por Estado miembro
+              label: 'RO: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissr5e9r6ior9dtpiqpbje1gmso8:
-              label: RO — Servicios desde España
+              label: 'RO: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissr5e9r6ior9dtpiqrrke9nn6:
-              label: RO — Servicios desde otros Estados miembros
+              label: 'RO: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobb5edo62rj1:
-              label: RO — Total desde España
+              label: 'RO: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobbfehp6uso:
-              label: RO — Total desde otros Estados miembros
+              label: 'RO: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobbgclp6irr4ds:
-              label: RO — Total cuotas del período
+              label: 'RO: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedgmop3f5lkmspriclpm2shdclpn0obec4:
               label: Saldo a ingresar en España
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisoj9cln6aspdclpn0obec4:
-              label: SE — Bienes desde España
+              label: 'SE: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisoj9cln6aspddtq74rrj:
-              label: SE — Bienes desde otros Estados miembros
+              label: 'SE: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: SE — Correcciones negativas
+              label: 'SE: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: SE — Correcciones positivas
+              label: 'SE: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisp35epnmotj5e8:
-              label: SE — A devolver por el Estado miembro
+              label: 'SE: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisqbectp6asr1e8:
-              label: SE — A ingresar en España
+              label: 'SE: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissj5edqmot31chng:
-              label: SE — Resultado por Estado miembro
+              label: 'SE: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissr5e9r6ior9dtpiqpbje1gmso8:
-              label: SE — Servicios desde España
+              label: 'SE: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissr5e9r6ior9dtpiqrrke9nn6:
-              label: SE — Servicios desde otros Estados miembros
+              label: 'SE: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobb5edo62rj1:
-              label: SE — Total desde España
+              label: 'SE: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobbfehp6uso:
-              label: SE — Total desde otros Estados miembros
+              label: 'SE: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobbgclp6irr4ds:
-              label: SE — Total cuotas del período
+              label: 'SE: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisoj9cln6aspdclpn0obec4:
-              label: SI — Bienes desde España
+              label: 'SI: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisoj9cln6aspddtq74rrj:
-              label: SI — Bienes desde otros Estados miembros
+              label: 'SI: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: SI — Correcciones negativas
+              label: 'SI: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: SI — Correcciones positivas
+              label: 'SI: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisp35epnmotj5e8:
-              label: SI — A devolver por el Estado miembro
+              label: 'SI: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisqbectp6asr1e8:
-              label: SI — A ingresar en España
+              label: 'SI: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissj5edqmot31chng:
-              label: SI — Resultado por Estado miembro
+              label: 'SI: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissr5e9r6ior9dtpiqpbje1gmso8:
-              label: SI — Servicios desde España
+              label: 'SI: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissr5e9r6ior9dtpiqrrke9nn6:
-              label: SI — Servicios desde otros Estados miembros
+              label: 'SI: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobb5edo62rj1:
-              label: SI — Total desde España
+              label: 'SI: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobbfehp6uso:
-              label: SI — Total desde otros Estados miembros
+              label: 'SI: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobbgclp6irr4ds:
-              label: SI — Total cuotas del período
+              label: 'SI: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisoj9cln6aspdclpn0obec4:
-              label: SK — Bienes desde España
+              label: 'SK: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisoj9cln6aspddtq74rrj:
-              label: SK — Bienes desde otros Estados miembros
+              label: 'SK: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: SK — Correcciones negativas
+              label: 'SK: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: SK — Correcciones positivas
+              label: 'SK: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisp35epnmotj5e8:
-              label: SK — A devolver por el Estado miembro
+              label: 'SK: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisqbectp6asr1e8:
-              label: SK — A ingresar en España
+              label: 'SK: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissj5edqmot31chng:
-              label: SK — Resultado por Estado miembro
+              label: 'SK: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissr5e9r6ior9dtpiqpbje1gmso8:
-              label: SK — Servicios desde España
+              label: 'SK: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissr5e9r6ior9dtpiqrrke9nn6:
-              label: SK — Servicios desde otros Estados miembros
+              label: 'SK: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobb5edo62rj1:
-              label: SK — Total desde España
+              label: 'SK: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobbfehp6uso:
-              label: SK — Total desde otros Estados miembros
+              label: 'SK: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobbgclp6irr4ds:
-              label: SK — Total cuotas del período
+              label: 'SK: Total cuotas del período'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisoj9cln6aspdclpn0obec4:
-              label: XI — Bienes desde España
+              label: 'XI: Bienes desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisoj9cln6aspddtq74rrj:
-              label: XI — Bienes desde otros Estados miembros
+              label: 'XI: Bienes desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: XI — Correcciones negativas
+              label: 'XI: Correcciones negativas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: XI — Correcciones positivas
+              label: 'XI: Correcciones positivas'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisp35epnmotj5e8:
-              label: XI — A devolver por el Estado miembro
+              label: 'XI: A devolver por el Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisqbectp6asr1e8:
-              label: XI — A ingresar en España
+              label: 'XI: A ingresar en España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissj5edqmot31chng:
-              label: XI — Resultado por Estado miembro
+              label: 'XI: Resultado por Estado miembro'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissr5e9r6ior9dtpiqpbje1gmso8:
-              label: XI — Servicios desde España
+              label: 'XI: Servicios desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissr5e9r6ior9dtpiqrrke9nn6:
-              label: XI — Servicios desde otros Estados miembros
+              label: 'XI: Servicios desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobb5edo62rj1:
-              label: XI — Total desde España
+              label: 'XI: Total desde España'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobbfehp6uso:
-              label: XI — Total desde otros Estados miembros
+              label: 'XI: Total desde otros Estados miembros'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobbgclp6irr4ds:
-              label: XI — Total cuotas del período
+              label: 'XI: Total cuotas del período'
           construct:
             modelo-369:
               field:
                 title: Modelo 369 - Esquema Unión (régimen especial OSS Unión)
-            modelo-369-union-resultado:
-              field:
-                title: Resultado por Estado miembro de consumo
           field:
             label: Modelo 369 - Esquema Unión - régimen especial de ventas intracomunitarias
               a distancia, interfaces electrónicas y servicios establecidos en la

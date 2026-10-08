@@ -78,7 +78,7 @@ modelo:
           m309-papel-ccc-entidad:
             label: 'CCC: entitat'
           m309-papel-ccc-oficina:
-            label: 'CCC: oficina'
+            label: 'CCC: sucursal'
           m309-papel-complementaria:
             label: Declaració complementària
           m309-papel-domicilio-codigo-postal:
@@ -88,7 +88,7 @@ modelo:
           m309-papel-domicilio-municipio:
             label: Municipi
           m309-papel-domicilio-numero:
-            label: Número
+            label: Nombre
           m309-papel-domicilio-piso:
             label: Pis
           m309-papel-domicilio-provincia:
@@ -110,34 +110,6 @@ modelo:
               (Núm. construcció)
           observaciones-presentacion:
             label: Observacions
-          papel-ccc-cuenta:
-            label: null
-          papel-ccc-dc:
-            label: null
-          papel-ccc-entidad:
-            label: null
-          papel-ccc-oficina:
-            label: null
-          papel-domicilio-codigo-postal:
-            label: null
-          papel-domicilio-escalera:
-            label: null
-          papel-domicilio-municipio:
-            label: null
-          papel-domicilio-numero:
-            label: null
-          papel-domicilio-piso:
-            label: null
-          papel-domicilio-provincia:
-            label: null
-          papel-domicilio-puerta:
-            label: null
-          papel-domicilio-telefono:
-            label: null
-          papel-domicilio-tipo-via:
-            label: null
-          papel-domicilio-via:
-            label: null
           papel-firma:
             help: Espai per signar l’imprès. Escriure-hi un nom no constitueix una
               signatura electrònica ni una presentació.
@@ -242,6 +214,13 @@ modelo:
               comercial):'
           vehiculo-tipo:
             label: Característiques i dades tècniques - Vehicles - Tipus
+      construct:
+        modelo-309-papel-domicilio-cuenta:
+          field:
+            title: Domicili i compte bancari
+        modelo-309-papel-identificacion-complementaria:
+          field:
+            title: Identificació complementària
       field:
         official_name: Modelo 309. Impost sobre el Valor Afegit. Declaració-liquidació
           no periòdica.

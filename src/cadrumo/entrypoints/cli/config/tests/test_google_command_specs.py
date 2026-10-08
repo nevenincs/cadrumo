@@ -24,6 +24,7 @@ def test_google_specs_declare_the_complete_operator_subtree() -> None:
         "config_google_logout",
         "config_google_folder",
         "config_google_folder_view",
+        "config_google_folder_organize",
         "config_google_probe",
     }
     leaves = [spec for spec in GOOGLE_COMMAND_SPECS if spec.kind == "leaf"]

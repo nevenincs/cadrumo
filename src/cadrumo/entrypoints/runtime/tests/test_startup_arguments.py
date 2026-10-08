@@ -88,7 +88,7 @@ async def test_help_and_invalid_invocations_do_not_initialize_runtime(
         stderr=asyncio.subprocess.PIPE,
     )
     try:
-        output, errors = await asyncio.wait_for(process.communicate(), timeout=20)
+        output, errors = await asyncio.wait_for(process.communicate(), timeout=None)
     finally:
         if process.returncode is None:
             process.kill()

@@ -1,4 +1,7 @@
-"""Strict public result contracts for profile sign-in custody commands."""
+"""Strict public result contracts for profile sign-in custody commands.
+
+:class:`OutputSchema` defines the public result envelope.
+"""
 
 from __future__ import annotations
 

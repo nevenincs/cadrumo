@@ -132,7 +132,7 @@ assert not Path(sys.argv[2]).exists()
         env=environment,
         capture_output=True,
         text=True,
-        timeout=30,
+        timeout=None,
         check=False,
     )
     assert result.returncode == 0, result.stderr

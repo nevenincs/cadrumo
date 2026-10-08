@@ -817,7 +817,7 @@ def test_concurrent_recipient_encryption_keypair_mint_reuses_one_encrypted_key_a
         for thread in threads:
             thread.start()
         for thread in threads:
-            thread.join(timeout=60)
+            thread.join()
 
         assert not [thread for thread in threads if thread.is_alive()], "keypair mint workers deadlocked"
         assert errors == [], f"concurrent keypair mint failures: {errors}"

@@ -30,7 +30,6 @@ modelo:
           modelo-126-page-01:
             heading: Withholding on income from accounts with financial institutions
         row:
-          periodificacion: Accrual allocation
           periodificacion-1: Accrual allocation · first line
           periodificacion-2: Accrual allocation · second line
           retenciones: Withholdings and payments on account
@@ -49,7 +48,7 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              label: Base for withholdings and payments on account
+              label: Withholding and payment-on-account base
             '02':
               label: Withholdings and payments on account
             '03':

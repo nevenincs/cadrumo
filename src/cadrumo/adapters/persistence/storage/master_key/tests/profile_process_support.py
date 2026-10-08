@@ -24,6 +24,7 @@ from cadrumo.application.user_profile.profile_record_repository import close_act
 from cadrumo.core import config as config_module
 from cadrumo.core.config import Settings
 from cadrumo.core.time.clock import now as _now
+from cadrumo.tests.process_results import receive_process_result
 
 
 class _ChildLoginResult(TypedDict):
@@ -164,13 +165,14 @@ def _login_in_separate_process(
     )
     child.start()
     try:
-        result = result_queue.get(timeout=180)
-        child.join(timeout=30)
+        result = receive_process_result(result_queue, owners=(child,))
+        child.join(timeout=None)
         assert child.exitcode == 0
         return result
     finally:
         if child.is_alive():
             child.terminate()
+        if child.pid is not None:
             child.join(timeout=30)
 
 
@@ -181,11 +183,12 @@ def _probe_resumable_session(storage_root: Path, profile: str) -> _ResumeProbeRe
     child = context.Process(target=_resume_probe_child, args=(storage_root, profile, result_queue))
     child.start()
     try:
-        result = result_queue.get(timeout=180)
-        child.join(timeout=30)
+        result = receive_process_result(result_queue, owners=(child,))
+        child.join(timeout=None)
         assert child.exitcode == 0
         return result
     finally:
         if child.is_alive():
             child.terminate()
+        if child.pid is not None:
             child.join(timeout=30)

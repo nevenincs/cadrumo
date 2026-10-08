@@ -342,22 +342,6 @@ application:
       sentido_ingreso: ingreso
       target_casilla: casilla %{number}
       target_declared: la casilla de regularización declarada
-    row_set:
-      errors:
-        grouping_dispatch_fell_through: 'La agrupación de conjunto de filas {grouping}
-          se resolvió a un ensamblador que no se ejecutó. Comuníquelo: la tabla de
-          despacho es inconsistente.'
-        grouping_has_no_assembler: La agrupación de conjunto de filas {grouping} no
-          tiene ensamblador en esta aplicación; las agrupaciones sin uno son {unassemblable_groupings}.
-        percepcion_clave_missing: La fila {row_index} no declara ninguna clave. Una
-          percepción debe indicar su clave de la AEAT, según el diseño de registros
-          de los Modelos 190 y 193, registro de tipo 2. Aporta la clave.
-        percepcion_clave_unsupported: La fila {row_index} declara la clave de la AEAT
-          {clave}, que esta aplicación no admite.
-        row_assembly_failed: 'No se ha podido ensamblar la fila {row_index}: {validation_error_detail}.
-          Corrige la fila y vuelve a hacer el pull.'
-        row_index_not_positive: El índice de fila de la celda del conjunto de filas
-          debe ser un número entero positivo; contiene {row_index}.
   filing:
     build_draft:
       errors:
@@ -424,8 +408,8 @@ application:
           Aux obligatorio de la declaración.
         casilla_metadata_drift: La numeración o el segmento de casilla se desvía del
           diseño de registro oficial de las definiciones del modelo.
-        rate_boxes_understate_total: Las casillas por tipo no cubren su propio total
-          declarado.
+        rate_boxes_understate_total: Las casillas por tipo no incluyen todos los importes
+          registrados.
         record_emit_order_drift: La exportación escribiría los registros fuera del
           orden declarado en las definiciones del modelo.
         record_emit_order_duplicated: Varios registros de exportación comparten orden
@@ -1928,6 +1912,43 @@ application:
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
+  reconciliation_export:
+    actor: Responsable
+    advisory: Aviso
+    advisory_code: Código de aviso
+    advisory_count: Avisos
+    calculation_revision: Cálculo guardado
+    context: Contexto
+    date: Fecha
+    difference_count: Diferencias
+    difference_kind: Tipo de diferencia
+    difference_kind_casilla: Valor de casilla
+    difference_kind_header_field: Identidad del justificante
+    difference_kind_total: Total presentado
+    difference_reason: Motivo de la diferencia
+    evidence_kind: Tipo de evidencia
+    evidence_kind_declaration: Declaración presentada
+    evidence_kind_justificante: Justificante
+    evidence_reference: Referencia de evidencia
+    evidence_value: Valor de la evidencia
+    field: Campo o casilla
+    legal_refs: Referencias legales
+    modelo: Modelo
+    period: Periodo
+    record: Reconciliación
+    record_identity: Identidad completa del registro
+    registry_revision: Revisión normativa guardada
+    saved_comparison_notice: 'Comparaciones guardadas: valores y referencias originales.
+      Un valor vacío es desconocido. Los avisos delimitan lo comprobado; una referencia
+      no demuestra que se conserven los bytes del documento.'
+    saved_value: Valor del cálculo guardado
+    source_refs: Fuentes oficiales
+    title: Reconciliaciones guardadas
+    verdict: Resultado de la comparación
+    verdict_matches: Los valores coinciden
+    verdict_mismatches: Hay diferencias
+    work_unit: Trabajo
+    year: Ejercicio
   storage:
     calc_sheets:
       engine:
@@ -1983,12 +2004,6 @@ application:
             no declarado por la revisión.
           unresolved_reference: El diseño de la hoja de cálculo no contiene una celda
             para un elemento referenciado.
-      parity:
-        errors:
-          seed_anchor_missing: La entrada del escenario de paridad no tiene una celda
-            de hoja de cálculo donde sembrarse.
-          unknown_casilla_ids: El escenario de paridad referencia ids de casilla que
-            no están en las definiciones del modelo.
       records:
         errors:
           address_mismatch: La dirección de celda de la hoja de cálculo no coincide
@@ -2005,6 +2020,13 @@ application:
           tariff_shape_invalid: La forma de la tabla de tarifas no es válida.
       review:
         labels:
+          aeat_confirmation: Confirmación de la AEAT
+          aeat_confirmation_confirmada: Confirmada por evidencia guardada de la AEAT
+          aeat_confirmation_descartada: Descartada antes de la confirmación de la
+            AEAT
+          aeat_confirmation_discrepante: Discrepancia con la evidencia de la AEAT
+          aeat_confirmation_pendiente: 'Pendiente: sin aceptación observada de la
+            AEAT'
           amount: Importe (visualización numérica)
           amount_id: Identificador del resultado
           art_104_tres_exclusion: Exclusión del artículo 104.Tres
@@ -2019,6 +2041,13 @@ application:
           business_pct: Proporción empresarial registrada
           byte_length: Tamaño original en bytes
           calculation_revision: Revisión del cálculo
+          calculation_state: Estado del cálculo guardado
+          calculation_state_borrador: 'Borrador: provisional'
+          calculation_state_descartado: Cálculo descartado
+          calculation_state_presentado: Presentado localmente
+          calculation_state_presentado_supersedido: 'Presentación local histórica:
+            sustituida'
+          calculation_state_verificado_completo: Cálculo local verificado
           casilla: Casilla
           category_id: Identificador de categoría
           classification: Clasificación empresarial
@@ -2027,6 +2056,8 @@ application:
           counterparty: Contraparte
           counterparty_country: País de la contraparte
           currency: Moneda
+          current_calculation: Cálculo actual al exportar
+          current_filing: Presentación local actual al exportar
           deduction_fact_kind: Tipo de dato de deducción
           description: Descripción capturada
           detail: Detalle de atribución capturado
@@ -2062,6 +2093,10 @@ application:
           external_notes_notice: Escribe aquí tus hallazgos y escenarios. Cadrumo
             nunca importa tus cambios. Los datos locales guardados se mantienen aparte.
           field: Campo
+          filing_record: Registro de presentación seleccionado
+          filing_status: Estado del registro de presentación guardado
+          filing_status_supersedido: 'Sustituido: histórico'
+          filing_status_vigente: Vigente
           finding: Hallazgo
           finding_count: Número de hallazgos
           formula: Referencia de fórmula registrada
@@ -2095,6 +2130,7 @@ application:
           media_type: Tipo de archivo
           missing_data: Datos ausentes
           modelo: Modelo
+          'no': 'No'
           no_captured_rows: Esta instantánea no contiene filas para esta sección.
           no_inventory_reference: Sin referencia de inventario capturada
           not_captured: No capturado
@@ -2138,25 +2174,6 @@ application:
           sources: Atribución de fuentes
           status: Código de estado registrado
           status_incomplete: Incompleto
-          calculation_state: 'Estado del cálculo guardado'
-          current_calculation: 'Cálculo actual al exportar'
-          current_filing: 'Presentación local actual al exportar'
-          filing_status: 'Estado del registro de presentación guardado'
-          filing_record: 'Registro de presentación seleccionado'
-          filing_status_vigente: 'Vigente'
-          filing_status_supersedido: 'Sustituido — histórico'
-          aeat_confirmation: 'Confirmación de la AEAT'
-          'yes': 'Sí'
-          'no': 'No'
-          calculation_state_borrador: 'Borrador — provisional'
-          calculation_state_verificado_completo: 'Cálculo local verificado'
-          calculation_state_presentado: 'Presentado localmente'
-          calculation_state_presentado_supersedido: 'Presentación local histórica — sustituida'
-          calculation_state_descartado: 'Cálculo descartado'
-          aeat_confirmation_pendiente: 'Pendiente — sin aceptación observada de la AEAT'
-          aeat_confirmation_confirmada: 'Confirmada por evidencia guardada de la AEAT'
-          aeat_confirmation_discrepante: 'Discrepancia con la evidencia de la AEAT'
-          aeat_confirmation_descartada: 'Descartada antes de la confirmación de la AEAT'
           status_provisional: Provisional
           status_verified: Datos locales verificados
           taxable_base: Base imponible (visualización numérica)
@@ -2167,6 +2184,7 @@ application:
           value: Valor guardado / visualización numérica
           value_date: Fecha valor
           work_unit: Unidad de trabajo
+          'yes': Sí
       translator:
         errors:
           translation_failed: La fórmula de las definiciones del modelo no se puede
@@ -2196,7 +2214,6 @@ application:
         tenga, o después de eliminar el perfil original.
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
         esquema de perfil de usuario.
-      no_active_profile_selected: No hay un perfil activo seleccionado.
       passphrase_confirmation_mismatch: La nueva contraseña y su confirmación no coinciden.
       passphrase_current_rejected: La contraseña actual no es correcta; la contraseña
         no se ha cambiado.
@@ -2358,39 +2375,3 @@ application:
       validation_clean: La validación se completó sin incidencias bloqueantes.
       validation_failed: La validación detectó incidencias bloqueantes.
       workflow_failure: No se pudo completar el flujo de trabajo.
-
-  reconciliation_export:
-    title: "Reconciliaciones guardadas"
-    saved_comparison_notice: "Comparaciones guardadas: valores y referencias originales. Un valor vacío es desconocido. Los avisos delimitan lo comprobado; una referencia no demuestra que se conserven los bytes del documento."
-    record: "Reconciliación"
-    date: "Fecha"
-    verdict: "Resultado de la comparación"
-    modelo: "Modelo"
-    year: "Ejercicio"
-    period: "Periodo"
-    registry_revision: "Revisión normativa guardada"
-    work_unit: "Trabajo"
-    calculation_revision: "Cálculo guardado"
-    evidence_kind: "Tipo de evidencia"
-    evidence_reference: "Referencia de evidencia"
-    actor: "Responsable"
-    difference_count: "Diferencias"
-    advisory_count: "Avisos"
-    difference_kind: "Tipo de diferencia"
-    field: "Campo o casilla"
-    saved_value: "Valor del cálculo guardado"
-    evidence_value: "Valor de la evidencia"
-    difference_reason: "Motivo de la diferencia"
-    legal_refs: "Referencias legales"
-    source_refs: "Fuentes oficiales"
-    advisory_code: "Código de aviso"
-    advisory: "Aviso"
-    context: "Contexto"
-    record_identity: "Identidad completa del registro"
-    verdict_matches: "Los valores coinciden"
-    verdict_mismatches: "Hay diferencias"
-    evidence_kind_justificante: "Justificante"
-    evidence_kind_declaration: "Declaración presentada"
-    difference_kind_header_field: "Identidad del justificante"
-    difference_kind_total: "Total presentado"
-    difference_kind_casilla: "Valor de casilla"

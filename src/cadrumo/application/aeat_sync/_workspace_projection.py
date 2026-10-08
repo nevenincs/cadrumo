@@ -14,6 +14,7 @@ from pydantic import BaseModel, TypeAdapter
 
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
+from ...core.identity.tax_id import same_tax_identifier
 from ...core.period import Period
 from ...domain.modelos.codes import ModeloCode
 from ..operations.models import OperationDefinitionId
@@ -147,7 +148,7 @@ def project_aeat_sync_workspace(
     if census_observation is not None and (
         census_observation.bucket_id != bucket_id
         or census_observation.subject_key != subject_key
-        or (census_observation.row.identity.nif or "").strip().upper() != subject_key.strip().upper()
+        or not same_tax_identifier(census_observation.row.identity.nif, subject_key)
     ):
         raise AeatSyncWorkspaceProjectionError("census observation belongs to another profile or taxpayer")
     obs = _observations(zone_observations)

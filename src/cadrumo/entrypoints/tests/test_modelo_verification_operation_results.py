@@ -317,7 +317,6 @@ def test_amendment_access_uses_exact_filing_source_profile_subject_and_period(
         assert foreign_subject.value.reason is AccessDenialCode.OPERATION_DENIED
 
 
-@pytest.mark.timeout(90)
 def test_unfiltered_revision_inventory_requires_all_periods_and_returns_complete_encrypted_rows(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:

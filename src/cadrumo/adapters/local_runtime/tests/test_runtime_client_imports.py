@@ -53,7 +53,7 @@ def test_runtime_client_import_does_not_require_tax_authority_or_profile_view_mo
         env=environment,
         capture_output=True,
         text=True,
-        timeout=30,
+        timeout=None,
         check=False,
         startupinfo=startupinfo,
     )

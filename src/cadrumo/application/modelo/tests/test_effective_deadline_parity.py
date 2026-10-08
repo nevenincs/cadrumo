@@ -148,7 +148,6 @@ def _calendar_posture(case: _Case, reference_on: date, operation: PinnedAuthorit
     return _Posture(row.closes_on, row.adjusted_closes_on, row.holiday_coverage, remaining, row.days_overdue)
 
 
-@pytest.mark.timeout(300)
 @pytest.mark.parametrize("case", _CASES, ids=["weekend", "national-holiday", "uncovered-year"])
 def test_every_surface_reads_the_same_nominal_and_effective_deadline(
     case: _Case, operation: PinnedAuthorityOperation

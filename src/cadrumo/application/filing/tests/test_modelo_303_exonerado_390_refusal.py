@@ -188,11 +188,15 @@ def test_exonerado_complete_revision_evidence_exports_page_four_without_override
     """Persisted A28 facts need no caller-authored export applicability envelope."""
     period = Period.from_year_and_code(2025, "4T")
     provider = build_runtime_schema_provider(filing_year=2025, period=period, modelos=("303",), operation=operation)
+    computed_endpoints = {
+        str(formula.target_casilla_id)
+        for formula in operation.snapshot("303", filing_year=2025, period=period.code).revision.formulas
+    }
     inputs = {
         "iva.repercutido.general.base": Decimal("0"),
         "iva.soportado.interiores": Decimal("0"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
-        **{endpoint: Decimal("0") for endpoint in _ENDPOINTS},
+        **{endpoint: Decimal("0") for endpoint in _ENDPOINTS if endpoint not in computed_endpoints},
     }
     draft = build_draft(
         modelo="303",

@@ -24,6 +24,9 @@ from ...domain.user_profile.values import (
     UserProfileRecord,
     create_user_profile_record,
 )
+from ...tests.aeat_literal_fixtures import (
+    CENSO_SOURCE_URL_FIXTURE,
+)
 from .. import workbench_generation_calendar as calendar_module
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
 from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
@@ -1333,7 +1336,7 @@ def test_secure_generation_refuses_a_census_capture_changed_during_read(
         domicilio_fiscal=CensalObservationAddress(),
         domicilio_notificacion=CensalObservationAddress(),
         captured_at=_NOW,
-        source_url="https://sede.agenciatributaria.gob.es/censo",
+        source_url=CENSO_SOURCE_URL_FIXTURE,
     )
     reads = iter((None, observation))
     door = replace(

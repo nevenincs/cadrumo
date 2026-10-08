@@ -473,6 +473,7 @@ def test_unavailable_canonical_root_has_no_weaker_supervision_fallback(tmp_path:
     assert first_enrollment_root.is_dir()
 
     blocked_parent = tmp_path / "non-directory-parent"
+    blocked_settings = _settings(blocked_parent / "custody-root")
     blocked_parent.write_text("not a directory", encoding="utf-8")
 
     with pytest.raises(ProfileCustodyRefusedError) as captured:
@@ -480,7 +481,7 @@ def test_unavailable_canonical_root_has_no_weaker_supervision_fallback(tmp_path:
             envelope,
             _PASSPHRASE,
             sentinel=sentinel,
-            settings=_settings(blocked_parent / "custody-root"),
+            settings=blocked_settings,
         )
 
     assert captured.value.refusal is ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE

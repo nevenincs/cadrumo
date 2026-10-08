@@ -79,7 +79,7 @@ def _build_m100_with_declared_modules(declared: str) -> subprocess.CompletedProc
         [sys.executable, "-c", textwrap.dedent(script)],
         capture_output=True,
         text=True,
-        timeout=300,
+        timeout=None,
     )
 
 

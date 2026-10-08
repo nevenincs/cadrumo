@@ -52,7 +52,7 @@ class _Cli:
                 capture_output=True,
                 env=self.environment,
                 cwd=self.root,
-                timeout=300 if arguments[:2] == ("profile", "create") else 30,
+                timeout=None,
                 check=False,
             )
         finally:

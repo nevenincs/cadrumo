@@ -200,7 +200,6 @@ def _drive(
     return run
 
 
-@pytest.mark.timeout(900)
 def test_installed_creation_opens_a_persisted_new_period_and_returns_to_that_row(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:

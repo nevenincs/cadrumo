@@ -1,6 +1,13 @@
 modelo:
   schema:
     '216':
+      casilla:
+        continuidad:
+          cuota-a-ingresar:
+            label: Amount payable
+          irnr-retencion-resultados-anteriores:
+            label: Amounts payable in previous returns for the same tax, year and
+              period
       construct:
         modelo-216-calculation-construct:
           field:
@@ -64,11 +71,6 @@ modelo:
               label: Number of income items not subject to withholding
             '5':
               label: Income not subject to withholding
-            '6':
-              label: Amounts payable in previous returns for the same tax, year and
-                period
-            '7':
-              label: Amount payable
           field:
             label: Order EHA/3290/2008, tax years 2020 to 2023
         2024-y-siguientes:
@@ -113,10 +115,5 @@ modelo:
             '19':
               label: Income not subject to withholding or advance payment. Tax base.
                 Total
-            '20':
-              label: Amounts payable from prior returns for the same item, year and
-                period
-            '21':
-              label: Result payable
           field:
             label: Order HAC/56/2024, tax years 2024 onwards

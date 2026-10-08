@@ -1,4 +1,7 @@
-"""Source evidence for complete membership of fixed binding-backed record rows."""
+"""Source evidence for complete membership of fixed binding-backed record rows.
+
+:class:`RegistrySnapshot` pins the registry declarations used by the projection.
+"""
 
 from collections.abc import Mapping, Sequence, Set
 
@@ -131,6 +134,9 @@ def resolve_closed_record_rows(
     the application owns profile, work-unit and authority admission. Both local
     arithmetic and workbook compilation must additionally check snapshot scope,
     declared record slots and consistency with the supplied values.
+
+    The ``snapshot`` parameter uses :class:`RegistrySnapshot`, which pins
+    the registry declarations used by the projection.
     """
     try:
         validate_closed_record_row_sets(row_sets, supplied_binding_ids=supplied_binding_ids)

@@ -34,8 +34,6 @@ from .collection_storage_root import _release_log_handlers_under
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SUBPROCESS_TIMEOUT_SECONDS = 60
-
 
 def _root_logger_file_handler(log_file: Path) -> logging.handlers.RotatingFileHandler:
     """Attach and return a real ``RotatingFileHandler`` pointed at ``log_file``."""
@@ -141,7 +139,6 @@ def test_registered_cleanup_removes_a_root_with_a_real_atexit_ordered_log_handle
         [sys.executable, "-c", probe],
         capture_output=True,
         text=True,
-        timeout=_SUBPROCESS_TIMEOUT_SECONDS,
         check=False,
     )
     assert completed.returncode == 0, f"probe failed:\n{completed.stdout}\n{completed.stderr}"

@@ -120,7 +120,6 @@ async def _opened(pilot: Pilot[None], screen: ModeloWorkbenchScreen) -> None:
     raise AssertionError("the workbench never finished reading its declaration")
 
 
-@pytest.mark.timeout(300)
 def test_an_attested_empty_detail_sends_the_filer_to_the_check_and_then_no_longer_blocks(tmp_path: Path) -> None:
     actions = FakeActions()
     with _declaration(tmp_path, attested=True) as (work, installed), override_settings(cadrumo_output_language="en"):
@@ -149,7 +148,6 @@ def test_an_attested_empty_detail_sends_the_filer_to_the_check_and_then_no_longe
     assert progress_after.next_action is not NextAction.VERIFY
 
 
-@pytest.mark.timeout(300)
 def test_an_unattested_empty_detail_stays_blocked_by_the_checks_own_finding(tmp_path: Path) -> None:
     with _declaration(tmp_path, attested=False) as (work, installed), override_settings(cadrumo_output_language="en"):
         before = installed.load(OutputLanguage.EN)

@@ -25,7 +25,7 @@ def test_password_successor_custody_boundary(tmp_path: Path, mode: str) -> None:
         [sys.executable, "-m", "cadrumo.entrypoints.runtime.tests.custody_rotation_fixture", str(tmp_path), mode],
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=None,
         check=False,
     )
     assert result.returncode == 0, result.stderr

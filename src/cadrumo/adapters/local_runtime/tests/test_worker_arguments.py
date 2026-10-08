@@ -12,7 +12,7 @@ from ..worker_arguments import validated_worker_arguments
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_INSTALLED = ("-I", "-m", "cadrumo.entrypoints.runtime.worker")
+_INSTALLED = ("-I", "-B", "-m", "cadrumo.entrypoints.runtime.worker")
 
 
 def test_installed_worker_prefix_and_its_complete_command_are_accepted() -> None:
@@ -24,7 +24,7 @@ def test_installed_worker_prefix_and_its_complete_command_are_accepted() -> None
 def test_selected_script_replaces_the_installed_module(tmp_path: Path) -> None:
     script = tmp_path / "worker.py"
     script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
-    selected = ("-I", str(script.resolve(strict=True)))
+    selected = ("-I", "-B", str(script.resolve(strict=True)))
     assert validated_worker_arguments(worker_script=script) == selected
     assert validated_worker_arguments((*selected, "--x"), worker_script=script) == (*selected, "--x")
     with pytest.raises(RuntimeRefusalError):
@@ -33,7 +33,12 @@ def test_selected_script_replaces_the_installed_module(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(
     "command",
-    [("-I", "-m", "other.worker"), ("-m", "cadrumo.entrypoints.runtime.worker"), (*_INSTALLED, "bad\0argument"), ()],
+    [
+        ("-I", "-B", "-m", "other.worker"),
+        ("-B", "-m", "cadrumo.entrypoints.runtime.worker"),
+        (*_INSTALLED, "bad\0argument"),
+        (),
+    ],
 )
 def test_substituted_module_dropped_isolation_or_nul_refuses(command: tuple[str, ...]) -> None:
     with pytest.raises(RuntimeRefusalError) as caught:
@@ -46,4 +51,19 @@ def test_unusable_selected_script_refuses(tmp_path: Path, invalid: str) -> None:
     script = {"relative": Path("worker.py"), "missing": tmp_path / "missing.py", "directory": tmp_path}[invalid]
     with pytest.raises(RuntimeRefusalError) as caught:
         validated_worker_arguments(worker_script=script)
+    assert caught.value.reason is RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE
+
+
+@pytest.mark.parametrize("script_mode", [False, True])
+@pytest.mark.parametrize("defect", ["missing-bytecode-flag", "unexpected-flag"])
+def test_worker_bytecode_policy_must_be_explicit_without_extra_flags(
+    tmp_path: Path, script_mode: bool, defect: str
+) -> None:
+    script = tmp_path / "worker.py"
+    script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
+    selected = script if script_mode else None
+    entrypoint = (str(script.resolve(strict=True)),) if script_mode else ("-m", "cadrumo.entrypoints.runtime.worker")
+    flags = ("-I",) if defect == "missing-bytecode-flag" else ("-I", "-B", "-O")
+    with pytest.raises(RuntimeRefusalError) as caught:
+        validated_worker_arguments((*flags, *entrypoint), worker_script=selected)
     assert caught.value.reason is RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE

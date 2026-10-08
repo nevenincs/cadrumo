@@ -1,6 +1,13 @@
 modelo:
   schema:
     '216':
+      casilla:
+        continuidad:
+          cuota-a-ingresar:
+            label: Fizetendő összeg
+          irnr-retencion-resultados-anteriores:
+            label: Azonos adónemre, évre és időszakra vonatkozó korábbi bevallások
+              fizetendő összege
       construct:
         modelo-216-calculation-construct:
           field:
@@ -57,18 +64,13 @@ modelo:
             '1':
               label: Adólevonás alá eső jövedelmek száma
             '2':
-              label: Adólevonás és adóelőleg alapja
+              label: A levonások és adóelőlegek alapja
             '3':
-              label: Levont adó és adóelőleg
+              label: Levonások és adóelőlegek
             '4':
               label: Adólevonás alá nem eső jövedelmek száma
             '5':
               label: Adólevonás alá nem eső jövedelmek összege
-            '6':
-              label: Azonos adónemre, évre és időszakra vonatkozó korábbi bevallások
-                fizetendő összege
-            '7':
-              label: Fizetendő összeg
           field:
             label: EHA/3290/2008 rendelet, 2020–2023. adóévek
         2024-y-siguientes:
@@ -114,10 +116,5 @@ modelo:
             '19':
               label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Adóalap.
                 Összesen
-            '20':
-              label: Korábbi bevallásokból befizetendő összegek ugyanazon tétel, év
-                és időszak esetén
-            '21':
-              label: Befizetendő eredmény
           field:
             label: HAC/56/2024 rendelet, 2024. adóévtől

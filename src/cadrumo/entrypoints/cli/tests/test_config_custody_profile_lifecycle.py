@@ -13,12 +13,14 @@ Profiles are registered in-process and the storage root is handed to the
 subprocess CLI. That is the only available shape rather than a convenience:
 credential registration is the sole creation door and it takes a passphrase
 as an argument, so no CLI verb -- and therefore no subprocess -- can mint a
-profile. Everything after the seed still runs through the real console
-script, which is what these tests exist to cover.
+profile. CLI assertions run through the real console script. Keychainless
+human sign-out uses a password-authenticated native frontend connection;
+a fresh CLI connection requires a persisted receipt.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import subprocess
 from datetime import UTC, datetime
@@ -27,7 +29,11 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.runtime.sign_in import RuntimeHumanSignedOut, SignInPresence
+from cadrumo.application.user_profile.profile_pointer import observe_active_profile_pointer
 
 from ....core.config import load_settings, override_settings
 from ....core.directory_scan import DirectoryEntryKind, scan_directory
@@ -70,7 +76,7 @@ def _run_cadrumo(
         env_strip_prefixes=("AEAT_", "PYTEST_"),
         extra_env=extra_env,
         stdin_payload=stdin_payload,
-        timeout=45.0,
+        timeout=None,
     )
 
 
@@ -106,27 +112,82 @@ def _register_profile(storage_root: Path, label: str, **facts: str) -> str:
         return profile_id
 
 
+def _assert_cli_logout_requires_human_proof(storage_root: Path) -> None:
+    """The real CLI must refuse a fresh connection without a shared receipt."""
+    selected = observe_active_profile_pointer(storage_root)
+    refused = _run_cadrumo(storage_root, ("--format", "json", "config", "logout"))
+    assert refused.returncode == 2, _combined_output(refused)
+    envelope = json.loads(refused.stderr)
+    assert envelope["status"] == "error"
+    assert envelope["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+    assert envelope["error"]["context"]["reason"] == "absent"
+    assert observe_active_profile_pointer(storage_root) == selected
+
+
+def _sign_out_password_authenticated_connection(storage_root: Path, profile_id: str) -> RuntimeHumanSignedOut:
+    """Exercise real keychainless sign-out on its own proven native connection."""
+    with override_settings(cadrumo_local_storage_root=storage_root):
+        proof = bytearray(load_settings().cadrumo_dev_test_database_password.get_secret_value(), "utf-8")
+        try:
+            with asyncio.run(
+                open_installed_runtime_client(profile_id=UUID(profile_id), frontend=OperationFrontendProjection.CLI)
+            ) as client:
+                admitted = client.login_password(proof, persist_receipt=False)
+                assert admitted.human_login is not None
+                assert not admitted.human_login.session_persisted
+                session_id = admitted.status.session_id
+                assert session_id is not None
+                signed_out = client.human_sign_out()
+                assert signed_out.profile_id == UUID(profile_id)
+                assert session_id in signed_out.session_ids
+                assert signed_out.receipt_removed
+                assert client.sign_in_status().status.presence is SignInPresence.ABSENT
+                return signed_out
+        finally:
+            proof[:] = bytes(len(proof))
+
+
 def test_logged_out_inactive_profile_delete_succeeds_through_real_root(tmp_path: Path) -> None:
-    """The real root admits exact inactive deletion after strong-close logout."""
-    _register_profile(tmp_path, "delete-after-logout")
+    """Only an explicitly deselected target can be deleted after proven human sign-out."""
+    profile_id = _register_profile(tmp_path, "delete-after-logout")
 
-    logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
-    assert logged_out.returncode == 0, _combined_output(logged_out)
+    with native_profile_view_server(tmp_path):
+        _assert_cli_logout_requires_human_proof(tmp_path)
+        _sign_out_password_authenticated_connection(tmp_path, profile_id)
+        assert observe_active_profile_pointer(tmp_path).bucket_id == profile_id
 
-    deleted = _run_cadrumo(
-        tmp_path,
-        ("--format", "json", "config", "profile", "delete", "delete-after-logout", "--yes"),
-    )
-    assert deleted.returncode == 0, _combined_output(deleted)
-    envelope = json.loads(deleted.stdout)
-    assert envelope["status"] == "success"
-    assert envelope["result"]["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
-    assert envelope["result"]["display_name"] == "delete-after-logout"
-    assert envelope["result"]["deleted"] is True
+        # Human sign-out revokes access; the selected target remains protected.
+        still_selected = _run_cadrumo(
+            tmp_path,
+            ("--format", "json", "config", "profile", "delete", "delete-after-logout", "--yes"),
+        )
+        assert still_selected.returncode == 2, _combined_output(still_selected)
+        refusal = json.loads(still_selected.stderr)
+        assert refusal["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+        assert refusal["error"]["context"] == {
+            "name": "delete-after-logout",
+            "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
+        }
+        assert observe_active_profile_pointer(tmp_path).bucket_id == profile_id
 
-    listed = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
-    assert listed.returncode == 0, _combined_output(listed)
-    assert json.loads(listed.stdout)["result"]["profiles"] == []
+        replacement_id = _register_profile(tmp_path, "surviving-replacement")
+        assert observe_active_profile_pointer(tmp_path).bucket_id == replacement_id
+        deleted = _run_cadrumo(
+            tmp_path,
+            ("--format", "json", "config", "profile", "delete", "delete-after-logout", "--yes"),
+        )
+        assert deleted.returncode == 0, _combined_output(deleted)
+        envelope = json.loads(deleted.stdout)
+        assert envelope["status"] == "success"
+        assert envelope["result"]["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+        assert envelope["result"]["display_name"] == "delete-after-logout"
+        assert envelope["result"]["deleted"] is True
+
+        listed = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
+        assert listed.returncode == 0, _combined_output(listed)
+        assert [
+            (profile["name"], profile["active"]) for profile in json.loads(listed.stdout)["result"]["profiles"]
+        ] == [("surviving-replacement", True)]
 
 
 def test_active_profile_delete_still_refuses_through_real_root(tmp_path: Path) -> None:
@@ -236,9 +297,9 @@ def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_pat
 
 
 def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) -> None:
-    """Strong profile logout replaces the duplicate root lock door."""
+    """Separate receipt-required CLI refusal from proven keychainless human sign-out."""
 
-    _register_profile(
+    profile_id = _register_profile(
         tmp_path,
         "custody",
         **{
@@ -257,35 +318,36 @@ def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) 
         },
     )
 
-    logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
-    assert logged_out.returncode == 0, _combined_output(logged_out)
-    assert "logged_out_profile\tcustody" in logged_out.stdout
+    with native_profile_view_server(tmp_path):
+        _assert_cli_logout_requires_human_proof(tmp_path)
+        _sign_out_password_authenticated_connection(tmp_path, profile_id)
+        assert observe_active_profile_pointer(tmp_path).bucket_id == profile_id
 
-    removed_lock = _run_cadrumo(tmp_path, ("config", "lock"))
-    assert removed_lock.returncode != 0
-    assert "No such command 'lock'" in _combined_output(removed_lock)
+        removed_lock = _run_cadrumo(tmp_path, ("config", "lock"))
+        assert removed_lock.returncode != 0
+        assert "No such command 'lock'" in _combined_output(removed_lock)
 
-    missing_default = _run_cadrumo(tmp_path, ("config", "login"))
-    assert missing_default.returncode != 0
-    assert "No passphrase channel is available" in _combined_output(missing_default)
+        missing_default = _run_cadrumo(tmp_path, ("config", "login"))
+        assert missing_default.returncode != 0
+        assert "No passphrase channel is available" in _combined_output(missing_default)
 
-    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-    login_payload = json.dumps({"passphrase": passphrase})
-    switched_by_name = _run_cadrumo(
-        tmp_path,
-        ("config", "login", "custody", "--secrets-stdin"),
-        stdin_payload=login_payload,
-    )
-    assert switched_by_name.returncode == 0, _combined_output(switched_by_name)
-    assert "active_profile\tcustody" in switched_by_name.stdout
+        passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+        login_payload = json.dumps({"passphrase": passphrase})
+        switched_by_name = _run_cadrumo(
+            tmp_path,
+            ("config", "login", "custody", "--secrets-stdin"),
+            stdin_payload=login_payload,
+        )
+        assert switched_by_name.returncode == 0, _combined_output(switched_by_name)
+        assert "active_profile\tcustody" in switched_by_name.stdout
 
-    switched_default = _run_cadrumo(
-        tmp_path,
-        ("config", "login", "--secrets-stdin"),
-        stdin_payload=login_payload,
-    )
-    assert switched_default.returncode == 0, _combined_output(switched_default)
-    assert "active_profile\tcustody" in switched_default.stdout
+        switched_default = _run_cadrumo(
+            tmp_path,
+            ("config", "login", "--secrets-stdin"),
+            stdin_payload=login_payload,
+        )
+        assert switched_default.returncode == 0, _combined_output(switched_default)
+        assert "active_profile\tcustody" in switched_default.stdout
 
 
 @pytest.mark.windows_only

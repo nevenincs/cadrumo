@@ -44,7 +44,9 @@ from ..ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from ..rate_box_partition import derive_rate_box_partitions
 from ..schema import BindingDefinition, ModeloRevision
+from .m390_formula_support import assert_partition_is_not_double_counted
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -364,19 +366,17 @@ def test_the_box_layer_exports_and_the_total_layer_does_not() -> None:
             assert not total.export_refs, f"{total.id} both totals and asserts a rate"
 
 
-def test_no_box_layer_casilla_enters_an_annual_total_formula() -> None:
-    """A box-layer cuota in the devengada total would double-count its tier.
-
-    The tier casillas already carry these rows for the total. If a box-layer
-    casilla were summed as well, every rate-recorded row would be counted twice
-    and the return would over-declare.
-    """
+def test_box_layer_never_double_counts_its_blind_control() -> None:
+    """Official box sums must not also consume the matching blind control total."""
     revision = _m390_revision()
-    box_layer_ids = {c.id for c in revision.casillas if c.id.startswith("iva.anual.repercutido.tipo-")}
-    for formula in revision.formulas:
-        referenced = {arg.casilla_id for arg in formula.expression.args if arg.casilla_id is not None}
-        leaked = referenced & box_layer_ids
-        assert not leaked, f"formula {formula.id} sums box-layer casillas {sorted(leaked)}"
+    partitions = tuple(
+        partition
+        for partition in derive_rate_box_partitions(revision)
+        if any(str(box).startswith("iva.anual.repercutido.tipo-") for box in partition.box_casilla_ids)
+    )
+    assert partitions, "no rate-box partition was checked"
+    for partition in partitions:
+        assert_partition_is_not_double_counted(revision, partition)
 
 
 # The official AEAT box each rate casilla occupies, read off the bundled 2024

@@ -18,7 +18,7 @@ from cadrumo.entrypoints.runtime import linux_worker_guardian
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_DEFAULT = ("-I", "-m", "cadrumo.entrypoints.runtime.worker")
+_DEFAULT = ("-I", "-B", "-m", "cadrumo.entrypoints.runtime.worker")
 _ENVIRONMENT = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}
 
 
@@ -33,7 +33,10 @@ def test_scope_rejects_invalid_selected_script_before_native_launch(
     assert refused.value.reason is RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE
 
 
-@pytest.mark.parametrize("invalid", ["unselected", "other_module", "mismatch", "relative", "removed", "null"])
+@pytest.mark.parametrize(
+    "invalid",
+    ["unselected", "other_module", "mismatch", "relative", "removed", "null", "missing-bytecode", "extra-flag"],
+)
 def test_scope_rejects_worker_substitution_before_manager_access(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, invalid: str
 ) -> None:
@@ -43,12 +46,14 @@ def test_scope_rejects_worker_substitution_before_manager_access(
     selected = None if invalid in {"unselected", "other_module"} else script
     scope = linux_worker_process.LinuxProcessScope(worker_id=uuid4(), worker_script=selected)
     command = {
-        "unselected": ("-I", str(script)),
-        "other_module": ("-I", "-m", "other.worker"),
+        "unselected": ("-I", "-B", str(script)),
+        "other_module": ("-I", "-B", "-m", "other.worker"),
         "mismatch": _DEFAULT,
-        "relative": ("-I", script.name),
-        "removed": ("-I", str(script)),
-        "null": ("-I", str(script), "--worker-id", "bad\0argument"),
+        "relative": ("-I", "-B", script.name),
+        "removed": ("-I", "-B", str(script)),
+        "null": ("-I", "-B", str(script), "--worker-id", "bad\0argument"),
+        "missing-bytecode": ("-I", str(script)),
+        "extra-flag": ("-I", "-B", "-O", str(script)),
     }[invalid]
     if invalid == "removed":
         script.unlink()
@@ -77,7 +82,7 @@ def test_scope_forwards_trusted_selection_inside_existing_guardian_containment(
     monkeypatch.setattr(linux_worker_process, "linux_process_start_identity", lambda _pid: "start-41")
     selected = script if script_mode else None
     scope = linux_worker_process.LinuxProcessScope(worker_id=uuid4(), worker_script=selected)
-    command = ("-I", str(script)) if script_mode else _DEFAULT
+    command = ("-I", "-B", str(script)) if script_mode else _DEFAULT
     recorded: list[tuple[str, ...]] = []
     unavailable = RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
 
@@ -106,14 +111,16 @@ def test_scope_forwards_trusted_selection_inside_existing_guardian_containment(
     assert scope._started  # a lost manager acknowledgement retains stop ownership
 
 
-@pytest.mark.parametrize("invalid", ["unselected", "mismatch", "relative", "missing", "null"])
+@pytest.mark.parametrize(
+    "invalid", ["unselected", "mismatch", "relative", "missing", "null", "missing-bytecode", "extra-flag"]
+)
 def test_guardian_refuses_worker_substitution_before_parent_or_process_access(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, invalid: str
 ) -> None:
     script = tmp_path / "worker.py"
     script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
     selected = script
-    command = ("-I", str(script))
+    command = ("-I", "-B", str(script))
     if invalid == "unselected":
         selected = None
     elif invalid == "mismatch":
@@ -122,8 +129,12 @@ def test_guardian_refuses_worker_substitution_before_parent_or_process_access(
         selected = Path("worker.py")
     elif invalid == "missing":
         selected = tmp_path / "missing.py"
-    else:
+    elif invalid == "null":
         command += ("bad\0argument",)
+    elif invalid == "missing-bytecode":
+        command = ("-I", str(script))
+    else:
+        command = ("-I", "-B", "-O", str(script))
     monkeypatch.setattr(
         linux_worker_guardian, "sys", SimpleNamespace(platform="linux", flags=SimpleNamespace(isolated=True))
     )
@@ -146,7 +157,7 @@ def test_guardian_checks_parent_twice_then_launches_only_selected_isolated_worke
     script = tmp_path / "worker.py"
     script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
     selected = script if script_mode else None
-    command = ("-I", str(script)) if script_mode else _DEFAULT
+    command = ("-I", "-B", str(script)) if script_mode else _DEFAULT
     starts: list[int] = []
     opened: list[int] = []
     closed: list[int] = []

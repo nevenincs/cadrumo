@@ -3,21 +3,93 @@ modelo:
     '188':
       casilla:
         continuidad:
+          capitalizacion-seguros-declarante-complementaria:
+            label: 'Complementària: C per afegir percepcions omeses'
+          capitalizacion-seguros-declarante-contacto:
+            label: Cognoms i nom de la persona de contacte
+          capitalizacion-seguros-declarante-ejercicio:
+            label: Exercici
+          capitalizacion-seguros-declarante-justificante-anterior:
+            label: Justificant anterior (només si és substitutiva)
+          capitalizacion-seguros-declarante-nif:
+            label: NIF del declarant
+          capitalizacion-seguros-declarante-nombre:
+            label: Cognoms i nom o raó social
+          capitalizacion-seguros-declarante-numero-justificante:
+            label: Número de justificant (13 dígits; comença per 188)
+          capitalizacion-seguros-declarante-sustitutiva:
+            label: 'Substitutiva: S per substituir una declaració anterior'
+          capitalizacion-seguros-declarante-telefono:
+            label: Telèfon de contacte
+          capitalizacion-seguros-perceptor-base-retenciones:
+            help: En IRPF, rendiment menys les reduccions aplicables. En IS i IRNR
+              amb establiment permanent, el mateix import i signe del rendiment. Valor
+              declarat; encara no es calcula automàticament.
+            label: Base de retencions i ingressos a compte
+          capitalizacion-seguros-perceptor-clave:
+            label: 'Clau B: disposició anticipada d''un PIAS'
+          capitalizacion-seguros-perceptor-ejercicio-devengo:
+            help: Només per a quantitats meritades en exercicis anteriors. Cada exercici
+              de meritació es declara en un registre diferent.
+            label: Exercici de meritació anterior
+          capitalizacion-seguros-perceptor-informacion-adicional:
+            help: Renda exempta comunicada en constituir la renda vitalícia d'un PIAS,
+              declarada en disposar anticipadament, totalment o parcialment, dels
+              seus drets econòmics.
+            label: Renda exempta comunicada per disposició anticipada d'un PIAS
+          capitalizacion-seguros-perceptor-modalidad:
+            label: 'Modalitat: 1 dinerària; 2 en espècie'
+          capitalizacion-seguros-perceptor-nombre:
+            label: Cognoms i nom o raó social del perceptor
+          capitalizacion-seguros-perceptor-porcentaje-retencion:
+            help: 'Percentatge expressat en punts percentuals: 19 significa 19 %.
+              Si es van aplicar diversos tipus durant l''exercici, només es declara
+              l''últim.'
+            label: Percentatge de retenció (%)
+          capitalizacion-seguros-perceptor-prima:
+            label: Prima aportada al contracte
+          capitalizacion-seguros-perceptor-provincia:
+            label: Codi de província
+          capitalizacion-seguros-perceptor-reducciones:
+            help: Només per a IRPF. Es declara zero si el rendiment és negatiu; no
+              s'aplica a IS ni a IRNR amb establiment permanent.
+            label: Reduccions de la disposició transitòria quarta
+          capitalizacion-seguros-perceptor-rendimiento-acreedor-hipotecario:
+            label: Rendiment d'assegurança amb el creditor hipotecari com a beneficiari
+          capitalizacion-seguros-perceptor-renta-vitalicia-clave:
+            label: 'Operació: A constitució; B disposició anticipada'
+          capitalizacion-seguros-perceptor-renta-vitalicia-fecha:
+            help: Si durant l'exercici hi va haver constitució i disposició anticipada,
+              cada operació s'informa en un registre diferent.
+            label: Data de constitució o de disposició anticipada
+          capitalizacion-seguros-perceptor-renta-vitalicia-identificacion:
+            label: Identificació de la renda vitalícia assegurada
+          capitalizacion-seguros-perceptor-rentas:
+            help: Import en euros amb el seu signe. Els rendiments amb signes diferents
+              es declaren en registres separats.
+            label: Rendes o rendiments del capital mobiliari
+          capitalizacion-seguros-perceptor-representante-nif:
+            label: NIF del representant legal
+          capitalizacion-seguros-perceptor-retenciones:
+            help: Import declarat. Ha de ser zero quan la base sigui negativa. La
+              verificació entre camps i el càlcul automàtic encara estan pendents.
+            label: Retencions i ingressos a compte
           capitalizacion-seguros-resumen-base-negativa:
-            help: Suma de les bases de retenció i ingrés a compte reflectides en els
-              registres de perceptor amb base negativa.
+            help: Suma de les bases de retenció i ingrés a compte dels registres de
+              perceptor amb base negativa.
             label: Base de retencions i ingressos a compte negativa
           capitalizacion-seguros-resumen-base-positiva:
-            help: Suma de les bases de retenció i ingrés a compte reflectides en els
-              registres de perceptor amb base positiva.
+            help: Suma de les bases de retenció i ingrés a compte dels registres de
+              perceptor amb base positiva.
             label: Base de retencions i ingressos a compte
           capitalizacion-seguros-resumen-perceptores-base-negativa:
-            help: Nombre de perceptors (registres) la base de retencions i ingressos
-              a compte dels quals és negativa.
-            label: Nombre total de perceptors amb base negativa
+            help: Nombre de registres amb una base de retencions i ingressos a compte
+              negativa o zero. Un perceptor que figuri en diversos registres es compta
+              una vegada per cada registre.
+            label: Nombre total de perceptors amb base negativa o zero
           capitalizacion-seguros-resumen-perceptores-base-positiva:
-            help: Nombre de perceptors (registres) la base de retencions i ingressos
-              a compte dels quals és positiva.
+            help: Nombre de perceptors (registres) amb una base de retencions i ingressos
+              a compte positiva.
             label: Nombre total de perceptors amb base positiva
           capitalizacion-seguros-resumen-retenciones:
             help: Suma de les retencions i ingressos a compte practicats sobre les
@@ -36,6 +108,38 @@ modelo:
             heading: Identificació i contacte
       revision:
         '2022':
+          casilla:
+            x-e1in4or5e1q6ushecdm62tj5:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2017, pàgina
+                16.'
+            x-e1in4or5e1q6ushedlnm8obcd5i62p0:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2017, pàgina
+                11.'
+            x-e1in4or5e1q6ushedpkmc:
+              help: Segons el disseny històric, si un menor d'edat no té NIF, s'informa
+                el NIF del representant legal en el camp corresponent.
+            x-e1in4or5e1q6ushedpnmqojick:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2017, pàgina
+                10.'
+            x-e1in4or5e1q6ushee1p6irb1:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2017, pàgina
+                18.'
+            x-e1in4or5e1q6ushee1p6utj9dphmio8:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2017, pàgina
+                10.'
+            x-e1in4or5e1q6ushee9imsp39dlkmarjkdsmm2oriclim8rri5lk6is3fehim6obid5ng:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2017, pàgina
+                18.'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lhmoobmck:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2017, pàgina
+                16.'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lkm8pbeehkmcqb3c5hmirre:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2017, pàgina
+                17.'
+            x-e1in4or5e1q6ushee9in0sj5edimst31dpq6abbed5j0:
+              help: Segons el disseny històric, s'informa el NIF del representant
+                si el perceptor és menor d'edat. En la resta de casos es deixa sense
+                dada.
           construct:
             modelo-188-calculation-construct:
               field:
@@ -45,24 +149,36 @@ modelo:
             label: Model 188, exercici 2022
         2023-y-siguientes:
           casilla:
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              label: 'Complementària: C per afegir percepcions omeses'
-            x-chim6r1ecdnmst31cdq6u:
-              label: Cognoms i nom de la persona de contacte
-            x-chim6r1ecll6asj3d5hmiro:
-              label: Exercici
-            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              label: Justificant anterior (només si és substitutiva)
-            x-chim6r1edpkmc:
-              label: NIF del declarant
-            x-chim6r1edpnmqojick:
-              label: Cognoms i nom o raó social
-            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
-              label: Número de justificant (13 dígits; comença per 188)
-            x-chim6r1eedqn6t39ehqn8qbmc4:
-              label: 'Substitutiva: S per substituir una declaració anterior'
-            x-chim6r1eehimopb6dtn6u:
-              label: Telèfon de contacte
+            x-e1in4or5e1q6ushecdm62tj5:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2023, pàgina
+                16.'
+            x-e1in4or5e1q6ushedlnm8obcd5i62p0:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2023, pàgina
+                11.'
+            x-e1in4or5e1q6ushedpkmc:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2023, pàgina
+                8.'
+            x-e1in4or5e1q6ushedpnmqojick:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2023, pàgina
+                10.'
+            x-e1in4or5e1q6ushee1p6irb1:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2023, pàgina
+                18.'
+            x-e1in4or5e1q6ushee1p6utj9dphmio8:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2023, pàgina
+                10.'
+            x-e1in4or5e1q6ushee9imsp39dlkmarjkdsmm2oriclim8rri5lk6is3fehim6obid5ng:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2023, pàgina
+                18.'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lhmoobmck:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2023, pàgina
+                16.'
+            x-e1in4or5e1q6ushee9imst315lr6it31dhkm6qb15lkm8pbeehkmcqb3c5hmirre:
+              help: 'Dada declarada per perceptor. Font: disseny AEAT 2023, pàgina
+                17.'
+            x-e1in4or5e1q6ushee9in0sj5edimst31dpq6abbed5j0:
+              help: S'informa quan el perceptor és menor de 14 anys. En la resta de
+                casos es deixa sense dada.
           construct:
             modelo-188-calculation-construct:
               field:

@@ -3565,6 +3565,16 @@ modelo:
           help: 'Shows how the payment is made: full payment, partial payment, no
             payment, negative or zero payment, or payment by transfer.'
           label: Payment type
+      construct:
+        modelo-369-exterior-resultado:
+          field:
+            title: Result by member state of consumption
+        modelo-369-importacion-resultado:
+          field:
+            title: Result by member state of consumption
+        modelo-369-union-resultado:
+          field:
+            title: Settlement by member state of consumption
       field:
         official_name: Modelo 369. Value Added Tax. Self-assessment under the special
           schemes applicable to taxable persons supplying services to non-taxable
@@ -3647,8 +3657,6 @@ modelo:
             heading: '8'
           fila-9:
             heading: '9'
-          identificacion:
-            heading: Identity, period and payment
           importaciones:
             heading: 3. Imports of goods below €150
           nif:
@@ -4137,9 +4145,6 @@ modelo:
               field:
                 title: Modelo 369 - Esquema Exterior (special scheme for services
                   provided by non-established suppliers)
-            modelo-369-exterior-resultado:
-              field:
-                title: Result by member state of consumption
           field:
             label: Modelo 369 - Non-Union scheme - special regime for services supplied
               by taxable persons not established in the Community (LIVA art. 163 octiesdecies
@@ -4609,9 +4614,6 @@ modelo:
             modelo-369:
               field:
                 title: Modelo 369 - Esquema Importación (special IOSS regime)
-            modelo-369-importacion-resultado:
-              field:
-                title: Result by member state of consumption
           field:
             label: Modelo 369 - Import scheme (IOSS) - special regime for distance
               sales of imported goods (LIVA art. 163 quinvicies to octovicies). Monthly
@@ -4915,686 +4917,683 @@ modelo:
               label: OSS Union scheme VAT amount to destination FR - services supplied
                 (LIVA art. 163 unvicies)
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2soj9cln6aspdclpn0obec4:
-              label: AT — Goods from Spain
+              label: 'AT: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2soj9cln6aspddtq74rrj:
-              label: AT — Goods from other member states
+              label: 'AT: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: AT — Negative corrections
+              label: 'AT: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: AT — Positive corrections
+              label: 'AT: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sp35epnmotj5e8:
-              label: AT — Refund from member state
+              label: 'AT: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sqbectp6asr1e8:
-              label: AT — Payable in Spain
+              label: 'AT: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssj5edqmot31chng:
-              label: AT — Result by member state
+              label: 'AT: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: AT — Services from Spain
+              label: 'AT: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: AT — Services from other member states
+              label: 'AT: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobb5edo62rj1:
-              label: AT — Total from Spain
+              label: 'AT: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobbfehp6uso:
-              label: AT — Total from other member states
+              label: 'AT: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobbgclp6irr4ds:
-              label: AT — Total VAT for the period
+              label: 'AT: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisoj9cln6aspdclpn0obec4:
-              label: BE — Goods from Spain
+              label: 'BE: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisoj9cln6aspddtq74rrj:
-              label: BE — Goods from other member states
+              label: 'BE: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: BE — Negative corrections
+              label: 'BE: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: BE — Positive corrections
+              label: 'BE: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisp35epnmotj5e8:
-              label: BE — Refund from member state
+              label: 'BE: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisqbectp6asr1e8:
-              label: BE — Payable in Spain
+              label: 'BE: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissj5edqmot31chng:
-              label: BE — Result by member state
+              label: 'BE: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissr5e9r6ior9dtpiqpbje1gmso8:
-              label: BE — Services from Spain
+              label: 'BE: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissr5e9r6ior9dtpiqrrke9nn6:
-              label: BE — Services from other member states
+              label: 'BE: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobb5edo62rj1:
-              label: BE — Total from Spain
+              label: 'BE: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobbfehp6uso:
-              label: BE — Total from other member states
+              label: 'BE: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobbgclp6irr4ds:
-              label: BE — Total VAT for the period
+              label: 'BE: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisoj9cln6aspdclpn0obec4:
-              label: BG — Goods from Spain
+              label: 'BG: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisoj9cln6aspddtq74rrj:
-              label: BG — Goods from other member states
+              label: 'BG: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: BG — Negative corrections
+              label: 'BG: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: BG — Positive corrections
+              label: 'BG: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisp35epnmotj5e8:
-              label: BG — Refund from member state
+              label: 'BG: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisqbectp6asr1e8:
-              label: BG — Payable in Spain
+              label: 'BG: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissj5edqmot31chng:
-              label: BG — Result by member state
+              label: 'BG: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissr5e9r6ior9dtpiqpbje1gmso8:
-              label: BG — Services from Spain
+              label: 'BG: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissr5e9r6ior9dtpiqrrke9nn6:
-              label: BG — Services from other member states
+              label: 'BG: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobb5edo62rj1:
-              label: BG — Total from Spain
+              label: 'BG: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobbfehp6uso:
-              label: BG — Total from other member states
+              label: 'BG: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobbgclp6irr4ds:
-              label: BG — Total VAT for the period
+              label: 'BG: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisoj9cln6aspdclpn0obec4:
-              label: CY — Goods from Spain
+              label: 'CY: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisoj9cln6aspddtq74rrj:
-              label: CY — Goods from other member states
+              label: 'CY: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: CY — Negative corrections
+              label: 'CY: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: CY — Positive corrections
+              label: 'CY: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisp35epnmotj5e8:
-              label: CY — Refund from member state
+              label: 'CY: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisqbectp6asr1e8:
-              label: CY — Payable in Spain
+              label: 'CY: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissj5edqmot31chng:
-              label: CY — Result by member state
+              label: 'CY: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissr5e9r6ior9dtpiqpbje1gmso8:
-              label: CY — Services from Spain
+              label: 'CY: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissr5e9r6ior9dtpiqrrke9nn6:
-              label: CY — Services from other member states
+              label: 'CY: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobb5edo62rj1:
-              label: CY — Total from Spain
+              label: 'CY: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobbfehp6uso:
-              label: CY — Total from other member states
+              label: 'CY: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobbgclp6irr4ds:
-              label: CY — Total VAT for the period
+              label: 'CY: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2soj9cln6aspdclpn0obec4:
-              label: CZ — Goods from Spain
+              label: 'CZ: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2soj9cln6aspddtq74rrj:
-              label: CZ — Goods from other member states
+              label: 'CZ: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: CZ — Negative corrections
+              label: 'CZ: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: CZ — Positive corrections
+              label: 'CZ: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sp35epnmotj5e8:
-              label: CZ — Refund from member state
+              label: 'CZ: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sqbectp6asr1e8:
-              label: CZ — Payable in Spain
+              label: 'CZ: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssj5edqmot31chng:
-              label: CZ — Result by member state
+              label: 'CZ: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: CZ — Services from Spain
+              label: 'CZ: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: CZ — Services from other member states
+              label: 'CZ: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobb5edo62rj1:
-              label: CZ — Total from Spain
+              label: 'CZ: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobbfehp6uso:
-              label: CZ — Total from other member states
+              label: 'CZ: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobbgclp6irr4ds:
-              label: CZ — Total VAT for the period
+              label: 'CZ: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisoj9cln6aspdclpn0obec4:
-              label: DE — Goods from Spain
+              label: 'DE: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisoj9cln6aspddtq74rrj:
-              label: DE — Goods from other member states
+              label: 'DE: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: DE — Negative corrections
+              label: 'DE: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: DE — Positive corrections
+              label: 'DE: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisp35epnmotj5e8:
-              label: DE — Refund from member state
+              label: 'DE: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisqbectp6asr1e8:
-              label: DE — Payable in Spain
+              label: 'DE: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissj5edqmot31chng:
-              label: DE — Result by member state
+              label: 'DE: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissr5e9r6ior9dtpiqpbje1gmso8:
-              label: DE — Services from Spain
+              label: 'DE: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissr5e9r6ior9dtpiqrrke9nn6:
-              label: DE — Services from other member states
+              label: 'DE: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobb5edo62rj1:
-              label: DE — Total from Spain
+              label: 'DE: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobbfehp6uso:
-              label: DE — Total from other member states
+              label: 'DE: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobbgclp6irr4ds:
-              label: DE — Total VAT for the period
+              label: 'DE: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisoj9cln6aspdclpn0obec4:
-              label: DK — Goods from Spain
+              label: 'DK: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisoj9cln6aspddtq74rrj:
-              label: DK — Goods from other member states
+              label: 'DK: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: DK — Negative corrections
+              label: 'DK: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: DK — Positive corrections
+              label: 'DK: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisp35epnmotj5e8:
-              label: DK — Refund from member state
+              label: 'DK: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisqbectp6asr1e8:
-              label: DK — Payable in Spain
+              label: 'DK: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissj5edqmot31chng:
-              label: DK — Result by member state
+              label: 'DK: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissr5e9r6ior9dtpiqpbje1gmso8:
-              label: DK — Services from Spain
+              label: 'DK: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissr5e9r6ior9dtpiqrrke9nn6:
-              label: DK — Services from other member states
+              label: 'DK: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobb5edo62rj1:
-              label: DK — Total from Spain
+              label: 'DK: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobbfehp6uso:
-              label: DK — Total from other member states
+              label: 'DK: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobbgclp6irr4ds:
-              label: DK — Total VAT for the period
+              label: 'DK: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisoj9cln6aspdclpn0obec4:
-              label: EE — Goods from Spain
+              label: 'EE: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisoj9cln6aspddtq74rrj:
-              label: EE — Goods from other member states
+              label: 'EE: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: EE — Negative corrections
+              label: 'EE: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: EE — Positive corrections
+              label: 'EE: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisp35epnmotj5e8:
-              label: EE — Refund from member state
+              label: 'EE: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisqbectp6asr1e8:
-              label: EE — Payable in Spain
+              label: 'EE: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissj5edqmot31chng:
-              label: EE — Result by member state
+              label: 'EE: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissr5e9r6ior9dtpiqpbje1gmso8:
-              label: EE — Services from Spain
+              label: 'EE: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissr5e9r6ior9dtpiqrrke9nn6:
-              label: EE — Services from other member states
+              label: 'EE: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobb5edo62rj1:
-              label: EE — Total from Spain
+              label: 'EE: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobbfehp6uso:
-              label: EE — Total from other member states
+              label: 'EE: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobbgclp6irr4ds:
-              label: EE — Total VAT for the period
+              label: 'EE: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisoj9cln6aspdclpn0obec4:
-              label: ES — Goods from Spain
+              label: 'ES: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisoj9cln6aspddtq74rrj:
-              label: ES — Goods from other member states
+              label: 'ES: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: ES — Negative corrections
+              label: 'ES: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: ES — Positive corrections
+              label: 'ES: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisp35epnmotj5e8:
-              label: ES — Refund from member state
+              label: 'ES: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisqbectp6asr1e8:
-              label: ES — Payable in Spain
+              label: 'ES: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissj5edqmot31chng:
-              label: ES — Result by member state
+              label: 'ES: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissr5e9r6ior9dtpiqpbje1gmso8:
-              label: ES — Services from Spain
+              label: 'ES: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissr5e9r6ior9dtpiqrrke9nn6:
-              label: ES — Services from other member states
+              label: 'ES: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobb5edo62rj1:
-              label: ES — Total from Spain
+              label: 'ES: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobbfehp6uso:
-              label: ES — Total from other member states
+              label: 'ES: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobbgclp6irr4ds:
-              label: ES — Total VAT for the period
+              label: 'ES: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisoj9cln6aspdclpn0obec4:
-              label: FI — Goods from Spain
+              label: 'FI: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisoj9cln6aspddtq74rrj:
-              label: FI — Goods from other member states
+              label: 'FI: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: FI — Negative corrections
+              label: 'FI: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: FI — Positive corrections
+              label: 'FI: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisp35epnmotj5e8:
-              label: FI — Refund from member state
+              label: 'FI: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisqbectp6asr1e8:
-              label: FI — Payable in Spain
+              label: 'FI: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissj5edqmot31chng:
-              label: FI — Result by member state
+              label: 'FI: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissr5e9r6ior9dtpiqpbje1gmso8:
-              label: FI — Services from Spain
+              label: 'FI: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissr5e9r6ior9dtpiqrrke9nn6:
-              label: FI — Services from other member states
+              label: 'FI: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobb5edo62rj1:
-              label: FI — Total from Spain
+              label: 'FI: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobbfehp6uso:
-              label: FI — Total from other member states
+              label: 'FI: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobbgclp6irr4ds:
-              label: FI — Total VAT for the period
+              label: 'FI: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2soj9cln6aspdclpn0obec4:
-              label: FR — Goods from Spain
+              label: 'FR: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2soj9cln6aspddtq74rrj:
-              label: FR — Goods from other member states
+              label: 'FR: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: FR — Negative corrections
+              label: 'FR: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: FR — Positive corrections
+              label: 'FR: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sp35epnmotj5e8:
-              label: FR — Refund from member state
+              label: 'FR: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sqbectp6asr1e8:
-              label: FR — Payable in Spain
+              label: 'FR: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssj5edqmot31chng:
-              label: FR — Result by member state
+              label: 'FR: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: FR — Services from Spain
+              label: 'FR: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: FR — Services from other member states
+              label: 'FR: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobb5edo62rj1:
-              label: FR — Total from Spain
+              label: 'FR: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobbfehp6uso:
-              label: FR — Total from other member states
+              label: 'FR: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobbgclp6irr4ds:
-              label: FR — Total VAT for the period
+              label: 'FR: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2soj9cln6aspdclpn0obec4:
-              label: GR — Goods from Spain
+              label: 'GR: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2soj9cln6aspddtq74rrj:
-              label: GR — Goods from other member states
+              label: 'GR: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: GR — Negative corrections
+              label: 'GR: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: GR — Positive corrections
+              label: 'GR: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sp35epnmotj5e8:
-              label: GR — Refund from member state
+              label: 'GR: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sqbectp6asr1e8:
-              label: GR — Payable in Spain
+              label: 'GR: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssj5edqmot31chng:
-              label: GR — Result by member state
+              label: 'GR: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: GR — Services from Spain
+              label: 'GR: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: GR — Services from other member states
+              label: 'GR: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobb5edo62rj1:
-              label: GR — Total from Spain
+              label: 'GR: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobbfehp6uso:
-              label: GR — Total from other member states
+              label: 'GR: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobbgclp6irr4ds:
-              label: GR — Total VAT for the period
+              label: 'GR: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2soj9cln6aspdclpn0obec4:
-              label: HR — Goods from Spain
+              label: 'HR: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2soj9cln6aspddtq74rrj:
-              label: HR — Goods from other member states
+              label: 'HR: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: HR — Negative corrections
+              label: 'HR: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: HR — Positive corrections
+              label: 'HR: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sp35epnmotj5e8:
-              label: HR — Refund from member state
+              label: 'HR: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sqbectp6asr1e8:
-              label: HR — Payable in Spain
+              label: 'HR: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssj5edqmot31chng:
-              label: HR — Result by member state
+              label: 'HR: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: HR — Services from Spain
+              label: 'HR: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: HR — Services from other member states
+              label: 'HR: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobb5edo62rj1:
-              label: HR — Total from Spain
+              label: 'HR: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobbfehp6uso:
-              label: HR — Total from other member states
+              label: 'HR: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobbgclp6irr4ds:
-              label: HR — Total VAT for the period
+              label: 'HR: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisoj9cln6aspdclpn0obec4:
-              label: HU — Goods from Spain
+              label: 'HU: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisoj9cln6aspddtq74rrj:
-              label: HU — Goods from other member states
+              label: 'HU: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: HU — Negative corrections
+              label: 'HU: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: HU — Positive corrections
+              label: 'HU: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisp35epnmotj5e8:
-              label: HU — Refund from member state
+              label: 'HU: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisqbectp6asr1e8:
-              label: HU — Payable in Spain
+              label: 'HU: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissj5edqmot31chng:
-              label: HU — Result by member state
+              label: 'HU: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissr5e9r6ior9dtpiqpbje1gmso8:
-              label: HU — Services from Spain
+              label: 'HU: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissr5e9r6ior9dtpiqrrke9nn6:
-              label: HU — Services from other member states
+              label: 'HU: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobb5edo62rj1:
-              label: HU — Total from Spain
+              label: 'HU: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobbfehp6uso:
-              label: HU — Total from other member states
+              label: 'HU: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobbgclp6irr4ds:
-              label: HU — Total VAT for the period
+              label: 'HU: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisoj9cln6aspdclpn0obec4:
-              label: IE — Goods from Spain
+              label: 'IE: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisoj9cln6aspddtq74rrj:
-              label: IE — Goods from other member states
+              label: 'IE: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: IE — Negative corrections
+              label: 'IE: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: IE — Positive corrections
+              label: 'IE: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisp35epnmotj5e8:
-              label: IE — Refund from member state
+              label: 'IE: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisqbectp6asr1e8:
-              label: IE — Payable in Spain
+              label: 'IE: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissj5edqmot31chng:
-              label: IE — Result by member state
+              label: 'IE: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissr5e9r6ior9dtpiqpbje1gmso8:
-              label: IE — Services from Spain
+              label: 'IE: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissr5e9r6ior9dtpiqrrke9nn6:
-              label: IE — Services from other member states
+              label: 'IE: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobb5edo62rj1:
-              label: IE — Total from Spain
+              label: 'IE: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobbfehp6uso:
-              label: IE — Total from other member states
+              label: 'IE: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobbgclp6irr4ds:
-              label: IE — Total VAT for the period
+              label: 'IE: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2soj9cln6aspdclpn0obec4:
-              label: IT — Goods from Spain
+              label: 'IT: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2soj9cln6aspddtq74rrj:
-              label: IT — Goods from other member states
+              label: 'IT: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: IT — Negative corrections
+              label: 'IT: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: IT — Positive corrections
+              label: 'IT: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sp35epnmotj5e8:
-              label: IT — Refund from member state
+              label: 'IT: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sqbectp6asr1e8:
-              label: IT — Payable in Spain
+              label: 'IT: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssj5edqmot31chng:
-              label: IT — Result by member state
+              label: 'IT: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: IT — Services from Spain
+              label: 'IT: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: IT — Services from other member states
+              label: 'IT: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobb5edo62rj1:
-              label: IT — Total from Spain
+              label: 'IT: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobbfehp6uso:
-              label: IT — Total from other member states
+              label: 'IT: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobbgclp6irr4ds:
-              label: IT — Total VAT for the period
+              label: 'IT: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2soj9cln6aspdclpn0obec4:
-              label: LT — Goods from Spain
+              label: 'LT: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2soj9cln6aspddtq74rrj:
-              label: LT — Goods from other member states
+              label: 'LT: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: LT — Negative corrections
+              label: 'LT: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: LT — Positive corrections
+              label: 'LT: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sp35epnmotj5e8:
-              label: LT — Refund from member state
+              label: 'LT: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sqbectp6asr1e8:
-              label: LT — Payable in Spain
+              label: 'LT: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssj5edqmot31chng:
-              label: LT — Result by member state
+              label: 'LT: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: LT — Services from Spain
+              label: 'LT: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: LT — Services from other member states
+              label: 'LT: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobb5edo62rj1:
-              label: LT — Total from Spain
+              label: 'LT: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobbfehp6uso:
-              label: LT — Total from other member states
+              label: 'LT: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobbgclp6irr4ds:
-              label: LT — Total VAT for the period
+              label: 'LT: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisoj9cln6aspdclpn0obec4:
-              label: LU — Goods from Spain
+              label: 'LU: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisoj9cln6aspddtq74rrj:
-              label: LU — Goods from other member states
+              label: 'LU: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: LU — Negative corrections
+              label: 'LU: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: LU — Positive corrections
+              label: 'LU: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisp35epnmotj5e8:
-              label: LU — Refund from member state
+              label: 'LU: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisqbectp6asr1e8:
-              label: LU — Payable in Spain
+              label: 'LU: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissj5edqmot31chng:
-              label: LU — Result by member state
+              label: 'LU: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissr5e9r6ior9dtpiqpbje1gmso8:
-              label: LU — Services from Spain
+              label: 'LU: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissr5e9r6ior9dtpiqrrke9nn6:
-              label: LU — Services from other member states
+              label: 'LU: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobb5edo62rj1:
-              label: LU — Total from Spain
+              label: 'LU: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobbfehp6uso:
-              label: LU — Total from other member states
+              label: 'LU: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobbgclp6irr4ds:
-              label: LU — Total VAT for the period
+              label: 'LU: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2soj9cln6aspdclpn0obec4:
-              label: LV — Goods from Spain
+              label: 'LV: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2soj9cln6aspddtq74rrj:
-              label: LV — Goods from other member states
+              label: 'LV: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: LV — Negative corrections
+              label: 'LV: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: LV — Positive corrections
+              label: 'LV: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sp35epnmotj5e8:
-              label: LV — Refund from member state
+              label: 'LV: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sqbectp6asr1e8:
-              label: LV — Payable in Spain
+              label: 'LV: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssj5edqmot31chng:
-              label: LV — Result by member state
+              label: 'LV: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: LV — Services from Spain
+              label: 'LV: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: LV — Services from other member states
+              label: 'LV: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobb5edo62rj1:
-              label: LV — Total from Spain
+              label: 'LV: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobbfehp6uso:
-              label: LV — Total from other member states
+              label: 'LV: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobbgclp6irr4ds:
-              label: LV — Total VAT for the period
+              label: 'LV: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2soj9cln6aspdclpn0obec4:
-              label: MT — Goods from Spain
+              label: 'MT: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2soj9cln6aspddtq74rrj:
-              label: MT — Goods from other member states
+              label: 'MT: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: MT — Negative corrections
+              label: 'MT: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: MT — Positive corrections
+              label: 'MT: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sp35epnmotj5e8:
-              label: MT — Refund from member state
+              label: 'MT: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sqbectp6asr1e8:
-              label: MT — Payable in Spain
+              label: 'MT: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssj5edqmot31chng:
-              label: MT — Result by member state
+              label: 'MT: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: MT — Services from Spain
+              label: 'MT: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: MT — Services from other member states
+              label: 'MT: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobb5edo62rj1:
-              label: MT — Total from Spain
+              label: 'MT: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobbfehp6uso:
-              label: MT — Total from other member states
+              label: 'MT: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobbgclp6irr4ds:
-              label: MT — Total VAT for the period
+              label: 'MT: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2soj9cln6aspdclpn0obec4:
-              label: NL — Goods from Spain
+              label: 'NL: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2soj9cln6aspddtq74rrj:
-              label: NL — Goods from other member states
+              label: 'NL: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: NL — Negative corrections
+              label: 'NL: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: NL — Positive corrections
+              label: 'NL: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sp35epnmotj5e8:
-              label: NL — Refund from member state
+              label: 'NL: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sqbectp6asr1e8:
-              label: NL — Payable in Spain
+              label: 'NL: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssj5edqmot31chng:
-              label: NL — Result by member state
+              label: 'NL: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: NL — Services from Spain
+              label: 'NL: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: NL — Services from other member states
+              label: 'NL: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobb5edo62rj1:
-              label: NL — Total from Spain
+              label: 'NL: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobbfehp6uso:
-              label: NL — Total from other member states
+              label: 'NL: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobbgclp6irr4ds:
-              label: NL — Total VAT for the period
+              label: 'NL: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2soj9cln6aspdclpn0obec4:
-              label: PL — Goods from Spain
+              label: 'PL: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2soj9cln6aspddtq74rrj:
-              label: PL — Goods from other member states
+              label: 'PL: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: PL — Negative corrections
+              label: 'PL: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: PL — Positive corrections
+              label: 'PL: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sp35epnmotj5e8:
-              label: PL — Refund from member state
+              label: 'PL: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sqbectp6asr1e8:
-              label: PL — Payable in Spain
+              label: 'PL: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssj5edqmot31chng:
-              label: PL — Result by member state
+              label: 'PL: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: PL — Services from Spain
+              label: 'PL: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: PL — Services from other member states
+              label: 'PL: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobb5edo62rj1:
-              label: PL — Total from Spain
+              label: 'PL: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobbfehp6uso:
-              label: PL — Total from other member states
+              label: 'PL: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobbgclp6irr4ds:
-              label: PL — Total VAT for the period
+              label: 'PL: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2soj9cln6aspdclpn0obec4:
-              label: PT — Goods from Spain
+              label: 'PT: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2soj9cln6aspddtq74rrj:
-              label: PT — Goods from other member states
+              label: 'PT: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: PT — Negative corrections
+              label: 'PT: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: PT — Positive corrections
+              label: 'PT: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sp35epnmotj5e8:
-              label: PT — Refund from member state
+              label: 'PT: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sqbectp6asr1e8:
-              label: PT — Payable in Spain
+              label: 'PT: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssj5edqmot31chng:
-              label: PT — Result by member state
+              label: 'PT: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: PT — Services from Spain
+              label: 'PT: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: PT — Services from other member states
+              label: 'PT: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobb5edo62rj1:
-              label: PT — Total from Spain
+              label: 'PT: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobbfehp6uso:
-              label: PT — Total from other member states
+              label: 'PT: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobbgclp6irr4ds:
-              label: PT — Total VAT for the period
+              label: 'PT: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisoj9cln6aspdclpn0obec4:
-              label: RO — Goods from Spain
+              label: 'RO: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisoj9cln6aspddtq74rrj:
-              label: RO — Goods from other member states
+              label: 'RO: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: RO — Negative corrections
+              label: 'RO: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: RO — Positive corrections
+              label: 'RO: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisp35epnmotj5e8:
-              label: RO — Refund from member state
+              label: 'RO: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisqbectp6asr1e8:
-              label: RO — Payable in Spain
+              label: 'RO: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissj5edqmot31chng:
-              label: RO — Result by member state
+              label: 'RO: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissr5e9r6ior9dtpiqpbje1gmso8:
-              label: RO — Services from Spain
+              label: 'RO: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissr5e9r6ior9dtpiqrrke9nn6:
-              label: RO — Services from other member states
+              label: 'RO: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobb5edo62rj1:
-              label: RO — Total from Spain
+              label: 'RO: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobbfehp6uso:
-              label: RO — Total from other member states
+              label: 'RO: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobbgclp6irr4ds:
-              label: RO — Total VAT for the period
+              label: 'RO: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedgmop3f5lkmspriclpm2shdclpn0obec4:
               label: Total payable in Spain
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisoj9cln6aspdclpn0obec4:
-              label: SE — Goods from Spain
+              label: 'SE: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisoj9cln6aspddtq74rrj:
-              label: SE — Goods from other member states
+              label: 'SE: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: SE — Negative corrections
+              label: 'SE: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: SE — Positive corrections
+              label: 'SE: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisp35epnmotj5e8:
-              label: SE — Refund from member state
+              label: 'SE: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisqbectp6asr1e8:
-              label: SE — Payable in Spain
+              label: 'SE: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissj5edqmot31chng:
-              label: SE — Result by member state
+              label: 'SE: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissr5e9r6ior9dtpiqpbje1gmso8:
-              label: SE — Services from Spain
+              label: 'SE: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissr5e9r6ior9dtpiqrrke9nn6:
-              label: SE — Services from other member states
+              label: 'SE: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobb5edo62rj1:
-              label: SE — Total from Spain
+              label: 'SE: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobbfehp6uso:
-              label: SE — Total from other member states
+              label: 'SE: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobbgclp6irr4ds:
-              label: SE — Total VAT for the period
+              label: 'SE: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisoj9cln6aspdclpn0obec4:
-              label: SI — Goods from Spain
+              label: 'SI: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisoj9cln6aspddtq74rrj:
-              label: SI — Goods from other member states
+              label: 'SI: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: SI — Negative corrections
+              label: 'SI: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: SI — Positive corrections
+              label: 'SI: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisp35epnmotj5e8:
-              label: SI — Refund from member state
+              label: 'SI: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisqbectp6asr1e8:
-              label: SI — Payable in Spain
+              label: 'SI: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissj5edqmot31chng:
-              label: SI — Result by member state
+              label: 'SI: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissr5e9r6ior9dtpiqpbje1gmso8:
-              label: SI — Services from Spain
+              label: 'SI: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissr5e9r6ior9dtpiqrrke9nn6:
-              label: SI — Services from other member states
+              label: 'SI: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobb5edo62rj1:
-              label: SI — Total from Spain
+              label: 'SI: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobbfehp6uso:
-              label: SI — Total from other member states
+              label: 'SI: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobbgclp6irr4ds:
-              label: SI — Total VAT for the period
+              label: 'SI: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisoj9cln6aspdclpn0obec4:
-              label: SK — Goods from Spain
+              label: 'SK: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisoj9cln6aspddtq74rrj:
-              label: SK — Goods from other member states
+              label: 'SK: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: SK — Negative corrections
+              label: 'SK: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: SK — Positive corrections
+              label: 'SK: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisp35epnmotj5e8:
-              label: SK — Refund from member state
+              label: 'SK: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisqbectp6asr1e8:
-              label: SK — Payable in Spain
+              label: 'SK: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissj5edqmot31chng:
-              label: SK — Result by member state
+              label: 'SK: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissr5e9r6ior9dtpiqpbje1gmso8:
-              label: SK — Services from Spain
+              label: 'SK: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissr5e9r6ior9dtpiqrrke9nn6:
-              label: SK — Services from other member states
+              label: 'SK: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobb5edo62rj1:
-              label: SK — Total from Spain
+              label: 'SK: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobbfehp6uso:
-              label: SK — Total from other member states
+              label: 'SK: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobbgclp6irr4ds:
-              label: SK — Total VAT for the period
+              label: 'SK: Total VAT for the period'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisoj9cln6aspdclpn0obec4:
-              label: XI — Goods from Spain
+              label: 'XI: Goods from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisoj9cln6aspddtq74rrj:
-              label: XI — Goods from other member states
+              label: 'XI: Goods from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: XI — Negative corrections
+              label: 'XI: Negative corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: XI — Positive corrections
+              label: 'XI: Positive corrections'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisp35epnmotj5e8:
-              label: XI — Refund from member state
+              label: 'XI: Refund from member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisqbectp6asr1e8:
-              label: XI — Payable in Spain
+              label: 'XI: Payable in Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissj5edqmot31chng:
-              label: XI — Result by member state
+              label: 'XI: Result by member state'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissr5e9r6ior9dtpiqpbje1gmso8:
-              label: XI — Services from Spain
+              label: 'XI: Services from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissr5e9r6ior9dtpiqrrke9nn6:
-              label: XI — Services from other member states
+              label: 'XI: Services from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobb5edo62rj1:
-              label: XI — Total from Spain
+              label: 'XI: Total from Spain'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobbfehp6uso:
-              label: XI — Total from other member states
+              label: 'XI: Total from other member states'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobbgclp6irr4ds:
-              label: XI — Total VAT for the period
+              label: 'XI: Total VAT for the period'
           construct:
             modelo-369:
               field:
                 title: Modelo 369 - Esquema Unión (special OSS Union regime)
-            modelo-369-union-resultado:
-              field:
-                title: Settlement by member state of consumption
           field:
             label: Modelo 369 - Union scheme - special regime for intra-Community
               distance sales, electronic interfaces and services established in the

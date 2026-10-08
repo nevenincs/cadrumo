@@ -1,6 +1,13 @@
 modelo:
   schema:
     '216':
+      casilla:
+        continuidad:
+          cuota-a-ingresar:
+            label: Resultat a ingressar
+          irnr-retencion-resultados-anteriores:
+            label: Resultats a ingressar de declaracions anteriors pel mateix concepte,
+              exercici i període
       construct:
         modelo-216-calculation-construct:
           field:
@@ -66,11 +73,6 @@ modelo:
               label: Nombre de rendes no subjectes a retenció
             '5':
               label: Import de les rendes no subjectes a retenció
-            '6':
-              label: Resultats a ingressar de declaracions anteriors pel mateix concepte,
-                exercici i període
-            '7':
-              label: Resultat a ingressar
           field:
             label: Ordre EHA/3290/2008, exercicis 2020 a 2023
         2024-y-siguientes:
@@ -113,10 +115,5 @@ modelo:
                 de rendes
             '19':
               label: Rendes no sotmeses a retenció o ingrés a compte. base. Total
-            '20':
-              label: Resultats a ingressar de declaracions anteriors pel mateix concepte,
-                exercici i període
-            '21':
-              label: Resultat a ingressar
           field:
             label: Ordre HAC/56/2024, exercicis 2024 i següents

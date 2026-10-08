@@ -215,7 +215,7 @@ modelo:
           retenciones-ingresos-a-cuenta-atribuibles:
             help: A Modelo 184 nyomtatványon bevallott összeg. A nyomtatvány egész
               és tizedes részre bontja.
-            label: Forrásadó és részletfizetés
+            label: Levonások és adóelőlegek
           situacion-inmueble:
             label: AZ INGATLAN ELHELYEZKEDÉSE
           tipo-actividad:

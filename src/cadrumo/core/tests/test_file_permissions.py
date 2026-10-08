@@ -47,7 +47,7 @@ def _icacls(path: Path, *args: str) -> tuple[int, str]:
         text=True,
         encoding="utf-8",
         errors="replace",
-        timeout=30,
+        timeout=None,
     )
     return completed.returncode, f"{completed.stdout!s}{completed.stderr!s}"
 

@@ -7,10 +7,11 @@ from decimal import Decimal
 
 import pytest
 
-from ..errors import RegistryValidationError
+from ..errors import CasillaConstraintViolationError, RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..formula_text_inputs import validated_text_input_casilla_ids
 from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ..schema_surfaces import CasillaConstraints
 from ._formula_runtime_support import (
     _M130_AGRARIAN_VOLUME_CASILLA,
     _M130_AGRARIAN_WITHHELD_CASILLA,
@@ -222,3 +223,83 @@ def test_registry_formula_runtime_rejects_missing_non_snapshot_parameter_axis(
                 _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
             },
         )
+
+
+def _snapshot_with_zero_range_manual_cost(snapshot: RegistrySnapshot) -> RegistrySnapshot:
+    """Pin a declared manual-cost range without changing the actual formula graph."""
+    target = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M130_GASTOS_CASILLA)
+    constrained = target.model_copy(
+        update={
+            "constraints": CasillaConstraints(
+                min_value=Decimal("0"),
+                max_value=Decimal("0"),
+                legal_refs=target.legal_refs,
+                source_refs=target.source_refs,
+            ),
+        },
+    )
+    revision = snapshot.revision.model_copy(
+        update={"casillas": tuple(constrained if row.id == target.id else row for row in snapshot.revision.casillas)},
+    )
+    return snapshot.model_copy(update={"revision": revision})
+
+
+@pytest.mark.parametrize("value", [Decimal("1"), Decimal("-1")])
+def test_numeric_manual_input_must_obey_declared_range_before_formula_execution(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+    value: Decimal,
+) -> None:
+    snapshot = _snapshot_with_zero_range_manual_cost(committed_modelo_130_snapshot)
+    with pytest.raises(CasillaConstraintViolationError) as refused:
+        calculate_registry_snapshot(snapshot, inputs={_M130_GASTOS_CASILLA: value}, date_context={})
+    context = refused.value.context
+    assert context is not None
+    assert context["casilla_id"] == _M130_GASTOS_CASILLA
+    assert context["value"] == str(value)
+    assert context["legal_refs"]
+    assert context["source_refs"]
+
+
+def test_zero_numeric_manual_input_preserves_actual_calculation_results(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    inputs = {
+        _M130_INGRESOS_CASILLA: Decimal("100"),
+        _M130_GASTOS_CASILLA: Decimal("0"),
+        _M130_RETENCIONES_CASILLA: Decimal("0"),
+        _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+        _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+        _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+        _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+    }
+    bindings = {
+        _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
+        _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
+    }
+    original = calculate_registry_snapshot(
+        committed_modelo_130_snapshot,
+        inputs=inputs,
+        binding_values=bindings,
+        date_context={},
+    )
+    constrained = calculate_registry_snapshot(
+        _snapshot_with_zero_range_manual_cost(committed_modelo_130_snapshot),
+        inputs=inputs,
+        binding_values=bindings,
+        date_context={},
+    )
+    assert constrained == original
+
+
+def test_input_key_and_decimal_type_refusals_remain_before_numeric_range_checks(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    snapshot = _snapshot_with_zero_range_manual_cost(committed_modelo_130_snapshot)
+    with pytest.raises(RegistryValidationError, match="unknown registry input casilla ids"):
+        calculate_registry_snapshot(
+            snapshot,
+            inputs={_M130_GASTOS_CASILLA: Decimal("1"), "unknown-casilla": Decimal("0")},
+            date_context={},
+        )
+    with pytest.raises(RegistryValidationError, match="must be a Decimal"):
+        calculate_registry_snapshot(snapshot, inputs={_M130_GASTOS_CASILLA: 1}, date_context={})

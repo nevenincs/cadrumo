@@ -1,4 +1,7 @@
-"""Explicit unused rows for fictional templates, without source-evidence claims."""
+"""Explicit unused rows for fictional templates, without source-evidence claims.
+
+:class:`ModeloRevision` declares the form and its value contracts.
+"""
 
 from collections.abc import Mapping
 
@@ -17,6 +20,8 @@ def fictional_unused_form_rows(
 
     No blank-cell inference or production evidence is created. Editing any
     member cell makes the spreadsheet row occupied through the shared translator.
+
+    The ``revision`` parameter uses :class:`ModeloRevision`, which declares the form and its value contracts.
     """
     grids: dict[str, FormGridBlock] = {}
     for layout in revision.form_layouts:

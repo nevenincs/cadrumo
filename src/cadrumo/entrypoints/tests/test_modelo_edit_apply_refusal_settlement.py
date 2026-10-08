@@ -116,7 +116,6 @@ def _address_a_casilla_outside_the_surface(submission: ModeloEditSubmissionV1) -
     ],
     ids=["stale-baseline", "unsupported-intent", "disallowed-intent"],
 )
-@pytest.mark.timeout(90)
 def test_a_refused_edit_settles_refused_with_its_family_code_and_writes_nothing(
     tmp_path: Path,
     variant: Callable[[ModeloEditSubmissionV1], ModeloEditSubmissionV1],

@@ -40,9 +40,9 @@ modelo:
             '01':
               label: Kedvezményezettek száma
             '02':
-              label: Forrásadó és előlegfizetés alapja
+              label: A levonások és adóelőlegek alapja
             '03':
-              label: Forrásadó és részletfizetés
+              label: Levonások és adóelőlegek
             '04':
               label: Korábbi bevallások eredménye
             '05':

@@ -58,5 +58,5 @@ def test_misc_config_target_schemas_resolve_and_own_canonical_identities() -> No
         assert schema.state is SchemaState.TARGET
         assert schema.target is not None
         assert schema.identity is not None
-        assert schema.identity.replace(".", "_") == spec.key
+        assert schema.identity.replace(".", "_").replace("-", "_") == spec.key
         assert inspect.isclass(getattr(importlib.import_module(schema.target.module), schema.target.qualname))

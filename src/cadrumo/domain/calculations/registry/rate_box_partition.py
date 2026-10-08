@@ -1,11 +1,11 @@
 """Rate-box partitions: the two-layer shape a rate-keyed official box requires.
 
-A casilla cannot both feed a computed total and be exported to a rate-specific
-AEAT box. The two roles want opposite bindings: rate-BLIND to keep every row in
-the total, rate-SPECIFIC to keep the box truthful. The registry expresses the
-split as two layers over one selector shape -- a rate-blind binding whose
-casilla carries no ``export_refs`` (the total layer) and its rate-specific
-siblings whose casillas do (the box layer).
+Official rate boxes must exclude observations whose rate is unknown. Separate
+rate-blind control casillas retain every observation so coverage checks can
+identify unallocated amounts. The registry expresses this as a control binding
+whose casilla carries no ``export_refs`` and rate-specific siblings whose
+casillas do. Printed official totals may sum those rate boxes; the matching
+control must not also enter the same sum.
 
 This module derives those layers from the revision alone, so no consumer has to
 name a modelo's casillas to find them. A ledger-IVA binding's selector is a set
@@ -26,8 +26,7 @@ in the calculation.
 :func:`rate_box_coverage_shortfalls` is the single arithmetic both gates read:
 the calculate path raises it as a non-blocking advisory (the operator needs the
 number in order to repair the ledger) and the export path refuses on it (a
-return whose rate boxes do not account for its declared total is what a human
-files, with nothing behind it). Two copies of this subtraction is how the two
+return whose rate boxes omit observed amounts must not be filed). Two copies of this subtraction is how the two
 gates would come to disagree about the same return, so there is one.
 
 See Also:

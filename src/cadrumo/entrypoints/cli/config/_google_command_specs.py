@@ -162,6 +162,17 @@ GOOGLE_COMMAND_SPECS = (
         GOOGLE_READ,
     ),
     _leaf(
+        "config_google_folder_organize",
+        "config_google_folder",
+        "organize",
+        "cli.config.google.folder.organize_help",
+        "_google_folder",
+        "google_folder_organize",
+        "_google_folder_payloads",
+        "GoogleFolderOrganizeResult",
+        GOOGLE_WRITE,
+    ),
+    _leaf(
         "config_google_probe",
         "config_google",
         "probe",

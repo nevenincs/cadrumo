@@ -57,19 +57,8 @@ adapters:
         api_call_failed: La crida a Google {action} ha fallat.
         api_call_refused: La crida a Google {action} ha estat rebutjada (HTTP {status}).
         api_target_not_found: El destí de Google {action} no s'ha trobat.
-        conflicting_duplicate_metadata: El full de Google conté metadades AEAT duplicades
-          i contradictòries.
-        developer_metadata_invalid: Les metadades de desenvolupador del full de càlcul
-          no són vàlides.
-        foreign_spreadsheet_not_owned: El full de Google no està marcat com a propietat
-          d'aquest perfil Cadrumo.
         googleapiclient_not_importable: googleapiclient no es pot importar; l'adaptador
           de Google no pot accedir a l'API.
-        ownership_metadata_invalid: Les metadades de propietat del full de càlcul
-          no són vàlides.
-        spreadsheet_id_blank: L'id del full de càlcul de Google no pot estar buit.
-        workbook_snapshot_mismatch: Les metadades del full de Google no coincideixen
-          amb la instantània de càlcul.
     installation_client:
       errors:
         client_metadata_invalid: El client de Google inclòs en aquesta instal·lació
@@ -82,8 +71,6 @@ adapters:
         consent_declined: S'ha rebutjat el consentiment de Google, de manera que no
           s'ha iniciat la sessió ni s'ha desat res. Torna a executar `aeat config
           google login` i aprova la sol·licitud.
-        email_claim_missing: L'id_token de Google s'ha comprovat però no inclou la
-          reclamació email.
         endpoint_unreachable: L'endpoint OAuth de Google no és accessible.
         id_token_missing: Google no ha retornat un id_token; el consentiment OAuth
           no incloïa els àmbits openid+email.
@@ -108,11 +95,6 @@ adapters:
       errors:
         no_active_profile: No hi ha cap perfil Cadrumo actiu enllaçat per a Google
           OAuth.
-    root_folder:
-      errors:
-        root_folder_not_owned: La carpeta de Google Drive desada per a aquest perfil
-          no és una carpeta creada per aquesta aplicació, o és a la paperera. Executa
-          `aeat config google login` per crear-ne una de nova.
   inbound:
     declaracion:
       errors:

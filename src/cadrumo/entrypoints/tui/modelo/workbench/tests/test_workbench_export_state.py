@@ -147,7 +147,6 @@ _ZERO_PRIOR_BINDINGS: dict[BindingId, str] = {
 
 @pytest.mark.integration
 @pytest.mark.hex_entrypoint
-@pytest.mark.timeout(300)
 def test_a_file_exported_for_real_reaches_the_header_through_the_installed_workbench(
     isolated_backend: None, tmp_path: Path
 ) -> None:

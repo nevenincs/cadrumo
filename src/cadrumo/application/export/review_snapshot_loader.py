@@ -1,4 +1,8 @@
-"""Project an explicitly selected persisted revision without recalculating it."""
+"""Project an explicitly selected persisted revision without recalculating it.
+
+:class:`CalculationRevision` holds the saved calculation and its evidence.
+:class:`ModeloRecord` selects the saved filing content.
+"""
 
 from __future__ import annotations
 
@@ -41,6 +45,9 @@ def build_calculation_review_snapshot(
     Neither current ledger state nor the work unit's current-revision pointer
     substitutes for the explicitly selected saved revision. A revision-wide
     source trace does not prove any individual amount's contributing rows.
+
+    The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
+    The ``filing_record`` parameter uses :class:`ModeloRecord`, which selects the saved filing content.
     """
     if (
         work_unit.bucket_id != str(selection.profile_id)

@@ -12,12 +12,13 @@ from urllib.parse import parse_qs, urlsplit
 
 from ....application.runtime.contracts import RuntimeRefusalError
 from ...local_runtime.windows_desktop_logon import current_windows_desktop_logon
+from .errors import GoogleAuthLoopbackBindError, GoogleAuthValidationError
 
 LOOPBACK_HOST = "127.0.0.1"
 _MAX_REQUEST_BYTES = 16_384
 
 
-class OAuthCallbackRefusedError(ValueError):
+class OAuthCallbackRefusedError(GoogleAuthValidationError):
     """A callback failed correlation; its contents must not enter diagnostics."""
 
 
@@ -25,7 +26,7 @@ class OAuthConsentDeclinedError(OAuthCallbackRefusedError):
     """The correlated authorization response reports denied consent."""
 
 
-class OAuthCallbackBindError(OSError):
+class OAuthCallbackBindError(GoogleAuthLoopbackBindError):
     """The loopback listener could not acquire its ephemeral address."""
 
 

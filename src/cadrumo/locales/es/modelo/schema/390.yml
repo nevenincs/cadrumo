@@ -1607,8 +1607,6 @@ modelo:
         title: IVA. Declaración-resumen anual
       form:
         authored:
-          accrual:
-            heading: 2. Devengo
           activities:
             heading: 3. Datos estadísticos · Actividades
           activity-code:
@@ -1619,8 +1617,6 @@ modelo:
             heading: Índice de cuota
           activity-input-tax:
             heading: Cuotas soportadas
-          activity-order:
-            heading: Orden
           activity-output-tax:
             heading: Cuota devengada
           activity-result:
@@ -1693,8 +1689,6 @@ modelo:
             heading: Otra actividad 4
           other-5:
             heading: Otra actividad 5
-          page-one:
-            heading: Página 1
           principal:
             heading: Principal
           prior-receipt:
@@ -1703,15 +1697,11 @@ modelo:
             heading: 11. Operaciones específicas
           surname:
             heading: Apellidos o razón social
-          taxpayer:
-            heading: 1. Sujeto pasivo
           territorial-settlement:
             heading: 8. Tributación a varias Administraciones
           year:
             heading: Ejercicio
         column:
-          actividad-desarrollada:
-            heading: Actividad desarrollada
           fecha-poder-ddmmaaaa:
             heading: Fecha del poder
           nif:
@@ -1724,10 +1714,6 @@ modelo:
             heading: Reducción por actividad en municipios afectados por la DANA
           reducciones-total:
             heading: Reducciones (total)
-          regularizacion-de-inversiones:
-            heading: Regularización de inversiones
-          suma-de-deducciones:
-            heading: Suma de deducciones
         page:
           pag-1:
             heading: Página 1
@@ -1762,12 +1748,6 @@ modelo:
             heading: Actividad 1
           actividad-2:
             heading: Actividad 2
-          bienes-corrientes:
-            heading: Bienes corrientes
-          bienes-inversion:
-            heading: Bienes de inversión
-          bienes-y-servic:
-            heading: Bienes y servicios corrientes
           compensac-reg-especial-agric-ganad-pesca:
             heading: Compensaciones del régimen especial de agricultura, ganadería
               y pesca
@@ -1854,48 +1834,12 @@ modelo:
             heading: 1. Sujeto pasivo
           10-volumen-de-operaciones:
             heading: 10. Volumen de operaciones
-          11-oper-especificas:
-            heading: 11. Operaciones específicas
           12-prorratas:
             heading: 12. Prorratas
-          13-reg-deducc-diferenc:
-            heading: Deducciones diferenciadas
-          13-reg-deducc-diferenc-1:
-            heading: Deducciones diferenciadas · sector 1
-          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
-            heading: Sector 1 · IVA deducible en adquisiciones intracomunitarias
-          13-reg-deducc-diferenc-1-iva-ded-importaciones:
-            heading: Sector 1 · IVA deducible en importaciones
-          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
-            heading: Sector 1 · IVA deducible en operaciones interiores
-          13-reg-deducc-diferenc-2:
-            heading: Deducciones diferenciadas · sector 2
-          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
-            heading: Sector 2 · IVA deducible en adquisiciones intracomunitarias
-          13-reg-deducc-diferenc-2-iva-ded-importaciones:
-            heading: Sector 2 · IVA deducible en importaciones
-          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
-            heading: Sector 2 · IVA deducible en operaciones interiores
-          13-reg-deducc-diferenc-3:
-            heading: Deducciones diferenciadas · sector 3
-          13-reg-deducc-diferenc-3-iva-ded-adquisic-92440f:
-            heading: Sector 3 · IVA deducible en adquisiciones intracomunitarias
-          13-reg-deducc-diferenc-3-iva-ded-importaciones:
-            heading: Sector 3 · IVA deducible en importaciones
-          13-reg-deducc-diferenc-3-iva-ded-operac-i-5ea9dc:
-            heading: Sector 3 · IVA deducible en operaciones interiores
           2-devengo:
             heading: 2. Devengo
           3-datos-estadisticos:
             heading: 3. Datos estadísticos
-          3-datos-estadisticos-a:
-            heading: 3. Datos estadísticos · A
-          3-datos-estadisticos-a-actividades:
-            heading: 3. Datos estadísticos · A · Actividades
-          3-datos-estadisticos-b:
-            heading: 3. Datos estadísticos · B
-          3-datos-estadisticos-c:
-            heading: 3. Datos estadísticos · C
           4-representante-personas-fisicas-comunid-bienes:
             heading: 4. Representante · Personas físicas y comunidades de bienes
           4-representante-personas-juridicas:
@@ -1958,10 +1902,6 @@ modelo:
             heading: 6. Régimen simplificado · Actividad 1
           6-operaciones-reg-simplificado-actividad-2:
             heading: 6. Régimen simplificado · Actividad 2
-          7-resultado-liquidacion-anual:
-            heading: 7. Resultado de la liquidación anual
-          8-tributacion-razon-de-territorio:
-            heading: 8. Tributación por razón de territorio
           9-resultado-de-las-liquidaciones:
             heading: 9. Resultado de las liquidaciones
       revision:

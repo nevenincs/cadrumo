@@ -12,6 +12,10 @@ from cadrumo.application.operations.error_detail import build_operation_error_de
 from cadrumo.core.config import Settings
 from cadrumo.core.errors.error_codes import resolve_error_message, scrub_error_context
 
+from ......tests.aeat_literal_fixtures import (
+    WWW6_PRIVATE_QUERY_DISCLOSURE_CANARY,
+)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
@@ -43,7 +47,7 @@ async def test_no_desktop_refuses_before_browser_start_and_returns_public_url(
         await provider._fresh_login_locked(
             dni_nie="12345678Z",
             storage_state_path=tmp_path / "unused",
-            target_url="https://www6.agenciatributaria.gob.es/private?secret=do-not-publish",
+            target_url=WWW6_PRIVATE_QUERY_DISCLOSURE_CANARY,
         )
     error = caught.value
     assert error.context is not None

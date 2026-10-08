@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.filing_producer_key import FilingProducerKey
+
 from .....core.decimal.fixed_width import coerce_fixed_width_decimal
 from .....core.directory_scan import scan_directory
 from ..errors import RegistryValidationError
@@ -43,6 +45,30 @@ def _field(**overrides: object) -> ExportFieldDefinition:
     }
     payload.update(overrides)
     return ExportFieldDefinition.model_validate(payload)
+
+
+def test_m369_required_complementaria_marker_keeps_the_official_negative_answer() -> None:
+    """The required C-or-space marker preserves a negative answer on read-back."""
+    field = _field(
+        kind="header",
+        casilla_id=None,
+        producer_key=FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA,
+        data_type="text",
+        length=1,
+        required=True,
+        padding="right_space",
+        justification="left",
+        source_refs=("aeat-dr-369-2021",),
+    )
+    for answer in ("C", " "):
+        wire = render_fixed_width_export_field(field, answer)
+        assert parse_fixed_width_export_field(field, wire) == answer
+        assert render_fixed_width_export_field(field, parse_fixed_width_export_field(field, wire)) == wire
+    with pytest.raises(RegistryValidationError, match="has no value"):
+        render_fixed_width_export_field(field, None)
+    unrelated = field.model_copy(update={"source_refs": ("aeat-dr-200-2025",)})
+    with pytest.raises(RegistryValidationError, match="has no value"):
+        parse_fixed_width_export_field(unrelated, " ")
 
 
 @pytest.mark.parametrize(("kind", "literal", "expected"), (("literal", "25", "25"), ("filler", None, "  ")))

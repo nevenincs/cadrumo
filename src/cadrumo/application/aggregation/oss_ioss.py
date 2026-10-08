@@ -593,9 +593,8 @@ def _closed_exterior_record_rows(
             context.modelo,
             filing_year=context.filing_year,
             period=context.period.registry_token,
-            revision_id=context.revision.id,
         ).revision
-        if revision.bindings != context.revision.bindings:
+        if revision.id != context.revision.id or revision.bindings != context.revision.bindings:
             raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
     slots = _exterior_record_slots(revision)
     covered = frozenset(binding for row in slots for binding in row)

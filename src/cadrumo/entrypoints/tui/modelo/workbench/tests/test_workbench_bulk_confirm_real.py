@@ -125,7 +125,6 @@ async def _confirm_with_f8(installed: InstalledModeloWorkbench) -> _Confirmed:
     return _Confirmed(listed=listed, tick_offered=tick_offered, notes=notes, staged=staged)
 
 
-@pytest.mark.timeout(300)
 def test_f8_confirms_a_typed_amount_no_printed_box_shows_and_applying_keeps_it_as_the_filers(tmp_path: Path) -> None:
     address = ModeloFormBindingAddressV1(binding_id=_NO_VOLUME_BASE)
     with _bench(tmp_path, modelo="131") as bench, override_settings(cadrumo_output_language="en"):

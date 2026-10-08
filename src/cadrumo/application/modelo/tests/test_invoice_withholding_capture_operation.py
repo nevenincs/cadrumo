@@ -257,8 +257,10 @@ def test_request_typed_operands_round_trip_canonically() -> None:
         )
 
 
+@pytest.mark.parametrize("with_financial_asset", (False, True))
 def test_typed_annual_detail_preserves_all_canonical_fields_under_pinned_authority(
     authority_operation: PinnedAuthorityOperation,
+    with_financial_asset: bool,
 ) -> None:
     with validating_governed_facts(authority_operation):
         detail = WithholdingObservation(
@@ -279,6 +281,10 @@ def test_typed_annual_detail_preserves_all_canonical_fields_under_pinned_authori
             foral_retention_gipuzkoa=Decimal("0"),
             foral_retention_bizkaia=Decimal("0"),
             base_retenciones=Decimal("0"),
+            financial_asset_origin="A" if with_financial_asset else None,
+            financial_asset_acquisition_value=Decimal("100.25") if with_financial_asset else None,
+            financial_asset_disposal_value=Decimal("120.50") if with_financial_asset else None,
+            financial_asset_related_entity="V" if with_financial_asset else None,
         )
         evidence = _evidence().model_copy(update={"modelo_190_detail": detail})
         public = PublicInvoiceWithholdingEvidence.from_domain(evidence)

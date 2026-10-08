@@ -1,4 +1,7 @@
-"""Journaled placement of known profile roots beneath the application folder."""
+"""Journaled placement of known profile roots beneath the application folder.
+
+:class:`SecureObjectRepository` stores the encrypted profile records.
+"""
 
 from __future__ import annotations
 
@@ -46,7 +49,10 @@ class RootLayoutState(BaseModel):
 
 
 def load_root_layout(repository: SecureObjectRepository, profile_id: UUID) -> RootLayoutState | None:
-    """Read only this profile's encrypted placement journal."""
+    """Read only this profile's encrypted placement journal.
+
+    The ``repository`` parameter uses :class:`SecureObjectRepository`, which stores the encrypted profile records.
+    """
     definition = GOOGLE_ARTIFACT_RECEIPTS_NAMESPACE
     record = repository.load(
         definition.namespace,

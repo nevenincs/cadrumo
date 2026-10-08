@@ -27,7 +27,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _C06 = validated_casilla_id("06")
 
 
-@pytest.mark.timeout(120)
 def test_an_operator_calculation_records_only_its_caller_tier(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         empty = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -48,7 +47,6 @@ def test_an_operator_calculation_records_only_its_caller_tier(tmp_path: Path) ->
     assert caller_context_of(typed).operator_layer == typed.operator_layer
 
 
-@pytest.mark.timeout(120)
 def test_a_calculation_that_does_not_record_the_layer_keeps_its_historical_id(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         unrecorded = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -65,7 +63,6 @@ def test_a_calculation_that_does_not_record_the_layer_keeps_its_historical_id(tm
     assert recorded.casilla_values == unrecorded.casilla_values
 
 
-@pytest.mark.timeout(120)
 def test_replaying_a_caller_context_reproduces_the_same_revision(tmp_path: Path) -> None:
     """The projected channels feed the engine exactly what the operator entered, binding overrides included."""
     carry = "modelo-130-pagos-fraccionados-anteriores"

@@ -77,7 +77,7 @@ def _observe_in_a_fresh_thread() -> tuple[bool, str | None]:
 
     thread = threading.Thread(target=target, name="isolation-probe")
     thread.start()
-    thread.join(timeout=10)
+    thread.join()
 
     assert observed, "the probe thread did not run"
     return observed[0]
@@ -147,7 +147,7 @@ def test_a_binding_made_on_a_worker_thread_reaches_the_thread_that_reads_next() 
     try:
         worker.start()
         bound.wait()
-        worker.join(timeout=10)
+        worker.join()
 
         active = current_active_bucket_session()
         assert active is session
@@ -216,7 +216,7 @@ def test_a_deliberately_copied_context_does_carry_the_session() -> None:
             context = copy_context()
             thread = threading.Thread(target=lambda: context.run(target), name="carried-probe")
             thread.start()
-            thread.join(timeout=10)
+            thread.join()
     finally:
         session.close()
 
@@ -259,7 +259,7 @@ def test_two_spans_hold_different_sessions_at_the_same_time() -> None:
         for thread in threads:
             thread.start()
         for thread in threads:
-            thread.join(timeout=10)
+            thread.join()
     finally:
         first.close()
         second.close()

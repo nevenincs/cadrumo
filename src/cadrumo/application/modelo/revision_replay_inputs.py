@@ -36,7 +36,6 @@ from ...domain.calculations.registry.applicability import (
 )
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
-from ...domain.calculations.registry.casilla_membership import text_family_casilla_ids
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -46,6 +45,7 @@ from ...domain.calculations.registry.manual_input_selector import ManualInputPro
 from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema_scalars import registry_scalar_value_type
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.filing.protocols import ModeloInputs, ModeloInputScalar
@@ -388,22 +388,19 @@ def _informational_casilla_replay_inputs(
 ) -> dict[str, str]:
     """Return non-formula informational casillas that the filing renderer needs as inputs.
 
-    Only numeric casillas are read from ``casilla_values``. A text casilla never
-    holds a number: its value, when it has one, replays from the persisted text
-    inputs, and a number found for it in the numeric channel is a placeholder
-    that stood for "no text". Writing that placeholder out as a string would put
-    a ``0`` into a filed text field, so the text casilla replays as absent.
+    Only numeric casillas are read from ``casilla_values``. Text and date
+    values replay from their persisted inputs. A numeric placeholder for an
+    absent text or date is omitted rather than becoming a filed ``0``.
     """
     if snapshot is None:
         return {}
     formula_targets = frozenset(formula.target_casilla_id for formula in snapshot.revision.formulas)
-    text_casilla_ids = text_family_casilla_ids(snapshot.revision.casillas)
     return {
         casilla.id: canonical_decimal_string(revision.casilla_values[casilla.id])
         for casilla in snapshot.revision.casillas
         if casilla.input_kind == InputKind.INFORMATIONAL
         and casilla.id not in formula_targets
-        and casilla.id not in text_casilla_ids
+        and registry_scalar_value_type(casilla.data_type) in {"decimal", "int", "bool"}
         and casilla.id in revision.casilla_values
     }
 

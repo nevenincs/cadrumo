@@ -49,9 +49,9 @@ modelo:
             '01':
               label: Kedvezményezettek száma
             '02':
-              label: Visszatartások és előlegfizetések alapja
+              label: A levonások és adóelőlegek alapja
             '03':
-              label: Forrásadó és részletfizetés
+              label: Levonások és adóelőlegek
             '04':
               label: Kedvezményezettek száma (kiegészítő blokk)
             '05':

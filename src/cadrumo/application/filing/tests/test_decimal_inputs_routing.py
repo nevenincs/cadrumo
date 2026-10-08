@@ -209,3 +209,23 @@ def test_calculate_registry_snapshot_applies_non_zero_bin_pendiente_compensation
     assert cuota == Decimal("20700.00"), (
         f"BIN compensation did not propagate: expected 20700 (= (100000 - 10000) * 0.23), got {cuota}"
     )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1", "DE"),
+        ("3-prestaciones-de-servicios-tipo-iva-1", "S"),
+    ],
+)
+def test_formula_consumed_text_record_field_retains_its_filing_value(field: str, value: str) -> None:
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
+
+    binding_id = "modelo-369-exterior-fichero." + field
+    with bundled_indexed_authority().operation() as operation:
+        revision = operation.revision("369", "esquema-exterior")
+        bindings = {binding.id: binding for binding in revision.bindings}
+        projected = filing_binding_values({binding_id: value}, bindings, frozenset({binding_id}))
+    assert len(projected) == 1
+    assert projected[0].binding_id == binding_id
+    assert projected[0].value == value

@@ -878,15 +878,17 @@ cli:
           as filed.
         work_unit_id_help: Declaration id (SHA-256 or unambiguous prefix).
       filing_record:
-        export_help: Export the selected historical filing as a saved calculation review workbook.
-        export_button: Export selected filing (XLSX)
-        export_missing: The selected historical calculation is no longer retained; export cannot use the current calculation.
         app_help: Inspect internal filing records
         bucket_id_help: Filter by profile
         evidence_kind_help: Kind of imported evidence (aeat_justificante_pdf, aeat_csv_register,
           aeat_live_capture)
         evidence_reference_id_help: Stable reference id of the imported evidence (justificante
           number, CSV register id, live capture id)
+        export_button: Export selected filing (XLSX)
+        export_help: Export the selected historical filing as a saved calculation
+          review workbook.
+        export_missing: The selected historical calculation is no longer retained;
+          export cannot use the current calculation.
         filing_record_id_help: Stable filing-record identifier
         import_casilla_help: Imported casilla value with CASILLA_ID=DECIMAL syntax
           (repeatable; at least one required)
@@ -1112,18 +1114,20 @@ cli:
       readiness_help: Report whether the active profile is ready to file one modelo
         / year / period.
       reconcile:
-        export_help: Export saved reconciliation differences to a local review workbook.
-        export_button: Export declaration differences (XLSX)
-        export_work_unit_scope: Exports all saved reconciliation differences for the selected declaration.
-        export_selector_required: "Select exactly one of --event-id, --work-unit-id, or --all-history."
-        export_work_unit_id_help: Exact saved declaration id (64-character SHA-256).
-        export_event_id_help: Exact saved reconciliation event id.
-        export_all_help: Export the complete saved reconciliation history explicitly.
         app_help: 'Compare a saved local calculation with AEAT evidence: pull downloads
           a receipt or filed declaration; import compares a local PDF; list shows
           past comparisons.'
         calculation_revision_help: Saved calculation revision ID to compare. Defaults
           to the filed or verified revision, then the latest saved revision.
+        export_all_help: Export the complete saved reconciliation history explicitly.
+        export_button: Export declaration differences (XLSX)
+        export_event_id_help: Exact saved reconciliation event id.
+        export_help: Export saved reconciliation differences to a local review workbook.
+        export_selector_required: Select exactly one of --event-id, --work-unit-id,
+          or --all-history.
+        export_work_unit_id_help: Exact saved declaration id (64-character SHA-256).
+        export_work_unit_scope: Exports all saved reconciliation differences for the
+          selected declaration.
         file_kind_help: 'Evidence document kind: justificante (AEAT receipt, every
           modelo) or declaration (filed declaración PDF, box-level reconcile, enrolled
           modelos only). Defaults to justificante.'
@@ -1261,9 +1265,6 @@ cli:
         app_help: Export spreadsheets. Google copies are outbound review documents;
           remote pull, calculate and verify are unavailable. Local XLSX export remains
           available.
-        calculate_help: Pull the cells you edited from a calc-sheets workbook, run
-          the local Decimal runtime over them, and emit the computed box values (persists
-          nothing)
         export:
           output_help: Path to write the .xlsx workbook to; an existing file is refused
             unless --replace is given
@@ -1277,20 +1278,12 @@ cli:
             publishing the selected calculation and captured ledger rows as a Google
             Sheet readable by authorized users.
           calculation_revision_id_help: Exact saved calculation revision id to publish.
-          filing_record_id_help: Exact historical filing record id paired with the saved calculation; optional.
+          filing_record_id_help: Exact historical filing record id paired with the
+            saved calculation; optional.
           publication_id_help: Publication UUID; generated when omitted.
         publish_button: Review in Google Sheets
-        review_help: Export a saved draft or completed calculation as an immutable local review workbook.
         publish_help: Publish a saved calculation as a readable native Google Sheet
           in the profile folder.
-        pull:
-          assemble_observations_help: After pulling, reassemble Detalle-tab row-set
-            cells into typed observations (perceptors, foreign assets, related-party
-            operations, atribución members, refund operations) and emit them in the
-            payload alongside the raw row_set_edits
-        pull_help: Read the cells you edited back from a calc-sheets workbook into
-          typed values (after checking that the workbook's registry-SHA stamp matches
-          the current modelo definitions)
         push:
           capability_disabled: Google export is disabled for this profile; enable
             it with 'aeat config profile capabilities set google_export on'.
@@ -1305,13 +1298,8 @@ cli:
             modelo {modelo} ({period} {year}).
         push_help: Export the calculation of a modelo and period, as set in the modelo
           definitions, to a Google Sheets workbook in your `cadrumo-vault/`
-        spreadsheet_id_help: Drive file id of the workbook to read your edits from
-          (must be owned by the app and tied to the supplied snapshot)
-        verify:
-          scenario_help: Path to a JSON scenario file with the values you enter and
-            an optional AEAT-published expected-output map
-        verify_help: Three-way parity check of a modelo's calculation surface (AEAT
-          oracle vs local Decimal runtime vs Sheets workbook)
+        review_help: Export a saved draft or completed calculation as an immutable
+          local review workbook.
         year_help: Filing year (e.g. 2025)
       support_matrix:
         help: 'Show the per-modelo support matrix across all modelo definitions: calculation
@@ -2062,6 +2050,7 @@ cli:
         it with 'aeat config profile capabilities set google_export on'.
       folder:
         help: Show the Google Drive folder created for the active profile
+        organize_help: Organize the profile folder inside Cadrumo
         view_help: Show the Google Drive folder created for the active profile.
       help: Manage the Google OAuth Desktop integration for Drive and Sheets
       login_help: Run the OAuth consent flow

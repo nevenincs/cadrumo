@@ -44,9 +44,6 @@ __all__ = ["SubprocessLLMClassifier"]
 
 _logger = logging.getLogger(__name__)
 
-_DEFAULT_TIMEOUT_SECONDS = 120.0
-"""Per-call subprocess budget, carried over from the production original."""
-
 
 @dataclass(frozen=True)
 class SubprocessLLMClassifier:
@@ -62,12 +59,14 @@ class SubprocessLLMClassifier:
 
     Set ``prompt_via_argument=True`` for CLIs that reject stdin and
     require the prompt as the final positional argument.
+
+    Children run to completion unless the caller supplies ``timeout_seconds``.
     """
 
     name: str
     command: tuple[str, ...]
     model: str | None = None
-    timeout_seconds: float = _DEFAULT_TIMEOUT_SECONDS
+    timeout_seconds: float | None = None
     spec: PromptSpec = field(default_factory=default_prompt_spec)
     prompt_via_argument: bool = False
 
@@ -154,7 +153,7 @@ class SubprocessLLMClassifier:
             raise LLMClassifierError(f"{self.name} CLI spawn failed: {exc}") from exc
 
     async def _run_cli_process(self, argv: list[str], stdin_input: str | None, transaction_id: str) -> str:
-        """Run the fixed executable vector with bounded, pipe-only I/O."""
+        """Run the fixed executable vector with pipe-only I/O and an optional deadline."""
         process = await asyncio.create_subprocess_exec(
             *argv,
             stdin=asyncio.subprocess.PIPE if stdin_input is not None else None,

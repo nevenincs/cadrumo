@@ -113,10 +113,12 @@ def read_modelo_workbench_form(
 ) -> ModeloWorkbenchFormReadV1:
     """Admit an edit baseline, read the declaration's form and the facts its actions need."""
     unit = _work_unit(work_unit_id, bucket_id=bucket_id, ports=ports)
+    work_catalogue = ports.work_units.load()
+    calculation_catalogue = ports.calculations.load(operation=operation)
     admission = admit_modelo_edit_baseline(
         work_unit_id=work_unit_id,
-        work_catalogue=ports.work_units.load(),
-        calculation_catalogue=ports.calculations.load(operation=operation),
+        work_catalogue=work_catalogue,
+        calculation_catalogue=calculation_catalogue,
         operation=operation,
         operation_contracts=operation_contracts,
     )
@@ -130,6 +132,7 @@ def read_modelo_workbench_form(
         work_unit_repository=ports.work_units,
         calculation_repository=ports.calculations,
         verification_repository=ports.verifications,
+        calculation_catalogue=calculation_catalogue,
         admission=admission,
         language=language,
         borrador_snapshots=ports.borrador_snapshots,

@@ -166,8 +166,6 @@ errors:
     error_cadrumo_observability: An error occurred in the application diagnostic logging.
     error_calc_sheets_engine: The spreadsheet export engine encountered an unresolvable
       state while building the export plan.
-    error_calc_sheets_parity: The parity harness scenario references casilla ids that
-      are not present in the registry snapshot.
     error_calc_sheets_record: A spreadsheet record operation failed due to an invalid
       column index or malformed A1 address.
     error_calculations_registry: An error occurred loading, resolving or validating

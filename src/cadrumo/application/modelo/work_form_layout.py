@@ -80,6 +80,8 @@ class LayoutWalker:
             for item in layout.placements
         }
         self.seen: set[str] = set()
+        self.positions: dict[str, set[tuple[str, str]]] = {}
+        self.section_position: tuple[str, str] = ("", "")
 
     def casilla(
         self, casilla_id: str, *, design_constant: str | None = None, literal_decimals: int | None = None
@@ -97,6 +99,7 @@ class LayoutWalker:
         if placement is None or placement.kind is not FormPlacementKind.ON_FORM:
             raise ModeloWorkFormLayoutError(f"casilla {casilla_id!r} sits on a page without an on-form placement")
         self.seen.add(casilla_id)
+        self.positions.setdefault(casilla_id, set()).add(self.section_position)
         field = project_casilla_field(casilla_id, self.context, placement, self.aliases.get(casilla_id, ()))
         if design_constant is None:
             return field
@@ -133,6 +136,7 @@ class LayoutWalker:
 
     def section(self, page_id: str, section: FormSectionDefinition) -> ModeloFormSection:
         """Project one section's blocks and counts in their declared order."""
+        self.section_position = (page_id, section.id)
         blocks = tuple(self.block(block) for block in section.blocks)
         form_section = ModeloFormSection(
             id=f"{page_id}.{section.id}",
@@ -175,6 +179,8 @@ class LayoutWalker:
                 value = localized_heading(choice.heading_key, choice.official_heading, "Opción", language).text
             return ModeloFormContextFieldBlock(id=block.id, label=label, value=value)
         if isinstance(block, FormFieldBlock):
+            if block.casilla_id is not None and str(block.casilla_id) in self.seen:
+                return self.alias(block)
             field = (
                 self.casilla(
                     str(block.casilla_id),
@@ -214,6 +220,18 @@ class LayoutWalker:
             id=block.id,
             fields=tuple(project_binding_field(str(binding_id), self.context) for binding_id in block.binding_ids),
         )
+
+    def alias(self, block: FormFieldBlock) -> ModeloFormContextFieldBlock:
+        """Show a declared repeat without creating another editable address."""
+        casilla_id = str(block.casilla_id)
+        placement = self.placements[casilla_id]
+        declared = {(alias.page_id, alias.section_id) for alias in placement.aliases}
+        visited = self.positions.setdefault(casilla_id, set())
+        if self.section_position not in declared or self.section_position in visited:
+            raise ModeloWorkFormLayoutError(f"the layout places casilla {casilla_id!r} more than once")
+        visited.add(self.section_position)
+        field = project_casilla_field(casilla_id, self.context, placement, self.aliases.get(casilla_id, ()))
+        return ModeloFormContextFieldBlock(id=block.id, label=field.label, value=field.value)
 
     def cell(
         self,

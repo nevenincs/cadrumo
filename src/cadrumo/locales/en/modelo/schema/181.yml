@@ -118,7 +118,7 @@ modelo:
             referencia-catastral:
               label: Cadastral reference
             representante-legal-nif:
-              label: Tax ID of the legal representative
+              label: Legal representative's NIF
             saldo-pendiente:
               label: Balance outstanding at 31 December
             situacion-inmueble:

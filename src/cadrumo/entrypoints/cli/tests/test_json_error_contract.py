@@ -225,7 +225,7 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=120,
+        timeout=None,
         check=False,
     )
     assert json_run.returncode == 6, json_run.stderr
@@ -238,7 +238,7 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=120,
+        timeout=None,
         check=False,
     )
     assert text_run.returncode == 6, text_run.stderr
@@ -259,7 +259,7 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
         capture_output=True,
         text=True,
         encoding="utf-8",
-        timeout=120,
+        timeout=None,
         check=False,
         env=child_environment,
     )

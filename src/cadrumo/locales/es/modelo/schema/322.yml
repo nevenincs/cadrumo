@@ -657,6 +657,9 @@ modelo:
         modelo-322-iva-grupo-individual:
           field:
             title: Modelo 322 IVA grupo de entidades, modelo individual
+        modelo-322-papel-actividades:
+          field:
+            title: Actividades
       field:
         official_name: Modelo 322. Impuesto sobre el Valor Añadido. Grupo de entidades.
           Modelo individual. Autoliquidación mensual.

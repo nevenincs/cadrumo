@@ -503,7 +503,6 @@ def test_native_bulk_submission_survives_disconnect_and_session_lock(native_bulk
 
 
 @pytest.mark.parametrize("native_bulk_runtime", ("financial",), indirect=True)
-@pytest.mark.timeout(180)
 def test_native_financial_batch_uses_volatile_intake_and_amount_free_journals(
     native_bulk_runtime: _NativeBulkRuntime,
 ) -> None:

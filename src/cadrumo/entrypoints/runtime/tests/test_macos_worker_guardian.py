@@ -15,7 +15,7 @@ from cadrumo.entrypoints.runtime import macos_worker_guardian
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_DEFAULT = ("-I", "-m", "cadrumo.entrypoints.runtime.worker")
+_DEFAULT = ("-I", "-B", "-m", "cadrumo.entrypoints.runtime.worker")
 _ENVIRONMENT = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}
 _OWN = MacosProcessIncarnation(pid=77, version=5, unique_id=505)
 _PARENT = MacosProcessIncarnation(pid=41, version=9, unique_id=909)
@@ -122,14 +122,16 @@ def _run(
     )
 
 
-@pytest.mark.parametrize("invalid", ["unselected", "mismatch", "relative", "missing", "null"])
+@pytest.mark.parametrize(
+    "invalid", ["unselected", "mismatch", "relative", "missing", "null", "missing-bytecode", "extra-flag"]
+)
 def test_guardian_refuses_worker_substitution_before_native_access(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, invalid: str
 ) -> None:
     script = tmp_path / "worker.py"
     script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
     selected: Path | None = script
-    command: tuple[str, ...] = ("-I", str(script))
+    command: tuple[str, ...] = ("-I", "-B", str(script))
     if invalid == "unselected":
         selected = None
     elif invalid == "mismatch":
@@ -138,8 +140,12 @@ def test_guardian_refuses_worker_substitution_before_native_access(
         selected = Path("worker.py")
     elif invalid == "missing":
         selected = tmp_path / "missing.py"
-    else:
+    elif invalid == "null":
         command += ("bad\0argument",)
+    elif invalid == "missing-bytecode":
+        command = ("-I", str(script))
+    else:
+        command = ("-I", "-B", "-O", str(script))
     kernel = _kernel()
     _install(monkeypatch, kernel)
     selection = ("--worker-script", str(selected)) if selected is not None else ()
@@ -175,7 +181,7 @@ def test_worker_exit_retires_the_rest_of_the_coalition_and_returns_its_code(
 ) -> None:
     script = tmp_path / "worker.py"
     script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
-    command = ("-I", str(script)) if script_mode else _DEFAULT
+    command = ("-I", "-B", str(script)) if script_mode else _DEFAULT
     kernel = _kernel()
     kernel.worker_codes = [None, None, 7]
     _install(monkeypatch, kernel)

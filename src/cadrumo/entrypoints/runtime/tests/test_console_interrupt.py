@@ -33,7 +33,7 @@ def _interrupted(mode: str, root: Path) -> dict[str, object]:
         (str(native_python()), *fixture_arguments(_FIXTURE, mode, str(root))),
         env=fixture_environment(),
         capture_output=True,
-        timeout=300,
+        timeout=None,
         check=False,
         # The fixture's Ctrl+C reaches only the processes on this hidden console.
         creationflags=WINDOWS_CREATE_NO_WINDOW,

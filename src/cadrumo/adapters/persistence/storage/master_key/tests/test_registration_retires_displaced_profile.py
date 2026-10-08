@@ -22,6 +22,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profi
 from cadrumo.application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
 from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
+from cadrumo.tests.process_results import receive_process_result
 
 from .profile_process_support import (
     _child_settings,
@@ -79,13 +80,14 @@ def _register_in_separate_process(storage_root: Path, label: str, password: str)
     )
     child.start()
     try:
-        result = result_queue.get(timeout=180)
-        child.join(timeout=30)
+        result = receive_process_result(result_queue, owners=(child,))
+        child.join(timeout=None)
         assert child.exitcode == 0
         return result
     finally:
         if child.is_alive():
             child.terminate()
+        if child.pid is not None:
             child.join(timeout=30)
 
 
@@ -130,13 +132,14 @@ def _attempt_registration_in_separate_process(storage_root: Path, label: str, pa
     )
     child.start()
     try:
-        result = result_queue.get(timeout=180)
-        child.join(timeout=30)
+        result = receive_process_result(result_queue, owners=(child,))
+        child.join(timeout=None)
         assert child.exitcode == 0
         return result
     finally:
         if child.is_alive():
             child.terminate()
+        if child.pid is not None:
             child.join(timeout=30)
 
 

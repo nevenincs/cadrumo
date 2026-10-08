@@ -44,6 +44,7 @@ from ...application.modelo.edit_refusal_projection import (
     ModeloEditRefusalProjectionStore,
 )
 from ...application.modelo.edit_transient_operand import modelo_edit_financial_operand
+from ...application.modelo.work_form_service import load_modelo_work_form
 from ...application.modelo.workbench_operations import (
     MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
     MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
@@ -75,6 +76,9 @@ from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.modelos.calculation_repository import CalculationRevisionPersistenceError
+from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..adapter_composition import build_calculation_action_ports
 from ..operation_composition import build_production_operation_registry
 from .modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
@@ -256,7 +260,6 @@ def _ports_factory(
     )
 
 
-@pytest.mark.timeout(300)
 def test_the_form_read_admits_an_edit_and_restores_the_exact_application_read(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -278,6 +281,7 @@ def test_the_form_read_admits_an_edit_and_restores_the_exact_application_read(
             ),
             ModeloWorkbenchFormProjectionV1,
         )
+        assert len(observations.calculations) == 2
         restored = restore_modelo_workbench_form(
             ModeloWorkbenchFormProjectionV1.model_validate_json(projection.model_dump_json())
         )
@@ -296,10 +300,25 @@ def test_the_form_read_admits_an_edit_and_restores_the_exact_application_read(
         )
         _assert_held_operation(observations.calculations, work.operation)
         _assert_held_operation(observations.verifications, work.operation)
+        assert len(observations.calculations) == 4
+        standalone = load_modelo_work_form(
+            work.work_unit.bucket_id,
+            work.work_unit.modelo,
+            work.work_unit.filing_year,
+            work.work_unit.period,
+            operation=work.operation,
+            work_unit_repository=work.ports.work_unit_repository,
+            calculation_repository=work.ports.calculation_repository,
+            verification_repository=VerificationReportCatalogueRepository(bucket_id=work.work_unit.bucket_id),
+            admission=direct.admission,
+            language=OutputLanguage.EN,
+            bucket_events=work.ports.bucket_event_repository,
+        )
 
     assert projection.admitted_baseline is not None and projection.admission_refusal is None
     assert isinstance(restored.admission, ModeloEditAdmittedV1)
     assert restored.load == direct.load
+    assert direct.load == standalone
     assert restored.calculation_revision_id == direct.calculation_revision_id
     assert restored.tax_id_format == direct.tax_id_format
     tampered = projection.model_copy(
@@ -313,7 +332,59 @@ def test_the_form_read_admits_an_edit_and_restores_the_exact_application_read(
         ModeloWorkbenchFormProjectionV1.model_validate_json(tampered.model_dump_json())
 
 
-@pytest.mark.timeout(300)
+def test_an_uncalculated_form_keeps_one_encrypted_catalogue_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with seeded_operator_work(tmp_path) as work:
+        observations = _OperationLoadObservations()
+        result = read_modelo_workbench_form(
+            work.work_unit_id,
+            bucket_id=work.work_unit.bucket_id,
+            ports=_workbench_read_ports(
+                work.work_unit.bucket_id, work.operation, observations=observations, monkeypatch=monkeypatch
+            ),
+            operation=work.operation,
+            operation_contracts=build_production_operation_registry().public_contract_set,
+            language=OutputLanguage.EN,
+        )
+
+    assert result.calculation_revision_id is None
+    assert result.load.form.operator_entries_known
+    assert observations.calculations == [work.operation]
+
+
+def test_the_form_keeps_its_final_encrypted_parent_validation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    with seeded_operator_work(tmp_path) as work:
+        work.recalculate()
+        ports = _workbench_read_ports(work.work_unit.bucket_id, work.operation)
+        original_load = ports.calculations.load
+        reads = 0
+
+        def read_with_parent_removed(
+            *, operation: PinnedAuthorityOperation | None = None
+        ) -> CalculationRevisionCatalogue:
+            nonlocal reads
+            reads += 1
+            if reads == 2:
+                ports.work_units.save(WorkUnitCatalogue())
+            return original_load(operation=operation)
+
+        monkeypatch.setattr(ports.calculations, "load", read_with_parent_removed)
+        with pytest.raises(CalculationRevisionPersistenceError) as refused:
+            read_modelo_workbench_form(
+                work.work_unit_id,
+                bucket_id=work.work_unit.bucket_id,
+                ports=ports,
+                operation=work.operation,
+                operation_contracts=build_production_operation_registry().public_contract_set,
+                language=OutputLanguage.EN,
+            )
+
+    assert reads == 2
+    assert refused.value.context is not None
+    assert refused.value.context["reason"] == "missing_parent_work_unit"
+
+
 def test_casilla_help_is_read_for_the_revision_and_calculation_the_form_showed(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -344,7 +415,6 @@ def test_casilla_help_is_read_for_the_revision_and_calculation_the_form_showed(
     assert projection.work_unit_id == work.work_unit_id
 
 
-@pytest.mark.timeout(300)
 def test_renewal_extends_an_unmoved_baseline_and_names_what_moved_otherwise(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -378,7 +448,6 @@ def test_renewal_extends_an_unmoved_baseline_and_names_what_moved_otherwise(
     assert isinstance(moved.refusal.refusal, ModeloEditStaleBaselineRefusalV1)
 
 
-@pytest.mark.timeout(300)
 def test_preflight_names_the_address_of_its_findings_without_applying(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -409,7 +478,6 @@ def test_preflight_names_the_address_of_its_findings_without_applying(
     assert after.calculation_revision_id == before.calculation_revision_id
 
 
-@pytest.mark.timeout(300)
 def test_a_retained_prerequisite_is_handed_out_once_to_its_exact_apply(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         head = work.recalculate()

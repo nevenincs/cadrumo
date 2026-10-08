@@ -1,4 +1,4 @@
-"""Resolve declared form context without inferring presentation from offsets."""
+"""Resolve the form context declared by a :class:`ModeloRevision`."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from .schema_form_layouts import FormContextFieldBlock, FormFieldChoice
 
 
 def resolve_form_context_field(revision: ModeloRevision, block: FormContextFieldBlock) -> ExportFieldDefinition:
-    """Refuse absent, ambiguous, repeating or unsupported context addresses."""
+    """Resolve a :class:`ModeloRevision` context address, refusing ambiguous or unsupported fields."""
     matches = [
         (record, field)
         for layout in derive_export_layouts_from_bindings(revision)

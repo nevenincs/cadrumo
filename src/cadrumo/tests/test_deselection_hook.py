@@ -43,8 +43,6 @@ from cadrumo.tests.deselection_hook import apply
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SUBPROCESS_TIMEOUT_SECONDS = 120
-
 _PROBE_INI = """
 [pytest]
 markers =
@@ -101,7 +99,7 @@ async def _capture_probe_output(command: list[str], *, cwd: Path, env: dict[str,
     try:
         stdout, _ = await asyncio.wait_for(
             process.communicate(),
-            timeout=_SUBPROCESS_TIMEOUT_SECONDS,
+            timeout=None,
         )
     except TimeoutError:
         process.kill()

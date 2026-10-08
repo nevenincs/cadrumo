@@ -102,7 +102,7 @@ modelo:
               marad üresen, ha a kedvezményezett típusa 5-ös kód és nincs spanyol
               adóazonosítója; ilyenkor az illetőség szerinti ország adóazonosítója
               kötelező.
-            label: A kedvezményezett adóazonosító száma
+            label: A jövedelemszerző NIF-azonosítója
           payee-province:
             help: A kedvezményezett lakcíme szerinti tartomány vagy autonóm város
               kétjegyű kódja. A külföldön szokásos tartózkodási hellyel bíró jövedelemadó-alanyoknál

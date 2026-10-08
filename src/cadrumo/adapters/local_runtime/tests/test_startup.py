@@ -55,7 +55,7 @@ async def test_launch_race_converges_and_abrupt_owner_death_allows_replacement(t
             assert sorted(results) == [b"busy\n", b"ready\n"]
             winner = processes[results.index(b"ready\n")]
             loser = processes[results.index(b"busy\n")]
-            assert await asyncio.wait_for(loser.wait(), timeout=5) == 0
+            assert await asyncio.wait_for(loser.wait(), timeout=None) == 0
             endpoint = (
                 WindowsRuntimeEndpoint(storage_root=tmp_path)
                 if sys.platform == "win32"

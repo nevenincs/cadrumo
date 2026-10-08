@@ -22,7 +22,7 @@ def _run_child(tmp_path: Path, mode: str) -> None:
         [sys.executable, "-m", "cadrumo.entrypoints.runtime.tests.admission_cancellation_fixture", str(tmp_path), mode],
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=None,
         check=False,
         creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
     )

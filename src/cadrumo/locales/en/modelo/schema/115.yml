@@ -39,7 +39,7 @@ modelo:
             '01':
               label: Number of recipients
             '02':
-              label: Base of withholdings and payments on account
+              label: Withholding and payment-on-account base
             '03':
               label: Withholdings and payments on account
             '04':

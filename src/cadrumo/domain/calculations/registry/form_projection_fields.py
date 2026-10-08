@@ -1,4 +1,4 @@
-"""Resolve exact projection endpoints declared by a repeating form block."""
+"""Resolve exact projection endpoints declared by a :class:`ModeloRevision` form block."""
 
 from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
@@ -11,7 +11,7 @@ from .schema_form_layouts import FormRepeatingGroupBlock
 def resolve_form_projection_fields(
     revision: ModeloRevision, block: FormRepeatingGroupBlock
 ) -> tuple[ExportFieldDefinition, ...]:
-    """Refuse ambiguous records, missing fields and non-projection endpoints.
+    """Resolve :class:`ModeloRevision` projections, refusing missing or ambiguous endpoints.
 
     The form supplies labels and order. Its values retain the typed projection
     references owned by the export declaration, including their slot identity.

@@ -59,7 +59,7 @@ modelo:
           payee-name:
             label: A kedvezményezett családi és utóneve, cégneve vagy megnevezése
           payee-nif:
-            label: A kedvezményezett adóazonosító száma (NIF)
+            label: A jövedelemszerző NIF-azonosítója
           payee-province:
             label: A kedvezményezett lakóhelye szerinti tartomány kódja
           payee-representative-nif:
@@ -84,6 +84,13 @@ modelo:
           és -befizetések. Városi ingatlanok bérbeadásából származó jövedelmek. Éves
           összesítő.
         title: Városi ingatlanok bérbeadására vonatkozó adóelőleg-levonások éves összesítője
+      form:
+        context:
+          ejercicio:
+            heading: Adóév
+        section:
+          ejercicio:
+            heading: Adóév
       revision:
         2019-2022:
           field:

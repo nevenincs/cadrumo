@@ -18,7 +18,7 @@ modelo:
           m136-declarante-nif:
             label: Tax identification number (NIF)
           m136-declarante-nombre:
-            label: Surname and first name or company name
+            label: Surname and given name or company name
           m136-ejercicio-declaracion:
             label: Tax year
           m136-fecha-celebracion:

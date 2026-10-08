@@ -22,6 +22,7 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_form_layouts import (
     FORM_LAYOUT_GENERATOR_VERSION,
+    FormAliasPosition,
     FormCell,
     FormCellKind,
     FormFieldBlock,
@@ -51,6 +52,7 @@ from ..work_form import build_modelo_work_form
 from ..work_form_errors import ModeloWorkFormLayoutError
 from ..work_form_models import (
     ModeloFormCasillaAddressV1,
+    ModeloFormContextFieldBlock,
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormGridBlock,
@@ -257,6 +259,45 @@ def test_a_layout_that_shows_a_casilla_twice_is_refused(
 
     with pytest.raises(ModeloWorkFormLayoutError, match="more than once"):
         _form(snapshot, operation, layout=twice)
+
+
+@pytest.mark.parametrize("fault", (None, "undeclared", "same-section"))
+def test_a_declared_alias_is_read_only_and_keeps_one_address(
+    snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation, fault: str | None
+) -> None:
+    layout = _layout(snapshot)
+    page = layout.pages[0]
+    alias = FormSectionDefinition(
+        id="payment-copy",
+        heading_key="modelo.schema.130.form.test.copy",
+        blocks=(FormFieldBlock(id="copied-amount", casilla_id="08"),),
+    )
+    if fault == "same-section":
+        alias = alias.model_copy(update={"blocks": (*alias.blocks, FormFieldBlock(id="copied-again", casilla_id="08"))})
+    placements = tuple(
+        placement.model_copy(update={"aliases": (FormAliasPosition(page_id=page.id, section_id=alias.id),)})
+        if placement.casilla_id == "08" and fault != "undeclared"
+        else placement
+        for placement in layout.placements
+    )
+    layout = layout.model_copy(
+        update={
+            "placements": placements,
+            "pages": (page.model_copy(update={"sections": (*page.sections, alias)}),),
+        }
+    )
+    if fault is not None:
+        with pytest.raises(ModeloWorkFormLayoutError, match="more than once"):
+            _form(snapshot, operation, layout=layout)
+        return
+    form = _form(snapshot, operation, layout=layout)
+    copied = form.pages[0].sections[-1].blocks[0]
+    assert isinstance(copied, ModeloFormContextFieldBlock)
+    primary = _by_casilla(form)["08"]
+    assert copied.value == primary.value
+    assert copied.label == primary.label
+    keys = [address_key(field.address) for field in form.fields()]
+    assert len(keys) == len(set(keys)) == len(snapshot.revision.casillas)
 
 
 def test_before_any_calculation_each_input_kind_reads_its_own_origin(

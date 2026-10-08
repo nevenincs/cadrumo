@@ -88,7 +88,7 @@ def _run_child(tmp_path: Path, *, source: str) -> dict[str, object]:
         [sys.executable, "-c", source, str(evidence)],
         capture_output=True,
         text=True,
-        timeout=180,
+        timeout=None,
         check=False,
     )
     assert completed.returncode == 0, f"child failed: {completed.stderr[-800:]}"

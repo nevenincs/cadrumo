@@ -313,21 +313,6 @@ application:
       sentido_ingreso: payment due
       target_casilla: box %{number}
       target_declared: the declared regularisation box
-    row_set:
-      errors:
-        grouping_dispatch_fell_through: 'The row-set grouping {grouping} resolved
-          to an assembler that did not run. Report this: the dispatch table is inconsistent.'
-        grouping_has_no_assembler: The row-set grouping {grouping} has no assembler
-          in this application; the groupings without one are {unassemblable_groupings}.
-        percepcion_clave_missing: Row {row_index} declares no clave. A percepción
-          must state its AEAT clave, per the Modelo 190 and 193 diseño de registros,
-          registro de tipo 2. Supply the clave.
-        percepcion_clave_unsupported: Row {row_index} declares the AEAT clave {clave},
-          which this application does not support.
-        row_assembly_failed: 'Row {row_index} could not be assembled: {validation_error_detail}.
-          Correct the row and pull again.'
-        row_index_not_positive: The row-set cell row index must be a positive whole
-          number; it carries {row_index}.
   filing:
     build_draft:
       errors:
@@ -389,8 +374,7 @@ application:
           Aux block.
         casilla_metadata_drift: Box numbering or segmento differs from the official
           record design in the modelo definitions.
-        rate_boxes_understate_total: The rate boxes do not account for their own declared
-          total.
+        rate_boxes_understate_total: The rate boxes do not cover all recorded amounts.
         record_emit_order_drift: The export would write records out of the order declared
           in the modelo definitions.
         record_emit_order_duplicated: Export records share an emit order, so the record
@@ -1809,6 +1793,43 @@ application:
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.
+  reconciliation_export:
+    actor: Actor
+    advisory: Advisory
+    advisory_code: Advisory code
+    advisory_count: Advisories
+    calculation_revision: Saved calculation
+    context: Context
+    date: Date
+    difference_count: Differences
+    difference_kind: Difference kind
+    difference_kind_casilla: Box value
+    difference_kind_header_field: Receipt identity
+    difference_kind_total: Filed total
+    difference_reason: Difference reason
+    evidence_kind: Evidence kind
+    evidence_kind_declaration: Filed declaration
+    evidence_kind_justificante: Filing receipt
+    evidence_reference: Evidence reference
+    evidence_value: Evidence value
+    field: Field or box
+    legal_refs: Legal references
+    modelo: Modelo
+    period: Period
+    record: Reconciliation
+    record_identity: Full record identity
+    registry_revision: Saved registry revision
+    saved_comparison_notice: Saved comparisons retain original values and references.
+      A blank value is unknown. Advisories describe what was checked; a reference
+      does not prove that document bytes are retained.
+    saved_value: Saved calculation value
+    source_refs: Official sources
+    title: Saved reconciliations
+    verdict: Comparison result
+    verdict_matches: Values match
+    verdict_mismatches: Differences found
+    work_unit: Work unit
+    year: Year
   storage:
     calc_sheets:
       engine:
@@ -1862,12 +1883,6 @@ application:
             by the revision.
           unresolved_reference: The spreadsheet layout does not contain a cell for
             a referenced item.
-      parity:
-        errors:
-          seed_anchor_missing: The parity scenario input has no spreadsheet cell to
-            seed.
-          unknown_casilla_ids: The parity scenario references box ids that are not
-            in the modelo definitions.
       records:
         errors:
           address_mismatch: The spreadsheet cell address does not match its row and
@@ -1883,6 +1898,11 @@ application:
           tariff_shape_invalid: The spreadsheet tariff-table record shape is invalid.
       review:
         labels:
+          aeat_confirmation: AEAT confirmation
+          aeat_confirmation_confirmada: Confirmed by saved AEAT evidence
+          aeat_confirmation_descartada: Discarded before AEAT confirmation
+          aeat_confirmation_discrepante: Discrepant with AEAT evidence
+          aeat_confirmation_pendiente: 'Pending: no observed AEAT acceptance'
           amount: Amount (numeric display)
           amount_id: Result identifier
           art_104_tres_exclusion: Article 104.Tres exclusion
@@ -1897,6 +1917,12 @@ application:
           business_pct: Recorded business proportion
           byte_length: Original byte length
           calculation_revision: Calculation revision
+          calculation_state: Saved calculation state
+          calculation_state_borrador: 'Draft: provisional'
+          calculation_state_descartado: Discarded calculation
+          calculation_state_presentado: Filed locally
+          calculation_state_presentado_supersedido: 'Historical local filing: superseded'
+          calculation_state_verificado_completo: Verified local calculation
           casilla: Casilla
           category_id: Category identifier
           classification: Business classification
@@ -1905,6 +1931,8 @@ application:
           counterparty: Counterparty
           counterparty_country: Counterparty country
           currency: Currency
+          current_calculation: Current calculation at export
+          current_filing: Current local filing at export
           deduction_fact_kind: Deduction fact kind
           description: Captured description
           detail: Captured attribution detail
@@ -1939,6 +1967,10 @@ application:
           external_notes_notice: Edit your findings and scenarios here. Cadrumo never
             imports your edits. The saved local baseline stays separate.
           field: Field
+          filing_record: Selected filing record
+          filing_status: Saved filing record status
+          filing_status_supersedido: 'Superseded: historical'
+          filing_status_vigente: Current
           finding: Finding
           finding_count: Finding count
           formula: Recorded formula reference
@@ -1971,6 +2003,7 @@ application:
           media_type: Media type
           missing_data: Missing data
           modelo: Modelo
+          'no': 'No'
           no_captured_rows: This snapshot contains no rows for this section.
           no_inventory_reference: No captured inventory reference
           not_captured: Not captured
@@ -2013,25 +2046,6 @@ application:
           source_revision: Source revision
           sources: Source attribution
           status: Recorded status code
-          calculation_state: 'Saved calculation state'
-          current_calculation: 'Current calculation at export'
-          current_filing: 'Current local filing at export'
-          filing_status: 'Saved filing record status'
-          filing_record: 'Selected filing record'
-          filing_status_vigente: 'Current'
-          filing_status_supersedido: 'Superseded — historical'
-          aeat_confirmation: 'AEAT confirmation'
-          'yes': 'Yes'
-          'no': 'No'
-          calculation_state_borrador: 'Draft — provisional'
-          calculation_state_verificado_completo: 'Verified local calculation'
-          calculation_state_presentado: 'Filed locally'
-          calculation_state_presentado_supersedido: 'Historical local filing — superseded'
-          calculation_state_descartado: 'Discarded calculation'
-          aeat_confirmation_pendiente: 'Pending — no observed AEAT acceptance'
-          aeat_confirmation_confirmada: 'Confirmed by saved AEAT evidence'
-          aeat_confirmation_discrepante: 'Discrepant with AEAT evidence'
-          aeat_confirmation_descartada: 'Discarded before AEAT confirmation'
           status_incomplete: Incomplete
           status_provisional: Provisional
           status_verified: Verified local baseline
@@ -2043,6 +2057,7 @@ application:
           value: Saved value / numeric display
           value_date: Value date
           work_unit: Work unit
+          'yes': 'Yes'
       translator:
         errors:
           translation_failed: The formula in the modelo definitions cannot be translated
@@ -2070,7 +2085,6 @@ application:
         profile is deleted.
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
         schema.
-      no_active_profile_selected: No active profile selected.
       passphrase_confirmation_mismatch: The new password and its confirmation do not
         match.
       passphrase_current_rejected: The current password is not correct; the password
@@ -2224,39 +2238,3 @@ application:
       validation_clean: Validation completed without blocking issues.
       validation_failed: Validation found blocking issues.
       workflow_failure: Workflow could not be completed.
-
-  reconciliation_export:
-    title: "Saved reconciliations"
-    saved_comparison_notice: "Saved comparisons retain original values and references. A blank value is unknown. Advisories describe what was checked; a reference does not prove that document bytes are retained."
-    record: "Reconciliation"
-    date: "Date"
-    verdict: "Comparison result"
-    modelo: "Modelo"
-    year: "Year"
-    period: "Period"
-    registry_revision: "Saved registry revision"
-    work_unit: "Work unit"
-    calculation_revision: "Saved calculation"
-    evidence_kind: "Evidence kind"
-    evidence_reference: "Evidence reference"
-    actor: "Actor"
-    difference_count: "Differences"
-    advisory_count: "Advisories"
-    difference_kind: "Difference kind"
-    field: "Field or box"
-    saved_value: "Saved calculation value"
-    evidence_value: "Evidence value"
-    difference_reason: "Difference reason"
-    legal_refs: "Legal references"
-    source_refs: "Official sources"
-    advisory_code: "Advisory code"
-    advisory: "Advisory"
-    context: "Context"
-    record_identity: "Full record identity"
-    verdict_matches: "Values match"
-    verdict_mismatches: "Differences found"
-    evidence_kind_justificante: "Filing receipt"
-    evidence_kind_declaration: "Filed declaration"
-    difference_kind_header_field: "Receipt identity"
-    difference_kind_total: "Filed total"
-    difference_kind_casilla: "Box value"

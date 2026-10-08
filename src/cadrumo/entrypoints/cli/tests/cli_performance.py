@@ -321,7 +321,7 @@ def calibrate_cli_path(
     storage_root: Path | None = None,
     extra_env: Mapping[str, str] | None = None,
     stdin_payload: str | None = None,
-    timeout: float = 120.0,
+    timeout: float | None = None,
     policy: PerformanceCalibrationPolicy | None = None,
 ) -> CliPerformanceCalibration:
     """Measure a command beside a quiet ``--version`` control in fresh processes."""
@@ -396,7 +396,7 @@ def profile_cli_path(
     storage_root: Path | None = None,
     extra_env: Mapping[str, str] | None = None,
     stdin_payload: str | None = None,
-    timeout: float = 120.0,
+    timeout: float | None = None,
 ) -> CliPerformanceProfile:
     """Profile resolution and invocation of an arbitrary CLI argument vector.
 
@@ -414,12 +414,12 @@ def profile_cli_path(
         extra_env: Explicit additional child environment. Cadrumo, AEAT, and
             pytest variables are stripped from the inherited environment first.
         stdin_payload: Optional text delivered to the real invocation.
-        timeout: Per-child deterministic wall timeout in seconds.
+        timeout: Optional caller-supplied wall timeout in seconds.
 
     Returns:
         The two independent, structured cold-process observations.
     """
-    if timeout <= 0:
+    if timeout is not None and timeout <= 0:
         raise ValueError("profiler timeout must be positive")
     with _observed_root(storage_root) as root:
         return _profile_with_root(
@@ -439,7 +439,7 @@ def profile_cli_invocation(
     storage_root: Path | None = None,
     extra_env: Mapping[str, str] | None = None,
     stdin_payload: str | None = None,
-    timeout: float = 120.0,
+    timeout: float | None = None,
 ) -> CliPerformanceObservation:
     """Observe only the real invocation of a CLI argument vector.
 
@@ -447,7 +447,7 @@ def profile_cli_invocation(
     reads the resolution observation: it starts one cold child instead of two.
     Arguments mean exactly what they mean there.
     """
-    if timeout <= 0:
+    if timeout is not None and timeout <= 0:
         raise ValueError("profiler timeout must be positive")
     with (
         _observed_root(storage_root) as root,
@@ -483,7 +483,7 @@ def _invocation_in_clone(
     *,
     extra_env: Mapping[str, str] | None,
     stdin_payload: str | None,
-    timeout: float,
+    timeout: float | None,
 ) -> CliPerformanceObservation:
     invocation_root = cold_parent / "invocation"
     _clone_storage_root(storage_root, invocation_root)
@@ -505,7 +505,7 @@ def _profile_with_root(
     *,
     extra_env: Mapping[str, str] | None,
     stdin_payload: str | None,
-    timeout: float,
+    timeout: float | None,
 ) -> CliPerformanceProfile:
     with tempfile.TemporaryDirectory(prefix="cadrumo-cli-cold-roots-") as directory:
         cold_parent = Path(directory)
@@ -546,7 +546,7 @@ def _run_child(
     storage_root: Path,
     *,
     extra_env: Mapping[str, str] | None,
-    timeout: float,
+    timeout: float | None,
     stdin_payload: str | None = None,
 ) -> CliPerformanceObservation:
     with tempfile.TemporaryDirectory(prefix="cadrumo-cli-envelope-") as directory:
@@ -646,7 +646,7 @@ def _failed_observation(
     )
 
 
-def verify_cli_profiler_instrumentation(*, timeout: float = 120.0) -> CliPerformanceObservation:
+def verify_cli_profiler_instrumentation(*, timeout: float | None = None) -> CliPerformanceObservation:
     """Run planted real operations in a fresh child to prove every counter bites."""
     with tempfile.TemporaryDirectory(prefix="cadrumo-cli-instrumentation-") as directory:
         root = Path(directory) / "storage"

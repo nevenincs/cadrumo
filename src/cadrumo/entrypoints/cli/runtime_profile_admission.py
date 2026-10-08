@@ -15,7 +15,10 @@ from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ...adapters.persistence.storage.errors import KeyringUnavailableError
 from ...application.operations.registry import OperationFrontendProjection
-from ...application.profile_preconditions import profile_session_failure_verdict
+from ...application.profile_preconditions import (
+    profile_password_channel_failure_verdict,
+    profile_session_failure_verdict,
+)
 from ...application.user_profile.login_session import ProfileReceiptRefusedError
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.errors.hierarchy import InternalInvariantError
@@ -120,7 +123,11 @@ def _authenticate(
         _password(client, selection=root_selection)
         return
     if not terminal_can_prompt_for_secrets():
-        raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_passphrase_channel_absent")
+        raise attach_cli_policy_verdict(
+            CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_passphrase_channel_absent"),
+            verdict=profile_password_channel_failure_verdict(profile_name=profile_label or str(client.profile_id)),
+            requested_leaf=requested_cli_leaf(ctx),
+        )
     try:
         client.resume_receipt()
     except ProfileReceiptRefusedError as error:

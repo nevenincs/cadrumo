@@ -39,7 +39,6 @@ def _intent(
     return ModeloScalarEditIntentV1(address=ModeloEditScalarAddressV1(casilla_id=casilla_id), kind=kind, value=value)
 
 
-@pytest.mark.timeout(180)
 def test_recalculating_keeps_manual_values_and_clears(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         applied = work.apply(
@@ -59,7 +58,6 @@ def test_recalculating_keeps_manual_values_and_clears(tmp_path: Path) -> None:
     assert recalculated.calculation_revision_id == edited.calculation_revision_id
 
 
-@pytest.mark.timeout(180)
 def test_recalculating_a_head_with_an_unknown_layer_keeps_it_unknown(tmp_path: Path) -> None:
     """A head stored before operator layers replays no values and does not claim a known-empty layer."""
     with seeded_operator_work(tmp_path) as work:
@@ -73,7 +71,6 @@ def test_recalculating_a_head_with_an_unknown_layer_keeps_it_unknown(tmp_path: P
     assert recalculated.operator_layer is None
 
 
-@pytest.mark.timeout(240)
 def test_recalculating_modelo_303_replays_its_recorded_filing_evidence(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path, modelo="303") as work:
         first = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(

@@ -20,6 +20,10 @@ from cadrumo.application.user_profile.censal_observation import (
 )
 from cadrumo.application.workbench_generation_public_contracts import PublicAeatSyncWorkspaceProjectionV1
 
+from ...tests.aeat_literal_fixtures import (
+    SEDE_ROOT_URL_FIXTURE,
+)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
@@ -31,7 +35,7 @@ def test_census_observation_survives_workbench_transport(captured: bool) -> None
             domicilio_fiscal=CensalObservationAddress(municipio="Synthetic municipality"),
             domicilio_notificacion=CensalObservationAddress(),
             captured_at=datetime(2023, 6, 1, tzinfo=UTC),
-            source_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/"),
+            source_url=AnyHttpUrl(SEDE_ROOT_URL_FIXTURE),
         )
         if captured
         else None

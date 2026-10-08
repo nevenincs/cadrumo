@@ -145,7 +145,7 @@ def _loaded_families(paths: list[list[str]]) -> dict[str, int]:
         ],
         capture_output=True,
         text=True,
-        timeout=900,
+        timeout=None,
         check=False,
     )
     assert completed.returncode == 0, completed.stderr

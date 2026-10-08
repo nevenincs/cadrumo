@@ -30,7 +30,7 @@ modelo:
             x-cdmn8bj1clp6urj1epiiqsr5e9kma:
               label: C.M.T. Légi járművek. Sorozatszám
             x-cdmn8bj5dlh62sj3c5hmirre5lin6r3fe9gg:
-              label: C.M.T. Vízi járművek. Legnagyobb hossz (méterben)
+              label: C.M.T. Vízi járművek. Legnagyobb hajóhossz (méterben)
             x-cdmn8bj5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
               label: C.M.T. Vízi járművek. Gyártó vagy importőr
             x-cdmn8bj5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:

@@ -653,6 +653,9 @@ modelo:
         modelo-322-iva-grupo-individual:
           field:
             title: Modelo 322 nyomtatvány IVA-csoport, egyedi bevallás
+        modelo-322-papel-actividades:
+          field:
+            title: Tevékenységek
       field:
         official_name: Modelo 322. Hozzáadottérték-adó. Cégcsoport. Egyedi nyomtatvány.
           Havi önbevallás.

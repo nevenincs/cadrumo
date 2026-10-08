@@ -377,7 +377,7 @@ def _reap(directory: Path) -> int:
     try:
         scope.launch(
             executable=Path(sys.executable),
-            arguments=("-I", str(sleeper.resolve(strict=True))),
+            arguments=("-I", "-B", str(sleeper.resolve(strict=True))),
             directory=root,
             environment=_CLEAN_ENVIRONMENT,
         )

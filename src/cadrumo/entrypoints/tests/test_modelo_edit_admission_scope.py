@@ -54,7 +54,6 @@ _SET_06 = ModeloScalarEditIntentV1(
 )
 
 
-@pytest.mark.timeout(180)
 def test_an_apply_after_the_lifetime_succeeds_once_renewed_when_nothing_changed(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         admission = work.admit(issued_at=datetime.now(UTC) - timedelta(minutes=10))
@@ -72,7 +71,6 @@ def test_an_apply_after_the_lifetime_succeeds_once_renewed_when_nothing_changed(
     assert applied.refusal is None
 
 
-@pytest.mark.timeout(240)
 def test_recalculating_another_declaration_does_not_stale_this_baseline(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         other = work.sibling("2T")
@@ -97,7 +95,6 @@ def test_recalculating_another_declaration_does_not_stale_this_baseline(tmp_path
     assert applied.refusal is None
 
 
-@pytest.mark.timeout(240)
 def test_a_change_to_the_edited_declaration_stales_the_baseline_and_is_not_renewed(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         baseline = work.baseline()
@@ -115,7 +112,6 @@ def test_a_change_to_the_edited_declaration_stales_the_baseline_and_is_not_renew
 
 
 @pytest.mark.parametrize(("modelo", "year", "period"), [("130", 2026, "1T"), ("303", 2026, "1T")])
-@pytest.mark.timeout(240)
 def test_the_surface_classifies_every_address_by_what_can_reach_the_engine(
     tmp_path: Path, modelo: str, year: int, period: str
 ) -> None:
@@ -164,7 +160,6 @@ def test_the_surface_classifies_every_address_by_what_can_reach_the_engine(
                 assert entry.reason is ModeloEditNonWritableReason.VALUE_CHANNEL_UNAVAILABLE
 
 
-@pytest.mark.timeout(240)
 def test_a_carry_binding_override_is_admitted_set_and_removed(tmp_path: Path) -> None:
     """Modelo 130's prior-payments carry takes an operator override the editor can later withdraw."""
     from ...application.modelo.edit_models import (

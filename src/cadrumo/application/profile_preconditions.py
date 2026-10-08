@@ -36,6 +36,7 @@ class ProfilePreconditionCondition(StrEnum):
     PROFILE_SELECTION_LIVE = "profile.selection.live"
     PROFILE_TARGET_NOT_SELECTED = "profile.target.not_selected"
     SESSION_LOGGED_IN = "profile.session.logged_in"
+    HUMAN_INPUT_CHANNEL_AVAILABLE = "profile.human.input_channel_available"
     SESSION_CURRENT = "profile.session.current"
     SESSION_SCHEMA_CURRENT = "profile.session.schema_current"
     SESSION_WELL_FORMED = "profile.session.well_formed"
@@ -49,6 +50,7 @@ class ProfilePreconditionEvidence(StrEnum):
     ACTIVE_PROFILE_STATE = "profile.active.state"
     PROFILE_SELECTION = "profile.selection.resolution"
     PROFILE_SESSION = "profile.session.resume"
+    HUMAN_INPUT_CHANNEL = "profile.human.input_channel"
     FORMER_PRODUCT_STATE = "storage.former_product_state.detection"
 
 
@@ -244,6 +246,33 @@ def profile_session_failure_verdict(
     )
 
 
+def profile_password_channel_failure_verdict(*, profile_name: str) -> PreconditionVerdict:
+    """Project login recovery from an observed absence of a password channel."""
+    condition_id = ProfilePreconditionCondition.HUMAN_INPUT_CHANNEL_AVAILABLE.value
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            _evidence(
+                condition_id=condition_id,
+                evidence_id=ProfilePreconditionEvidence.HUMAN_INPUT_CHANNEL.value,
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values={"profile_name": profile_name, "password_channel_available": False},
+            ),
+        ),
+        action=ActionReference(action_id="operator.profile.login"),
+        argument_bindings=(
+            ActionArgumentBinding(
+                argument_name="name",
+                status=ActionArgumentStatus.RESOLVED,
+                value=profile_name,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="name",
+            ),
+        ),
+        conditionality=ActionConditionality.IMMEDIATE,
+    )
+
+
 def former_product_state_verdict(scope: FormerProductDetectionScope) -> PreconditionVerdict:
     """Return the safety refusal for state Cadrumo deliberately cannot adopt."""
     condition_id = ProfilePreconditionCondition.FORMER_PRODUCT_STATE_ABSENT.value
@@ -286,6 +315,7 @@ __all__ = [
     "former_product_state_verdict",
     "inspect_active_profile_precondition",
     "profile_deletion_requires_other_selection_verdict",
+    "profile_password_channel_failure_verdict",
     "profile_selection_failure_verdict",
     "profile_session_failure_verdict",
 ]

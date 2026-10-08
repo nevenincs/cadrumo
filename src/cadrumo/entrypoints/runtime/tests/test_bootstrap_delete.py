@@ -5,7 +5,9 @@ from __future__ import annotations
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import ExitStack
 from pathlib import Path
+from queue import Queue
 from threading import Event
 from uuid import uuid4
 
@@ -30,9 +32,10 @@ from cadrumo.application.runtime.bootstrap_delete import (
     RuntimeProfileDeletePrepared,
     RuntimeProfileDeleteRefused,
 )
-from cadrumo.application.runtime.contracts import RuntimeByteChannel, RuntimeRefusalError
+from cadrumo.application.runtime.contracts import RuntimeByteChannel, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal
 from cadrumo.application.user_profile import login_session
+from cadrumo.application.user_profile.custody_repository import ProfileCustodyTransactionRepository
 from cadrumo.application.user_profile.custody_transactions import (
     ProfileCustodyDeleteConfirmation,
     ProfileCustodyTransactionReceipt,
@@ -120,10 +123,22 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
         server = RetainedRuntimeTransportServer(
             endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
         )
+        readiness: Queue[str] = Queue()
+        original_ready_set = server.ready.set
+
+        def observe_original_ready() -> None:
+            original_ready_set()
+            readiness.put("ready")
+
+        monkeypatch.setattr(server.ready, "set", observe_original_ready)
         with ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
+            running.add_done_callback(lambda _future: readiness.put("server_finished"))
             try:
-                assert server.ready.wait(3)
+                observed = readiness.get()
+                if observed != "ready":
+                    running.result()
+                assert observed == "ready"
                 hosted_wire = None
                 if case == "hosted":
                     hosted_wire = _connect(endpoint)
@@ -205,3 +220,160 @@ def test_runtime_bootstrap_delete_uses_existing_custody_journal(
             finally:
                 stop.set()
                 running.result(timeout=25)
+
+
+@pytest.mark.parametrize("overlap", ["handoff", "selected", "shutdown"])
+def test_native_bootstrap_delete_fresh_admission_after_an_actual_poll_handoff(
+    tmp_path: Path, overlap: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Hold real polling after wire admission; custody stays fresh and owns durable completion."""
+    login = _MutableLogin()
+    root = tmp_path / "cadrumo-storage"
+    root.mkdir()
+    endpoint = WindowsRuntimeEndpoint(storage_root=root)
+    installation = runtime_installation(
+        storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
+    )
+    stop, boot = Event(), uuid4()
+    with administration_subject(
+        tmp_path, os_owner_id=owner_id(), installation_id=installation.installation_id
+    ) as subject:
+        profile = subject.store.binding.profile_id
+        capsule = load_committed_profile_password_material(profile, root=root).capsule_path
+        close_active_bucket_session()
+        with active_profile_pointer_transaction(root) as pointer:
+            pointer.clear()
+        with composed_profile_persistence_ports() as ports:
+            assessment = BucketMaintenanceService(bucket_storage=ports.bucket_storage(), root=root).assess_deletion(
+                AssessBucketDeletionCommand(bucket_id=str(profile))
+            )
+        assert assessment.fingerprint is not None
+        profiles = RuntimeProfileConnections(
+            storage_root=root,
+            storage_identity=endpoint.storage_identity,
+            runtime_boot_id=boot,
+            stop=stop,
+            capture_login=lambda _channel: login,
+            secret_store=lambda: subject.native,
+        )
+        server = RetainedRuntimeTransportServer(
+            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        )
+        observations: Queue[str] = Queue()
+        ready_set = server.ready.set
+
+        def observe_ready() -> None:
+            ready_set()
+            observations.put("ready")
+
+        monkeypatch.setattr(server.ready, "set", observe_ready)
+        release_poll, poll_entered, poll_finished = Event(), Event(), Event()
+        repository = ProfileCustodyTransactionRepository(root=root)
+        journal_root = repository.journal_path(uuid4()).parent
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            running = pool.submit(server.serve)
+            running.add_done_callback(lambda _future: observations.put("server_finished"))
+            request_cleanup = ExitStack()
+            try:
+                ready = observations.get()
+                if ready != "ready":
+                    running.result()
+                assert ready == "ready"
+                # The serving owner already has the protected native wire before its accept loop is held.
+                wire = _connect(endpoint)
+                request_cleanup.callback(wire.close)
+                original_poll = profiles._poll_profiles
+
+                def hold_actual_poll() -> None:
+                    if not poll_entered.is_set():
+                        poll_entered.set()
+                        observations.put("poll_held")
+                        release_poll.wait()
+                    try:
+                        original_poll()
+                    finally:
+                        poll_finished.set()
+
+                monkeypatch.setattr(profiles, "_poll_profiles", hold_actual_poll)
+                held = observations.get()
+                if held != "poll_held":
+                    running.result()
+                assert held == "poll_held"
+                capsule_before = {
+                    path.relative_to(capsule): path.read_bytes() for path in capsule.rglob("*") if path.is_file()
+                }
+                journals_before = {path.name: path.read_bytes() for path in journal_root.glob("*.json")}
+                original_wait = profiles._drain_guard._condition.wait
+
+                def observe_registered_delete(timeout: float | None = None) -> bool:
+                    if profiles._drain_guard._owner_role == "poll":
+                        observations.put("delete_queued")
+                    return original_wait(timeout)
+
+                monkeypatch.setattr(profiles._drain_guard._condition, "wait", observe_registered_delete)
+                preparing = pool.submit(
+                    wire.delete_profile,
+                    RuntimeProfileDeletePrepare(
+                        request_id=uuid4(),
+                        profile_id=profile,
+                        frontend=OperationFrontendProjection.CLI,
+                        fingerprint=assessment.fingerprint,
+                    ),
+                    deadline=time.monotonic() + 30,
+                )
+                preparing.add_done_callback(lambda _future: observations.put("prepare_finished"))
+                request_cleanup.callback(preparing.result)
+                queued = observations.get()
+                if queued == "prepare_finished":
+                    preparing.result()
+                elif queued == "server_finished":
+                    running.result()
+                assert queued == "delete_queued"
+                assert not preparing.done()
+                assert capsule.exists()
+                assert {
+                    path.relative_to(capsule): path.read_bytes() for path in capsule.rglob("*") if path.is_file()
+                } == (capsule_before)
+                assert {path.name: path.read_bytes() for path in journal_root.glob("*.json")} == journals_before
+                if overlap == "selected":
+                    # Pointer locking must remain available while the request waits outside every root guard.
+                    with active_profile_pointer_transaction(root) as pointer:
+                        pointer.select(str(profile))
+                elif overlap == "shutdown":
+                    stop.set()
+                release_poll.set()
+                prepared = preparing.result()
+                assert poll_finished.is_set()
+                if overlap == "selected":
+                    assert isinstance(prepared, RuntimeProfileDeleteRefused)
+                    assert prepared.code == "selected_profile"
+                elif overlap == "shutdown":
+                    assert isinstance(prepared, RuntimeAccessRefusal)
+                    assert prepared.code is RuntimeRefusalCode.DRAINING
+                else:
+                    assert isinstance(prepared, RuntimeProfileDeletePrepared)
+                    assert repository.load_journal(prepared.confirmation.transaction_id).profile_id == profile
+                    assert capsule.exists()
+                    deleted = wire.delete_profile(
+                        RuntimeProfileDelete(
+                            request_id=uuid4(),
+                            profile_id=profile,
+                            frontend=OperationFrontendProjection.CLI,
+                            confirmation=prepared.confirmation,
+                        ),
+                        deadline=time.monotonic() + 30,
+                    )
+                    assert isinstance(deleted, RuntimeProfileDeleted)
+                    assert repository.load_receipt(prepared.confirmation.transaction_id) == deleted.receipt
+                    assert not capsule.exists()
+                if overlap != "handoff":
+                    assert capsule.exists()
+                    assert {path.name: path.read_bytes() for path in journal_root.glob("*.json")} == journals_before
+            finally:
+                # Always settle the held poll before waiting on serving requests or original native cleanup.
+                release_poll.set()
+                try:
+                    request_cleanup.close()
+                finally:
+                    stop.set()
+                    running.result()

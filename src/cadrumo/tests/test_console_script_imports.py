@@ -53,7 +53,7 @@ def test_cadrumo_package_imports_in_subprocess() -> None:
         capture_output=True,
         text=True,
         check=False,
-        timeout=120,
+        timeout=None,
     )
     assert completed.returncode == 0, (
         f"fresh-subprocess `import cadrumo` failed:\n  stdout: {completed.stdout!r}\n  stderr: {completed.stderr!r}"

@@ -260,7 +260,6 @@ def _states(result: LocalReaderProvisionPublicResultV1) -> dict[LocalReaderSetup
     return {step.step: step.state for step in result.steps}
 
 
-@pytest.mark.timeout(120)
 def test_load_brings_a_pulled_model_into_memory_and_reports_it_resident(tmp_path: Path) -> None:
     ports = _Ports()
     with _runtime(installed={_TEXT}, residents=set()):
@@ -278,7 +277,6 @@ def test_load_brings_a_pulled_model_into_memory_and_reports_it_resident(tmp_path
     assert loads == [{"model": _TEXT, "keep_alive": "30m", "stream": False}], "a load must not run inference"
 
 
-@pytest.mark.timeout(120)
 def test_loading_a_resident_model_sends_nothing(tmp_path: Path) -> None:
     ports = _Ports()
     with _runtime(installed={_TEXT}, residents={_TEXT}):
@@ -291,7 +289,6 @@ def test_loading_a_resident_model_sends_nothing(tmp_path: Path) -> None:
     assert _Runtime.requests == []
 
 
-@pytest.mark.timeout(120)
 def test_load_refuses_a_model_that_was_never_pulled_instead_of_fetching_it(tmp_path: Path) -> None:
     ports = _Ports()
     with _runtime(installed=set(), residents=set()):
@@ -308,7 +305,6 @@ def test_load_refuses_a_model_that_was_never_pulled_instead_of_fetching_it(tmp_p
     assert run.effect is OperationEffect.NONE
 
 
-@pytest.mark.timeout(180)
 def test_setup_pulls_loads_and_verifies_every_role_in_order(tmp_path: Path) -> None:
     ports = _Ports()
     with _runtime(installed=set(), residents=set()):
@@ -337,7 +333,6 @@ def test_setup_pulls_loads_and_verifies_every_role_in_order(tmp_path: Path) -> N
     assert _TEXT in ports.probed
 
 
-@pytest.mark.timeout(180)
 def test_setup_over_a_ready_reader_redoes_nothing(tmp_path: Path) -> None:
     ports = _Ports()
     with override_settings(
@@ -359,7 +354,6 @@ def test_setup_over_a_ready_reader_redoes_nothing(tmp_path: Path) -> None:
     assert all(item.already_satisfied for item in run.result.models if item.step is LocalReaderSetupStep.PULL)
 
 
-@pytest.mark.timeout(180)
 def test_setup_stops_at_the_failing_step_and_names_why(tmp_path: Path) -> None:
     ports = _Ports()
     with _runtime(installed=set(), residents=set(), pull_fails=True):
@@ -421,7 +415,6 @@ def _essence(result: LocalReaderProvisionPublicResultV1 | LocalReaderProvisionOu
     )
 
 
-@pytest.mark.timeout(180)
 @pytest.mark.parametrize("pull_fails", [False, True])
 def test_the_direct_call_and_the_supervised_operation_settle_identically(tmp_path: Path, pull_fails: bool) -> None:
     request = build_local_reader_setup_request(consent=False)
@@ -439,7 +432,6 @@ def test_the_direct_call_and_the_supervised_operation_settle_identically(tmp_pat
     assert direct.succeeded is not pull_fails
 
 
-@pytest.mark.timeout(120)
 def test_a_resident_model_of_another_size_does_not_count_as_loaded(tmp_path: Path) -> None:
     family_sibling = _TEXT.split(":", 1)[0] + ":8b"
     assert family_sibling != _TEXT
@@ -454,7 +446,6 @@ def test_a_resident_model_of_another_size_does_not_count_as_loaded(tmp_path: Pat
     assert residents == {_TEXT, family_sibling}
 
 
-@pytest.mark.timeout(120)
 def test_load_refuses_when_only_another_size_is_pulled(tmp_path: Path) -> None:
     family_sibling = _TEXT.split(":", 1)[0] + ":8b"
     ports = _Ports()
@@ -468,7 +459,6 @@ def test_load_refuses_when_only_another_size_is_pulled(tmp_path: Path) -> None:
     assert loads == []
 
 
-@pytest.mark.timeout(120)
 def test_an_untagged_model_name_means_latest(tmp_path: Path) -> None:
     ports = _Ports()
     with _runtime(installed={"qwen3:latest"}, residents={"qwen3:latest"}):

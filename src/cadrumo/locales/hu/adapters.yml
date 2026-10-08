@@ -57,17 +57,8 @@ adapters:
         api_call_failed: A Google {action} hívás sikertelen.
         api_call_refused: A Google {action} hívást elutasították (HTTP {status}).
         api_target_not_found: A Google {action} célpontja nem található.
-        conflicting_duplicate_metadata: A Google-táblázat ellentmondó, duplikált AEAT-metaadatokat
-          tartalmaz.
-        developer_metadata_invalid: A munkalap fejlesztői metaadatai érvénytelenek.
-        foreign_spreadsheet_not_owned: A Google-táblázat nincs ennek az AEAT-profilnak
-          a tulajdonaként megjelölve.
         googleapiclient_not_importable: A googleapiclient nem importálható; a Google-adapter
           nem tud kapcsolódni az API-hoz.
-        ownership_metadata_invalid: A munkalap tulajdonosi metaadatai érvénytelenek.
-        spreadsheet_id_blank: A Google-táblázat azonosítója nem lehet üres.
-        workbook_snapshot_mismatch: A Google-táblázat metaadatai nem egyeznek a számítási
-          pillanatképpel.
     installation_client:
       errors:
         client_metadata_invalid: A telepítéshez mellékelt Google-kliens érvénytelen.
@@ -80,8 +71,6 @@ adapters:
         consent_declined: 'A Google hozzájárulási kérését elutasították, ezért nem
           történt bejelentkezés, és semmi sem lett elmentve. Futtasd újra: `aeat config
           google login`, és hagyd jóvá a kérést.'
-        email_claim_missing: A Google id_token ellenőrzése sikeres volt, de nem tartalmaz
-          e-mail-igényt.
         endpoint_unreachable: A Google OAuth-végpont nem érhető el.
         id_token_missing: A Google nem adott vissza id_token-t; az OAuth-hozzájárulás
           nem tartalmazta az openid+email hatókört.
@@ -103,11 +92,6 @@ adapters:
     profile_binding:
       errors:
         no_active_profile: Nincs aktív AEAT-profil kötve a Google OAuth-hoz.
-    root_folder:
-      errors:
-        root_folder_not_owned: 'A profilhoz tárolt Google Drive-mappát nem ez az alkalmazás
-          hozta létre, vagy a kukában van. Új mappa létrehozásához futtasd: `aeat
-          config google login`.'
   inbound:
     declaracion:
       errors:

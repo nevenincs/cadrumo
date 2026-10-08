@@ -3,17 +3,138 @@ modelo:
     '308':
       casilla:
         continuidad:
+          declaracion-tipo:
+            label: Bevallás típusa
+          declarante-nombre:
+            label: Kérelmező utóneve
+          devolucion-bic:
+            label: BIC / SWIFT-kód
+          devolucion-ccc:
+            help: A történeti változatban használt 20 számjegyű bankszámlakód. Őrizd
+              meg a kezdő nullákat.
+            label: Visszatérítési bankszámla (CCC)
+          devolucion-iban:
+            label: Visszatérítés bankszámlája (IBAN)
           filing-period:
             help: A Modelo 308 nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
               véve.
             label: Esedékesség. Időszak
           filing-year:
             label: A kérelem vonatkozási éve
+          mtn-adquirente-apellidos:
+            label: Vevő vezetékneve vagy cégneve
+          mtn-adquirente-nif:
+            label: Vevő adóazonosítója
+          mtn-adquirente-nombre:
+            label: Vevő utóneve
+          mtn-adquirente-nombre-completo:
+            help: Vevő teljes neve vagy cégneve
+            label: Vevő teljes neve vagy cégneve
+          mtn-adquirente-pais:
+            label: Vevő országa
+          mtn-aeronave-ano:
+            label: Légi jármű gyártási éve
+          mtn-aeronave-fabricante:
+            label: Légi jármű gyártója
+          mtn-aeronave-marca:
+            label: Légi jármű márkája
+          mtn-aeronave-peso:
+            label: Legnagyobb felszállótömeg (kg)
+          mtn-aeronave-serie:
+            label: Légi jármű sorozatszáma
+          mtn-embarcacion-eslora:
+            label: Legnagyobb hajóhossz
+          mtn-embarcacion-fabricante:
+            label: Vízi jármű gyártója
+          mtn-embarcacion-identificacion:
+            label: Vízi jármű azonosítója
+          mtn-embarcacion-tipo:
+            label: Vízi jármű típusa
+          mtn-iva-devolver-art21:
+            label: 'Visszatérítendő áfa: áfatörvény 21.4. cikk'
+          mtn-iva-devolver-eib:
+            label: Közösségen belüli értékesítések áfa-visszatérítése
+          mtn-iva-devolver-transporte:
+            label: Fuvarozási tevékenység áfa-visszatérítése
+          mtn-iva-soportado:
+            label: Beszerzés előzetesen felszámított áfája
+          mtn-iva-soportado-art21:
+            label: 'Előzetesen felszámított áfa: áfatörvény 21.4. cikk'
+          mtn-maximo-devolver:
+            label: Legnagyobb visszatérítés
+          mtn-precio-adquisicion:
+            label: Beszerzési ár
+          mtn-precio-venta:
+            label: Eladási ár
+          mtn-tipo-01:
+            label: Beszerzés áfakulcsa (%)
+          mtn-tipo-04:
+            label: Eladás áfakulcsa (%)
+          mtn-vehiculo-bastidor:
+            label: Alvázszám
+          mtn-vehiculo-clasificacion:
+            label: Jármű besorolása
+          mtn-vehiculo-marca:
+            label: Jármű márkája
+          mtn-vehiculo-modelo:
+            label: Jármű modellje (kereskedelmi név)
+          mtn-vehiculo-tipo:
+            label: Jármű típusa
+          observaciones:
+            help: Megjegyzések
+            label: Megjegyzések
+          papel-declarante-apellidos:
+            label: Vezetéknév vagy cégnév
+          papel-declarante-nif:
+            label: Kérelmező adóazonosítója
+          papel-declarante-nombre-completo:
+            help: Kérelmező teljes neve vagy cégneve
+            label: Kérelmező teljes neve vagy cégneve
+          papel-firma:
+            help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus aláírást
+              vagy benyújtást.
+            label: Aláírás (papírnyomtatvány)
+          papel-firma-fecha:
+            help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus aláírást
+              vagy benyújtást.
+            label: Aláírás dátuma
+          papel-firma-lugar:
+            help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus aláírást
+              vagy benyújtást.
+            label: Aláírás helye
           papel-importe-devolucion:
             help: Az űrlap 6. részében banki átutalással igényelt összeg. Ellenőrizd,
               hogy megfelel a kérelmednek; a különböző visszatérítési kategóriák összegeit
               nem adjuk össze automatikusan.
             label: D összeg · Igényelt visszatérítés
+          persona-contacto:
+            help: Kapcsolattartó
+            label: Kapcsolattartó
+          req-base-08:
+            label: Adóalap · 1. sor
+          req-base-11:
+            label: Adóalap · 2. sor
+          req-base-14:
+            label: Adóalap · 3. sor
+          req-cuota-10:
+            label: Áfa összege · 1. sor
+          req-cuota-13:
+            label: Áfa összege · 2. sor
+          req-cuota-16:
+            label: Áfa összege · 3. sor
+          req-iva-devolver-17:
+            label: Egyenértékűségi pótlék rendszerének áfa-visszatérítése
+          req-tipo-09:
+            label: Áfakulcs (%) · 1. sor
+          req-tipo-12:
+            label: Áfakulcs (%) · 2. sor
+          req-tipo-15:
+            label: Áfakulcs (%) · 3. sor
+          telefono-contacto:
+            help: Kapcsolattartási telefonszám
+            label: Kapcsolattartási telefonszám
+          tipo-tributacion-sujeto-pasivo:
+            label: Adózás típusa az adóalany szerint
       construct:
         modelo-308-iva-solicitud-devolucion:
           field:
@@ -82,759 +203,495 @@ modelo:
       revision:
         2009-2011-junio:
           casilla:
-            firma:
-              help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus
-                aláírást vagy benyújtást.
-              label: Aláírás (papírnyomtatvány)
-            firma-fecha:
-              help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus
-                aláírást vagy benyújtást.
-              label: Aláírás dátuma
-            firma-lugar:
-              help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus
-                aláírást vagy benyújtást.
-              label: Aláírás helye
-            papel-nif:
-              label: Kérelmező adóazonosítója
-            papel-nombre-completo:
-              help: Kérelmező teljes neve vagy cégneve
-              label: Kérelmező teljes neve vagy cégneve
-            x-chim6r1echincrrcelhmirre5lhm6oo:
-              help: A történeti változatban használt 20 számjegyű bankszámlakód. Őrizd
-                meg a kezdő nullákat.
-              label: Visszatérítési bankszámla (CCC)
-            x-chim6r1ecll6asj3d5hmiro:
-              label: A kérelem vonatkozási éve
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
               help: Vevő adóazonosítója. A 308-as nyomtatvány kérelmének adata a 2009-es
                 hivatalos rekordleírás szerint.
-              label: Vevő adóazonosítója
-            x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojickmm6rrde1m6at3f:
-              help: Vevő teljes neve vagy cégneve
-              label: Vevő teljes neve vagy cégneve
             x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
               help: A vevő országának neve a 2009-es hivatalos leírás szerint.
-              label: Vevő országa
             x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
               help: Légi jármű gyártási éve. A 308-as nyomtatvány kérelmének adata
                 a 2009-es hivatalos rekordleírás szerint.
-              label: Légi jármű gyártási éve
             x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
               help: Légi jármű gyártója. A 308-as nyomtatvány kérelmének adata a 2009-es
                 hivatalos rekordleírás szerint.
-              label: Légi jármű gyártója
             x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
               help: Légi jármű márkája. A 308-as nyomtatvány kérelmének adata a 2009-es
                 hivatalos rekordleírás szerint.
-              label: Légi jármű márkája
             x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
               help: Legnagyobb felszállótömeg (kg). A 308-as nyomtatvány kérelmének
                 adata a 2009-es hivatalos rekordleírás szerint.
-              label: Legnagyobb felszállótömeg (kg)
             x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
               help: Légi jármű sorozatszáma. A 308-as nyomtatvány kérelmének adata
                 a 2009-es hivatalos rekordleírás szerint.
-              label: Légi jármű sorozatszáma
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
               help: Legnagyobb hajóhossz. A 308-as nyomtatvány kérelmének adata a
                 2009-es hivatalos rekordleírás szerint.
-              label: Legnagyobb hajóhossz
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
               help: Vízi jármű gyártója. A 308-as nyomtatvány kérelmének adata a 2009-es
                 hivatalos rekordleírás szerint.
-              label: Vízi jármű gyártója
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
               help: Vízi jármű azonosítója. A 308-as nyomtatvány kérelmének adata
                 a 2009-es hivatalos rekordleírás szerint.
-              label: Vízi jármű azonosítója
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
               help: Vízi jármű típusa. A 308-as nyomtatvány kérelmének adata a 2009-es
                 hivatalos rekordleírás szerint.
-              label: Vízi jármű típusa
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
               help: Közösségen belüli értékesítések áfa-visszatérítése. A 308-as nyomtatvány
                 kérelmének adata a 2009-es hivatalos rekordleírás szerint.
-              label: Közösségen belüli értékesítések áfa-visszatérítése
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
               help: Fuvarozási tevékenység áfa-visszatérítése. A 308-as nyomtatvány
                 kérelmének adata a 2009-es hivatalos rekordleírás szerint.
-              label: Fuvarozási tevékenység áfa-visszatérítése
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
               help: Beszerzés előzetesen felszámított áfája. A 308-as nyomtatvány
                 kérelmének adata a 2009-es hivatalos rekordleírás szerint.
-              label: Beszerzés előzetesen felszámított áfája
             x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
               help: Legnagyobb visszatérítés. A 308-as nyomtatvány kérelmének adata
                 a 2009-es hivatalos rekordleírás szerint.
-              label: Legnagyobb visszatérítés
             x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
               help: Beszerzési ár. A 308-as nyomtatvány kérelmének adata a 2009-es
                 hivatalos rekordleírás szerint.
-              label: Beszerzési ár
             x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
               help: Eladási ár. A 308-as nyomtatvány kérelmének adata a 2009-es hivatalos
                 rekordleírás szerint.
-              label: Eladási ár
             x-chim6r1edlq6sbbkd5o6ub9g64:
               help: Beszerzés áfakulcsa (%). A 308-as nyomtatvány kérelmének adata
                 a 2009-es hivatalos rekordleírás szerint. A nyomtatvány 02. mezője.
-              label: Beszerzés áfakulcsa (%)
             x-chim6r1edlq6sbbkd5o6ub9g6g:
               help: Eladás áfakulcsa (%). A 308-as nyomtatvány kérelmének adata a
                 2009-es hivatalos rekordleírás szerint. A nyomtatvány 05. mezője.
-              label: Eladás áfakulcsa (%)
             x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
               help: Alvázszám. A 308-as nyomtatvány kérelmének adata a 2009-es hivatalos
                 rekordleírás szerint.
-              label: Alvázszám
             x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
               help: Jármű besorolása. A 308-as nyomtatvány kérelmének adata a 2009-es
                 hivatalos rekordleírás szerint.
-              label: Jármű besorolása
             x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
               help: Jármű márkája. A 308-as nyomtatvány kérelmének adata a 2009-es
                 hivatalos rekordleírás szerint.
-              label: Jármű márkája
             x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
               help: Jármű modellje (kereskedelmi név). A 308-as nyomtatvány kérelmének
                 adata a 2009-es hivatalos rekordleírás szerint.
-              label: Jármű modellje (kereskedelmi név)
             x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
               help: Jármű típusa. A 308-as nyomtatvány kérelmének adata a 2009-es
                 hivatalos rekordleírás szerint.
-              label: Jármű típusa
-            x-chim6r1edth76pbiepgm6qbfdpin6:
-              help: Megjegyzések
-              label: Megjegyzések
-            x-chim6r1ee1in4qbfchng:
-              help: A Modelo 308 nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
-                véve.
-              label: Esedékesség. Időszak
-            x-chim6r1ee1in4srfdpgiqorfdpq62orkds:
-              help: Kapcsolattartó
-              label: Kapcsolattartó
             x-chim6r1ee9in2bb2c5pmab9g70:
               help: Adóalap · 1. sor. A 308-as nyomtatvány kérelmének adata a 2009-es
                 hivatalos rekordleírás szerint. A nyomtatvány 08. mezője.
-              label: Adóalap · 1. sor
             x-chim6r1ee9in2bb2c5pmab9h64:
               help: Adóalap · 2. sor. A 308-as nyomtatvány kérelmének adata a 2009-es
                 hivatalos rekordleírás szerint. A nyomtatvány 11. mezője.
-              label: Adóalap · 2. sor
             x-chim6r1ee9in2bb2c5pmab9h6g:
               help: Adóalap · 3. sor. A 308-as nyomtatvány kérelmének adata a 2009-es
                 hivatalos rekordleírás szerint. A nyomtatvány 14. mezője.
-              label: Adóalap · 3. sor
             x-chim6r1ee9in2bb3elnn8o9d64o0:
               help: Áfa összege · 1. sor. A 308-as nyomtatvány kérelmének adata a
                 2009-es hivatalos rekordleírás szerint. A nyomtatvány 10. mezője.
-              label: Áfa összege · 1. sor
             x-chim6r1ee9in2bb3elnn8o9d64pg:
               help: Áfa összege · 2. sor. A 308-as nyomtatvány kérelmének adata a
                 2009-es hivatalos rekordleírás szerint. A nyomtatvány 13. mezője.
-              label: Áfa összege · 2. sor
             x-chim6r1ee9in2bb3elnn8o9d64r0:
               help: Áfa összege · 3. sor. A 308-as nyomtatvány kérelmének adata a
                 2009-es hivatalos rekordleírás szerint. A nyomtatvány 16. mezője.
-              label: Áfa összege · 3. sor
             x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
               help: Egyenértékűségi pótlék rendszerének áfa-visszatérítése. A 308-as
                 nyomtatvány kérelmének adata a 2009-es hivatalos rekordleírás szerint.
                 A nyomtatvány 17. mezője.
-              label: Egyenértékűségi pótlék rendszerének áfa-visszatérítése
             x-chim6r1ee9in2bbkd5o6ub9g74:
               help: Áfakulcs (%) · 1. sor. A 308-as nyomtatvány kérelmének adata a
                 2009-es hivatalos rekordleírás szerint. A nyomtatvány 09. mezője.
-              label: Áfakulcs (%) · 1. sor
             x-chim6r1ee9in2bbkd5o6ub9h68:
               help: Áfakulcs (%) · 2. sor. A 308-as nyomtatvány kérelmének adata a
                 2009-es hivatalos rekordleírás szerint. A nyomtatvány 12. mezője.
-              label: Áfakulcs (%) · 2. sor
             x-chim6r1ee9in2bbkd5o6ub9h6k:
               help: Áfakulcs (%) · 3. sor. A 308-as nyomtatvány kérelmének adata a
                 2009-es hivatalos rekordleírás szerint. A nyomtatvány 15. mezője.
-              label: Áfakulcs (%) · 3. sor
-            x-chim6r1eehimopb6dtn6ubb3dtn78ob3ehng:
-              help: Kapcsolattartó telefonszáma
-              label: Kapcsolattartó telefonszáma
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Bevallás típusa. A 308-as nyomtatvány kérelmének adata a 2009-es
                 hivatalos rekordleírás szerint.
-              label: Bevallás típusa
           field:
             label: 308-es modelo, 2009-2011. adóévek, 2011. júniusáig
         2011-julio-2015:
           casilla:
-            firma:
-              help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus
-                aláírást vagy benyújtást.
-              label: Aláírás (papírnyomtatvány)
-            firma-fecha:
-              help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus
-                aláírást vagy benyújtást.
-              label: Aláírás dátuma
-            firma-lugar:
-              help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus
-                aláírást vagy benyújtást.
-              label: Aláírás helye
-            papel-nif:
-              label: Kérelmező adóazonosítója
-            papel-nombre-completo:
-              help: Kérelmező teljes neve vagy cégneve
-              label: Kérelmező teljes neve vagy cégneve
-            x-chim6r1echincrrcelhmirre5lhm6oo:
-              help: A történeti változatban használt 20 számjegyű bankszámlakód. Őrizd
-                meg a kezdő nullákat.
-              label: Visszatérítési bankszámla (CCC)
-            x-chim6r1ecll6asj3d5hmiro:
-              label: A kérelem vonatkozási éve
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
               help: Vevő adóazonosítója. A 308-as nyomtatvány kérelmének adata a 2011-es
                 hivatalos rekordleírás szerint.
-              label: Vevő adóazonosítója
-            x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojickmm6rrde1m6at3f:
-              help: Vevő teljes neve vagy cégneve
-              label: Vevő teljes neve vagy cégneve
             x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
               help: A vevő országának neve a 2011-es hivatalos leírás szerint.
-              label: Vevő országa
             x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
               help: Légi jármű gyártási éve. A 308-as nyomtatvány kérelmének adata
                 a 2011-es hivatalos rekordleírás szerint.
-              label: Légi jármű gyártási éve
             x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
               help: Légi jármű gyártója. A 308-as nyomtatvány kérelmének adata a 2011-es
                 hivatalos rekordleírás szerint.
-              label: Légi jármű gyártója
             x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
               help: Légi jármű márkája. A 308-as nyomtatvány kérelmének adata a 2011-es
                 hivatalos rekordleírás szerint.
-              label: Légi jármű márkája
             x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
               help: Legnagyobb felszállótömeg (kg). A 308-as nyomtatvány kérelmének
                 adata a 2011-es hivatalos rekordleírás szerint.
-              label: Legnagyobb felszállótömeg (kg)
             x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
               help: Légi jármű sorozatszáma. A 308-as nyomtatvány kérelmének adata
                 a 2011-es hivatalos rekordleírás szerint.
-              label: Légi jármű sorozatszáma
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
               help: Legnagyobb hajóhossz. A 308-as nyomtatvány kérelmének adata a
                 2011-es hivatalos rekordleírás szerint.
-              label: Legnagyobb hajóhossz
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
               help: Vízi jármű gyártója. A 308-as nyomtatvány kérelmének adata a 2011-es
                 hivatalos rekordleírás szerint.
-              label: Vízi jármű gyártója
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
               help: Vízi jármű azonosítója. A 308-as nyomtatvány kérelmének adata
                 a 2011-es hivatalos rekordleírás szerint.
-              label: Vízi jármű azonosítója
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
               help: Vízi jármű típusa. A 308-as nyomtatvány kérelmének adata a 2011-es
                 hivatalos rekordleírás szerint.
-              label: Vízi jármű típusa
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
               help: 'Visszatérítendő áfa: áfatörvény 21.4. cikk. A 308-as nyomtatvány
                 kérelmének adata a 2011-es hivatalos rekordleírás szerint.'
-              label: 'Visszatérítendő áfa: áfatörvény 21.4. cikk'
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
               help: Közösségen belüli értékesítések áfa-visszatérítése. A 308-as nyomtatvány
                 kérelmének adata a 2011-es hivatalos rekordleírás szerint.
-              label: Közösségen belüli értékesítések áfa-visszatérítése
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
               help: Fuvarozási tevékenység áfa-visszatérítése. A 308-as nyomtatvány
                 kérelmének adata a 2011-es hivatalos rekordleírás szerint.
-              label: Fuvarozási tevékenység áfa-visszatérítése
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
               help: Beszerzés előzetesen felszámított áfája. A 308-as nyomtatvány
                 kérelmének adata a 2011-es hivatalos rekordleírás szerint.
-              label: Beszerzés előzetesen felszámított áfája
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
               help: 'Előzetesen felszámított áfa: áfatörvény 21.4. cikk. A 308-as
                 nyomtatvány kérelmének adata a 2011-es hivatalos rekordleírás szerint.'
-              label: 'Előzetesen felszámított áfa: áfatörvény 21.4. cikk'
             x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
               help: Legnagyobb visszatérítés. A 308-as nyomtatvány kérelmének adata
                 a 2011-es hivatalos rekordleírás szerint.
-              label: Legnagyobb visszatérítés
             x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
               help: Beszerzési ár. A 308-as nyomtatvány kérelmének adata a 2011-es
                 hivatalos rekordleírás szerint.
-              label: Beszerzési ár
             x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
               help: Eladási ár. A 308-as nyomtatvány kérelmének adata a 2011-es hivatalos
                 rekordleírás szerint.
-              label: Eladási ár
             x-chim6r1edlq6sbbkd5o6ub9g64:
               help: Beszerzés áfakulcsa (%). A 308-as nyomtatvány kérelmének adata
                 a 2011-es hivatalos rekordleírás szerint. A nyomtatvány 02. mezője.
-              label: Beszerzés áfakulcsa (%)
             x-chim6r1edlq6sbbkd5o6ub9g6g:
               help: Eladás áfakulcsa (%). A 308-as nyomtatvány kérelmének adata a
                 2011-es hivatalos rekordleírás szerint. A nyomtatvány 05. mezője.
-              label: Eladás áfakulcsa (%)
             x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
               help: Alvázszám. A 308-as nyomtatvány kérelmének adata a 2011-es hivatalos
                 rekordleírás szerint.
-              label: Alvázszám
             x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
               help: Jármű besorolása. A 308-as nyomtatvány kérelmének adata a 2011-es
                 hivatalos rekordleírás szerint.
-              label: Jármű besorolása
             x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
               help: Jármű márkája. A 308-as nyomtatvány kérelmének adata a 2011-es
                 hivatalos rekordleírás szerint.
-              label: Jármű márkája
             x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
               help: Jármű modellje (kereskedelmi név). A 308-as nyomtatvány kérelmének
                 adata a 2011-es hivatalos rekordleírás szerint.
-              label: Jármű modellje (kereskedelmi név)
             x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
               help: Jármű típusa. A 308-as nyomtatvány kérelmének adata a 2011-es
                 hivatalos rekordleírás szerint.
-              label: Jármű típusa
-            x-chim6r1edth76pbiepgm6qbfdpin6:
-              help: Megjegyzések
-              label: Megjegyzések
-            x-chim6r1ee1in4qbfchng:
-              help: A Modelo 308 nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
-                véve.
-              label: Esedékesség. Időszak
-            x-chim6r1ee1in4srfdpgiqorfdpq62orkds:
-              help: Kapcsolattartó
-              label: Kapcsolattartó
             x-chim6r1ee9in2bb2c5pmab9g70:
               help: Adóalap · 1. sor. A 308-as nyomtatvány kérelmének adata a 2011-es
                 hivatalos rekordleírás szerint. A nyomtatvány 08. mezője.
-              label: Adóalap · 1. sor
             x-chim6r1ee9in2bb2c5pmab9h64:
               help: Adóalap · 2. sor. A 308-as nyomtatvány kérelmének adata a 2011-es
                 hivatalos rekordleírás szerint. A nyomtatvány 11. mezője.
-              label: Adóalap · 2. sor
             x-chim6r1ee9in2bb2c5pmab9h6g:
               help: Adóalap · 3. sor. A 308-as nyomtatvány kérelmének adata a 2011-es
                 hivatalos rekordleírás szerint. A nyomtatvány 14. mezője.
-              label: Adóalap · 3. sor
             x-chim6r1ee9in2bb3elnn8o9d64o0:
               help: Áfa összege · 1. sor. A 308-as nyomtatvány kérelmének adata a
                 2011-es hivatalos rekordleírás szerint. A nyomtatvány 10. mezője.
-              label: Áfa összege · 1. sor
             x-chim6r1ee9in2bb3elnn8o9d64pg:
               help: Áfa összege · 2. sor. A 308-as nyomtatvány kérelmének adata a
                 2011-es hivatalos rekordleírás szerint. A nyomtatvány 13. mezője.
-              label: Áfa összege · 2. sor
             x-chim6r1ee9in2bb3elnn8o9d64r0:
               help: Áfa összege · 3. sor. A 308-as nyomtatvány kérelmének adata a
                 2011-es hivatalos rekordleírás szerint. A nyomtatvány 16. mezője.
-              label: Áfa összege · 3. sor
             x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
               help: Egyenértékűségi pótlék rendszerének áfa-visszatérítése. A 308-as
                 nyomtatvány kérelmének adata a 2011-es hivatalos rekordleírás szerint.
                 A nyomtatvány 17. mezője.
-              label: Egyenértékűségi pótlék rendszerének áfa-visszatérítése
             x-chim6r1ee9in2bbkd5o6ub9g74:
               help: Áfakulcs (%) · 1. sor. A 308-as nyomtatvány kérelmének adata a
                 2011-es hivatalos rekordleírás szerint. A nyomtatvány 09. mezője.
-              label: Áfakulcs (%) · 1. sor
             x-chim6r1ee9in2bbkd5o6ub9h68:
               help: Áfakulcs (%) · 2. sor. A 308-as nyomtatvány kérelmének adata a
                 2011-es hivatalos rekordleírás szerint. A nyomtatvány 12. mezője.
-              label: Áfakulcs (%) · 2. sor
             x-chim6r1ee9in2bbkd5o6ub9h6k:
               help: Áfakulcs (%) · 3. sor. A 308-as nyomtatvány kérelmének adata a
                 2011-es hivatalos rekordleírás szerint. A nyomtatvány 15. mezője.
-              label: Áfakulcs (%) · 3. sor
-            x-chim6r1eehimopb6dtn6ubb3dtn78ob3ehng:
-              help: Kapcsolattartó telefonszáma
-              label: Kapcsolattartó telefonszáma
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Bevallás típusa. A 308-as nyomtatvány kérelmének adata a 2011-es
                 hivatalos rekordleírás szerint.
-              label: Bevallás típusa
           field:
             label: 308-es modelo, 2011-2015. adóévek, 2011. júliusától
         2016-2018:
           casilla:
-            firma:
-              help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus
-                aláírást vagy benyújtást.
-              label: Aláírás (papírnyomtatvány)
-            firma-fecha:
-              help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus
-                aláírást vagy benyújtást.
-              label: Aláírás dátuma
-            firma-lugar:
-              help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus
-                aláírást vagy benyújtást.
-              label: Aláírás helye
-            papel-apellidos:
-              label: Vezetéknév vagy cégnév
-            papel-nif:
-              label: Kérelmező adóazonosítója
             x-chim6r1echincrrcelhmirre5lh6ioo:
               help: BIC / SWIFT-kód. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: BIC / SWIFT-kód
             x-chim6r1echincrrcelhmirre5lkm4obe:
               help: Visszatérítés bankszámlája (IBAN). A 308-as nyomtatvány kérelmének
                 adata a 2016-es hivatalos rekordleírás szerint.
-              label: Visszatérítés bankszámlája (IBAN)
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
               help: Vevő vezetékneve vagy cégneve. A 308-as nyomtatvány kérelmének
                 adata a 2016-es hivatalos rekordleírás szerint.
-              label: Vevő vezetékneve vagy cégneve
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
               help: Vevő adóazonosítója. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: Vevő adóazonosítója
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
               help: Vevő utóneve. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: Vevő utóneve
             x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
               help: Vevő országa. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: Vevő országa
             x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
               help: Légi jármű gyártási éve. A 308-as nyomtatvány kérelmének adata
                 a 2016-es hivatalos rekordleírás szerint.
-              label: Légi jármű gyártási éve
             x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
               help: Légi jármű gyártója. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: Légi jármű gyártója
             x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
               help: Légi jármű márkája. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: Légi jármű márkája
             x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
               help: Legnagyobb felszállótömeg (kg). A 308-as nyomtatvány kérelmének
                 adata a 2016-es hivatalos rekordleírás szerint.
-              label: Legnagyobb felszállótömeg (kg)
             x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
               help: Légi jármű sorozatszáma. A 308-as nyomtatvány kérelmének adata
                 a 2016-es hivatalos rekordleírás szerint.
-              label: Légi jármű sorozatszáma
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
               help: Legnagyobb hajóhossz. A 308-as nyomtatvány kérelmének adata a
                 2016-es hivatalos rekordleírás szerint.
-              label: Legnagyobb hajóhossz
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
               help: Vízi jármű gyártója. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: Vízi jármű gyártója
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
               help: Vízi jármű azonosítója. A 308-as nyomtatvány kérelmének adata
                 a 2016-es hivatalos rekordleírás szerint.
-              label: Vízi jármű azonosítója
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
               help: Vízi jármű típusa. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: Vízi jármű típusa
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
               help: 'Visszatérítendő áfa: áfatörvény 21.4. cikk. A 308-as nyomtatvány
                 kérelmének adata a 2016-es hivatalos rekordleírás szerint.'
-              label: 'Visszatérítendő áfa: áfatörvény 21.4. cikk'
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
               help: Közösségen belüli értékesítések áfa-visszatérítése. A 308-as nyomtatvány
                 kérelmének adata a 2016-es hivatalos rekordleírás szerint.
-              label: Közösségen belüli értékesítések áfa-visszatérítése
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
               help: Fuvarozási tevékenység áfa-visszatérítése. A 308-as nyomtatvány
                 kérelmének adata a 2016-es hivatalos rekordleírás szerint.
-              label: Fuvarozási tevékenység áfa-visszatérítése
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
               help: Beszerzés előzetesen felszámított áfája. A 308-as nyomtatvány
                 kérelmének adata a 2016-es hivatalos rekordleírás szerint.
-              label: Beszerzés előzetesen felszámított áfája
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
               help: 'Előzetesen felszámított áfa: áfatörvény 21.4. cikk. A 308-as
                 nyomtatvány kérelmének adata a 2016-es hivatalos rekordleírás szerint.'
-              label: 'Előzetesen felszámított áfa: áfatörvény 21.4. cikk'
             x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
               help: Legnagyobb visszatérítés. A 308-as nyomtatvány kérelmének adata
                 a 2016-es hivatalos rekordleírás szerint.
-              label: Legnagyobb visszatérítés
             x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
               help: Beszerzési ár. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: Beszerzési ár
             x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
               help: Eladási ár. A 308-as nyomtatvány kérelmének adata a 2016-es hivatalos
                 rekordleírás szerint.
-              label: Eladási ár
             x-chim6r1edlq6sbbkd5o6ub9g64:
               help: Beszerzés áfakulcsa (%). A 308-as nyomtatvány kérelmének adata
                 a 2016-es hivatalos rekordleírás szerint. A nyomtatvány 02. mezője.
-              label: Beszerzés áfakulcsa (%)
             x-chim6r1edlq6sbbkd5o6ub9g6g:
               help: Eladás áfakulcsa (%). A 308-as nyomtatvány kérelmének adata a
                 2016-es hivatalos rekordleírás szerint. A nyomtatvány 05. mezője.
-              label: Eladás áfakulcsa (%)
             x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
               help: Alvázszám. A 308-as nyomtatvány kérelmének adata a 2016-es hivatalos
                 rekordleírás szerint.
-              label: Alvázszám
             x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
               help: Jármű besorolása. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: Jármű besorolása
             x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
               help: Jármű márkája. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: Jármű márkája
             x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
               help: Jármű modellje (kereskedelmi név). A 308-as nyomtatvány kérelmének
                 adata a 2016-es hivatalos rekordleírás szerint.
-              label: Jármű modellje (kereskedelmi név)
             x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
               help: Jármű típusa. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: Jármű típusa
             x-chim6r1edpnmqojick:
               help: Kérelmező utóneve. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: Kérelmező utóneve
             x-chim6r1ee9in2bb2c5pmab9g70:
               help: Adóalap · 1. sor. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint. A nyomtatvány 08. mezője.
-              label: Adóalap · 1. sor
             x-chim6r1ee9in2bb2c5pmab9h64:
               help: Adóalap · 2. sor. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint. A nyomtatvány 11. mezője.
-              label: Adóalap · 2. sor
             x-chim6r1ee9in2bb2c5pmab9h6g:
               help: Adóalap · 3. sor. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint. A nyomtatvány 14. mezője.
-              label: Adóalap · 3. sor
             x-chim6r1ee9in2bb3elnn8o9d64o0:
               help: Áfa összege · 1. sor. A 308-as nyomtatvány kérelmének adata a
                 2016-es hivatalos rekordleírás szerint. A nyomtatvány 10. mezője.
-              label: Áfa összege · 1. sor
             x-chim6r1ee9in2bb3elnn8o9d64pg:
               help: Áfa összege · 2. sor. A 308-as nyomtatvány kérelmének adata a
                 2016-es hivatalos rekordleírás szerint. A nyomtatvány 13. mezője.
-              label: Áfa összege · 2. sor
             x-chim6r1ee9in2bb3elnn8o9d64r0:
               help: Áfa összege · 3. sor. A 308-as nyomtatvány kérelmének adata a
                 2016-es hivatalos rekordleírás szerint. A nyomtatvány 16. mezője.
-              label: Áfa összege · 3. sor
             x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
               help: Egyenértékűségi pótlék rendszerének áfa-visszatérítése. A 308-as
                 nyomtatvány kérelmének adata a 2016-es hivatalos rekordleírás szerint.
                 A nyomtatvány 17. mezője.
-              label: Egyenértékűségi pótlék rendszerének áfa-visszatérítése
             x-chim6r1ee9in2bbkd5o6ub9g74:
               help: Áfakulcs (%) · 1. sor. A 308-as nyomtatvány kérelmének adata a
                 2016-es hivatalos rekordleírás szerint. A nyomtatvány 09. mezője.
-              label: Áfakulcs (%) · 1. sor
             x-chim6r1ee9in2bbkd5o6ub9h68:
               help: Áfakulcs (%) · 2. sor. A 308-as nyomtatvány kérelmének adata a
                 2016-es hivatalos rekordleírás szerint. A nyomtatvány 12. mezője.
-              label: Áfakulcs (%) · 2. sor
             x-chim6r1ee9in2bbkd5o6ub9h6k:
               help: Áfakulcs (%) · 3. sor. A 308-as nyomtatvány kérelmének adata a
                 2016-es hivatalos rekordleírás szerint. A nyomtatvány 15. mezője.
-              label: Áfakulcs (%) · 3. sor
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Bevallás típusa. A 308-as nyomtatvány kérelmének adata a 2016-es
                 hivatalos rekordleírás szerint.
-              label: Bevallás típusa
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
               help: Adózás típusa az adóalany szerint. A 308-as nyomtatvány kérelmének
                 adata a 2016-es hivatalos rekordleírás szerint.
-              label: Adózás típusa az adóalany szerint
           field:
             label: 308-es modelo, 2016-2018. adóévek
         2019-y-siguientes:
           casilla:
-            firma:
-              help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus
-                aláírást vagy benyújtást.
-              label: Aláírás (papírnyomtatvány)
-            firma-fecha:
-              help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus
-                aláírást vagy benyújtást.
-              label: Aláírás dátuma
-            firma-lugar:
-              help: A papírnyomtatvány 5. részének adata. Nem igazol elektronikus
-                aláírást vagy benyújtást.
-              label: Aláírás helye
             x-chim6r1echincrrcelhmirre5lh6ioo:
               help: BIC / SWIFT-kód. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: BIC / SWIFT-kód
             x-chim6r1echincrrcelhmirre5lkm4obe:
               help: Visszatérítés bankszámlája (IBAN). A 308-as nyomtatvány kérelmének
                 adata a 2019-es hivatalos rekordleírás szerint.
-              label: Visszatérítés bankszámlája (IBAN)
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
               help: Vevő vezetékneve vagy cégneve. A 308-as nyomtatvány kérelmének
                 adata a 2019-es hivatalos rekordleírás szerint.
-              label: Vevő vezetékneve vagy cégneve
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpkmc:
               help: Vevő adóazonosítója. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: Vevő adóazonosítója
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
               help: Vevő utóneve. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: Vevő utóneve
             x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
               help: Vevő országa. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: Vevő országa
             x-chim6r1edlq6sbb1clp6urj1epiiqobeds:
               help: Légi jármű gyártási éve. A 308-as nyomtatvány kérelmének adata
                 a 2019-es hivatalos rekordleírás szerint.
-              label: Légi jármű gyártási éve
             x-chim6r1edlq6sbb1clp6urj1epiiqpj1c9p6ior1dpq6a:
               help: Légi jármű gyártója. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: Légi jármű gyártója
             x-chim6r1edlq6sbb1clp6urj1epiiqrb1e9hm2:
               help: Légi jármű márkája. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: Légi jármű márkája
             x-chim6r1edlq6sbb1clp6urj1epiiqs35edng:
               help: Legnagyobb felszállótömeg (kg). A 308-as nyomtatvány kérelmének
                 adata a 2019-es hivatalos rekordleírás szerint.
-              label: Legnagyobb felszállótömeg (kg)
             x-chim6r1edlq6sbb1clp6urj1epiiqsr5e9kma:
               help: Légi jármű sorozatszáma. A 308-as nyomtatvány kérelmének adata
                 a 2019-es hivatalos rekordleírás szerint.
-              label: Légi jármű sorozatszáma
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lin6r3fe9gg:
               help: Legnagyobb hajóhossz. A 308-as nyomtatvány kérelmének adata a
                 2019-es hivatalos rekordleírás szerint.
-              label: Legnagyobb hajóhossz
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
               help: Vízi jármű gyártója. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: Vízi jármű gyártója
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
               help: Vízi jármű azonosítója. A 308-as nyomtatvány kérelmének adata
                 a 2019-es hivatalos rekordleírás szerint.
-              label: Vízi jármű azonosítója
             x-chim6r1edlq6sbb5dlh62sj3c5hmirre5lq6is3f:
               help: Vízi jármű típusa. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: Vízi jármű típusa
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mm2sjk68og:
               help: 'Visszatérítendő áfa: áfatörvény 21.4. cikk. A 308-as nyomtatvány
                 kérelmének adata a 2019-es hivatalos rekordleírás szerint.'
-              label: 'Visszatérítendő áfa: áfatörvény 21.4. cikk'
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mmaqb2:
               help: Közösségen belüli értékesítések áfa-visszatérítése. A 308-as nyomtatvány
                 kérelmének adata a 2019-es hivatalos rekordleírás szerint.
-              label: Közösségen belüli értékesítések áfa-visszatérítése
             x-chim6r1edlq6sbb9epgiqp35epnmotj5e8mn8sj1dppn0rriehig:
               help: Fuvarozási tevékenység áfa-visszatérítése. A 308-as nyomtatvány
                 kérelmének adata a 2019-es hivatalos rekordleírás szerint.
-              label: Fuvarozási tevékenység áfa-visszatérítése
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chng:
               help: Beszerzés előzetesen felszámított áfája. A 308-as nyomtatvány
                 kérelmének adata a 2019-es hivatalos rekordleírás szerint.
-              label: Beszerzés előzetesen felszámított áfája
             x-chim6r1edlq6sbb9epgiqsrfe1nn4t31chniqobiegp32:
               help: 'Előzetesen felszámított áfa: áfatörvény 21.4. cikk. A 308-as
                 nyomtatvány kérelmének adata a 2019-es hivatalos rekordleírás szerint.'
-              label: 'Előzetesen felszámított áfa: áfatörvény 21.4. cikk'
             x-chim6r1edlq6sbbdc5s6irbf5li6atjfdhr6asg:
               help: Legnagyobb visszatérítés. A 308-as nyomtatvány kérelmének adata
                 a 2019-es hivatalos rekordleírás szerint.
-              label: Legnagyobb visszatérítés
             x-chim6r1edlq6sbbge9im6qbf5lgm8sbld5pmior9dtn0:
               help: Beszerzési ár. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: Beszerzési ár
             x-chim6r1edlq6sbbge9im6qbf5lr6arjkc4:
               help: Eladási ár. A 308-as nyomtatvány kérelmének adata a 2019-es hivatalos
                 rekordleírás szerint.
-              label: Eladási ár
             x-chim6r1edlq6sbbkd5o6ub9g64:
               help: Beszerzés áfakulcsa (%). A 308-as nyomtatvány kérelmének adata
                 a 2019-es hivatalos rekordleírás szerint. A nyomtatvány 02. mezője.
-              label: Beszerzés áfakulcsa (%)
             x-chim6r1edlq6sbbkd5o6ub9g6g:
               help: Eladás áfakulcsa (%). A 308-as nyomtatvány kérelmének adata a
                 2019-es hivatalos rekordleírás szerint. A nyomtatvány 05. mezője.
-              label: Eladás áfakulcsa (%)
             x-chim6r1edlq6sbbmclk6iorldhniqoj1edq6ip3fe8:
               help: Alvázszám. A 308-as nyomtatvány kérelmének adata a 2019-es hivatalos
                 rekordleírás szerint.
-              label: Alvázszám
             x-chim6r1edlq6sbbmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
               help: Jármű besorolása. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: Jármű besorolása
             x-chim6r1edlq6sbbmclk6iorldhniqrb1e9hm2:
               help: Jármű márkája. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: Jármű márkája
             x-chim6r1edlq6sbbmclk6iorldhniqrbfchimoro:
               help: Jármű modellje (kereskedelmi név). A 308-as nyomtatvány kérelmének
                 adata a 2019-es hivatalos rekordleírás szerint.
-              label: Jármű modellje (kereskedelmi név)
             x-chim6r1edlq6sbbmclk6iorldhniqt39e1ng:
               help: Jármű típusa. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: Jármű típusa
             x-chim6r1edpnmqojick:
               help: Kérelmező utóneve. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: Kérelmező utóneve
             x-chim6r1ee9in2bb2c5pmab9g70:
               help: Adóalap · 1. sor. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint. A nyomtatvány 08. mezője.
-              label: Adóalap · 1. sor
             x-chim6r1ee9in2bb2c5pmab9h64:
               help: Adóalap · 2. sor. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint. A nyomtatvány 11. mezője.
-              label: Adóalap · 2. sor
             x-chim6r1ee9in2bb2c5pmab9h6g:
               help: Adóalap · 3. sor. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint. A nyomtatvány 14. mezője.
-              label: Adóalap · 3. sor
             x-chim6r1ee9in2bb3elnn8o9d64o0:
               help: Áfa összege · 1. sor. A 308-as nyomtatvány kérelmének adata a
                 2019-es hivatalos rekordleírás szerint. A nyomtatvány 10. mezője.
-              label: Áfa összege · 1. sor
             x-chim6r1ee9in2bb3elnn8o9d64pg:
               help: Áfa összege · 2. sor. A 308-as nyomtatvány kérelmének adata a
                 2019-es hivatalos rekordleírás szerint. A nyomtatvány 13. mezője.
-              label: Áfa összege · 2. sor
             x-chim6r1ee9in2bb3elnn8o9d64r0:
               help: Áfa összege · 3. sor. A 308-as nyomtatvány kérelmének adata a
                 2019-es hivatalos rekordleírás szerint. A nyomtatvány 16. mezője.
-              label: Áfa összege · 3. sor
             x-chim6r1ee9in2bb9epgiqp35epnmotj5e8mj2do:
               help: Egyenértékűségi pótlék rendszerének áfa-visszatérítése. A 308-as
                 nyomtatvány kérelmének adata a 2019-es hivatalos rekordleírás szerint.
                 A nyomtatvány 17. mezője.
-              label: Egyenértékűségi pótlék rendszerének áfa-visszatérítése
             x-chim6r1ee9in2bbkd5o6ub9g74:
               help: Áfakulcs (%) · 1. sor. A 308-as nyomtatvány kérelmének adata a
                 2019-es hivatalos rekordleírás szerint. A nyomtatvány 09. mezője.
-              label: Áfakulcs (%) · 1. sor
             x-chim6r1ee9in2bbkd5o6ub9h68:
               help: Áfakulcs (%) · 2. sor. A 308-as nyomtatvány kérelmének adata a
                 2019-es hivatalos rekordleírás szerint. A nyomtatvány 12. mezője.
-              label: Áfakulcs (%) · 2. sor
             x-chim6r1ee9in2bbkd5o6ub9h6k:
               help: Áfakulcs (%) · 3. sor. A 308-as nyomtatvány kérelmének adata a
                 2019-es hivatalos rekordleírás szerint. A nyomtatvány 15. mezője.
-              label: Áfakulcs (%) · 3. sor
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Bevallás típusa. A 308-as nyomtatvány kérelmének adata a 2019-es
                 hivatalos rekordleírás szerint.
-              label: Bevallás típusa
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
               label: A kérelem oka
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
               help: Adózás típusa az adóalany szerint. A 308-as nyomtatvány kérelmének
                 adata a 2019-es hivatalos rekordleírás szerint.
-              label: Adózás típusa az adóalany szerint
           field:
             label: 308-es modelo, 2019. adóévtől

@@ -72,6 +72,10 @@ from .....core.identity.bucket import BucketId
 from .....core.operations import OperationTerminalCondition
 from .....core.period import Period
 from .....domain.modelos.codes import ModeloCode
+from .....tests.aeat_literal_fixtures import (
+    CENSO_SOURCE_URL_FIXTURE,
+    OBLIGACIONES_SOURCE_URL_FIXTURE,
+)
 from ...components.host import ScreenHostApp
 from ...destination_alias import closed_destination_ids
 from ...navigation import TuiScreenContextV1
@@ -1392,11 +1396,11 @@ async def test_complete_census_evidence_survives_reopen_and_selected_value_is_re
         domicilio_fiscal=CensalObservationAddress(codigo_postal="28001"),
         domicilio_notificacion=CensalObservationAddress(),
         captured_at=_T2,
-        source_url="https://sede.agenciatributaria.gob.es/censo",
+        source_url=CENSO_SOURCE_URL_FIXTURE,
         consultations=(
             CensalConsultation(
                 kind="obligaciones",
-                source_url="https://sede.agenciatributaria.gob.es/obligaciones",
+                source_url=OBLIGACIONES_SOURCE_URL_FIXTURE,
                 sections=(
                     CensalSection(
                         title="Mis Obligaciones",

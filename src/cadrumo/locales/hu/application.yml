@@ -331,23 +331,6 @@ application:
       sentido_ingreso: befizetés
       target_casilla: '%{number}. rubrika'
       target_declared: a bejelentett korrekciós rubrika
-    row_set:
-      errors:
-        grouping_dispatch_fell_through: 'A(z) {grouping} sorhalmaz-csoportosítás olyan
-          összeállítóra oldódott fel, amely nem futott le. Jelentsd ezt: az elosztótábla
-          nem konzisztens.'
-        grouping_has_no_assembler: 'A(z) {grouping} sorhalmaz-csoportosításhoz nincs
-          összeállító ebben az alkalmazásban; az összeállító nélküli csoportosítások:
-          {unassemblable_groupings}.'
-        percepcion_clave_missing: A(z) {row_index}. sor nem ad meg clavét. A percepciónak
-          meg kell adnia az AEAT clavéját a 190-es és Modelo 193 nyomtatvány diseño
-          de registros 2-es típusú rekordja szerint. Add meg a clavét.
-        percepcion_clave_unsupported: A(z) {row_index}. sor a(z) {clave} AEAT clavét
-          adja meg, amelyet ez az alkalmazás nem támogat.
-        row_assembly_failed: 'A(z) {row_index}. sor nem állítható össze: {validation_error_detail}.
-          Javítsd a sort, majd húzd le újra.'
-        row_index_not_positive: 'A sorhalmaz cellájának sorindexe pozitív egész szám
-          kell legyen; jelenlegi értéke: {row_index}.'
   filing:
     build_draft:
       errors:
@@ -414,8 +397,8 @@ application:
           Aux blokkját.
         casilla_metadata_drift: A rovat számozása vagy segmentója eltér a nyomtatványdefiníciókban
           szereplő hivatalos rekordtervtől.
-        rate_boxes_understate_total: A kulcsonkénti rovatok nem fedik le a saját bevallott
-          végösszegüket.
+        rate_boxes_understate_total: A kulcsonkénti mezők nem tartalmazzák az összes
+          rögzített összeget.
         record_emit_order_drift: Az export a nyomtatványdefiníciókban megadott sorrendtől
           eltérően írná ki a rekordokat.
         record_emit_order_duplicated: Több exportrekord azonos kiírási sorrendet ad
@@ -1895,6 +1878,43 @@ application:
     explain:
       errors:
         modelo_blank: A nyomtatvány azonosítója nem lehet üres.
+  reconciliation_export:
+    actor: Felelős
+    advisory: Figyelmeztetés
+    advisory_code: Figyelmeztetés kódja
+    advisory_count: Figyelmeztetések
+    calculation_revision: Mentett számítás
+    context: Kontextus
+    date: Dátum
+    difference_count: Eltérések
+    difference_kind: Eltérés típusa
+    difference_kind_casilla: Mezőérték
+    difference_kind_header_field: Bizonylat azonosító adatai
+    difference_kind_total: Benyújtott végösszeg
+    difference_reason: Eltérés oka
+    evidence_kind: Bizonyíték típusa
+    evidence_kind_declaration: Benyújtott bevallás
+    evidence_kind_justificante: Benyújtási bizonylat
+    evidence_reference: Bizonyíték hivatkozása
+    evidence_value: Bizonyíték értéke
+    field: Mező vagy rovat
+    legal_refs: Jogi hivatkozások
+    modelo: Modelo
+    period: Időszak
+    record: Egyeztetés
+    record_identity: Teljes rekordazonosító
+    registry_revision: Mentett nyilvántartási verzió
+    saved_comparison_notice: A mentett összehasonlítások az eredeti értékeket és hivatkozásokat
+      őrzik. Az üres érték ismeretlen. A figyelmeztetések jelzik az ellenőrzés korlátait;
+      egy hivatkozás nem bizonyítja a dokumentum bájtjainak megőrzését.
+    saved_value: Mentett számítás értéke
+    source_refs: Hivatalos források
+    title: Mentett egyeztetések
+    verdict: Összehasonlítás eredménye
+    verdict_matches: Az értékek egyeznek
+    verdict_mismatches: Eltérések találhatók
+    work_unit: Munkaegység
+    year: Év
   storage:
     calc_sheets:
       engine:
@@ -1948,12 +1968,6 @@ application:
             a revízió nem deklarál.
           unresolved_reference: A táblázatelrendezés nem tartalmaz cellát a hivatkozott
             elemhez.
-      parity:
-        errors:
-          seed_anchor_missing: A paritási forgatókönyv bemenetéhez nincs kitölthető
-            táblázatcella.
-          unknown_casilla_ids: A paritási forgatókönyv olyan rovat-azonosítókra hivatkozik,
-            amelyek nincsenek a nyomtatványdefiníciókban.
       records:
         errors:
           address_mismatch: A táblázatcella címe nem egyezik a sorával és oszlopával.
@@ -1968,6 +1982,11 @@ application:
           tariff_shape_invalid: A tarifa táblázat alakja érvénytelen.
       review:
         labels:
+          aeat_confirmation: AEAT-visszaigazolás
+          aeat_confirmation_confirmada: Mentett AEAT-bizonyíték igazolja
+          aeat_confirmation_descartada: Az AEAT-visszaigazolás előtt elvetve
+          aeat_confirmation_discrepante: Eltér az AEAT-bizonyítéktól
+          aeat_confirmation_pendiente: 'Függőben: nincs megfigyelt AEAT-elfogadás'
           amount: Összeg (numerikus megjelenítés)
           amount_id: Az eredmény azonosítója
           art_104_tres_exclusion: A 104.Tres cikk szerinti kizárás
@@ -1982,6 +2001,12 @@ application:
           business_pct: Rögzített üzleti hányad
           byte_length: Eredeti méret bájtban
           calculation_revision: A számítás verziója
+          calculation_state: A mentett számítás állapota
+          calculation_state_borrador: 'Piszkozat: előzetes'
+          calculation_state_descartado: Elvetett számítás
+          calculation_state_presentado: Helyben benyújtott
+          calculation_state_presentado_supersedido: 'Korábbi helyi benyújtás: felváltva'
+          calculation_state_verificado_completo: Ellenőrzött helyi számítás
           casilla: Bevallási mező
           category_id: Kategóriaazonosító
           classification: Üzleti besorolás
@@ -1990,6 +2015,8 @@ application:
           counterparty: Partner
           counterparty_country: A partner országa
           currency: Pénznem
+          current_calculation: Aktuális számítás az exportáláskor
+          current_filing: Aktuális helyi benyújtás az exportáláskor
           deduction_fact_kind: Levonási adat típusa
           description: Rögzített leírás
           detail: Rögzített hozzárendelési részlet
@@ -2025,6 +2052,10 @@ application:
             A Cadrumo soha nem importálja a módosításaidat. A mentett helyi adatok
             elkülönülnek.
           field: Mező
+          filing_record: Kiválasztott bevallási rekord
+          filing_status: Mentett bevallási rekord állapota
+          filing_status_supersedido: 'Felváltott: előzmény'
+          filing_status_vigente: Aktuális
           finding: Észrevétel
           finding_count: Észrevételek száma
           formula: Rögzített képlethivatkozás
@@ -2058,6 +2089,7 @@ application:
           media_type: Fájltípus
           missing_data: Hiányzó adatok
           modelo: Bevallási nyomtatvány
+          'no': Nem
           no_captured_rows: Ez a pillanatkép nem tartalmaz sorokat ehhez a szakaszhoz.
           no_inventory_reference: Nincs rögzített jegyzékhivatkozás
           not_captured: Nincs rögzítve
@@ -2101,25 +2133,6 @@ application:
           sources: Forráshoz rendelés
           status: Rögzített állapotkód
           status_incomplete: Hiányos
-          calculation_state: 'A mentett számítás állapota'
-          current_calculation: 'Aktuális számítás az exportáláskor'
-          current_filing: 'Aktuális helyi benyújtás az exportáláskor'
-          filing_status: 'Mentett bevallási rekord állapota'
-          filing_record: 'Kiválasztott bevallási rekord'
-          filing_status_vigente: 'Aktuális'
-          filing_status_supersedido: 'Felváltott — előzmény'
-          aeat_confirmation: 'AEAT-visszaigazolás'
-          'yes': 'Igen'
-          'no': 'Nem'
-          calculation_state_borrador: 'Piszkozat — előzetes'
-          calculation_state_verificado_completo: 'Ellenőrzött helyi számítás'
-          calculation_state_presentado: 'Helyben benyújtott'
-          calculation_state_presentado_supersedido: 'Korábbi helyi benyújtás — felváltva'
-          calculation_state_descartado: 'Elvetett számítás'
-          aeat_confirmation_pendiente: 'Függőben — nincs megfigyelt AEAT-elfogadás'
-          aeat_confirmation_confirmada: 'Mentett AEAT-bizonyíték igazolja'
-          aeat_confirmation_discrepante: 'Eltér az AEAT-bizonyítéktól'
-          aeat_confirmation_descartada: 'Az AEAT-visszaigazolás előtt elvetve'
           status_provisional: Előzetes
           status_verified: Ellenőrzött helyi adatok
           taxable_base: Adóalap (numerikus megjelenítés)
@@ -2130,6 +2143,7 @@ application:
           value: Mentett érték / numerikus megjelenítés
           value_date: Értéknap
           work_unit: Munkaegység
+          'yes': Igen
       translator:
         errors:
           translation_failed: A nyomtatványdefiníciókban szereplő képlet nem fordítható
@@ -2158,7 +2172,6 @@ application:
         a biztonsági mentés csak olyan tárolóba állítható vissza, amely még nem tartalmazza,
         vagy az eredeti profil törlése után.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
-      no_active_profile_selected: Nincs kiválasztva aktív profil.
       passphrase_confirmation_mismatch: Az új jelszó és a megerősítése nem egyezik.
       passphrase_current_rejected: A jelenlegi jelszó helytelen; a jelszó nem változott.
       profile_already_exists: A(z) %{profile} profil már létezik; futtasd az aeat
@@ -2320,39 +2333,3 @@ application:
       validation_clean: Az ellenőrzés blokkoló problémák nélkül befejeződött.
       validation_failed: Az ellenőrzés blokkoló problémákat talált.
       workflow_failure: A munkafolyamatot nem sikerült befejezni.
-
-  reconciliation_export:
-    title: "Mentett egyeztetések"
-    saved_comparison_notice: "A mentett összehasonlítások az eredeti értékeket és hivatkozásokat őrzik. Az üres érték ismeretlen. A figyelmeztetések jelzik az ellenőrzés korlátait; egy hivatkozás nem bizonyítja a dokumentum bájtjainak megőrzését."
-    record: "Egyeztetés"
-    date: "Dátum"
-    verdict: "Összehasonlítás eredménye"
-    modelo: "Modelo"
-    year: "Év"
-    period: "Időszak"
-    registry_revision: "Mentett nyilvántartási verzió"
-    work_unit: "Munkaegység"
-    calculation_revision: "Mentett számítás"
-    evidence_kind: "Bizonyíték típusa"
-    evidence_reference: "Bizonyíték hivatkozása"
-    actor: "Felelős"
-    difference_count: "Eltérések"
-    advisory_count: "Figyelmeztetések"
-    difference_kind: "Eltérés típusa"
-    field: "Mező vagy rovat"
-    saved_value: "Mentett számítás értéke"
-    evidence_value: "Bizonyíték értéke"
-    difference_reason: "Eltérés oka"
-    legal_refs: "Jogi hivatkozások"
-    source_refs: "Hivatalos források"
-    advisory_code: "Figyelmeztetés kódja"
-    advisory: "Figyelmeztetés"
-    context: "Kontextus"
-    record_identity: "Teljes rekordazonosító"
-    verdict_matches: "Az értékek egyeznek"
-    verdict_mismatches: "Eltérések találhatók"
-    evidence_kind_justificante: "Benyújtási bizonylat"
-    evidence_kind_declaration: "Benyújtott bevallás"
-    difference_kind_header_field: "Bizonylat azonosító adatai"
-    difference_kind_total: "Benyújtott végösszeg"
-    difference_kind_casilla: "Mezőérték"

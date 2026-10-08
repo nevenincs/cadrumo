@@ -53,7 +53,7 @@ class RuntimeBootstrapDeleteMixin:
         request: RuntimeProfileDeletePrepare | RuntimeProfileDelete,
     ) -> None:
         """Serialize containment with polling and shutdown; never wait inside root."""
-        if not self._drain_guard.acquire(blocking=False):
+        if not self._drain_guard.acquire_delete():
             write_document(
                 channel,
                 RuntimeAccessRefusal(

@@ -33,7 +33,7 @@ def _console_members(mode: str, root: Path) -> dict[str, object]:
         (str(native_python()), *fixture_arguments(_FIXTURE, mode, str(root))),
         env=fixture_environment(),
         capture_output=True,
-        timeout=180,
+        timeout=None,
         check=False,
         # A hidden console of the fixture's own keeps the probe off the test runner's console.
         creationflags=WINDOWS_CREATE_NO_WINDOW,

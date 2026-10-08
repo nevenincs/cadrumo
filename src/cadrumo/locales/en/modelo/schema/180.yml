@@ -82,6 +82,13 @@ modelo:
         official_name: Modelo 180. Informative return. Withholdings and payments on
           account. Income arising from the letting of urban property. Annual summary.
         title: Annual summary of withholdings on urban property letting
+      form:
+        context:
+          ejercicio:
+            heading: Tax year
+        section:
+          ejercicio:
+            heading: Tax year
       revision:
         2019-2022:
           field:

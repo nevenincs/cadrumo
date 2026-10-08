@@ -28,7 +28,7 @@ def test_product_identity_matches_the_accepted_external_tuple() -> None:
         repository="nevenincs/cadrumo",
         plugin_identifier="cadrumo",
         environment_prefix="CADRUMO_",
-        companion_distributions=("cadrumo-data-manuals", "cadrumo-data-official"),
+        companion_distributions=("cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-data-normatives"),
         companion_namespace="cadrumo_data",
         application_id="md.neve.cadrumo",
     )
@@ -37,12 +37,12 @@ def test_product_identity_matches_the_accepted_external_tuple() -> None:
 
 
 def test_cohort_distributions_lists_the_product_before_its_companions() -> None:
-    """A release publishes the product and both data companions as one ordered set."""
+    """A release publishes the product and all three data companions as one ordered set."""
     assert PRODUCT_IDENTITY.cohort_distributions == (
         PRODUCT_IDENTITY.distribution,
         *PRODUCT_IDENTITY.companion_distributions,
     )
-    assert len(set(PRODUCT_IDENTITY.cohort_distributions)) == 3
+    assert len(set(PRODUCT_IDENTITY.cohort_distributions)) == 4
 
 
 @pytest.mark.parametrize(
@@ -51,6 +51,7 @@ def test_cohort_distributions_lists_the_product_before_its_companions() -> None:
         Path("pyproject.toml"),
         Path("packaging/cadrumo_data_manuals/pyproject.toml"),
         Path("packaging/cadrumo_data_official/pyproject.toml"),
+        Path("packaging/cadrumo_data_normatives/pyproject.toml"),
     ),
 )
 def test_repository_metadata_consumes_the_owner_qualified_slug(

@@ -1208,6 +1208,30 @@ sheets:
       contract_relation_clave: Szerződés vagy jogviszony
       contributor_legal_name: Az adóalany neve
       contributor_tax_id: Az adóalany adóazonosítója
+      cotizacion_01_importe: Januári járulék összege
+      cotizacion_01_situacion: Januári járulékfizetési állapot
+      cotizacion_02_importe: Februári járulék összege
+      cotizacion_02_situacion: Februári járulékfizetési állapot
+      cotizacion_03_importe: Márciusi járulék összege
+      cotizacion_03_situacion: Márciusi járulékfizetési állapot
+      cotizacion_04_importe: Áprilisi járulék összege
+      cotizacion_04_situacion: Áprilisi járulékfizetési állapot
+      cotizacion_05_importe: Májusi járulék összege
+      cotizacion_05_situacion: Májusi járulékfizetési állapot
+      cotizacion_06_importe: Júniusi járulék összege
+      cotizacion_06_situacion: Júniusi járulékfizetési állapot
+      cotizacion_07_importe: Júliusi járulék összege
+      cotizacion_07_situacion: Júliusi járulékfizetési állapot
+      cotizacion_08_importe: Augusztusi járulék összege
+      cotizacion_08_situacion: Augusztusi járulékfizetési állapot
+      cotizacion_09_importe: Szeptemberi járulék összege
+      cotizacion_09_situacion: Szeptemberi járulékfizetési állapot
+      cotizacion_10_importe: Októberi járulék összege
+      cotizacion_10_situacion: Októberi járulékfizetési állapot
+      cotizacion_11_importe: Novemberi járulék összege
+      cotizacion_11_situacion: Novemberi járulékfizetési állapot
+      cotizacion_12_importe: Decemberi járulék összege
+      cotizacion_12_situacion: Decemberi járulékfizetési állapot
       counterparty_legal_name: Szerződő fél neve
       counterparty_tax_id: Szerződő fél adóazonosítója
       country_code: Országkód
@@ -1237,6 +1261,10 @@ sheets:
       fecha_devengo: Keletkezés dátuma
       fecha_inicio_prestamo: Kölcsön kezdő dátuma
       fecha_vencimiento_prestamo: Kölcsön lejárati dátuma
+      financial_asset_acquisition_value: Pénzügyi eszköz beszerzési értéke
+      financial_asset_disposal_value: Pénzügyi eszköz elidegenítési értéke
+      financial_asset_origin: Pénzügyi eszköz eredete
+      financial_asset_related_entity: Pénzügyi eszközhöz kapcsolódó szervezet
       first_child_compute: 1. gyermek beszámítása
       floor: Emelet
       foral_retention_araba: Araba/Álavának befizetett visszatartások és előlegek
@@ -1275,9 +1303,12 @@ sheets:
       naturaleza: Jelleg
       naturaleza_declarante: A bevalló jellege
       naturaleza_inmueble: Az ingatlan jellege
+      nif: Adóazonosító szám
       nif_pagador_anterior: Előző kifizető adóazonosítója
+      nombre: Név
       number_qualifier: Számminősítő
       number_type: Számozás típusa
+      numero_afiliacion: Tagsági szám
       numero_orden: Sorszám
       opening_minus_closing_positive: Pozitív nyitó mínusz záró különbözet
       operation_date: Művelet dátuma
@@ -2437,6 +2468,7 @@ tui:
         bank_city: bank városa
         bank_country_code: bank országa
         bank_name: bank neve
+        closed_on: Lezárás dátuma
         currency: pénznem
         holding: tulajdonosi viszony
         iban: IBAN

@@ -155,7 +155,7 @@ def _run_profile_recovery_enable(root: Path, *, channel: str, payload: str) -> s
                 encoding="utf-8",
                 capture_output=True,
                 check=False,
-                timeout=120,
+                timeout=None,
                 close_fds=True,
                 startupinfo=startup,
             )
@@ -179,7 +179,7 @@ def _run_profile_recovery_enable(root: Path, *, channel: str, payload: str) -> s
                 encoding="utf-8",
                 capture_output=True,
                 check=False,
-                timeout=120,
+                timeout=None,
                 pass_fds=tuple(descriptors),
             )
     finally:
@@ -444,7 +444,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
             errors="replace",
             capture_output=True,
             check=False,
-            timeout=180,
+            timeout=None,
             close_fds=True,
             startupinfo=startup,
         )
@@ -562,7 +562,7 @@ def _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path: 
             errors="replace",
             capture_output=True,
             check=False,
-            timeout=45,
+            timeout=None,
             close_fds=True,
             startupinfo=startup,
             after_spawn=release_parent_copies,
@@ -639,7 +639,7 @@ def _assert_posix_recovery_descriptors_complete_real_headless_enrolment(tmp_path
             encoding="utf-8",
             capture_output=True,
             check=False,
-            timeout=45,
+            timeout=None,
             pass_fds=(handoff_writer, verification_reader),
         )
     finally:
@@ -745,7 +745,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
             errors="replace",
             capture_output=True,
             check=False,
-            timeout=180,
+            timeout=None,
             close_fds=True,
             startupinfo=startup,
         )

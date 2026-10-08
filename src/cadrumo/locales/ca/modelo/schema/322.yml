@@ -634,6 +634,9 @@ modelo:
         modelo-322-iva-grupo-individual:
           field:
             title: Model 322 IVA grup d'entitats, model individual
+        modelo-322-papel-actividades:
+          field:
+            title: Activitats
       field:
         official_name: Modelo 322. Impost sobre el Valor Afegit. Grup d'entitats.
           Model individual. Autoliquidació mensual.

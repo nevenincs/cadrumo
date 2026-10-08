@@ -146,14 +146,6 @@ modelo:
             help: Dato declarado en el modelo 347, declaración anual de operaciones
               con terceras personas.
             label: NIF DEL REPRESENTANTE LEGAL
-          resumen-importe-arrendamientos:
-            label: null
-          resumen-importe-operaciones:
-            label: null
-          resumen-inmuebles:
-            label: null
-          resumen-personas-entidades:
-            label: null
           situacion-inmueble:
             help: Dato declarado en el modelo 347, declaración anual de operaciones
               con terceras personas.

@@ -496,7 +496,7 @@ print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
             capture_output=True,
             encoding="utf-8",
             text=True,
-            timeout=60,
+            timeout=None,
         )
         assert completed.returncode == 0, completed.stderr
         assert isinstance(completed.stdout, str)

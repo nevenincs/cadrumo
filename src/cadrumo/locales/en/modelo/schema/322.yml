@@ -643,6 +643,9 @@ modelo:
         modelo-322-iva-grupo-individual:
           field:
             title: Modelo 322 IVA group of entities, individual return
+        modelo-322-papel-actividades:
+          field:
+            title: Activities
       field:
         official_name: Modelo 322. Value Added Tax. Group of entities. Individual
           form. Monthly self-assessment.

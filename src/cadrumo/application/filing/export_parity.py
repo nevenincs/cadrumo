@@ -509,18 +509,18 @@ def assert_rate_boxes_account_for_total(
     *,
     draft: ModeloDraft,
 ) -> None:
-    """Panic if the draft's rate boxes account for less than their declared total.
+    """Refuse export when rate boxes omit amounts held in their evidence control.
 
     A rate-specific official box asserts a rate, so a ledger row recording a
-    cuota without recording the rate charged reaches the rate-blind total layer
-    and no box. The return keeps the money and the breakdown keeps its integrity;
-    what it loses is the property that the parts sum to the whole, and AEAT
-    reconciles those boxes against that total.
+    cuota without recording the rate charged reaches the rate-blind control
+    and no box. The control retains the observed amount separately from printed
+    totals that sum rate boxes. Export must refuse the unallocated amount; a
+    numerically consistent printed sum alone cannot prove complete coverage.
 
     The refusal sits at the write door for the same reason the completeness gate
     does: the application never files, so the artefact leaves here for a human to
     submit with nothing behind it. A blank computed slot and a breakdown that
-    does not reach its own total are the same class of defect -- a return whose
+    omits recorded amounts are the same class of defect -- a return whose
     structure contradicts what the calculation determined -- and both cost the
     taxpayer a correction they cannot make, where the refusal costs them a ledger
     repair they can.

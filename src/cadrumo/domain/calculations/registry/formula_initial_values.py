@@ -40,7 +40,7 @@ from .binding_temporal import SameTargetContext
 from .bindings import CasillaObservation, CasillaObservationValueKind, resolve_bound_casilla_binding_value
 from .bindings_previous_filing import PreviousFilingProvider
 from .casilla_membership import casillas_by_id, text_family_casilla_ids
-from .errors import RegistryValidationError
+from .errors import CasillaConstraintViolationError, RegistryValidationError
 from .ids import BindingId
 from .schema import BindingDefinition, ModeloRevision
 from .schema_input_kind import InputKind
@@ -156,6 +156,8 @@ def initial_values(
         binding_values=binding_values,
     )
 
+    _reject_numeric_input_constraint_violations(inputs, casillas)
+
     return _initial_values_for_casillas(
         revision.casillas,
         inputs=inputs,
@@ -163,6 +165,32 @@ def initial_values(
         binding_values=binding_values,
         target_period=target_period,
     )
+
+
+def _reject_numeric_input_constraint_violations(
+    inputs: Mapping[CasillaId, Decimal],
+    casillas: Mapping[CasillaId, CasillaDefinition],
+) -> None:
+    """Enforce the selected revision's declared ranges on admitted numeric inputs."""
+    for casilla_id, value in inputs.items():
+        casilla = casillas[casilla_id]
+        constraints = casilla.constraints
+        if constraints is None:
+            continue
+        violation = constraints.violates(value)
+        if violation is not None:
+            raise CasillaConstraintViolationError(
+                f"input casilla {casilla.number!r} violates declared constraint: {violation}",
+                translated_message="errors.calc.casilla_constraint_violation",
+                context={
+                    "casilla_id": casilla_id,
+                    "display_number": casilla.number,
+                    "value": str(value),
+                    "violation": violation,
+                    "legal_refs": ",".join(constraints.legal_refs),
+                    "source_refs": ",".join(constraints.source_refs),
+                },
+            )
 
 
 def initial_value_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:

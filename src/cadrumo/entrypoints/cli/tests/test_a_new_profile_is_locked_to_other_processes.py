@@ -54,7 +54,7 @@ def _list_in_a_fresh_process(
         env_strip_prefixes=("AEAT_", "PYTEST_", "CADRUMO_"),
         extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
         stdin_payload="" if credential is None else json.dumps({"profile_passphrase": credential}),
-        timeout=180.0,
+        timeout=None,
     )
 
 

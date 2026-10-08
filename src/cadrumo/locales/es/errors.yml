@@ -180,8 +180,6 @@ errors:
       de la aplicación.
     error_calc_sheets_engine: El motor de exportación de hojas de cálculo encontró
       un estado irresoluble al generar el plan de exportación.
-    error_calc_sheets_parity: El escenario del arnés de paridad hace referencia a
-      casilla.id que no están presentes en la instantánea del registro.
     error_calc_sheets_record: Una operación de registro de hoja de cálculo falló por
       un índice de columna inválido o una dirección A1 malformada.
     error_calculations_registry: Se produjo un error al cargar, resolver o validar

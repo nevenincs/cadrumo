@@ -29,7 +29,7 @@ modelo:
             x-cdmn8bj1clp6urj1epiiqsr5e9kma:
               label: C.M.T. Aircraft. Serial number
             x-cdmn8bj5dlh62sj3c5hmirre5lin6r3fe9gg:
-              label: C.M.T. Vessels. Maximum length (in metres)
+              label: C.M.T. Vessels. Maximum vessel length (in metres)
             x-cdmn8bj5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
               label: C.M.T. Vessels. Manufacturer or importer
             x-cdmn8bj5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:

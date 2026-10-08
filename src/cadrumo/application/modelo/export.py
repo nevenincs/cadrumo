@@ -730,6 +730,7 @@ def _approve_export_draft(
             period=period,
             profile=filing_profile_from_taxpayer(workflow_profile),
             inputs=inputs,
+            closed_record_row_sets=revision.closed_record_row_sets,
             schema_provider=schema_provider,
         )
         draft = attach_revision_row_source_identities(draft=draft, revision=revision)

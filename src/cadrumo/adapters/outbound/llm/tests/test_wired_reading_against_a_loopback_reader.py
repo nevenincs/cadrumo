@@ -225,7 +225,7 @@ def test_the_read_actually_reaches_the_loopback_endpoint(
 
     _read_through_the_wired_path(chat_url)
 
-    sent = requests.get(timeout=5)
+    sent = requests.get_nowait()
     assert sent["stream"] is False
     assert isinstance(sent["messages"], list)
 
@@ -242,7 +242,7 @@ def test_the_transcription_not_the_raw_bytes_is_what_the_reader_receives(
 
     _read_through_the_wired_path(chat_url)
 
-    sent = requests.get(timeout=5)
+    sent = requests.get_nowait()
     messages = sent["messages"]
     assert isinstance(messages, list), "the wired request carried no message list"
     prompt = "".join(str(message.get("content", "")) for message in messages if isinstance(message, dict))

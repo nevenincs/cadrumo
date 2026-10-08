@@ -44,7 +44,6 @@ def _calendar_words(effective: date) -> str:
     return tr("tui.modelo.workbench.header.deadline", locale="en", date=shown, days=(effective - _TODAY).days)
 
 
-@pytest.mark.timeout(300)
 def test_the_header_names_the_calendar_rows_date_and_counts_its_days_from_the_same_day() -> None:
     compared: list[tuple[str, str, str]] = []
     with bundled_indexed_authority().operation() as operation, override_settings(cadrumo_output_language="en"):

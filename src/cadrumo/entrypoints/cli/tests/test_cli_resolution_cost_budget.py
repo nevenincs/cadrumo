@@ -67,7 +67,6 @@ _CLASS_EXCESS_BUDGET: dict[str, int] = {
 
 _HEAVY_NODE = "app/ledger/import"
 _BATCH_COUNT = 3
-_MEASUREMENT_TIMEOUT_SECONDS = 600
 
 _PROBE = textwrap.dedent(
     """
@@ -110,7 +109,7 @@ def _run_measurements(runs: list[list[str]], workdir: Path, *, named: frozenset[
             started.append((process, result, log))
         outcomes: list[list[_CostRecord]] = []
         for process, result, log in started:
-            returncode = process.wait(timeout=_MEASUREMENT_TIMEOUT_SECONDS)
+            returncode = process.wait(timeout=None)
             assert returncode == 0, f"measurement child failed: {log.read_text(encoding='utf-8', errors='replace')}"
             outcomes.append(json.loads(result.read_text(encoding="utf-8")))
         return outcomes

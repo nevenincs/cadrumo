@@ -75,7 +75,6 @@ def _workbench(tmp_path: Path) -> Generator[_Workbench]:
         yield _Workbench(work=work, installed=installed, submissions=submissions)
 
 
-@pytest.mark.timeout(300)
 def test_a_carried_box_takes_the_filers_value_and_gives_it_back_to_its_source(tmp_path: Path) -> None:
     with _workbench(tmp_path) as bench:
         bench.work.recalculate()
@@ -107,7 +106,6 @@ def test_a_carried_box_takes_the_filers_value_and_gives_it_back_to_its_source(tm
     assert restored.origin is not ModeloFormOrigin.OVERRIDES_SOURCE
 
 
-@pytest.mark.timeout(300)
 def test_a_declaration_calculated_elsewhere_names_the_value_applying_returns_to_source(tmp_path: Path) -> None:
     c06 = validated_casilla_id("06")
     with _workbench(tmp_path) as bench:

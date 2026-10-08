@@ -13,7 +13,7 @@ modelo:
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
-            label: A levonások és előlegfizetések alapja
+            label: A levonások és adóelőlegek alapja
           declaracion-anterior-numero:
             label: A korábbi bevallás azonosító száma
           declaracion-complementaria:
@@ -41,7 +41,7 @@ modelo:
           gastos-total-declarante:
             label: Levonható költségek (35/2006 törvény 26.1.a cikk)
           payee-base-retenciones-193:
-            label: A levonások és előlegfizetések alapja
+            label: A levonások és adóelőlegek alapja
           payee-ceuta-melilla-clave:
             label: CEUTA VAGY MELILLA / ISLA DE LA PALMA
           payee-clave-codigo:
@@ -72,8 +72,6 @@ modelo:
             label: A BEVALLÓ JELLEGE
           payee-naturaleza-percepcion:
             label: JELLEG
-          payee-nif:
-            label: A kedvezményezett adószáma
           payee-nif-pagador-anterior:
             label: AZ ELŐZŐ KIFIZETŐ NIF SZÁMA
           payee-numero-orden-193:
@@ -93,7 +91,7 @@ modelo:
           payee-reducciones-193:
             label: Csökkentések összege
           payee-retenciones-193:
-            label: Forrásadó és részletfizetés
+            label: Levonások és adóelőlegek
           payee-retenciones-forales-araba:
             label: Befizetett levonások és előlegfizetések. Araba/Álava Tartományi
               Tanácsa
@@ -109,14 +107,10 @@ modelo:
             label: KÓD TÍPUSA
           payee-tipo-percepcion:
             label: A juttatás típusa
-          perc-nif-representante:
-            label: A törvényes képviselő adószáma
-          representante-legal-nif:
-            label: A törvényes képviselő adószáma
           retenciones-ingresadas-total:
             label: BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
           retenciones-ingresos-a-cuenta:
-            label: Forrásadó és részletfizetés
+            label: Levonások és adóelőlegek
           total-perceptores-count:
             label: A KEDVEZMÉNYEZETTEK SZÁMA
       construct:
@@ -172,6 +166,13 @@ modelo:
             heading: A bevallásban szereplő adatok összesítése
       revision:
         '2022':
+          casilla:
+            x-ctgn6t3f5pn6iphde9in0sj5edimst31dpq6a:
+              label: A törvényes képviselő NIF-azonosítója
+            x-e1in4opedpkmc:
+              label: A jövedelemszerző NIF-azonosítója
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehig:
+              label: A törvényes képviselő NIF-azonosítója
           field:
             label: 193-as modelo, 2022. adóév
         '2023':

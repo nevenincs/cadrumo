@@ -1,4 +1,7 @@
-"""Human date presentation derived from explicit registry wire-value contracts."""
+"""Human date presentation derived from explicit registry wire-value contracts.
+
+:class:`ModeloRevision` declares the form and its value contracts.
+"""
 
 from ....domain.calculations.registry.export_value_policy import ExportValuePolicy
 from ....domain.calculations.registry.schema import ModeloRevision
@@ -9,6 +12,8 @@ def compact_date_casillas(revision: ModeloRevision) -> frozenset[str]:
 
     Validated export records require the year/month/day components to be a
     complete adjacent group addressing the same semantic value.
+
+    The ``revision`` parameter uses :class:`ModeloRevision`, which declares the form and its value contracts.
     """
     return frozenset(
         str(field.casilla_id)

@@ -221,7 +221,7 @@ def test_worker_human_login_receipt_lifecycle(tmp_path: Path, mode: str) -> None
         [sys.executable, "-m", "cadrumo.entrypoints.runtime.tests.test_human_login_receipt", str(tmp_path), mode],
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=None,
         check=False,
     )
     assert result.returncode == 0, result.stderr

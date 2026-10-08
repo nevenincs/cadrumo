@@ -1598,8 +1598,6 @@ modelo:
         title: IVA. Declaració-resum anual
       form:
         authored:
-          accrual:
-            heading: 2. Meritació
           activities:
             heading: 3. Dades estadístiques · Activitats
           activity-code:
@@ -1610,8 +1608,6 @@ modelo:
             heading: Índex de quota
           activity-input-tax:
             heading: Quotes suportades
-          activity-order:
-            heading: Ordre
           activity-output-tax:
             heading: Quota meritada
           activity-result:
@@ -1684,8 +1680,6 @@ modelo:
             heading: Altra activitat 4
           other-5:
             heading: Altra activitat 5
-          page-one:
-            heading: Pàgina 1
           principal:
             heading: Principal
           prior-receipt:
@@ -1694,15 +1688,11 @@ modelo:
             heading: 11. Operacions específiques
           surname:
             heading: Cognoms o raó social
-          taxpayer:
-            heading: 1. Subjecte passiu
           territorial-settlement:
             heading: 8. Tributació a diverses administracions
           year:
             heading: Exercici
         column:
-          actividad-desarrollada:
-            heading: Activitat desenvolupada
           fecha-poder-ddmmaaaa:
             heading: Data del poder
           nif:
@@ -1715,10 +1705,6 @@ modelo:
             heading: Reducció per activitat en municipis afectats per la DANA
           reducciones-total:
             heading: Reduccions (total)
-          regularizacion-de-inversiones:
-            heading: Regularització d'inversions
-          suma-de-deducciones:
-            heading: Suma de deduccions
         page:
           pag-1:
             heading: Pàgina 1
@@ -1753,12 +1739,6 @@ modelo:
             heading: Activitat 1
           actividad-2:
             heading: Activitat 2
-          bienes-corrientes:
-            heading: Béns corrents
-          bienes-inversion:
-            heading: Béns d'inversió
-          bienes-y-servic:
-            heading: Béns i serveis corrents
           compensac-reg-especial-agric-ganad-pesca:
             heading: Compensacions del règim especial d'agricultura, ramaderia i pesca
           cuotas-deducibles-en-virtud-de-resolucion-aa4c5d:
@@ -1843,48 +1823,12 @@ modelo:
             heading: 1. Subjecte passiu
           10-volumen-de-operaciones:
             heading: 10. Volum d'operacions
-          11-oper-especificas:
-            heading: 11. Operacions específiques
           12-prorratas:
             heading: 12. Prorrates
-          13-reg-deducc-diferenc:
-            heading: Deduccions diferenciades
-          13-reg-deducc-diferenc-1:
-            heading: Deduccions diferenciades · sector 1
-          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
-            heading: Sector 1 · IVA deduïble en adquisicions intracomunitàries
-          13-reg-deducc-diferenc-1-iva-ded-importaciones:
-            heading: Sector 1 · IVA deduïble en importacions
-          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
-            heading: Sector 1 · IVA deduïble en operacions interiors
-          13-reg-deducc-diferenc-2:
-            heading: Deduccions diferenciades · sector 2
-          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
-            heading: Sector 2 · IVA deduïble en adquisicions intracomunitàries
-          13-reg-deducc-diferenc-2-iva-ded-importaciones:
-            heading: Sector 2 · IVA deduïble en importacions
-          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
-            heading: Sector 2 · IVA deduïble en operacions interiors
-          13-reg-deducc-diferenc-3:
-            heading: Deduccions diferenciades · sector 3
-          13-reg-deducc-diferenc-3-iva-ded-adquisic-92440f:
-            heading: Sector 3 · IVA deduïble en adquisicions intracomunitàries
-          13-reg-deducc-diferenc-3-iva-ded-importaciones:
-            heading: Sector 3 · IVA deduïble en importacions
-          13-reg-deducc-diferenc-3-iva-ded-operac-i-5ea9dc:
-            heading: Sector 3 · IVA deduïble en operacions interiors
           2-devengo:
             heading: 2. Meritació
           3-datos-estadisticos:
             heading: 3. Dades estadístiques
-          3-datos-estadisticos-a:
-            heading: 3. Dades estadístiques · A
-          3-datos-estadisticos-a-actividades:
-            heading: 3. Dades estadístiques · A · Activitats
-          3-datos-estadisticos-b:
-            heading: 3. Dades estadístiques · B
-          3-datos-estadisticos-c:
-            heading: 3. Dades estadístiques · C
           4-representante-personas-fisicas-comunid-bienes:
             heading: 4. Representant · Persones físiques i comunitats de béns
           4-representante-personas-juridicas:
@@ -1943,10 +1887,6 @@ modelo:
             heading: 6. Règim simplificat · Activitat 1
           6-operaciones-reg-simplificado-actividad-2:
             heading: 6. Règim simplificat · Activitat 2
-          7-resultado-liquidacion-anual:
-            heading: 7. Resultat de la liquidació anual
-          8-tributacion-razon-de-territorio:
-            heading: 8. Tributació per raó de territori
           9-resultado-de-las-liquidaciones:
             heading: 9. Resultat de les liquidacions
       revision:

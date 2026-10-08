@@ -125,6 +125,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
                 executable=Path(sys.executable),
                 arguments=(
                     "-I",
+                    "-B",
                     *worker_entrypoint,
                     "--storage-root",
                     str(storage_root),

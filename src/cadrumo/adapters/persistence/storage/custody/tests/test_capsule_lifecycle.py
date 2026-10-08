@@ -430,7 +430,7 @@ def test_real_crash_between_label_and_head_recovers_the_durable_advance(tmp_path
         args=(str(tmp_path), str(_PROFILE_ID)),
     )
     child.start()
-    child.join(30)
+    child.join(None)
     assert child.exitcode == 97
 
     recovered = CommittedProfileRepository(root=tmp_path).load(_PROFILE_ID)

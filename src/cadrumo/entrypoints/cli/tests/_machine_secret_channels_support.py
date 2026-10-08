@@ -436,7 +436,7 @@ def _run(
                 errors="replace",
                 capture_output=True,
                 check=False,
-                timeout=180,
+                timeout=None,
                 pass_fds=tuple(readers),
             ),
         )
@@ -497,7 +497,7 @@ def _run_windows_handles(
                 errors="replace",
                 capture_output=True,
                 check=False,
-                timeout=180,
+                timeout=None,
                 close_fds=True,
                 startupinfo=startup,
             ),

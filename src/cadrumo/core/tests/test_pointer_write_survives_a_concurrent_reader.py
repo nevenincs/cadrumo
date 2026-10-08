@@ -39,7 +39,7 @@ def test_a_profile_switch_is_not_refused_by_a_peer_reading_the_pointer(tmp_path:
             write_pointer(tmp_path, BucketPointer.absent(transition_revision=revision))
     finally:
         stop.set()
-        reader.join(30)
+        reader.join(None)
 
     assert seen["present"] > 0, "the reader never observed a selected pointer; the race did not overlap"
     assert seen["absent"] > 0, "the reader never observed a tombstone; the race did not overlap"

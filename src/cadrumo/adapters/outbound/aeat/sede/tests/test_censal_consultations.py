@@ -5,6 +5,11 @@ from __future__ import annotations
 import pytest
 
 from ......application.user_profile.censal_observation import CensalConsultation
+from ......tests.aeat_literal_fixtures import (
+    CENSAL_CONSULTATION_URL_FIXTURE,
+    CENSAL_PRIVATE_QUERY_FRAGMENT_CANARY,
+    WWW6_UNLISTED_URL_CANARY,
+)
 from ..censal_datos import READ_GUARD_POLICY, parse_censal_datos
 from ..censal_navigation import assert_censal_consultation_request
 from ..censal_tables import parse_censal_table
@@ -13,7 +18,7 @@ from ..errors import SedeNavigationError, SedeParseError
 from .censal_consultation_fixtures import ACTIVITIES_HTML, OBLIGATIONS_HTML, TAX_HTML, table_document
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-_SOURCE = "https://www6.agenciatributaria.gob.es/consulta?nif=PRIVATE#PRIVATE"
+_SOURCE = CENSAL_PRIVATE_QUERY_FRAGMENT_CANARY
 
 
 @pytest.mark.parametrize("aria", [False, True])
@@ -34,7 +39,7 @@ def test_reordered_headers_and_new_columns_keep_their_values(aria: bool) -> None
         "Denominación": "ACTIVIDAD",
         "Epígrafe": "999",
     }
-    assert str(parsed.source_url) == "https://www6.agenciatributaria.gob.es/consulta"
+    assert str(parsed.source_url) == CENSAL_CONSULTATION_URL_FIXTURE
     assert CensalConsultation.model_validate_json(parsed.model_dump_json()) == parsed
 
 
@@ -126,4 +131,4 @@ def test_identity_conflicting_duplicates_cannot_overwrite_each_other() -> None:
 @pytest.mark.parametrize("method", ["GET", "POST"])
 def test_unexpected_navigation_is_refused_before_request(method: str) -> None:
     with pytest.raises(SedeNavigationError):
-        assert_censal_consultation_request(READ_GUARD_POLICY, method, "https://www6.agenciatributaria.gob.es/unlisted")
+        assert_censal_consultation_request(READ_GUARD_POLICY, method, WWW6_UNLISTED_URL_CANARY)

@@ -1,4 +1,8 @@
-"""Read-only filing context selected by a declared form, never a profile dump."""
+"""Read-only filing context selected by a declared form, never a profile dump.
+
+:class:`CalculationRevision` holds the saved calculation and its evidence.
+:class:`RegistrySnapshot` pins the registry declarations used by the projection.
+"""
 
 from __future__ import annotations
 
@@ -29,6 +33,10 @@ def form_context_value(
     No profile is opened here. The caller supplies an admitted filing snapshot
     explicitly, and facts for a different modelo are refused even when the
     requested field itself is a year or period.
+
+    The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
+    The ``snapshot`` parameter uses :class:`RegistrySnapshot`, which pins
+    the registry declarations used by the projection.
     """
     if producer_snapshot is not None and str(producer_snapshot.modelo) != str(snapshot.modelo.id):
         raise RegistryValidationError("form context producer belongs to another modelo")

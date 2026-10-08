@@ -48,7 +48,11 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.source_byte_availability import layout_embedded_source_ids
 from ...domain.filing.schema import ModeloScalar, ModeloValueKind
-from ...domain.modelos.calculation_revision import CalculationRevision, persisted_boolean_binding_value
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    persisted_boolean_binding_value,
+)
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -139,11 +143,13 @@ def _current_revision(
     repository: CalculationRevisionCatalogueRepositoryProtocol,
     *,
     operation: PinnedAuthorityOperation,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
 ) -> CalculationRevision | None:
     revision_id = work_unit.current_calculation_revision_id
     if revision_id is None:
         return None
-    revision = repository.load(operation=operation).get(revision_id)
+    catalogue = calculation_catalogue if calculation_catalogue is not None else repository.load(operation=operation)
+    revision = catalogue.get(revision_id)
     if revision is None:
         raise CalculationRevisionNotFoundError(
             translated_message="application.modelo.errors.calculation_revision_not_found",
@@ -535,6 +541,7 @@ def assemble_modelo_work_review(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
 ) -> ModeloWorkReview:
     selected_revision = operation.revision_for_context(
         modelo,
@@ -558,7 +565,12 @@ def assemble_modelo_work_review(
         registry_revision_id=snapshot.revision.id,
         catalogue=work_units,
     )
-    revision = _current_revision(work_unit, calculation_repo, operation=operation)
+    revision = _current_revision(
+        work_unit,
+        calculation_repo,
+        operation=operation,
+        calculation_catalogue=calculation_catalogue,
+    )
     verification = _latest_verification(revision, verification_repo, operation=operation)
     findings = () if verification is None else verification.findings
     blocking_findings = tuple(

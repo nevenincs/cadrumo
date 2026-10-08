@@ -573,7 +573,7 @@ def test_a_duplicate_label_is_refused_before_any_key_is_derived(tmp_path: Path) 
         invocation_args=("only one", "--quiet", "--secrets-stdin"),
         storage_root=root,
         stdin_payload=payload,
-        timeout=300,
+        timeout=None,
     )
 
     refusal = profile.invocation

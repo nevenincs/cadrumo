@@ -101,7 +101,7 @@ modelo:
               where the payee type is code 5 and the payee has no Spanish NIF, in
               which case the identification number in the country of residence is
               mandatory instead.
-            label: Payee tax identification number
+            label: Recipient's NIF
           payee-province:
             help: Two digits for the province or autonomous city of the payee's address.
               Digits 98 are used for personal income tax payers habitually resident

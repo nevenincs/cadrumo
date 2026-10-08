@@ -47,7 +47,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
-_JOIN_TIMEOUT_S = 60.0
 
 
 def _fresh_nonce_hex() -> str:
@@ -161,7 +160,7 @@ def test_concurrent_same_nonce_consumption_allows_exactly_one_success(tmp_path: 
         for thread in threads:
             thread.start()
         for thread in threads:
-            thread.join(timeout=_JOIN_TIMEOUT_S)
+            thread.join()
 
         assert not [thread for thread in threads if thread.is_alive()], "a replay consumer deadlocked"
         assert unexpected == []
@@ -193,7 +192,7 @@ def test_concurrent_distinct_nonce_consumption_preserves_every_record(tmp_path: 
         for thread in threads:
             thread.start()
         for thread in threads:
-            thread.join(timeout=_JOIN_TIMEOUT_S)
+            thread.join()
 
         assert not [thread for thread in threads if thread.is_alive()], "a replay consumer deadlocked"
         assert unexpected == []

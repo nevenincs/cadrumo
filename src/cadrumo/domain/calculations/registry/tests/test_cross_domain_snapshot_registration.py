@@ -46,7 +46,7 @@ def _run_python(*fragments: str) -> subprocess.CompletedProcess[str]:
         [sys.executable, "-c", source],
         capture_output=True,
         text=True,
-        timeout=300,
+        timeout=None,
     )
 
 

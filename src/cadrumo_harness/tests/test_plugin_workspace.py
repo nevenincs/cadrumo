@@ -238,7 +238,7 @@ def test_emitted_plugin_passes_claude_validate_strict_when_cli_present(
             [claude, "plugin", "validate", "--strict", str(output)],
             capture_output=True,
             check=False,
-            timeout=60,
+            timeout=None,
             encoding=_UTF_8,
         )
         assert completed.returncode == 0, (

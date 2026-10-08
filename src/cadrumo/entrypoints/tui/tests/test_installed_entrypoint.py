@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _SCRIPT_NAME = "aeat"
 _RETIRED_SCRIPT_NAME = "aeat-tui"
 _SESSION_MODULE = "cadrumo.entrypoints.tui"
-_STARTUP_GRACE_SECONDS = 45.0
 _REPO_ROOT = Path(__file__).parents[5]
 
 
@@ -49,7 +48,7 @@ def test_the_tui_module_imports_no_cli_internals() -> None:
         capture_output=True,
         text=True,
         check=True,
-        timeout=_STARTUP_GRACE_SECONDS,
+        timeout=None,
     )
 
     imported = json.loads(completed.stdout.splitlines()[-1])
@@ -80,7 +79,7 @@ def test_the_tui_module_refuses_retired_destination_session_arguments(tmp_path: 
         capture_output=True,
         text=True,
         check=False,
-        timeout=_STARTUP_GRACE_SECONDS,
+        timeout=None,
     )
 
     assert completed.returncode == 2

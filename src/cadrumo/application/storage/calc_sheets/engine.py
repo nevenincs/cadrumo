@@ -1232,6 +1232,8 @@ def assemble_workbook_plan[M: (SheetExportMetadata, SheetTemplatePreviewMetadata
     Production callers select and ground these inputs through a registry snapshot.
     Fictional preview callers must supply their own distinct preview identity.
     This assembly stage neither selects a revision nor resolves profile data.
+
+    The ``revision`` parameter uses :class:`ModeloRevision`, which declares the form and its value contracts.
     """
     entradas = _value_cells_for_entradas(revision, layout, inputs)
     calculos_labels = _label_cells_for_calculos(revision, layout)

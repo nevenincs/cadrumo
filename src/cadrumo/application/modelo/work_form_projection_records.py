@@ -1,4 +1,8 @@
-"""Read typed non-casilla activity endpoints from immutable saved evidence."""
+"""Read typed non-casilla activity endpoints from immutable saved evidence.
+
+:class:`CalculationRevision` holds the saved calculation and its evidence.
+:class:`RegistrySnapshot` pins the registry declarations used by the projection.
+"""
 
 from ...core.filing_projection_ref import (
     M303Exonerado390ActivityProjectionRef,
@@ -30,6 +34,10 @@ def saved_projection_context_value(
 
     A missing slot stays unknown. The third-party declaration is a boolean
     fact, so an evidenced false decision remains distinguishable from absence.
+
+    The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
+    The ``snapshot`` parameter uses :class:`RegistrySnapshot`, which pins
+    the registry declarations used by the projection.
     """
     field = resolve_form_context_field(snapshot.revision, block)
     supported = (M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef)
@@ -75,6 +83,10 @@ def saved_projection_form_records(
     Unknown legacy evidence remains unknown. Explicitly unclaimed simplified
     scope is known-empty. Page occurrence numbers come from the domain owner;
     selecting a subset of fields never renumbers or joins unrelated activities.
+
+    The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
+    The ``snapshot`` parameter uses :class:`RegistrySnapshot`, which pins
+    the registry declarations used by the projection.
     """
     if revision.registry_snapshot_ref != snapshot.snapshot_ref:
         raise RegistryValidationError("saved projection rows belong to another registry coordinate")

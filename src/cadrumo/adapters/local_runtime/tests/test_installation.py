@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 
 from ..installation import read_runtime_installation, runtime_installation
 
@@ -26,12 +28,13 @@ def test_racing_installation_reads_converge_without_an_os_secret_store(tmp_path:
         read_runtime_installation(storage_root=tmp_path, os_owner_id="synthetic-owner", storage_identity="a" * 64)
         == identities[0]
     )
-    before = (tmp_path / ".runtime" / "installation.json").read_bytes()
+    installation_path = tmp_path / storage_location(StorageCategory.RUNTIME_INSTALLATION_RECORD).relative_path()
+    before = installation_path.read_bytes()
     for owner, root in (("another-owner", "a" * 64), ("synthetic-owner", "b" * 64)):
         with pytest.raises(RuntimeRefusalError) as refused:
             runtime_installation(storage_root=tmp_path, os_owner_id=owner, storage_identity=root)
         assert refused.value.reason is RuntimeRefusalCode.ROOT_MISMATCH
-    assert (tmp_path / ".runtime" / "installation.json").read_bytes() == before
+    assert installation_path.read_bytes() == before
 
 
 def test_passive_identity_read_never_creates_a_missing_installation(tmp_path: Path) -> None:

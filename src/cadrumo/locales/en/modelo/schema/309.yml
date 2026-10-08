@@ -35,7 +35,7 @@ modelo:
           declarante-nombre-309:
             label: Identification - Given name
           embarcacion-eslora:
-            label: Characteristics and technical data - Vessels - Maximum length
+            label: Characteristics and technical data - Vessels - Maximum vessel length
           embarcacion-fabricante:
             label: Characteristics and technical data - Vessels - Manufacturer
           embarcacion-tipo:
@@ -100,7 +100,7 @@ modelo:
           m309-papel-domicilio-via:
             label: 'Tax address: street'
           m309-papel-nombre-completo:
-            label: Full name or company name
+            label: Surname and given name or company name
           motivo-declaracion-no-periodica:
             label: Reason for the non-periodic return
           mtn-embarcacion-identificacion:
@@ -108,34 +108,6 @@ modelo:
               no.)
           observaciones-presentacion:
             label: Observations
-          papel-ccc-cuenta:
-            label: null
-          papel-ccc-dc:
-            label: null
-          papel-ccc-entidad:
-            label: null
-          papel-ccc-oficina:
-            label: null
-          papel-domicilio-codigo-postal:
-            label: null
-          papel-domicilio-escalera:
-            label: null
-          papel-domicilio-municipio:
-            label: null
-          papel-domicilio-numero:
-            label: null
-          papel-domicilio-piso:
-            label: null
-          papel-domicilio-provincia:
-            label: null
-          papel-domicilio-puerta:
-            label: null
-          papel-domicilio-telefono:
-            label: null
-          papel-domicilio-tipo-via:
-            label: null
-          papel-domicilio-via:
-            label: null
           papel-firma:
             help: Space for signing the printed form. A name entered here is neither
               an electronic signature nor a submission.
@@ -238,6 +210,13 @@ modelo:
               name):'
           vehiculo-tipo:
             label: Characteristics and technical data - Vehicles - Type
+      construct:
+        modelo-309-papel-domicilio-cuenta:
+          field:
+            title: Address and bank account
+        modelo-309-papel-identificacion-complementaria:
+          field:
+            title: Additional identification
       field:
         official_name: Modelo 309. Value Added Tax. Non-periodic return-settlement.
         title: VAT. Non-periodic return-settlement

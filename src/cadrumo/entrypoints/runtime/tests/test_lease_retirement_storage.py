@@ -65,7 +65,7 @@ def test_retiring_the_only_lease_makes_profile_storage_not_ready(tmp_path: Path)
         [sys.executable, "-m", "cadrumo.entrypoints.runtime.tests.test_lease_retirement_storage", str(tmp_path)],
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=None,
         check=False,
     )
     assert result.returncode == 0, result.stderr

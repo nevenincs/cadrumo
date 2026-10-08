@@ -2,9 +2,9 @@
 
 A rate-specific official box may assert only a rate the evidence determines, so
 a ledger row that records a cuota without recording the rate charged reaches the
-rate-blind total and no box. The return stays whole and the breakdown stays
-truthful, and the price is that the boxes sum to less than the total by exactly
-that amount.
+rate-blind control total and no box. The control retains the observed amount,
+while the printed boxes exclude the unallocated portion. Their difference
+identifies the amount that needs a recorded rate before export.
 
 The operator has to be told, and told HERE rather than only at export. The
 repair is a ledger edit -- record the rate on the rows that lack one -- and the
@@ -71,15 +71,15 @@ def collect_rate_box_coverage_diagnostics(
             source_kind=_LEDGER_IVA_SOURCE_KIND,
             message=(
                 f"{shortfall.shortfall} of the {'/'.join(shortfall.partition.rate_kinds)} "
-                f"{shortfall.partition.fact} declared in {shortfall.partition.total_casilla_id!r} "
+                f"{shortfall.partition.fact} observed in {shortfall.partition.total_casilla_id!r} "
                 f"({shortfall.total}) reaches no rate box: boxes "
                 f"{list(shortfall.partition.box_casilla_ids)!r} account for {shortfall.boxes_total}. "
                 f"Those rows record a cuota without recording the rate charged, so no official box may "
-                f"assert a rate for them. The return still declares the full amount"
+                f"assert a rate for them. The full observed amount remains visible in the separate control total"
             ),
             remedy=(
                 "Record the IVA rate on the ledger rows that lack one, then recalculate; "
-                "export refuses while the rate boxes do not account for the declared total."
+                "export refuses while the rate boxes do not account for the observed control total."
             ),
             casilla_id=shortfall.partition.total_casilla_id,
         )

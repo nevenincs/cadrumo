@@ -41,6 +41,9 @@ from ...core.period import Period
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...tests.aeat_literal_fixtures import (
+    SEDE_TEST_URL_FIXTURE,
+)
 from ..justificante_composition import build_justificante_capture_service
 from . import modelo_operation_test_support
 from . import test_registered_executor_conformance as conformance
@@ -122,7 +125,7 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
                     artefacts=(
                         FiledDeclaracionArtefact(
                             kind="submitted_file",
-                            source_url="https://sede.agenciatributaria.gob.es/test",
+                            source_url=SEDE_TEST_URL_FIXTURE,
                             content_type="text/plain",
                             byte_count=5,
                             sha256=sha256_hex(b"filed"),

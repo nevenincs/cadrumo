@@ -13,7 +13,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
     replace_test_profile_record,
 )
-from cadrumo.application.modelo.action_errors import StoredCalculationDriftError
+from cadrumo.application.modelo.action_errors import CalculationRevisionNotFoundError, StoredCalculationDriftError
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_addressing import ModeloExactWorkUnitTarget
 from cadrumo.application.modelo.work_review import (
@@ -56,6 +56,7 @@ from cadrumo.domain.modelos.calculation_repository import (
 )
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
+    CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
@@ -169,7 +170,13 @@ def test_a_work_review_capture_carries_exactly_the_built_review_and_stays_curren
     }
 
     with bundled_indexed_authority().operation() as operation:
-        built = build_modelo_work_review(*target, operation=operation, **stores)
+        built = build_modelo_work_review(
+            *target,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
         captured = capture_modelo_work_review(*target, operation=operation, **stores)
         again = capture_modelo_work_review(*target, operation=operation, **stores)
         current = read_modelo_work_review_current_coordinate(*target, operation=operation, **stores)
@@ -274,7 +281,10 @@ def _persist_m100_revision_with_override(repos: Repos, raw_value: str) -> WorkUn
 
 
 @pytest.mark.parametrize("truth", ["true", "false"])
-def test_the_review_reads_a_persisted_boolean_binding_as_a_truth_value(repos: Repos, truth: str) -> None:
+@pytest.mark.parametrize("supplied_catalogue", [False, True])
+def test_the_review_reads_a_persisted_boolean_binding_as_a_truth_value(
+    repos: Repos, truth: str, supplied_catalogue: bool
+) -> None:
     """The replay writer stores a boolean-channel binding as a truth token, not a quantity."""
     work_repo, calculation_repo, _, verification_repo, _ = repos
     unit = _persist_m100_revision_with_override(repos, truth)
@@ -289,12 +299,16 @@ def test_the_review_reads_a_persisted_boolean_binding_as_a_truth_value(repos: Re
             work_unit_repository=work_repo,
             calculation_repository=calculation_repo,
             verification_repository=verification_repo,
+            calculation_catalogue=calculation_repo.load(operation=operation) if supplied_catalogue else None,
         )
 
     assert review.calculation_revision_id == unit.current_calculation_revision_id
 
 
-def test_a_boolean_binding_holding_no_truth_value_still_refuses_as_stored_drift(repos: Repos) -> None:
+@pytest.mark.parametrize("supplied_catalogue", [False, True])
+def test_a_boolean_binding_holding_no_truth_value_still_refuses_as_stored_drift(
+    repos: Repos, supplied_catalogue: bool
+) -> None:
     """Skipping truth tokens must not let an unreadable stored value through."""
     work_repo, calculation_repo, _, verification_repo, _ = repos
     unit = _persist_m100_revision_with_override(repos, "maybe")
@@ -309,6 +323,25 @@ def test_a_boolean_binding_holding_no_truth_value_still_refuses_as_stored_drift(
             work_unit_repository=work_repo,
             calculation_repository=calculation_repo,
             verification_repository=verification_repo,
+            calculation_catalogue=calculation_repo.load(operation=operation) if supplied_catalogue else None,
+        )
+
+
+def test_a_supplied_empty_catalogue_refuses_a_missing_head_without_reloading(repos: Repos) -> None:
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    unit = _persist_m100_revision_with_override(repos, "true")
+
+    with bundled_indexed_authority().operation() as operation, pytest.raises(CalculationRevisionNotFoundError):
+        build_modelo_work_review(
+            unit.bucket_id,
+            unit.modelo,
+            unit.filing_year,
+            unit.period,
+            operation=operation,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+            calculation_catalogue=CalculationRevisionCatalogue(),
         )
 
 
@@ -642,6 +675,7 @@ def test_graded_admission_carries_the_canonical_review_of_a_calculated_unit(repo
     assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
     projection = result.projection
     assert projection.work_review.disposition is ModeloWorkspaceCapabilityDisposition.AVAILABLE
+    assert projection.work_review.review is not None
     assert projection.work_review.review == expected_review
     assert projection.work_review.review.calculation_revision_id == revision.calculation_revision_id
     assert {contributor.owner for contributor in projection.contributors} >= {

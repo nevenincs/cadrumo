@@ -64,7 +64,7 @@ def _run_console(environment: dict[str, str], arguments: list[str]) -> subproces
             errors="replace",
             capture_output=True,
             check=False,
-            timeout=90,
+            timeout=None,
         ),
     )
 

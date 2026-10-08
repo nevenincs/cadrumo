@@ -1,4 +1,7 @@
-"""Strict presentation inputs for fictional workbook templates, never filing snapshots."""
+"""Strict presentation inputs for fictional workbook templates, never filing snapshots.
+
+:class:`ModeloRevision` declares the form and its value contracts.
+"""
 
 from __future__ import annotations
 

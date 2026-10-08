@@ -131,7 +131,7 @@ def _reopen(namespace: str, account: str, expected: SecretBytes) -> None:
         input=expected.get_secret_value(),
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
-        timeout=15,
+        timeout=None,
         check=False,
     )
     try:

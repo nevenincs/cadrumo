@@ -18,7 +18,7 @@ modelo:
           m136-declarante-nif:
             label: Adóazonosító szám (NIF)
           m136-declarante-nombre:
-            label: Családi és utónév vagy cégnév
+            label: Vezetéknév és utónév vagy cégnév
           m136-ejercicio-declaracion:
             label: Adóév
           m136-fecha-celebracion:

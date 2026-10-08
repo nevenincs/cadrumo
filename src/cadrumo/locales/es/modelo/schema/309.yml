@@ -112,34 +112,6 @@ modelo:
               (Nº construcción)
           observaciones-presentacion:
             label: Observaciones
-          papel-ccc-cuenta:
-            label: null
-          papel-ccc-dc:
-            label: null
-          papel-ccc-entidad:
-            label: null
-          papel-ccc-oficina:
-            label: null
-          papel-domicilio-codigo-postal:
-            label: null
-          papel-domicilio-escalera:
-            label: null
-          papel-domicilio-municipio:
-            label: null
-          papel-domicilio-numero:
-            label: null
-          papel-domicilio-piso:
-            label: null
-          papel-domicilio-provincia:
-            label: null
-          papel-domicilio-puerta:
-            label: null
-          papel-domicilio-telefono:
-            label: null
-          papel-domicilio-tipo-via:
-            label: null
-          papel-domicilio-via:
-            label: null
           papel-firma:
             help: Espacio para la firma del impreso. Escribir un nombre aquí no constituye
               una firma electrónica ni una presentación.
@@ -244,6 +216,13 @@ modelo:
               comercial):'
           vehiculo-tipo:
             label: Características y datos técnicos - Vehículos - Tipo
+      construct:
+        modelo-309-papel-domicilio-cuenta:
+          field:
+            title: Domicilio y cuenta bancaria
+        modelo-309-papel-identificacion-complementaria:
+          field:
+            title: Identificación complementaria
       field:
         official_name: Modelo 309. Impuesto sobre el Valor Añadido. Declaración-liquidación
           no periódica.

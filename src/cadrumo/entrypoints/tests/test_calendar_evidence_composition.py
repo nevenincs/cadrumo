@@ -36,6 +36,9 @@ from ...core.hashing import sha256_hex
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.models import ObligationStatus
+from ...tests.aeat_literal_fixtures import (
+    SEDE_ROOT_URL_FIXTURE,
+)
 from ..calendar_evidence_composition import compose_calendar_aeat_reader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -62,7 +65,7 @@ def _store_observation(
             ("303", 2025, Period.from_year_and_code(2025, period), expediente),
             FiledDeclaracionArtefact(
                 kind="register_row",
-                source_url=TypeAdapter(AnyHttpUrl).validate_python("https://sede.agenciatributaria.gob.es/"),
+                source_url=TypeAdapter(AnyHttpUrl).validate_python(SEDE_ROOT_URL_FIXTURE),
                 content_type="text/html",
                 byte_count=len(body),
                 sha256=sha256_hex(body),

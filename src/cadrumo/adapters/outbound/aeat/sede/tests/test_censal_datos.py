@@ -31,6 +31,8 @@ from ......core.config import Settings
 from ......core.period import Period
 from ......tests.aeat_literal_fixtures import (
     CENSAL_WRITE_SURFACE_PATH_CANARIES,
+    CLAVE_AUTHORIZATION_SELECTOR_HTML_FIXTURE,
+    OTHER_APPLICATION_START_PATH_CANARY,
     PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE,
     aeat_url,
 )
@@ -354,13 +356,7 @@ _SELECTOR_URL = _AEAT.clave_movil.selector_access_url_template.format(
 # Cl@ve Movil authorize control is in the DOM but not actionable, which is
 # what the live capture recorded: the selector rendered and the reader's
 # click ran out its timeout with no further navigation.
-_AUTHENTICATED_SELECTOR_HTML = """
-<html><head><title>Selector de acceso</title></head><body>
-  <form method="post" action="/wlpl/AUTH/Autorizar">
-    <button type="button" name="autoriza-P" style="display:none">Cl@ve Movil</button>
-  </form>
-</body></html>
-"""
+_AUTHENTICATED_SELECTOR_HTML = CLAVE_AUTHORIZATION_SELECTOR_HTML_FIXTURE
 _OTHER_HTML = "<html><head><title>Agencia Tributaria</title></head><body><p>Servicio</p></body></html>"
 
 
@@ -511,14 +507,14 @@ class TestDirectAuthenticatedEntry:
 
     @pytest.mark.asyncio
     async def test_unrecognised_landing_is_the_bad_landing_refusal(self) -> None:
-        boundary = _SedeDocuments(_bouncing_to(f"{_AEAT.domains.www6}/wlpl/OTRA-APLI/Inicio", _OTHER_HTML))
+        boundary = _SedeDocuments(_bouncing_to(f"{_AEAT.domains.www6}OTHER_APPLICATION_START_PATH_CANARY", _OTHER_HTML))
         try:
             with pytest.raises(SedeNavigationError) as excinfo:
                 await _read(boundary, "censal-unrecognised")
         finally:
             boundary.close()
 
-        assert (excinfo.value.context or {})["landing_path"] == "/wlpl/OTRA-APLI/Inicio"
+        assert (excinfo.value.context or {})["landing_path"] == OTHER_APPLICATION_START_PATH_CANARY
 
     @pytest.mark.asyncio
     async def test_retired_selector_click_entry_times_out_on_the_authenticated_selector(self) -> None:

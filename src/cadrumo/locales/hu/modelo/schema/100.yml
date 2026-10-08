@@ -3914,7 +3914,7 @@ modelo:
               label: Rokonság esetén beszámítandó minimumjövedelem (a személyi jövedelemadóról
                 szóló törvény 24. cikke)
             '0153':
-              label: Forrásadó és részletfizetés
+              label: Levonások és adóelőlegek
             '0154':
               label: 'Ingatlantőkéből származó csökkentett nettó jövedelem: a ([0149]
                 - [0150] - [0151]) és [0152] közül a nagyobb összeg'

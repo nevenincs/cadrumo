@@ -74,6 +74,9 @@ from ...adapters.persistence.operations.tests.test_censal_operation_executor imp
 from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
     wait_for_phase as _wait_for_phase,
 )
+from ...tests.aeat_literal_fixtures import (
+    CENSO_CONSULTATION_URL_FIXTURE,
+)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -229,7 +232,7 @@ def test_reviewed_preserve_of_equal_effective_value_does_not_record_a_divergence
         html = (FIXTURES_DIR / "aeat-sede" / "censal-datos-mdcacceso.html").read_text(encoding="utf-8")
         observation = parse_censal_datos(
             html.replace("Y0000001Z", "12345678Z"),
-            source_url="https://sede.agenciatributaria.gob.es/censo/consulta",
+            source_url=CENSO_CONSULTATION_URL_FIXTURE,
         )
         proposal = CensalReviewedOperand(
             observation=observation,

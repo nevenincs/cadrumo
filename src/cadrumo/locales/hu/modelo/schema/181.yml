@@ -118,7 +118,7 @@ modelo:
             referencia-catastral:
               label: Ingatlan-nyilvántartási hivatkozás
             representante-legal-nif:
-              label: A törvényes képviselő adószáma
+              label: A törvényes képviselő NIF-azonosítója
             saldo-pendiente:
               label: A december 31-én fennálló egyenleg
             situacion-inmueble:

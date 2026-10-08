@@ -13,6 +13,7 @@ from datetime import datetime
 from pydantic import BaseModel, ValidationError
 
 from ....application.operations.persistence.journal import serialize_operation_operand
+from ....core.async_cleanup import await_cancellation_complete
 from ....core.classification.policies import AtRestTreatment, SensitivityClass, default_policy_for
 from ....core.hashing import sha256_hex
 from ....core.identity.digest import ContentDigest
@@ -107,7 +108,18 @@ class OperationSecureReferenceRepository:
         operand_type: type[OperandT],
     ) -> OperandT:
         """Load, re-hash, and strictly hydrate one typed secure operand, off the awaiting loop."""
-        payload = await asyncio.to_thread(self._verified_payload, reference)
+
+        def resolve_operand() -> OperandT:
+            return self._resolve(reference, operand_type)
+
+        return await await_cancellation_complete(
+            asyncio.to_thread(resolve_operand),
+            task_name="operation-secure-reference-resolve",
+        )
+
+    def _resolve[OperandT: BaseModel](self, reference: ContentDigest, operand_type: type[OperandT]) -> OperandT:
+        """Finish the fresh read and strict hydration before its caller releases custody."""
+        payload = self._verified_payload(reference)
         try:
             return operand_type.model_validate_json(payload, strict=True)
         except ValidationError as exc:

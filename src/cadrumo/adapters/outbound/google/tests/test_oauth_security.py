@@ -139,7 +139,7 @@ def test_real_flow_uses_fresh_s256_and_never_logs_callback(
             with pytest.raises(GoogleAuthValidationError):
                 oauth_flow._run_local_server(client)
             for visit in browser.visits:
-                visit.join(timeout=2)
+                visit.join()
             request = endpoint.grant_requests[0]
             verifier = request["code_verifier"][0]
             verifiers.append(verifier)
@@ -308,7 +308,7 @@ def test_complete_authorization_validates_signed_nonce_and_returns_records(
         loopback_client = client.model_copy(update={"token_uri": endpoint.url})
         refresh, _uri, email, scopes = oauth_flow._run_local_server(loopback_client)
         for visit in browser.visits:
-            visit.join(timeout=2)
+            visit.join()
         assert len(endpoint.grant_requests) == 1
     from .....core.time.clock import now
 
@@ -340,5 +340,5 @@ def test_invalid_wire_callback_never_reaches_token_endpoint(monkeypatch: pytest.
         with pytest.raises(GoogleAuthNetworkError):
             oauth_flow._run_local_server(client)
         for visit in browser.visits:
-            visit.join(timeout=2)
+            visit.join()
         assert endpoint.grant_requests == []

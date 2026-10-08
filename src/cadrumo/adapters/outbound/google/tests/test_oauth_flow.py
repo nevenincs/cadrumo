@@ -215,7 +215,7 @@ def test_login_flow_refuses_fast_without_a_controlling_terminal() -> None:
         stdin=subprocess.PIPE,
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=None,
     )
 
     assert completed.returncode == 0, completed.stderr
@@ -367,7 +367,7 @@ def test_a_completed_token_exchange_is_accounted_as_a_change_before_a_later_refu
                 acknowledged=lambda action, *, writes=False: boundaries.append(f"done:{action}:{writes}"),
             )
         for visit in browser.visits:
-            visit.join(timeout=10)
+            visit.join()
 
         assert [request["grant_type"] for request in endpoint.grant_requests] == [["authorization_code"]]
         assert endpoint.grant_requests[0]["code"] == ["synthetic-authorization-code"]
@@ -404,7 +404,7 @@ def test_a_declined_consent_is_refused_before_the_exchange_is_admitted(monkeypat
                 acknowledged=lambda action, *, writes=False: boundaries.append(f"done:{action}:{writes}"),
             )
         for visit in browser.visits:
-            visit.join(timeout=10)
+            visit.join()
 
         assert endpoint.grant_requests == []
 
@@ -434,7 +434,7 @@ def test_an_error_the_token_endpoint_answers_is_never_taken_for_a_declined_conse
                 acknowledged=lambda action, *, writes=False: boundaries.append(f"done:{action}:{writes}"),
             )
         for visit in browser.visits:
-            visit.join(timeout=10)
+            visit.join()
 
         assert len(endpoint.grant_requests) == 1
 

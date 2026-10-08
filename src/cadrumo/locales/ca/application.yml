@@ -341,22 +341,6 @@ application:
       sentido_ingreso: ingrés
       target_casilla: casella %{number}
       target_declared: la casella de regularització declarada
-    row_set:
-      errors:
-        grouping_dispatch_fell_through: 'L''agrupació de conjunt de files {grouping}
-          s''ha resolt a un assemblador que no s''ha executat. Comunica-ho: la taula
-          de despatx és inconsistent.'
-        grouping_has_no_assembler: L'agrupació de conjunt de files {grouping} no té
-          assemblador en aquesta aplicació; les agrupacions sense un són {unassemblable_groupings}.
-        percepcion_clave_missing: La fila {row_index} no declara cap clave. Una percepción
-          ha d'indicar la seva clave de l'AEAT, segons el disseny de registres dels
-          Models 190 i 193, registre de tipus 2. Aporta la clave.
-        percepcion_clave_unsupported: La fila {row_index} declara la clave de l'AEAT
-          {clave}, que aquesta aplicació no admet.
-        row_assembly_failed: 'No s''ha pogut assemblar la fila {row_index}: {validation_error_detail}.
-          Corregeix la fila i torna a fer el pull.'
-        row_index_not_positive: L'índex de fila de la cel·la del conjunt de files
-          ha de ser un nombre enter positiu; conté {row_index}.
   filing:
     build_draft:
       errors:
@@ -423,8 +407,8 @@ application:
           obligatori de la declaració.
         casilla_metadata_drift: La numeració o el segment de casella es desvia del
           disseny de registre oficial de les definicions del model.
-        rate_boxes_understate_total: Les casilles per tipus no cobreixen el seu propi
-          total declarat.
+        rate_boxes_understate_total: Les caselles per tipus no inclouen tots els imports
+          registrats.
         record_emit_order_drift: L'exportació escriuria els registres fora de l'ordre
           declarat a les definicions del model.
         record_emit_order_duplicated: Diversos registres d'exportació comparteixen
@@ -1926,6 +1910,43 @@ application:
     explain:
       errors:
         modelo_blank: L'identificador de model no pot estar en blanc.
+  reconciliation_export:
+    actor: Responsable
+    advisory: Avís
+    advisory_code: Codi d'avís
+    advisory_count: Avisos
+    calculation_revision: Càlcul desat
+    context: Context
+    date: Data
+    difference_count: Diferències
+    difference_kind: Tipus de diferència
+    difference_kind_casilla: Valor de casella
+    difference_kind_header_field: Identitat del justificant
+    difference_kind_total: Total presentat
+    difference_reason: Motiu de la diferència
+    evidence_kind: Tipus d'evidència
+    evidence_kind_declaration: Declaració presentada
+    evidence_kind_justificante: Justificant
+    evidence_reference: Referència d'evidència
+    evidence_value: Valor de l'evidència
+    field: Camp o casella
+    legal_refs: Referències legals
+    modelo: Model
+    period: Període
+    record: Reconciliació
+    record_identity: Identitat completa del registre
+    registry_revision: Revisió normativa desada
+    saved_comparison_notice: Les comparacions desades conserven els valors i les referències
+      originals. Un valor buit és desconegut. Els avisos delimiten què s'ha comprovat;
+      una referència no demostra que es conservin els bytes del document.
+    saved_value: Valor del càlcul desat
+    source_refs: Fonts oficials
+    title: Reconciliacions desades
+    verdict: Resultat de la comparació
+    verdict_matches: Els valors coincideixen
+    verdict_mismatches: Hi ha diferències
+    work_unit: Treball
+    year: Exercici
   storage:
     calc_sheets:
       engine:
@@ -1980,12 +2001,6 @@ application:
             no declarat per la revisió.
           unresolved_reference: El disseny del full de càlcul no conté cap cel·la
             per a un element referenciat.
-      parity:
-        errors:
-          seed_anchor_missing: L'entrada de l'escenari de paritat no té cap cel·la
-            del full de càlcul on sembrar-se.
-          unknown_casilla_ids: L'escenari de paritat referencia ids de casella que
-            no són a les definicions del model.
       records:
         errors:
           address_mismatch: La direcció de cel·la del full de càlcul no coincideix
@@ -2003,6 +2018,11 @@ application:
             no és vàlida.
       review:
         labels:
+          aeat_confirmation: Confirmació de l’AEAT
+          aeat_confirmation_confirmada: Confirmada per evidència desada de l’AEAT
+          aeat_confirmation_descartada: Descartada abans de la confirmació de l’AEAT
+          aeat_confirmation_discrepante: Discrepància amb l’evidència de l’AEAT
+          aeat_confirmation_pendiente: 'Pendent: sense acceptació observada de l’AEAT'
           amount: Import (visualització numèrica)
           amount_id: Identificador del resultat
           art_104_tres_exclusion: Exclusió de l'article 104.Tres
@@ -2017,6 +2037,13 @@ application:
           business_pct: Proporció empresarial registrada
           byte_length: Mida original en bytes
           calculation_revision: Revisió del càlcul
+          calculation_state: Estat del càlcul desat
+          calculation_state_borrador: 'Esborrany: provisional'
+          calculation_state_descartado: Càlcul descartat
+          calculation_state_presentado: Presentat localment
+          calculation_state_presentado_supersedido: 'Presentació local històrica:
+            substituïda'
+          calculation_state_verificado_completo: Càlcul local verificat
           casilla: Casella
           category_id: Identificador de categoria
           classification: Classificació empresarial
@@ -2025,6 +2052,8 @@ application:
           counterparty: Contrapart
           counterparty_country: País de la contrapart
           currency: Moneda
+          current_calculation: Càlcul actual en exportar
+          current_filing: Presentació local actual en exportar
           deduction_fact_kind: Tipus de dada de deducció
           description: Descripció capturada
           detail: Detall d'atribució capturat
@@ -2061,6 +2090,10 @@ application:
             no importa mai els teus canvis. Les dades locals desades es mantenen a
             part.
           field: Camp
+          filing_record: Registre de presentació seleccionat
+          filing_status: Estat del registre de presentació desat
+          filing_status_supersedido: 'Substituït: històric'
+          filing_status_vigente: Vigent
           finding: Troballa
           finding_count: Nombre de troballes
           formula: Referència de fórmula registrada
@@ -2094,6 +2127,7 @@ application:
           media_type: Tipus de fitxer
           missing_data: Dades absents
           modelo: Modelo
+          'no': 'No'
           no_captured_rows: Aquesta instantània no conté files per a aquesta secció.
           no_inventory_reference: Sense referència d'inventari capturada
           not_captured: No capturat
@@ -2137,25 +2171,6 @@ application:
           sources: Atribució de fonts
           status: Codi d'estat registrat
           status_incomplete: Incomplet
-          calculation_state: 'Estat del càlcul desat'
-          current_calculation: 'Càlcul actual en exportar'
-          current_filing: 'Presentació local actual en exportar'
-          filing_status: 'Estat del registre de presentació desat'
-          filing_record: 'Registre de presentació seleccionat'
-          filing_status_vigente: 'Vigent'
-          filing_status_supersedido: 'Substituït — històric'
-          aeat_confirmation: 'Confirmació de l’AEAT'
-          'yes': 'Sí'
-          'no': 'No'
-          calculation_state_borrador: 'Esborrany — provisional'
-          calculation_state_verificado_completo: 'Càlcul local verificat'
-          calculation_state_presentado: 'Presentat localment'
-          calculation_state_presentado_supersedido: 'Presentació local històrica — substituïda'
-          calculation_state_descartado: 'Càlcul descartat'
-          aeat_confirmation_pendiente: 'Pendent — sense acceptació observada de l’AEAT'
-          aeat_confirmation_confirmada: 'Confirmada per evidència desada de l’AEAT'
-          aeat_confirmation_discrepante: 'Discrepància amb l’evidència de l’AEAT'
-          aeat_confirmation_descartada: 'Descartada abans de la confirmació de l’AEAT'
           status_provisional: Provisional
           status_verified: Dades locals verificades
           taxable_base: Base imposable (visualització numèrica)
@@ -2166,6 +2181,7 @@ application:
           value: Valor desat / visualització numèrica
           value_date: Data valor
           work_unit: Unitat de treball
+          'yes': Sí
       translator:
         errors:
           translation_failed: La fórmula de les definicions del model no es pot traduir
@@ -2195,7 +2211,6 @@ application:
         la tingui, o després d'eliminar el perfil original.
       lifecycle_schema_validation_failed: Les dades del perfil no coincideixen amb
         l'esquema de perfil d'usuari.
-      no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
       passphrase_confirmation_mismatch: La nova contrasenya i la seva confirmació
         no coincideixen.
       passphrase_current_rejected: La contrasenya actual no és correcta; la contrasenya
@@ -2355,39 +2370,3 @@ application:
       validation_clean: La validació s'ha completat sense incidències bloquejants.
       validation_failed: La validació ha detectat incidències que bloquegen.
       workflow_failure: No s'ha pogut completar el flux de treball.
-
-  reconciliation_export:
-    title: "Reconciliacions desades"
-    saved_comparison_notice: "Les comparacions desades conserven els valors i les referències originals. Un valor buit és desconegut. Els avisos delimiten què s'ha comprovat; una referència no demostra que es conservin els bytes del document."
-    record: "Reconciliació"
-    date: "Data"
-    verdict: "Resultat de la comparació"
-    modelo: "Model"
-    year: "Exercici"
-    period: "Període"
-    registry_revision: "Revisió normativa desada"
-    work_unit: "Treball"
-    calculation_revision: "Càlcul desat"
-    evidence_kind: "Tipus d'evidència"
-    evidence_reference: "Referència d'evidència"
-    actor: "Responsable"
-    difference_count: "Diferències"
-    advisory_count: "Avisos"
-    difference_kind: "Tipus de diferència"
-    field: "Camp o casella"
-    saved_value: "Valor del càlcul desat"
-    evidence_value: "Valor de l'evidència"
-    difference_reason: "Motiu de la diferència"
-    legal_refs: "Referències legals"
-    source_refs: "Fonts oficials"
-    advisory_code: "Codi d'avís"
-    advisory: "Avís"
-    context: "Context"
-    record_identity: "Identitat completa del registre"
-    verdict_matches: "Els valors coincideixen"
-    verdict_mismatches: "Hi ha diferències"
-    evidence_kind_justificante: "Justificant"
-    evidence_kind_declaration: "Declaració presentada"
-    difference_kind_header_field: "Identitat del justificant"
-    difference_kind_total: "Total presentat"
-    difference_kind_casilla: "Valor de casella"

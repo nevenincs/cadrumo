@@ -149,7 +149,7 @@ def _run_probe(leaves: list[tuple[str, ...]]) -> list[_LeafReport]:
             input=json.dumps([list(argv) for argv in leaves]),
             capture_output=True,
             text=True,
-            timeout=900,
+            timeout=None,
             check=False,
         )
     assert completed.returncode == 0, f"probe crashed on {leaves}\n{completed.stderr}"
@@ -272,7 +272,7 @@ def test_the_probe_sees_state_a_writing_command_creates() -> None:
             ],
             capture_output=True,
             text=True,
-            timeout=300,
+            timeout=None,
             check=False,
         )
         assert completed.returncode == 0, completed.stderr

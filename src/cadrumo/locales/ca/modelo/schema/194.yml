@@ -79,8 +79,8 @@ modelo:
               al mateix perceptor. Inclou bases negatives i zero.
             label: Nombre de registres amb base negativa o zero
           capital-ajeno-resumen-perceptores-base-positiva:
-            help: Nombre de perceptors (registres) la base de retencions dels quals
-              és positiva.
+            help: Nombre de perceptors (registres) amb una base de retencions i ingressos
+              a compte positiva.
             label: Nombre total de perceptors amb base positiva
           capital-ajeno-resumen-retenciones:
             help: Suma de les retencions i ingressos a compte practicats sobre les
@@ -106,8 +106,6 @@ modelo:
             label: Tipus d’identificació de l’emissor
           emisor-identificacion:
             label: Identificació de l’emissor
-          perceptor-identificacion-fiscal:
-            label: NIF del perceptor
           perceptor-nombre:
             label: Cognoms i nom o raó social
           perceptor-provincia:

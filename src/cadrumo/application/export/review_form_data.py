@@ -1,4 +1,7 @@
-"""Frozen form values and geometry projected solely from a saved calculation."""
+"""Frozen form values and geometry projected solely from a saved calculation.
+
+:class:`CalculationRevision` holds the saved calculation and its evidence.
+"""
 
 from __future__ import annotations
 
@@ -54,7 +57,10 @@ class ReviewSavedForm(BaseModel):
 
 
 def capture_review_form(revision: CalculationRevision) -> ReviewSavedForm | None:
-    """Project the original saved registry and channels without current-source resolution."""
+    """Project the original saved registry and channels without current-source resolution.
+
+    The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
+    """
     rendering = revision.rendering_snapshot
     if rendering is None or len(rendering.registry_snapshot.revision.form_layouts) != 1:
         return None

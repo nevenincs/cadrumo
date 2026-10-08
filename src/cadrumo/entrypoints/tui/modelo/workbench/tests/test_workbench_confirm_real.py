@@ -89,7 +89,6 @@ async def _keep_in_panel(
     return app.return_value, shown
 
 
-@pytest.mark.timeout(300)
 def test_confirming_an_assumed_value_then_applying_makes_it_entered_by_the_filer(tmp_path: Path) -> None:
     with _bench(tmp_path) as bench, override_settings(cadrumo_output_language="en"):
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(

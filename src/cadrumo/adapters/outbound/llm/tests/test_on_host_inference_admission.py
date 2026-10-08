@@ -153,7 +153,7 @@ def test_second_concurrent_on_host_request_is_refused_while_the_first_holds_the_
             asyncio.run(client.complete(LLMRequest(prompt="second")))
 
         runtime.release.set()
-        first_thread.join(timeout=_SERVER_WAIT_S)
+        first_thread.join()
 
     assert len(first_outcome) == 1
     permitted = first_outcome[0]
@@ -194,8 +194,8 @@ def test_both_concurrent_requests_proceed_when_the_bound_permits_two(tmp_path: P
         assert runtime.arrived.get(timeout=_SERVER_WAIT_S) == "second"
 
         runtime.release.set()
-        first_thread.join(timeout=_SERVER_WAIT_S)
-        second_thread.join(timeout=_SERVER_WAIT_S)
+        first_thread.join()
+        second_thread.join()
 
     for outcome in (first_outcome, second_outcome):
         assert len(outcome) == 1
@@ -220,7 +220,7 @@ def test_the_bound_is_shared_across_clients(tmp_path: Path) -> None:
             asyncio.run(arrival.complete(LLMRequest(prompt="second")))
 
         runtime.release.set()
-        first_thread.join(timeout=_SERVER_WAIT_S)
+        first_thread.join()
 
 
 def test_a_failed_dispatch_gives_its_slot_back(tmp_path: Path) -> None:

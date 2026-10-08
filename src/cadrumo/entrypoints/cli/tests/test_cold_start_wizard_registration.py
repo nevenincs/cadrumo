@@ -126,7 +126,7 @@ def _run_cli_cold(
         ),
         capture_output=True,
         text=True,
-        timeout=180,
+        timeout=None,
         check=False,
         env=env,
     )

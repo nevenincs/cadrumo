@@ -58,7 +58,7 @@ _MESA_FACTS = frozenset(
 _MESA_SUB_INDICES = frozenset({1, 2, 3, 4})
 _REPEATING_FACT_SUB_INDICES = frozenset({1, 2, 3, 4})
 _EARLY_DP30302_EPOCHS = frozenset({"2022", "2023", "2024-hasta-08-y-2t", "2024-desde-09-y-3t"})
-_LATE_DP30302_EPOCHS = frozenset({"2025", "2026-y-siguientes"})
+_LATE_DP30302_EPOCHS = frozenset({"2025", "2026-hasta-01-y-1t", "2026-y-siguientes"})
 _HORNO_DIAS = M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE
 _HORNO_SUPERFICIE = M303RegimenSimplificadoFact.SUPERFICIE_HORNO_CUARTO_TRIMESTRE
 

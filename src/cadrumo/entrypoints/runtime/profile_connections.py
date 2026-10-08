@@ -47,6 +47,7 @@ from .access_management import RuntimeAccessManagement
 from .bootstrap_delete import RuntimeBootstrapDeleteMixin
 from .bootstrap_reset import RuntimeBootstrapMixin
 from .enrollment_connections import RuntimeEnrollmentConnections
+from .lifecycle_guard import RuntimeLifecycleGuard
 from .profile_connection_access import ProfileConnectionAccessMixin
 from .profile_connection_admission import ProfileConnectionAdmissionMixin
 from .profile_connection_drain import ProfileConnectionDrainMixin, ProfileDrainRecord
@@ -94,7 +95,7 @@ class RuntimeProfileConnections(
         self._login_lifecycle_available = False
         self._worker_script, self._wall_clock = worker_script, wall_clock
         self._guard = RLock()
-        self._drain_guard = RLock()
+        self._drain_guard = RuntimeLifecycleGuard()
         self._drain_records: dict[UUID, ProfileDrainRecord] | None = None
         self._drain_result: RuntimeProfileDrainResult | None = None
         self._installation: RuntimeInstallation | None = None
@@ -294,7 +295,7 @@ class RuntimeProfileConnections(
 
     def poll(self) -> None:
         """Do not race custody-owned containment or a retained shutdown attempt."""
-        if not self._drain_guard.acquire(blocking=False):
+        if not self._drain_guard.acquire_poll():
             return
         try:
             self._poll_profiles()

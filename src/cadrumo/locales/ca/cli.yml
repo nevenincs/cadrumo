@@ -943,15 +943,17 @@ cli:
           com a presentat.
         work_unit_id_help: Identificador de la declaració (SHA-256 o prefix inequívoc).
       filing_record:
-        export_help: Exportar la presentació històrica seleccionada com a llibre de revisió del càlcul desat.
-        export_button: Exporta la presentació seleccionada (XLSX)
-        export_missing: El càlcul històric seleccionat ja no es conserva; l'exportació no pot usar el càlcul actual.
         app_help: Inspeccionar els filing records interns registrats
         bucket_id_help: Filtrar per perfil
         evidence_kind_help: Tipus d'evidència importada (aeat_justificante_pdf, aeat_csv_register,
           aeat_live_capture)
         evidence_reference_id_help: Identificador estable de l'evidència importada
           (número de justificant, id del registre CSV, id de captura en viu)
+        export_button: Exporta la presentació seleccionada (XLSX)
+        export_help: Exportar la presentació històrica seleccionada com a llibre de
+          revisió del càlcul desat.
+        export_missing: El càlcul històric seleccionat ja no es conserva; l'exportació
+          no pot usar el càlcul actual.
         filing_record_id_help: Identificador estable d'un filing record
         import_casilla_help: Valor de casella importat amb sintaxi CASILLA_ID=DECIMAL
           (repetible; almenys un requerit)
@@ -1196,18 +1198,23 @@ cli:
       readiness_help: Informa de si el perfil actiu està a punt per presentar un model
         / exercici / període.
       reconcile:
-        export_help: Exportar les diferències de conciliació desades a un llibre local de revisió.
-        export_button: Exporta diferències de la declaració (XLSX)
-        export_work_unit_scope: Exporta totes les diferències de conciliació desades de la declaració seleccionada.
-        export_selector_required: "Selecciona exactament una opció: --event-id, --work-unit-id o --all-history."
-        export_work_unit_id_help: Identificador exacte de la declaració desada (SHA-256 de 64 caràcters).
-        export_event_id_help: Identificador exacte de l'esdeveniment de conciliació desat.
-        export_all_help: Exportar explícitament tot l'historial de conciliació desat.
         app_help: 'Compara un càlcul local desat amb evidència de l''AEAT: pull descarrega
           un justificant o una declaració presentada; import compara un PDF local;
           list mostra les comparacions anteriors.'
         calculation_revision_help: ID de revisió de càlcul desada que es compararà.
           Per defecte, presentada o verificada, després la darrera desada.
+        export_all_help: Exportar explícitament tot l'historial de conciliació desat.
+        export_button: Exporta diferències de la declaració (XLSX)
+        export_event_id_help: Identificador exacte de l'esdeveniment de conciliació
+          desat.
+        export_help: Exportar les diferències de conciliació desades a un llibre local
+          de revisió.
+        export_selector_required: 'Selecciona exactament una opció: --event-id, --work-unit-id
+          o --all-history.'
+        export_work_unit_id_help: Identificador exacte de la declaració desada (SHA-256
+          de 64 caràcters).
+        export_work_unit_scope: Exporta totes les diferències de conciliació desades
+          de la declaració seleccionada.
         file_kind_help: 'Tipus de document d''evidència: justificante (rebut AEAT,
           tots els models) o declaration (PDF de declaració presentada, conciliació
           a nivell de casella, només models habilitats). Per defecte justificante.'
@@ -1355,9 +1362,6 @@ cli:
         app_help: Exporta fulls de càlcul. Les còpies de Google són documents de revisió
           de sortida; no pots importar canvis, calcular ni verificar des de Google.
           L’exportació local a XLSX continua disponible.
-        calculate_help: Recupera les cel·les que has editat al llibre de calc-sheets,
-          executa el motor Decimal local sobre elles i emet els valors calculats de
-          les caselles (no desa res)
         export:
           output_help: Ruta on escriure el llibre .xlsx; un fitxer existent es rebutja
             tret que s'indiqui --replace
@@ -1372,20 +1376,12 @@ cli:
             com a full de Google llegible pels usuaris autoritzats.
           calculation_revision_id_help: Identificador exacte de la revisió de càlcul
             desada que es publicarà.
-          filing_record_id_help: Identificador exacte de la presentació històrica vinculada al càlcul desat; opcional.
+          filing_record_id_help: Identificador exacte de la presentació històrica
+            vinculada al càlcul desat; opcional.
           publication_id_help: UUID de publicació; es genera si s'omet.
         publish_button: Revisa a Google Sheets
-        review_help: Exportar un càlcul desat, esborrany o completat, com a llibre local de revisió immutable.
         publish_help: Publica un càlcul desat com a full natiu de Google llegible
           a la carpeta del perfil.
-        pull:
-          assemble_observations_help: Després de recuperar, reensambla les cel·les
-            de files de la pestanya Detalle en observacions tipades (perceptors, béns
-            a l'estranger, operacions vinculades, membres d'atribució, operacions
-            de devolució) i emet-les al payload al costat dels row_set_edits crus
-        pull_help: Llegeix les cel·les que has editat en un full calc-sheets i les
-          converteix en valors tipats (després de comprovar que la marca registry-SHA
-          del llibre coincideix amb les definicions dels models actuals)
         push:
           capability_disabled: L'exportació a Google està desactivada per a aquest
             perfil; activa-la amb 'aeat config profile capabilities set google_export
@@ -1401,14 +1397,8 @@ cli:
             dels models per al model {modelo} ({period} {year}).
         push_help: Exporta el càlcul d'un model i període, tal com el fixen les definicions
           dels models, a un full de Google Sheets dins del teu `cadrumo-vault/`
-        spreadsheet_id_help: Identificador del fitxer de Drive del llibre del qual
-          llegir les teves edicions (ha de ser propietat de l'app i estar lligat al
-          snapshot indicat)
-        verify:
-          scenario_help: Ruta a un fitxer JSON d'escenari amb els valors que introdueixes
-            i, si està disponible, un mapa de sortides esperades publicades per l'AEAT
-        verify_help: Comprovació de paritat triple del model (oracle AEAT vs motor
-          Decimal local vs full de Sheets)
+        review_help: Exportar un càlcul desat, esborrany o completat, com a llibre
+          local de revisió immutable.
         year_help: Any de declaració (p. ex. 2025)
       support_matrix:
         help: 'Mostra la matriu de suport per model per a totes les definicions dels
@@ -2205,6 +2195,7 @@ cli:
         on'.
       folder:
         help: Mostra la carpeta de Google Drive creada per al perfil actiu
+        organize_help: Organitza la carpeta del perfil dins de Cadrumo
         view_help: Mostra la carpeta de Google Drive creada per al perfil actiu.
       help: Gestionar la integració OAuth de Google Desktop per a Drive i Sheets
       login_help: Executar el flux de consentiment OAuth

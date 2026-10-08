@@ -58,44 +58,6 @@ modelo:
             heading: Az új végső címzett adószáma
           sustituto-nombre:
             heading: Az új végső címzett neve
-        column:
-          op-apellidos-razon-social:
-            heading: A közösségen belüli szereplő vezeték- és keresztneve vagy cégneve
-          op-base-imponible:
-            heading: Adóalap vagy összeg
-          op-clave-operacion:
-            heading: Ügyletkód
-          op-codigo-pais:
-            heading: Országkód
-          op-nif-comunitario:
-            heading: A közösségi szereplő adószáma
-          rect-base-anterior:
-            heading: Korábban bevallott adóalap
-          rect-base-rectificada:
-            heading: Helyesbített adóalap vagy összegek
-          rect-ejercicio-rectificado:
-            heading: Adóév
-          rect-periodo-rectificado:
-            heading: Időszak
-          sustituto-apellidos-razon-social:
-            heading: A helyettesítő adóalany vezeték- és keresztneve vagy cégneve
-          sustituto-nif:
-            heading: A helyettesítő végső címzett vállalkozó vagy szakember adószáma
-              (NIF)
-        page:
-          modelo-349-declarante:
-            heading: Bevallói rekord
-          modelo-349-operador:
-            heading: Közösségen belüli szereplő rekordja
-          modelo-349-rectificacion:
-            heading: Helyesbítési rekord
-        section:
-          datos-identificativos-y-hoja-resumen-de-l-26252f:
-            heading: Azonosító adatok és a bevallás összesítő lapja
-          operadores-intracomunitarios:
-            heading: Közösségen belüli szereplők
-          rectificaciones:
-            heading: Helyesbítések
       revision:
         2020-y-siguientes:
           casilla:

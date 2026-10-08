@@ -673,6 +673,14 @@ modelo:
         modelo-303-iva-autoliquidacion:
           field:
             title: Modelo 303 IVA autoliquidació
+        modelo-303-printed-disclosure-arithmetic-2026-hasta-01-y-1t:
+          field:
+            title: 'Model 303: volum anual d’operacions, gener i primer trimestre
+              de 2026'
+        modelo-303-printed-disclosure-arithmetic-2026-y-siguientes:
+          field:
+            title: 'Model 303: volum anual d’operacions, formulari aplicable des del
+              febrer i el segon trimestre de 2026'
       field:
         official_name: Modelo 303. Impost sobre el Valor Afegit. Autoliquidació.
         title: IVA. Autoliquidació (trimestral)
@@ -905,48 +913,6 @@ modelo:
             heading: Total quota meritada
           volumen:
             heading: Volum anual d’operacions diferent de zero
-        column:
-          1t-2t-3t:
-            heading: 1T/2T/3T
-          4t:
-            heading: 4T
-          4t-2:
-            heading: 4T
-          adquisicion-o-importacion-de-activos-fijos:
-            heading: Adquisició o importació d'actius fixos
-          adquisiciones-intracomunitarias-de-bienes:
-            heading: Adquisicions intracomunitàries de béns
-          entregas-de-activos-fijos:
-            heading: Lliuraments d'actius fixos
-          iva-devengado-por-inversion-del-sujeto-pasivo:
-            heading: IVA meritat per inversió del subjecte passiu
-          regularizacion-bienes-de-inversion:
-            heading: Regularització de béns d'inversió
-          regularizacion-de-bienes-de-inversion:
-            heading: Regularització de béns d'inversió
-          regularizacion-de-inversiones:
-            heading: Regularització d'inversions
-          resultado:
-            heading: Resultat
-          resultado-rs:
-            heading: Resultat del règim simplificat
-          suma-de-deducciones:
-            heading: Suma de deduccions
-          total-cuota-resultante:
-            heading: Total quota resultant
-          total-iva-deducible:
-            heading: Total IVA deduïble
-        page:
-          dp30301:
-            heading: Pàgina 1 · Liquidació del règim general
-          dp30302:
-            heading: Pàgina 2 · Règim simplificat
-          dp30303:
-            heading: Pàgina 3 · Informació addicional i resultat
-          dp30304:
-            heading: Pàgina 4 · Subjectes exonerats del model 390
-          dp30305:
-            heading: Pàgina 5 · Prorrates i deduccions diferenciades
         row:
           '1':
             heading: Línia 1
@@ -960,18 +926,6 @@ modelo:
             heading: Línia 5
           adquisiciones-intracomunitarias-de-bienes-368e6a:
             heading: Adquisicions intracomunitàries de béns i serveis
-          bienes-corrientes:
-            heading: Béns corrents
-          bienes-corrientes-y-servicios:
-            heading: Béns corrents i serveis
-          bienes-inversion:
-            heading: Béns d'inversió
-          bienes-y-servic:
-            heading: Béns i serveis corrents
-          bienes-y-servicios-corrientes:
-            heading: Béns i serveis corrents
-          compensac-reg-especial-agric-ganad-pesca:
-            heading: Compensacions del règim especial d'agricultura, ramaderia i pesca
           en-adquisiciones-intracomunitarias-de-bie-13bc2d:
             heading: En adquisicions intracomunitàries de béns d'inversió
           en-adquisiciones-intracomunitarias-de-bie-1944dc:
@@ -1001,50 +955,10 @@ modelo:
           regimen-general:
             heading: Règim general
         section:
-          13-reg-deducc-diferenc:
-            heading: Deduccions diferenciades
-          13-reg-deducc-diferenc-1:
-            heading: Deduccions diferenciades · sector 1
-          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
-            heading: Sector 1 · IVA deduïble en adquisicions intracomunitàries
-          13-reg-deducc-diferenc-1-iva-ded-importaciones:
-            heading: Sector 1 · IVA deduïble en importacions
-          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
-            heading: Sector 1 · IVA deduïble en operacions interiors
-          13-reg-deducc-diferenc-2:
-            heading: Deduccions diferenciades · sector 2
-          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
-            heading: Sector 2 · IVA deduïble en adquisicions intracomunitàries
-          13-reg-deducc-diferenc-2-iva-ded-importaciones:
-            heading: Sector 2 · IVA deduïble en importacions
-          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
-            heading: Sector 2 · IVA deduïble en operacions interiors
-          exclusivamente-a-cumplimentar-en-el-ultim-974ccf:
-            heading: 'Només en l''últim període: subjectes exonerats del resum anual
-              (model 390)'
           informacion-adicional:
             heading: Informació addicional
-          informacion-adicional-exclusivamente-a-cu-d26dc7:
-            heading: Informació addicional · Només en l'últim període per als exonerats
-              del resum anual
-          liquidacion-3:
-            heading: Liquidació
-          liquidacion-3-regimen-general:
-            heading: Règim general · Totals
-          liquidacion-3-regimen-general-iva-deducible:
-            heading: Règim general · IVA deduïble
-          liquidacion-3-regimen-general-iva-devengado:
-            heading: Règim general · IVA meritat
-          liquidacion-3-rs:
-            heading: Règim simplificat
-          liquidacion-3-rs-a-b-actividades-en-rs:
-            heading: Règim simplificat · Activitats en el règim simplificat (A+B)
           prorratas:
             heading: Prorrates
-          rectificativa:
-            heading: Autoliquidació rectificativa
-          resultado:
-            heading: Resultat
       revision:
         '2022':
           casilla:
@@ -1106,6 +1020,9 @@ modelo:
               label: Resultat de l'autoliquidació ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, exercici 2025
+        2026-hasta-01-y-1t:
+          field:
+            label: Model 303, exercici 2026, gener i primer trimestre
         2026-y-siguientes:
           casilla:
             '01':

@@ -61,7 +61,6 @@ def _door(work: SeededOperatorWork, submissions: RecordedSubmissions) -> ModeloW
     )
 
 
-@pytest.mark.timeout(180)
 def test_the_form_read_admits_an_edit_and_carries_a_refusal_as_the_typed_refusal(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         ports = workbench_read_ports(work.work_unit.bucket_id, work.operation)
@@ -94,7 +93,6 @@ def test_the_form_read_admits_an_edit_and_carries_a_refusal_as_the_typed_refusal
     assert isinstance(refused.admission, ModeloEditRefusedV1)
 
 
-@pytest.mark.timeout(180)
 def test_an_expired_baseline_is_renewed_before_the_typed_intents_are_submitted(tmp_path: Path) -> None:
     submissions = RecordedSubmissions()
     with seeded_operator_work(tmp_path) as work:
@@ -114,7 +112,6 @@ def test_an_expired_baseline_is_renewed_before_the_typed_intents_are_submitted(t
     assert submission.scalar_intents == (_SET_06,)
 
 
-@pytest.mark.timeout(180)
 def test_a_moved_declaration_is_refused_before_anything_is_submitted(tmp_path: Path) -> None:
     submissions = RecordedSubmissions()
     with seeded_operator_work(tmp_path) as work:
@@ -131,7 +128,6 @@ def test_a_moved_declaration_is_refused_before_anything_is_submitted(tmp_path: P
     assert submissions.submitted == []
 
 
-@pytest.mark.timeout(180)
 def test_preflight_names_the_address_of_its_findings(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(

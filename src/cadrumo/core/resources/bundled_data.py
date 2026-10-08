@@ -14,12 +14,12 @@ operator outputs in :mod:`cadrumo.core.config` and is not a valid resolution pat
 for read-only bundled data.
 
 The corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``) are excluded
-from the command-bearing ``cadrumo`` wheel and shipped in two mandatory
+from the command-bearing ``cadrumo`` wheel and shipped in three mandatory
 ``cadrumo_data`` companion distributions whose joined layout mirrors
 ``cadrumo/_data``. :func:`resolve_corpus_binary` is the single
 ``importlib.resources`` seam that resolves such a binary from the ``cadrumo``
 tree first and then the companion namespace, so a full checkout and an installed
-three-wheel cohort read a corpus binary uniformly. A missing companion remains
+four-wheel cohort read a corpus binary uniformly. A missing companion remains
 a not-present signal (``None``) at this low-level resource boundary; the
 catalogue integrity boundary turns that signal into a hard failure.
 
@@ -115,7 +115,7 @@ def _traversable_is_file(node: Traversable) -> bool:
 def _companion_root() -> Traversable | None:
     """Return the ``cadrumo_data`` companion package root, or ``None`` when it is absent.
 
-    The companion namespace is supplied by two mandatory distributions. A
+    The companion namespace is supplied by three mandatory distributions. A
     broken or deliberately dependency-pruned installation may still omit it;
     this low-level helper maps that import-family error to ``None`` so the
     catalogue integrity boundary can report the missing source precisely.
@@ -218,7 +218,7 @@ def bundled_data_roots() -> tuple[Path, ...]:
     The ``cadrumo`` tree comes first and is always present; each installed
     ``cadrumo_data`` portion follows. Together they are the roots a single
     logical ``_data``-relative path may resolve under, which is what makes the
-    suffix-partitioned corpus one tree rather than three.
+    suffix-partitioned corpus one logical tree across four distributions.
 
     Returns:
         The ordered roots, ``cadrumo`` first.

@@ -42,7 +42,7 @@ from ..posix_channel import PosixRuntimeChannel
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _UID = 501
-_DEFAULT = ("-I", "-m", "cadrumo.entrypoints.runtime.worker")
+_DEFAULT = ("-I", "-B", "-m", "cadrumo.entrypoints.runtime.worker")
 _ENVIRONMENT = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}
 _RUNTIME = MacosProcessIncarnation(pid=os.getpid(), version=11, unique_id=1011)
 _RUNTIME_COALITION = 5000
@@ -121,7 +121,7 @@ def test_job_definition_runs_the_guardian_through_a_clean_environment_in_aqua(tm
         executable=interpreter,
         directory=tmp_path,
         parent=_RUNTIME,
-        worker_arguments=("-I", "/private/var/worker.py", "--worker-id", "w"),
+        worker_arguments=("-I", "-B", "/private/var/worker.py", "--worker-id", "w"),
         worker_script=script,
     )
     definition = plistlib.loads(payload)
@@ -146,6 +146,7 @@ def test_job_definition_runs_the_guardian_through_a_clean_environment_in_aqua(tm
             str(script),
             "--",
             "-I",
+            "-B",
             "/private/var/worker.py",
             "--worker-id",
             "w",
@@ -171,7 +172,7 @@ def test_job_definition_refuses_unscoped_label_relative_paths_and_nul(invalid: s
             executable=Path("python3") if invalid == "relative" else tmp_path / "python3",
             directory=tmp_path,
             parent=_RUNTIME,
-            worker_arguments=("-I", "/w.py", "bad\0argument" if invalid == "null" else "ok"),
+            worker_arguments=("-I", "-B", "/w.py", "bad\0argument" if invalid == "null" else "ok"),
             worker_script=None,
         )
     assert caught.value.reason is RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE
@@ -501,12 +502,42 @@ def test_admitted_guardian_runs_in_a_fresh_launchd_coalition(
     assert guardian.pid == _GUARDIAN.pid and guardian.alive
     arguments = host.definition["ProgramArguments"]
     assert isinstance(arguments, list)
-    assert arguments[:2] == ["/usr/bin/env", "-i"] and arguments[-3:] == list(_DEFAULT)
+    assert arguments[:2] == ["/usr/bin/env", "-i"] and arguments[-len(_DEFAULT) :] == list(_DEFAULT)
     marker = decode_macos_worker_marker(host.store[scope._label + ".json"], name=scope._label + ".json")
     assert marker.coalition == _JOB_COALITION
     scope.terminate(timeout=2)
     assert not guardian.alive and all(watch.closed for watch in host.watches)
     assert ("launchctl", "bootout", f"gui/{_UID}/{scope._label}") in host.events
+    assert host.store == {} and not host.jobs
+
+
+def test_selected_script_scope_keeps_guardian_isolation_and_retires_its_owned_coalition(
+    host: _Host, tmp_path: Path
+) -> None:
+    script = tmp_path / "worker.py"
+    script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
+    selected = script.resolve(strict=True)
+    scope = MacosProcessScope(worker_id=uuid4(), storage_root=tmp_path, worker_script=script, host=host)
+    try:
+        guardian = scope.launch(
+            executable=Path(sys.executable),
+            arguments=("-I", "-B", str(selected)),
+            directory=tmp_path,
+            environment=_ENVIRONMENT,
+        )
+        assert guardian.pid == _GUARDIAN.pid and guardian.alive
+        arguments = host.definition["ProgramArguments"]
+        assert isinstance(arguments, list)
+        guardian_index = arguments.index("cadrumo.entrypoints.runtime.macos_worker_guardian")
+        assert arguments[guardian_index - 2 : guardian_index] == ["-I", "-m"]
+        assert arguments[arguments.index("--worker-script") + 1] == str(selected)
+        assert arguments[arguments.index("--") + 1 :] == ["-I", "-B", str(selected)]
+        marker = decode_macos_worker_marker(host.store[scope._label + ".json"], name=scope._label + ".json")
+        assert marker.coalition == _JOB_COALITION
+    finally:
+        if scope._started:
+            scope.terminate(timeout=2)
+    assert not guardian.alive and all(watch.closed for watch in host.watches)
     assert host.store == {} and not host.jobs
 
 
@@ -699,14 +730,18 @@ def test_stale_marker_naming_a_different_coalition_refuses_registration(host: _H
     assert not scope._started and not any(event[0] in {"bootstrap", "terminate"} for event in host.events)
 
 
-@pytest.mark.parametrize("invalid", ["environment", "module", "relative"])
+@pytest.mark.parametrize("invalid", ["environment", "module", "relative", "missing-bytecode", "extra-flag"])
 def test_scope_refuses_substitution_before_any_native_step(
     host: _Host, scope: MacosProcessScope, tmp_path: Path, invalid: str
 ) -> None:
     with pytest.raises(RuntimeRefusalError) as caught:
         scope.launch(
             executable=Path("python3") if invalid == "relative" else Path(sys.executable),
-            arguments=("-I", "-m", "other.worker") if invalid == "module" else _DEFAULT,
+            arguments={
+                "module": ("-I", "-B", "-m", "other.worker"),
+                "missing-bytecode": ("-I", "-m", "cadrumo.entrypoints.runtime.worker"),
+                "extra-flag": ("-I", "-B", "-O", "-m", "cadrumo.entrypoints.runtime.worker"),
+            }.get(invalid, _DEFAULT),
             directory=tmp_path,
             environment=_ENVIRONMENT | {"PYTHONPATH": "/opt/override"} if invalid == "environment" else _ENVIRONMENT,
         )

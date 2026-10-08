@@ -171,9 +171,9 @@ custody re-opens the hole, and only a desktop run closes it again. A
 green run once does not vouch for the code as it stands now.
 
 Two gates keep the hole from going unnoticed.
-`dev/ci/tests/test_os_keychain_lane_scope.py` refuses a labelled case
+The keychain lane scope gate refuses a labelled case
 that sits outside the paths `just test-os-keychain` names, and
-`dev/tests/test_lane_reachability.py` requires every test no automated
+the lane reachability gate requires every test no automated
 lane can run to carry a label naming why. Neither pins which cases may
 take the label, so keeping it to what is irreducibly capability-bound
 stays with the author. They bound the hole; they do not fill it.
@@ -185,7 +185,7 @@ there does not declare, so a retired or misspelt marker fails collection
 instead of selecting nothing.
 
 `src/cadrumo/tests/test_every_test_module_is_lane_reachable.py` and
-`dev/tests/test_lane_reachability.py` fail when a test is selected by no
+the repository lane reachability gate fail when a test is selected by no
 lane.
 
 The repo-root `conftest.py` invokes the collection policy in
@@ -285,6 +285,6 @@ Checklist:
   hook reports a violation both at `-n0` and under xdist workers.
 - `src/cadrumo/tests/os_keychain_hook.py` - shared credential-store
   precondition for `os_keychain` cases.
-- `dev/tests/test_lane_reachability.py` - per-test lane reachability gate.
+- The repository tooling enforces per-test lane reachability.
 - `pyproject.toml` - pytest discovery, marker registry, and coverage
   omit settings.

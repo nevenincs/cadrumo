@@ -41,6 +41,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.tests.process_results import receive_process_result
 
 if TYPE_CHECKING:
     from multiprocessing.synchronize import Barrier
@@ -108,13 +109,14 @@ def test_two_processes_registering_one_label_produce_one_capsule(tmp_path: Path)
     for worker in workers:
         worker.start()
     try:
-        outcomes = [results.get(timeout=300) for _ in workers]
+        outcomes = [receive_process_result(results, owners=workers) for _ in workers]
         for worker in workers:
-            worker.join(120)
+            worker.join(None)
     finally:
         for worker in workers:
             if worker.is_alive():
                 worker.kill()
+            if worker.pid is not None:
                 worker.join(30)
 
     registered = [outcome for kind, outcome in outcomes if kind == "registered"]
@@ -142,13 +144,14 @@ def test_the_race_actually_reached_the_registration_path(tmp_path: Path) -> None
     for worker in workers:
         worker.start()
     try:
-        outcomes = [results.get(timeout=300) for _ in workers]
+        outcomes = [receive_process_result(results, owners=workers) for _ in workers]
         for worker in workers:
-            worker.join(120)
+            worker.join(None)
     finally:
         for worker in workers:
             if worker.is_alive():
                 worker.kill()
+            if worker.pid is not None:
                 worker.join(30)
 
     kinds = sorted(kind for kind, _detail in outcomes)

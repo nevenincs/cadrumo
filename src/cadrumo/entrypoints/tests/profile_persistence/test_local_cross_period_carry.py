@@ -50,13 +50,17 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.relation_prefill_support import empty_profile_read_ports
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ResultDispositionProjection
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from ....application.ledger.actions_manual import create_manual_transaction
+from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.modelo.calculation_actions import (
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -78,6 +82,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import (
@@ -86,6 +91,8 @@ from .file_flow_test_support import (
     _M130_AGRARIAN_WITHHELD_CASILLA,
     _M130_CARRY_FORWARD_CASILLA,
     _M130_HOME_DEDUCTION_CASILLA,
+    _M130_INCOME_CASILLA,
+    _M130_PREVIOUS_PAYMENTS_CASILLA,
     _M130_PRIOR_RETURN_RESULT_CASILLA,
     _M130_SALDO_NEGATIVO_CASILLA,
     _M130_WITHHELD_CASILLA,
@@ -127,39 +134,23 @@ _M130_DIFERENCIA_PREVIA_CASILLA: CasillaId = validated_casilla_id("14")
 # previous_filing saldo-negativo at the current positive C14 before it flows through.
 _CARRY_BINDING_ID = "modelo-130-resultados-negativos-anteriores"
 
-# Inputs that drive Modelo 130 1T to a NEGATIVE Diferencia (casilla 17):
-# casilla 01 (income) and 02 (gastos) are resolver-owned and resolve to 0 for this
-# empty transaction bucket, so rendimiento neto is 0; the manual casilla-16
-# deduction of 5000 then forces casilla 17 negative, so saldo-negativo-fin-periodo
-# > 0 and seeds the next quarter. The exact seed is read back from the persisted
-# revision (anti-tautology), never hand-derived from the formula.
-# Casilla 05 ("Pagos fraccionados anteriores") is now a bound carry (Stage 2);
-# at 1T its expanding span is empty (absent-by-design = 0), so it is NOT supplied
-# as a manual input here.
+# Positive operator-declared withholding makes 1T's partial result negative.
+# Home deduction stays zero, so the subsequent prior-payments aggregation
+# cannot manufacture a negative Casilla05. The carry seed is read from the
+# actually saved/filed revision, rather than derived here from the formulas.
 _NEGATIVE_1T_INPUTS: dict[CasillaId, Decimal] = {
-    # Casilla 01 (income) and 02 (gastos) are resolver-owned (the enrolled
-    # LedgerRentaIncome/Gasto aggregation resolvers); they return 0 for this
-    # empty transaction bucket and must not be supplied as manual inputs. The
-    # negative result that seeds the carry comes from the manual casilla-16
-    # deduction below applied against a zero rendimiento neto.
-    _M130_WITHHELD_CASILLA: Decimal("0"),
+    _M130_WITHHELD_CASILLA: Decimal("5000"),
     _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
     _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
-    _M130_HOME_DEDUCTION_CASILLA: Decimal("5000"),
+    _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
-# Casilla "01" (actividad-económica gross income) is now owned by the enrolled
-# LedgerRentaIncomeAggregationSourceResolver, and casilla "02" (Gastos) by the
-# enrolled LedgerRentaGastosPagoFraccionadoAggregationSourceResolver.  Callers must not supply
-# either on the aggregation path; both resolvers return zero for an empty
-# transaction bucket, which is correct for these carry-forward tests that do not
-# seed income or expense transactions.  The carry-forward assertion (casilla 15
-# == 1T saldo-negativo) is independent of casilla 01/02 and remains valid with
-# resolver-supplied zero.  Casilla 05 (now a bound carry) and casilla 15 (the
-# carry under test) are both resolved by the previous_filing pipeline at 2T,
-# never supplied as manual inputs.
+# Income/gastos remain resolver-owned. A real Q2 income receipt funds a
+# positive current C14 below the saved carry; withholding is cumulative and
+# retains the same operator-declared amount in both quarters. Casillas05/15
+# still come only from previous_filing, never from manual inputs.
 _2T_INPUTS_WITHOUT_15: dict[CasillaId, Decimal] = {
-    _M130_WITHHELD_CASILLA: Decimal("0"),
+    _M130_WITHHELD_CASILLA: Decimal("5000"),
     _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
     _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
@@ -187,6 +178,44 @@ def _seed_130(
     )
 
 
+def _seed_2t_130_income(repos_: _Repos) -> str:
+    """Fund positive 2T through the real manual ledger writer and isolated store."""
+    wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos_
+    transactions = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=bv_repo.secure_object_repository)
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=bv_repo.secure_object_repository,
+        transaction_repository=transactions,
+        bucket_event_repository=bv_repo,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 15),
+                value_date=date(2026, 5, 15),
+                amount=Decimal("25750"),
+                direction=TransactionDirection.INCOMING,
+                counterparty="Cliente SA",
+                description="Q2 economic activity income for cross-period carry",
+                business_classification=BusinessClassification.BUSINESS,
+                taxable_base=Decimal("25750"),
+                irpf_category="actividad_economica",
+                actor="operator-A",
+                idempotency_key="m130-carry-q2-income",
+            ),
+            ports=ports,
+            occurred_at=_T4,
+        )
+    persisted = transactions.load().get(created.ref.transaction_id)
+    assert persisted is not None
+    assert persisted.raw.value_date == date(2026, 5, 15)
+    assert persisted.raw.amount == Decimal("25750")
+    assert persisted.taxable_base == Decimal("25750")
+    return persisted.transaction_id
+
+
 def _file_1t_with_negative_result(repos_: _Repos, *, operation: PinnedAuthorityOperation) -> Decimal:
     """File Modelo 130 1T with a negative Diferencia; return its saldo-negativo seed.
 
@@ -209,6 +238,9 @@ def _file_1t_with_negative_result(repos_: _Repos, *, operation: PinnedAuthorityO
             ports=_calculation_ports_190,
             clock=_T1,
         )
+    assert Decimal(revision.casilla_values[_M130_WITHHELD_CASILLA]) == Decimal("5000")
+    assert Decimal(revision.casilla_values[_M130_HOME_DEDUCTION_CASILLA]) == Decimal("0")
+    assert Decimal(revision.casilla_values[_M130_PREVIOUS_PAYMENTS_CASILLA]) == Decimal("0")
     saldo = Decimal(revision.casilla_values[_M130_SALDO_NEGATIVO_CASILLA])
     assert saldo > 0, "1T inputs must produce a positive carry-forward seed for the test to be meaningful"
     # 1T's casilla-05 expanding-span and casilla-15 single-offset previous_filing
@@ -353,6 +385,7 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(
     _seed_first_year_activity_profile(repos)
     carried_seed = _file_1t_with_negative_result(repos, operation=operation)
 
+    income_id = _seed_2t_130_income(repos)
     work_unit_2t = _seed_130(repos, period="2T", clock=_T4, operation=operation)
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -368,6 +401,10 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(
             clock=_T4,
         )
 
+    assert income_id in result.revision.source_transaction_ids
+    assert Decimal(result.revision.casilla_values[_M130_INCOME_CASILLA]) == Decimal("25750")
+    assert Decimal(result.revision.casilla_values[_M130_WITHHELD_CASILLA]) == Decimal("5000")
+    assert Decimal(result.revision.casilla_values[_M130_PREVIOUS_PAYMENTS_CASILLA]) == Decimal("0")
     carried_casilla_15 = Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA])
     c14 = Decimal(result.revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA])
     assert Decimal(result.revision.binding_overrides[_CARRY_BINDING_ID]) == carried_seed
@@ -384,6 +421,7 @@ def test_first_year_activity_start_calculate_scopes_prior_year_m100_binding(
     _seed_first_year_activity_profile(repos)
     carried_seed = _file_1t_with_negative_result(repos, operation=operation)
 
+    _seed_2t_130_income(repos)
     work_unit_2t = _seed_130(repos, period="2T", clock=_T4, operation=operation)
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -457,6 +495,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(
     assert stored is not None
     assert stored.source_kind == APP_FILING_SOURCE_KIND
 
+    _seed_2t_130_income(repos)
     work_unit_2t = _seed_130(repos, period="2T", clock=_T4, operation=operation)
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -534,6 +573,7 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(
     assert carried_seed > Decimal("0")
 
     override_value = carried_seed + Decimal("250")
+    _seed_2t_130_income(repos)
     work_unit_2t = _seed_130(repos, period="2T", clock=_T4, operation=operation)
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -556,9 +596,17 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(
     assert casilla_15 == c14
 
 
+@pytest.mark.parametrize(
+    ("period_code", "revision_id", "prior_year", "prior_period"),
+    (("1T", "2026-hasta-01-y-1t", 2025, "4T"), ("2T", "2026-y-siguientes", 2026, "1T")),
+)
 def test_carry_resolver_excludes_303_iva_compensation_binding(
     repos: _Repos,
     operation: PinnedAuthorityOperation,
+    period_code: str,
+    revision_id: str,
+    prior_year: int,
+    prior_period: str,
 ) -> None:
     """D3: the previous_filing resolver does not emit the M303 IVA-compensation binding.
 
@@ -578,20 +626,21 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(
         bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2026,
-        period=Period.from_year_and_code(2026, "2T"),
-        revision_id="2026-y-siguientes",
+        period=Period.from_year_and_code(2026, period_code),
+        revision_id=revision_id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository()),
         clock=_T4,
         operation=operation,
     )
-    _persist_prior_303(CalculationObservationRepository())
+    _persist_prior_303(CalculationObservationRepository(), filing_year=prior_year, period_code=prior_period)
 
-    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period=period_code)
+    assert snapshot.revision.id == revision_id
     context = CalculationSourceContext(
         bucket_id=work_unit_303.bucket_id,
         modelo="303",
         filing_year=2026,
-        period=Period.from_year_and_code(2026, "2T"),
+        period=Period.from_year_and_code(2026, period_code),
         revision=snapshot.revision,
     )
     raw = PreviousFilingSourceResolver(
@@ -638,9 +687,17 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(
         assert filtered.binding_values[binding_id] == value
 
 
+@pytest.mark.parametrize(
+    ("period_code", "revision_id", "prior_year", "prior_period"),
+    (("1T", "2026-hasta-01-y-1t", 2025, "4T"), ("2T", "2026-y-siguientes", 2026, "1T")),
+)
 def test_source_mesh_excludes_303_iva_compensation_relation_binding(
     repos: _Repos,
     operation: PinnedAuthorityOperation,
+    period_code: str,
+    revision_id: str,
+    prior_year: int,
+    prior_period: str,
 ) -> None:
     """D3: relation-prefill must not bypass the IVA-wallet owner for M303 casilla 110."""
 
@@ -650,15 +707,16 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(
         bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2026,
-        period=Period.from_year_and_code(2026, "2T"),
-        revision_id="2026-y-siguientes",
+        period=Period.from_year_and_code(2026, period_code),
+        revision_id=revision_id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository()),
         clock=_T4,
         operation=operation,
     )
-    _persist_prior_303(CalculationObservationRepository())
+    _persist_prior_303(CalculationObservationRepository(), filing_year=prior_year, period_code=prior_period)
 
-    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period=period_code)
+    assert snapshot.revision.id == revision_id
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
         work_unit_repository=wu_repo,
@@ -845,7 +903,7 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2026-y-siguientes",
+        revision_id="2026-hasta-01-y-1t",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
         operation=operation,
@@ -881,15 +939,19 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(
     )
 
 
-def _persist_prior_303(repository: CalculationObservationRepository) -> None:
+def _persist_prior_303(
+    repository: CalculationObservationRepository, *, filing_year: int = 2026, period_code: str = "1T"
+) -> None:
     """Persist a prior-period 303 observation carrying the compensation carry casilla.
 
-    Stored under the prior period (1T) so the 2T snapshot's previous_filing
+    Stored under the requested prior period so the snapshot's previous_filing
     compensation binding (``source_casilla_id = iva.compensacion-disponible-fin-periodo``,
     offset -1) discovers it and the raw resolver emits the
     ``modelo-303-compensacion-pendiente-anteriores`` binding the D3 exclusion strips.
     """
-    observation, disposition = _local_m303_observation(filing_year=2026, period_code="1T", available=Decimal("1200.00"))
+    observation, disposition = _local_m303_observation(
+        filing_year=filing_year, period_code=period_code, available=Decimal("1200.00")
+    )
     repository.save(
         repository.prepare_observation_envelope(
             observation,
@@ -923,6 +985,7 @@ def test_first_filer_same_year_chain_is_fully_reachable(
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
     _file_1t_with_negative_result(repos, operation=operation)
+    _seed_2t_130_income(repos)
     work_unit_2t = _seed_130(repos, period="2T", clock=_T4, operation=operation)
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,

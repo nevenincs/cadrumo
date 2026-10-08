@@ -111,6 +111,10 @@ class PublicAnnualRecipientDetail(BaseModel):
     pago: int | None = Field(default=None, ge=1, le=5)
     tipo_codigo: str | None = Field(default=None, pattern="^[COP]$")
     codigo_cuenta: str | None = Field(default=None, max_length=20)
+    financial_asset_origin: Literal["A", "B", "C", "D", "E"] | None = None
+    financial_asset_acquisition_value: PublicDecimal | None = None
+    financial_asset_disposal_value: PublicDecimal | None = None
+    financial_asset_related_entity: Literal["V", ""] | None = None
     pendiente_flag: str | None = Field(default=None, max_length=1)
     tipo_percepcion: int | None = Field(default=None, ge=1, le=2)
     reducciones: PublicDecimal = PublicDecimal(decimal="0")

@@ -520,24 +520,20 @@ class SecureObjectWriteOperations:
         previous: dict[tuple[str, bytes], _PreviousRowMetadata] = {}
         for namespace, digests in by_namespace.items():
             for start in range(0, len(digests), OBJECT_KEY_SELECT_CHUNK):
-                rows = (
-                    session.execute(
-                        select(
-                            SecureObjectRow.id,
-                            SecureObjectRow.object_key,
-                            SecureObjectRow.revision_id,
-                            SecureObjectRow.revision_ancestor_ids,
-                            SecureObjectRow.payload_hash,
-                        ).where(
-                            SecureObjectRow.namespace == namespace,
-                            SecureObjectRow.object_key.in_(
-                                digests[start : start + OBJECT_KEY_SELECT_CHUNK],
-                            ),
+                rows = session.execute(
+                    select(
+                        SecureObjectRow.id,
+                        SecureObjectRow.object_key,
+                        SecureObjectRow.revision_id,
+                        SecureObjectRow.revision_ancestor_ids,
+                        SecureObjectRow.payload_hash,
+                    ).where(
+                        SecureObjectRow.namespace == namespace,
+                        SecureObjectRow.object_key.in_(
+                            digests[start : start + OBJECT_KEY_SELECT_CHUNK],
                         ),
-                    )
-                    .tuples()
-                    .all()
-                )
+                    ),
+                ).all()
                 for row_id, object_key, revision_id, revision_ancestor_ids, payload_hash in rows:
                     digest = bytes(object_key)
                     previous[(namespace, digest)] = _PreviousRowMetadata(

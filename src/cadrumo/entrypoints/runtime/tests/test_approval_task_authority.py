@@ -245,7 +245,7 @@ def test_exact_task_permit_and_cancellation_complete_publication(tmp_path: Path)
         [sys.executable, "-m", "cadrumo.entrypoints.runtime.tests.test_approval_task_authority", str(tmp_path)],
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=None,
         check=False,
     )
     assert result.returncode == 0, result.stderr

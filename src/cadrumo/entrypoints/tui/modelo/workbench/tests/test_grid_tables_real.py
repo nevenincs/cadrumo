@@ -206,6 +206,9 @@ async def _walk(items: tuple[CasillaListItem, ...], width: int, keys: tuple[str,
         async with app.run_test(size=(width, 300)) as pilot:
             await pilot.pause()
             widget = app.query_one(CasillaList)
+            first = next(item for item in items if isinstance(item, CasillaListEntry) and item.field.box)
+            assert first.field.address is not None
+            assert widget.focus_address(address_key(first.field.address))
             for key in keys:
                 await pilot.press(key)
                 entry = widget.highlighted

@@ -8,6 +8,14 @@ import pytest
 
 from ......core.auth_provider import AuthProviderKind
 from ......core.config import Settings
+from ......tests.aeat_literal_fixtures import (
+    CLAVE_QR_PROTECTED_QUERY_URL_CANARY,
+    PROTECTED_RESOURCE_FOREIGN_HOST_CANARY,
+    PROTECTED_RESOURCE_PATH_FIXTURE,
+    PROTECTED_RESOURCE_QUERY_PATH_CANARY,
+    PROTECTED_RESOURCE_URL_FIXTURE,
+    WWW6_LOGIN_URL_FIXTURE,
+)
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
 from .. import session_store
@@ -80,28 +88,28 @@ async def test_resume_recaptures_cookies_rotated_by_live_probe(tmp_path: Path, k
 @pytest.mark.parametrize(
     ("url", "html", "expected"),
     [
-        ("https://attacker.example/wlpl/TEWV-CORE/ResumenVlt", "", ClaveMovilPageState.UNTRUSTED),
+        (PROTECTED_RESOURCE_FOREIGN_HOST_CANARY, "", ClaveMovilPageState.UNTRUSTED),
         (
-            "https://www6.agenciatributaria.gob.es/error?next=/wlpl/TEWV-CORE/ResumenVlt",
+            PROTECTED_RESOURCE_QUERY_PATH_CANARY,
             "",
             ClaveMovilPageState.UNKNOWN,
         ),
-        ("https://www6.agenciatributaria.gob.es/wlpl/TEWV-CORE/ResumenVlt", "", ClaveMovilPageState.AUTHENTICATED),
-        ("https://www6.agenciatributaria.gob.es/login", '<input id="NIF">', ClaveMovilPageState.IDENTITY),
+        (PROTECTED_RESOURCE_URL_FIXTURE, "", ClaveMovilPageState.AUTHENTICATED),
+        (WWW6_LOGIN_URL_FIXTURE, '<input id="NIF">', ClaveMovilPageState.IDENTITY),
         (
-            "https://www6.agenciatributaria.gob.es/login",
+            WWW6_LOGIN_URL_FIXTURE,
             '<span id="spanCodigoVerificacion">ABC</span>',
             ClaveMovilPageState.WAITING,
         ),
         (
             # AEAT's waiting page as served on 2026-10-03: the code moved out of #spanCodigoVerificacion.
-            "https://www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/ObtenerClaveMovil?ref=/wlpl/TEWV-CORE/ResumenVlt",
+            CLAVE_QR_PROTECTED_QUERY_URL_CANARY,
             '<div id="divEsperaActiva"><div id="divRegistradoActivado"><div class="negrita codigoVerificacion">'
             'Código</div><div class="negrita codigoVerificacion fuenteTamanyo3em">ABC</div></div>'
             '<input type="button" id="botonCancelar"></div>',
             ClaveMovilPageState.WAITING,
         ),
-        ("https://www6.agenciatributaria.gob.es/login", "Petición pendiente", ClaveMovilPageState.PENDING),
+        (WWW6_LOGIN_URL_FIXTURE, "Petición pendiente", ClaveMovilPageState.PENDING),
     ],
 )
 def test_observed_state_never_uses_target_in_query_as_authentication(
@@ -113,7 +121,7 @@ def test_observed_state_never_uses_target_in_query_as_authentication(
         classify_clave_movil_page(
             url=url,
             html=html,
-            target_path="/wlpl/TEWV-CORE/ResumenVlt",
+            target_path=PROTECTED_RESOURCE_PATH_FIXTURE,
             settings=Settings(),
         )
         is expected

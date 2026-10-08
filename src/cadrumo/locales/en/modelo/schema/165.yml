@@ -32,7 +32,7 @@ modelo:
           m165-porcentaje-participacion:
             label: Percentage of shareholding
           m165-representante-legal-nif:
-            label: Tax ID of the legal representative
+            label: Legal representative's NIF
           m165-socio-nif:
             label: Tax ID of the member or shareholder
           m165-socio-nombre:

@@ -1,6 +1,13 @@
 modelo:
   schema:
     '216':
+      casilla:
+        continuidad:
+          cuota-a-ingresar:
+            label: Resultado a ingresar
+          irnr-retencion-resultados-anteriores:
+            label: Resultados a ingresar de anteriores declaraciones por el mismo
+              concepto, ejercicio y período
       construct:
         modelo-216-calculation-construct:
           field:
@@ -67,11 +74,6 @@ modelo:
               label: Número de rentas no sujetas a retención
             '5':
               label: Importe de las rentas no sujetas a retención
-            '6':
-              label: Resultados a ingresar de anteriores declaraciones por el mismo
-                concepto, ejercicio y período
-            '7':
-              label: Resultado a ingresar
           field:
             label: Orden EHA/3290/2008, ejercicios 2020 a 2023
         2024-y-siguientes:
@@ -115,10 +117,5 @@ modelo:
                 de rentas
             '19':
               label: Rentas no sometidas a retención o ingreso a cuenta. Base. Total
-            '20':
-              label: Resultados a ingresar de anteriores declaraciones por el mismo
-                concepto, ejercicio y período
-            '21':
-              label: Resultado a ingresar
           field:
             label: Orden HAC/56/2024, ejercicios 2024 y siguientes

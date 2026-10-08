@@ -1,4 +1,7 @@
-"""Validate explicit transport-only omissions from human workbook surfaces."""
+"""Validate explicit transport-only omissions from human workbook surfaces.
+
+:class:`ModeloRevision` declares the form and its value contracts.
+"""
 
 import re
 from typing import cast
@@ -32,6 +35,8 @@ def workbook_transport_controls(revision: ModeloRevision) -> frozenset[str]:
 
     This is a workbook presentation policy, not deletion from the registry or
     the filing export. Unknown or unplaced financial values cannot opt out.
+
+    The ``revision`` parameter uses :class:`ModeloRevision`, which declares the form and its value contracts.
     """
     excluded = frozenset(
         str(p.casilla_id)

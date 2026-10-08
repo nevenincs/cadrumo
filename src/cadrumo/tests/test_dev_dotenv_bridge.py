@@ -14,7 +14,7 @@ prerequisite gate instead of exercising the real probe it exists to run.
 That is a silent regression: the suite still runs, and nothing announces
 that the credential channel stopped working. This test makes the
 regression loud on any machine that actually carries an ``env/.env``, and
-is a clean no-op (skipped, not failed) on a machine that does not -- CI,
+is a clean no-op on a machine that does not -- CI,
 a fresh clone, an installed run.
 """
 
@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_operator_dotenv_keys_are_bridged_into_the_environment() -> None:
-    """Every key ``env/.env`` declares must already be visible in ``os.environ``.
+    """Every admitted dotenv key must be visible after deliberate session isolation.
 
     Presence, not exact-value equality, is the check: an operator may
     legitimately override a dotfile value with a real ambient shell/CI
@@ -39,7 +39,8 @@ def test_operator_dotenv_keys_are_bridged_into_the_environment() -> None:
     directly in ``test_env_loader.py``), and that is not a broken
     channel. A key entirely absent from ``os.environ`` despite being
     declared in ``env/.env`` is what a structurally broken bridge looks
-    like, and is what this test refuses.
+    like, and is what this test refuses. The Google publisher credential is
+    deliberately removed by the session fixture and must remain absent.
     """
     env_path = REPO_ROOT / "env" / ".env"
     declared = load_env_file(env_path)
@@ -53,7 +54,11 @@ def test_operator_dotenv_keys_are_bridged_into_the_environment() -> None:
         # fail-rather-than-skip on a missing prerequisite.
         return
 
-    missing = sorted(key for key in declared if key not in os.environ)
+    # The session's Google-client isolation fixture deliberately removes the
+    # publisher credential channel after the bridge, before any test runs.
+    isolated_key = "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON"
+    assert isolated_key not in os.environ
+    missing = sorted(key for key in declared if key != isolated_key and key not in os.environ)
     assert not missing, (
         f"env/.env declares {missing} but "
         f"{'this key is' if len(missing) == 1 else 'these keys are'} absent from "

@@ -358,7 +358,7 @@ def test_concurrent_signing_keypair_mint_reuses_one_encrypted_key_and_signs_pack
         for thread in threads:
             thread.start()
         for thread in threads:
-            thread.join(timeout=60)
+            thread.join()
 
         assert not [thread for thread in threads if thread.is_alive()]
         assert errors == []

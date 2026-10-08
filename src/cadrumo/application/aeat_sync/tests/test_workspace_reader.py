@@ -17,6 +17,10 @@ from pydantic import ValidationError
 
 from ....core.period import Period
 from ....domain.modelos.filing_record import ModeloRecord
+from ....tests.aeat_literal_fixtures import (
+    CENSO_SOURCE_URL_FIXTURE,
+    OBLIGACIONES_SOURCE_URL_FIXTURE,
+)
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ...calculations.ports import FiledDeclaracionObservationProtocol
 from ...live.filed_history_operation import (
@@ -384,7 +388,8 @@ def test_an_uncomposed_custody_reader_leaves_notifications_unobserved() -> None:
     assert row.local_observed_at is None
 
 
-def test_saved_census_is_available_and_compares_only_observed_facts() -> None:
+@pytest.mark.parametrize("observed_nif", (_SUBJECT, "00000001-r"))
+def test_saved_census_is_available_and_compares_only_observed_facts(observed_nif: str) -> None:
     """A reopened workspace reads stored evidence without fabricating absent values."""
     from ...user_profile.censal_observation import (
         CensalCell,
@@ -397,15 +402,15 @@ def test_saved_census_is_available_and_compares_only_observed_facts() -> None:
     )
 
     observation = CensalObservation(
-        identity=CensalObservationIdentity(nif=_SUBJECT),
+        identity=CensalObservationIdentity(nif=observed_nif),
         domicilio_fiscal=CensalObservationAddress(codigo_postal="28001"),
         domicilio_notificacion=CensalObservationAddress(),
         captured_at=_NOW,
-        source_url="https://sede.agenciatributaria.gob.es/censo",
+        source_url=CENSO_SOURCE_URL_FIXTURE,
         consultations=(
             CensalConsultation(
                 kind="obligaciones",
-                source_url="https://sede.agenciatributaria.gob.es/obligaciones",
+                source_url=OBLIGACIONES_SOURCE_URL_FIXTURE,
                 sections=(
                     CensalSection(
                         title="Mis Obligaciones",

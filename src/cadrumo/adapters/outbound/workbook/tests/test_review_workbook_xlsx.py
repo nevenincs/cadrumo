@@ -41,4 +41,4 @@ def test_ledger_materialization_has_no_fake_modelo_metadata() -> None:
     )
     workbook = load_workbook(BytesIO(materialize_export_plan(plan)))
     assert "Cálculos" not in workbook.sheetnames
-    assert workbook.properties.title == "Overview"
+    assert workbook.properties.title == "Ledger · aaaaaaaaaaaa"

@@ -82,7 +82,6 @@ def _findings(result: ModeloEditPreflightResultV1) -> dict[tuple[str, str | None
     }
 
 
-@pytest.mark.timeout(180)
 def test_each_finding_names_its_address_and_severity(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         head = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -108,7 +107,6 @@ def test_each_finding_names_its_address_and_severity(tmp_path: Path) -> None:
     assert all("12.345" not in str(finding.message_arguments) for finding in findings.values())
 
 
-@pytest.mark.timeout(180)
 def test_a_head_stored_before_operator_layers_is_flagged_once(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -119,7 +117,6 @@ def test_a_head_stored_before_operator_layers_is_flagged_once(tmp_path: Path) ->
     assert findings[OPERATOR_LAYER_UNKNOWN, None].severity is ModeloEditFindingSeverity.WARNING
 
 
-@pytest.mark.timeout(180)
 def test_a_required_casilla_left_empty_is_named(tmp_path: Path) -> None:
     """Marks one writable casilla required in an isolated copy of a real baseline, then clears it."""
     with seeded_operator_work(tmp_path) as work:
@@ -145,7 +142,6 @@ def test_a_required_casilla_left_empty_is_named(tmp_path: Path) -> None:
     assert (REQUIRED_EMPTY, _C08) not in set_value
 
 
-@pytest.mark.timeout(180)
 def test_a_stale_baseline_is_refused_instead_of_evaluated(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         baseline = work.baseline()

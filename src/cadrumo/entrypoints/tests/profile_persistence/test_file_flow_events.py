@@ -5,6 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.tests.calculation_catalogue_tamper_support import (
     plant_calculation_revision_unchecked,
@@ -71,12 +72,17 @@ def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> No
             "verified_by": "operator-A",
         }
     )
+    # The planted coordinate also contradicts its saved rendering snapshot.
+    # Pin that concrete integrity failure before asserting the sanitized read
+    # refusal, so an unrelated persistence failure cannot satisfy this test.
+    with pytest.raises(ValidationError, match="saved rendering snapshot belongs to another calculation coordinate"):
+        type(stale).model_validate(stale.model_dump(mode="python", context={"secure_calculation_revision": True}))
     plant_calculation_revision_unchecked(cr_repo.load(), stale)
 
     # The repository read refuses the planted row before the action reaches its
     # own divergence check.
     with (
-        pytest.raises(CalculationRevisionPersistenceError, match="disagrees with its parent WorkUnit"),
+        pytest.raises(CalculationRevisionPersistenceError) as refusal,
         bundled_indexed_authority().operation() as operation,
     ):
         file_modelo_revision(
@@ -90,6 +96,8 @@ def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> No
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         )
+
+    assert refusal.value.context == {"reason": "invalid_payload"}
 
 
 def test_calculate_emits_modelo_calculation_created_event(repos: Repos) -> None:

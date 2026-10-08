@@ -8,6 +8,36 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.adapters.outbound.google.oauth_callback.OAuthCallbackRefusedError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_CALLBACK",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_google_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.outbound.google.oauth_callback.OAuthConsentDeclinedError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_CONSENT_DECLINED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_google_sign_in_required",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.outbound.google.oauth_callback.OAuthCallbackBindError",
+        ErrorCode(
+            code="FAIL_GOOGLE_CALLBACK_BIND",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_google_loopback_bind",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.core.errors.hierarchy.AeatLoginAssertionError",
         ErrorCode(
             code="AUTH_AEAT_LOGIN_ASSERTION",

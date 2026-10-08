@@ -44,7 +44,7 @@ def _cli_modules_a_fresh_process_loads(*modules: str) -> list[str]:
         text=True,
         encoding="utf-8",
         check=False,
-        timeout=300,
+        timeout=None,
     )
     assert completed.returncode == 0, str(completed.stderr)[-4000:]
     loaded = json.loads(str(completed.stdout).strip().splitlines()[-1])

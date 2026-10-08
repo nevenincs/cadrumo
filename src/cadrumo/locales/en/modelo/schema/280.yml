@@ -6,7 +6,7 @@ modelo:
           filing-year:
             label: Reporting year
           irpf-declarante-nif:
-            label: Declarant's tax identification number (NIF)
+            label: Declarant's NIF
           m280-aportaciones-ejercicio:
             label: Contributions made during the year
           m280-base-retencion-practicada:
@@ -52,7 +52,7 @@ modelo:
           m280-rendimientos-positivos-ejercicio:
             label: Positive returns obtained during the year
           m280-representante-legal-nif:
-            label: Tax ID of the legal representative
+            label: Legal representative's NIF
           m280-tipo-identificador:
             label: Identifier type
           m280-tipo-plan-ahorro:

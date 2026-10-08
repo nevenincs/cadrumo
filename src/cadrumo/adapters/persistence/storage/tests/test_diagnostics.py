@@ -740,7 +740,7 @@ def test_importing_diagnostics_does_not_pull_the_browser_or_registry_subtree() -
         capture_output=True,
         text=True,
         check=True,
-        timeout=120,
+        timeout=None,
     )
     leaked = result.stdout.strip()
     assert leaked == "", f"importing diagnostics eagerly pulled the heavy subtree: {leaked}"

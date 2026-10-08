@@ -121,6 +121,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "attachment_manifests",
     "aeat_browser_sessions",
     "clave_movil_diagnostics",
+    "google_artifact_receipts",
     "google_oauth_token",
     "google_oauth_metadata",
     "google_drive_config",

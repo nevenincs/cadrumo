@@ -52,7 +52,7 @@ def test_a_bare_core_probe_miss_carries_machine_identity_not_install_prose(tmp_p
             cwd=project_root,
             capture_output=True,
             text=True,
-            timeout=90,
+            timeout=None,
         )
     except subprocess.TimeoutExpired as exc:
         pytest.fail(

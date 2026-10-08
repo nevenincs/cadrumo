@@ -66,6 +66,9 @@ from ...core.operations import (
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.justificante.schema import Justificante
+from ...tests.aeat_literal_fixtures import (
+    CSV_CONSULTATION_URL_FIXTURE,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -334,7 +337,7 @@ def _parsed_receipt() -> Justificante:
         period=_PERIOD,
         presented_at=datetime(2026, 4, 18, 9, 0),
         tax_id=_TAX_ID,
-        verification_url="https://sede.agenciatributaria.gob.es/Sede/consulta-csv",
+        verification_url=CSV_CONSULTATION_URL_FIXTURE,
         source_pdf_path=Path("synthetic-justificante.pdf"),
         source_pdf_sha256=_PDF_SHA256,
         parsed_at=_NOW,

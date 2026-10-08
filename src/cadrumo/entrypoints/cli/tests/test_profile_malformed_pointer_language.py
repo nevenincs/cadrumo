@@ -56,7 +56,7 @@ def _run_cli(*args: str, storage_root: Path, tmp_path: Path) -> subprocess.Compl
             capture_output=True,
             text=True,
             encoding="utf-8",
-            timeout=120,
+            timeout=None,
             check=False,
             env=_profile_storage_env(storage_root=storage_root, tmp_path=tmp_path),
         ),

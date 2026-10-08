@@ -6,11 +6,11 @@ modelo:
           a-deducir-23:
             label: Elszámolás - Levonandó [23]
           adjudicatario-apellidos:
-            label: Vevő - Vezetéknév vagy cégnév
+            label: Odaítélés kedvezményezettje - Vezetéknév vagy cégnév
           adjudicatario-nif:
-            label: Vevő - NIF
+            label: Odaítélés kedvezményezettje - NIF
           adjudicatario-nombre:
-            label: Vevő - Utónév
+            label: Odaítélés kedvezményezettje - Utónév
           aeronave-ano:
             label: Jellemzők és műszaki adatok - Légi járművek - Gyártási év
           aeronave-fabricante:
@@ -35,7 +35,7 @@ modelo:
           declarante-nombre-309:
             label: Azonosítás - Utónév
           embarcacion-eslora:
-            label: Jellemzők és műszaki adatok - Vízi járművek - Legnagyobb hossz
+            label: Jellemzők és műszaki adatok - Vízi járművek - Legnagyobb hajóhossz
           embarcacion-fabricante:
             label: Jellemzők és műszaki adatok - Vízi járművek - Gyártó
           embarcacion-tipo:
@@ -101,7 +101,7 @@ modelo:
           m309-papel-domicilio-via:
             label: 'Adóügyi cím: közterület'
           m309-papel-nombre-completo:
-            label: Teljes név vagy cégnév
+            label: Vezetéknév és utónév vagy cégnév
           motivo-declaracion-no-periodica:
             label: A nem időszakos bevallás oka
           mtn-embarcacion-identificacion:
@@ -109,34 +109,6 @@ modelo:
               szám)
           observaciones-presentacion:
             label: Megjegyzések
-          papel-ccc-cuenta:
-            label: null
-          papel-ccc-dc:
-            label: null
-          papel-ccc-entidad:
-            label: null
-          papel-ccc-oficina:
-            label: null
-          papel-domicilio-codigo-postal:
-            label: null
-          papel-domicilio-escalera:
-            label: null
-          papel-domicilio-municipio:
-            label: null
-          papel-domicilio-numero:
-            label: null
-          papel-domicilio-piso:
-            label: null
-          papel-domicilio-provincia:
-            label: null
-          papel-domicilio-puerta:
-            label: null
-          papel-domicilio-telefono:
-            label: null
-          papel-domicilio-tipo-via:
-            label: null
-          papel-domicilio-via:
-            label: null
           papel-firma:
             help: A nyomtatvány aláírásának helye. Az ide beírt név nem elektronikus
               aláírás és nem jelent benyújtást.
@@ -240,6 +212,13 @@ modelo:
               megnevezés):'
           vehiculo-tipo:
             label: Jellemzők és műszaki adatok - Járművek - Típus
+      construct:
+        modelo-309-papel-domicilio-cuenta:
+          field:
+            title: Lakcím és bankszámla
+        modelo-309-papel-identificacion-complementaria:
+          field:
+            title: Kiegészítő azonosítás
       field:
         official_name: Modelo 309. Hozzáadottérték-adó. Nem rendszeres bevallás-elszámolás.
         title: IVA. Nem rendszeres bevallás-elszámolás

@@ -54,6 +54,9 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...tests.aeat_literal_fixtures import (
+    SEDE_NOTIFICATIONS_URL_FIXTURE,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -197,13 +200,13 @@ def _snapshot() -> NotificationsSnapshot:
         fecha_notificacion=None,
         modo_notificacion=None,
         leida=False,
-        source_url="https://sede.agenciatributaria.gob.es/Sede/notificaciones",
+        source_url=SEDE_NOTIFICATIONS_URL_FIXTURE,
         mode="read",
     )
     return NotificationsSnapshot(
         rows=(row,),
         captured_at=_NOW,
-        source_url="https://sede.agenciatributaria.gob.es/Sede/notificaciones",
+        source_url=SEDE_NOTIFICATIONS_URL_FIXTURE,
     )
 
 

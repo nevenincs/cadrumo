@@ -2,6 +2,10 @@
 
 The form is a read-only presentation of existing calculation cells. It never
 reconstructs fiscal formulas, invents data, or infers official page structure.
+
+:class:`CalculationRevision` holds the saved calculation and its evidence.
+:class:`ModeloRevision` declares the form and its value contracts.
+:class:`RegistrySnapshot` pins the registry declarations used by the projection.
 """
 
 from __future__ import annotations
@@ -84,6 +88,10 @@ def add_form_workbook[M: (SheetExportMetadata, SheetReviewMetadata)](
     plans are refused until their exact registry identity and value mapping
     can be verified. Missing figures stay visibly unknown. Generated layout
     provenance is always disclosed.
+
+    The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
+    The ``snapshot`` parameter uses :class:`RegistrySnapshot`, which pins
+    the registry declarations used by the projection.
     """
     if isinstance(plan.metadata, SheetReviewMetadata):
         raise CalcSheetsEngineError("saved review baseline requires verified registry identity and value mapping")

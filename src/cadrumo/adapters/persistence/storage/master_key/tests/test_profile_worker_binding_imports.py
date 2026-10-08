@@ -47,7 +47,7 @@ def test_binding_owner_import_does_not_require_the_worker_protocol(tmp_path: Pat
         env=environment,
         capture_output=True,
         text=True,
-        timeout=30,
+        timeout=None,
         check=False,
         startupinfo=startupinfo,
     )

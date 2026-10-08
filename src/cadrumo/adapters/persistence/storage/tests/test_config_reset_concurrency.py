@@ -250,7 +250,7 @@ def _run_child(
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=90,
+            timeout=None,
         ),
     )
 

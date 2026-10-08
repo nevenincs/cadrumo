@@ -18,4 +18,13 @@ class GoogleFolderViewResult(OutputSchema):
     root_folder_id: str | None = None
 
 
-__all__ = ["GoogleFolderViewResult"]
+class GoogleFolderOrganizeResult(OutputSchema):
+    """The recorded profile root after its journaled placement operation."""
+
+    operation: str = "config.google.folder.organize"
+    profile: str
+    configured: bool
+    root_folder_id: str
+
+
+__all__ = ["GoogleFolderOrganizeResult", "GoogleFolderViewResult"]

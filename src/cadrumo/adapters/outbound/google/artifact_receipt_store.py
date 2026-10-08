@@ -1,4 +1,8 @@
-"""Encrypted, insert-only custody of acknowledged Google creation identities."""
+"""Encrypted, insert-only custody of acknowledged Google creation identities.
+
+:class:`SecureObjectRepository` stores the encrypted profile records.
+:class:`SensitivityClass` declares their custody classification.
+"""
 
 from __future__ import annotations
 

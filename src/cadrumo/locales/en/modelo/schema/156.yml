@@ -66,8 +66,6 @@ modelo:
             heading: Member identification
           contacto:
             heading: Contact person
-          cotizaciones:
-            heading: Monthly contributions
           declaracion:
             heading: Supplementary or replacement return
           domicilio:

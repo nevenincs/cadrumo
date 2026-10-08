@@ -1,4 +1,7 @@
-"""Export a selected saved difference review through the authenticated worker."""
+"""Export a selected saved difference review through the authenticated worker.
+
+:class:`OutputSchema` defines the public result envelope.
+"""
 
 from __future__ import annotations
 

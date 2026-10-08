@@ -53,7 +53,7 @@ def test_unknown_linux_containment_refuses_before_private_worker_launch(
     with pytest.raises(RuntimeRefusalError) as refused:
         scope.launch(
             executable=Path(sys.executable),
-            arguments=("-I", "-m", "cadrumo.entrypoints.runtime.worker"),
+            arguments=("-I", "-B", "-m", "cadrumo.entrypoints.runtime.worker"),
             directory=tmp_path,
             environment={"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"},
         )
@@ -518,7 +518,7 @@ def test_linux_worker_owner_loss_during_registration(tmp_path: Path) -> None:
             workers: list[int] = []
             for pid in members - {guardian_pid}:
                 arguments = (Path("/proc") / str(pid) / "cmdline").read_bytes().split(b"\0")
-                if arguments[1:4] == [b"-I", b"-m", b"cadrumo.entrypoints.runtime.worker"]:
+                if arguments[1:5] == [b"-I", b"-B", b"-m", b"cadrumo.entrypoints.runtime.worker"]:
                     workers.append(pid)
             if workers:
                 assert len(workers) == 1
@@ -534,7 +534,7 @@ def test_linux_worker_owner_loss_during_registration(tmp_path: Path) -> None:
         worker_native = Path("/proc") / str(worker_pid)
         assert (worker_native / "exe").resolve(strict=True) == interpreter
         worker_args = (worker_native / "cmdline").read_bytes().split(b"\0")
-        assert worker_args[1:4] == [b"-I", b"-m", b"cadrumo.entrypoints.runtime.worker"]
+        assert worker_args[1:5] == [b"-I", b"-B", b"-m", b"cadrumo.entrypoints.runtime.worker"]
         stat_fields = (worker_native / "stat").read_text(encoding="ascii").rsplit(") ", 1)[1].split()
         assert int(stat_fields[1]) == guardian_pid
         assert os.getpgid(worker_pid) == worker_pid and os.getsid(worker_pid) == worker_pid

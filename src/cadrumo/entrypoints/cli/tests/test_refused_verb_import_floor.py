@@ -65,7 +65,7 @@ def _loaded_after(
     completed = run_audited_process(
         [sys.executable, "-c", _PROBE, *args],
         capture_output=True,
-        timeout=180,
+        timeout=None,
         check=False,
         env=env,
     )

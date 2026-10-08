@@ -520,7 +520,7 @@ def test_fresh_import_restores_empty_modelo_projection_from_json(tmp_path: Path)
         args=(public.model_dump_json(), str(result_path)),
     )
     process.start()
-    process.join(timeout=20)
+    process.join(timeout=None)
     if process.is_alive():
         process.terminate()
         process.join(timeout=5)

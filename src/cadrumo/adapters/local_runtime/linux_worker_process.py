@@ -169,7 +169,7 @@ class LinuxProcessScope:
         if sys.platform != "linux":
             raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
         selected = validated_worker_arguments(worker_script=worker_script)
-        self._worker_script = Path(selected[1]) if worker_script is not None else None
+        self._worker_script = Path(selected[-1]) if worker_script is not None else None
         self._unit = f"cadrumo-worker-{worker_id.hex}.service"
         self._lock = Lock()
         self._guardian: LinuxOwnedProcess | None = None

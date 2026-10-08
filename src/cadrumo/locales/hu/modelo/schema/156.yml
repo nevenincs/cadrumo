@@ -65,8 +65,6 @@ modelo:
             heading: Tag azonosítása
           contacto:
             heading: Kapcsolattartó
-          cotizaciones:
-            heading: Havi járulékok
           declaracion:
             heading: Kiegészítő vagy helyettesítő bevallás
           domicilio:

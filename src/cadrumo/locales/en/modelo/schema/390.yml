@@ -1604,8 +1604,6 @@ modelo:
         title: VAT. Annual summary return
       form:
         authored:
-          accrual:
-            heading: 2. Tax period
           activities:
             heading: 3. Statistical information · Activities
           activity-code:
@@ -1616,8 +1614,6 @@ modelo:
             heading: Tax coefficient
           activity-input-tax:
             heading: Input VAT
-          activity-order:
-            heading: Order
           activity-output-tax:
             heading: Output VAT
           activity-result:
@@ -1690,8 +1686,6 @@ modelo:
             heading: Other activity 4
           other-5:
             heading: Other activity 5
-          page-one:
-            heading: Page 1
           principal:
             heading: Principal
           prior-receipt:
@@ -1700,15 +1694,11 @@ modelo:
             heading: 11. Specific transactions
           surname:
             heading: Surnames or legal name
-          taxpayer:
-            heading: 1. Taxpayer
           territorial-settlement:
             heading: 8. Taxation across several administrations
           year:
             heading: Tax year
         column:
-          actividad-desarrollada:
-            heading: Activity carried on
           fecha-poder-ddmmaaaa:
             heading: Date of power of attorney
           nif:
@@ -1721,10 +1711,6 @@ modelo:
             heading: Reduction for activity in municipalities hit by the DANA storm
           reducciones-total:
             heading: Reductions (total)
-          regularizacion-de-inversiones:
-            heading: Investment adjustment
-          suma-de-deducciones:
-            heading: Total deductions
         page:
           pag-1:
             heading: Page 1
@@ -1759,12 +1745,6 @@ modelo:
             heading: Activity 1
           actividad-2:
             heading: Activity 2
-          bienes-corrientes:
-            heading: Current goods
-          bienes-inversion:
-            heading: Capital goods
-          bienes-y-servic:
-            heading: Current goods and services
           compensac-reg-especial-agric-ganad-pesca:
             heading: Special farming, livestock and fishing regime compensation
           cuotas-deducibles-en-virtud-de-resolucion-aa4c5d:
@@ -1848,48 +1828,12 @@ modelo:
             heading: 1. Taxpayer
           10-volumen-de-operaciones:
             heading: 10. Turnover
-          11-oper-especificas:
-            heading: 11. Specific transactions
           12-prorratas:
             heading: 12. Pro rata
-          13-reg-deducc-diferenc:
-            heading: Differentiated deductions
-          13-reg-deducc-diferenc-1:
-            heading: Differentiated deductions · sector 1
-          13-reg-deducc-diferenc-1-iva-ded-adquisic-2c241b:
-            heading: Sector 1 · deductible VAT on intra-EU acquisitions
-          13-reg-deducc-diferenc-1-iva-ded-importaciones:
-            heading: Sector 1 · deductible VAT on imports
-          13-reg-deducc-diferenc-1-iva-ded-operac-i-174de9:
-            heading: Sector 1 · deductible VAT on domestic transactions
-          13-reg-deducc-diferenc-2:
-            heading: Differentiated deductions · sector 2
-          13-reg-deducc-diferenc-2-iva-ded-adquisic-1d6b48:
-            heading: Sector 2 · deductible VAT on intra-EU acquisitions
-          13-reg-deducc-diferenc-2-iva-ded-importaciones:
-            heading: Sector 2 · deductible VAT on imports
-          13-reg-deducc-diferenc-2-iva-ded-operac-i-f7ea1e:
-            heading: Sector 2 · deductible VAT on domestic transactions
-          13-reg-deducc-diferenc-3:
-            heading: Differentiated deductions · sector 3
-          13-reg-deducc-diferenc-3-iva-ded-adquisic-92440f:
-            heading: Sector 3 · deductible VAT on intra-EU acquisitions
-          13-reg-deducc-diferenc-3-iva-ded-importaciones:
-            heading: Sector 3 · deductible VAT on imports
-          13-reg-deducc-diferenc-3-iva-ded-operac-i-5ea9dc:
-            heading: Sector 3 · deductible VAT on domestic transactions
           2-devengo:
             heading: 2. Accrual
           3-datos-estadisticos:
             heading: 3. Statistical data
-          3-datos-estadisticos-a:
-            heading: 3. Statistical data · A
-          3-datos-estadisticos-a-actividades:
-            heading: 3. Statistical data · A · Activities
-          3-datos-estadisticos-b:
-            heading: 3. Statistical data · B
-          3-datos-estadisticos-c:
-            heading: 3. Statistical data · C
           4-representante-personas-fisicas-comunid-bienes:
             heading: 4. Representative · Individuals and joint ownerships
           4-representante-personas-juridicas:
@@ -1944,10 +1888,6 @@ modelo:
             heading: 6. Simplified regime · Activity 1
           6-operaciones-reg-simplificado-actividad-2:
             heading: 6. Simplified regime · Activity 2
-          7-resultado-liquidacion-anual:
-            heading: 7. Annual return result
-          8-tributacion-razon-de-territorio:
-            heading: 8. Taxation by territory
           9-resultado-de-las-liquidaciones:
             heading: 9. Results of the returns
       revision:

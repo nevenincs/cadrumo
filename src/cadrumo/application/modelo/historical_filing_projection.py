@@ -1,4 +1,8 @@
-"""Read the saved content selected by a filing record without current-source substitution."""
+"""Read the saved content selected by a filing record without current-source substitution.
+
+:class:`CalculationRevision` holds the saved calculation and its evidence.
+:class:`ModeloRecord` selects the saved filing content.
+"""
 
 from __future__ import annotations
 
@@ -139,7 +143,11 @@ class ModeloHistoricalFilingContentProjection(BaseModel):
 def project_historical_filing_content(
     record: ModeloRecord, revision: CalculationRevision | None
 ) -> ModeloHistoricalFilingContentProjection:
-    """Project exactly the record's saved revision, refusing identity or coordinate drift."""
+    """Project exactly the record's saved revision, refusing identity or coordinate drift.
+
+    The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
+    The ``record`` parameter uses :class:`ModeloRecord`, which selects the saved filing content.
+    """
     if revision is None:
         return ModeloHistoricalFilingContentProjection(
             calculation_revision_id=record.calculation_revision_id,

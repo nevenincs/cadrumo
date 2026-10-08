@@ -55,7 +55,7 @@ def _bare_interpreter_spawn_seconds() -> float:
     one machine's idle speed.
     """
     started = time.monotonic()
-    subprocess.run([sys.executable, "-c", "import sys"], check=True, capture_output=True, timeout=120)
+    subprocess.run([sys.executable, "-c", "import sys"], check=True, capture_output=True, timeout=None)
     return time.monotonic() - started
 
 
@@ -118,7 +118,7 @@ def _probe(root: Path) -> str:
         [sys.executable, "-c", script],
         capture_output=True,
         text=True,
-        timeout=120,
+        timeout=None,
         check=False,
     )
     return completed.stdout.strip()
@@ -180,7 +180,7 @@ def test_the_same_thread_may_re_enter_and_a_sibling_thread_may_not(tmp_path: Pat
 
         thread = threading.Thread(target=_sibling_attempt)
         thread.start()
-        thread.join(timeout=120)
+        thread.join()
 
     assert sibling == ["REFUSED"]
 

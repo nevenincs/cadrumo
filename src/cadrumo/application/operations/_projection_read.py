@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -9,6 +10,7 @@ from typing import TYPE_CHECKING, TypeGuard
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
+from ...core.async_cleanup import await_cancellation_complete
 from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationInteractionKind, OperationLifecycle, OperationTerminalCondition
 from .frontend_contracts import (
@@ -45,6 +47,7 @@ from .registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
     OperationResultProjector,
+    OperationSchemaBindingV1,
     OperationWorkspaceRefreshAdapter,
     operation_public_schema_reference,
 )
@@ -518,34 +521,56 @@ async def _resolve_result_projection[ResultProjectionT: BaseModel](
     try:
         binding = registry.lookup_public_schema_binding(bound.context.request.result_schema)
         definition = registry.lookup(bound.context.snapshot.identity.definition_id)
-        if definition.result_type is None:
+        result_type = definition.result_type
+        if result_type is None:
             raise TypeError("result-less operation definition cannot resolve a settled result")
-        resolved = await operands.resolve(digest, definition.result_type)
-        if bound.projector is None:
-            # The registry admits no projector only when the stored and public
-            # models are the exact same defining class. Keep that condition at
-            # the read boundary too, before releasing an encrypted operand.
-            if definition.result_type is not binding.model_type:
-                raise TypeError("identity result projection requires the registered result model")
-            projected = resolved
-        else:
-            projected = bound.projector(resolved, bound.context.receipt)
-        del resolved
-        if type(projected) is not binding.model_type:
-            raise TypeError("result projector returned an unregistered model")
-        validated = binding.model_type.model_validate(projected.model_dump(mode="python"))
-        if not isinstance(validated, projection_type):
-            raise TypeError("registered result projection is not the requested model")
-        return OperationResultProjectionSuccessV1[ResultProjectionT](
-            result_schema=binding.identity,
-            definition_contract_digest=bound.registration.contract.definition_contract_digest,
-            projection=validated,
-        )
+        resolved = await operands.resolve(digest, result_type)
+
+        def project_result(value: BaseModel) -> OperationResultProjectionSuccessV1[ResultProjectionT]:
+            return _project_result_model(binding, bound, value, result_type, projection_type)
+
+        try:
+            return await await_cancellation_complete(
+                asyncio.to_thread(project_result, resolved),
+                task_name="operation-result-projection",
+            )
+        finally:
+            del resolved
     except Exception:
         return _result_projection_refusal(
             OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
             requested_version=1,
         )
+
+
+def _project_result_model[ResultProjectionT: BaseModel](
+    binding: OperationSchemaBindingV1,
+    bound: _ResultRegistration,
+    resolved: BaseModel,
+    result_type: type[BaseModel],
+    projection_type: type[ResultProjectionT],
+) -> OperationResultProjectionSuccessV1[ResultProjectionT]:
+    """Project and revalidate pure model values inside the caller's retained read guard."""
+    if bound.projector is None:
+        # The registry admits no projector only when the stored and public
+        # models are the exact same defining class. Keep that condition at
+        # the read boundary too, before releasing an encrypted operand.
+        if result_type is not binding.model_type:
+            raise TypeError("identity result projection requires the registered result model")
+        projected = resolved
+    else:
+        projected = bound.projector(resolved, bound.context.receipt)
+    del resolved
+    if type(projected) is not binding.model_type:
+        raise TypeError("result projector returned an unregistered model")
+    validated = binding.model_type.model_validate(projected.model_dump(mode="python"))
+    if not isinstance(validated, projection_type):
+        raise TypeError("registered result projection is not the requested model")
+    return OperationResultProjectionSuccessV1[ResultProjectionT](
+        result_schema=binding.identity,
+        definition_contract_digest=bound.registration.contract.definition_contract_digest,
+        projection=validated,
+    )
 
 
 def _review_refusal(

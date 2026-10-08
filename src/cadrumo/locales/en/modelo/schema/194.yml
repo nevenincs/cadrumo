@@ -59,28 +59,29 @@ modelo:
           activo-financiero-valor-transmision:
             label: Disposal or redemption value
           capital-ajeno-perceptor-base-retenciones:
-            label: Withholding tax base
+            label: Withholding and payment-on-account base
           capital-ajeno-perceptor-deduccion-territorial:
             label: Applicable territorial deduction
           capital-ajeno-perceptor-porcentaje-retencion:
             label: Withholding rate
           capital-ajeno-perceptor-retenciones:
-            label: Withholding and payments on account
+            label: Withholdings and payments on account
           capital-ajeno-resumen-base-negativa:
             help: Sum of negative bases shown as a positive amount, without offsetting
               positive bases.
-            label: Negative base for withholdings and payments on account
+            label: Negative withholding and payment-on-account base
           capital-ajeno-resumen-base-positiva:
             help: Sum of the withholding bases in recipient records with a positive
               base.
-            label: Base for withholdings and payments on account
+            label: Withholding and payment-on-account base
           capital-ajeno-resumen-perceptores-base-negativa:
             help: Count each declared transaction, including multiple transactions
               for one recipient. Includes negative and zero bases.
             label: Number of records with a negative or zero base
           capital-ajeno-resumen-perceptores-base-positiva:
-            help: Number of recipients (records) whose withholding base is positive.
-            label: Total number of recipients with a positive base
+            help: Number of recipients (records) whose withholding and payment-on-account
+              base is positive.
+            label: Total recipients with a positive base
           capital-ajeno-resumen-retenciones:
             help: Sum of the withholdings and payments on account applied to the declared
               income.
@@ -100,21 +101,21 @@ modelo:
           declarante-contacto-nombre:
             label: Contact surname and first name
           declarante-contacto-telefono:
-            label: Contact telephone
+            label: Contact telephone number
           emisor-clave-identificacion:
             label: Issuer identification type
           emisor-identificacion:
             label: Issuer identification
           perceptor-identificacion-fiscal:
-            label: Recipient tax ID
+            label: Recipient's NIF
           perceptor-nombre:
-            label: Name or business name
+            label: Surname and given name or company name
           perceptor-provincia:
             label: Province code
           perceptor-representante-identificacion-fiscal:
-            label: Legal representative tax ID
+            label: Legal representative's NIF
           rendimiento-ejercicio-devengo:
-            label: Previous accrual year
+            label: Earlier accrual tax year
           rendimiento-pendiente-abono:
             label: Payment pending
       construct:

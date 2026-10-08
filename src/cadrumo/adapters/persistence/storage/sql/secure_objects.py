@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import NamedTuple, cast, override
 
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text
-from sqlalchemy.engine import TupleResult
+from sqlalchemy.engine import Result
 from sqlalchemy.orm import Session
 
 from .....core.classification.policies import SensitivityClass
@@ -464,8 +464,9 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             stmt = stmt.execution_options(yield_per=batch_size)
             parameters = {"namespace": namespace} if namespace is not None else {}
             # text() bypasses the ORM column processors. Bind the exact SELECT
-            # shape at the SQL API boundary; tuples() preserves its physical rows.
-            rows = cast(TupleResult[_ArchiveColumns], session.execute(stmt, parameters).tuples())
+            # shape at the SQL API boundary; physical rows already support unpacking.
+            # Defer the variadic type subscription for the SQLAlchemy 2.0 runtime floor.
+            rows = cast("Result[*_ArchiveColumns]", session.execute(stmt, parameters))
             for (
                 row_id,
                 stored_namespace,
@@ -699,7 +700,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         with session_scope(self._engine) as session:
             rows = tuple(
                 cast(
-                    TupleResult[_ListColumns],
+                    "Result[*_ListColumns]",
                     session.execute(
                         text(
                             "SELECT id, object_key, classification, schema_version, "
@@ -719,7 +720,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                             schema_version=SecureObjectRow.__table__.c.schema_version.type,
                             written_at=SecureObjectRow.__table__.c.written_at.type,
                         ),
-                    ).tuples(),
+                    ),
                 )
             )
             legacy_keys: list[str] = []
@@ -1058,8 +1059,8 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                 )
             )
             classification, schema_version, written_at, payload = cast(
-                TupleResult[tuple[str, int, datetime, Buffer]],
-                session.execute(stmt).tuples(),
+                "Result[str, int, datetime, Buffer]",
+                session.execute(stmt),
             ).one()
         return SecureObjectMetadata(
             namespace=namespace,
@@ -1094,7 +1095,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                     schema_version=SecureObjectRow.__table__.c.schema_version.type,
                 )
             )
-            rows = cast(TupleResult[tuple[Buffer, int]], session.execute(stmt).tuples()).all()
+            rows = cast("Result[Buffer, int]", session.execute(stmt)).all()
         return {key_by_digest[bytes(object_key)]: int(schema_version) for object_key, schema_version in rows}
 
     def peek_many_revision_ids(self, namespace: str, object_keys: Iterable[str]) -> Mapping[str, str | None]:
@@ -1123,7 +1124,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                     revision_id=SecureObjectRow.__table__.c.revision_id.type,
                 )
             )
-            rows = cast(TupleResult[tuple[Buffer, str | None]], session.execute(stmt).tuples()).all()
+            rows = cast("Result[Buffer, str | None]", session.execute(stmt)).all()
         return {
             key_by_digest[bytes(object_key)]: (None if revision_id is None else str(revision_id))
             for object_key, revision_id in rows

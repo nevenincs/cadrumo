@@ -1214,6 +1214,30 @@ sheets:
       contract_relation_clave: Contracte o relació
       contributor_legal_name: Cognoms i nom del contribuent
       contributor_tax_id: NIF del contribuent
+      cotizacion_01_importe: Import cotitzat al gener
+      cotizacion_01_situacion: Situació de cotització al gener
+      cotizacion_02_importe: Import cotitzat al febrer
+      cotizacion_02_situacion: Situació de cotització al febrer
+      cotizacion_03_importe: Import cotitzat al març
+      cotizacion_03_situacion: Situació de cotització al març
+      cotizacion_04_importe: Import cotitzat al abril
+      cotizacion_04_situacion: Situació de cotització al abril
+      cotizacion_05_importe: Import cotitzat al maig
+      cotizacion_05_situacion: Situació de cotització al maig
+      cotizacion_06_importe: Import cotitzat al juny
+      cotizacion_06_situacion: Situació de cotització al juny
+      cotizacion_07_importe: Import cotitzat al juliol
+      cotizacion_07_situacion: Situació de cotització al juliol
+      cotizacion_08_importe: Import cotitzat al agost
+      cotizacion_08_situacion: Situació de cotització al agost
+      cotizacion_09_importe: Import cotitzat al setembre
+      cotizacion_09_situacion: Situació de cotització al setembre
+      cotizacion_10_importe: Import cotitzat al octubre
+      cotizacion_10_situacion: Situació de cotització al octubre
+      cotizacion_11_importe: Import cotitzat al novembre
+      cotizacion_11_situacion: Situació de cotització al novembre
+      cotizacion_12_importe: Import cotitzat al desembre
+      cotizacion_12_situacion: Situació de cotització al desembre
       counterparty_legal_name: Raó social de la contrapart
       counterparty_tax_id: NIF de la contrapart
       country_code: Codi de país
@@ -1243,6 +1267,10 @@ sheets:
       fecha_devengo: Data de meritació
       fecha_inicio_prestamo: Data d'inici del préstec
       fecha_vencimiento_prestamo: Data de venciment del préstec
+      financial_asset_acquisition_value: Valor d’adquisició de l’actiu financer
+      financial_asset_disposal_value: Valor de transmissió de l’actiu financer
+      financial_asset_origin: Origen de l’actiu financer
+      financial_asset_related_entity: Entitat vinculada a l’actiu financer
       first_child_compute: Còmput del 1r fill
       floor: Pis
       foral_retention_araba: Retencions i ingressos a compte ingressats a Araba/Àlaba
@@ -1283,9 +1311,12 @@ sheets:
       naturaleza: Naturalesa
       naturaleza_declarante: Naturalesa del declarant
       naturaleza_inmueble: Naturalesa de l'immoble
+      nif: NIF
       nif_pagador_anterior: NIF del pagador anterior
+      nombre: Nom
       number_qualifier: Qualificador del número
       number_type: Tipus de numeració
+      numero_afiliacion: Número d’afiliació
       numero_orden: Número d'ordre
       opening_minus_closing_positive: Diferència positiva entre obertura i tancament
       operation_date: Data de l'operació
@@ -2449,6 +2480,7 @@ tui:
         bank_city: ciutat del banc
         bank_country_code: país del banc
         bank_name: nom del banc
+        closed_on: Data de tancament
         currency: moneda
         holding: titularitat
         iban: IBAN

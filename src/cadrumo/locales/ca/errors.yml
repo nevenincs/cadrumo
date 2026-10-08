@@ -181,8 +181,6 @@ errors:
       de l'aplicació.
     error_calc_sheets_engine: El motor d'exportació de fulls de càlcul ha trobat un
       estat irresoluble en generar el pla d'exportació.
-    error_calc_sheets_parity: L'escenari del bastiment de paritat fa referència a
-      casilla.id que no es troben a la instantània del registre.
     error_calc_sheets_record: Una operació de registre de full de càlcul ha fallat
       per un índex de columna invàlid o una adreça A1 malformada.
     error_calculations_registry: S'ha produït un error en carregar, resoldre o validar

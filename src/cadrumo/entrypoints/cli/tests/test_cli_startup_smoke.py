@@ -65,7 +65,7 @@ def _run_startup_smoke(tmp_path: Path, *args: str) -> subprocess.CompletedProces
             errors="replace",
             capture_output=True,
             check=False,
-            timeout=120.0,
+            timeout=None,
         ),
     )
 

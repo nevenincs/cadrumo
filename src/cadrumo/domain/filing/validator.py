@@ -229,6 +229,12 @@ class ModeloValidator:
                     collection.schema_version,
                 )
                 continue
+            # Optional absent results retain unknown source membership. They
+            # carry no value or provenance to compare, and must not be turned
+            # into invented zeroes just to satisfy a trace check. Required
+            # absence remains an error in _validate_required and below.
+            if value.kind is ModeloValueKind.EMPTY and not casilla.required:
+                continue
             if not casilla.formula_input_casilla_ids:
                 if value.formula_trace_casilla_ids:
                     out.append(self._divergence(value.casilla_id))

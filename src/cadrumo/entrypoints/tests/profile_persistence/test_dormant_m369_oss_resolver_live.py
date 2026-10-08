@@ -359,7 +359,16 @@ def test_m369_exterior_period_calculate_review_export_e2e(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=_calculation_ports_311,
-            enum_binding_values=_EXTERIOR_DECLARANT_BINDINGS,
+            # The no-activity flag is consumed arithmetically by the current
+            # formula; the declarant's text fields remain on the string channel.
+            binding_values={
+                "modelo-369-exterior-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad": Decimal("0"),
+            },
+            enum_binding_values={
+                key: value
+                for key, value in _EXTERIOR_DECLARANT_BINDINGS.items()
+                if key != "modelo-369-exterior-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad"
+            },
             clock=_T1,
         )
     period_casilla = validated_casilla_id("decl.periodo")

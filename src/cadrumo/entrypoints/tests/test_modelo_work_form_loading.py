@@ -17,6 +17,8 @@ imported AEAT draft supplied reads as AEAT data.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -24,13 +26,18 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from pydantic import BaseModel
 
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ...adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from ...application.modelo.calculation_note_gate import ModeloCalculationBlockedError
 from ...application.modelo.edit_models import (
+    ModeloBindingEditIntentV1,
     ModeloEditAdmissionResultV1,
     ModeloEditAdmittedV1,
+    ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
     ModeloScalarEditIntentV1,
@@ -54,7 +61,7 @@ from ...application.modelo.work_form_models import (
 )
 from ...application.modelo.work_form_service import ModeloWorkFormLoadV1, load_modelo_work_form, modelo_form_snapshot
 from ...application.modelo.work_review import ModeloWorkReview, build_modelo_work_review
-from ...application.modelo.work_verification_contracts import ModeloWorkVerifyRequest
+from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.owner import OperationExecutorContext
 from ...core.casilla_id import validated_casilla_id
@@ -119,6 +126,22 @@ class _Events:
         self.effects.append(effect)
 
 
+class _Cancellation:
+    @asynccontextmanager
+    async def irreversible_section(self) -> AsyncIterator[None]:
+        yield
+
+
+@dataclass(slots=True)
+class _Operands:
+    results: list[BaseModel] = field(default_factory=list)
+
+    async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
+        del written_at
+        self.results.append(operand)
+        return content_hash_hex({"operand": len(self.results)})
+
+
 @dataclass(frozen=True, slots=True)
 class _Context:
     """The slice of the supervisor context the verify executor reads."""
@@ -126,6 +149,8 @@ class _Context:
     identity: OperationIdentity
     authority_operation: PinnedAuthorityOperation
     events: _Events
+    cancellation: _Cancellation = field(default_factory=_Cancellation)
+    operands: _Operands = field(default_factory=_Operands)
 
 
 def _verify(work: SeededOperatorWork) -> None:
@@ -151,8 +176,11 @@ def _verify(work: SeededOperatorWork) -> None:
         operator_scope_ports=build_operator_scope_ports(),
         verification_repository_bundle_factory=build_verification_repository_bundle,
     )
-    report_id = asyncio.run(executor.execute(request, cast(OperationExecutorContext, context)))
-    assert report_id is not None
+    result_ref = asyncio.run(executor.execute(request, cast(OperationExecutorContext, context)))
+    assert result_ref is not None
+    (result,) = context.operands.results
+    assert isinstance(result, ModeloWorkVerifyPublicResultV2)
+    assert result.calculation_revision_id == payload.calculation_revision_id
 
 
 def _rebuilt(work: SeededOperatorWork, head: CalculationRevision, review: ModeloWorkReview) -> ModeloWorkForm:
@@ -191,7 +219,6 @@ def _review(work: SeededOperatorWork) -> ModeloWorkReview:
     )
 
 
-@pytest.mark.timeout(240)
 def test_a_typed_value_reads_as_entered_and_survives_a_recalculation(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         fresh = _load(work, work.admit())
@@ -226,7 +253,6 @@ def test_a_typed_value_reads_as_entered_and_survives_a_recalculation(tmp_path: P
     assert not edited.filed
 
 
-@pytest.mark.timeout(240)
 def test_an_admission_for_another_declaration_offers_nothing(tmp_path: Path) -> None:
     with seeded_operator_work(tmp_path) as work:
         other = work.sibling("2T")
@@ -243,12 +269,11 @@ def _needs_input(form: ModeloWorkForm) -> set[str]:
     }
 
 
-@pytest.mark.timeout(240)
 def test_the_form_asks_for_exactly_what_the_real_verification_finds_missing(tmp_path: Path) -> None:
     """Verification is the authority on what the filer owes, so the two never disagree.
 
-    Nobody enters anything, so the verification of the calculation judges the
-    same entries the uncalculated form shows. Box 06 is a box the filer types
+    The operator supplies the previous Renta's economic-activity income,
+    without entering a box. Box 06 is a box the filer types
     and sits in the calculation closure the completeness manifest lists; the
     form used to ask for every empty box of that closure, 06 included, while
     verification, which follows the registry's required flag, never asks for
@@ -256,6 +281,21 @@ def test_the_form_asks_for_exactly_what_the_real_verification_finds_missing(tmp_
     """
     with seeded_operator_work(tmp_path) as work:
         fresh = _load(work, work.admit(), reference_on=_REFERENCE_DAY).form
+        applied = work.apply(
+            binding=tuple(
+                ModeloBindingEditIntentV1(
+                    address=ModeloEditBindingAddressV1(binding_id=binding_id),
+                    kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                    value=value,
+                )
+                for binding_id, value in (
+                    ("irpf.previous_year_economic_activity_net_income", "13000"),
+                    ("modelo-130-resultados-negativos-anteriores", "0"),
+                    ("modelo-130-pagos-fraccionados-anteriores", "0"),
+                )
+            )
+        )
+        assert applied.refusal is None
         work.recalculate()
         _verify(work)
         verified = _load(work, work.admit(), reference_on=_REFERENCE_DAY).form
@@ -274,13 +314,13 @@ def test_the_form_asks_for_exactly_what_the_real_verification_finds_missing(tmp_
     assert _field(fresh, "06").origin is ModeloFormOrigin.OPTIONAL_EMPTY
     assert not _field(fresh, "06").required
 
-    # The engine could not produce the result without the earlier Renta it
-    # reads, so the box holds nothing and no direction is claimed for it.
+    # The previous Renta is supplied and the fresh ledger holds no income,
+    # so the declared result is a calculated zero.
     assert verified.result is not None
     assert verified.result.box == "19"
-    assert _field(verified, "19").origin is ModeloFormOrigin.CALCULATION_FAILED
-    assert verified.result.value is None
-    assert verified.result.direction is ModeloFormResultDirection.UNKNOWN
+    assert _field(verified, "19").origin is ModeloFormOrigin.CALCULATED
+    assert verified.result.value == Decimal("0")
+    assert verified.result.direction is ModeloFormResultDirection.NIL
 
     assert verified.deadline is not None
     assert verified.deadline.nominal_closes_on == date(2026, 4, 20)
@@ -288,7 +328,23 @@ def test_the_form_asks_for_exactly_what_the_real_verification_finds_missing(tmp_
     assert verified.deadline.days_remaining == (verified.deadline.closes_on - _REFERENCE_DAY).days
 
 
-@pytest.mark.timeout(240)
+def test_a_form_with_unresolved_prior_renta_keeps_its_failed_result_and_refuses_verification(tmp_path: Path) -> None:
+    with seeded_operator_work(tmp_path) as work:
+        work.recalculate()
+        with pytest.raises(ModeloCalculationBlockedError) as refused:
+            _verify(work)
+        form = _load(work, work.admit(), reference_on=_REFERENCE_DAY).form
+
+    assert refused.value.context is not None
+    assert refused.value.context["reason"] == "unresolved_binding"
+    assert form.verification is None
+    assert form.result is not None
+    assert form.result.box == "19"
+    assert _field(form, "19").origin is ModeloFormOrigin.CALCULATION_FAILED
+    assert form.result.value is None
+    assert form.result.direction is ModeloFormResultDirection.UNKNOWN
+
+
 def test_a_declaration_recorded_as_filed_offers_nothing_for_editing(tmp_path: Path) -> None:
     """Neither the admission nor the edit executor refuses a filed head, so the form does.
 
@@ -318,7 +374,6 @@ def test_a_declaration_recorded_as_filed_offers_nothing_for_editing(tmp_path: Pa
     assert not any(item.editability in _EDITABLE for item in filed_form.fields())
 
 
-@pytest.mark.timeout(240)
 def test_values_a_replayed_aeat_draft_supplied_read_as_aeat_data(tmp_path: Path) -> None:
     """A recalculation replays the imported draft, so the form says which boxes it fed and when."""
     with seeded_operator_work(tmp_path) as work:

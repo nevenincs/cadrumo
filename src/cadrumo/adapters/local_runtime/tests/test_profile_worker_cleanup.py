@@ -7,6 +7,7 @@ process acquisition is an isolated fault seam, not platform acceptance evidence.
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
@@ -202,6 +203,10 @@ class _Scope(WindowsProcessScope):
         self.child = _Child()
         self.native_member = True
         self.membership_checks = 0
+        self.worker_script: Path | None = None
+        self.launch_arguments: tuple[str, ...] | None = None
+        self.launch_directory: Path | None = None
+        self.launch_environment: dict[str, str] | None = None
 
     @override
     def contains_process(self, process_handle: int) -> bool:
@@ -214,7 +219,15 @@ class _Scope(WindowsProcessScope):
         self, *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
     ) -> WindowsOwnedProcess:
         assert executable == Path(sys.executable)
-        assert arguments[:3] == ("-I", "-m", "cadrumo.entrypoints.runtime.worker")
+        prefix = (
+            ("-I", "-B", "-m", "cadrumo.entrypoints.runtime.worker")
+            if self.worker_script is None
+            else ("-I", "-B", str(self.worker_script.resolve(strict=True)))
+        )
+        assert tuple(arguments[: len(prefix)]) == prefix
+        self.launch_arguments = tuple(arguments)
+        self.launch_directory = directory
+        self.launch_environment = dict(environment)
         self.launched = True
         return self.child
 
@@ -283,8 +296,9 @@ class _Fixture:
         monkeypatch.setattr(profile_worker, "WindowsProcessScope", lambda: self.scope)
         monkeypatch.setattr(profile_worker, "WorkerAuthorizationServer", lambda **_: self.authorization)
 
-    def open(self) -> ProfileWorkerProcess:
-        return ProfileWorkerProcess(self.identity, storage_root=self.root)
+    def open(self, *, worker_script: Path | None = None) -> ProfileWorkerProcess:
+        self.scope.worker_script = worker_script
+        return ProfileWorkerProcess(self.identity, storage_root=self.root, worker_script=worker_script)
 
 
 def _retained(error: BaseException) -> AsyncResourceCleanupError:
@@ -293,12 +307,40 @@ def _retained(error: BaseException) -> AsyncResourceCleanupError:
     return cleanup
 
 
+@pytest.mark.parametrize("script_mode", [False, True])
 def test_successful_construction_transfers_worker_after_both_listeners_retire(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, script_mode: bool
 ) -> None:
     fixture = _Fixture(monkeypatch, tmp_path)
-    worker = fixture.open()
+    script = tmp_path / "worker.py"
+    script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
+    selected = script if script_mode else None
+    worker = fixture.open(worker_script=selected)
     try:
+        prefix = (
+            ("-I", "-B", str(script.resolve(strict=True)))
+            if script_mode
+            else ("-I", "-B", "-m", "cadrumo.entrypoints.runtime.worker")
+        )
+        assert fixture.scope.launch_arguments == (
+            *prefix,
+            "--storage-root",
+            str(tmp_path),
+            "--worker-id",
+            str(fixture.identity.worker_id),
+            "--parent-pid",
+            str(os.getpid()),
+            "--expected-version",
+            "worker-test",
+        )
+        assert fixture.scope.launch_directory == tmp_path
+        environment = fixture.scope.launch_environment
+        assert environment is not None
+        assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(tmp_path)
+        assert environment["PYDANTIC_DISABLE_PLUGINS"] == "__all__"
+        assert environment["TEMP"] == environment["TMP"] == environment["TMPDIR"]
+        assert Path(environment["TEMP"]).is_absolute()
+        assert not any(name.startswith("PYTHON") for name in environment)
         assert worker.identity == fixture.identity
         assert fixture.native_process.opened == fixture.native_process.closed == 2
         assert [channel.peer_checks for channel in fixture.channels] == [1, 1]

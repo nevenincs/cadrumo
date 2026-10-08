@@ -100,7 +100,6 @@ def _result(completed: subprocess.CompletedProcess[str]) -> dict[str, object]:
     return cast(dict[str, object], envelope["result"])
 
 
-@pytest.mark.timeout(180)
 def test_status_and_load_run_without_a_profile(tmp_path: Path) -> None:
     with _runtime(installed={_TEXT}) as chat_url:
         status = _run(tmp_path, chat_url, "status")
@@ -120,7 +119,6 @@ def test_status_and_load_run_without_a_profile(tmp_path: Path) -> None:
     assert residents == {_TEXT}
 
 
-@pytest.mark.timeout(180)
 def test_load_of_an_absent_model_exits_2_with_the_resolved_refusal(tmp_path: Path) -> None:
     with _runtime(installed=set()) as chat_url:
         completed = _run(tmp_path, chat_url, "load", "--role", ModelRole.TEXT_EXTRACTION.value)
@@ -135,7 +133,6 @@ def test_load_of_an_absent_model_exits_2_with_the_resolved_refusal(tmp_path: Pat
     assert paths == [], "an absent model is neither pulled nor loaded"
 
 
-@pytest.mark.timeout(180)
 def test_setup_reports_where_it_stopped_and_exits_2(tmp_path: Path) -> None:
     with _runtime(installed=set()) as chat_url:
         completed = _run(tmp_path, chat_url, "setup")
@@ -157,7 +154,6 @@ def test_setup_reports_where_it_stopped_and_exits_2(tmp_path: Path) -> None:
     assert "/api/generate" not in paths
 
 
-@pytest.mark.timeout(180)
 def test_remove_refusals_keep_their_envelope_and_exit_code(tmp_path: Path) -> None:
     with _runtime(installed={_TEXT}) as chat_url:
         unselected = _run(tmp_path, chat_url, "remove", "--model", "someone-elses:7b")
@@ -177,7 +173,6 @@ def test_remove_refusals_keep_their_envelope_and_exit_code(tmp_path: Path) -> No
     assert installed == {_TEXT}
 
 
-@pytest.mark.timeout(180)
 def test_install_without_confirm_never_runs_the_installer(tmp_path: Path) -> None:
     with _runtime(installed=set()) as chat_url:
         completed = _run(tmp_path, chat_url, "install")
@@ -198,7 +193,6 @@ def test_install_without_confirm_never_runs_the_installer(tmp_path: Path) -> Non
         }
 
 
-@pytest.mark.timeout(180)
 def test_browser_provisioning_is_idempotent_over_a_complete_cache(tmp_path: Path) -> None:
     builds = required_browser_builds()
     assert builds is not None

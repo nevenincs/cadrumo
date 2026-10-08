@@ -3920,6 +3920,16 @@ modelo:
           help: 'Indica com es paga: ingrés total, ingrés parcial, sense ingrés, negativa
             o pagament zero, o ingrés per transferència.'
           label: Tipus de pagament
+      construct:
+        modelo-369-exterior-resultado:
+          field:
+            title: Resultat per estat membre de consum
+        modelo-369-importacion-resultado:
+          field:
+            title: Resultat per estat membre de consum
+        modelo-369-union-resultado:
+          field:
+            title: Resultat per estat membre de consum
       field:
         official_name: Modelo 369. Impost sobre el Valor Afegit. Autoliquidació dels
           règims especials aplicables als subjectes passius que presten serveis a
@@ -4002,8 +4012,6 @@ modelo:
             heading: '8'
           fila-9:
             heading: '9'
-          identificacion:
-            heading: Identificació, període i pagament
           importaciones:
             heading: 3. Importacions de béns de menys de 150 €
           nif:
@@ -4492,9 +4500,6 @@ modelo:
               field:
                 title: Model 369 - Esquema Exterior (règim especial serveis prestats
                   per no establerts)
-            modelo-369-exterior-resultado:
-              field:
-                title: Resultat per estat membre de consum
           field:
             label: Model 369 - Règim exterior a la Unió - règim especial de serveis
               prestats per subjectes passius no establerts a la Comunitat (LIVA art.
@@ -4964,9 +4969,6 @@ modelo:
             modelo-369:
               field:
                 title: Model 369 - Esquema Importació (règim especial IOSS)
-            modelo-369-importacion-resultado:
-              field:
-                title: Resultat per estat membre de consum
           field:
             label: Model 369 - Règim d'importació (IOSS) - règim especial de vendes
               a distància de béns importats (LIVA art. 163 quinvicies a octovicies).
@@ -5270,686 +5272,683 @@ modelo:
               label: Quota d'IVA OSS Unió a la destinació FR - serveis prestats (LIVA
                 art. 163 unvicies)
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2soj9cln6aspdclpn0obec4:
-              label: AT — Béns des d’Espanya
+              label: 'AT: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2soj9cln6aspddtq74rrj:
-              label: AT — Béns des d’altres estats membres
+              label: 'AT: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: AT — Correccions negatives
+              label: 'AT: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: AT — Correccions positives
+              label: 'AT: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sp35epnmotj5e8:
-              label: AT — A retornar per l’estat membre
+              label: 'AT: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2sqbectp6asr1e8:
-              label: AT — A ingressar a Espanya
+              label: 'AT: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssj5edqmot31chng:
-              label: AT — Resultat per estat membre
+              label: 'AT: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: AT — Serveis des d’Espanya
+              label: 'AT: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: AT — Serveis des d’altres estats membres
+              label: 'AT: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobb5edo62rj1:
-              label: AT — Total des d’Espanya
+              label: 'AT: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobbfehp6uso:
-              label: AT — Total des d’altres estats membres
+              label: 'AT: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec5q2st3fehgmobbgclp6irr4ds:
-              label: AT — Total quotes del període
+              label: 'AT: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisoj9cln6aspdclpn0obec4:
-              label: BE — Béns des d’Espanya
+              label: 'BE: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisoj9cln6aspddtq74rrj:
-              label: BE — Béns des d’altres estats membres
+              label: 'BE: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: BE — Correccions negatives
+              label: 'BE: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: BE — Correccions positives
+              label: 'BE: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisp35epnmotj5e8:
-              label: BE — A retornar per l’estat membre
+              label: 'BE: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iisqbectp6asr1e8:
-              label: BE — A ingressar a Espanya
+              label: 'BE: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissj5edqmot31chng:
-              label: BE — Resultat per estat membre
+              label: 'BE: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissr5e9r6ior9dtpiqpbje1gmso8:
-              label: BE — Serveis des d’Espanya
+              label: 'BE: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iissr5e9r6ior9dtpiqrrke9nn6:
-              label: BE — Serveis des d’altres estats membres
+              label: 'BE: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobb5edo62rj1:
-              label: BE — Total des d’Espanya
+              label: 'BE: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobbfehp6uso:
-              label: BE — Total des d’altres estats membres
+              label: 'BE: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9iist3fehgmobbgclp6irr4ds:
-              label: BE — Total quotes del període
+              label: 'BE: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisoj9cln6aspdclpn0obec4:
-              label: BG — Béns des d’Espanya
+              label: 'BG: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisoj9cln6aspddtq74rrj:
-              label: BG — Béns des d’altres estats membres
+              label: 'BG: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: BG — Correccions negatives
+              label: 'BG: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: BG — Correccions positives
+              label: 'BG: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisp35epnmotj5e8:
-              label: BG — A retornar per l’estat membre
+              label: 'BG: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jisqbectp6asr1e8:
-              label: BG — A ingressar a Espanya
+              label: 'BG: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissj5edqmot31chng:
-              label: BG — Resultat per estat membre
+              label: 'BG: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissr5e9r6ior9dtpiqpbje1gmso8:
-              label: BG — Serveis des d’Espanya
+              label: 'BG: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jissr5e9r6ior9dtpiqrrke9nn6:
-              label: BG — Serveis des d’altres estats membres
+              label: 'BG: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobb5edo62rj1:
-              label: BG — Total des d’Espanya
+              label: 'BG: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobbfehp6uso:
-              label: BG — Total des d’altres estats membres
+              label: 'BG: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpec9jist3fehgmobbgclp6irr4ds:
-              label: BG — Total quotes del període
+              label: 'BG: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisoj9cln6aspdclpn0obec4:
-              label: CY — Béns des d’Espanya
+              label: 'CY: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisoj9cln6aspddtq74rrj:
-              label: CY — Béns des d’altres estats membres
+              label: 'CY: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: CY — Correccions negatives
+              label: 'CY: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: CY — Correccions positives
+              label: 'CY: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisp35epnmotj5e8:
-              label: CY — A retornar per l’estat membre
+              label: 'CY: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsisqbectp6asr1e8:
-              label: CY — A ingressar a Espanya
+              label: 'CY: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissj5edqmot31chng:
-              label: CY — Resultat per estat membre
+              label: 'CY: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissr5e9r6ior9dtpiqpbje1gmso8:
-              label: CY — Serveis des d’Espanya
+              label: 'CY: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsissr5e9r6ior9dtpiqrrke9nn6:
-              label: CY — Serveis des d’altres estats membres
+              label: 'CY: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobb5edo62rj1:
-              label: CY — Total des d’Espanya
+              label: 'CY: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobbfehp6uso:
-              label: CY — Total des d’altres estats membres
+              label: 'CY: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdsist3fehgmobbgclp6irr4ds:
-              label: CY — Total quotes del període
+              label: 'CY: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2soj9cln6aspdclpn0obec4:
-              label: CZ — Béns des d’Espanya
+              label: 'CZ: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2soj9cln6aspddtq74rrj:
-              label: CZ — Béns des d’altres estats membres
+              label: 'CZ: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: CZ — Correccions negatives
+              label: 'CZ: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: CZ — Correccions positives
+              label: 'CZ: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sp35epnmotj5e8:
-              label: CZ — A retornar per l’estat membre
+              label: 'CZ: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2sqbectp6asr1e8:
-              label: CZ — A ingressar a Espanya
+              label: 'CZ: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssj5edqmot31chng:
-              label: CZ — Resultat per estat membre
+              label: 'CZ: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: CZ — Serveis des d’Espanya
+              label: 'CZ: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: CZ — Serveis des d’altres estats membres
+              label: 'CZ: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobb5edo62rj1:
-              label: CZ — Total des d’Espanya
+              label: 'CZ: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobbfehp6uso:
-              label: CZ — Total des d’altres estats membres
+              label: 'CZ: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecdt2st3fehgmobbgclp6irr4ds:
-              label: CZ — Total quotes del període
+              label: 'CZ: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisoj9cln6aspdclpn0obec4:
-              label: DE — Béns des d’Espanya
+              label: 'DE: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisoj9cln6aspddtq74rrj:
-              label: DE — Béns des d’altres estats membres
+              label: 'DE: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: DE — Correccions negatives
+              label: 'DE: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: DE — Correccions positives
+              label: 'DE: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisp35epnmotj5e8:
-              label: DE — A retornar per l’estat membre
+              label: 'DE: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiisqbectp6asr1e8:
-              label: DE — A ingressar a Espanya
+              label: 'DE: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissj5edqmot31chng:
-              label: DE — Resultat per estat membre
+              label: 'DE: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissr5e9r6ior9dtpiqpbje1gmso8:
-              label: DE — Serveis des d’Espanya
+              label: 'DE: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiissr5e9r6ior9dtpiqrrke9nn6:
-              label: DE — Serveis des d’altres estats membres
+              label: 'DE: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobb5edo62rj1:
-              label: DE — Total des d’Espanya
+              label: 'DE: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobbfehp6uso:
-              label: DE — Total des d’altres estats membres
+              label: 'DE: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechiist3fehgmobbgclp6irr4ds:
-              label: DE — Total quotes del període
+              label: 'DE: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisoj9cln6aspdclpn0obec4:
-              label: DK — Béns des d’Espanya
+              label: 'DK: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisoj9cln6aspddtq74rrj:
-              label: DK — Béns des d’altres estats membres
+              label: 'DK: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: DK — Correccions negatives
+              label: 'DK: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: DK — Correccions positives
+              label: 'DK: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisp35epnmotj5e8:
-              label: DK — A retornar per l’estat membre
+              label: 'DK: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlisqbectp6asr1e8:
-              label: DK — A ingressar a Espanya
+              label: 'DK: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissj5edqmot31chng:
-              label: DK — Resultat per estat membre
+              label: 'DK: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissr5e9r6ior9dtpiqpbje1gmso8:
-              label: DK — Serveis des d’Espanya
+              label: 'DK: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlissr5e9r6ior9dtpiqrrke9nn6:
-              label: DK — Serveis des d’altres estats membres
+              label: 'DK: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobb5edo62rj1:
-              label: DK — Total des d’Espanya
+              label: 'DK: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobbfehp6uso:
-              label: DK — Total des d’altres estats membres
+              label: 'DK: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpechlist3fehgmobbgclp6irr4ds:
-              label: DK — Total quotes del període
+              label: 'DK: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisoj9cln6aspdclpn0obec4:
-              label: EE — Béns des d’Espanya
+              label: 'EE: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisoj9cln6aspddtq74rrj:
-              label: EE — Béns des d’altres estats membres
+              label: 'EE: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: EE — Correccions negatives
+              label: 'EE: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: EE — Correccions positives
+              label: 'EE: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisp35epnmotj5e8:
-              label: EE — A retornar per l’estat membre
+              label: 'EE: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliisqbectp6asr1e8:
-              label: EE — A ingressar a Espanya
+              label: 'EE: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissj5edqmot31chng:
-              label: EE — Resultat per estat membre
+              label: 'EE: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissr5e9r6ior9dtpiqpbje1gmso8:
-              label: EE — Serveis des d’Espanya
+              label: 'EE: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliissr5e9r6ior9dtpiqrrke9nn6:
-              label: EE — Serveis des d’altres estats membres
+              label: 'EE: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobb5edo62rj1:
-              label: EE — Total des d’Espanya
+              label: 'EE: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobbfehp6uso:
-              label: EE — Total des d’altres estats membres
+              label: 'EE: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecliist3fehgmobbgclp6irr4ds:
-              label: EE — Total quotes del període
+              label: 'EE: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisoj9cln6aspdclpn0obec4:
-              label: ES — Béns des d’Espanya
+              label: 'ES: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisoj9cln6aspddtq74rrj:
-              label: ES — Béns des d’altres estats membres
+              label: 'ES: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: ES — Correccions negatives
+              label: 'ES: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: ES — Correccions positives
+              label: 'ES: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisp35epnmotj5e8:
-              label: ES — A retornar per l’estat membre
+              label: 'ES: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpisqbectp6asr1e8:
-              label: ES — A ingressar a Espanya
+              label: 'ES: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissj5edqmot31chng:
-              label: ES — Resultat per estat membre
+              label: 'ES: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissr5e9r6ior9dtpiqpbje1gmso8:
-              label: ES — Serveis des d’Espanya
+              label: 'ES: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpissr5e9r6ior9dtpiqrrke9nn6:
-              label: ES — Serveis des d’altres estats membres
+              label: 'ES: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobb5edo62rj1:
-              label: ES — Total des d’Espanya
+              label: 'ES: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobbfehp6uso:
-              label: ES — Total des d’altres estats membres
+              label: 'ES: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeclpist3fehgmobbgclp6irr4ds:
-              label: ES — Total quotes del període
+              label: 'ES: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisoj9cln6aspdclpn0obec4:
-              label: FI — Béns des d’Espanya
+              label: 'FI: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisoj9cln6aspddtq74rrj:
-              label: FI — Béns des d’altres estats membres
+              label: 'FI: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: FI — Correccions negatives
+              label: 'FI: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: FI — Correccions positives
+              label: 'FI: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisp35epnmotj5e8:
-              label: FI — A retornar per l’estat membre
+              label: 'FI: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkisqbectp6asr1e8:
-              label: FI — A ingressar a Espanya
+              label: 'FI: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissj5edqmot31chng:
-              label: FI — Resultat per estat membre
+              label: 'FI: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissr5e9r6ior9dtpiqpbje1gmso8:
-              label: FI — Serveis des d’Espanya
+              label: 'FI: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkissr5e9r6ior9dtpiqrrke9nn6:
-              label: FI — Serveis des d’altres estats membres
+              label: 'FI: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobb5edo62rj1:
-              label: FI — Total des d’Espanya
+              label: 'FI: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobbfehp6uso:
-              label: FI — Total des d’altres estats membres
+              label: 'FI: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpkist3fehgmobbgclp6irr4ds:
-              label: FI — Total quotes del període
+              label: 'FI: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2soj9cln6aspdclpn0obec4:
-              label: FR — Béns des d’Espanya
+              label: 'FR: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2soj9cln6aspddtq74rrj:
-              label: FR — Béns des d’altres estats membres
+              label: 'FR: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: FR — Correccions negatives
+              label: 'FR: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: FR — Correccions positives
+              label: 'FR: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sp35epnmotj5e8:
-              label: FR — A retornar per l’estat membre
+              label: 'FR: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2sqbectp6asr1e8:
-              label: FR — A ingressar a Espanya
+              label: 'FR: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssj5edqmot31chng:
-              label: FR — Resultat per estat membre
+              label: 'FR: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: FR — Serveis des d’Espanya
+              label: 'FR: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: FR — Serveis des d’altres estats membres
+              label: 'FR: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobb5edo62rj1:
-              label: FR — Total des d’Espanya
+              label: 'FR: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobbfehp6uso:
-              label: FR — Total des d’altres estats membres
+              label: 'FR: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpecpp2st3fehgmobbgclp6irr4ds:
-              label: FR — Total quotes del període
+              label: 'FR: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2soj9cln6aspdclpn0obec4:
-              label: GR — Béns des d’Espanya
+              label: 'GR: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2soj9cln6aspddtq74rrj:
-              label: GR — Béns des d’altres estats membres
+              label: 'GR: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: GR — Correccions negatives
+              label: 'GR: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: GR — Correccions positives
+              label: 'GR: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sp35epnmotj5e8:
-              label: GR — A retornar per l’estat membre
+              label: 'GR: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2sqbectp6asr1e8:
-              label: GR — A ingressar a Espanya
+              label: 'GR: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssj5edqmot31chng:
-              label: GR — Resultat per estat membre
+              label: 'GR: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: GR — Serveis des d’Espanya
+              label: 'GR: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: GR — Serveis des d’altres estats membres
+              label: 'GR: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobb5edo62rj1:
-              label: GR — Total des d’Espanya
+              label: 'GR: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobbfehp6uso:
-              label: GR — Total des d’altres estats membres
+              label: 'GR: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpectp2st3fehgmobbgclp6irr4ds:
-              label: GR — Total quotes del període
+              label: 'GR: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2soj9cln6aspdclpn0obec4:
-              label: HR — Béns des d’Espanya
+              label: 'HR: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2soj9cln6aspddtq74rrj:
-              label: HR — Béns des d’altres estats membres
+              label: 'HR: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: HR — Correccions negatives
+              label: 'HR: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: HR — Correccions positives
+              label: 'HR: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sp35epnmotj5e8:
-              label: HR — A retornar per l’estat membre
+              label: 'HR: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2sqbectp6asr1e8:
-              label: HR — A ingressar a Espanya
+              label: 'HR: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssj5edqmot31chng:
-              label: HR — Resultat per estat membre
+              label: 'HR: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: HR — Serveis des d’Espanya
+              label: 'HR: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: HR — Serveis des d’altres estats membres
+              label: 'HR: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobb5edo62rj1:
-              label: HR — Total des d’Espanya
+              label: 'HR: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobbfehp6uso:
-              label: HR — Total des d’altres estats membres
+              label: 'HR: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1p2st3fehgmobbgclp6irr4ds:
-              label: HR — Total quotes del període
+              label: 'HR: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisoj9cln6aspdclpn0obec4:
-              label: HU — Béns des d’Espanya
+              label: 'HU: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisoj9cln6aspddtq74rrj:
-              label: HU — Béns des d’altres estats membres
+              label: 'HU: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: HU — Correccions negatives
+              label: 'HU: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: HU — Correccions positives
+              label: 'HU: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisp35epnmotj5e8:
-              label: HU — A retornar per l’estat membre
+              label: 'HU: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qisqbectp6asr1e8:
-              label: HU — A ingressar a Espanya
+              label: 'HU: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissj5edqmot31chng:
-              label: HU — Resultat per estat membre
+              label: 'HU: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissr5e9r6ior9dtpiqpbje1gmso8:
-              label: HU — Serveis des d’Espanya
+              label: 'HU: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qissr5e9r6ior9dtpiqrrke9nn6:
-              label: HU — Serveis des d’altres estats membres
+              label: 'HU: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobb5edo62rj1:
-              label: HU — Total des d’Espanya
+              label: 'HU: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobbfehp6uso:
-              label: HU — Total des d’altres estats membres
+              label: 'HU: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped1qist3fehgmobbgclp6irr4ds:
-              label: HU — Total quotes del període
+              label: 'HU: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisoj9cln6aspdclpn0obec4:
-              label: IE — Béns des d’Espanya
+              label: 'IE: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisoj9cln6aspddtq74rrj:
-              label: IE — Béns des d’altres estats membres
+              label: 'IE: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: IE — Correccions negatives
+              label: 'IE: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: IE — Correccions positives
+              label: 'IE: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisp35epnmotj5e8:
-              label: IE — A retornar per l’estat membre
+              label: 'IE: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iisqbectp6asr1e8:
-              label: IE — A ingressar a Espanya
+              label: 'IE: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissj5edqmot31chng:
-              label: IE — Resultat per estat membre
+              label: 'IE: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissr5e9r6ior9dtpiqpbje1gmso8:
-              label: IE — Serveis des d’Espanya
+              label: 'IE: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iissr5e9r6ior9dtpiqrrke9nn6:
-              label: IE — Serveis des d’altres estats membres
+              label: 'IE: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobb5edo62rj1:
-              label: IE — Total des d’Espanya
+              label: 'IE: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobbfehp6uso:
-              label: IE — Total des d’altres estats membres
+              label: 'IE: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5iist3fehgmobbgclp6irr4ds:
-              label: IE — Total quotes del període
+              label: 'IE: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2soj9cln6aspdclpn0obec4:
-              label: IT — Béns des d’Espanya
+              label: 'IT: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2soj9cln6aspddtq74rrj:
-              label: IT — Béns des d’altres estats membres
+              label: 'IT: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: IT — Correccions negatives
+              label: 'IT: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: IT — Correccions positives
+              label: 'IT: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sp35epnmotj5e8:
-              label: IT — A retornar per l’estat membre
+              label: 'IT: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2sqbectp6asr1e8:
-              label: IT — A ingressar a Espanya
+              label: 'IT: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssj5edqmot31chng:
-              label: IT — Resultat per estat membre
+              label: 'IT: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: IT — Serveis des d’Espanya
+              label: 'IT: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: IT — Serveis des d’altres estats membres
+              label: 'IT: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobb5edo62rj1:
-              label: IT — Total des d’Espanya
+              label: 'IT: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobbfehp6uso:
-              label: IT — Total des d’altres estats membres
+              label: 'IT: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rped5q2st3fehgmobbgclp6irr4ds:
-              label: IT — Total quotes del període
+              label: 'IT: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2soj9cln6aspdclpn0obec4:
-              label: LT — Béns des d’Espanya
+              label: 'LT: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2soj9cln6aspddtq74rrj:
-              label: LT — Béns des d’altres estats membres
+              label: 'LT: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: LT — Correccions negatives
+              label: 'LT: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: LT — Correccions positives
+              label: 'LT: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sp35epnmotj5e8:
-              label: LT — A retornar per l’estat membre
+              label: 'LT: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2sqbectp6asr1e8:
-              label: LT — A ingressar a Espanya
+              label: 'LT: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssj5edqmot31chng:
-              label: LT — Resultat per estat membre
+              label: 'LT: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: LT — Serveis des d’Espanya
+              label: 'LT: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: LT — Serveis des d’altres estats membres
+              label: 'LT: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobb5edo62rj1:
-              label: LT — Total des d’Espanya
+              label: 'LT: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobbfehp6uso:
-              label: LT — Total des d’altres estats membres
+              label: 'LT: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhq2st3fehgmobbgclp6irr4ds:
-              label: LT — Total quotes del període
+              label: 'LT: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisoj9cln6aspdclpn0obec4:
-              label: LU — Béns des d’Espanya
+              label: 'LU: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisoj9cln6aspddtq74rrj:
-              label: LU — Béns des d’altres estats membres
+              label: 'LU: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: LU — Correccions negatives
+              label: 'LU: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: LU — Correccions positives
+              label: 'LU: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisp35epnmotj5e8:
-              label: LU — A retornar per l’estat membre
+              label: 'LU: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqisqbectp6asr1e8:
-              label: LU — A ingressar a Espanya
+              label: 'LU: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissj5edqmot31chng:
-              label: LU — Resultat per estat membre
+              label: 'LU: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissr5e9r6ior9dtpiqpbje1gmso8:
-              label: LU — Serveis des d’Espanya
+              label: 'LU: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqissr5e9r6ior9dtpiqrrke9nn6:
-              label: LU — Serveis des d’altres estats membres
+              label: 'LU: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobb5edo62rj1:
-              label: LU — Total des d’Espanya
+              label: 'LU: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobbfehp6uso:
-              label: LU — Total des d’altres estats membres
+              label: 'LU: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhqist3fehgmobbgclp6irr4ds:
-              label: LU — Total quotes del període
+              label: 'LU: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2soj9cln6aspdclpn0obec4:
-              label: LV — Béns des d’Espanya
+              label: 'LV: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2soj9cln6aspddtq74rrj:
-              label: LV — Béns des d’altres estats membres
+              label: 'LV: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: LV — Correccions negatives
+              label: 'LV: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: LV — Correccions positives
+              label: 'LV: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sp35epnmotj5e8:
-              label: LV — A retornar per l’estat membre
+              label: 'LV: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2sqbectp6asr1e8:
-              label: LV — A ingressar a Espanya
+              label: 'LV: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssj5edqmot31chng:
-              label: LV — Resultat per estat membre
+              label: 'LV: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: LV — Serveis des d’Espanya
+              label: 'LV: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: LV — Serveis des d’altres estats membres
+              label: 'LV: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobb5edo62rj1:
-              label: LV — Total des d’Espanya
+              label: 'LV: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobbfehp6uso:
-              label: LV — Total des d’altres estats membres
+              label: 'LV: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedhr2st3fehgmobbgclp6irr4ds:
-              label: LV — Total quotes del període
+              label: 'LV: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2soj9cln6aspdclpn0obec4:
-              label: MT — Béns des d’Espanya
+              label: 'MT: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2soj9cln6aspddtq74rrj:
-              label: MT — Béns des d’altres estats membres
+              label: 'MT: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: MT — Correccions negatives
+              label: 'MT: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: MT — Correccions positives
+              label: 'MT: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sp35epnmotj5e8:
-              label: MT — A retornar per l’estat membre
+              label: 'MT: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2sqbectp6asr1e8:
-              label: MT — A ingressar a Espanya
+              label: 'MT: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssj5edqmot31chng:
-              label: MT — Resultat per estat membre
+              label: 'MT: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: MT — Serveis des d’Espanya
+              label: 'MT: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: MT — Serveis des d’altres estats membres
+              label: 'MT: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobb5edo62rj1:
-              label: MT — Total des d’Espanya
+              label: 'MT: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobbfehp6uso:
-              label: MT — Total des d’altres estats membres
+              label: 'MT: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedlq2st3fehgmobbgclp6irr4ds:
-              label: MT — Total quotes del període
+              label: 'MT: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2soj9cln6aspdclpn0obec4:
-              label: NL — Béns des d’Espanya
+              label: 'NL: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2soj9cln6aspddtq74rrj:
-              label: NL — Béns des d’altres estats membres
+              label: 'NL: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: NL — Correccions negatives
+              label: 'NL: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: NL — Correccions positives
+              label: 'NL: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sp35epnmotj5e8:
-              label: NL — A retornar per l’estat membre
+              label: 'NL: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2sqbectp6asr1e8:
-              label: NL — A ingressar a Espanya
+              label: 'NL: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssj5edqmot31chng:
-              label: NL — Resultat per estat membre
+              label: 'NL: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: NL — Serveis des d’Espanya
+              label: 'NL: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: NL — Serveis des d’altres estats membres
+              label: 'NL: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobb5edo62rj1:
-              label: NL — Total des d’Espanya
+              label: 'NL: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobbfehp6uso:
-              label: NL — Total des d’altres estats membres
+              label: 'NL: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpedpm2st3fehgmobbgclp6irr4ds:
-              label: NL — Total quotes del període
+              label: 'NL: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2soj9cln6aspdclpn0obec4:
-              label: PL — Béns des d’Espanya
+              label: 'PL: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2soj9cln6aspddtq74rrj:
-              label: PL — Béns des d’altres estats membres
+              label: 'PL: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: PL — Correccions negatives
+              label: 'PL: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: PL — Correccions positives
+              label: 'PL: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sp35epnmotj5e8:
-              label: PL — A retornar per l’estat membre
+              label: 'PL: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2sqbectp6asr1e8:
-              label: PL — A ingressar a Espanya
+              label: 'PL: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssj5edqmot31chng:
-              label: PL — Resultat per estat membre
+              label: 'PL: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: PL — Serveis des d’Espanya
+              label: 'PL: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: PL — Serveis des d’altres estats membres
+              label: 'PL: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobb5edo62rj1:
-              label: PL — Total des d’Espanya
+              label: 'PL: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobbfehp6uso:
-              label: PL — Total des d’altres estats membres
+              label: 'PL: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1m2st3fehgmobbgclp6irr4ds:
-              label: PL — Total quotes del període
+              label: 'PL: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2soj9cln6aspdclpn0obec4:
-              label: PT — Béns des d’Espanya
+              label: 'PT: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2soj9cln6aspddtq74rrj:
-              label: PT — Béns des d’altres estats membres
+              label: 'PT: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: PT — Correccions negatives
+              label: 'PT: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: PT — Correccions positives
+              label: 'PT: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sp35epnmotj5e8:
-              label: PT — A retornar per l’estat membre
+              label: 'PT: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2sqbectp6asr1e8:
-              label: PT — A ingressar a Espanya
+              label: 'PT: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssj5edqmot31chng:
-              label: PT — Resultat per estat membre
+              label: 'PT: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssr5e9r6ior9dtpiqpbje1gmso8:
-              label: PT — Serveis des d’Espanya
+              label: 'PT: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2ssr5e9r6ior9dtpiqrrke9nn6:
-              label: PT — Serveis des d’altres estats membres
+              label: 'PT: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobb5edo62rj1:
-              label: PT — Total des d’Espanya
+              label: 'PT: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobbfehp6uso:
-              label: PT — Total des d’altres estats membres
+              label: 'PT: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee1q2st3fehgmobbgclp6irr4ds:
-              label: PT — Total quotes del període
+              label: 'PT: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisoj9cln6aspdclpn0obec4:
-              label: RO — Béns des d’Espanya
+              label: 'RO: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisoj9cln6aspddtq74rrj:
-              label: RO — Béns des d’altres estats membres
+              label: 'RO: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: RO — Correccions negatives
+              label: 'RO: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: RO — Correccions positives
+              label: 'RO: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisp35epnmotj5e8:
-              label: RO — A retornar per l’estat membre
+              label: 'RO: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nisqbectp6asr1e8:
-              label: RO — A ingressar a Espanya
+              label: 'RO: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissj5edqmot31chng:
-              label: RO — Resultat per estat membre
+              label: 'RO: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissr5e9r6ior9dtpiqpbje1gmso8:
-              label: RO — Serveis des d’Espanya
+              label: 'RO: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nissr5e9r6ior9dtpiqrrke9nn6:
-              label: RO — Serveis des d’altres estats membres
+              label: 'RO: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobb5edo62rj1:
-              label: RO — Total des d’Espanya
+              label: 'RO: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobbfehp6uso:
-              label: RO — Total des d’altres estats membres
+              label: 'RO: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpee9nist3fehgmobbgclp6irr4ds:
-              label: RO — Total quotes del període
+              label: 'RO: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedgmop3f5lkmspriclpm2shdclpn0obec4:
               label: Saldo a ingressar a Espanya
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisoj9cln6aspdclpn0obec4:
-              label: SE — Béns des d’Espanya
+              label: 'SE: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisoj9cln6aspddtq74rrj:
-              label: SE — Béns des d’altres estats membres
+              label: 'SE: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: SE — Correccions negatives
+              label: 'SE: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: SE — Correccions positives
+              label: 'SE: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisp35epnmotj5e8:
-              label: SE — A retornar per l’estat membre
+              label: 'SE: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediisqbectp6asr1e8:
-              label: SE — A ingressar a Espanya
+              label: 'SE: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissj5edqmot31chng:
-              label: SE — Resultat per estat membre
+              label: 'SE: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissr5e9r6ior9dtpiqpbje1gmso8:
-              label: SE — Serveis des d’Espanya
+              label: 'SE: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediissr5e9r6ior9dtpiqrrke9nn6:
-              label: SE — Serveis des d’altres estats membres
+              label: 'SE: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobb5edo62rj1:
-              label: SE — Total des d’Espanya
+              label: 'SE: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobbfehp6uso:
-              label: SE — Total des d’altres estats membres
+              label: 'SE: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeediist3fehgmobbgclp6irr4ds:
-              label: SE — Total quotes del període
+              label: 'SE: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisoj9cln6aspdclpn0obec4:
-              label: SI — Béns des d’Espanya
+              label: 'SI: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisoj9cln6aspddtq74rrj:
-              label: SI — Béns des d’altres estats membres
+              label: 'SI: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: SI — Correccions negatives
+              label: 'SI: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: SI — Correccions positives
+              label: 'SI: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisp35epnmotj5e8:
-              label: SI — A retornar per l’estat membre
+              label: 'SI: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkisqbectp6asr1e8:
-              label: SI — A ingressar a Espanya
+              label: 'SI: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissj5edqmot31chng:
-              label: SI — Resultat per estat membre
+              label: 'SI: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissr5e9r6ior9dtpiqpbje1gmso8:
-              label: SI — Serveis des d’Espanya
+              label: 'SI: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkissr5e9r6ior9dtpiqrrke9nn6:
-              label: SI — Serveis des d’altres estats membres
+              label: 'SI: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobb5edo62rj1:
-              label: SI — Total des d’Espanya
+              label: 'SI: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobbfehp6uso:
-              label: SI — Total des d’altres estats membres
+              label: 'SI: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedkist3fehgmobbgclp6irr4ds:
-              label: SI — Total quotes del període
+              label: 'SI: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisoj9cln6aspdclpn0obec4:
-              label: SK — Béns des d’Espanya
+              label: 'SK: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisoj9cln6aspddtq74rrj:
-              label: SK — Béns des d’altres estats membres
+              label: 'SK: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: SK — Correccions negatives
+              label: 'SK: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: SK — Correccions positives
+              label: 'SK: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisp35epnmotj5e8:
-              label: SK — A retornar per l’estat membre
+              label: 'SK: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlisqbectp6asr1e8:
-              label: SK — A ingressar a Espanya
+              label: 'SK: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissj5edqmot31chng:
-              label: SK — Resultat per estat membre
+              label: 'SK: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissr5e9r6ior9dtpiqpbje1gmso8:
-              label: SK — Serveis des d’Espanya
+              label: 'SK: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlissr5e9r6ior9dtpiqrrke9nn6:
-              label: SK — Serveis des d’altres estats membres
+              label: 'SK: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobb5edo62rj1:
-              label: SK — Total des d’Espanya
+              label: 'SK: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobbfehp6uso:
-              label: SK — Total des d’altres estats membres
+              label: 'SK: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpeedlist3fehgmobbgclp6irr4ds:
-              label: SK — Total quotes del període
+              label: 'SK: Total quotes del període'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisoj9cln6aspdclpn0obec4:
-              label: XI — Béns des d’Espanya
+              label: 'XI: Béns des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisoj9cln6aspddtq74rrj:
-              label: XI — Béns des d’altres estats membres
+              label: 'XI: Béns des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisorfe9p6aor3d5nmspbj5ln6apr1ehkncobj:
-              label: XI — Correccions negatives
+              label: 'XI: Correccions negatives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisorfe9p6aor3d5nmspbj5lo6usr9ehkncobj:
-              label: XI — Correccions positives
+              label: 'XI: Correccions positives'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisp35epnmotj5e8:
-              label: XI — A retornar per l’estat membre
+              label: 'XI: A retornar per l’estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kisqbectp6asr1e8:
-              label: XI — A ingressar a Espanya
+              label: 'XI: A ingressar a Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissj5edqmot31chng:
-              label: XI — Resultat per estat membre
+              label: 'XI: Resultat per estat membre'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissr5e9r6ior9dtpiqpbje1gmso8:
-              label: XI — Serveis des d’Espanya
+              label: 'XI: Serveis des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kissr5e9r6ior9dtpiqrrke9nn6:
-              label: XI — Serveis des d’altres estats membres
+              label: 'XI: Serveis des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobb5edo62rj1:
-              label: XI — Total des d’Espanya
+              label: 'XI: Total des d’Espanya'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobbfehp6uso:
-              label: XI — Total des d’altres estats membres
+              label: 'XI: Total des d’altres estats membres'
             x-d5r62bjldpkmurhee9in6tbcehgm8rpef1kist3fehgmobbgclp6irr4ds:
-              label: XI — Total quotes del període
+              label: 'XI: Total quotes del període'
           construct:
             modelo-369:
               field:
                 title: Model 369 - Esquema Unió (règim especial OSS Union)
-            modelo-369-union-resultado:
-              field:
-                title: Resultat per estat membre de consum
           field:
             label: Model 369 - Règim de la Unió - règim especial de vendes intracomunitàries
               a distància, interfícies electròniques i serveis establerts a la Comunitat

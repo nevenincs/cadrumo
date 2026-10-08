@@ -31,6 +31,7 @@ from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_
 from ....domain.calculations.registry.m303_regimen_simplificado_projection import (
     m303_iae_epigraph_wire_value,
     project_m303_regimen_simplificado_rows,
+    validate_m303_regimen_simplificado_endpoint_epoch,
 )
 from ....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
@@ -203,14 +204,14 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields(
 
 @pytest.mark.parametrize(
     ("filing_year", "period_code"),
-    ((2023, "1T"), (2024, "1T"), (2024, "3T"), (2025, "1T"), (2026, "1T")),
+    ((2023, "1T"), (2024, "1T"), (2024, "3T"), (2025, "1T"), (2026, "1T"), (2026, "2T")),
 )
 def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
     filing_year: int,
     period_code: str,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """All five live epochs preserve their calculated module endpoint values."""
+    """Historical epochs and both 2026 branches preserve calculated module endpoint values."""
     period = Period.from_year_and_code(filing_year, period_code)
     registry_snapshot = published_snapshot(
         "303",
@@ -384,3 +385,40 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
         .cuota_devengada
         for reference in cuota_refs
     )
+
+
+@pytest.mark.parametrize(
+    ("period_code", "revision_id"),
+    (
+        ("01", "2026-hasta-01-y-1t"),
+        ("1T", "2026-hasta-01-y-1t"),
+        ("02", "2026-y-siguientes"),
+        ("2T", "2026-y-siguientes"),
+    ),
+)
+def test_both_2026_branches_admit_the_published_dp30302_fields_and_preserve_multiplicity_refusal(
+    period_code: str, revision_id: str
+) -> None:
+    snapshot = published_snapshot("303", filing_year=2026, period=period_code)
+    assert snapshot.revision.id == revision_id
+    refs = tuple(
+        field.projection_ref
+        for layout in snapshot.revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if isinstance(field.projection_ref, M303RegimenSimplificadoFactProjectionRef)
+    )
+    assert refs
+    validate_m303_regimen_simplificado_endpoint_epoch(refs, revision_id=revision_id)
+    for fact in (
+        M303RegimenSimplificadoFact.SUPERFICIE_HORNO_DIAS_CUARTO_TRIMESTRE,
+        M303RegimenSimplificadoFact.SUPERFICIE_HORNO_CUARTO_TRIMESTRE,
+    ):
+        horno = tuple(ref for ref in refs if ref.fact is fact)
+        assert {ref.sub_index for ref in horno} == {1, 2, 3, 4}
+        with pytest.raises(RegistryValidationError, match=r"horno-(days|surface) fact is not admitted"):
+            validate_m303_regimen_simplificado_endpoint_epoch(
+                (horno[0].model_copy(update={"sub_index": None}),), revision_id=revision_id
+            )
+    with pytest.raises(RegistryValidationError, match="unknown DP30302 simplified-regime revision"):
+        validate_m303_regimen_simplificado_endpoint_epoch(refs, revision_id="2026-unrecognized")

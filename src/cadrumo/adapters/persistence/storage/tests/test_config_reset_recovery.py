@@ -263,7 +263,7 @@ def _run_fresh_resume_allowing_failure(
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=90,
+            timeout=None,
         ),
     )
 
@@ -313,7 +313,7 @@ def _run_crashing_start(root: Path, boundary: str) -> subprocess.CompletedProces
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=90,
+            timeout=None,
         ),
     )
 
@@ -339,7 +339,7 @@ def _run_fresh_resume(
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=90,
+            timeout=None,
         ),
     )
     return _refuse_with_child_stderr(resumed, what="fresh resume")

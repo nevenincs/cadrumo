@@ -951,15 +951,17 @@ cli:
           o registrado como presentado.
         work_unit_id_help: Identificador de la declaración (SHA-256 o prefijo inequívoco).
       filing_record:
-        export_help: Exportar la presentación histórica seleccionada como libro de revisión del cálculo guardado.
-        export_button: Exportar presentación seleccionada (XLSX)
-        export_missing: El cálculo histórico seleccionado ya no se conserva; la exportación no puede usar el cálculo actual.
         app_help: Inspeccionar las presentaciones internas (filing records) registradas
         bucket_id_help: Filtrar por perfil
         evidence_kind_help: Tipo de evidencia importada (aeat_justificante_pdf, aeat_csv_register,
           aeat_live_capture)
         evidence_reference_id_help: Identificador estable de la evidencia importada
           (número de justificante, id del registro CSV, id de captura en vivo)
+        export_button: Exportar presentación seleccionada (XLSX)
+        export_help: Exportar la presentación histórica seleccionada como libro de
+          revisión del cálculo guardado.
+        export_missing: El cálculo histórico seleccionado ya no se conserva; la exportación
+          no puede usar el cálculo actual.
         filing_record_id_help: Identificador estable de un filing record
         import_casilla_help: Valor de casilla importado con sintaxis CASILLA_ID=DECIMAL
           (repetible; al menos uno requerido)
@@ -1205,18 +1207,23 @@ cli:
       readiness_help: Informa de si el perfil activo está listo para presentar un
         modelo / ejercicio / periodo.
       reconcile:
-        export_help: Exportar las diferencias de conciliación guardadas a un libro local de revisión.
-        export_button: Exportar diferencias de la declaración (XLSX)
-        export_work_unit_scope: Exporta todas las diferencias de conciliación guardadas de la declaración seleccionada.
-        export_selector_required: "Selecciona exactamente una opción: --event-id, --work-unit-id o --all-history."
-        export_work_unit_id_help: Identificador exacto de la declaración guardada (SHA-256 de 64 caracteres).
-        export_event_id_help: Identificador exacto del evento de conciliación guardado.
-        export_all_help: Exportar explícitamente todo el historial de conciliación guardado.
         app_help: 'Compara un cálculo local guardado con evidencia de la AEAT: pull
           descarga un justificante o una declaración presentada; import compara un
           PDF local; list muestra las comparaciones anteriores.'
         calculation_revision_help: ID de revisión de cálculo guardada que se comparará.
           Por defecto, presentada o verificada, después la última guardada.
+        export_all_help: Exportar explícitamente todo el historial de conciliación
+          guardado.
+        export_button: Exportar diferencias de la declaración (XLSX)
+        export_event_id_help: Identificador exacto del evento de conciliación guardado.
+        export_help: Exportar las diferencias de conciliación guardadas a un libro
+          local de revisión.
+        export_selector_required: 'Selecciona exactamente una opción: --event-id,
+          --work-unit-id o --all-history.'
+        export_work_unit_id_help: Identificador exacto de la declaración guardada
+          (SHA-256 de 64 caracteres).
+        export_work_unit_scope: Exporta todas las diferencias de conciliación guardadas
+          de la declaración seleccionada.
         file_kind_help: 'Tipo de documento de evidencia: justificante (recibo AEAT,
           todos los modelos) o declaration (PDF de declaración presentada, conciliación
           a nivel de casilla, solo modelos habilitados). Por defecto justificante.'
@@ -1365,9 +1372,6 @@ cli:
         app_help: Exporta hojas de cálculo. Las copias de Google son documentos de
           revisión de salida; no puedes importar cambios, calcular ni verificar desde
           Google. La exportación local a XLSX sigue disponible.
-        calculate_help: Recupera las celdas que editaste en el libro de calc-sheets,
-          ejecuta el motor Decimal local sobre ellas y emite los valores calculados
-          de las casillas (no guarda nada)
         export:
           output_help: Ruta en la que escribir el libro .xlsx; un fichero existente
             se rechaza salvo que se indique --replace
@@ -1382,20 +1386,12 @@ cli:
             como hoja de Google legible por usuarios autorizados.
           calculation_revision_id_help: Identificador exacto de la revisión de cálculo
             guardada que se publicará.
-          filing_record_id_help: Identificador exacto de la presentación histórica vinculada al cálculo guardado; opcional.
+          filing_record_id_help: Identificador exacto de la presentación histórica
+            vinculada al cálculo guardado; opcional.
           publication_id_help: UUID de publicación; se genera si se omite.
         publish_button: Revisar en Google Sheets
-        review_help: Exportar un cálculo guardado, borrador o completado, como libro local de revisión inmutable.
         publish_help: Publica un cálculo guardado como hoja nativa de Google legible
           en la carpeta del perfil.
-        pull:
-          assemble_observations_help: Tras recuperar, reensambla las celdas de filas
-            de la pestaña Detalle en observaciones tipadas (perceptores, bienes en
-            el extranjero, operaciones vinculadas, miembros de atribución, operaciones
-            de devolución) y emítelas en el payload junto a los row_set_edits brutos
-        pull_help: Lee las celdas que editaste en una hoja calc-sheets y las convierte
-          en valores tipados (tras comprobar que la marca registry-SHA del libro coincide
-          con las definiciones de los modelos actuales)
         push:
           capability_disabled: La exportación a Google está desactivada para este
             perfil; actívala con 'aeat config profile capabilities set google_export
@@ -1411,15 +1407,8 @@ cli:
             de los modelos para el modelo {modelo} ({period} {year}).
         push_help: Exporta el cálculo de un modelo y periodo, tal como lo fijan las
           definiciones de los modelos, a una hoja de Google Sheets dentro de tu `cadrumo-vault/`
-        spreadsheet_id_help: Identificador del fichero de Drive del libro del que
-          leer tus ediciones (debe ser propiedad de la app y estar vinculado al snapshot
-          indicado)
-        verify:
-          scenario_help: Ruta a un fichero JSON de escenario con los valores que introduces
-            y, si está disponible, un mapa de salidas esperadas publicadas por la
-            AEAT
-        verify_help: Comprobación de paridad triple del modelo (oráculo AEAT vs motor
-          Decimal local vs hoja de Sheets)
+        review_help: Exportar un cálculo guardado, borrador o completado, como libro
+          local de revisión inmutable.
         year_help: Año de declaración (p. ej. 2025)
       support_matrix:
         help: 'Muestra la matriz de soporte por modelo para todas las definiciones
@@ -2220,6 +2209,7 @@ cli:
         perfil; actívala con 'aeat config profile capabilities set google_export on'.
       folder:
         help: Muestra la carpeta de Google Drive creada para el perfil activo
+        organize_help: Organiza la carpeta del perfil dentro de Cadrumo
         view_help: Muestra la carpeta de Google Drive creada para el perfil activo.
       help: Gestionar la integración OAuth de Google Desktop para Drive y Sheets
       login_help: Ejecutar el flujo de consentimiento OAuth

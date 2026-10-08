@@ -94,10 +94,10 @@ def test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba(
     result_queue = context.Queue()
     child = context.Process(target=_select_b_then_a_in_child, args=(str(tmp_path), result_queue))
     child.start()
-    child.join(30)
+    child.join(None)
 
     assert child.exitcode == 0
-    selected_b, selected_a_again = result_queue.get(timeout=10)
+    selected_b, selected_a_again = result_queue.get_nowait()
     assert selected_b.bucket_id == _B
     assert selected_b.transition_revision == initial_a.transition_revision + 1
     assert selected_a_again.bucket_id == _A

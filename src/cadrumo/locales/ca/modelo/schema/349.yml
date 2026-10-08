@@ -57,43 +57,6 @@ modelo:
             heading: NIF del destinatari final substitut
           sustituto-nombre:
             heading: Nom del destinatari final substitut
-        column:
-          op-apellidos-razon-social:
-            heading: Cognoms i nom o raó social de l'operador intracomunitari
-          op-base-imponible:
-            heading: Base imposable o import
-          op-clave-operacion:
-            heading: Clau d'operació
-          op-codigo-pais:
-            heading: Codi de país
-          op-nif-comunitario:
-            heading: NIF de l'operador comunitari
-          rect-base-anterior:
-            heading: Base imposable declarada anteriorment
-          rect-base-rectificada:
-            heading: Base imposable o imports rectificats
-          rect-ejercicio-rectificado:
-            heading: Exercici
-          rect-periodo-rectificado:
-            heading: Període
-          sustituto-apellidos-razon-social:
-            heading: Cognoms i nom o raó social del subjecte passiu substitut
-          sustituto-nif:
-            heading: NIF de l'empresari o professional destinatari final substitut
-        page:
-          modelo-349-declarante:
-            heading: Registre del declarant
-          modelo-349-operador:
-            heading: Registre d'operador intracomunitari
-          modelo-349-rectificacion:
-            heading: Registre de rectificacions
-        section:
-          datos-identificativos-y-hoja-resumen-de-l-26252f:
-            heading: Dades identificatives i full resum de la declaració
-          operadores-intracomunitarios:
-            heading: Operadors intracomunitaris
-          rectificaciones:
-            heading: Rectificacions
       revision:
         2020-y-siguientes:
           casilla:

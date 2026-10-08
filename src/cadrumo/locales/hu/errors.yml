@@ -181,8 +181,6 @@ errors:
     error_cadrumo_observability: Hiba történt az alkalmazás diagnosztikai naplózásában.
     error_calc_sheets_engine: A táblázatexportáló motor feloldhatatlan állapotba került
       az exportálási terv elkészítésekor.
-    error_calc_sheets_parity: A paritás-tesztelési forgatókönyv olyan casilla.id értékekre
-      hivatkozik, amelyek nem találhatók a registry pillanatképében.
     error_calc_sheets_record: Egy táblázat-rekordművelet érvénytelen oszlopindex vagy
       hibás A1-cím miatt meghiúsult.
     error_calculations_registry: Hiba történt a számítási nyilvántartás betöltése,

@@ -1,7 +1,7 @@
 """Setup-event emission contract tests.
 
 Required bucket events must be wired from the operator-facing setup
-paths that create profiles, activate profiles, update profile values,
+paths that create profiles, update profile values,
 and configure authentication providers. This gate pins the file:symbol
 identity of each required emission site so a future refactor cannot
 silently drop one.
@@ -32,11 +32,6 @@ _REQUIRED_EMISSION_SITES: tuple[tuple[BucketEventType, Path, str], ...] = (
         BucketEventType.PROFILE_BUCKET_CREATED,
         _AEAT_ROOT / "application" / "user_profile" / "capsule_record.py",
         "BucketEventType.PROFILE_BUCKET_CREATED",
-    ),
-    (
-        BucketEventType.PROFILE_ACTIVATED,
-        _AEAT_ROOT / "application" / "user_profile" / "login_session.py",
-        "BucketEventType.PROFILE_ACTIVATED",
     ),
     (
         BucketEventType.AUTH_PROVIDER_CONFIGURED,
@@ -135,11 +130,23 @@ def test_events_with_no_production_emitter_are_still_unemitted() -> None:
 # directory and the inaugural profile record in one atomic create
 # span, so a single event captures the pair. Documented here so a
 # future change does not add a duplicate PROFILE_CREATED slot.
-_RESERVED_EVENTS_WITHOUT_OPERATOR_PATHS: tuple[BucketEventType, ...] = (BucketEventType.CONFIG_ENV_UPDATED,)
+_RESERVED_EVENTS_WITHOUT_OPERATOR_PATHS: tuple[BucketEventType, ...] = (
+    BucketEventType.CONFIG_ENV_UPDATED,
+    BucketEventType.PROFILE_ACTIVATED,
+)
+# The accepted 2026-08-13 profile-session-lifecycle successor separates
+# frontend selection from authentication. Candidate proof and runtime session
+# promotion do not globally activate a bucket. Existing history retains its
+# closed catalogue member; current candidate behavior is exercised by
+# test_candidate_receipt_publication::test_password_candidate_publishes_once_without_promoting_custody.
 
 
 def test_reserved_events_remain_in_the_closed_catalogue() -> None:
     """Reserved setup events keep stable catalogue slots until operator paths exist."""
-    expected_values = {BucketEventType.CONFIG_ENV_UPDATED: "config.env.updated"}
+    expected_values = {
+        BucketEventType.CONFIG_ENV_UPDATED: "config.env.updated",
+        BucketEventType.PROFILE_ACTIVATED: "profile.activated",
+    }
     for event in _RESERVED_EVENTS_WITHOUT_OPERATOR_PATHS:
         assert event.value == expected_values[event], f"{event.name} has an unexpected catalogue value"
+        assert BucketEventType(expected_values[event]) is event

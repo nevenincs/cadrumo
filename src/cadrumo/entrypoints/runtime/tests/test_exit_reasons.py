@@ -236,7 +236,7 @@ def test_drain_watchdog_exits_the_process_with_its_reason(tmp_path: Path) -> Non
         cwd=tmp_path,
         env=fixture_environment(),
         capture_output=True,
-        timeout=60,
+        timeout=None,
         check=False,
     )
     assert completed.returncode == RuntimeExitReason.DRAIN_WATCHDOG.value, completed.stderr

@@ -49,7 +49,7 @@ modelo:
             '01':
               label: Number of recipients
             '02':
-              label: Withholding and advance-payment tax base
+              label: Withholding and payment-on-account base
             '03':
               label: Withholdings and payments on account
             '04':

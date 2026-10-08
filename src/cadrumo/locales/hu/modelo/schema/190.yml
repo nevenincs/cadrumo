@@ -166,7 +166,7 @@ modelo:
           payee-name:
             label: A juttatásban részesülő vezetékneve és utóneve vagy cégneve
           payee-nif:
-            label: A juttatásban részesülő adóazonosítója (NIF)
+            label: A jövedelemszerző NIF-azonosítója
           payee-pension-compensatoria:
             label: Kiegyenlítő járadékok
           payee-prestamos-vivienda-clave:
@@ -227,7 +227,7 @@ modelo:
             label: Vállalkozáshoz, innovációhoz és gazdasági tevékenység fejlesztéséhez
               kötött alapok kezeléséből származó munkajövedelem
           representante-legal-nif:
-            label: A törvényes képviselő NIF száma
+            label: A törvényes képviselő NIF-azonosítója
           retenciones-ingresos-a-cuenta:
             label: A visszatartások és előlegfizetések teljes összege
           total-percepciones-amount:
@@ -246,6 +246,10 @@ modelo:
           Éves összesítő.
         title: Munkaviszonyból és gazdasági tevékenységből származó jövedelmek adóelőleg-levonásának
           éves összesítője
+      form:
+        context:
+          ejercicio:
+            heading: Adóév
       revision:
         '2022':
           field:

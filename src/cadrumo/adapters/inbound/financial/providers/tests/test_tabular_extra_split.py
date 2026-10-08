@@ -40,11 +40,12 @@ from importlib.abc import MetaPathFinder
 from importlib.machinery import ModuleSpec
 from multiprocessing.queues import Queue
 from pathlib import Path
-from queue import Empty
 from types import ModuleType
 from typing import Literal, TypedDict, override
 
 import pytest
+
+from cadrumo.tests.process_results import receive_process_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -160,13 +161,9 @@ def _run_case(case: Literal["known", "unknown"], *, extra_absent: bool, tmp_path
     )
     process.start()
     try:
-        try:
-            message = results.get(timeout=300)
-        except Empty as exc:
-            process.join(timeout=1)
-            raise AssertionError(f"child produced no result; exitcode={process.exitcode}") from exc
-        process.join(timeout=300)
-        assert not process.is_alive(), "child probe exceeded its timeout"
+        message = receive_process_result(results, owners=(process,))
+        process.join(timeout=None)
+        assert not process.is_alive(), "child probe is still alive after join"
         assert process.exitcode == 0, f"child probe exited with {process.exitcode}: {message['error']}"
         assert message["error"] is None, message["error"]
         payload = message["payload"]
@@ -179,6 +176,7 @@ def _run_case(case: Literal["known", "unknown"], *, extra_absent: bool, tmp_path
     finally:
         if process.is_alive():
             process.terminate()
+        if process.pid is not None:
             process.join(timeout=5)
         process.close()
         results.close()

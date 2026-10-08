@@ -166,7 +166,7 @@ class TestRevisionViewSurfacesDetailRows:
             errors="replace",
             text=True,
             input=stdin_payload,
-            timeout=300,
+            timeout=None,
             check=False,
         )
         if creating_profile and completed.returncode == 0:

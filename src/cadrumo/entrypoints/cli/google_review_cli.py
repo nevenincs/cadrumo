@@ -1,4 +1,7 @@
-"""Publish one saved calculation after exact readable-export disclosure."""
+"""Publish one saved calculation after exact readable-export disclosure.
+
+:class:`OutputSchema` defines the public result envelope.
+"""
 
 from __future__ import annotations
 

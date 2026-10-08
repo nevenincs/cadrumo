@@ -709,7 +709,7 @@ class MacosProcessScope:
         if sys.platform != "darwin":
             raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
         selected = validated_worker_arguments(worker_script=worker_script)
-        self._worker_script = Path(selected[1]) if worker_script is not None else None
+        self._worker_script = Path(selected[-1]) if worker_script is not None else None
         self._host = host if host is not None else _NativeMacosWorkerHost()
         self._scope_key = macos_worker_scope_key(storage_root)
         self._label = macos_worker_label(scope_key=self._scope_key, worker_id=worker_id)

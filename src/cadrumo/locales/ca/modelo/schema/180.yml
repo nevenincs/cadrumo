@@ -83,6 +83,13 @@ modelo:
           a compte. Rendiments procedents de l'arrendament d'immobles urbans. Resum
           anual.
         title: Resum anual de retencions sobre arrendaments urbans
+      form:
+        context:
+          ejercicio:
+            heading: Exercici
+        section:
+          ejercicio:
+            heading: Exercici
       revision:
         2019-2022:
           field:

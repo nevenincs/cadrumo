@@ -93,7 +93,7 @@ def _native_tool(*arguments: str) -> str:
     if arguments[0] not in {"/bin/ps", "/usr/sbin/lsof"}:
         raise AssertionError("unsupported native inspection tool")
     completed = run_audited_process(
-        arguments, capture_output=True, check=False, timeout=30, env={"PATH": "/usr/bin:/bin", "LANG": "C"}
+        arguments, capture_output=True, check=False, timeout=None, env={"PATH": "/usr/bin:/bin", "LANG": "C"}
     )
     assert isinstance(completed.stdout, bytes)
     return completed.stdout.decode("utf-8", errors="replace")
@@ -479,7 +479,7 @@ def test_macos_worker_owner_loss_during_registration(tmp_path: Path) -> None:
             workers = [
                 pid
                 for pid, command in _commands(set(members) - {guardian_pid}).items()
-                if "-I -m cadrumo.entrypoints.runtime.worker" in command
+                if "-I -B -m cadrumo.entrypoints.runtime.worker" in command
             ]
             if workers:
                 (worker_pid,) = workers

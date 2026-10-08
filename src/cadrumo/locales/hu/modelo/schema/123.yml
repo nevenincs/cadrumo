@@ -77,9 +77,9 @@ modelo:
         2019-2023:
           casilla:
             '02':
-              label: Levonások és előlegfizetések adóalapja
+              label: A levonások és adóelőlegek alapja
             '03':
-              label: Forrásadó és részletfizetés
+              label: Levonások és adóelőlegek
           construct:
             modelo-123-capital-withholding:
               field:

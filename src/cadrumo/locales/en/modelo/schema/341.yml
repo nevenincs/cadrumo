@@ -64,7 +64,7 @@ modelo:
             label: Place of signature
           m341-papel-nombre-completo:
             help: Original paper-form detail; not included in the electronic file.
-            label: Full name or company name
+            label: Surname and given name or company name
           observaciones-presentacion:
             label: Observations
           reagp-importe-compensacion:

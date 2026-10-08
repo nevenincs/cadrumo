@@ -221,7 +221,7 @@ modelo:
           resultado-anteriores-autoliquidaciones:
             label: Korábbi önadózásokból befizetendő eredmény
           retenciones-ingresos-a-cuenta:
-            label: Forrásadó és részletfizetés
+            label: Levonások és adóelőlegek
       construct:
         modelo-131-objective-estimation-instalment:
           field:

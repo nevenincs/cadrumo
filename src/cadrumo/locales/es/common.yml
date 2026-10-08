@@ -1222,6 +1222,30 @@ sheets:
       contract_relation_clave: Contrato o relación
       contributor_legal_name: Apellidos y nombre del contribuyente
       contributor_tax_id: NIF del contribuyente
+      cotizacion_01_importe: Importe cotizado en enero
+      cotizacion_01_situacion: Situación de cotización en enero
+      cotizacion_02_importe: Importe cotizado en febrero
+      cotizacion_02_situacion: Situación de cotización en febrero
+      cotizacion_03_importe: Importe cotizado en marzo
+      cotizacion_03_situacion: Situación de cotización en marzo
+      cotizacion_04_importe: Importe cotizado en abril
+      cotizacion_04_situacion: Situación de cotización en abril
+      cotizacion_05_importe: Importe cotizado en mayo
+      cotizacion_05_situacion: Situación de cotización en mayo
+      cotizacion_06_importe: Importe cotizado en junio
+      cotizacion_06_situacion: Situación de cotización en junio
+      cotizacion_07_importe: Importe cotizado en julio
+      cotizacion_07_situacion: Situación de cotización en julio
+      cotizacion_08_importe: Importe cotizado en agosto
+      cotizacion_08_situacion: Situación de cotización en agosto
+      cotizacion_09_importe: Importe cotizado en septiembre
+      cotizacion_09_situacion: Situación de cotización en septiembre
+      cotizacion_10_importe: Importe cotizado en octubre
+      cotizacion_10_situacion: Situación de cotización en octubre
+      cotizacion_11_importe: Importe cotizado en noviembre
+      cotizacion_11_situacion: Situación de cotización en noviembre
+      cotizacion_12_importe: Importe cotizado en diciembre
+      cotizacion_12_situacion: Situación de cotización en diciembre
       counterparty_legal_name: Razón social de la contraparte
       counterparty_tax_id: NIF de la contraparte
       country_code: Código de país
@@ -1251,6 +1275,10 @@ sheets:
       fecha_devengo: Fecha de devengo
       fecha_inicio_prestamo: Fecha de inicio del préstamo
       fecha_vencimiento_prestamo: Fecha de vencimiento del préstamo
+      financial_asset_acquisition_value: Valor de adquisición del activo financiero
+      financial_asset_disposal_value: Valor de transmisión del activo financiero
+      financial_asset_origin: Origen del activo financiero
+      financial_asset_related_entity: Entidad vinculada al activo financiero
       first_child_compute: Cómputo del 1.er hijo
       floor: Planta
       foral_retention_araba: Retenciones e ingresos a cuenta ingresados a Araba/Álava
@@ -1291,9 +1319,12 @@ sheets:
       naturaleza: Naturaleza
       naturaleza_declarante: Naturaleza del declarante
       naturaleza_inmueble: Naturaleza del inmueble
+      nif: NIF
       nif_pagador_anterior: NIF del pagador anterior
+      nombre: Nombre
       number_qualifier: Calificador del número
       number_type: Tipo de numeración
+      numero_afiliacion: Número de afiliación
       numero_orden: Número de orden
       opening_minus_closing_positive: Diferencia positiva entre apertura y cierre
       operation_date: Fecha de la operación
@@ -2459,6 +2490,7 @@ tui:
         bank_city: ciudad del banco
         bank_country_code: país del banco
         bank_name: nombre del banco
+        closed_on: Fecha de cierre
         currency: moneda
         holding: titularidad
         iban: IBAN

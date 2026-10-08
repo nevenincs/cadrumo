@@ -241,6 +241,10 @@ modelo:
           a compte. Rendiments del treball i d'activitats econòmiques, premis i determinats
           guanys patrimonials i imputacions de rendes. Resum anual.
         title: Resum anual de retencions del treball i d'activitats
+      form:
+        context:
+          ejercicio:
+            heading: Exercici
       revision:
         '2022':
           field:

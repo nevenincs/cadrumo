@@ -473,7 +473,7 @@ def test_resident_set_is_read_from_the_runtime_ps_endpoint(runtime: tuple[str, Q
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
         residents = read_runtime_residents()
     assert residents == (RuntimeResident(name="qwen2.5vl:3b", size_bytes=4 * GIB, size_vram_bytes=3 * GIB),)
-    assert events.get(timeout=5) == {"method": "GET", "path": "/api/ps"}
+    assert events.get_nowait() == {"method": "GET", "path": "/api/ps"}
 
 
 def test_an_unreachable_runtime_reads_as_unmeasured_not_as_empty() -> None:
@@ -497,7 +497,7 @@ def test_unload_releases_a_selected_resident_with_a_zero_keep_alive_and_no_promp
         )
     assert outcome.unloaded is True
     assert outcome.was_resident is True
-    posted = events.get(timeout=5)
+    posted = events.get_nowait()
     assert posted["method"] == "POST"
     assert posted["body"] == {"model": "qwen2.5vl:3b", "keep_alive": 0}
     body = posted["body"]
@@ -776,8 +776,8 @@ def test_a_readiness_check_reports_ready_when_the_runtime_answers(
     assert outcome.answered is True
     assert outcome.resident is True
     assert outcome.elapsed_ms is not None
-    assert events.get(timeout=5)["path"] == "/api/ps"
-    assert events.get(timeout=5)["path"] == "/api/generate"
+    assert events.get_nowait()["path"] == "/api/ps"
+    assert events.get_nowait()["path"] == "/api/generate"
 
 
 def test_a_readiness_check_for_a_model_that_is_not_installed_names_the_pull_and_loads_nothing(

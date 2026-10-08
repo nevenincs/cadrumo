@@ -64,7 +64,7 @@ modelo:
             label: Aláírás helye
           m341-papel-nombre-completo:
             help: Az eredeti papírűrlap adata; az elektronikus fájl nem tartalmazza.
-            label: Teljes név vagy cégnév
+            label: Vezetéknév és utónév vagy cégnév
           observaciones-presentacion:
             label: Megjegyzések
           reagp-importe-compensacion:

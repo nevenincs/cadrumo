@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
@@ -16,7 +17,7 @@ from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.filing.errors import ModeloBuilderError, ModeloDraftError
-from ....domain.filing.protocols import CasillaSchemaProvider
+from ....domain.filing.protocols import CasillaCollection, CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding, ModeloValueKind, compute_modelo_draft_id
 from ....domain.filing.validator import ModeloValidator
 from ....domain.submission.models import ModeloDraftStatus
@@ -26,7 +27,7 @@ from ..draft_review import (
     approve_draft,
     refresh_review_status,
 )
-from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from ..runtime import ModeloOperatorProfile, RegistryCasillaCollection, build_runtime_schema_provider
 from .filing_support import empty_prior_filing_observations_fingerprint, empty_profile_activity_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -746,3 +747,58 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
     assert refreshed.approved_at is None
     assert refreshed.approved_by is None
     assert refreshed.review_checksum is None
+
+
+@pytest.mark.parametrize(
+    ("required", "kind"),
+    [(False, ModeloValueKind.EMPTY), (True, ModeloValueKind.EMPTY), (False, ModeloValueKind.LITERAL)],
+)
+def test_formula_validation_distinguishes_optional_absence_required_absence_and_false_provenance(
+    required: bool, kind: ModeloValueKind
+) -> None:
+    provider = _schema_provider()
+    draft = _draft(provider)
+    collection = provider.get_collection("130")
+    assert isinstance(collection, RegistryCasillaCollection)
+    collection = replace(
+        collection,
+        casillas=tuple(
+            casilla.model_copy(update={"required": required}) if casilla.casilla_id == _M130_CASILLA_19 else casilla
+            for casilla in collection.casillas
+        ),
+    )
+
+    class Provider:
+        def get_collection(self, modelo: str) -> CasillaCollection:
+            assert modelo == "130"
+            return collection
+
+    mutated = draft.model_copy(
+        update={
+            "values": tuple(
+                value.model_copy(
+                    update={
+                        "kind": kind,
+                        "value": None if kind is ModeloValueKind.EMPTY else Decimal("0"),
+                        "formula_trace_casilla_ids": None,
+                    }
+                )
+                if value.casilla_id == _M130_CASILLA_19
+                else value
+                for value in draft.values
+            )
+        }
+    )
+    findings = [
+        finding
+        for finding in ModeloValidator(schema_provider=Provider()).validate(mutated)
+        if finding.casilla_id == _M130_CASILLA_19
+    ]
+    if kind is ModeloValueKind.LITERAL:
+        assert any(finding.code == "formula-divergence" for finding in findings)
+    elif required:
+        assert any(finding.severity is BaseSeverity.ERROR for finding in findings)
+    else:
+        assert findings == []
+        absent = next(value for value in mutated.values if value.casilla_id == _M130_CASILLA_19)
+        assert absent.value is None and absent.formula_trace_casilla_ids is None

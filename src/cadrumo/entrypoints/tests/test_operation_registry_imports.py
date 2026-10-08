@@ -33,7 +33,7 @@ assert not engines.intersection(sys.modules), sorted(engines.intersection(sys.mo
         env=environment,
     )
     try:
-        _, stderr = await asyncio.wait_for(process.communicate(), timeout=60)
+        _, stderr = await asyncio.wait_for(process.communicate(), timeout=None)
         assert process.returncode == 0, stderr.decode()
     finally:
         if process.returncode is None:

@@ -66,8 +66,6 @@ modelo:
             heading: Identificació de l’afiliat o mutualista
           contacto:
             heading: Persona de contacte
-          cotizaciones:
-            heading: Cotitzacions mensuals
           declaracion:
             heading: Declaració complementària o substitutiva
           domicilio:
@@ -183,7 +181,7 @@ modelo:
             domicilio-numero:
               help: Dada del formulari en paper; no s’inclou en el fitxer electrònic.
                 No acredita una signatura ni una presentació.
-              label: Número
+              label: Nombre
             domicilio-piso:
               help: Dada del formulari en paper; no s’inclou en el fitxer electrònic.
                 No acredita una signatura ni una presentació.

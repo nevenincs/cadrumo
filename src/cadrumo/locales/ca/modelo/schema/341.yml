@@ -34,7 +34,7 @@ modelo:
             label: Municipi
           m341-papel-domicilio-numero:
             help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
-            label: Número
+            label: Nombre
           m341-papel-domicilio-piso:
             help: Dada del formulari original en paper; no s’inclou al fitxer electrònic.
             label: Pis

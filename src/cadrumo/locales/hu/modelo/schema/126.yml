@@ -30,7 +30,6 @@ modelo:
             heading: Pénzügyi intézményeknél vezetett számlák jövedelméből levont
               adó
         row:
-          periodificacion: Időbeli elhatárolás
           periodificacion-1: Időbeli elhatárolás · első sor
           periodificacion-2: Időbeli elhatárolás · második sor
           retenciones: Levont adó és adóelőleg
@@ -49,9 +48,9 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              label: A levonások és előlegfizetések alapja
+              label: A levonások és adóelőlegek alapja
             '02':
-              label: Forrásadó és részletfizetés
+              label: Levonások és adóelőlegek
             '03':
               label: 'Időbeli elhatárolás: a levonások és előlegfizetések alapja'
             '04':
