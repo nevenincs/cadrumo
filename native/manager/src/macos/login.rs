@@ -84,21 +84,63 @@ mod native {
         // mach/task_info.h and mach/mach_init.h: borrowed current-task send right.
         static mach_task_self_: u32;
         fn task_info(task: u32, flavor: u32, output: *mut i32, count: *mut u32) -> i32;
+        fn task_name_for_pid(task: u32, pid: i32, port: *mut u32) -> i32;
+        fn mach_port_deallocate(task: u32, port: u32) -> i32;
+    }
+
+    /// An observation-only send right, never a task-control or debugger right.
+    struct TaskName(u32);
+
+    impl TaskName {
+        fn open(process: &Process) -> io::Result<Self> {
+            let pid = process.identity()?.incarnation.pid;
+            let mut port = 0;
+            // SAFETY: public mach/mach_traps.h ABI; writable name-port output.
+            // The retained process brackets the numeric lookup and the returned
+            // kernel token must match its pidversion before it grants authority.
+            let status = unsafe { task_name_for_pid(mach_task_self_, pid as i32, &mut port) };
+            let owned = (port != 0 && port != u32::MAX).then(|| Self(port));
+            if status != 0 {
+                // KERN_FAILURE includes policy denial and absence. It is not errno
+                // and must never be translated into proof that a process exited.
+                return Err(io::Error::other(format!(
+                    "task_name_for_pid: Mach status {status}"
+                )));
+            }
+            owned.ok_or_else(|| io::ErrorKind::InvalidData.into())
+        }
+    }
+
+    impl Drop for TaskName {
+        fn drop(&mut self) {
+            // SAFETY: this is the uniquely owned send right returned by the kernel;
+            // the current-task port itself remains borrowed and is not released.
+            unsafe {
+                mach_port_deallocate(mach_task_self_, self.0);
+            }
+        }
     }
 
     fn current_token(process: &Process) -> io::Result<Token> {
-        let identity = process.identity()?;
-        if identity.incarnation.pid != std::process::id() {
+        if process.identity()?.incarnation.pid != std::process::id() {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
+        // SAFETY: the current-task send right is borrowed for this call only.
+        task_token(unsafe { mach_task_self_ }, process)
+    }
+
+    fn task_token(port: u32, process: &Process) -> io::Result<Token> {
+        let identity = process.identity()?;
         let mut words = [0u32; 8];
         let mut count = 8;
         // SAFETY: TASK_AUDIT_TOKEN (15) copies eight natural_t words into the
-        // bounded buffer; the current-task right is borrowed, never deallocated.
-        let status =
-            unsafe { task_info(mach_task_self_, 15, words.as_mut_ptr().cast(), &mut count) };
-        if status != 0 || count != 8 {
-            return Err(io::ErrorKind::PermissionDenied.into());
+        // bounded buffer; the caller retains the task-name right throughout.
+        let status = unsafe { task_info(port, 15, words.as_mut_ptr().cast(), &mut count) };
+        if status != 0 {
+            return Err(io::Error::other(format!("task_info: Mach status {status}")));
+        }
+        if count != 8 {
+            return Err(io::ErrorKind::InvalidData.into());
         }
         let bytes: Vec<u8> = words.into_iter().flat_map(u32::to_ne_bytes).collect();
         let token = Token::decode(&bytes, identity.observed.uid)?;
@@ -235,6 +277,39 @@ mod native {
             Ok(session)
         }
 
+        /// Observe an arbitrary held process through its native task-name right.
+        /// A boot record or a signal-only audit token cannot supply this identity.
+        pub fn process(&self, process: &Process) -> io::Result<Session> {
+            let port = TaskName::open(process)?;
+            let before = task_token(port.0, process)?;
+            let session = Session {
+                uid: before.0[1],
+                id: before.0[6],
+            };
+            if self.observe(&session)? != (Observation::Present { graphical: true }) {
+                return Err(io::ErrorKind::PermissionDenied.into());
+            }
+            if task_token(port.0, process)? != before {
+                return Err(io::ErrorKind::PermissionDenied.into());
+            }
+            Ok(session)
+        }
+
+        /// Fresh kernel identity only, for revalidating already-admitted ownership.
+        /// This does not grant graphical, unlocked or unattended authority, and
+        /// remains usable while the admitted login session is being torn down.
+        pub(crate) fn process_identity(process: &Process) -> io::Result<Session> {
+            let port = TaskName::open(process)?;
+            let before = task_token(port.0, process)?;
+            if task_token(port.0, process)? != before {
+                return Err(io::ErrorKind::PermissionDenied.into());
+            }
+            Ok(Session {
+                uid: before.0[1],
+                id: before.0[6],
+            })
+        }
+
         /// Open only the kernel's peer PID, then require its current audit incarnation.
         pub fn peer(&self, socket: &UnixStream) -> io::Result<(Process, Session)> {
             let pid = i32::from_ne_bytes(socket_record::<4>(socket, 2)?);
@@ -266,6 +341,52 @@ mod native {
         use super::*;
 
         #[test]
+        fn task_name_token_corroborates_owned_child_and_preserves_session_policy() {
+            use std::process::{Child, Command, Stdio};
+            struct InputChild(Child);
+            impl Drop for InputChild {
+                fn drop(&mut self) {
+                    drop(self.0.stdin.take());
+                    self.0.wait().unwrap();
+                }
+            }
+            let child = InputChild(
+                Command::new("/bin/cat")
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::null())
+                    .spawn()
+                    .unwrap(),
+            );
+            let own = Process::open(std::process::id()).unwrap();
+            let held = Process::open(child.0.id()).unwrap();
+            let port = TaskName::open(&held).unwrap();
+            let before = task_token(port.0, &held).unwrap();
+            assert_eq!(before.0[6], current_token(&own).unwrap().0[6]);
+            assert_eq!(task_token(port.0, &held).unwrap(), before);
+            let login = Login::open().unwrap();
+            let session = Session {
+                uid: before.0[1],
+                id: before.0[6],
+            };
+            assert_eq!(Login::process_identity(&held).unwrap(), session);
+            match login.observe(&session).unwrap() {
+                Observation::Present { graphical: true } => {
+                    assert_eq!(login.process(&held).unwrap(), session);
+                }
+                _ => assert_eq!(
+                    login.process(&held).unwrap_err().kind(),
+                    io::ErrorKind::PermissionDenied
+                ),
+            }
+            drop(child);
+            assert!(held.exited().unwrap());
+            assert_eq!(
+                login.process(&held).unwrap_err().kind(),
+                io::ErrorKind::NotFound
+            );
+        }
+
+        #[test]
         fn current_kernel_token_matches_held_process_and_native_session_policy() {
             let process = Process::open(std::process::id()).unwrap();
             let token = current_token(&process).unwrap();
@@ -277,12 +398,19 @@ mod native {
             let observed = login.observe(&session).unwrap();
             match observed {
                 Observation::Present { graphical: true } => {
-                    assert_eq!(login.current(&process).unwrap(), session)
+                    assert_eq!(login.current(&process).unwrap(), session);
+                    assert_eq!(login.process(&process).unwrap(), session);
                 }
-                _ => assert_eq!(
-                    login.current(&process).unwrap_err().kind(),
-                    io::ErrorKind::PermissionDenied
-                ),
+                _ => {
+                    assert_eq!(
+                        login.current(&process).unwrap_err().kind(),
+                        io::ErrorKind::PermissionDenied
+                    );
+                    assert_eq!(
+                        login.process(&process).unwrap_err().kind(),
+                        io::ErrorKind::PermissionDenied
+                    );
+                }
             }
         }
     }

@@ -35,6 +35,12 @@ fn native_failure() -> io::Error {
 }
 
 struct Library(*mut c_void);
+// SAFETY: dlopen returns a process-wide loader reference, not thread-local state.
+// Library owns one reference and may move with its function pointers to another
+// thread; Drop releases it exactly once after its owner stops using those pointers.
+// This does not grant shared access (Sync); Process also retains its Cell !Sync.
+unsafe impl Send for Library {}
+
 impl Drop for Library {
     fn drop(&mut self) {
         // SAFETY: the uniquely owned handle came from dlopen.
@@ -175,6 +181,16 @@ pub struct Process {
     exited: Cell<bool>,
 }
 
+impl std::fmt::Debug for Process {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("Process")
+            .field("identity", &self.identity)
+            .field("exited", &self.exited.get())
+            .finish_non_exhaustive()
+    }
+}
+
 impl Process {
     pub fn open(pid: u32) -> io::Result<Self> {
         // SAFETY: geteuid has no arguments and cannot fail.
@@ -310,5 +326,51 @@ impl Process {
         } else {
             result
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{
+        os::unix::process::ExitStatusExt,
+        process::{Child, Command, Stdio},
+    };
+
+    struct InputChild(Child);
+    impl Drop for InputChild {
+        fn drop(&mut self) {
+            drop(self.0.stdin.take());
+            self.0.wait().unwrap();
+        }
+    }
+
+    #[test]
+    fn native_signal_capability_targets_only_its_owned_test_child() {
+        for signal in [libc::SIGTERM, libc::SIGKILL] {
+            let mut child = InputChild(
+                Command::new("/bin/cat")
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::null())
+                    .spawn()
+                    .unwrap(),
+            );
+            let held = Process::open(child.0.id()).unwrap();
+            assert_eq!(held.signal(signal).unwrap(), SignalDelivery::Delivered);
+            assert_eq!(child.0.wait().unwrap().signal(), Some(signal));
+            assert!(held.exited().unwrap());
+            assert_eq!(held.signal(signal).unwrap(), SignalDelivery::Gone);
+        }
+    }
+
+    #[test]
+    fn process_custody_can_move_to_the_supervisor_thread() {
+        let held = Process::open(std::process::id()).unwrap();
+        std::thread::spawn(move || {
+            assert_eq!(held.identity().unwrap().incarnation.pid, std::process::id());
+            assert!(!held.exited().unwrap());
+        })
+        .join()
+        .unwrap();
     }
 }

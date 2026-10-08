@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:ab86f578aa1d80968eb780b37700734314626c43ced91e2f50e21c2f72d7670d'
+body_hash: 'sha256:259881c269a351e5e7d2cb70bc5d65227dd720ba54c82fb3bc82afe240e01038'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -674,6 +674,11 @@ related:
 - `S19` `verify:` `Darwin instance native Mac all-target manager and platform Clippy` -> `pass`
 - `S19` `verify:` `Darwin instance Windows manager all-target Clippy` -> `pass`
 - `S19` `verify:` `Darwin instance independent source review rustfmt and diff check` -> `pass`
+- `S19` `M` `native/manager/src/macos/process.rs`
+- `S19` `M` `native/manager/src/supervision/stop.rs`
+- `S19` `verify:` `native Mac check8 platform32 manager90 tests and both Clippy` -> `pass`
+- `S19` `verify:` `configured Windows manager all-target Clippy` -> `pass`
+- `S19` `verify:` `native task-name audit-token and owned-child signal probes` -> `pass`
 
 ## Notes
 
@@ -726,3 +731,4 @@ related:
 - `S19` S19 remains open for platform activation/lifecycle/registration and acceptance. Frozen package builds unchanged; non-disposable hosts used only for isolated tests/builds and read-only native probes.
 - `S19` Transport-specific findings repaired; remaining full type diagnostic belongs to concurrently edited worker cleanup test. S19 remains open.
 - `S19` S19 remains open; isolated synthetic native evidence only, no main activation or host product/login/session transitions. Shared capability concurrent binding race corrected before native verification.
+- `S19` S19 remains open. Task-name rights corroborate held process UID/PID/pidversion; private admitted session is revalidated against target and current manager before exact-incarnation signaling. Adopted exit remains Unknown. ASID validation is bounded, not atomic with signal. check6 compilation failure and check7 transient lock failure retained; native probes corroborated CLOEXEC descriptor inheritance during concurrent spawn. Tests prove local capability release before bounded reacquisition; product locking unchanged. Main activation, lifecycle, registration and graphical acceptance remain gated. check8 source archive SHA256 22977a56b82453a28f714cb128379a1ac9a7a75dff095e90034374e9f1964fb5.

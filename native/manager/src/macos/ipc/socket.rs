@@ -435,11 +435,33 @@ mod tests {
         .unwrap()
     }
 
+    fn released_claim(
+        directory: &Path,
+        previous: std::sync::Weak<NamespaceClaim>,
+    ) -> Arc<NamespaceClaim> {
+        assert!(
+            previous.upgrade().is_none(),
+            "a Rust session/listener capability remains held"
+        );
+        // Other native tests spawn children concurrently. Darwin posix_spawn can
+        // briefly retain the open-file description until its CLOEXEC processing;
+        // final Rust ownership release does not prove that kernel reference ended.
+        // Use the existing bounded lock wait only after proving our claim is gone.
+        NamespaceClaim::acquire(
+            Directory::open(directory).unwrap(),
+            "fixture.sock",
+            Duration::from_secs(1),
+        )
+        .unwrap()
+        .expect("kernel lock remained held after all local capabilities were released")
+    }
+
     #[test]
     fn session_and_listener_share_one_lock_until_the_last_owner_releases_it() {
         for session_first in [false, true] {
             let scratch = Scratch::new();
             let session = claim(&scratch.0).unwrap();
+            let released = Arc::downgrade(&session);
             let original = session.lock.metadata().unwrap().ino();
             let listener = Socket::bind_claim(Arc::clone(&session)).unwrap();
             assert!(claim(&scratch.0).is_none());
@@ -459,7 +481,7 @@ mod tests {
                 assert!(claim(&scratch.0).is_none());
                 drop(session);
             }
-            let next = claim(&scratch.0).unwrap();
+            let next = released_claim(&scratch.0, released);
             assert_eq!(next.lock.metadata().unwrap().ino(), original);
             assert!(!scratch.0.join("fixture.sock").exists());
         }
@@ -470,6 +492,7 @@ mod tests {
         let scratch = Scratch::new();
         let path = scratch.0.join("fixture.sock");
         let session = claim(&scratch.0).unwrap();
+        let released = Arc::downgrade(&session);
         let other = UnixListener::bind(&path).unwrap();
         assert!(
             matches!(Socket::bind_claim(Arc::clone(&session)), Err(error) if error.kind() == io::ErrorKind::AddrInUse)
@@ -480,7 +503,7 @@ mod tests {
         drop(Socket::bind_claim(Arc::clone(&session)).unwrap());
         assert!(claim(&scratch.0).is_none());
         drop(session);
-        assert!(claim(&scratch.0).is_some());
+        drop(released_claim(&scratch.0, released));
     }
 
     #[test]
@@ -584,9 +607,10 @@ mod tests {
             socket.identity
         );
         drop(client);
+        let released = Arc::downgrade(&socket.claim);
         drop(socket);
         assert!(!path.exists());
-        let replacement = Socket::bind(&path).unwrap();
+        let replacement = Socket::bind_claim(released_claim(&scratch.0, released)).unwrap();
         drop(replacement);
     }
 

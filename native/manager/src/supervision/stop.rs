@@ -72,7 +72,7 @@ impl StopSignal for PlatformStopSignal {
                 Ok(Some(_)) => Err(StopSignalError::NotRunning),
                 Err(_) => Err(StopSignalError::Failed),
             },
-            #[cfg(target_os = "linux")]
+            #[cfg(any(target_os = "linux", target_os = "macos"))]
             RuntimeProcess::Adopted(opened) => {
                 super::process::adopted_stop(opened).map_err(|error| {
                     if error.raw_os_error() == Some(libc::ESRCH) {
@@ -82,7 +82,7 @@ impl StopSignal for PlatformStopSignal {
                     }
                 })
             }
-            #[cfg(not(target_os = "linux"))]
+            #[cfg(not(any(target_os = "linux", target_os = "macos")))]
             RuntimeProcess::Adopted(_) => Err(StopSignalError::Unsupported),
         }
     }

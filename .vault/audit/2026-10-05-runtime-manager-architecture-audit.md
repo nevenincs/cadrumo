@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:9d6a1d1b6fdb2ba26ecd43f8cb2c5d11a1019877925e54130f2232cc676c4ab2'
+body_hash: 'sha256:d9fd40b9ad542549e3fd779b6c8c6b95a260336978b5801158e0482172e824f7'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -288,6 +288,12 @@ The native session owner and listener now share one retained namespace-lock capa
 Review caught a concurrent-bind race introduced by sharing the capability; an exclusive binding permit now spans stale-socket checks, binding, socket cleanup and listener closure. Tests cover both session/listener drop orders, failed-bind recovery, rebinding, persistent lock identity, lock replacement/link/mode refusals and removed-socket concurrent binding. Independent review passes.
 
 Native Mac snapshot b737750814fbc44fb0b02fcd34c547b0387a686c6b346dd958c3ec7692e18819 passed all 83 manager and 32 platform tests plus both all-target Clippy checks on pinned Rust 1.96. Windows all-target manager Clippy also passes. Rust formatting and diff checks pass. Evidence is retained in build/macos-process-typecheck/native-instance-evidence and the remote native-transport-check5 directory. Discovery used named source files while semantic search was unavailable. S19 stays open for remaining supervision, lifecycle, registration and acceptance; no manager-main activation or installed graphical-session claim is added. Frozen package inputs remain unchanged.
+
+
+2026-10-08 S19 Darwin supervision checkpoint: source review PASS after correcting session drift before signal delivery. Login::process obtains a task-name send right and TASK_AUDIT_TOKEN, corroborates the retained process UID/PID/pidversion, and deallocates the right; ambiguous Mach failures remain uninspectable. OpenedProcess retains private admitted-session evidence. Signal delivery reobserves target and current manager UID/ASID before exact PID-version targeting; session validation is bounded revalidation, not atomic with signal. Adopted NOTE_EXIT reports Unknown. Library custody is movable but not shared across threads. SSH admission remains refused and manager main stays gated.
+
+Native check8 passed 32 platform and 90 manager tests plus both Clippy checks; configured Windows manager Clippy passed. Archive SHA256: 22977a56b82453a28f714cb128379a1ac9a7a75dff095e90034374e9f1964fb5. Earlier check6 exposed missing Send and check7 exposed an immediate-lock-release test assumption; both attempts remain preserved. Deterministic CLOEXEC/fork and matched native posix_spawn probes established transient inherited lock retention (19 immediate reacquisition refusals across 50,000 cycles with 500 normally reaped synthetic children), without identifying the specific child in check7. Corrected tests prove all Rust ownership released through Weak, then use the existing one-second lock bound; live-owner refusal remains immediate and production locking is unchanged. Native logs are retained under build/macos-process-typecheck/native-supervision-evidence and task-name-proof. Lifecycle, installation discovery, cutover, registration, menu integration and host acceptance remain outstanding.
+
 
 ## Recommendations
 
