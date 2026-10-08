@@ -1,5 +1,6 @@
 //! Darwin process capabilities; login and signed agent registration remain separate.
 
+pub mod activity;
 pub mod login;
 pub mod naming;
 #[cfg(target_os = "macos")]

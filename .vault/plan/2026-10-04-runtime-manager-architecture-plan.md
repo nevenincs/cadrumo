@@ -12,7 +12,7 @@ related:
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:05268fd8184f66226ff62bcfe52a2f52a6071ffd8bf9c269252f02b6cc8d00c1'
+body_hash: 'sha256:679284625072c57a2d57003cf626d44d68892cf0c3b8d10ba2bb49a427a7ad04'
 ---
 
 # `runtime-manager-architecture` plan
@@ -171,6 +171,8 @@ Darwin IPC continuation: the existing linux_manager worker also owns the narrow 
 2026-10-08 S19 instance-ownership continuation: linux_manager owns the bounded Darwin session-lock/IPC capability integration in session/instance.rs, macos/ipc.rs and macos/ipc/socket.rs, with a narrowly scoped helper/test module if needed. Reuse the canonical compact socket name and its existing persistent namespace-lock inode; acquire once and retain explicit custody across server lifetime without implicit reacquisition or premature release. Verify owner/mode/inode and namespace replacement refusal, current native session binding, contention and cleanup with synthetic native tests. Preserve non-Darwin behavior and keep manager-main activation, product registration and graphical acceptance gated. Root owns final implementation review, native build snapshots, shared Cargo runs, vault records and commits. Frozen package builds remain unchanged; discovery uses bounded named-file inspection while the semantic service is unavailable.
 
 2026-10-08 S19 Darwin supervision continuation: following the isolated native task-name/audit-token proof, linux_manager owns Login::process in macos/login.rs, Darwin held-process inspection/adopted exit and stop integration in supervision/process.rs and supervision/stop.rs, plus narrowly needed held-process formatting and focused tests. Reuse task_name_for_pid with a retained/deallocated task-name send right, TASK_AUDIT_TOKEN, exact UID/PID/pidversion checks and existing Security session policy. Keep ambiguous Mach permission failures distinct from proven process absence; do not use task_for_pid, POSIX session IDs, environment or fabricated audit-session authority. Native signal/exit tests may target only synthetic children launched by that test and must reap them; never signal existing host processes or change host sessions. Root owns shared native builds, review, source snapshots, vault and commits. Manager-main, login registration, native graphical acceptance and existing frozen package inputs remain gated/unchanged.
+
+2026-10-08 S19 activity observation: linux_manager owns macos/activity.rs and macos.rs enrollment plus owning tests. Use public caller-scoped CGSessionCopyCurrentDictionary. Retain a fully admitted current Process and native Session; bracket each query with unchanged kernel UID/ASID and require strictly typed matching UID, OnConsole and LoginDone values. Missing or inconsistent evidence remains unavailable; only corroborated on-console and logged-in state grants start/restart eligibility. No undocumented keys, console-set/ASID conflation, unlocked-state claims or session-end signals. Native checks only observe the SSH host or synthetic pure-policy fixtures. Main activation, lifecycle/registration and frozen package inputs stay unchanged. Root owns native suite snapshots, review, vault and commits.
 
 ## Verification
 

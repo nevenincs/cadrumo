@@ -305,8 +305,10 @@ mod tests {
                 .is_none()
         );
         drop(first);
+        // Concurrent POSIX child creation can retain the open-file description
+        // briefly until close-on-exec, even after this unique owner is dropped.
         assert!(
-            LocalLock::acquire(&path, Duration::ZERO)
+            LocalLock::acquire(&path, Duration::from_secs(1))
                 .expect("acquire")
                 .is_some()
         );

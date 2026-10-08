@@ -5,7 +5,7 @@ tags:
 date: '2026-10-05'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:d9fd40b9ad542549e3fd779b6c8c6b95a260336978b5801158e0482172e824f7'
+body_hash: 'sha256:93fe3af5e68bfacaa020b789c1e612a56fd450d1926d0203a967e0eb1c165645'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -294,6 +294,9 @@ Native Mac snapshot b737750814fbc44fb0b02fcd34c547b0387a686c6b346dd958c3ec7692e1
 
 Native check8 passed 32 platform and 90 manager tests plus both Clippy checks; configured Windows manager Clippy passed. Archive SHA256: 22977a56b82453a28f714cb128379a1ac9a7a75dff095e90034374e9f1964fb5. Earlier check6 exposed missing Send and check7 exposed an immediate-lock-release test assumption; both attempts remain preserved. Deterministic CLOEXEC/fork and matched native posix_spawn probes established transient inherited lock retention (19 immediate reacquisition refusals across 50,000 cycles with 500 normally reaped synthetic children), without identifying the specific child in check7. Corrected tests prove all Rust ownership released through Weak, then use the existing one-second lock bound; live-owner refusal remains immediate and production locking is unchanged. Native logs are retained under build/macos-process-typecheck/native-supervision-evidence and task-name-proof. Lifecycle, installation discovery, cutover, registration, menu integration and host acceptance remain outstanding.
 
+2026-10-08 S19 activity observation review: PASS. The new macOS Activity retains full graphical admission and the current process/native session, then brackets the public caller-scoped CGSessionCopyCurrentDictionary query with matching kernel UID/ASID. Exact SDK keys, CoreFoundation types and lossless UID range checks are enforced; missing, malformed or inconsistent evidence is Unavailable, and only on-console plus login-complete grants SessionActivity. Copy/Create references release once; borrowed dictionary members remain inside its lifetime. Public SessionGetInfo attributes are not live console evidence (0x20 is TTY access). This interpretation uses Apple's documented caller-session semantics; positive fast-switch/logout behavior still needs interactive evidence. No unlocked-state claim, session-end signal or manager activation was added. Primary evidence: https://developer.apple.com/documentation/coregraphics/cgsessioncopycurrentdictionary() and https://developer.apple.com/documentation/coregraphics/window-server-session-properties ; SDK hashes retained in build/macos-process-typecheck/session-activity-evidence.
+
+Mac check9 passed 32 platform and 93 manager tests plus both Clippy checks; Windows passed 148 configured manager tests and Clippy. Native snapshot SHA256 c3b6e2a4bd66634f8ca3a9d44543b4bced0c5c1afa8d7c8a29510a6e081c6484; logs retained in native-activity-evidence. The common custody unit test's post-drop reacquisition now permits the existing one-second bounded lock wait for reproduced transient inherited descriptors; its live-owner 60ms refusal remains unchanged. Production lock semantics are unchanged. Lifecycle, installation/cutover composition, menu integration and acceptance remain open.
 
 ## Recommendations
 
