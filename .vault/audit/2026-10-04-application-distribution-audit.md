@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:90127b950b145593681b595d91b695dcb0adebf254b78417e54079652163f48d'
+body_hash: 'sha256:0a7d0b5cd65a7eb3fe82be59dac0935e5cc36c4c0771941d5e0a0107beee227f'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -123,7 +123,6 @@ Verification: isolated Release DLL/runner build passed; application/installer CT
 
 S09 remains open: protected publication-directory ACL custody, authenticated callback enrollment and happy native transaction evidence, ordered prior-registration removal, safe native uninstall, rollback/owner-death recovery and all-session in-use protection are not completed by this checkpoint. Software and disposable interactive host/two-release acceptance stay gated; certificates are excluded from current source/build work.
 
-
 2026-10-08 native CA/publication checkpoint: actual Windows tests admit the standard Program Files ancestry under the available elevated installer token, reject unsafe user-writable machine ancestry and implicit user-owner WRITE_DAC, preserve ordinary-user read/shared-lease access, and hold namespace custody. The native build and 13 installer tests passed; 22 Python MSI checks compiled and inspected the four CA-enrolled products and verified early gated refusal. Root reviewed the ACL, action sequencing and stable-entry dispatch integration. The active manager runs from its version subtree; a transient stable-entry image holder causes maintenance refusal rather than forced shutdown. Postcommit native creation is re-audited before publication. No install acceptance is claimed. Old cached custom actions pinned to the original runner hash cannot support arbitrary future runner changes; the accepted owner-compatibility refinement selects a protected identity-bound owner record, still to be implemented. Native removal/recovery and two-release interactive acceptance remain open; literal-false MSI gate stays in force.
 
 ### Linux RPM assembly integrity | high | Default distro build scripts can modify the inventoried payload
@@ -160,16 +159,13 @@ Configured application.rust passed (38.28s) and installer.rust passed (9.42s); p
 
 Microsoft's MsiBeginTransactionW/MsiEndTransaction contract establishes current-owner settlement but does not explicitly guarantee a zero-package transaction commit. Actual support for this branch remains disposable Windows acceptance work; code preserves the fence on any failure. Positive native maintenance and interactive two-release lifecycle acceptance are still unverified and all installation gates remain closed. S09 remains open.
 
-
 ### 2026-10-08 native Apple SDK inventory | low | Contained framework ancestor aliases retain complete identity
 
 The genuine Apple CLT macOS 26.5 SDK includes a Ruby framework header alias pointing to its ancestor. SDK inventory now explicitly permits such contained directory aliases while recording each link and hashing each canonical directory once. Unresolved or escaping links still refuse. Generic action-cache directory inventory retains its default cycle refusal. Header mutation and link retargeting invalidate builder identity. Eleven builder-identity/action-cache tests, scoped Ruff/format/ty and independent source review pass. Actual macOS configure passed in 11.3s plus 1.9s generation using the unmodified SDK; platform static/shared, manager and application Release targets subsequently compiled successfully on arm64 with the canonical 14.0 deployment floor. This does not prove DMG assembly, login lifecycle or release signing. The isolated build uses explicit local ad-hoc identity '-' without a publisher certificate.
 
-
 ### 2026-10-08 documentation subprocess scratch | low | Explicit short scratch survives environment isolation
 
 The native Linux package build exposed AF_UNIX pathname overflow because documentation subprocesses removed CADRUMO_TEMP_DIR along with ambient product routing. english_pinned_environment now reintroduces only the canonical prepared scratch directory after that scrub. Runtime endpoint/storage routing and unrelated product settings remain absent. A real child-interpreter regression passes on Windows (1 test, 9.01s) and Linux (1 test, 10.60s); scoped Ruff/format/ty and independent review pass. Real Linux profile-setup sequences advance beyond pathname and socket-permission setup, then correctly refuse runtime_containment_unavailable because the manylinux container has no user-systemd bus. The existing WSL user manager is available; an isolated source/dependency build there is being prepared for sequence execution without changing services. This checkpoint does not claim the whole docs/package gate passed.
-
 
 ### 2026-10-08 native documentation runtime checks | low | Linux containment and Darwin socket budget pass focused real pages
 
@@ -177,13 +173,11 @@ The identical frozen Linux snapshot (23984 members; d192edab8af12fc369669c35d613
 
 On Darwin even the explicit short private temp directory produced 110-byte single-sequence and 115-byte cumulative-page socket paths with the old verbose sandbox prefixes, above the native 104-byte limit. Only the unique scratch prefixes now shorten to seq- and page-, yielding 101 and 102 bytes in that configuration. Namespace ownership, canonical paths, random uniqueness and endpoint identity remain unchanged. Scoped Ruff/format/ty and independent review pass; the real Mac profile-setup goldens now pass with native transport and workers. Its full build was retried after the focused success. No whole DMG or installer acceptance is claimed.
 
-
 ### 2026-10-08 explicit native Darwin toolchain | low | Native admission and compiler proof pass
 
 The macos-arm64 preset now selects a reusable Darwin toolchain with explicit reviewed compiler path/full Apple version header and SDK root/version. SDKSettings.json must identify that macOS SDK. Native arm64 and non-cross compilation are required; root CMake retains the canonical deployment floor and architecture. Rust linker selection remains explicit. Compiler/sysroot conflicts refuse before admitted cache bindings are set. Independent review found a medium empty-cache defect; forcing the admitted values after conflict checks fixes it, and the native regression starts from empty compiler/sysroot cache entries and verifies exact selected bindings.
 
 Portable admission tests pass (4 passed, 1 native-only skipped; 8.55s), with Ruff/format/ty and preset parsing passing. The actual Mac independently configured, compiled and ran an arm64/macOS 14.0 C probe and refused changed SDK identity, conflicting compiler and conflicting sysroot; final evidence is toolchain-proof/proof-v4.log beneath the preserved Mac task directory. Independent final review passes all four source/enrollment files. The ongoing full package build still uses its original explicit experiment toolchain; this new reusable configuration has native component proof, not a completed whole-product build or release-signing proof.
-
 
 ### 2026-10-08 documentation cache input mutation | medium | Revalidate enrolled inputs before publishing or reusing completion
 
@@ -191,14 +185,11 @@ Independent review confirmed that docs_build previously captured source identity
 
 The live Windows full native-installer attempt reported its docs compile failure after 4673s: runtime_deadline_exceeded in renta observations and Modelo036, still-running/connection-closed outcomes in Modelo390, and connection-closed in verification-reports. Those are executable sequence failures, not evidence to refresh goldens. Other source owners have ongoing runtime/performance edits in the shared checkout. No full MSI acceptance or new package success is claimed; focused/frozen investigation must precede another expensive full retry.
 
-
 2026-10-08 frozen Windows continuation: source snapshot 2a4396effdcc3aa68fab7374efec9885bc7851f0c0dc819481af3d8194d3d8db and selected authority 9db202fd630f35654c984a5b656ddd4be59dffd03927d6f520316af6e9222a92 reproduce the Renta documentation failure sequentially in 349.03 seconds. The retained error reports SUCCEEDED/NONE followed by runtime_deadline_exceeded; it does not establish calculation failure. Static tracing finds repeated whole-result retrieval/projection/canonicalization for each bounded page under a shared residual deadline, but no retained failing-operation journal establishes exact operation definition, page count or timing. Instrumented reproduction is pending; no deadline or golden change is justified by current evidence. Modelo036 passes on the same frozen inputs in 121.85 seconds; Modelo390 and verification reports remain pending. Evidence is under build/windows-docs-frozen-20261008/evidence.
 
 Host preservation: the operator explicitly identifies both this Windows runner and gergely.wootsch@gw-laptop as non-disposable. Only isolated builds, tests and read-only native probes are authorized in this execution; no product install/uninstall, login registration or session-ending acceptance is performed. The existing Mac build connection remains open without a final result, while fresh SSH probes time out; its completion status is unknown. Native lifecycle acceptance remains open.
 
-
 Renta timing follow-up: one instrumented reproduction passes unchanged frozen sources/goldens in 238.23 seconds, with 131 observed page calls. Two revision_snapshot results each contain 997,173 bytes over 31 pages; their retrievals take 12.710/11.675 seconds from initial result budgets 42.582/40.595 seconds. Settlement polling takes about three seconds, with admission/prior exchanges consuming approximately 14.27/16.42 seconds first. Concurrent Windows Modelo390 and WSL documentation work is explicitly recorded. This successful run does not explain or fix the original 349-second deadline failure. No production changes or deadline increases follow from it; retain the ignored timing harness and result logs for a future failing run.
-
 
 ### Filing settlement during frozen installer docs | medium | bounded wait corrected, native confirmation pending
 
@@ -208,11 +199,9 @@ Source trace shows filing had no separate settlement allowance: its contract/adm
 
 Source review PASS after correcting the synthetic successful filing fixture to UPDATED. Ten focused tests pass in3.82seconds through the real filing contract, registered loop and result-page collector, covering completion after60seconds, single submit/start, bounded admission/polling, custom/default expiry without resultread/replay, and invalid waits before transport. Scoped Ruff, formatting and ty pass. Native frozen annual-scenario confirmation remains PENDING; the controlled one-module overlay and journalled rerun are delegated to msi_maintenance. The separate intermittent Renta issue remains unresolved. Evidence: build/windows-docs-frozen-20261008/evidence/final-result.json and development test run20261008T145314.573631Z-pytest-17500-d1de8ebe/run.log.
 
-
 S14 native confirmation attempt remains unresolved: the one-module frozen overlay has source digest38b44614e0fffa1934e6c46ae6639ff65a0f31bf12d2ce73fedaf0213a8769cd and unchanged authority9db202fd630f35654c984a5b656ddd4be59dffd03927d6f520316af6e9222a92. Targeted annual390 passes the first two filings but fails after334.31seconds earlier than the original failure, at seed line39 calculation with runtime_connection_closed and unknown effect (operation d27924a297251d2039cda5e090f20dcc7eec375868d458af5d0d90592f321e55). No sandbox/journal survives TemporaryDirectory cleanup; remaining log is empty and no relevant Windows crash event is found. Exit2 is the CLI status, not worker exit evidence. This neither confirms the complete filing fix nor establishes its cause as the new policy.
 
 The WSL strict full documentation compile also fails after4397.47seconds, with no language HTML roots. Filing-spine-chain workcreate reports runtime_unavailable, while runtime fixture cleanup wraps the server's synthesized unavailable exception in AsyncResourceCleanupError. The retained traceback does not recover the earlier server failure flag cause or a worker exit code. Hashed copies are under build/windows-installers-x64/verification/wsl-docs-failure-20261008/. Preserve failed inputs and add bounded forensic observation before retrying; no golden refresh, global deadline change or install gate relaxation is warranted. Full Windows/Linux native package builds and native Darwin verification remain incomplete.
-
 
 S14 native targeted confirmation: the retained-sandbox forensic annual390 check passes exit0 in440.89seconds, including seed line52 and the complete golden comparison. It observes28 clean connection futures, no logged server/future exception, one drain receipt with zero missing/uncontained/unsettled workers, and fixture cleanup released=true. The process hook records only expected zero-timeout liveness polls, not an actual exit status. Normal native cleanup runs; no product/login installation occurs. This confirms the filing policy change through the failed native scenario. It does not explain the earlier intermittent connection loss or complete the full native package build. Evidence remains under build/windows-docs-frozen-20261008/evidence/filing-retry-forensics/ and the retained synthetic sandbox outside the frozen source.
 
@@ -240,9 +229,7 @@ An isolated retained-sandbox diagnostic of that exact sequence, using unchanged 
 
 The original full-build failure remains unexplained. One full native-installer retry is running with the same frozen inputs. The current Darwin transport source correction is separately tested and has not been overlaid into that build. Windows full package validation is also running; neither active build constitutes installer, upgrade or graphical-session acceptance.
 
-
 2026-10-08 S05 portable documentation cache review: PASS for commit eb5d29c645. The documentation owner hashes validated checkout-relative input names and bytes plus selected authority roles, retaining language identity, before/after mutation fences and verified output inventory. Generic native-action fingerprints remain unchanged. Review found CMake excluded source test-support modules imported by documentation scenarios; removing that exclusion closes the dependency gap. Actual generated inputs include secure_sql, profile_worker_support, retained_server, cli_runner, profile_capsule_runtime and recorded_ecb_rates as well as the identity helper. The configured user_docs_driver_test passed 34 tests in 4.28 seconds; focused Ruff/format/ty passed. Native WSL producer and manylinux cache handoff remain pending. Active Windows and Mac builds retain their original frozen source sets; this source review does not establish package or installation acceptance.
-
 
 2026-10-08 Mac full attempt 28180: the strict documentation owner completed four languages in 3112 seconds, then native package relocation refused WebKit because the canonical system-library declaration omitted actual desktop dependencies. Read-only inspection parsed all 52 staged Mach-O images with no parser errors and found eight missing direct install names, all on cadrumo: WebKit, ApplicationServices, Carbon, CoreVideo, QuartzCore, ColorSync, CoreServices and libobjc.A.dylib. Each exact install name is corroborated by the selected public SDK stub; no missing non-system dependency was observed. The fix adds only those exact names and extends real-parser relocation tests to retain rejection of ambient framework paths and undeclared versions. Focused 22 tests, Ruff, format and ty passed. Evidence is retained under build/macos-process-typecheck/relocation-failure-evidence; original full log SHA256 7af45fdc2d8fe1df6467c0af787aebf2047975d2ed966a7099234c5c858dfe68. Native relocation and full build retry remain pending. No DMG or installation acceptance is claimed.
 

@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:213f3f807708916d043a1c1b5fe1c7d9258277cd435d040d8dcc530cf3fd9b32'
+body_hash: 'sha256:a22eace621ddda8c871a706e802dadb54239d1bceb0e725302dedccde28f0543'
 ---
 
 # Application distribution
@@ -33,7 +33,6 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 2026-10-07 S10 correction: the Windows registry adapter now returns named this-user and all-users origins, and manager/desktop convert them to the shared catalogue's borrowed RegistrationHints. A verified this-user prefix outranks newer machine/local fallback prefixes. Invalid user candidates permit fallback; a local archive receives no user-scope preference without matching native registration. Native application/manager CTests, all nineteen selected desktop manager backend tests and pinned Rust 1.96 Clippy for all three consumers pass. This corrects the audit's scope-selection finding without implementing S09's all-account MSI admission or publication/removal exclusion. S09 is the next source implementation Step; S03/S04 and manager lifecycle dependencies remain open.
 
 2026-10-08 CMake orchestration: the operator requested integrating the installation steps into the CMake-owned flow while preserving software and acceptance gates. S11 refines that authorized build integration: the manager msi target builds the four scoped products, msi-verify checks their source/payload/artifact bindings, and check-msi-installation fails with the unresolved lifecycle and disposable-runner requirements. A read-only native MSI database query verifies actual action sequencing because WiX 5.0.2 decompilation reconstructs the registration schedule inaccurately. Neither the source launch condition nor the readiness refusal is bypassable by a CMake switch. S09, S03 and S04 remain open; compilation receipts are build evidence and are not native transaction publication or install/upgrade acceptance. Linux/macOS native backends, runner evidence and release signing/notarization remain separate prerequisites.
-
 
 2026-10-08 frozen acceptance correction: the unchanged Windows Modelo390 annual seed fails at fourth-quarter Modelo303 local filing because the registered CLI operation is still running when its shared 60-second deadline expires. Filing lacks the distinct settlement allowance already used by calculation and verification. S14 applies the existing bounded 1800-second settlement policy while retaining 60-second per-exchange bounds and existing unknown-effect/no-replay behavior. This is an in-scope installer-build blocker correction under the operator's continued implementation authorization; it introduces no transport, storage or installation authority change. The original long-work bottleneck remains unmeasured, and the separate Renta intermittent result-read failure remains unresolved.
 
@@ -62,21 +61,15 @@ Execute sequentially. Preserve independent application-core and desktop edits in
 
 2026-10-08: S09 native MSI maintenance may run alongside root-owned S05 Linux CMake build enrollment. The MSI worker owns a native installer adapter, its transaction/scope/removal tests, windows_msi.py authoring integration and installer-only CMake enrollment. Root owns Linux toolchain/container orchestration, distribution documentation, vault edits and commits. The separate manager worker owns manager IPC/tray/preferences; coordinate any shared native/application maintenance changes with root and serialize native Cargo verification. Preserve the installability gate until protections and acceptance pass.
 
-
 2026-10-08 native macOS builder integration: after completing native component evidence, linux_manager may own a repository Darwin toolchain file, its focused admission checks and isolated verification on the actual Mac. Translate the working explicit compiler/SDK selection into reproducible CMake inputs without hardcoding the operator's home directory, changing the canonical target/deployment floor or inventing release signing. Preserve explicit Rust linker configuration and exact builder/SDK identity. Coordinate shared CMake enrollment with root; root owns full-package build sessions, documentation source edits, vault and commits.
-
 
 2026-10-08 stable Windows build recovery: after the live-checkout full docs attempt failed with deadline/connection outcomes, msi_maintenance may prepare an isolated canonical Windows source snapshot and pinned builder, then run the four failing documentation pages against those fixed inputs. Preserve existing Windows host/product/services and all unrelated working-tree edits. Never copy dotenv/private credentials into the snapshot. Root owns any source fixes, shared build decisions and commits; a full frozen native-installer retry requires those focused pages to pass first and coordination with root. WSL and Mac frozen runs may continue independently.
 
-
 Frozen Windows diagnostic follow-up: notice_review owns ignored payload-free timing instrumentation and one coordinated Renta page reproduction after msi_maintenance releases the focused four-page lane. Record operation definition, settlement time, remaining result budget and per-page latency/count; no production edits, deadline increases or golden changes. Root chooses any correction only after this evidence and coordinates with unrelated runtime/performance owners.
-
 
 Timing follow-up scheduling correction: because the Modelo390 page contains eleven long scenarios, root authorizes one Renta diagnostic concurrently in its own diagnostic-storage and diagnostic-temp. Its evidence must record concurrent Windows Modelo390 and WSL docs activity; timings establish the observed code/budget path, not isolated performance causality. Sources, golden files and deadlines remain unchanged.
 
-
 S14: linux_manager may own only the filing constant/signature/settlement forwarding in runtime_modelo_verification.py and a new test_runtime_modelo_filing_settlement.py under its owning CLI tests. Preserve the existing independent verification edits in that same module and the dirty existing error-detail tests; no broad refactor. Reuse the real registered protocol/clock test patterns with bounded policy tests. Root owns review, frozen source overlay after the current docs batch completes, native failed-sequence rerun, vault and scoped partial-hunk commit.
-
 
 Post-S14 native diagnostic follow-up: notice_review owns an ignored one-scenario forensic harness under the frozen Windows evidence directory, using the existing execute_sequence sandbox_root parameter to retain synthetic files while preserving normal runtime/worker cleanup. Capture only failure type, traceback locations, bounded cleanup flags and process exit metadata through existing observation points; do not log messages/locals/payloads or alter native semantics. Root reviews before one targeted launch. msi_maintenance retains Windows/WSL build inputs and copies bounded failed-build diagnostics; no new full build or overlay without coordination.
 

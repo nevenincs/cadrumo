@@ -5,7 +5,7 @@ tags:
 date: '2026-10-07'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:6c5193675cb1987846e0ca2dfbdf423de6de547209cb36cd7e320181e451abeb'
+body_hash: 'sha256:d67b3781b963adcb5e229969923cbc0c6635142c85e4e5fe4df5f8e00d3ef806'
 related:
   - "[[2026-10-04-application-distribution-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -57,7 +57,6 @@ Acceptance uses two genuinely built different releases, exact artifact/manifest 
 Under the operator's instruction to implement and build the unsigned installers, ordered native maintenance is the supported installation entry. CMake invokes an installer-only transaction runner over hash-bound version and registration MSIs. It owns MsiBeginTransaction and holds exact prefix/version exclusion, verifies the installed version before submitting shared registration, and permits atomic Ready-plus-anchor publication only after successful MsiEndTransaction(COMMIT) and exact native ownership/inventory revalidation. Callback success, InstallFinalize, an idle _MSIExecute mutex, process exit and ProductState=5 alone do not prove commitment. Rollback, owner loss, timeout or ambiguous native evidence retains the durable Pending/Removing fence and prior anchors. Machine maintenance requires installer elevation; manager/runtime remain governed by their existing interactive-user admission policy. Delivery remains MSI; the runner is CMake orchestration support. Direct standalone MSI installation remains refused until an equivalent authenticated owner participates. Software and disposable-host acceptance remain separate from unsigned artifact generation.
 
 Primary evidence: Microsoft documents that successful [MsiEndTransaction(COMMIT)](https://learn.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msiendtransaction) deletes rollback scripts, that [commit custom actions](https://learn.microsoft.com/en-us/windows/win32/msi/commit-custom-actions) can fail and trigger rollback, and that [_MSIExecute](https://learn.microsoft.com/en-us/windows/win32/msi/-msiexecute-mutex) covers the execute sequence. Implementation must verify the owner protocol and native custody before lifting the existing gate.
-
 
 ### 2026-10-08 owner compatibility refinement
 
