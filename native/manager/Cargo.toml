@@ -25,6 +25,12 @@ tokio = { version = "1", features = ["rt", "time", "process"] }
 # Descriptor-relative, no-follow calls for the custody primitives.
 libc = "0.2"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = { version = "0.6.4", default-features = false, features = ["std"] }
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSApplication", "NSResponder", "NSWorkspace"] }
+objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSObject", "NSNotification", "NSString", "NSRunLoop", "NSTimer"] }
+tokio = { version = "1", features = ["signal"] }
+
 [target.'cfg(target_os = "linux")'.dependencies]
 zbus = "5.19"
 

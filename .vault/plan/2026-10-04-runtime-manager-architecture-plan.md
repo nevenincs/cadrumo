@@ -12,7 +12,7 @@ related:
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:e83f368f7aca7c2ffb68160e64c6111a221e8bfba4cdba58f4bdc86149e8935b'
+body_hash: 'sha256:6e889274866540ea4572b872da737ec7a87b068469659ca035e493aeb88d06d0'
 ---
 
 # `runtime-manager-architecture` plan
@@ -179,6 +179,8 @@ Darwin IPC continuation: the existing linux_manager worker also owns the narrow 
 2026-10-08 S19 portable Background prerequisite: linux_manager owns the sealed shared successor permit/reporting owner with nested Windows-only native admission, required-method installation-removal observation contract with the existing Windows watcher implementation, and minimal Background/startup/supervised/lifecycle/lib/main consumer changes to compile the existing state machine on supported platforms. Preserve private permit construction after native admission, exact root/session/Quit checks, bounded reporting and final Ready acknowledgement, retained claims, cancellation and settlement semantics. No no-op macOS removal watcher, new authority constructor, native activation, installation-layout decision or host mutation. Root owns shared Windows/Mac verification, integrated review, vault and commits. Keep frozen builds and unrelated peer edits unchanged.
 
 2026-10-08 S19 nonblocking session-end prerequisite: linux_manager owns startup.rs, background.rs, lifecycle.rs and the minimal Windows lifecycle test consumer updates for required begin_session_end/session_end_settled methods. Suppress restarts before the stop request, keep repeated notifications idempotent without extending stop deadlines or writing user Quit preferences, and preserve the existing Windows 3500ms bounded wrapper. Nonblocking settlement must retain terminal evidence until the real worker finishes, join it and drain final events before successful completion; disconnection, panic and errors cannot masquerade as clean settlement or discard ownership. Add focused tests for result-before-thread-exit, clean join, disconnection/panic, repeated requests and cancellation/reassessment. No native host activation, signal registration, new installation policy or frozen-build modification. Root owns shared checks, integrated review, vault and commits.
+
+2026-10-08 S19 native AppKit host slice: linux_manager owns new macos/lifecycle.rs and narrowly scoped lifecycle helper/tests, macos.rs enrollment, target-specific Cargo.toml dependencies and resulting Cargo.lock. Implement a typed main-thread NSApplicationDelegate/retained observer and timer using existing objc2 versions, consuming the real shared ManagerLifecycle nonblocking shutdown contract and retaining supplied native custody through settlement. Public power-off/logout and Tokio SIGTERM observations suppress restart; deferred termination polling includes NSModalPanelRunLoopMode. Preserve user Quit separation, repeated request idempotence, unknown effect semantics, and explicit failure retention. Do not infer logout cancellation from activation or console activity; no no-op cutover owner, fabricated IPC readiness, production main activation, login registration, or graphical/session-ending host probe. Main integration remains gated on real native installation/cutover ownership and cancellation acceptance. Dependencies resolve through normal Cargo, no hand-authored lockfile edits. Root owns source review, native compile/tests, snapshot provenance, vault and commits; frozen package builds and peer edits remain unchanged.
 
 ## Verification
 

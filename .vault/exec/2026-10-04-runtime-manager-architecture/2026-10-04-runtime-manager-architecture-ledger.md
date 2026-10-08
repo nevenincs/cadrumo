@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:858a096cd4583060c8c0ac54e39ea3185d9d2a9aab47b862939d736e7660d962'
+body_hash: 'sha256:09b7af007b2f45cfed2bc07f0858787cb276ef208c751fc9b6bd61613c6c3c8e'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -706,6 +706,14 @@ related:
 - `S19` `verify:` `Windows manager152 tests and all-target Clippy` -> `pass`
 - `S19` `verify:` `scoped rustfmt and diff check` -> `pass`
 - `S19` `verify:` `independent nonblocking settlement review` -> `pass`
+- `S19` `A` `native/manager/src/macos/lifecycle.rs`
+- `S19` `A` `native/manager/src/macos/lifecycle/appkit.rs`
+- `S19` `verify:` `Mac check14 native manager100 tests` -> `pass`
+- `S19` `verify:` `Mac check14 manager Clippy unnecessary unsafe` -> `fail`
+- `S19` `verify:` `Mac check15 platform32 manager100 tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `Windows manager154 tests and all-target Clippy` -> `pass`
+- `S19` `verify:` `independent inactive AppKit host source review` -> `pass`
+- `S19` `verify:` `scoped rustfmt and diff check` -> `pass`
 
 ## Notes
 
@@ -764,3 +772,4 @@ related:
 - `S19` S19 prerequisite only: existing lifecycle/cutover traits now have canonical shared definitions consumed by actual Windows host/coordinator. Existing defaults, Background Windows gating and concrete cancellation/claims/settlement behavior remain unchanged; no new native host adapter or activation. Snapshot SHA256 e3c711a1bafd6388909a91d9e9a74b051b43101394f2dbc696f77dfd25a140b9.
 - `S19` Shared lifecycle prerequisite only; native activation and versioned macOS installation remain incomplete. Non-disposable hosts received only isolated tests.
 - `S19` Errors now retain Running ownership rather than discarding it; Effects::Unknown unchanged. Native host activation and graphical acceptance remain open.
+- `S19` Check14 warning corrected by using typed safe API; no suppression. Main activation remains gated; no GUI loop, host signal policy, login or session-ending tests performed.
