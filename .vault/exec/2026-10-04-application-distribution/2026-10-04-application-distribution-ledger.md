@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:a7bf056d9179a29fee78dfb3e51e5797bf161c6a6faa07e7239aa2f4993f3c0b'
+body_hash: 'sha256:0449ecefa92d6b55d71be9808c7d370711af8011e83fc88a4cbdc019fd6ebd74'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -375,6 +375,8 @@ related:
 - `S15` `verify:` `S15 scoped Ruff format ty` -> `pass`
 - `S15` `verify:` `S15 independent source review` -> `pass`
 - `S15` `verify:` `S15 actual51ELF isolated relocation` -> `pass`
+- `S15` `M` `native/CONTRACT.md`
+- `S15` `verify:` `Linux prerequisite reference source reconciliation and diff check` -> `pass`
 
 ## Notes
 
@@ -416,3 +418,4 @@ related:
 - `S15` Accepted dependency refinement under existing all-code/build authorization; implementation and minimum-runtime/native package verification pending.
 - `S15` Static provider proof exposes WebKit2.42 and stronger package minima; no product execution/installation or minimum graphical-host claim. Darwin publication candidate research remains unaccepted.
 - `S15` S15 remains open for full product packaging evidence; native graphical minimum-host and installation acceptance remain separate gates. Windows-native-tool skips covered by isolated DEB/RPM fixture run.
+- `S15` Reference now states archive/this-user prerequisites and artifact versus host glibc boundary. Full frozen Linux build lane delegated after source/native fixture and ELF checks.

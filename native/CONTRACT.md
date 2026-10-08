@@ -1545,6 +1545,21 @@ is the latest release. Set `CPACK_WIX_PRODUCT_ICON` to the generated product ICO
 when producing the Windows installer. DEB requires dpkg tooling; RPM requires
 rpmbuild. Signing, notarization and native launch/upgrade tests remain release gates.
 
+Linux desktop packages use distribution-managed GTK 3 and WebKitGTK 4.1.
+`dev/packaging/native/linux_desktop_runtime.py` owns the provider minimums and
+the desktop-only external library declaration. Assembly includes its requirements
+in `data/linux-desktop-runtime.json`, covered by the payload inventory; CMake
+projects them into DEB/RPM metadata, and native artifact inspection checks them.
+Archives carry the same prerequisites. A this-user prefix install does not
+install system libraries or grant permission to do so.
+
+The glibc 2.28 limit applies to CADRUMO's distributed ELF files. Desktop hosts must
+also satisfy the declared runtime packages, which may require a newer glibc.
+The interpreter, manager and Python extensions retain their existing private
+dependency closure. Private build SDK paths are removed during relocation.
+Dependency declarations and successful compilation do not establish minimum-host
+graphical compatibility; the installation and lifecycle gates remain in force.
+
 Windows payloads declaring the manager stage under `versions/<version>` with the
 stable entry at the installation prefix. The desktop shortcut targets that
 version's root-level desktop image; installer-added notices stay outside its

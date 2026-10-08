@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:f3992886919066a80565f73b85e0c9131a65a68f9f6b0444c9726ff635d43dfa'
+body_hash: 'sha256:8ea5ee8ea47e997e0097fb3e551259999c89b0c966e3655830c84d36edd58f8e'
 ---
 
 # Application distribution
@@ -88,6 +88,8 @@ The same diagnostic owner may adapt the ignored retained-sandbox observer to one
 2026-10-08 S05 native package recovery: linux_manager owns ignored Mac full-CMake documentation observer preparation, root-reviewed launch and evidence collection against the unchanged frozen source/authority. Preserve actual per-page arguments, concurrency, progress journals, deadlines and cleanup; collect only payload-free lifecycle/exception metadata. Root retains source remedies and final acceptance. msi_maintenance owns Linux desktop dependency-policy grounding and amendment preparation, then only explicitly assigned package dependency files/tests after root accepts the refinement. Do not edit the peer-owned Docs.cmake, Packaging.cmake, ReleaseVerification.cmake, native/CONTRACT.md or docs_build.py. Root owns vault records and commits; no product installation, login registration or session transition on either non-disposable host.
 
 S15: msi_maintenance owns the canonical Linux desktop-runtime contract, native platform enrollment, dev/packaging/native dependency/projection/relocation/package inspection helpers and their tests, and native/cmake/distribution only. Implement the accepted 2026-10-08 distribution refinement with per-image scope, metadata inspection and retained native refusal gates. Root owns governance, review and commits. linux_manager may continue the isolated Mac build observer concurrently. Peer-owned top-level CMake packaging/docs/release files and native/CONTRACT.md remain excluded; report any required enrollment handoff before touching them.
+
+S15 verified-source follow-up: after commit 840f846001, msi_maintenance owns the controlled committed-slice overlay into stopped WSL and manylinux snapshots, their before/after provenance, actual CMake documentation producer/cache handoff and full Linux native-installer retry. Include only required Cargo evidence inputs, preserve all earlier output/evidence and native provider checks, and use the established secure build-input helper. Root authorizes these launches after source review, both real native package fixture tests and all 51 actual ELF relocation checks passed. linux_manager continues the independent frozen Mac full observer; root retains frozen Windows full-build ownership. No product installation or host session changes.
 
 ## Verification
 
