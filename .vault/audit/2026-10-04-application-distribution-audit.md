@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:57411048e313659654617f9b63cd5480f3933730b9872b1bc057b78edf93c3d4'
+body_hash: 'sha256:2f74777c57e6921721425daa7519606fcae9ddf81e133123b84b7802a2f3acf0'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -108,6 +108,12 @@ This closes only the shared foundation. Native MSI transaction/rollback adapters
 2026-10-08: Added an explicit native manylinux toolchain that verifies glibc 2.28 and selects the reviewed image's GCC toolset. The script accepts the digest-pinned x86-64 container and correctly rejects the Ubuntu 2.43 host. CMake component configuration passes with CADRUMO_CONFIGURE_PAYLOAD=OFF; full payload configuration remains the default. Actual Release rust_platform static/shared, rust_application and baseline rust_manager targets pass with Rust 1.96.0. Configured platform.resolver CTest passes. Fifteen CMake configuration/input tests pass.
 
 Component configuration deliberately supplies no bundle or package acceptance target. Full payload configure on the mounted tree is slow, and the reviewed floor image currently provides WebKitGTK 4.0 rather than the Tauri dependency's 4.1 API. Full desktop and native package acceptance remain open. Actual interpreter build exposed missing Ninja SDK byproduct and interpreter-to-bridge dependencies; those corrections are being verified separately. The baseline manager compile does not establish the in-progress Linux lifecycle port's acceptance.
+
+### 2026-10-08 source-to-native packaging orchestration review
+
+The source native-installer target now depends on its configured bundle and Windows installer binaries, forwards exact configuration/channel/desktop placement and builder interpreter, and delegates format construction to the owning distribution preset. The windows-installers-x64 preset isolates source output from the concurrent documentation build. Review found that nested distribution output remains shared; a generated CMake script now holds a process lock through nested configure and packaging. An actual concurrent two-source-build test confirms the first package's payload cannot be changed by the second configure. The lock does not govern independently invoked standalone distribution commands; those must not overlap. No generated build-system script is incorrectly enrolled as disposable artifact cleanup.
+
+Sixteen CMake configuration/input/flow tests passed before the lock addition, and the affected flow test passed after it with real concurrent package execution. Scoped Ruff/format/ty and diff checks pass. The independent Linux-worker review reports its concurrency finding resolved. Windows isolated configure succeeds with pinned tools, and full Linux configure plus frontend TypeScript/Vite production build pass on the pinned floor builder. Native Linux platform/application/manager CTests pass (15.74s); later manager cutover changes require fresh integration verification. The full Linux desktop host remains blocked by WebKitGTK 4.1 availability in the floor SDK. No full product/native installation or interactive acceptance is inferred.
 
 ## Recommendations
 

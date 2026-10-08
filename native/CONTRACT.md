@@ -1367,6 +1367,21 @@ not constitute real session-1 logoff or desktop package acceptance.
 
 ## Native distribution definitions
 
+The source build exposes `native-installer`. For example,
+`cmake --build --preset release --target native-installer` builds the exact
+configured payload, then configures the matching distribution preset and builds
+its `native-package` target. Windows also builds and supplies the installer-only
+DLL and maintenance runner. Set `CADRUMO_WIX_EXECUTABLE` on the source configure
+when WiX is not on PATH. The channel, builder interpreter, configuration-specific
+payload and staged desktop image are passed explicitly. This target creates
+unsigned artifacts; it does not install them or bypass lifecycle acceptance gates.
+The distribution preset owns its own outputs and cleanup targets. A process-held
+lock serializes its configure-and-package operation across source build trees.
+Standalone distribution configure/build/clean commands must not overlap that
+operation. `windows-installers-x64` and `windows-installers-release` provide an
+isolated Windows source build; their native distribution output remains shared
+and serialized by this lock.
+
 `native/cmake/distribution` packages an already assembled payload. Its shared
 identity projection covers Windows x64, Linux x64/ARM64 and macOS ARM64. The
 application ID is `md.neve.cadrumo`; the preview channel adds `.preview`.

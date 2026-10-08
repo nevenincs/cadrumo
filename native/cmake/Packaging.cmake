@@ -217,3 +217,4 @@ add_custom_target(verify-package
 # One dependency graph builds the bundle/ZIP once and verifies that exact artifact.
 # Separate recipe invocations repeat graph traversal and can observe different inputs.
 include("${CMAKE_CURRENT_LIST_DIR}/ReleaseVerification.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/InstallerFlow.cmake")

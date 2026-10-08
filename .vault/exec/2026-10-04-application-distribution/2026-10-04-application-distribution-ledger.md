@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:62e8132c956b001eae182cfd2f257539714f65cf73fdb6af7f66404a42077036'
+body_hash: 'sha256:6af663ae9cc7e5bb1e79b70e29dacc7c1f18b7abbdbc5c4263ab510d7912b14e'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -193,6 +193,14 @@ related:
 - `S05` `verify:` `Pinned Linux platform/application/manager Release CTest` -> `pass`
 - `S05` `verify:` `Pinned Linux platform all-target Clippy` -> `pass`
 - `S05` `by:` `Codex`
+- `S05` `M` `CMakePresets.json`
+- `S05` `M` `native/cmake/InstallerFlow.cmake`
+- `S05` `M` `dev/packaging/native/tests/test_cmake_installer_flow.py`
+- `S05` `verify:` `Sixteen CMake configuration/input/flow tests` -> `pass`
+- `S05` `verify:` `Post-review concurrent native-installer graph regression` -> `pass`
+- `S05` `verify:` `Scoped Ruff format lint and ty` -> `pass`
+- `S05` `verify:` `Pinned isolated Windows source configure` -> `pass`
+- `S05` `verify:` `Pinned Linux full source configure and frontend production build` -> `pass`
 
 ## Notes
 
@@ -206,3 +214,4 @@ related:
 - `S12` Shared publication/lease foundation only. Native MSI transaction/rollback, all-session process proof and independent runtime leases remain S09. MSI is still installable:false.
 - `S13` Native component lane only. Full payload remains default ON. New desktop WebKitGTK4.1 dependency and full installer/session acceptance remain unresolved; no complete Linux artifact claimed.
 - `S05` Cross-platform validation repairs. Full Linux Clippy encountered concurrently introduced manager cutover source and awaits owner stabilization. S05 stays open; no full payload acceptance.
+- `S05` Shared nested distribution configure/build serialized under process lock after independent review. Full payload and native installation acceptance remain open; standalone distribution commands must not overlap source native-installer.

@@ -28,6 +28,14 @@
       }
     },
     {
+      "name": "windows-installers-x64",
+      "displayName": "Unsigned Windows installer build, isolated outputs",
+      "inherits": "windows-x64",
+      "environment": {
+        "CADRUMO_BUILD_DIR": "${sourceDir}/build/windows-installers-x64"
+      }
+    },
+    {
       "name": "linux-x86-64",
       "displayName": "linux-x86-64 (requires native SDK/toolchain)",
       "generator": "Ninja Multi-Config",
@@ -71,6 +79,12 @@
     }
   ],
   "buildPresets": [
+    {
+      "name": "windows-installers-release",
+      "configurePreset": "windows-installers-x64",
+      "configuration": "Release",
+      "targets": ["native-installer"]
+    },
     {
       "name": "debug",
       "configurePreset": "windows-x64",
