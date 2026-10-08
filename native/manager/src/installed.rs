@@ -55,6 +55,7 @@ pub struct InstalledRuntime {
     pub target: LaunchTarget,
     query: ChildConfiguration,
     version: InstalledVersion,
+    _publication: Option<std::sync::Arc<cadrumo_application::installation::maintenance::Lease>>,
 }
 
 impl InstalledRuntime {
@@ -69,9 +70,11 @@ impl InstalledRuntime {
     pub fn from_admitted(
         installation: crate::installation::CurrentInstallation,
     ) -> Result<Self, InspectionFailure> {
-        let locations = installation.into_locations();
+        let (locations, lease) = installation.into_parts();
         require_no_failed_marker(locations.storage_root())?;
-        Self::prepare(&locations)
+        let mut installed = Self::prepare(&locations)?;
+        installed._publication = lease;
+        Ok(installed)
     }
 
     fn prepare(locations: &ManagedLocations) -> Result<Self, InspectionFailure> {
@@ -103,6 +106,7 @@ impl InstalledRuntime {
         )
         .map_err(|_| InspectionFailure::refused(InspectionRefusal::LaunchTargetRefused))?;
         Ok(Self {
+            _publication: None,
             target,
             query,
             version: InstalledVersion {

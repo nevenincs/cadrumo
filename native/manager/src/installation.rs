@@ -12,6 +12,7 @@ use std::{
 /// Its locations are available for diagnostics without exposing a new admission path.
 pub struct CurrentInstallation {
     locations: ManagedLocations,
+    pub(crate) lease: Option<std::sync::Arc<cadrumo_application::installation::maintenance::Lease>>,
 }
 
 impl CurrentInstallation {
@@ -19,8 +20,13 @@ impl CurrentInstallation {
         &self.locations
     }
 
-    pub(crate) fn into_locations(self) -> ManagedLocations {
-        self.locations
+    pub(crate) fn into_parts(
+        self,
+    ) -> (
+        ManagedLocations,
+        Option<std::sync::Arc<cadrumo_application::installation::maintenance::Lease>>,
+    ) {
+        (self.locations, self.lease)
     }
 }
 
@@ -70,7 +76,10 @@ fn current_installation(
         ));
     }
     if std::fs::canonicalize(image)? == std::fs::canonicalize(&selected.manager)? {
-        Ok(Some(CurrentInstallation { locations }))
+        Ok(Some(CurrentInstallation {
+            locations,
+            lease: selected.lease.clone(),
+        }))
     } else {
         Ok(None)
     }

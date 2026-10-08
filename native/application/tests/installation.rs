@@ -96,6 +96,128 @@ impl Fixture {
         });
         package
     }
+
+    fn native(&mut self, prefix: &Path) -> cadrumo_application::installation::maintenance::Store {
+        use cadrumo_application::{
+            installation::maintenance::{Identity, Store},
+            value::RelativePath,
+        };
+        let relative = RelativePath::new("data/installation-state").unwrap();
+        self.contract.layout.installation.publication = Some(relative.clone());
+        let marker = prefix.join("data/installation.json");
+        let mut value: serde_json::Value =
+            serde_json::from_slice(&fs::read(&marker).unwrap()).unwrap();
+        value["publication"] = json!(relative.as_str());
+        fs::write(marker, serde_json::to_vec(&value).unwrap()).unwrap();
+        Store::new(
+            relative.under(prefix),
+            Identity {
+                application_id: "test.discovery".into(),
+                channel: "stable".into(),
+                platform: self.contract.layout.platform.clone(),
+            },
+            128,
+        )
+        .unwrap()
+    }
+}
+
+#[test]
+fn native_publication_refuses_missing_pending_changed_and_removing_versions() {
+    use cadrumo_application::value::Sha256Digest;
+    let mut fixture = Fixture::new();
+    let prefix = fixture.prefix("native");
+    let package = fixture.version(&prefix, "1.0.0");
+    let store = fixture.native(&prefix);
+    assert!(
+        fixture
+            .contract
+            .inspect_cancellable(&prefix, &Cancellation::default())
+            .is_err()
+    );
+    store.initialize().unwrap();
+    let manifest = Sha256Digest::new(format!(
+        "{:x}",
+        Sha256::digest(fs::read(package.join("data/package-manifest.json")).unwrap())
+    ))
+    .unwrap();
+    let product = "12345678-1234-1234-1234-123456789abc".to_owned();
+    let install = store
+        .prepare("1.0.0", product.clone(), manifest.clone())
+        .unwrap();
+    assert!(
+        fixture
+            .contract
+            .inspect_cancellable(&prefix, &Cancellation::default())
+            .is_err()
+    );
+    let other = Sha256Digest::new("0".repeat(64)).unwrap();
+    assert!(store.prepare("1.0.0", product, other).is_err());
+    fs::write(package.join("python.zip"), b"changed").unwrap();
+    assert!(store.publish("1.0.0", &package, &fixture.contract).is_err());
+    fs::write(
+        package.join("python.zip"),
+        b"inventoried fixture dependency",
+    )
+    .unwrap();
+    store.publish("1.0.0", &package, &fixture.contract).unwrap();
+    assert!(store.acquire("1.0.0", &manifest).is_err());
+    drop(install);
+    let selection = fixture
+        .contract
+        .inspect_cancellable(&prefix, &Cancellation::default())
+        .unwrap();
+    assert!(matches!(store.begin_removal("1.0.0"), Err(Error::Busy)));
+    let clone = selection.clone();
+    drop(selection);
+    assert!(matches!(store.begin_removal("1.0.0"), Err(Error::Busy)));
+    drop(clone);
+    store.anchors(Some("1.0.0"), None).unwrap();
+    assert!(matches!(store.begin_removal("1.0.0"), Err(Error::Busy)));
+    store.anchors(None, Some("1.0.0")).unwrap();
+    assert!(matches!(store.begin_removal("1.0.0"), Err(Error::Busy)));
+    store.anchors(None, None).unwrap();
+    let removal = store.begin_removal("1.0.0").unwrap();
+    assert!(store.acquire("1.0.0", &manifest).is_err());
+    drop(removal);
+    assert!(store.acquire("1.0.0", &manifest).is_err());
+    assert!(
+        fixture
+            .contract
+            .inspect_cancellable(&prefix, &Cancellation::default())
+            .is_err()
+    );
+}
+
+#[test]
+fn native_publication_identity_and_path_must_match_the_catalogue() {
+    use cadrumo_application::installation::maintenance::{Identity, Store};
+    let mut fixture = Fixture::new();
+    let prefix = fixture.prefix("native");
+    fixture.version(&prefix, "1.0.0");
+    let store = fixture.native(&prefix);
+    store.initialize().unwrap();
+    let wrong = Store::new(
+        prefix.join("data/installation-state"),
+        Identity {
+            application_id: "foreign".into(),
+            channel: "stable".into(),
+            platform: fixture.contract.layout.platform.clone(),
+        },
+        128,
+    )
+    .unwrap();
+    assert!(wrong.initialize().is_err());
+    let marker = prefix.join("data/installation.json");
+    let mut value: serde_json::Value = serde_json::from_slice(&fs::read(&marker).unwrap()).unwrap();
+    value["publication"] = json!("other/state");
+    fs::write(marker, serde_json::to_vec(&value).unwrap()).unwrap();
+    assert!(
+        fixture
+            .contract
+            .inspect_cancellable(&prefix, &Cancellation::default())
+            .is_err()
+    );
 }
 
 #[test]

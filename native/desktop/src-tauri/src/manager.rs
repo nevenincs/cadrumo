@@ -6,7 +6,7 @@ use cadrumo_application::{
     component::Cancellation,
     diagnostics::{Diagnostics, EventKind, HostOutcome, HostStage},
     error::application::{ApplicationError, ErrorCode, Operation, Result},
-    installation::{DiscoveryContract, RegistrationHints},
+    installation::{DiscoveryContract, RegistrationHints, Selection},
     process::status::{ProcessPhase, ProcessRole},
 };
 use serde::{Deserialize, Serialize};
@@ -153,19 +153,22 @@ impl ManagerStart {
         let mut command = tokio::process::Command::from(self.child.command());
         command
             .args(["-I", "-c", DISPATCH])
-            .arg(target)
+            .arg(&target.entrypoint)
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
             .kill_on_drop(true);
         #[cfg(windows)]
         command.creation_flags(0x0800_0000);
-        self.run_dispatch(command, DEADLINE).await
+        let outcome = self.run_dispatch(command, DEADLINE).await;
+        drop(target);
+        outcome
     }
 
-    async fn resolve_with<F>(&self, inspect: F) -> Result<PathBuf>
+    async fn resolve_with<F, T>(&self, inspect: F) -> Result<T>
     where
-        F: FnOnce(Arc<Cancellation>) -> Result<PathBuf> + Send + 'static,
+        F: FnOnce(Arc<Cancellation>) -> Result<T> + Send + 'static,
+        T: Send + 'static,
     {
         if self.closed.load(Ordering::Acquire) {
             return Err(failure(ErrorCode::SessionUnavailable));
@@ -305,7 +308,7 @@ fn decode(bytes: &[u8], success: bool) -> Result<StartOutcome> {
     })
 }
 
-fn target(package_root: &Path, cancellation: &Cancellation) -> Result<PathBuf> {
+fn target(package_root: &Path, cancellation: &Cancellation) -> Result<Selection> {
     let contract: DiscoveryContract =
         serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json")))
             .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
@@ -329,13 +332,12 @@ fn target_from(
     contract: &DiscoveryContract,
     registered: &RegistrationHints<'_>,
     cancellation: &Cancellation,
-) -> Result<PathBuf> {
+) -> Result<Selection> {
     let member = contract
         .manager_member()
         .map_err(|error| failure(ErrorCode::PackageUnavailable).caused_by(error))?;
     contract
         .discover_cancellable(&member.under(package_root), registered, cancellation)
-        .map(|selection| selection.entrypoint)
         .map_err(|error| match error {
             cadrumo_application::error::Error::Cancelled => failure(ErrorCode::SessionUnavailable),
             error => failure(ErrorCode::PackageUnavailable).caused_by(error),

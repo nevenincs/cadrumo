@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:9ff42846d4ab9241e7989451ed94717e2574e137d5d3d016e168781c7fcd1a7b'
+body_hash: 'sha256:d3e440aac391e6e4c5ad7350dc323b4f53e70a529bf002b249f3b8e72ae62955'
 ---
 
 # Application distribution
@@ -43,6 +43,7 @@ Live Windows acceptance also depends on manager-owned IPC, scoped default login 
 - [x] `S08` - Author separate immutable version and shared registration WiX products for both scopes, with combined manager MSI refused until native maintenance is integrated; `dev/packaging/native/windows_msi.py, dev/packaging/native/windows_msi_identity.py, native/cmake/distribution, dev/packaging/tests/test_windows_msi.py, dev/packaging/native/tests/test_distribution_prepare.py and native/CONTRACT.md`.
 - [x] `S10` - Preserve native registry scope in discovery and enforce verified this-user fallback before newer machine installations; `native/platform/src/installation.rs, native/application installation catalogue and tests, native/manager/src/installation.rs, native/desktop/src-tauri manager consumers and tests, and native/CONTRACT.md`.
 - [x] `S11` - Integrate scoped MSI compilation, database verification and fail-closed installation readiness into the CMake distribution graph; `native/cmake/distribution, dev/packaging/native Windows MSI build helpers and tests, native/CONTRACT.md`.
+- [x] `S12` - Implement shared installer publication state, catalogue admission, anchor retention and version leases before native MSI adapter integration; `native/application installation maintenance and catalogue, manager and desktop lease consumers, native/package-layout.json and owning tests`.
 - [ ] `S09` - Integrate native MSI transaction publication and scope admission with catalogue startup and removal exclusion; `native/application installation catalogue, native installer maintenance adapter and native/cmake/distribution`.
 - [ ] `S03` - Implement native installation registration and ownership-aware uninstall; `native/cmake, native/desktop build identity, and dev/packaging/native installation helpers`.
 - [ ] `S04` - Verify native install upgrade launch and uninstall across the supported matrix and review; `dev/packaging/tests and native package verification`.

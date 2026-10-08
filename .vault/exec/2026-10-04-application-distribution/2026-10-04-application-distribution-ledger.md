@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:02c8f8a72ddabca5256ad105b1e4f254e85bea9776a05603b81c82d7088e1e58'
+body_hash: 'sha256:3212c4fb4a6061fc3142513bb92ff6db0f4a839b245de5490af6b05567db8f3b'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -158,6 +158,22 @@ related:
 - `S11` `verify:` `pytest dev/quality/tests/test_no_git_cli.py: 25 tests` -> `pass`
 - `S11` `verify:` `scoped Ruff lint and format, ty, git diff --check` -> `pass`
 - `S11` `by:` `Codex`
+- `S12` `A` `native/application/src/installation/maintenance.rs`
+- `S12` `M` `native/application/src/installation.rs`
+- `S12` `M` `native/application/tests/installation.rs`
+- `S12` `M` `native/manager/src/installation.rs`
+- `S12` `M` `native/manager/src/installed.rs`
+- `S12` `M` `native/desktop/src-tauri/src/manager.rs`
+- `S12` `M` `native/desktop/src-tauri/src/manager/package_tests.rs`
+- `S12` `M` `native/package-layout.json`
+- `S12` `M` `native/CONTRACT.md`
+- `S12` `verify:` `configured application.rust CTest` -> `pass`
+- `S12` `verify:` `configured application Clippy all-targets -D warnings` -> `pass`
+- `S12` `verify:` `configured desktop test-unit manager:: (19 tests)` -> `pass`
+- `S12` `verify:` `configured desktop clippy-backend` -> `pass`
+- `S12` `verify:` `pytest native layout installation MSI identity (52 passed, 2 POSIX skipped)` -> `pass`
+- `S12` `verify:` `scoped git diff --check` -> `pass`
+- `S12` `by:` `Codex`
 
 ## Notes
 
@@ -168,3 +184,4 @@ related:
 - `S06` S06 covers format setup only. No native installer creation/install or release lifecycle acceptance; S03/S04 remain open for ownership, manager integration and disposable native runner gates.
 - `S08` Source/database authoring only. Every product retains the literal-false installation gate; S09 native transaction/scope admission and safe maintenance remain unimplemented. No product installed or release upgrade acceptance claimed.
 - `S10` Initial ad-hoc Clippy picked ambient cargo-clippy 1.99 despite pinned RUSTC and failed E0514; pinned 1.96 extension rerun passed without cleaning shared build outputs. Native transaction/scope admission and disposable-host acceptance remain open in other Steps.
+- `S12` Shared publication/lease foundation only. Native MSI transaction/rollback, all-session process proof and independent runtime leases remain S09. MSI is still installable:false.

@@ -430,6 +430,7 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `python_product` | Build and install the CADRUMO wheel cohort into dependency staging |
 | `user_docs` | Build every declared documentation language and stage the shippable subset; a `bundle` prerequisite unless `CADRUMO_PACKAGE_USER_DOCS=OFF` |
 | `user_docs_build`, `user_docs_stage` | Compile documentation or prepare its shippable subset independently |
+| `user_docs_sequences_check`, `user_docs_sequences_refresh` | Check committed CLI transcripts or explicitly regenerate them through the documentation owner; select a page with `CADRUMO_DOCS_SEQUENCE_PAGE` |
 | `desktop-frontend-install`, `desktop-frontend-chrome`, `desktop-frontend-palette`, `desktop-frontend-build`, `desktop-host-prepare` | Prepare each desktop dependency, generated input, asset bundle or host snapshot independently |
 | `verify` | Build bundle/ABI consumers, run CTest including real dependency imports |
 | `install` / `cmake --install` | Copy staged package to the chosen prefix |
@@ -572,6 +573,13 @@ of compiling again; the cache holds one site, checked against its recorded inven
 before it is reused. A stale published authority fails the target, and the owner's
 refusal is printed as the `cause:` line. The previous search index is removed before
 the compile, so staging can never accept an older root after a failed build.
+
+For transcript maintenance, configure with
+`-DCADRUMO_DOCS_SEQUENCE_PAGE=how-to/filing-spine`, then build
+`user_docs_sequences_check` or `user_docs_sequences_refresh`. An empty page selects
+all enrolled sequences. Refresh executes the documented commands and checks their
+declared expectations before writing source goldens; review those changes before
+accepting them. The normal documentation build only checks goldens.
 
 `dev/packaging/native/docs_stage.py` stages the addresses of the published site
 layout: English at `P/docs/user/` and every other language at
@@ -1426,6 +1434,26 @@ treated as errors, then reads the MSI databases back to verify product identitie
 the install block and the absence of version-removal upgrades. This verifies the
 generated ownership definitions. Disposable-host install/upgrade acceptance remains
 pending.
+Native installation markers can opt into the canonical `publication` directory,
+`data/installation-state`, outside immutable version inventories. The application
+library owns its bounded, identity-bound state with pending, ready and removing
+phases. Readers never create missing state. Publication checks the actual complete
+package and reserved manifest digest; a different product or different bytes
+under the same version is refused. Archives without this marker retain their
+existing catalogue behavior.
+
+Installer operations reserve an exclusive kernel version lease. Catalogue readers
+acquire shared leases before full package inspection; manager runtime composition
+and desktop dispatch retain them through their respective use. An active lease or
+either retained manager/desktop anchor prevents the removal transition. Removing
+state fences later catalogue launches and persists after the removal guard closes.
+State replacement is serialized and atomic; this does not claim power-loss recovery.
+
+These primitives do not replace native installer admission, transaction rollback,
+directory permissions, all-session process checks or native package-manager removal.
+The MSI adapter must own those operations and keep reservation/removal leases alive
+through them. A runtime that outlives its manager also needs independent protection.
+Native MSI markers remain gated until that integration is verified.
 The catalogue alone does not implement manager cutover or obsolete-version removal.
 Linux installs under `/opt/cadrumo` with desktop/icon registrations
 under `/usr/share`. Preview uses separate names. macOS packages a CADRUMO.app

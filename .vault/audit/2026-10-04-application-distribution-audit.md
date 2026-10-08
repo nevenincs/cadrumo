@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:9d89237b86bbbc18ae7f0bc637989260d61d388b2e83b7c101a5c542389cd15f'
+body_hash: 'sha256:3bc0857079a3d3a1d5dbdb0f35e631a7a31729b96e3e639fd13cae274101e5ce'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -96,6 +96,12 @@ S10 source/consumer verdict: PASS, with no new high or critical finding. This is
 WiX 5.0.2 decompilation reported afterInstallFinalize for the correctly authored afterInstallExecute product. Actual native InstallExecuteSequence rows confirm removal between InstallExecute and InstallFinalize. The verifier therefore reads those rows directly; an additional genuinely compiled fixture moving removal after InstallFinalize is rejected. This corrects a verifier assumption, not the accepted upgrade policy.
 
 Evidence: uv run --no-sync pytest -q -n 0 -m unit dev/packaging/native/tests/test_distribution_prepare.py dev/packaging/tests/test_windows_msi.py: 28 passed, including native compiler tests, with configured temporary WiX 5.0.2 and DOTNET_ROLL_FORWARD=Major. Log: var/storage/development/.logs/test-runs/2026-10-08/20261008T060959.336556Z-pytest-57884-95c6e212/run.log. Scoped Ruff lint/format and ty checks passed. Discovery reused the bounded distribution source owners; semantic search was unavailable in the recorded session. Overall release PENDING: S09 native admission/publication/maintenance and manager lifecycle integration remain unfinished; disposable interactive Windows/two-release acceptance, Linux/macOS native backend/runner evidence and signing/notarization are still required. No native product was installed.
+
+### S12 publication foundation review | low | Shared state and lease checks pass; native MSI integration remains gated
+
+2026-10-08: Reviewed installer-owned pending/ready/removing state, bounded identity and manifest admission, immutable version verification, retained registration anchors and kernel version leases. Catalogue selection carries a shared lease into manager composition and desktop dispatch. Changed same-version product/digest, incomplete payloads, missing state, anchors and held leases refuse publication or removal. Review corrected manifest pre-admission hashing to use bounded JSON reads and cancellation. Configured Windows application CTest and desktop manager tests pass; desktop backend Clippy passes. Packaging layout/installation/identity tests pass (52 passed, two POSIX-only tests skipped on Windows).
+
+This closes only the shared foundation. Native MSI transaction/rollback adapters, cross-scope admission, all-session process proof, runtime protection after manager exit and recovery/finalization remain S09 work. Native markers and compiled MSI products remain gated. No interactive host or installation acceptance is claimed.
 
 ## Recommendations
 

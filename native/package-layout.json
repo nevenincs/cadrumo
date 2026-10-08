@@ -4,7 +4,8 @@
     "schema": 1,
     "marker": "data/installation.json",
     "versions": "versions",
-    "maximum_versions": 128
+    "maximum_versions": 128,
+    "publication": "data/installation-state"
   },
   "paths": {
     "stdlib": "python.zip",

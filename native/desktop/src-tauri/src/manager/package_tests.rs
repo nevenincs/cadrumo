@@ -15,6 +15,7 @@ fn target(package_root: &Path) -> Result<PathBuf> {
         &RegistrationHints::default(),
         &Cancellation::default(),
     )
+    .map(|selection| selection.entrypoint)
 }
 
 struct PackageFixture {

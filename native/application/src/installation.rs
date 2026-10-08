@@ -1,17 +1,19 @@
 //! Read-only discovery of complete immutable versions beneath an explicit install prefix.
 //! Metadata and hashes establish package consistency, not publisher authenticity.
+pub mod maintenance;
 use crate::{
     binary::{self, BinaryExpectation},
     component::Cancellation,
     error::Error,
     filesystem,
     package::{PackageManifest, Readiness},
-    value::RelativePath,
+    value::{RelativePath, Sha256Digest},
 };
 use serde::Deserialize;
 use std::{
     fs,
     path::{Path, PathBuf},
+    sync::Arc,
 };
 
 #[derive(Deserialize)]
@@ -39,6 +41,8 @@ pub struct Installation {
     pub marker: RelativePath,
     pub versions: RelativePath,
     pub maximum_versions: usize,
+    #[serde(default)]
+    pub publication: Option<RelativePath>,
 }
 #[derive(Deserialize)]
 pub struct Files {
@@ -58,6 +62,8 @@ struct Marker {
     channel: String,
     platform: String,
     abi: u32,
+    #[serde(default)]
+    publication: Option<RelativePath>,
 }
 #[derive(Deserialize)]
 struct VersionManifest {
@@ -79,6 +85,7 @@ pub struct Selection {
     pub package: PathBuf,
     pub manager: PathBuf,
     pub version: [u32; 3],
+    pub lease: Option<Arc<maintenance::Lease>>,
 }
 
 /// Scoped native registrations are hints, verified through the same package catalogue.
@@ -234,6 +241,25 @@ impl DiscoveryContract {
             return Err(Error::Incompatible("installation identity differs".into()));
         }
         let versions = layout.installation.versions.under(prefix);
+        let publication = match marker.publication.as_ref() {
+            Some(path) if Some(path) == layout.installation.publication.as_ref() => {
+                Some(maintenance::Store::new(
+                    path.under(prefix),
+                    maintenance::Identity {
+                        application_id: marker.application_id.clone(),
+                        channel: marker.channel.clone(),
+                        platform: marker.platform.clone(),
+                    },
+                    layout.installation.maximum_versions,
+                )?)
+            }
+            Some(_) => {
+                return Err(Error::Invalid(
+                    "undeclared installation publication path".into(),
+                ));
+            }
+            None => None,
+        };
         filesystem::absolute_root(&versions)?;
         let member = self.manager_member()?;
         let entrypoint = member.under(prefix);
@@ -259,51 +285,22 @@ impl DiscoveryContract {
         for (number, name, package) in candidates {
             cancellation.check()?;
             let inspect = || -> Result<_, Error> {
-                filesystem::absolute_root(&package)?;
-                let manifest: VersionManifest = filesystem::json_file_cancellable(
-                    &layout.files.package_manifest.under(&package),
-                    cancellation,
-                )?;
-                let target = if layout.platform == "windows-x64" {
-                    "windows-x86-64"
-                } else {
-                    &layout.platform
-                };
-                if manifest.build.application_id != marker.application_id
-                    || manifest.build.channel != marker.channel
-                    || manifest.build.version != name
-                    || manifest.build.target != target
-                {
-                    return Err(Error::Incompatible("version identity differs".into()));
-                }
-                let inspected = manifest.package.inspect_cancellable(
-                    &package,
-                    &layout.files.package_manifest,
-                    &layout.platform,
-                    layout.abi,
-                    cancellation,
-                )?;
-                if inspected.readiness != Readiness::Ready {
-                    return Err(Error::Integrity("incomplete installed version".into()));
-                }
-                let digest = inspected
-                    .manifest
-                    .files
-                    .get(&member)
-                    .ok_or_else(|| Error::Invalid("manager absent from inventory".into()))?
-                    .clone();
-                let manager = member.under(&package);
-                cancellation.check()?;
-                binary::verify(&manager, &digest, expected)?;
-                cancellation.check()?;
-                Ok((manager, digest))
+                let lease = publication
+                    .as_ref()
+                    .map(|store| {
+                        let manifest = self.manifest_digest(&package, cancellation)?;
+                        store.acquire(&name, &manifest).map(Arc::new)
+                    })
+                    .transpose()?;
+                let (manager, digest) = self.inspect_package(&package, &name, cancellation)?;
+                Ok((manager, digest, lease))
             };
             let inspected = inspect();
             cancellation.check()?;
             if matches!(inspected, Err(Error::Cancelled)) {
                 return Err(Error::Cancelled);
             }
-            let Ok((manager, digest)) = inspected else {
+            let Ok((manager, digest, lease)) = inspected else {
                 continue;
             };
             // A stable entry can still contain an older manager's bytes. It must match
@@ -319,6 +316,7 @@ impl DiscoveryContract {
                     package,
                     manager,
                     version: number,
+                    lease,
                 });
             }
             if newest.is_some() && entry_verified {
@@ -333,5 +331,63 @@ impl DiscoveryContract {
         }
         cancellation.check()?;
         newest.ok_or_else(|| Error::Incompatible("no complete compatible installed version".into()))
+    }
+
+    pub(crate) fn manifest_digest(
+        &self,
+        package: &Path,
+        cancellation: &Cancellation,
+    ) -> Result<Sha256Digest, Error> {
+        cancellation.check()?;
+        let bytes = filesystem::json_bytes(&self.layout.files.package_manifest.under(package))?;
+        filesystem::digest_reader(&mut bytes.as_slice(), cancellation)
+    }
+
+    pub(crate) fn inspect_package(
+        &self,
+        package: &Path,
+        name: &str,
+        cancellation: &Cancellation,
+    ) -> Result<(PathBuf, Sha256Digest), Error> {
+        filesystem::absolute_root(package)?;
+        let layout = &self.layout;
+        let manifest: VersionManifest = filesystem::json_file_cancellable(
+            &layout.files.package_manifest.under(package),
+            cancellation,
+        )?;
+        let target = if layout.platform == "windows-x64" {
+            "windows-x86-64"
+        } else {
+            &layout.platform
+        };
+        if manifest.build.application_id != self.installation_identity.application_id
+            || manifest.build.channel != self.installation_identity.channel
+            || manifest.build.version != name
+            || manifest.build.target != target
+        {
+            return Err(Error::Incompatible("version identity differs".into()));
+        }
+        let inspected = manifest.package.inspect_cancellable(
+            package,
+            &layout.files.package_manifest,
+            &layout.platform,
+            layout.abi,
+            cancellation,
+        )?;
+        if inspected.readiness != Readiness::Ready {
+            return Err(Error::Integrity("incomplete installed version".into()));
+        }
+        let member = self.manager_member()?;
+        let digest = inspected
+            .manifest
+            .files
+            .get(&member)
+            .ok_or_else(|| Error::Invalid("manager absent from inventory".into()))?
+            .clone();
+        let manager = member.under(package);
+        cancellation.check()?;
+        binary::verify(&manager, &digest, BinaryExpectation::host()?)?;
+        cancellation.check()?;
+        Ok((manager, digest))
     }
 }
