@@ -11,7 +11,7 @@ related:
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
 modified: '2026-10-08'
 body_schema: body-v2
-body_hash: 'sha256:5156009fddf39f0b9431d0fca196d615ca29ef1b7f6533e48e18345e823be092'
+body_hash: 'sha256:9c31adc495ae50deab471a4053dea56817ceff08f75c2c2e1c311c63a3a5d825'
 ---
 
 # Application distribution
@@ -83,6 +83,8 @@ The same diagnostic owner may adapt the ignored retained-sandbox observer to one
 2026-10-08 Mac documentation recovery: root owns dev/docs/language_switcher.py and its new multilingual error-page regression tests after the full Mac compile exposed nine invalid translated 404 links. notice_review reviews that source slice, preserves the failed Mac logs, and may apply exactly that reviewed module and its test to the stopped frozen Mac source with before/after hashes, followed by the focused native regression. Root owns the subsequent full build launch. The Windows full build remains untouched while running; no golden, authority, runtime or containment changes are included.
 
 2026-10-08 S05 Linux documentation handoff: after proving WSL and manylinux have the same 10,267 enrolled source inputs and selected authority bytes but different absolute checkout paths, msi_maintenance may own a documentation-only portable input identity in docs_build.py and a narrowly scoped helper/tests. Keep generic native action fingerprints unchanged. Hash the complete enrolled source graph by validated repository-relative names and bytes, and selected authority by stable owner-defined roles and bytes; reject unknown external inputs, preserve language identity and before/after input validation. Existing output-inventory checks and strict compile remain mandatory. Root reviews before overlaying the stopped frozen WSL/manylinux snapshots with the committed filing-settlement and 404 fixes plus this reviewed slice. Use genuine CMake enrollment and the owning docs_build producer/cache; never synthesize a ready marker or promote unverified standalone HTML. No service/product registration, containment weakening or change to active Windows/Mac frozen inputs is included. Root owns final build launches, vault and commits.
+
+2026-10-08 S05 native package recovery: linux_manager owns ignored Mac full-CMake documentation observer preparation, root-reviewed launch and evidence collection against the unchanged frozen source/authority. Preserve actual per-page arguments, concurrency, progress journals, deadlines and cleanup; collect only payload-free lifecycle/exception metadata. Root retains source remedies and final acceptance. msi_maintenance owns Linux desktop dependency-policy grounding and amendment preparation, then only explicitly assigned package dependency files/tests after root accepts the refinement. Do not edit the peer-owned Docs.cmake, Packaging.cmake, ReleaseVerification.cmake, native/CONTRACT.md or docs_build.py. Root owns vault records and commits; no product installation, login registration or session transition on either non-disposable host.
 
 ## Verification
 

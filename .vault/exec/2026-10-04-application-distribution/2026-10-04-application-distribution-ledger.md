@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:822c54043f4589cd106ed721b18f4e5f79d57bd0538dcab06a925dd646a579e6'
+body_hash: 'sha256:e72d1f3624c086155a52bcd7ff112e665355539ce022eac9a124bae50e2a6001'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -346,6 +346,10 @@ related:
 - `S05` `verify:` `frozen Windows all 13 bank-import scenarios with payload-free observer` -> `pass`
 - `S05` `verify:` `WSL actual CMake strict user_docs_build` -> `pass`
 - `S05` `verify:` `manylinux actual CMake verified portable docs cache consumption` -> `pass`
+- `S05` `verify:` `Mac full native-installer attempt74299` -> `fail`
+- `S05` `verify:` `Mac isolated modelo349 diagnostic` -> `pass`
+- `S05` `verify:` `manylinux native desktop release compile` -> `pass`
+- `S05` `verify:` `manylinux full package dependency closure` -> `fail`
 
 ## Notes
 
@@ -383,3 +387,4 @@ related:
 - `S05` Committed 04a0faa151 was applied with before/after hashes to the stopped Mac snapshot after preserving failure evidence. All 52 original stage image hashes were unchanged by isolated relocation. Full CMake native-installer retry 74299 is running; native platform JSON changes correctly invalidate the enrolled documentation input graph. Windows 55091 and WSL 91625 retain independent frozen sources. No signing credentials, product installation or acceptance claimed.
 - `S05` Original full-build `runtime_deadline_exceeded` remains unexplained; isolated passes establish clean observed timing/cleanup, not remediation or installer acceptance. Exact frozen source and authority hashes unchanged.
 - `S05` Full native packaging remains separate and in progress; no product installation or native lifecycle acceptance performed.
+- `S05` S05 remains open. Native failures and isolated diagnostics are distinct; preserve host state and existing installation gates. Linux desktop delivery boundary needs explicit refinement.
