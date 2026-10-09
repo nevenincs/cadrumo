@@ -121,3 +121,29 @@ test("components cannot depend on composition or forwarding modules", async () =
     );
   }
 });
+
+test("shared helpers cannot depend on presentation, shell, IPC or host layers", async () => {
+  for (const source of [
+    'import { App } from "../App";',
+    'import { useHostLogs } from "../shell/useHostLogs";',
+    'import { entryKey } from "@/shell/calendarEntries";',
+    'import { Button } from "@/components/ui/button";',
+    'import type { LogRecord } from "../ipc/contract";',
+    'import { invoke } from "@tauri-apps/api/core";',
+  ]) {
+    const [result] = await lint.lintText(source, {
+      filePath: "src/shared/fixture.ts",
+    });
+    assert.ok(
+      result.messages.some((item) => item.ruleId === "no-restricted-imports"),
+    );
+  }
+  const [result] = await lint.lintText('import { isoDay } from "./dates";', {
+    filePath: "src/shared/fixture.ts",
+  });
+  assert.equal(
+    result.messages.filter((item) => item.ruleId === "no-restricted-imports")
+      .length,
+    0,
+  );
+});

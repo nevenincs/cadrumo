@@ -1,18 +1,19 @@
-import { useId, useMemo, useRef } from "react";
+import { useId, useRef } from "react";
 import { flushSync } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import {
-  entryKey,
-  entrySpan,
   LANES_SHOWN,
   type DrawnWeek,
   type GridBar,
   type GridMonth,
   type GridWeek,
 } from "@/shell/calendarGrid";
-import { evaluatedLabel, isoDay as day } from "@/shell/calendar";
+import { evaluatedLabel } from "@/shell/calendar";
+import { entryKey, entrySpan } from "@/shell/calendarEntries";
+import { isoDay as day } from "@/shared/dates";
+import { dateFormats } from "@/shared/dateFormats";
 import { useStrings } from "@/shell/strings";
 import type { CalendarUserState } from "@/shell/views";
 import { EVENT_MARK, STATE_MARK } from "./calendarMarks";
@@ -63,25 +64,11 @@ export function CalendarMonth({
   const t = useStrings();
   const heading = useId();
   const wholeControl = useRef<HTMLButtonElement>(null);
-  const formats = useMemo(
-    () => ({
-      title: new Intl.DateTimeFormat(locale, {
-        month: "long",
-        year: "numeric",
-      }),
-      weekday: new Intl.DateTimeFormat(locale, { weekday: "narrow" }),
-      short: new Intl.DateTimeFormat(locale, {
-        day: "numeric",
-        month: "short",
-      }),
-      full: new Intl.DateTimeFormat(locale, { dateStyle: "full" }),
-    }),
-    [locale],
-  );
+  const formats = dateFormats(locale);
   // The seven weekday letters, from the week's first day. 4 January 1970
   // was a Sunday.
   const weekdays = Array.from({ length: 7 }, (_, column) =>
-    formats.weekday.format(new Date(1970, 0, 4 + weekStart + column)),
+    formats.weekdayNarrow.format(new Date(1970, 0, 4 + weekStart + column)),
   );
   // What a window says for itself: its Modelo and period, the days it is
   // open, and where it stands.
@@ -93,7 +80,7 @@ export function CalendarMonth({
         : formats.short.formatRange(day(span.from), day(span.to));
     return `${t("desktop.calendar.modelo", { modelo: bar.entry.modelo })} ${bar.entry.period}, ${days}, ${t(`desktop.calendar.state.${bar.entry.user_state}`)}`;
   };
-  const title = formats.title.format(new Date(month.year, month.month - 1, 1));
+  const title = formats.month.format(new Date(month.year, month.month - 1, 1));
   const toggle = t(
     whole ? "desktop.calendar.show_fewer" : "desktop.calendar.show_all",
   );

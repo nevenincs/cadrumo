@@ -35,7 +35,7 @@ import { Rail, type RailItem } from "./components/Rail";
 import { RecordList, type RecordMenuRequest } from "./components/RecordList";
 import {
   DEFAULT_FILTERS,
-  LEVELS,
+  levelRank,
   recordLine,
   type RecordFilters,
 } from "./shell/records";
@@ -1374,7 +1374,7 @@ export function App({ host }: { host: Host }) {
             run: () =>
               setFilters((f) => ({
                 ...f,
-                minLevel: Math.max(0, LEVELS.indexOf(record.level ?? "INFO")),
+                minLevel: Math.max(0, levelRank(record.level)),
               })),
           },
         ],

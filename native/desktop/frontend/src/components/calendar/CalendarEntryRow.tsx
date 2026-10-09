@@ -2,28 +2,13 @@ import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
-import { deadlineDistance, isoDay as day } from "@/shell/calendar";
-import { entryKey } from "@/shell/calendarGrid";
+import { deadlineDistance } from "@/shell/calendar";
+import { daysBetween, isoDay as day } from "@/shared/dates";
+import { dateFormats } from "@/shared/dateFormats";
+import { entryKey } from "@/shell/calendarEntries";
 import { useStrings } from "@/shell/strings";
 import type { CalendarEntry } from "@/shell/views";
 import { STATE_TONE } from "./calendarMarks";
-
-const DAY_MS = 86_400_000;
-
-// The formats of a language, made once: a row needs four and there are
-// many rows.
-const FORMATS = new Map<string, ReturnType<typeof makeFormats>>();
-const makeFormats = (locale: string) => ({
-  short: new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }),
-  full: new Intl.DateTimeFormat(locale, { dateStyle: "full" }),
-  weekday: new Intl.DateTimeFormat(locale, { weekday: "short" }),
-  relative: new Intl.RelativeTimeFormat(locale, { numeric: "auto" }),
-});
-function formatsFor(locale: string) {
-  let formats = FORMATS.get(locale);
-  if (!formats) FORMATS.set(locale, (formats = makeFormats(locale)));
-  return formats;
-}
 
 // A row is drawn again only when it changes: choosing one obligation does
 // not redraw the others.
@@ -43,15 +28,13 @@ export const CalendarEntryRow = memo(function CalendarEntryRow({
 }) {
   const t = useStrings();
   const closes = day(entry.adjusted_closes_on);
-  const { short, full, weekday, relative: distance } = formatsFor(locale);
+  const { short, full, weekday, relative: distance } = dateFormats(locale);
   // How far the binding date is from the day the product evaluated: the
   // product's own count where it gives one.
   const away =
     entry.days_overdue !== null
       ? -entry.days_overdue
-      : Math.round(
-          (closes.getTime() - day(entry.evaluated_on).getTime()) / DAY_MS,
-        );
+      : daysBetween(entry.evaluated_on, entry.adjusted_closes_on);
   // A filed obligation has no distance left to say.
   const { value, unit } = deadlineDistance(away, entry.days_overdue !== null);
   const relative =

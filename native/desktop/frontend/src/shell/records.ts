@@ -4,13 +4,17 @@ import type { LogContext, LogLevel, LogRecord } from "../ipc/contract";
 // of the component's module so that an edit to the view is a hot update and
 // not a reload.
 
-export const LEVELS: readonly LogLevel[] = [
+const LEVELS: readonly LogLevel[] = [
   "DEBUG",
   "INFO",
   "WARNING",
   "ERROR",
   "CRITICAL",
 ];
+
+/** Missing levels have the same filtering rank as INFO. */
+export const levelRank = (level: LogLevel | null): number =>
+  LEVELS.indexOf(level ?? "INFO");
 
 export type RecordFilters = {
   text: string;
@@ -21,7 +25,7 @@ export type RecordFilters = {
 
 export const DEFAULT_FILTERS: RecordFilters = {
   text: "",
-  minLevel: 1,
+  minLevel: levelRank("INFO"),
   hiddenSources: [],
   logger: null,
 };

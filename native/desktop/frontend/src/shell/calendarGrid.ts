@@ -1,4 +1,6 @@
-import type { CalendarEntry, CalendarEvent, CalendarUserState } from "./views";
+import { DAY_MS, dayOrdinal, isoDate } from "../shared/dates";
+import { compareCalendarEntries, entryKey, entrySpan } from "./calendarEntries";
+import type { CalendarEntry, CalendarEvent } from "./views";
 
 // The filing calendar laid out as months of weeks. This is arithmetic on the
 // dates the product gave and nothing else: which day falls in which column,
@@ -46,50 +48,6 @@ export type GridMonth = {
   weeks: GridWeek[];
 };
 
-const DAY_MS = 86_400_000;
-
-/** An ISO date as a count of days, in UTC so that no zone or clock change
- * can make a day longer or shorter. */
-const ordinal = (iso: string): number => {
-  const [year = 1970, month = 1, day = 1] = iso.split("-").map(Number);
-  return Math.round(Date.UTC(year, month - 1, day) / DAY_MS);
-};
-
-const isoOf = (year: number, month: number, day: number) =>
-  `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-
-/** The product's readings in the order they need the person: what is late
- * first, what is filed last. */
-export const STATE_ORDER: readonly CalendarUserState[] = [
-  "late",
-  "due",
-  "unknown",
-  "filed",
-];
-
-/** Which of two obligations needs the person first: by its reading, then by
- * the day it binds, the sooner first. */
-const urgency = (a: CalendarEntry, b: CalendarEntry) =>
-  STATE_ORDER.indexOf(a.user_state) - STATE_ORDER.indexOf(b.user_state) ||
-  a.adjusted_closes_on.localeCompare(b.adjusted_closes_on) ||
-  entryKey(a).localeCompare(entryKey(b));
-
-/** The identity of an obligation: its Modelo and period. */
-export const entryKey = (entry: CalendarEntry) =>
-  `${entry.modelo}:${entry.period}`;
-
-/**
- * The days an obligation is drawn across: from the day its filing window
- * opens to the day it closes in effect. Where the opening is not known the
- * window is not guessed: only its closing day is drawn.
- */
-export function entrySpan(entry: CalendarEntry): { from: string; to: string } {
-  const to = entry.adjusted_closes_on;
-  const from =
-    entry.opens_on !== null && entry.opens_on <= to ? entry.opens_on : to;
-  return { from, to };
-}
-
 /**
  * The months from the first of the range to its last, or to the month the
  * last window open in it closes, each as weeks that
@@ -106,12 +64,14 @@ export function calendarMonths(
   const spans = entries
     .map((entry) => {
       const span = entrySpan(entry);
-      return { entry, from: ordinal(span.from), to: ordinal(span.to) };
+      return { entry, from: dayOrdinal(span.from), to: dayOrdinal(span.to) };
     })
     // Earlier first, and of two that open together the one that needs the
     // person first: what is late, then the nearest deadline, takes the
     // first row.
-    .sort((a, b) => a.from - b.from || urgency(a.entry, b.entry));
+    .sort(
+      (a, b) => a.from - b.from || compareCalendarEntries(a.entry, b.entry),
+    );
   const observed = new Map<string, CalendarEvent[]>();
   for (const event of events) {
     const day = event.event_date.slice(0, 10);
@@ -125,7 +85,7 @@ export function calendarMonths(
   // last window open in the range closes: its closing day is what the
   // calendar is for, and the list names that month. Never more than a year
   // past the range, whatever a date says.
-  const rangeEnd = ordinal(range.to_date);
+  const rangeEnd = dayOrdinal(range.to_date);
   // A window whose opening is not known was returned for the range too:
   // its closing day is all there is of it to draw.
   const latest = spans.reduce(
@@ -145,7 +105,7 @@ export function calendarMonths(
     month === 12 ? ((month = 1), (year += 1)) : (month += 1)
   ) {
     const length = new Date(Date.UTC(year, month, 0)).getUTCDate();
-    const first = ordinal(isoOf(year, month, 1));
+    const first = dayOrdinal(isoDate(year, month, 1));
     const last = first + length - 1;
     // The column of the month's first day.
     const lead =
@@ -156,7 +116,7 @@ export function calendarMonths(
         const at = start + column;
         if (at < first || at > last) return null;
         const day = at - first + 1;
-        const iso = isoOf(year, month, day);
+        const iso = isoDate(year, month, day);
         return {
           iso,
           day,
@@ -188,7 +148,12 @@ export function calendarMonths(
       }
       weeks.push({ days, bars, lanes: taken.length });
     }
-    months.push({ key: isoOf(year, month, 1).slice(0, 7), year, month, weeks });
+    months.push({
+      key: isoDate(year, month, 1).slice(0, 7),
+      year,
+      month,
+      weeks,
+    });
   }
   return months;
 }
@@ -240,7 +205,8 @@ function kept(
   const ranked = [...week.bars].sort(
     (a, b) =>
       Number(entryKey(b.entry) === chosen) -
-        Number(entryKey(a.entry) === chosen) || urgency(a.entry, b.entry),
+        Number(entryKey(a.entry) === chosen) ||
+      compareCalendarEntries(a.entry, b.entry),
   );
   const order = new Map(week.bars.map((bar, index) => [bar, index]));
   const byOrder = (a: GridBar, b: GridBar) =>

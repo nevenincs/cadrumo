@@ -1,3 +1,5 @@
+import { dateFormats } from "../shared/dateFormats";
+import { isoDay as day, localDay } from "../shared/dates";
 import { CalendarEntryRow } from "./calendar/CalendarEntryRow";
 import { CalendarTodayMarker } from "./calendar/CalendarTodayMarker";
 import {
@@ -33,28 +35,14 @@ import { Spinner } from "@/components/ui/spinner";
 import {
   evaluatedDay,
   evaluatedWord,
-  isoDay as day,
-  localDay,
   type CalendarState,
 } from "../shell/calendar";
-import { entryKey } from "../shell/calendarGrid";
+import { entryKey, STATE_ORDER } from "../shell/calendarEntries";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
-import type {
-  CalendarEntry,
-  CalendarEvent,
-  CalendarUserState,
-} from "../shell/views";
+import type { CalendarEntry, CalendarEvent } from "../shell/views";
 import { CalendarMonths } from "./calendar/CalendarMonths";
 import { EVENT_MARK, STATE_MARK, STATE_TONE } from "./calendar/calendarMarks";
-
-// What needs the person first comes first.
-const STATE_ORDER: readonly CalendarUserState[] = [
-  "late",
-  "due",
-  "unknown",
-  "filed",
-];
 
 /** A reader's place in a face: what is at the top of their view, by its
  * month or its obligation, and how far under the head it sits; or that
@@ -578,10 +566,7 @@ export function FilingCalendarView({
   });
 
   const months = useMemo(() => {
-    const month = new Intl.DateTimeFormat(locale, {
-      month: "long",
-      year: "numeric",
-    });
+    const month = dateFormats(locale).month;
     const groups = new Map<
       string,
       {
@@ -675,10 +660,7 @@ export function FilingCalendarView({
   } else {
     const { warnings, coverage, generated_at } = state.calendar;
     const asOf = generated_at
-      ? new Intl.DateTimeFormat(locale, {
-          dateStyle: "medium",
-          timeStyle: "short",
-        }).format(new Date(generated_at))
+      ? dateFormats(locale).dateTime.format(new Date(generated_at))
       : "—";
     // How the range stands, in the product's own four readings: counted,
     // never combined into a verdict.
@@ -690,10 +672,7 @@ export function FilingCalendarView({
             .length,
         ] as const,
     ).filter(([, count]) => count > 0);
-    const short = new Intl.DateTimeFormat(locale, {
-      day: "numeric",
-      month: "short",
-    });
+    const short = dateFormats(locale).short;
     const nothing = months.length === 0;
     const observedKinds = (["filing", "message"] as const).filter((kind) =>
       state.calendar.events.some((event) => event.event_type === kind),
@@ -904,9 +883,7 @@ export function FilingCalendarView({
                       today === here
                         ? undefined
                         : t("desktop.calendar.to_day", {
-                            date: new Intl.DateTimeFormat(locale, {
-                              dateStyle: "medium",
-                            }).format(day(today)),
+                            date: dateFormats(locale).medium.format(day(today)),
                           })
                     }
                     onClick={toToday}

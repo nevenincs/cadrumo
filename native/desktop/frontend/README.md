@@ -213,6 +213,14 @@ camelCase `.ts` files, and host subscriptions live in `src/shell/use*.ts`.
 Import the defining module directly; do not add barrel exports or forwarding
 components.
 
+`src/shared/` holds dependency-free helpers reused across features, such as
+ISO calendar-date arithmetic and cached locale formats. These modules import
+no components, shell policy, IPC or host adapter. Product-specific shared rules
+stay under their shell owner: `calendarEntries.ts` owns entry identity, windows
+and urgency; `records.ts` owns severity ranking and record serialization. Keep
+focus restoration, scroll positioning and read-refresh policy with the surface
+that owns their behavior.
+
 `npm run check` enforces component filenames, import boundaries and token use,
 and tests these guards with deliberate violations. Literal dimensions, colors,
 layer numbers and durations are rejected in components and stories. Structural

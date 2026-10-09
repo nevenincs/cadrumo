@@ -19,12 +19,12 @@ import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
-import type { LogLevel, LogRecord, LogSourceStates } from "../ipc/contract";
+import type { LogRecord, LogSourceStates } from "../ipc/contract";
 import { useMetric } from "../shell/metrics";
 import { fromPointer } from "../shell/pointer";
 import {
   DEFAULT_FILTERS,
-  LEVELS,
+  levelRank,
   recordLine,
   shortLogger,
   type RecordFilters,
@@ -40,8 +40,6 @@ export type RecordMenuRequest = {
   /** Every record the filters let through, not only the ones drawn. */
   visible: LogRecord[];
 };
-
-const rank = (level: LogLevel | null) => (level ? LEVELS.indexOf(level) : 1);
 
 // How many of the newest matching records are in the document at once. The
 // log holds up to ten thousand; drawing them all costs every scroll and every
@@ -118,7 +116,7 @@ export const RecordList = memo(function RecordList({
     return all.filter(
       (record) =>
         !filters.hiddenSources.includes(record.source) &&
-        rank(record.level) >= filters.minLevel &&
+        levelRank(record.level) >= filters.minLevel &&
         (!filters.logger || record.logger === filters.logger) &&
         (!text ||
           `${recordLine(record)} ${record.detail ?? ""}`
@@ -607,10 +605,18 @@ export const RecordList = memo(function RecordList({
               setFilters({ ...filters, minLevel: Number(event.target.value) })
             }
           >
-            <option value={0}>{t("desktop.logs.level_all")}</option>
-            <option value={1}>{t("desktop.logs.level_info")}</option>
-            <option value={2}>{t("desktop.logs.level_warning")}</option>
-            <option value={3}>{t("desktop.logs.level_error")}</option>
+            <option value={levelRank("DEBUG")}>
+              {t("desktop.logs.level_all")}
+            </option>
+            <option value={levelRank("INFO")}>
+              {t("desktop.logs.level_info")}
+            </option>
+            <option value={levelRank("WARNING")}>
+              {t("desktop.logs.level_warning")}
+            </option>
+            <option value={levelRank("ERROR")}>
+              {t("desktop.logs.level_error")}
+            </option>
           </NativeSelect>
           {followButton("@4xl:hidden panel-short:hidden")}
         </div>

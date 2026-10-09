@@ -1,3 +1,5 @@
+import { dateFormats } from "../shared/dateFormats";
+import { isoDay, localDay } from "../shared/dates";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { failureCode } from "../errors";
 import type { FilingCalendar, ProfileViews } from "./views";
@@ -13,24 +15,14 @@ export type CalendarState =
 
 type Read = Exclude<CalendarState, { kind: "withheld" }>;
 
-const iso = (day: Date) =>
-  [
-    day.getFullYear(),
-    String(day.getMonth() + 1).padStart(2, "0"),
-    String(day.getDate()).padStart(2, "0"),
-  ].join("-");
-
 /** The year the page asks for: the quarter behind today and the three ahead,
  * in whole months, so what was just due is still in view. */
 export function calendarRange(today: Date): { from: string; to: string } {
   return {
-    from: iso(new Date(today.getFullYear(), today.getMonth() - 3, 1)),
-    to: iso(new Date(today.getFullYear(), today.getMonth() + 9, 0)),
+    from: localDay(new Date(today.getFullYear(), today.getMonth() - 3, 1)),
+    to: localDay(new Date(today.getFullYear(), today.getMonth() + 9, 0)),
   };
 }
-
-/** The local calendar day, as an ISO date. */
-export const localDay = (now: Date = new Date()): string => iso(now);
 
 /**
  * The day the product worked a calendar's states out for: one day for the
@@ -43,12 +35,6 @@ export function evaluatedDay(calendar: FilingCalendar): string | null {
     if (latest === null || entry.evaluated_on > latest)
       latest = entry.evaluated_on;
   return latest;
-}
-
-/** An ISO date as a local calendar day: no time, so no zone can move it. */
-export function isoDay(iso: string): Date {
-  const [year = 1970, month = 1, date = 1] = iso.split("-").map(Number);
-  return new Date(year, month - 1, date);
 }
 
 /**
@@ -64,39 +50,22 @@ export function evaluatedLabel(
   full = false,
 ): string {
   const day = isoDay(on);
-  if (on !== today)
-    return new Intl.DateTimeFormat(locale, {
-      dateStyle: full ? "full" : "medium",
-    }).format(day);
-  const word = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
-    0,
-    "day",
-  );
-  const date = new Intl.DateTimeFormat(
-    locale,
-    full ? { dateStyle: "full" } : { day: "numeric", month: "short" },
-  ).format(day);
-  return `${word.charAt(0).toLocaleUpperCase(locale)}${word.slice(1)} · ${date}`;
+  const formats = dateFormats(locale);
+  if (on !== today) return (full ? formats.full : formats.medium).format(day);
+  const word = evaluatedWord(on, today, locale);
+  const date = (full ? formats.full : formats.short).format(day);
+  return `${word} · ${date}`;
 }
 
-/**
- * The name of the way back to the evaluated day: the language's word for
- * today where that day is today here, and the day itself where it is not.
- */
+/** The label for returning to the evaluated day, in the locale's own words. */
 export function evaluatedWord(
   on: string,
   today: string,
   locale: string,
 ): string {
-  if (on !== today)
-    return new Intl.DateTimeFormat(locale, {
-      day: "numeric",
-      month: "short",
-    }).format(isoDay(on));
-  const word = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
-    0,
-    "day",
-  );
+  const formats = dateFormats(locale);
+  if (on !== today) return formats.short.format(isoDay(on));
+  const word = formats.relative.format(0, "day");
   return `${word.charAt(0).toLocaleUpperCase(locale)}${word.slice(1)}`;
 }
 

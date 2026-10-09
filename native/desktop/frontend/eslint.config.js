@@ -19,6 +19,20 @@ const composition = {
   message:
     "Components and shell modules do not import application composition.",
 };
+const aboveShared = {
+  group: [
+    "@/shell/**",
+    "@/ipc/**",
+    "@/components/**",
+    "@/App",
+    "**/shell/**",
+    "**/ipc/**",
+    "**/components/**",
+    "**/App",
+  ],
+  message:
+    "Shared helpers stay independent of components, shell policy and IPC.",
+};
 const aboveAPrimitive = [
   {
     group: ["@/shell/**", "@/ipc/**", "@/App", "**/shell/**", "**/ipc/**"],
@@ -85,6 +99,10 @@ export default tseslint.config(
   {
     files: adapter,
     rules: restricted(development),
+  },
+  {
+    files: ["src/shared/**/*.{ts,tsx}"],
+    rules: restricted(development, host, aboveShared),
   },
   {
     // Layers point downward: a primitive imports nothing above it.
