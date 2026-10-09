@@ -5,7 +5,7 @@ tags:
 date: '2026-10-09'
 modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:fa06daabcb42d71c3d781d6c72e3bc9657774eb91aa356b905247191bfae9fce'
+body_hash: 'sha256:c6d098bd7194fa5c6320b225cdb292d23a9a685151d35363b29761eb4eeafc34'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -79,3 +79,5 @@ P03.S31 PASS for scoped software: final corrected frozen desktop manager selecti
 Commit isolation: external installer/bootstrap changes in desktop manager source remain uncommitted and outside this checkpoint. HEAD-based staging-source variants contain only this recovery correction, command helper and tests; their standalone native manager selection passed 21 tests after explicitly refreshing copied-source timestamps to prevent stale Cargo reuse. Inspect `staging-src`, `desktop-staged-test.log` and `staging-verification-output.log`. Final working-source snapshot is restored to the verified integrated version. Root will commit only isolated recovery blobs, the adapter/test and its own records, preserving the external source diff.
 
 Final review: PASS for P02.S29/P02.S30/P03.S31 software. A GPT-6.1 Sol medium reviewer independently traced the combined flows and raised the coalescing and legacy stable-entry findings; both were corrected and covered by the applicable final checks. Root confirms no outstanding critical/high or unfixed in-scope software defect. Feature vault health has zero errors and two existing whitespace warnings; plan ordering warning is expected from append-only identifiers grouped by phase. Installed acceptance remains PENDING: machine/user installation, interactive GUI/COM launch, old-owner tray recovery, logout and two-release idle cutover were not run on this Session 0 development host. The installer session retains its provisioning and package-assembly verification scope; earlier historical pending statements are superseded only for this audit's software integration.
+
+Repository-wide vault check after the scoped commit failed with two errors and 47 warnings outside this software verification: an unreplaced {title} placeholder in `2026-10-09-desktop-frontend-coherence-audit` and missing grounding references in `2026-10-07-git-free-tooling-adr`. The feature-scoped check remains zero errors; unrelated records and concurrent work were not repaired by this audit continuation. This exception prevents claiming a repository-wide clean vault, but does not invalidate the applicable source/test results or reopen these scoped recovery Steps.

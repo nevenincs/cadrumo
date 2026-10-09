@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:a05d756bb44e9008c1ded99edc7140a9c4e6956b22c043dec5b04d99c5f29bdd'
+body_hash: 'sha256:4db12cba8d0c89cc4e312a2da79a4aa44cca21b88cbd35ccabcb6a8e98f69f78'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -777,6 +777,7 @@ related:
 - `S31` `verify:` `scoped git diff --check` -> `pass`
 - `S31` `verify:` `feature vault check errors0 warnings2` -> `pass`
 - `S31` `verify:` `plan check expected phase-order warning` -> `pass`
+- `S31` `verify:` `repository-wide vault check all two unrelated record errors and47warnings` -> `fail`
 
 ## Notes
 
@@ -846,3 +847,4 @@ related:
 - `S30` Probe affirms metadata grammar only. Historical managers unsupported by it retain tray Retry; installed and cross-release graphical acceptance remains pending.
 - `S31` User released desktop files; external installer/bootstrap baseline preserved. Commit only recovery semantic blobs and tests without capturing external uncommitted bootstrap hunks; both isolated and integrated source variants verified.
 - `S31` Interactive installation/GUI/COM/logout/cross-release acceptance remains pending on a disposable interactive host. Current machine product/login state untouched.
+- `S31` Global vault errors belong to desktop-frontend-coherence placeholder and git-free-tooling missing grounding, outside the recovery scope. Feature check remains errors0; no unrelated records changed.
