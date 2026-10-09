@@ -1,4 +1,4 @@
-"""Install the assembler's native-module map without site or .pth execution."""
+"""Install the assembler's native-module map and declared package paths."""
 
 import hashlib
 import importlib

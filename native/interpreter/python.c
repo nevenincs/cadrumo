@@ -47,7 +47,7 @@ BRIDGE_EXPORT int BRIDGE_CALL cadrumo_python_main(int argc, BRIDGE_CHAR **argv, 
     PyConfig_InitIsolatedConfig(&config);
     config.parse_argv = 1;
     config.install_signal_handlers = 1;
-    config.site_import = 0;
+    config.site_import = 1;
     config.user_site_directory = 0;
     config.write_bytecode = 0;
     config.safe_path = 1;
@@ -61,7 +61,6 @@ BRIDGE_EXPORT int BRIDGE_CALL cadrumo_python_main(int argc, BRIDGE_CHAR **argv, 
     /* Reassert reserved policy after parsing Python invocation options. */
     config.isolated = 1;
     config.use_environment = 0;
-    config.site_import = 0;
     config.user_site_directory = 0;
     config.write_bytecode = 0;
     config.safe_path = 1;

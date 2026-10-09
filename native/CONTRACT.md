@@ -256,8 +256,10 @@ handshake with the runtime's exact process image. The probe stops the runtime
 through its process scope; it registers no service and leaves no process.
 
 The interpreter excludes environment-derived Python paths, virtualenv discovery,
-user site, automatic current-directory imports, sitecustomize and executable `.pth`
-files. Necessary wheel path additions must be generated from inspected package
+user site and automatic current-directory imports. Normal CPython `site`
+initialization supplies the standard interactive helpers and package-local site
+customization; `-S` disables that initialization. Necessary wheel path additions
+must be generated from inspected package
 metadata. `-m`, `-c`, scripts, stdin and child startup use the bundled executable.
 The caller's working directory is retained for explicit script/file arguments;
 it is not an implicit import root. This is environment isolation, not a sandbox.
@@ -464,7 +466,7 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `native_contract`, `native_metadata` | Generate content-stable C/Rust contracts and executable resources |
 | `rust_platform_static`, `rust_platform_shared`, `rust_platform_consumer` | Build one platform library format or its Rust consumer; `rust_platform` groups the libraries |
 | `rust_application`, `rust_manager`, `desktop-host-build` | Build each application library, manager executable or desktop executable |
-| `python`, `python_d` | Compile production or development host and bridge |
+| `python`, `python_d` | Build a runnable standalone interpreter at `stage/<Config>/app`, including `python.zip`, native libraries and site-packages; `python_d` also includes the development executable. Uses the application package layout and assembler without product wheels, application images or user documentation |
 | `cadrumo_entrypoint_<name>` | Compile one declared console entrypoint host, such as `cadrumo-runtime.exe` |
 | `python_sdk` | Acquire and verify the pinned CPython SDK |
 | `python_dependencies` | Install the selected runtime wheel closure, reusing the SDK |
@@ -553,8 +555,8 @@ requires these exclusions to match and records each removed file, hash and reaso
 in the package manifest. Every retained native module is imported by the smoke test.
 
 `cadrumo/python.pth` is generated data: only reviewed package-relative directories
-are allowed, matching the native manifest. `site` does not execute arbitrary `.pth`
-files. Startup checks build identity, file presence and essential file hashes;
+are allowed, matching the native manifest. This file is consumed by the package
+bootstrap, rather than executed by `site`. Startup checks build identity, file presence and essential file hashes;
 `python.exe --check-package` hashes the whole package, including delegated
 inventories, and rejects extra files.
 This detects missing, damaged or mixed artifacts; it is not an authenticated

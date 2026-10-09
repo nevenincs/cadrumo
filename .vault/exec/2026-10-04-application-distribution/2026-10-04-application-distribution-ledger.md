@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-08'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:f9085736b1c87ff9cdd406721fb822e3851f85a8bba9c63eecd42172c97dc40f'
+body_hash: 'sha256:81b5ff207bedd1ffd1f9d5771ba74b4f42570b5d2e0d259ab302ecf93e170de9'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -426,6 +426,18 @@ related:
 - `S05` `verify:` `Full Windows before-after payload and source verification` -> `pass`
 - `S05` `verify:` `Frozen Windows strict full documentation retry` -> `fail`
 - `S05` `verify:` `Fresh censo and annual Modelo390 observed fixtures` -> `pass`
+- `S05` `M` `native/interpreter/python.c`
+- `S05` `M` `native/interpreter/bootstrap.py`
+- `S05` `M` `native/cmake/platforms/Posix.cmake`
+- `S05` `A` `native/cmake/PythonDistribution.cmake`
+- `S05` `M` `dev/packaging/native/assemble.py`
+- `S05` `M` `dev/packaging/native/platforms/windows_verify.py`
+- `S05` `M` `native/tests/package_smoke.py`
+- `S05` `A` `native/tests/interpreter_smoke.py`
+- `S05` `verify:` `CMake python and python_d builds` -> `pass`
+- `S05` `verify:` `standalone interpreter CTest and development smoke` -> `pass`
+- `S05` `verify:` `package inventory and 18 focused tests` -> `pass`
+- `S05` `verify:` `Ruff and ty` -> `pass`
 
 ## Notes
 
@@ -476,3 +488,4 @@ related:
 - `S05` Full-payload retry pending; installation gates retained.
 - `S03` Proposed only; authenticated package preflight, positive receipt classification and complete scope discovery remain unresolved.
 - `S05` Four gated full MSIs published. Separate full documentation failures remain unexplained; targeted passes do not replace qualification.
+- `S05` User requested normal site initialization and standalone Python with python.zip in the shared stage layout. Broader S05 remains open.

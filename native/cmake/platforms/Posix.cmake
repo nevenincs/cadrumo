@@ -119,10 +119,6 @@ foreach(target ${host_targets})
     target_link_options(${target} PRIVATE "LINKER:-headerpad_max_install_names")
   endif()
 endforeach()
-add_custom_target(python DEPENDS cadrumo_python cadrumo_python_bridge)
-add_custom_target(python_d DEPENDS cadrumo_python_d cadrumo_python_bridge)
-cadrumo_register_clean(TARGET python DEPENDS cadrumo_python cadrumo_python_bridge)
-cadrumo_register_clean(TARGET python_d DEPENDS cadrumo_python_d cadrumo_python_bridge)
 if(BUILD_TESTING)
   add_test(NAME platform.linker_contract COMMAND "${CMAKE_COMMAND}"
     "-DTEST_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/linker-contract"

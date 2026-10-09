@@ -78,6 +78,7 @@ set(metadata_inputs ${contract_inputs}
   "${PROJECT_SOURCE_DIR}/src/cadrumo/core/toml.py"
   "${PROJECT_SOURCE_DIR}/pyproject.toml" "${PROJECT_SOURCE_DIR}/dev/packaging/release-python-version")
 include("${PROJECT_SOURCE_DIR}/native/cmake/platforms/${CMAKE_SYSTEM_NAME}.cmake")
+include("${PROJECT_SOURCE_DIR}/native/cmake/PythonDistribution.cmake")
 if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET rust_platform_static PATHS "${platform_static}")
   if(WIN32)

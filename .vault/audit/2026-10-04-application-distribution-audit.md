@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-08'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:16fa05f7dae1d83d2004bcdb23e4c5566d6a3d08ec0e41c626b3745ed12e47cd'
+body_hash: 'sha256:28e71095baca5e282cd507068e86a3663cb4dabbf12692f5278c4f028558e081'
 related:
   - "[[2026-10-04-application-distribution-plan]]"
 ---
@@ -324,6 +324,14 @@ Corrected standalone CMake native-package retry 27886 completed with primary_exi
 Outputs under build/distribution-windows-x64/packages/msi: user-version.msi (355053900 bytes, SHA256 cad8f39b5fece282c33ee8d55ec35fa700268a02809a0aacd5bec80362d18e9c); user-registration.msi (1785856 bytes, 2794cec7656819cf0b2739f6b0d4967a9e8df87bb167985709491f960c408ce2); machine-version.msi (350240104 bytes, 6a5f9d10796dd6ebd17188afa1c832d29412a3582ee4430a32c1d1c3bcec68b5); machine-registration.msi (1785856 bytes, 27b02480baf4bd69d8152b96e695e69bc6d8ac76184e673cff79f660e3b551bd). compiled.json binds all source/artifact hashes, WiX 5.0.2+aa65968c and installable=false. Build/input evidence is build/s16-full-msi-evidence/{build.log,before.json,after.json,result.json}; prior failed evidence remains under attempt-96263.
 
 These genuine full-payload unsigned packages retain unconditional native installation gates. No MSI, product or login registration was installed. The payload is the independently completed earlier application cohort with the current installer, not a claim that every component was rebuilt from current HEAD or that two distinct release acceptance passed. Windows interactive maintenance/lifecycle acceptance and the failed separate live documentation qualification remain open, as do Darwin/Linux native installation backend obligations. The Mac DMG and Linux DEB/RPM passes recorded above establish their own exact cohorts only.
+
+### S05 standalone interpreter build and normal site | low | PASS for Windows interpreter scope
+
+User correction: python and python_d must produce runnable distributions themselves, with python.zip and site-packages, in the same structure used by later application steps. Both targets now invoke the shared assembler into the existing CMake stage/<Config>/app path without product wheels, application images or documentation. Application closure admission remains mandatory in application mode. The shared output cache lock serializes assembly variants and inventories reject stale receipts. Normal CPython site initialization replaces the previous site_import=0 policy; explicit -S is honored, with environment isolation and user-site exclusion retained. The proposed hand-written exit/quit substitution was removed before the final implementation.
+
+Verification: cmake --build --preset release --target python and --target python_d passed. CTest interpreter.python passed against the assembled interpreter; the same smoke script passed under python_d.exe. It checks python.zip/site.pyc, the declared site-packages path, initialized site, exit/quit/help, ssl/sqlite3/ctypes/bz2/lzma/multiprocessing/venv imports, interactive exit()/quit() both with default status and explicit status 17, and explicit -S. Full --check-package passed on the assembled output. Eighteen assembly-refusal, assembly-tool, configuration and build-path tests passed; scoped Ruff lint/format and ty passed. No native Linux/macOS execution was claimed. Discovery reused the named build/assembly modules without semantic search. Integrated review found no remaining issue within this scope; the broader S05 work remains open.
+
+The earlier full bundle attempt was stopped at user correction; its documentation build is not acceptance evidence for this interpreter correction. No ad hoc output directory or manual artifact copy was used.
 
 ## Recommendations
 

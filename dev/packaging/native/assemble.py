@@ -129,7 +129,7 @@ def native_assembly_layout(contract: dict[str, Any], provenance: Mapping[str, An
 
 def assemble(
     python: Path,
-    dependencies: Path,
+    dependencies: Path | None,
     build: Path,
     destination: Path,
     metadata: Path,
@@ -138,6 +138,7 @@ def assemble(
     images: Mapping[str, Path],
     binary_dir: Path,
     development: bool = False,
+    interpreter: bool = False,
     target: str,
     provenance: Mapping[str, object] | None = None,
     timings: BuildTimings | None = None,
@@ -151,10 +152,16 @@ def assemble(
     if build_identity["target"] != target or build_identity["layout_abi"] != contract["abi"]:
         raise ValueError("Build metadata target/layout ABI differs from assembly")
     layout, files = contract["paths"], contract["files"]
-    allowed = set(PRODUCT_IDENTITY.cohort_distributions)
-    requirements = active_requirements(REPO_ROOT, target_platform(target), build_identity["python"])
+    if interpreter and (dependencies is not None or user_docs is not None or images):
+        raise ValueError("Standalone interpreter assembly does not consume application inputs")
+    if not interpreter and dependencies is None:
+        raise ValueError("Application assembly requires product dependencies")
+    allowed = set() if interpreter else set(PRODUCT_IDENTITY.cohort_distributions)
+    requirements = (
+        {} if interpreter else active_requirements(REPO_ROOT, target_platform(target), build_identity["python"])
+    )
     allowed.update(requirements)
-    installed = list(importlib.metadata.distributions(path=[str(dependencies)]))
+    installed = [] if dependencies is None else list(importlib.metadata.distributions(path=[str(dependencies)]))
     distributions: dict[str, str] = {
         canonicalize_name(distribution.metadata["Name"]): distribution.version for distribution in installed
     }
@@ -165,7 +172,9 @@ def assemble(
     for name, requirement in requirements.items():
         if distributions[name] not in requirement.specifier:
             raise ValueError(f"Production dependency version differs from lock: {name} {distributions[name]}")
-    if {distributions[name] for name in PRODUCT_IDENTITY.cohort_distributions} != {build_identity["version"]}:
+    if not interpreter and {distributions[name] for name in PRODUCT_IDENTITY.cohort_distributions} != {
+        build_identity["version"]
+    }:
         raise ValueError("Product cohort versions differ from build metadata")
     smoke_modules = {}
     for distribution in installed:
@@ -213,14 +222,17 @@ def assemble(
 
     def omit_development(directory: str, names: list[str]) -> set[str]:
         excluded = {"__pycache__", "tests"}
-        if Path(directory).resolve() == dependencies.resolve():
+        if dependencies is not None and Path(directory).resolve() == dependencies.resolve():
             excluded.add("bin")
         return set(names) & excluded
 
     with timings.phase("dependency-copy") if timings is not None else nullcontext():
-        shutil.copytree(dependencies, packages, ignore=omit_development)
+        if dependencies is None:
+            packages.mkdir(parents=True)
+        else:
+            shutil.copytree(dependencies, packages, ignore=omit_development)
     pruned = []
-    for exclusion in contract.get("package_exclusions", []):
+    for exclusion in [] if interpreter else contract.get("package_exclusions", []):
         matches = list(packages.glob(exclusion["pattern"]))
         if not matches:
             raise ValueError(f"Package exclusion no longer matches: {exclusion['pattern']}")
@@ -235,13 +247,14 @@ def assemble(
     executable.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(build / executable.name, executable)
     # Console entrypoints share the native directory; the platform context maps them back to the package root.
-    entrypoints = sorted(entrypoint_files(contract).values())
+    entrypoints = [] if interpreter else sorted(entrypoint_files(contract).values())
     for relative in entrypoints:
         shutil.copy2(build / Path(relative).name, root / relative)
     # Application images are not interpreter hosts; each enters the startup check only by opting in.
-    staged_images = staged_application_images(contract, user_docs=user_docs is not None)
+    staged_images = () if interpreter else staged_application_images(contract, user_docs=user_docs is not None)
     stage_application_images(root, staged_images, images, binary_dir)
-    stage_linux_desktop_runtime(root, contract)
+    if not interpreter:
+        stage_linux_desktop_runtime(root, contract)
     if development:
         development_executable = root / files["development_executable"]
         development_executable.parent.mkdir(parents=True, exist_ok=True)
@@ -304,6 +317,7 @@ def assemble(
             if relative == docs_manifest or not relative.startswith(f"{docs_prefix}/")
         }
     manifest = {
+        "kind": "interpreter" if interpreter else "application",
         "build": build_identity,
         "layout": contract,
         "startup_files": startup_files,

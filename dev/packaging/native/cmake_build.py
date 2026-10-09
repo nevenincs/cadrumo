@@ -157,6 +157,7 @@ def main() -> None:
     parser.add_argument("--config", choices=("Debug", "Release"))
     parser.add_argument("--env", action="append", default=[])
     parser.add_argument("--development", action="store_true")
+    parser.add_argument("--interpreter", action="store_true")
     parser.add_argument("--without-user-docs", action="store_true")
     # One FILE=ARTIFACT pair per staged application image, resolved by CMake for the selected configuration.
     parser.add_argument("--image", action="append", default=[])
@@ -315,7 +316,7 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
         destination = reset(build, str((paths["stage"] / arguments.config).relative_to(build)))
         assemble(
             sdk,
-            paths["product"] / "dependencies",
+            None if arguments.interpreter else paths["product"] / "dependencies",
             paths["bin"] / arguments.config,
             destination / "app",
             paths["generated"] / "build.json",
@@ -323,12 +324,15 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
             images=dict(image_artifact(item) for item in arguments.image),
             binary_dir=build,
             development=arguments.development,
+            interpreter=arguments.interpreter,
             target=arguments.target,
             provenance={
-                "runtime": json.loads((runtime / "runtime-inputs.json").read_text(encoding="utf-8")),
-                "cohort_wheels": json.loads(
-                    (paths["product"] / "build/product-wheels.json").read_text(encoding="utf-8")
-                ),
+                "runtime": {}
+                if arguments.interpreter
+                else json.loads((runtime / "runtime-inputs.json").read_text(encoding="utf-8")),
+                "cohort_wheels": {}
+                if arguments.interpreter
+                else json.loads((paths["product"] / "build/product-wheels.json").read_text(encoding="utf-8")),
                 "build_toolchain": json.loads(
                     (paths["generated"] / "build-toolchain.json").read_text(encoding="utf-8")
                 ),

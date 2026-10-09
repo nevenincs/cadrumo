@@ -22,7 +22,8 @@ from ..verification_paths import relocated_verification_package, verification_de
 PROBE = r"""
 import importlib, json, os, pathlib, subprocess, sys, tempfile
 root = pathlib.Path(sys.executable).parent.resolve()
-assert sys.flags.isolated and sys.flags.no_site and sys.flags.no_user_site
+assert sys.flags.isolated and not sys.flags.no_site and sys.flags.no_user_site
+assert 'site' in sys.modules and not sys.modules['site'].ENABLE_USER_SITE
 assert sys.flags.safe_path and sys.dont_write_bytecode
 assert all(pathlib.Path(p).resolve().is_relative_to(root) for p in sys.path)
 assert len(sys.path) == len({pathlib.Path(p).resolve() for p in sys.path}), 'duplicate package import paths'

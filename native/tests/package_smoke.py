@@ -24,6 +24,22 @@ def require(condition: bool, message: str) -> None:
 
 root = Path(sys.argv[1]).resolve(strict=True)
 manifest = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
+for helper in ("exit", "quit"):
+    result = subprocess.run(
+        [sys.executable, "-i", "-q"],
+        input=(
+            "import sys; print('isolated:', sys.flags.isolated, sys.flags.no_site, sys.flags.no_user_site)\n"
+            f"{helper}(17)\n"
+        ),
+        text=True,
+        capture_output=True,
+        timeout=30,
+        check=False,
+    )
+    require(result.returncode == 17, f"Interactive {helper} failed: {result.stderr}")
+    require("isolated: 1 0 1" in result.stdout, "Site initialization or interpreter isolation differs")
+require("site" in sys.modules, "Interpreter did not initialize site")
+require(not sys.modules["site"].ENABLE_USER_SITE, "Interpreter enabled ambient user packages")
 require(sys.pycache_prefix is None, "Packaged bytecode lookup must stay beside its source")
 for relative in manifest["files"]:
     if relative.endswith(".py"):
@@ -95,7 +111,7 @@ require(
     importlib.metadata.version("cadrumo") == importlib.metadata.version("cadrumo-data-manuals"),
     "Manual cohort mismatch",
 )
-require(bool(sys.flags.isolated and sys.flags.no_site), "Interpreter is not isolated")
+require(bool(sys.flags.isolated and sys.flags.no_user_site), "Interpreter is not isolated")
 require(sys.version_info[:2] == (3, 13), "Wrong CPython minor version")
 child = subprocess.check_output(
     [sys.executable, "-c", "import json,sys; print(json.dumps([sys.executable,sys.flags.isolated]))"], text=True

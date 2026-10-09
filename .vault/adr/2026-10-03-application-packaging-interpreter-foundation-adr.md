@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-packaging'
 date: '2026-10-03'
-modified: '2026-10-04'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:d44d35421b0afee375c8efdd41267d4936ac2edd2a1e4adb3c2a9264b28c4c4b'
+body_hash: 'sha256:6a5c64afc96f1c90aacb190a745ea22dc76824aea833b8b86e37dcc035a524fe'
 related:
   - "[[2026-10-03-application-packaging-research]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -42,6 +42,10 @@ Use the existing 3.13.11 release pin with the official CPython NuGet SDK, SHA256
 The assembler maps qualified extension names to relocated native files under `bin/python`, rejects conflicting DLL basenames and unreviewed `.pth` files, and projects pywin32's required path entries without executing its `.pth` bootstrap. Two checked package adaptations address PDFium's explicit DLL location and pywin32's registry-derived extension/cache locations. pywin32 public COM aliases resolve to bundled extensions and its generated cache belongs under the declared user cache; before/after hashes are recorded. Authority is relocated once to `data/authority` and selected through the existing Settings field.
 
 The packaged mutable root is Windows Known Folder LocalAppData plus `cadrumo`, with secure storage under `data` and temporary files under `tmp`. Inherited Settings/Python path overrides are cleared. The initial non-secret override allowlist is empty. This is controlled environment configuration, not an arbitrary-code security sandbox. Full process write tracing remains an acceptance obligation; Python audit events alone are insufficient.
+
+### 2026-10-09 user-authorized standalone interpreter correction
+
+The user requires the interpreter build itself to produce a runnable Python distribution including python.zip, site initialization and site-packages, in the same package structure used by subsequent application assembly. Python construction does not depend on documentation or application packaging. This supersedes the disabled-site requirement above: CPython initializes site by default and explicit -S retains its standard meaning. Environment-derived Python paths and user-site packages remain excluded. The python and python_d CMake targets assemble stage/<Config>/app through the shared application assembler. The standalone variant contains no application wheels, application images or user documentation; the later application target assembles that same layout with its additional inputs.
 
 ## Rationale
 
