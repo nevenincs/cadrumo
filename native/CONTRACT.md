@@ -1424,6 +1424,18 @@ version before taking the session lock or runtime ownership. The successor repea
 admission and resolves the canonical installed default; an override never becomes
 managed through environment clearing. Dispatch still acknowledges launch only.
 
+The exact metadata argument `--supports-retry` returns exit code zero without
+output, before native admission, package discovery or runtime launch. Combined
+arguments are refused. Before explicit Retry redirects to a different verified
+manager image, the dispatcher probes this argument with a strict cleared
+environment, null streams, the selected package working directory and a retained
+package lease. The probe has a two-second exit bound; timeout or inspection failure
+terminates only the metadata child with a separate two-second cleanup bound.
+Nonzero exit refuses Retry redispatch, including historical managers whose closed
+grammar returns usage code two. Historical owners retain their existing tray Retry
+action. Neither probe success nor dispatch acknowledgement establishes recovery
+completion or runtime readiness; authenticated client handshake remains required.
+
 The Windows manager exposes bounded authenticated reveal/retry IPC and localized
 tray actions. Upgrade discovery retains a lease on a complete newer package and
 requests an idle stop under the old manager's start claim. Busy or adopted runtimes

@@ -84,6 +84,21 @@ mod fixture {
         process::exit(i32::from_ne_bytes(code.to_ne_bytes()))
     }
 
+    pub fn retry_probe() -> ! {
+        fs::write("retry-probe-pid", process::id().to_string()).expect("record metadata child");
+        let mode = fs::read_to_string("retry-probe-mode").expect("metadata fixture mode");
+        match mode.as_str() {
+            "capable" => exit(0),
+            "legacy" => exit(USAGE),
+            "failed" => exit(UNEXPECTED_FAILURE),
+            "timeout" => {
+                thread::sleep(LIFETIME);
+                exit(UNEXPECTED_FAILURE)
+            }
+            _ => exit(USAGE),
+        }
+    }
+
     /// Take sole ownership of one standard handle, as the runtime moves its protocol streams.
     fn take_standard(which: u32) -> Option<File> {
         // SAFETY: GetStdHandle only reads this process's standard handle slot.
@@ -490,6 +505,9 @@ mod fixture {
 #[cfg(windows)]
 fn main() {
     let raw: Vec<String> = std::env::args().skip(1).collect();
+    if raw.as_slice() == ["--supports-retry"] {
+        fixture::retry_probe();
+    }
     match raw.split_first() {
         Some((first, rest)) if first == "--harness" => fixture::harness(rest),
         _ => fixture::runtime(&raw),

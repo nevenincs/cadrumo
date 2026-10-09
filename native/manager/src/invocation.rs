@@ -33,6 +33,7 @@ pub enum Invocation {
     Start { intent: Intent, breakaway: bool },
     Cutover(crate::cutover::Designation),
     Version,
+    SupportsRetry,
 }
 
 impl Invocation {
@@ -46,6 +47,7 @@ impl Invocation {
             [flag] if flag == "--sign-in" => Intent::SignIn,
             [flag] if flag == "--retry" => Intent::Retry,
             [flag] if flag == "--version" && !breakaway => return Ok(Self::Version),
+            [flag] if flag == "--supports-retry" && !breakaway => return Ok(Self::SupportsRetry),
             [flag, value] if flag == "--cutover" && !breakaway => {
                 let designation =
                     value
@@ -101,6 +103,9 @@ mod tests {
             vec!["--retry", "--retry"],
             vec!["--breakaway-attempt", "--breakaway-attempt"],
             vec!["--breakaway-attempt", "--version"],
+            vec!["--breakaway-attempt", "--supports-retry"],
+            vec!["--supports-retry", "--retry"],
+            vec!["--supports-retry", "--supports-retry"],
             vec![
                 "--retry",
                 "--cutover",
@@ -122,6 +127,10 @@ mod tests {
         assert_eq!(
             Invocation::parse(&["--version".into()]).unwrap(),
             Invocation::Version
+        );
+        assert_eq!(
+            Invocation::parse(&["--supports-retry".into()]).unwrap(),
+            Invocation::SupportsRetry
         );
         let designation = crate::cutover::Designation {
             parent_pid: 7,

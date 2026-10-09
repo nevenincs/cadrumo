@@ -203,6 +203,7 @@ fn main() -> ExitCode {
     match Invocation::parse(&arguments) {
         Ok(Invocation::Start { intent, breakaway }) => start(breakaway, intent, None),
         Ok(Invocation::Cutover(designation)) => start(false, Intent::Manual, Some(designation)),
+        Ok(Invocation::SupportsRetry) => ExitCode::SUCCESS,
         Ok(Invocation::Version) => {
             match writeln!(
                 io::stdout(),

@@ -12,7 +12,7 @@ related:
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
 modified: '2026-10-09'
 body_schema: body-v2
-body_hash: 'sha256:21158e93d8a0fe7eac1ad788fb5c605f6d40e909a0b767019068428c4ff91f51'
+body_hash: 'sha256:4f14ee4f11377aad27903b80eb309a53eb520fe5eabe13ac620225a120c7df08'
 ---
 
 # `runtime-manager-architecture` plan
@@ -95,7 +95,7 @@ The cadrumo-manager native image: identity-derived names, canonical locations, s
 - [x] `P02.S24` - Register the manager .runtime records, preference and log locations in the Python storage taxonomy and record the session lock, start claim and Quit marker grammar as a cross-version contract; `src/cadrumo/core/storage_taxonomy.py, storage_taxonomy_locations.py, native/CONTRACT.md, owning tests`.
 - [x] `P02.S28` - Preserve explicit Retry through manager activation, version redirection and job escape; verify native admission for Session 0 and arbitrary interactive session IDs without weakening user identity or supervision; `native/manager invocation, main, installation, Windows lifecycle, admission and entrypoint tests`.
 - [x] `P02.S29` - Keep Cargo subcommand tools within the configured toolchain without mutating the parent environment; verify native manager Clippy consistency; `dev/packaging/native/cmake_build.py, dev/packaging/native/tests/test_cargo_toolchain.py`.
-- [ ] `P02.S30` - Refuse unsupported restored-manager Retry before redispatch using a bounded read-only capability check while retaining exact-image IPC and failure state; `native/manager invocation and entrypoint, installation dispatch, focused activation fixture and tests, native/CONTRACT.md metadata grammar`.
+- [x] `P02.S30` - Refuse unsupported restored-manager Retry before redispatch using a bounded read-only capability check while retaining exact-image IPC and failure state; `native/manager invocation and entrypoint, installation dispatch, focused activation fixture and tests, native/CONTRACT.md metadata grammar`.
 
 ### Phase `P03` - Installation and client remedies
 

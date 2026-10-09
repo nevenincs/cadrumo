@@ -4,6 +4,19 @@ use std::process::Command;
 const MANAGER: &str = env!("CARGO_BIN_EXE_cadrumo-manager");
 
 #[test]
+fn retry_support_metadata_is_silent_and_does_not_require_admission() {
+    let output = Command::new(MANAGER)
+        .arg("--supports-retry")
+        .output()
+        .expect("probe manager metadata");
+    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    assert!(
+        output.stdout.is_empty() && output.stderr.is_empty(),
+        "{output:?}"
+    );
+}
+
+#[test]
 fn version_reports_the_projected_manager_name_and_version() {
     let output = Command::new(MANAGER)
         .arg("--version")
@@ -54,6 +67,9 @@ fn unknown_arguments_are_refused() {
         &["start"],
         &["--retry", "--sign-in"],
         &["--retry", "--retry"],
+        &["--supports-retry", "--retry"],
+        &["--supports-retry", "--supports-retry"],
+        &["--breakaway-attempt", "--supports-retry"],
     ] {
         let output = Command::new(MANAGER)
             .args(arguments)

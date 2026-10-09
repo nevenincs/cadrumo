@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:a843a26aefbc47299985f7561001852b71908b8874fa51cb63f2b72e7774a6b6'
+body_hash: 'sha256:7fad0c5e12c8b20f40f475e5e7e8fe10c8c1d8c934a1d7541453a943b20768fa'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -745,6 +745,23 @@ related:
 - `S29` `verify:` `scoped configured ty linux win32 darwin` -> `pass`
 - `S29` `verify:` `configured Rust 1.96 manager Clippy original command without PATH override` -> `pass`
 - `S29` `verify:` `scoped git diff --check` -> `pass`
+- `S30` `A` `native/manager/src/activation_probe.rs`
+- `S30` `A` `native/manager/tests/activation_probe.rs`
+- `S30` `M` `native/manager/src/installation.rs`
+- `S30` `M` `native/manager/src/invocation.rs`
+- `S30` `M` `native/manager/src/lib.rs`
+- `S30` `M` `native/manager/src/main.rs`
+- `S30` `M` `native/manager/tests/entrypoint.rs`
+- `S30` `M` `native/manager/tests/fixture/runtime.rs`
+- `S30` `M` `native/CONTRACT.md`
+- `S30` `M` `.vault/audit/2026-10-09-runtime-manager-architecture-windows-admission-recovery-audit.md`
+- `S30` `verify:` `frozen configured Rust 1.96 manager suite fixture-test-mode initial supervision2 failures` -> `fail`
+- `S30` `verify:` `frozen configured Rust 1.96 native manager preceding suites168 tests` -> `pass`
+- `S30` `verify:` `frozen configured Rust 1.96 supervision serial37 tests` -> `pass`
+- `S30` `verify:` `frozen configured Rust 1.96 termination and version-resource4 tests` -> `pass`
+- `S30` `verify:` `frozen configured Rust 1.96 clippy all-targets fixture-test-mode warnings denied` -> `pass`
+- `S30` `verify:` `configured native manager cargo fmt` -> `pass`
+- `S30` `verify:` `scoped git diff --check` -> `pass`
 
 ## Notes
 
@@ -810,3 +827,5 @@ related:
 - `S28` Semantic code service unavailable; named-file inspection and accepted vault decision discovery used.
 - `S28` Interactive installed and cross-release acceptance remains pending on a disposable interactive host; current process is Session 0.
 - `S29` GPT-6.1 Sol medium worker owns build-helper source; root confirms configured actual compiler check. External installer/desktop changes preserved.
+- `S30` 209 distinct manager cases pass across the scoped checks. Two initial unchanged short-bound supervision cases failed during concurrent Tauri compilation and passed without source/expectation changes in subsequent serial37 suite; original failure retained.
+- `S30` Probe affirms metadata grammar only. Historical managers unsupported by it retain tray Retry; installed and cross-release graphical acceptance remains pending.

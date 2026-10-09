@@ -129,6 +129,10 @@ pub fn dispatch_newest(
     if let Some(current) = current_installation(image, &selected, locations)? {
         return Ok(DispatchOutcome::Current(current));
     }
+    if intent == crate::invocation::Intent::Retry {
+        // Restoration can select an older image whose activation grammar predates Retry.
+        crate::activation_probe::require_retry_support(&selected.manager, &selected.package)?;
+    }
     Command::new(selected.manager)
         .args(intent.argument())
         .env_clear()
