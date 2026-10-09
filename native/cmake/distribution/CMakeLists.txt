@@ -213,7 +213,14 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
     add_custom_target(msi-verify
       COMMAND ${msi_build_helper} verify ${msi_build_arguments}
       DEPENDS msi WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
-    add_custom_target(native-package DEPENDS msi-verify)
+    if(CADRUMO_DESKTOP_EXECUTABLE AND CADRUMO_MSI_RUNNER)
+      add_custom_target(msi-bootstrap-kit
+        COMMAND ${msi_build_helper} kit ${msi_build_arguments} --payload "${CADRUMO_PAYLOAD}"
+        DEPENDS msi-verify WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" USES_TERMINAL VERBATIM)
+      add_custom_target(native-package DEPENDS msi-bootstrap-kit)
+    else()
+      add_custom_target(native-package DEPENDS msi-verify)
+    endif()
     set(CADRUMO_MSI_SCOPE "" CACHE STRING "Explicit maintenance scope: user or machine")
     set_property(CACHE CADRUMO_MSI_SCOPE PROPERTY STRINGS user machine)
     set(CADRUMO_MSI_PREFIX "" CACHE PATH "Explicit native MSI installation prefix")

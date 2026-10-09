@@ -18,6 +18,7 @@ from .windows_msi_identity import InstallationScope, MsiIdentity, ProductRole, m
 
 WIX_NAMESPACE = "http://wixtoolset.org/schemas/v4/wxs"
 MAINTENANCE_GATE = "Native MSI transaction, scope admission and safe maintenance are not yet integrated."
+OWNER_GATE = "Installation requires the authenticated native maintenance owner."
 
 
 def _staged_manifest(build: Path) -> tuple[Path, dict[str, str], Path, dict[str, Any]]:
@@ -253,9 +254,15 @@ def _source(
         After="CostFinalize",
         Sequence="execute",
     )
-    # Literal false cannot be bypassed with an MSI command-line property. Replace
-    # it only when native transactional admission/maintenance is implemented.
-    SubElement(package, "Launch", Condition="0", Message=MAINTENANCE_GATE)
+    # Owned products authenticate through mandatory native callbacks before any
+    # file ownership changes. No command-line property can skip those callbacks.
+    # Keep unowned/admission-only products unconditionally blocked.
+    SubElement(
+        package,
+        "Launch",
+        Condition="1" if runner is not None else "0",
+        Message=OWNER_GATE if runner is not None else MAINTENANCE_GATE,
+    )
     if adapter is not None:
         _admission(package, value, scope, adapter)
         if runner is not None:
@@ -417,7 +424,7 @@ def author(
     adapter: Path | None = None,
     runner: Path | None = None,
 ) -> dict[str, Path]:
-    """Emit four ownership sources from the verified stage without producing installable MSIs."""
+    """Emit four scoped sources; owned products require authenticated native maintenance."""
     stage, owned, manifest_file, manifest = _staged_manifest(build)
     if adapter is not None:
         adapter = adapter.resolve(strict=True)
@@ -483,7 +490,7 @@ def author(
         outputs[name] = output
     descriptor = {
         "installable": False,
-        "blocked_by": MAINTENANCE_GATE,
+        "blocked_by": OWNER_GATE if runner is not None else MAINTENANCE_GATE,
         "manifest_sha256": digest(manifest_file),
         "sources": {name: digest(path) for name, path in outputs.items()},
         "adapter_sha256": digest(adapter) if adapter is not None else None,

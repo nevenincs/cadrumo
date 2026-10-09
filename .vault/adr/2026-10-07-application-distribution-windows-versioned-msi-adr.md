@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-07'
-modified: '2026-10-08'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:d67b3781b963adcb5e229969923cbc0c6635142c85e4e5fe4df5f8e00d3ef806'
+body_hash: 'sha256:3e3d26df14febf3df6d0c36ee7ead3925ba82967249c4952e7cc624e4799f0a9'
 related:
   - "[[2026-10-04-application-distribution-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -71,6 +71,15 @@ This refines the same transaction-owner decision; it does not establish acceptan
 The user's continuing authorization to complete unsigned installation code includes an exact already-installed no-op. This does not relax anchored repair exclusion or native installation gates. A no-op may succeed only under maintenance exclusion after verifying the exact native owners and cached product identity, Ready publication and anchors, complete immutable version bytes, and the actual shared registration resources. Cached MSI properties or component key-path status alone do not prove installed registration integrity.
 
 The existing MSI authoring owner projects a bounded, typed registration-resource description into its immutable registration MSI: shared file hashes including the native marker bytes, scoped registry values and component identity, and desktop shortcut semantics. Installer verification consumes that same bound description and reads actual native resources without invoking repair, launching a shortcut, changing publication, or opening a native installation transaction. Missing, legacy, damaged or ambiguous evidence refuses no-op admission; normal ordered maintenance retains its own existing admission rules. A distinct successful result must identify that an already-published installation was verified, not claim that native installation or repair ran. No-op verification may coexist with readers of unchanged version files while retaining maintenance exclusion and file/version custody through its observation.
+
+
+### 2026-10-09 authorized companion installation kit
+
+The operator's desktop installation-command request extends delivery with a portable companion kit outside the immutable application inventory, binding both scoped MSI pairs and the exact maintenance runner to the active package manifest and identity. The desktop invokes the existing transaction runner through shared native admission under 2026-10-09-desktop-service-installation-adr. Native MSI roles, transaction commitment/publication, removal and disposable-host acceptance remain binding.
+
+### 2026-10-09 scoped desktop installation admission
+
+The operator requests a usable internal desktop installer for both scopes. Products authored with the established authenticated native owner and adapter may replace the unconditional literal-false LaunchCondition with mandatory native owner/scope callbacks, so the owning transaction runner can install them. Products without that owner remain unconditionally blocked; unauthenticated standalone requests fail before file ownership changes. This supersedes the source-only unconditional block for owned products, not signing, transactional publication or disposable-host release acceptance obligations.
 
 ## Rationale
 

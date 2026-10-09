@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -23,6 +24,7 @@ def test_native_installer_preserves_configuration_and_clears_stale_desktop(tmp_p
     source = tmp_path / "source with spaces"
     distribution = source / "native/cmake/distribution"
     distribution.mkdir(parents=True)
+    shutil.copyfile(REPO_ROOT / "native/package-layout.json", source / "native/package-layout.json")
     (source / "native/CMakeLists.txt").write_text(
         'set(CADRUMO_MSI_ADAPTER "${PROJECT_BINARY_DIR}/adapter.dll")\n'
         'set(CADRUMO_MSI_RUNNER "${PROJECT_BINARY_DIR}/maintenance.exe")\n'
@@ -65,7 +67,10 @@ def test_native_installer_preserves_configuration_and_clears_stale_desktop(tmp_p
         "set(image_count 1)\n"
         'set(application_images "[{\\"desktop\\":true,\\"staged\\":${STAGED},'
         '\\"package_path\\":\\"desktop executable\\"}]")\n'
-        "function(cadrumo_register_clean)\nendfunction()\n"
+        "function(cadrumo_register_clean)\n"
+        'cmake_parse_arguments(CLEAN "" "TARGET" "PATHS" ${ARGN})\n'
+        'file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/${CLEAN_TARGET}-clean-$<CONFIG>.txt" '
+        'CONTENT "${CLEAN_PATHS}")\nendfunction()\n'
         "add_subdirectory(native)\n"
         'add_custom_target(bundle COMMAND "${CMAKE_COMMAND}" -E make_directory '
         '"${CADRUMO_PATH_STAGE}/$<CONFIG>/app" COMMAND "${CMAKE_COMMAND}" -E touch '
@@ -91,6 +96,10 @@ def test_native_installer_preserves_configuration_and_clears_stale_desktop(tmp_p
             "preview",
         ]
         assert (nested / "packaged-Release").is_file()
+        clean_paths = (binary / "native-installer-clean-Release.txt").read_text()
+        assert clean_paths == (
+            (binary / "stage/Release/services").as_posix() if desktop and sys.platform == "win32" else ""
+        )
 
     # Different source binary directories share the enrolled distribution owner.
     # Its configured payload must not change halfway through the first package.

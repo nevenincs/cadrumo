@@ -5,7 +5,11 @@
     "marker": "data/installation.json",
     "versions": "versions",
     "maximum_versions": 128,
-    "publication": "data/installation-state"
+    "publication": "data/installation-state",
+    "bootstrap": {
+      "directory": "services",
+      "manifest": "kit.json"
+    }
   },
   "paths": {
     "stdlib": "python.zip",

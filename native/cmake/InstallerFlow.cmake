@@ -85,6 +85,13 @@ add_custom_target(native-installer
   COMMAND "${CMAKE_COMMAND}" -P "${distribution_script_path}"
   DEPENDS ${distribution_dependencies}
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" USES_TERMINAL VERBATIM)
-# The script is generated build-system state. The nested preset owns package
-# outputs and cleanup; this target has no independently removable artifacts.
-cadrumo_register_clean(TARGET native-installer)
+# The nested preset owns MSI outputs. Desktop bootstrap delivery also writes
+# beside this source graph's assembled payload, so this target owns its cleanup.
+if(WIN32 AND distribution_desktop)
+  file(READ "${PROJECT_SOURCE_DIR}/native/package-layout.json" installer_layout)
+  string(JSON bootstrap_directory GET "${installer_layout}" installation bootstrap directory)
+  cadrumo_register_clean(TARGET native-installer
+    PATHS "${CADRUMO_PATH_STAGE}/$<CONFIG>/${bootstrap_directory}")
+else()
+  cadrumo_register_clean(TARGET native-installer)
+endif()

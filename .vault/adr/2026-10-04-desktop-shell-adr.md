@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-07'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:18834ca830b088c348840c3b33a87378b7a3bdd7f1589a94f4b3a5f686f80c3d'
+body_hash: 'sha256:4eb668f11573e99c012be6b757766b00eb1736c275c001bdcc3844df9685cbc1'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -102,6 +102,10 @@ Evidence is in `2026-10-04-desktop-shell-reference`.
 
 Amendment approved 2026-10-07 under the user's environment-readiness instruction: the earlier requirement for console and Python REPL to start in the generic user home is replaced by a dedicated console workspace declared in the canonical storage taxonomy beneath the resolved CADRUMO root. This workspace is for operator-authored scripts and scratch files, not encrypted profile custody. All desktop terminal kinds use this workspace and the same pinned storage/environment and bundled command search path. Standalone command invocations retain the caller's cwd for relative arguments. Authentication still uses native peer verification and the existing profile receipt flow; profile identifiers or credentials are not conveyed through new environment variables. Runtime start/supervision remains with the manager. This amendment also supersedes the home-cwd sentence in the terminal implementation specification below; all other shell authority constraints stand.
 
+
+### 2026-10-09 authorized scoped installation command
+
+The operator authorizes token-checked manager installation for user/machine scope and missing-installation recovery under 2026-10-09-desktop-service-installation-adr. This extends the shell's manager-start surface to verified native installation followed by shell dispatch of the published manager. Machine scope elevates the installer only. Runtime transport, profile and supervision authority remain excluded.
 
 ## Implementation
 

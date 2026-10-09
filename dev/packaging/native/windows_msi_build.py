@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from uuid import UUID
@@ -15,7 +16,7 @@ from ..command_execution import run_command
 from .build_paths import build_paths
 from .hashing import digest
 from .installation import member
-from .windows_msi import MAINTENANCE_GATE, WIX_NAMESPACE, author
+from .windows_msi import MAINTENANCE_GATE, OWNER_GATE, WIX_NAMESPACE, author
 from .windows_msi_database import verify_admission_order, verify_upgrade_order
 from .windows_msi_identity import InstallationScope
 
@@ -57,8 +58,19 @@ def verify_database(source: Path, database: Path) -> None:
     elif observed_registration is None or registration.attrib.get("Value") != observed_registration.attrib.get("Value"):
         raise ValueError("MSI database immutable registration resources differ from its source")
     conditions = tree.findall(".//w:Launch", _NS)
-    if not any(item.attrib == {"Condition": "0", "Message": MAINTENANCE_GATE} for item in conditions):
-        raise ValueError("MSI database lost its unconditional installation gate")
+    owner = original.find("w:Property[@Id='CadrumoOwner']", _NS)
+    gate = (
+        {"Condition": "1", "Message": OWNER_GATE}
+        if owner is not None
+        else {
+            "Condition": "0",
+            "Message": MAINTENANCE_GATE,
+        }
+    )
+    if not any(item.attrib == gate for item in conditions):
+        raise ValueError("MSI database lost its native installation gate")
+    if owner is not None and any(item.attrib.get("Condition") == "0" for item in conditions):
+        raise ValueError("MSI database blocks its authenticated native owner")
     upgrade = tree.find(".//w:MajorUpgrade", _NS)
     if original.attrib["UpgradeStrategy"] == "none":
         if upgrade is not None or tree.find(".//w:RemoveExistingProducts", _NS) is not None:
@@ -66,11 +78,14 @@ def verify_database(source: Path, database: Path) -> None:
     elif upgrade is None:
         raise ValueError("Registration MSI lost its major upgrade")
     admission = original.find("w:Property[@Id='CadrumoAdmission']", _NS)
-    owner = original.find("w:Property[@Id='CadrumoOwner']", _NS)
     if owner is not None:
         observed_owner = package.find("w:Property[@Id='CadrumoOwner']", _NS)
         if observed_owner is None or observed_owner.attrib.get("Value") != owner.attrib["Value"]:
             raise ValueError("MSI database lost immutable native owner authentication metadata")
+        for name in ("CadrumoPrepareOwner", "CadrumoAuthenticateOwner"):
+            scheduled = tree.find(f".//w:InstallExecuteSequence/w:Custom[@Action='{name}']", _NS)
+            if scheduled is None or scheduled.attrib.get("Condition", ""):
+                raise ValueError("MSI database lost unconditional native owner authentication")
     if admission is not None:
         observed = package.find("w:Property[@Id='CadrumoAdmission']", _NS)
         if observed is None or observed.attrib.get("Value") != admission.attrib["Value"]:
@@ -119,7 +134,7 @@ def compile_products(
             verify_database(source, database)
             verify_upgrade_order(artifact, version_product=source.stem.endswith("-version"))
             if adapter is not None:
-                verify_admission_order(artifact)
+                verify_admission_order(artifact, owner_required=runner is not None)
             artifacts[artifact.name] = digest(artifact)
         # Re-admit the payload after compilation, detecting a concurrently changed stage.
         author(build, identity, desktop, adapter, runner)
@@ -190,11 +205,81 @@ def maintenance_plan(
     return destination
 
 
+def bootstrap_kit(
+    build: Path,
+    identity: Path,
+    payload: Path,
+    desktop: str | None = None,
+    adapter: Path | None = None,
+    runner: Path | None = None,
+) -> Path:
+    """Deliver portable desktop provisioning beside the immutable application package."""
+    if runner is None or adapter is None or desktop is None:
+        raise ValueError("Desktop provisioning requires the authenticated runner, adapter and desktop")
+    verify_products(build, identity, desktop, adapter, runner)
+    paths = build_paths(build)
+    authored = json.loads(member(paths["installation_metadata"], "wix/authoring.json").read_text(encoding="utf-8"))
+    compiled = json.loads(member(paths["packages"], "msi/compiled.json").read_text(encoding="utf-8"))
+    source = authored["maintenance"]
+    manifest = json.loads(member(payload, "data/package-manifest.json").read_text(encoding="utf-8"))
+    if digest(member(payload, "data/package-manifest.json")) != source["manifest_sha256"]:
+        raise ValueError("Desktop package differs from the MSI installation kit")
+    definition = manifest["layout"]["installation"]["bootstrap"]
+    directory = member(payload.parent, definition["directory"])
+    directory.mkdir(parents=True, exist_ok=True)
+    descriptor = member(directory, definition["manifest"])
+    artifacts = {
+        name: {
+            "path": f"{name}.msi",
+            "sha256": compiled["artifacts"][f"{name}.msi"],
+            "product_code": code,
+        }
+        for name, code in source["products"].items()
+    }
+    document = {
+        "schema": 1,
+        "runner": {"path": runner.name, "sha256": authored["runner_sha256"]},
+        "maintenance": {key: source[key] for key in ("version", "manifest_sha256", "desktop_present", "contract")},
+        "artifacts": artifacts,
+    }
+    sources = {runner.name: (runner, authored["runner_sha256"])}
+    sources.update(
+        {
+            f"{name}.msi": (member(paths["packages"], f"msi/{name}.msi"), compiled["artifacts"][f"{name}.msi"])
+            for name in artifacts
+        }
+    )
+    return _deliver_kit(directory, descriptor, sources, json.dumps(document, indent=2) + "\n")
+
+
+def _deliver_kit(directory: Path, descriptor: Path, sources: dict[str, tuple[Path, str]], document: str) -> Path:
+    """Copy admitted inputs and publish their descriptor only after every hash matches."""
+    with TemporaryDirectory(prefix="kit-", dir=directory) as temporary:
+        work = Path(temporary)
+        for name, (original, checksum) in sources.items():
+            if digest(original) != checksum:
+                raise ValueError("Installation kit source changed during delivery")
+            pending = member(work, name)
+            shutil.copyfile(original, pending)
+            if digest(pending) != checksum:
+                raise ValueError("Installation kit copy differs from its verified source")
+            destination = member(directory, name)
+            if destination.exists() and digest(destination) == checksum:
+                continue
+            os.replace(pending, destination)
+        # Publish the descriptor last; incomplete or mixed copies cannot pass admission.
+        pending_descriptor = member(work, descriptor.name)
+        pending_descriptor.write_text(document, encoding="utf-8")
+        os.replace(pending_descriptor, descriptor)
+    return descriptor
+
+
 def main() -> None:
-    """Expose build, verification and the still-closed native installation boundary."""
+    """Expose build, verification and authenticated native maintenance commands."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "command", choices=("build", "verify", "plan", "install", "remove-version", "unregister", "check-installation")
+        "command",
+        choices=("build", "verify", "kit", "plan", "install", "remove-version", "unregister", "check-installation"),
     )
     parser.add_argument("--build", type=Path, required=True)
     parser.add_argument("--identity", type=Path, required=True)
@@ -205,6 +290,7 @@ def main() -> None:
     parser.add_argument("--prefix", type=Path)
     parser.add_argument("--version", help="Exact installed release to remove; anchors and live use refuse")
     parser.add_argument("--wix", type=Path)
+    parser.add_argument("--payload", type=Path)
     args = parser.parse_args()
     try:
         if args.command == "check-installation":
@@ -215,7 +301,13 @@ def main() -> None:
                 "interactive Windows runner and two genuinely built distinct releases; Session 0 is insufficient. "
                 "Signing remains a release prerequisite."
             )
-        if args.command in {"plan", "install", "remove-version", "unregister"}:
+        if args.command == "kit":
+            if args.payload is None:
+                raise ValueError("Desktop provisioning requires the assembled payload")
+            bootstrap_kit(
+                args.build.resolve(), args.identity, args.payload.resolve(), args.desktop, args.adapter, args.runner
+            )
+        elif args.command in {"plan", "install", "remove-version", "unregister"}:
             if args.scope is None or args.prefix is None:
                 raise ValueError("Set CADRUMO_MSI_SCOPE and CADRUMO_MSI_PREFIX for explicit native maintenance")
             plan = maintenance_plan(

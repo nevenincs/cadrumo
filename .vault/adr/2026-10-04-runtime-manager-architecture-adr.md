@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-08'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:608f8ef971be16efe40401e5437effa0643349baa29681a5527e33b279796f35'
+body_hash: 'sha256:0379d7d1d4f3e2c33f12af0985530227e8c20314cf4c21d4200fce3d123ae32e'
 related:
   - "[[2026-10-04-runtime-manager-architecture-requirements-research]]"
   - "[[2026-10-03-runtime-manager-architecture-research]]"
@@ -324,6 +324,11 @@ Letting the old manager orchestrate the cutover keeps the only supervisor channe
 - unattended agent work needs a runtime before any sign-in
 
 Acceptance would establish decision authority only. None of this is implemented.
+
+
+### 2026-10-09 authorized desktop provisioning exception
+
+Under the operator's explicit request, the desktop may ensure the manager's scoped native installation before shell dispatch through the shared installer bootstrap and verified companion kit of 2026-10-09-desktop-service-installation-adr. Missing-installation recovery defaults to user scope; machine scope uses native installer elevation. This refines desktop dispatch and login registration: the desktop may provision the manager while the separate interactive manager remains the sole runtime supervisor. Overrides, opt-out, session admission and the prohibition of SCM services/tasks remain unchanged.
 
 ## 2026-10-08 accepted Darwin transport location and naming exception
 

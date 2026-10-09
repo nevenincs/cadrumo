@@ -23,11 +23,12 @@ const PLAN_LIMIT: u64 = 64 * 1024;
 const ARTIFACT_LIMIT: u64 = 16 * 1024 * 1024 * 1024;
 
 mod already_installed;
+pub mod bootstrap;
 mod recovery;
 mod removal;
 pub use removal::{remove_version, unregister};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 struct Artifact {
     path: PathBuf,
@@ -35,7 +36,7 @@ struct Artifact {
     product_code: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 struct Plan {
     schema: u32,
@@ -434,9 +435,9 @@ pub fn install(path: &Path) -> MaintenanceResult {
             Ok(value) => value,
             Err(_) => return report(Outcome::Refused, "artifact_or_owner_refused"),
         };
-    // Native lifecycle protections must pass disposable-host acceptance before
-    // the unconditional MSI Launch gate can open. Refuse before creating state
-    // or starting a native transaction; implemented source is not that evidence.
+    // Legacy/unowned products remain unconditionally blocked. New owned products
+    // require native scope and owner authentication before any file changes.
+    // This does not establish signing or disposable-host release acceptance.
     if windows::standalone_gate_present(&plan.version_product.path).unwrap_or(true)
         || windows::standalone_gate_present(&plan.registration_product.path).unwrap_or(true)
     {

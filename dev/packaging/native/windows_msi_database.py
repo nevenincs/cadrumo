@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 
-def action_sequence(artifact: Path) -> dict[str, int]:
+def _sequence_rows(artifact: Path) -> dict[str, tuple[int, str]]:
     """Query the MSI database in read-only mode, closing every native handle."""
     if sys.platform != "win32":
         raise ValueError("MSI database verification requires a native Windows host")
@@ -38,12 +38,12 @@ def action_sequence(artifact: Path) -> dict[str, int]:
         view = handle()
         check(
             msi.MsiDatabaseOpenViewW(
-                database, "SELECT `Action`, `Sequence` FROM `InstallExecuteSequence`", ctypes.byref(view)
+                database, "SELECT `Action`, `Sequence`, `Condition` FROM `InstallExecuteSequence`", ctypes.byref(view)
             )
         )
         try:
             check(msi.MsiViewExecute(view, 0))
-            actions: dict[str, int] = {}
+            actions: dict[str, tuple[int, str]] = {}
             while True:
                 record = handle()
                 status = msi.MsiViewFetch(view, ctypes.byref(record))
@@ -54,13 +54,21 @@ def action_sequence(artifact: Path) -> dict[str, int]:
                     size = handle(256)
                     action = ctypes.create_unicode_buffer(size.value)
                     check(msi.MsiRecordGetStringW(record, 1, action, ctypes.byref(size)))
-                    actions[action.value] = int(msi.MsiRecordGetInteger(record, 2))
+                    size = handle(4096)
+                    condition = ctypes.create_unicode_buffer(size.value)
+                    check(msi.MsiRecordGetStringW(record, 3, condition, ctypes.byref(size)))
+                    actions[action.value] = (int(msi.MsiRecordGetInteger(record, 2)), condition.value)
                 finally:
                     msi.MsiCloseHandle(record)
         finally:
             msi.MsiCloseHandle(view)
     finally:
         msi.MsiCloseHandle(database)
+
+
+def action_sequence(artifact: Path) -> dict[str, int]:
+    """Project the actual database's action ordering without executing installation."""
+    return {name: row[0] for name, row in _sequence_rows(artifact).items()}
 
 
 def verify_upgrade_order(artifact: Path, *, version_product: bool) -> None:
@@ -78,9 +86,10 @@ def verify_upgrade_order(artifact: Path, *, version_product: bool) -> None:
         raise ValueError(f"Registration MSI lost its transactional upgrade order: {sequence}")
 
 
-def verify_admission_order(artifact: Path) -> None:
+def verify_admission_order(artifact: Path, *, owner_required: bool = False) -> None:
     """Prove scoped admission runs in the execute transaction before file ownership changes."""
-    sequence = action_sequence(artifact)
+    rows = _sequence_rows(artifact)
+    sequence = {name: row[0] for name, row in rows.items()}
     if not (
         0
         < sequence.get("CostFinalize", 0)
@@ -91,8 +100,19 @@ def verify_admission_order(artifact: Path) -> None:
         < sequence.get("InstallFiles", 0)
     ):
         raise ValueError(f"MSI native scope admission has unsafe action ordering: {sequence}")
-    if "CadrumoAuthenticateOwner" in sequence and not (
+    owner_required = owner_required or "CadrumoAuthenticateOwner" in sequence
+    if owner_required and not (
         sequence["CostFinalize"] < sequence.get("CadrumoPrepareOwner", 0) < sequence["CadrumoPrepareAdmission"]
-        and sequence["CadrumoScopeAdmission"] < sequence["CadrumoAuthenticateOwner"] < sequence["ProcessComponents"]
+        and sequence["CadrumoScopeAdmission"]
+        < sequence.get("CadrumoAuthenticateOwner", 0)
+        < sequence["ProcessComponents"]
     ):
         raise ValueError(f"MSI native owner authentication has unsafe action ordering: {sequence}")
+    if owner_required and any(
+        rows.get(name, (0, "missing"))[1]
+        for name in (
+            "CadrumoPrepareOwner",
+            "CadrumoAuthenticateOwner",
+        )
+    ):
+        raise ValueError("MSI native owner authentication can be skipped by a condition")

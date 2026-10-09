@@ -18,6 +18,7 @@ from dev.packaging.native.hashing import digest
 from dev.packaging.native.identity import DistributionIdentity
 from dev.packaging.native.windows_msi import MAINTENANCE_GATE, _source_path, author, reject_combined_manager_msi
 from dev.packaging.native.windows_msi_build import compile_products, maintenance_plan, verify_database, verify_products
+from dev.packaging.native.windows_msi_database import verify_admission_order
 from dev.packaging.native.windows_msi_identity import msi_identity
 
 from .test_native_installation import payload_fixture
@@ -218,7 +219,7 @@ def test_authoring_is_incremental_and_preserves_stage(tmp_path: Path) -> None:
     assert receipt.read_bytes() == before
 
 
-def test_cached_owner_protocol_binds_native_identity_and_publication_without_opening_gate(tmp_path: Path) -> None:
+def test_cached_owner_protocol_binds_native_identity_and_publication_for_owned_installation(tmp_path: Path) -> None:
     build, identity = _prepared(tmp_path)
     adapter = tmp_path / "installer.dll"
     runner = tmp_path / "maintenance.exe"
@@ -246,7 +247,12 @@ def test_cached_owner_protocol_binds_native_identity_and_publication_without_ope
                 "publication": "data/installation-state",
             }
             launch = package.find("w:Launch", NS)
-            assert launch is not None and launch.attrib["Condition"] == "0"
+            assert launch is not None and launch.attrib["Condition"] == "1"
+            for name in ("CadrumoPrepareOwner", "CadrumoAuthenticateOwner"):
+                action = package.find(f"w:CustomAction[@Id='{name}']", NS)
+                assert action is not None and action.attrib["Return"] == "check"
+                sequence = package.find(f"w:InstallExecuteSequence/w:Custom[@Action='{name}']", NS)
+                assert sequence is not None and "Condition" not in sequence.attrib
 
 
 def test_optional_native_admission_is_scoped_and_hash_bound_without_opening_installation(tmp_path: Path) -> None:
@@ -283,6 +289,40 @@ def test_optional_native_admission_is_scoped_and_hash_bound_without_opening_inst
     adapter.write_bytes(b"changed adapter")
     author(build, identity, "cadrumo", adapter)
     assert descriptor.read_bytes() != before
+
+
+@pytest.mark.parametrize("defect", ["blocked", "missing-owner", "conditional-owner", "ignore-failure"])
+def test_database_verifier_refuses_broken_native_owner_admission(tmp_path: Path, defect: str) -> None:
+    build, identity = _prepared(tmp_path)
+    adapter = tmp_path / "installer.dll"
+    runner = tmp_path / "maintenance.exe"
+    adapter.write_bytes(b"authoring fixture")
+    runner.write_bytes(b"authoring fixture, never executed")
+    source = author(build, identity, "cadrumo", adapter, runner)["machine-version.wxs"]
+    tree = ElementTree.parse(source)
+    package = tree.find("w:Package", NS)
+    assert package is not None
+    if defect == "blocked":
+        launch = package.find("w:Launch", NS)
+        assert launch is not None
+        launch.set("Condition", "0")
+    elif defect == "ignore-failure":
+        action = package.find("w:CustomAction[@Id='CadrumoAuthenticateOwner']", NS)
+        assert action is not None
+        action.set("Return", "ignore")
+    else:
+        sequence = package.find("w:InstallExecuteSequence", NS)
+        assert sequence is not None
+        action = sequence.find("w:Custom[@Action='CadrumoAuthenticateOwner']", NS)
+        assert action is not None
+        if defect == "missing-owner":
+            sequence.remove(action)
+        else:
+            action.set("Condition", "NOT SKIP_OWNER")
+    database = tmp_path / "database.wxs"
+    tree.write(database, encoding="utf-8")
+    with pytest.raises(ValueError, match=r"native installation gate|native owner authentication|native admission"):
+        verify_database(source, database)
 
 
 @pytest.mark.parametrize("defect", ["data", "action", "impersonation", "ignore-failure"])
@@ -339,9 +379,8 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(tmp_path
         assert isinstance(code, str)
         return code
 
-    assert run_plan() == "native_owner_protocol_not_admitted"
-    assert run_plan("unregister") == "native_owner_protocol_not_admitted"
-    assert run_plan("remove-version", "--version", "0.5.1") == "native_owner_protocol_not_admitted"
+    # Valid plans are installation-capable now. This development-host lane
+    # invokes only requests that are refused before any native mutation.
     assert run_plan("remove-version", "--version", "../escape") == "invalid_release"
     request = json.loads(plan.read_text(encoding="utf-8"))
     request["version_product"], request["registration_product"] = (
@@ -359,6 +398,22 @@ def test_native_admission_dll_is_embedded_in_all_four_verified_products(tmp_path
     request["contract"]["installation_identity"]["channel"] = "another-channel"
     plan.write_text(json.dumps(request), encoding="utf-8")
     assert run_plan() == "artifact_or_owner_refused"
+    # Read the actual conditional action row in a deliberately broken MSI;
+    # compilation and database inspection create no installation session.
+    source = build / "installation/metadata/wix/machine-version.wxs"
+    tree = ElementTree.parse(source)
+    action = tree.find("w:Package/w:InstallExecuteSequence/w:Custom[@Action='CadrumoAuthenticateOwner']", NS)
+    assert action is not None
+    action.set("Condition", "NOT SKIP_OWNER")
+    conditional_source = tmp_path / "conditional.wxs"
+    tree.write(conditional_source, encoding="utf-8")
+    conditional_msi = tmp_path / "conditional.msi"
+    result = run_command(
+        [str(wix), "build", "-arch", "x64", "-wx", "-o", str(conditional_msi), str(conditional_source)], cwd=build
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    with pytest.raises(ValueError, match="can be skipped by a condition"):
+        verify_admission_order(conditional_msi, owner_required=True)
     adapter.write_bytes(adapter.read_bytes() + b"changed")
     with pytest.raises(ValueError, match="stale payload identity"):
         verify_products(build, identity, "cadrumo", adapter, runner)

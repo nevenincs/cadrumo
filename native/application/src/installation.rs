@@ -10,24 +10,24 @@ use crate::{
     package::{PackageManifest, Readiness},
     value::{RelativePath, Sha256Digest},
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{
     fs,
     path::{Path, PathBuf},
     sync::Arc,
 };
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct DiscoveryContract {
     pub layout: Layout,
     pub installation_identity: Identity,
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Identity {
     pub application_id: String,
     pub channel: String,
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Layout {
     pub abi: u32,
     pub platform: String,
@@ -36,7 +36,7 @@ pub struct Layout {
     pub application_images: Vec<Image>,
     pub entrypoint_suffix: String,
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Installation {
     pub schema: u32,
     pub marker: RelativePath,
@@ -44,12 +44,20 @@ pub struct Installation {
     pub maximum_versions: usize,
     #[serde(default)]
     pub publication: Option<RelativePath>,
+    #[serde(default)]
+    pub bootstrap: Option<Bootstrap>,
 }
-#[derive(Deserialize)]
+
+#[derive(Deserialize, Serialize)]
+pub struct Bootstrap {
+    pub directory: RelativePath,
+    pub manifest: RelativePath,
+}
+#[derive(Deserialize, Serialize)]
 pub struct Files {
     pub package_manifest: RelativePath,
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Image {
     pub name: String,
     pub placement: String,
