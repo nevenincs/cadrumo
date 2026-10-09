@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:94f56b96c90c66222c9a5584927354c59b84fd5c155a9879dff68ba5e79571ed'
+body_hash: 'sha256:a843a26aefbc47299985f7561001852b71908b8874fa51cb63f2b72e7774a6b6'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -737,6 +737,14 @@ related:
 - `S28` `verify:` `configured Clippy with ambient driver first attempt E0514` -> `fail`
 - `S28` `verify:` `configured Rust 1.96 Clippy all-targets fixture-test-mode warnings denied final` -> `pass`
 - `S28` `verify:` `git diff --check -- native/manager` -> `pass`
+- `S29` `M` `dev/packaging/native/cmake_build.py`
+- `S29` `M` `dev/packaging/native/tests/test_cargo_toolchain.py`
+- `S29` `M` `.vault/audit/2026-10-09-runtime-manager-architecture-windows-admission-recovery-audit.md`
+- `S29` `verify:` `focused pytest cargo_toolchain and build_timing 8 tests` -> `pass`
+- `S29` `verify:` `scoped Ruff lint and format` -> `pass`
+- `S29` `verify:` `scoped configured ty linux win32 darwin` -> `pass`
+- `S29` `verify:` `configured Rust 1.96 manager Clippy original command without PATH override` -> `pass`
+- `S29` `verify:` `scoped git diff --check` -> `pass`
 
 ## Notes
 
@@ -801,3 +809,4 @@ related:
 - `S28` Concurrent desktop-service-installation session owns installer/bootstrap and desktop retry flag integration; only native/manager source changed by this Step.
 - `S28` Semantic code service unavailable; named-file inspection and accepted vault decision discovery used.
 - `S28` Interactive installed and cross-release acceptance remains pending on a disposable interactive host; current process is Session 0.
+- `S29` GPT-6.1 Sol medium worker owns build-helper source; root confirms configured actual compiler check. External installer/desktop changes preserved.

@@ -125,13 +125,16 @@ def run_configured_command(
     directory = selected.resolve()
     identity = native_toolchain_identity(configured)
     marker = paths["generated"] / f"rust-toolchain-{hashlib.sha256(str(directory).encode()).hexdigest()}.txt"
+    # Cargo subcommands and their drivers must use the selected toolchain too.
+    environment = dict(os.environ)
+    environment["PATH"] = os.pathsep.join((str(Path(command[0]).parent), environment.get("PATH", "")))
     with action_lock(build, "native-cargo", timings=timings):
         if not marker.is_file() or marker.read_text(encoding="utf-8").strip() != identity:
             clean = [command[0], "clean", "--target-dir", str(directory)]
             if "--manifest-path" in command:
                 clean.extend(["--manifest-path", command[command.index("--manifest-path") + 1]])
             with timings.phase("cargo-clean") if timings is not None else nullcontext():
-                result = run_command(clean, cwd=REPO_ROOT)
+                result = run_command(clean, cwd=REPO_ROOT, environment=environment)
                 if timings is not None:
                     timings.command_completed(result.returncode)
             sys.stdout.write(result.stdout)
@@ -139,7 +142,7 @@ def run_configured_command(
             if result.returncode:
                 return result
         with timings.phase("cargo-command") if timings is not None else nullcontext():
-            result = run_command(command, cwd=REPO_ROOT)
+            result = run_command(command, cwd=REPO_ROOT, environment=environment)
             if timings is not None:
                 timings.command_completed(result.returncode)
         if result.returncode == 0:

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-09'
 modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:66e35fa5f3372969333ded03317e0f9ff93d60999ae74e7a4d9ff36a956afb1c'
+body_hash: 'sha256:ce6b26ef63f2ff26cf57912624f6379c1efe4f4dcf4f5c8d2257b3dc380d6797'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -36,6 +36,10 @@ The initial newest-package retry selection described above was revised before ch
 
 The first isolated Clippy invocation selected ambient Rust 1.99 against artifacts built with configured Rust 1.96 and failed E0514. Explicitly prepending the configured toolchain bin directory selects its cargo-clippy and clippy-driver; the final lint check passes. No source defect or global toolchain change was required.
 
+### configured-toolchain-fix | low | Cargo subprocesses now resolve subcommands from the selected toolchain
+
+P02.S29 fixes the earlier ambient Clippy observation in the canonical `dev/packaging/native/cmake_build.py:run_configured_command` owner. Cleanup and Cargo execution receive a child environment whose PATH starts with the selected Cargo bin; inherited entries and the parent environment are retained. The regression executes a real offline Clippy build with conflicting ambient cargo-clippy and clippy-driver executables and proves that the wrapper selects the configured tools. No global Rust default or toolchain identity schema changes. Independent root verification reran the original configured Rust 1.96 frozen-manager Clippy invocation without its prior temporary PATH override and passed.
+
 ## Recommendations
 
 Integration handoff: desktop ownership should pass `--retry` only for an explicit recovery action; ordinary bootstrap retains its existing no-argument dispatch. As of this review, `native/desktop/src-tauri/src/manager.rs:start` still dispatches without the flag. That file and its Python Explorer-dispatch adapter remain owned by the concurrent desktop-service-installation session. Installer/bootstrap and end-to-end desktop recovery are not certified by this manager-only checkpoint.
@@ -47,3 +51,5 @@ The manager is an interactive per-user login background process, not an SCM serv
 PASS for P02.S28 software scope: configured pinned Rust 1.96 Windows x64 test command, locked manifest and static CRT, against the frozen source/contract snapshot at `build/windows-x64/testing/manager-recovery-20261009`, output isolated under `build/windows-x64/cargo/native/manager-recovery-20261009`. The initial default suite passed 167 tests; after the restoration correction, the final full suite with fixture-test-mode passed 205 tests including 37 supervision and one termination test. This covers native Session 0 executable refusal, arbitrary nonzero session-number policy, closed retry parser/redispatch, restoration and malformed failure state, real authenticated IPC, custody, ownership, crash/hang recovery and session-end supervision. `cargo fmt --manifest-path native/manager/Cargo.toml -- --check`, Clippy all-targets with fixture-test-mode and warnings denied, and scoped git diff --check passed. Inspect `command-pinned.json`, `tests-fixture.log` and `clippy.log` in the snapshot directory for configured inputs and output.
 
 PENDING for installed acceptance: native interactive installation, logout, clean GUI bootstrap, cross-release activation and version-cutover acceptance are unverified. The current host runs in Session 0; fixture children can run but cannot establish interactive desktop acceptance. No product registration or user-session mutation occurred. The concurrent session owns combined installer/desktop verification; existing open manager acceptance Steps remain open. No critical or high software finding remains in this scoped review.
+
+P02.S29 PASS: eight focused Cargo/toolchain and build-timing tests passed; scoped Ruff lint/format, configured ty checks on Linux/Windows/macOS, and git diff --check passed. Test log: `var/storage/development/.logs/test-runs/2026-10-09/20261009T073708.909283Z-pytest-33324-612e00fe/run.log`. Root's configured Rust 1.96 manager Clippy check passed without a PATH override; output at `build/windows-x64/testing/recovery-followthrough-20261009/clippy-toolchain.log`. These developer files are outside the configured strict production subset. Desktop forwarding and restored-manager probe follow-through remain in progress under P03.S31 and P02.S30.
