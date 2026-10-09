@@ -2332,6 +2332,22 @@ test("the calendar's months draw each filing window across the days it is open",
     await expect(window303.nth(index)).toHaveAttribute("aria-hidden", "true");
     await expect(window303.nth(index)).toHaveAttribute("tabindex", "-1");
   }
+  // It is named in full once in the month, where it is first drawn; the
+  // weeks it goes on across carry its Modelo alone.
+  await expect(window303.getByText("303", { exact: true })).toHaveCount(4);
+  await expect(window303.first().getByText("2026-3T")).toBeVisible();
+  for (const index of [1, 2, 3])
+    await expect(window303.nth(index).getByText("2026-3T")).toBeHidden();
+  // The end that binds is the heaviest edge it has, by the shared measure.
+  const measures = await window303.last().evaluate((bar) => ({
+    closing: getComputedStyle(bar).borderRightWidth,
+    measure: getComputedStyle(document.documentElement)
+      .getPropertyValue("--calendar-deadline-edge")
+      .trim(),
+    opening: getComputedStyle(bar).borderLeftWidth,
+  }));
+  expect(measures.closing).toBe(measures.measure);
+  expect(measures.opening).toBe("0px");
   // Pressed, a part that is only for the eye chooses the obligation and
   // leaves the keyboard on the part that is its stop, the view unmoved.
   await window303.nth(2).scrollIntoViewIfNeeded();

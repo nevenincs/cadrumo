@@ -155,6 +155,10 @@
   --focus-ring: 2px;
   --selection-edge: 2px;
   --forced-double-edge: 3px;
+  /* The end of a filing window that binds, heavier than its other edges,
+     and the edge of a hollow mark on a day. */
+  --calendar-deadline-edge: 4px;
+  --calendar-mark-edge: 2px;
 
   /* ── Terminal font-size steps: pixel numbers for xterm's canvas, behind
      the named "small"/"medium"/"large"/"x-large" preference

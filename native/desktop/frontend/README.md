@@ -306,7 +306,11 @@ The calendar has two faces over the one read, in
 - **The months** (`src/components/calendar/CalendarMonths.tsx`, laid out by
   `src/shell/calendarGrid.ts`) draw each obligation as a bar across the days
   its window is open, ending on the day that binds, in a row of its own where
-  windows overlap. What was observed is a mark on its day, filled for a
+  windows overlap. A window is named in full, Modelo and period, where it
+  is first drawn in a month; the weeks it goes on across carry its Modelo
+  alone, quietly. Its closing end is its heaviest edge,
+  `--calendar-deadline-edge`, and hovered it takes the shared wash over its
+  own fill (`hover-wash`). What was observed is a mark on its day, filled for a
   filing made and hollow for a message from the agency. The day the product
   evaluated is marked: filled and said as today where it is today here,
   ringed and said as its date where it is not. The months run from the

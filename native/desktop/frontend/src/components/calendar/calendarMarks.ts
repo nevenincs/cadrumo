@@ -13,7 +13,7 @@ export const STATE_TONE: Record<
  */
 export const EVENT_MARK: Record<CalendarEvent["event_type"], string> = {
   filing: "bg-success forced-colors:bg-[CanvasText]",
-  message: "border-2 border-muted-foreground",
+  message: "border-(length:--calendar-mark-edge) border-muted-foreground",
 };
 
 /**

@@ -84,6 +84,9 @@ export function CalendarMonth({
   const toggle = t(
     whole ? "desktop.calendar.show_fewer" : "desktop.calendar.show_all",
   );
+  // A window is named in full once in a month, where it is first drawn; the
+  // weeks it goes on across carry its Modelo alone, quietly.
+  const named = new Set<string>();
   return (
     <div
       // A group, not a region: the list names its months as regions, and
@@ -129,7 +132,7 @@ export function CalendarMonth({
         {month.weeks.map((week, row) => (
           <div
             key={row}
-            className="grid min-h-9 grid-cols-7 content-start gap-y-0.5 border-b pb-0.5 last:border-b-0"
+            className="grid min-h-9 grid-cols-7 content-start gap-y-1 border-b pb-1 last:border-b-0"
           >
             {week.days.map((cell, column) => (
               <div
@@ -190,6 +193,8 @@ export function CalendarMonth({
             {(drawn.get(week)?.bars ?? []).map(({ bar, lane, stop }) => {
               const key = entryKey(bar.entry);
               const said = describe(bar);
+              const lead = !named.has(key);
+              named.add(key);
               return (
                 <button
                   key={key}
@@ -212,7 +217,7 @@ export function CalendarMonth({
                   }}
                   className={cn(
                     "calendar-bar @container flex h-control-xs min-w-0 cursor-pointer items-center border-y px-1 text-xs font-medium text-foreground",
-                    "scroll-mt-[calc(var(--calendar-head)+--spacing(8))] hover:brightness-95 focus-visible:z-(--layer-separator) data-selected:ring-2 data-selected:ring-ring data-selected:ring-inset",
+                    "scroll-mt-[calc(var(--calendar-head)+--spacing(8))] hover-wash focus-visible:z-(--layer-separator) data-selected:ring-2 data-selected:ring-ring data-selected:ring-inset",
                     // A ring is a shadow, which forced colours do not draw.
                     "forced-colors:data-selected:outline-2 forced-colors:data-selected:-outline-offset-2 forced-colors:data-selected:outline-[Highlight]",
                     BAR_TONE[bar.entry.user_state],
@@ -222,7 +227,8 @@ export function CalendarMonth({
                     // given up under a finger, where a day is barely a fingertip
                     // wide and a window of one day needs all of it.
                     bar.opens && "rounded-l-md border-l pointer-fine:ml-0.5",
-                    bar.closes && "rounded-r-md border-r-4 pointer-fine:mr-0.5",
+                    bar.closes &&
+                      "rounded-r-md border-r-(length:--calendar-deadline-edge) pointer-fine:mr-0.5",
                   )}
                   onClick={(event) => {
                     onSelect(key);
@@ -246,8 +252,20 @@ export function CalendarMonth({
                     />
                   )}
                   {/* The Modelo is what a window too short for more keeps. */}
-                  <span className="shrink-0">{bar.entry.modelo}</span>{" "}
-                  <span className="ml-1 min-w-0 truncate font-normal text-muted-foreground @max-calendar-bar:hidden">
+                  <span
+                    className={cn(
+                      "shrink-0",
+                      !lead && "font-normal text-muted-foreground",
+                    )}
+                  >
+                    {bar.entry.modelo}
+                  </span>{" "}
+                  <span
+                    className={cn(
+                      "ml-1 min-w-0 truncate font-normal text-muted-foreground @max-calendar-bar:hidden",
+                      !lead && "hidden",
+                    )}
+                  >
                     {bar.entry.period}
                   </span>
                 </button>

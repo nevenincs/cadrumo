@@ -62,6 +62,14 @@
   grid-template-columns: var(--log-time-width) var(--log-level-width) 1fr;
 }
 
+/* Hover for a surface that keeps a colour of its own: the same wash of ink
+   every hovered control takes, laid over the fill instead of replacing it. */
+@utility hover-wash {
+  &:hover {
+    background-image: linear-gradient(var(--accent), var(--accent));
+  }
+}
+
 @utility calendar-month-grid {
   grid-template-columns: repeat(
     auto-fill,
