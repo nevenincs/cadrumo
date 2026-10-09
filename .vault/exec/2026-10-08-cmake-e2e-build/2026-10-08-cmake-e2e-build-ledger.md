@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#cmake-e2e-build'
 date: '2026-10-08'
-modified: '2026-10-08'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:907dd03648ccfecefcaf674d2216ee70403af0316bf5bfbae4e16c3f6f37670c'
+body_hash: 'sha256:f86f920b212986bb5ebc491bee229c2e43dc40af1b876babc86cc3a2095e48b1'
 related:
   - "[[2026-10-08-cmake-e2e-build-plan]]"
 ---
@@ -74,6 +74,17 @@ related:
 - `S01` `verify:` `cmake snapshot release app-distro (desktop, runtime and four-language documentation)` -> `pass`
 - `S01` `verify:` `ctest snapshot release bundle with package-root override unset (6 tests)` -> `pass`
 - `S01` `verify:` `cmake -E env packaged cadrumo.exe from Y:/ with package-root override unset: version, help, no arguments` -> `pass`
+- `S02` `M` `native/application/src/child.rs`
+- `S02` `M` `native/cmake/Packaging.cmake`
+- `S02` `A` `dev/packaging/native/package_launch_smoke.py`
+- `S02` `M` `native/CONTRACT.md`
+- `S02` `verify:` `ctest release application.rust (111 tests)` -> `pass`
+- `S02` `verify:` `cmake release verify-app-distro (8 tests including full inventory and CMD launch)` -> `pass`
+- `S02` `verify:` `CMake CMD packaged no-argument launch from C:/Users/hello without overrides` -> `pass`
+- `S02` `verify:` `ruff check .` -> `pass`
+- `S02` `verify:` `python -m dev.quality.types` -> `pass`
+- `S02` `verify:` `changed Python and Rust formatting; git diff --check` -> `pass`
+- `S02` `verify:` `ruff format --check .` -> `fail`
 
 ## Notes
 
@@ -82,3 +93,4 @@ related:
 - `S01` Runtime-only bundle and standalone executable launch succeeded. Full desktop distribution remains blocked by documentation runtime deadline and shutdown failures. No session-number branch was added; existing desktop availability checks govern launch mode. S01 remains open for full distribution acceptance.
 - `S01` User explicitly separates app-distro, ZIP and release verification. Corrected search stamping to preserve line endings; rebuild pending. Full format check reports unrelated application/overview/calendar.py drift. Initial import graph command lacked managed tool PATH; reran that component successfully with its absolute managed executable, preserving passing loadability/checker evidence.
 - `S01` Complete non-zipped distribution exists at build/windows-x64/product/build/source/build/windows-x64/stage/Release/app. Packaged CADRUMO 0.5.1 exits 0 for version/help/no-argument launch. Session 0 permits headless execution only; no production session-selection code changed. ZIP and full live release verification remain separate and were not run for this user-requested distribution.
+- `S02` Unrelated calendar.py formatting remains. First build refused concurrent documentation input changes; final retry passed. Initial CMD unit fixture was replaced with a native child environment assertion; real CMD package acceptance passed. GUI interaction unavailable in Session 0; no production selection logic changed.

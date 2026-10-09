@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#cmake-e2e-build'
 date: '2026-10-08'
-modified: '2026-10-08'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:9a07a5bbcb11676d4dfca52bca110687d5c568146671e162b144834ed360e20a'
+body_hash: 'sha256:813271a239c6d66473981cc5fd601f9be67848e4a64fe3edbe04fe75abcb3d4b'
 related:
   - "[[2026-10-08-cmake-e2e-build-plan]]"
 ---
@@ -55,7 +55,19 @@ The user's latest instruction explicitly requires the complete uncompressed dist
 
 The first separated build rendered all four languages successfully, then failed its stored-documentation round-trip check for all 1316 HTML pages. The first differing byte in en/404.html was a line terminator: the indexed page had 818 LF line endings, while reconstruction had 818 CRLF endings; normalizing the terminators made the bytes identical. Both Pagefind stamping paths explicitly rewrote pages with LF, conflicting with native-platform reconstruction. Read and write now preserve existing line endings. Real Pagefind integration tests cover LF and CRLF pages in both indexed and excluded paths. All 44 CMake documentation-driver and Pagefind tests pass. No byte-identity assertion was removed. The corrected full distribution build remains pending at this checkpoint.
 
+### cmd-launch-acceptance | low | CMD compatibility correction and actual distribution integrity verified
+
+PASS for S02 against HEAD 5506eda9e7 plus the scoped working-tree correction. The Windows child validator now preserves a single leading equals sign in inherited environment names, retaining rejection of malformed names, NULs and case collisions. The regression suite proves the hidden entry survives a real child process. The package test compares actual CMD and direct version/help launches with default and explicit storage, always removing the package-root override. CMake `verify-app-distro` depends on the canonical `app-distro` and runs both bundle smoke tests and the existing full `application.package` verifier; ZIP and live release verification remain separate. No production desktop/session selection changed.
+
+Verification: `ctest --preset release -R '^application[.]rust$' --output-on-failure` passed all 111 Rust tests. `cmake --build --preset release --target verify-app-distro --parallel 4` exited 0; all eight package checks passed in 48.89 seconds, including actual file/delegated documentation inventory inspection before and after the packaged Python probe. The manifest declares an application distribution, bundled documentation, version 0.6.0 and 18489 directly inventoried files. From `C:/Users/hello`, CMake launched `cmd.exe /d /c` with the packaged executable and no arguments, with package-root and local-storage overrides removed: application start/help output and exit 0. The accepted executable is `Y:/code/cadrumo-worktrees/tui/build/windows-x64/stage/Release/app/cadrumo.exe`. This supersedes the old nested snapshot handover. GUI interaction remains unverified in Session 0.
+
+Repository lint and type checks passed; changed Python/Rust formatting and `git diff --check` passed. Repository formatting still reports the previously identified unrelated `src/cadrumo/application/overview/calendar.py` line. An initial assembly attempt correctly refused documentation inputs changed by concurrent work; the final retry passed source stability. Initial CMD-based unit-fixture attempts failed in the headless child setup; the final unit fixture uses a real native test child to assert the inherited value, while the passing package acceptance separately exercises real CMD. The earlier CMD launch finding is resolved by these checks. Integrated review found no remaining high or critical issue in S02's scope.
+
 ## Recommendations
+
+### cmd-launch-correction | high | Previous smoke acceptance did not cover CMD's inherited environment
+
+On 2026-10-09 the user reported environment_failed from CMD. Direct invocation from C:/Users/hello without a package-root or storage override passed, while the same CMake env invocation through cmd.exe reproduced the failure in Session 0. Native startup logs show admission success and immediate environment failure before any Python child. `ChildConfiguration::new` rejected every equals sign in environment names, including Windows hidden names such as =C:. The native projection preserves those inherited entries; the shared child validator then rejects them. S02 corrects the native Windows name boundary and adds real CMD/default-storage acceptance. The previous six smoke tests were insufficient to establish ordinary CMD startup, and the full `application.package` inventory test was not included in that bundle-only test selection. Validation is pending for this correction. Source lookup confirmed Windows hidden-drive entries in Microsoft's CreateProcess documentation and the pinned Rust 1.96.0 Windows environment-block serialization. Semantic vault lookup did not return within the bounded discovery attempt; existing accepted desktop/distribution coverage and exact code were used.
 
 ### final-distribution-review | low | Complete directory and direct packaged launch accepted
 

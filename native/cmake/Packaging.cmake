@@ -71,7 +71,7 @@ string(JSON image_count LENGTH "${application_images}")
 if(image_count GREATER 0)
   math(EXPR image_last "${image_count} - 1")
   foreach(index RANGE ${image_last})
-    foreach(key file target artifact staged)
+    foreach(key file target artifact staged desktop)
       string(JSON image_${key} GET "${application_images}" ${index} ${key})
     endforeach()
     if(NOT image_staged)
@@ -98,9 +98,19 @@ if(image_count GREATER 0)
       endforeach()
       string(JSON image_package_path GET "${application_images}" ${index} package_path)
       add_test(NAME bundle.image.${image_file} COMMAND "${CMAKE_COMMAND}" -E env
+        --unset=CADRUMO_DESKTOP_PACKAGE_ROOT
         "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
         "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${image_package_path}" ${image_arguments})
       set_tests_properties(bundle.image.${image_file} PROPERTIES RESOURCE_LOCK package_inventory)
+      if(WIN32 AND image_desktop)
+        add_test(NAME bundle.launch.${image_file} COMMAND "${CMAKE_COMMAND}" -E env
+          "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_TESTING}/$<CONFIG>/storage"
+          "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.package_launch_smoke
+          "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/${image_package_path}" "${CADRUMO_VERSION}"
+          "${CADRUMO_STORAGE_ROOT_VARIABLE}" "${CADRUMO_PATH_TESTING}/$<CONFIG>")
+        set_tests_properties(bundle.launch.${image_file} PROPERTIES RESOURCE_LOCK package_inventory TIMEOUT 600
+          WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+      endif()
     endif()
   endforeach()
 endif()
@@ -202,6 +212,10 @@ add_custom_target(verify
   COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>" --output-on-failure
   DEPENDS bundle ${native_verification_targets}
   USES_TERMINAL VERBATIM)
+add_custom_target(verify-app-distro
+  COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${PROJECT_BINARY_DIR}" -C "$<CONFIG>"
+    --output-on-failure -R "^(bundle[.]|application[.]package$)"
+  DEPENDS app-distro USES_TERMINAL VERBATIM)
 cadrumo_cached_command(zip_command zip
   INPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" "${PROJECT_BINARY_DIR}/CPackConfig.cmake"
     "${PROJECT_BINARY_DIR}/CPackProject.cmake" "${PROJECT_BINARY_DIR}/Artifact.cmake"

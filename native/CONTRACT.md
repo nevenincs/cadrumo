@@ -458,6 +458,7 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | --- | --- |
 | default / `app-distro` | Build the complete runnable directory at `stage/<Config>/app`, including application images, runtime and documentation |
 | `bundle` | Compatibility alias for `app-distro` |
+| `verify-app-distro` | Build the app directory, run its smoke tests and inspect the complete package inventory, without ZIP or release verification |
 | `zip` | Build `app-distro`, then create its install-based ZIP |
 | `release` / `verify-release` | Build the ZIP and run native, extracted-artifact and live documentation verification |
 | `setup-native-builder` | Converge the configure-owned builder or validate the selected external interpreter |

@@ -8,9 +8,9 @@ related:
   - '[[2026-07-13-docs-cli-sequences-adr]]'
   - '[[2026-09-29-docs-build-workflow-adr]]'
   - '[[2026-10-04-application-distribution-adr]]'
-modified: '2026-10-08'
+modified: '2026-10-09'
 body_schema: body-v2
-body_hash: 'sha256:22b916c18e7a78a8f35dcda29d1bb2c2204ff5897b05130f08bd8a69b27ee95d'
+body_hash: 'sha256:adee90f73eb4b50dbab6d748c05f3b09a83e3b77c4679ea81989004a014326bf'
 ---
 
 # `cmake-e2e-build` plan
@@ -18,6 +18,8 @@ body_hash: 'sha256:22b916c18e7a78a8f35dcda29d1bb2c2204ff5897b05130f08bd8a69b27ee
 ## Description
 
 Approved 2026-10-08
+
+2026-10-09 corrective acceptance (S02): the user reported `environment_failed` launching the delivered EXE from CMD. Reproduced from CMD in Session 0 while direct PowerShell launch succeeds, including without a storage override. The native child validator rejects CMD's hidden leading-equals environment entries. Fix the shared validator, preserve malformed-name and case-collision checks, add real CMD/default-storage package acceptance, and run the existing full inventory verifier through a dedicated CMake target. A separate parent `bundle` build (PID 34888) replaced the nested product snapshot; do not interrupt it or build concurrently in its binary directory. Deliver the normal top-level CMake stage directory after it finishes. No Session 0 production behavior is to be added.
 
 Latest controlling instruction: build the complete uncompressed application distribution now. CMake owns independent binary compilation, `app-distro`, `zip`, and `release` stages; all archive/release paths consume the same `app-distro` producer. Strict documentation rendering belongs to the distribution; live sequence verification belongs to the explicit release stage. The user explicitly rejected further scope questions. Earlier entries below record history and do not override this instruction.
 
@@ -44,12 +46,15 @@ Latest authorization: the user requested ensuring the package is built for launc
 Stopped at the user's explicit request on 2026-10-08: the owned desktop-headless-test CMake process 30004 and its descendants were terminated. The separate windows-installers-x64 documentation compile 18600 was left running. The proposed shared-cache option was not implemented; only its scope dry-run was performed. Existing edits remain, S01 stays open, and cadrumo.exe has not been executed or accepted. Do not resume the build without a new user request.
 
 - [x] `S01` - Separate binary compilation, on-disk app distribution, ZIP and release verification; build and launch the complete app distribution; `native/cmake/Docs.cmake, native/cmake/Packaging.cmake, native/cmake/ReleaseVerification.cmake, native/desktop/CMakeLists.txt, native/CONTRACT.md, dev/docs/compile_once.py, dev/docs/pagefind_index.py, dev/docs/tests/test_pagefind_index.py, dev/packaging/native/docs_build.py, dev/packaging/native/tests/test_docs_build_environment.py, dev/packaging/native/tests/test_docs_shared_site.py, docs/_sequences, src/cadrumo/entrypoints/cli/runtime_modelo_verification.py, build/windows-x64`.
+- [x] `S02` - Fix CMD-inherited environment admission and verify the rebuilt app directory through real CMD launch and complete inventory inspection; `native/application/src/child.rs, native/cmake/Packaging.cmake, dev/packaging/native/package_launch_smoke.py, native/CONTRACT.md, build/windows-x64`.
 
 ## Parallelization
 
 One owner executes S01. A single CMake invocation may schedule independent documentation pages with parallelism two. Do not run competing builds in the same binary directory.
 
 ## Verification
+
+S02 corrective acceptance passed on 2026-10-09: CMake `verify-app-distro` exited 0 with all eight package tests passing (48.89 seconds), including real CMD/default-storage launch and full inventory inspection. All 111 application Rust tests passed. The actual package is now the canonical top-level `build/windows-x64/stage/Release/app`, with bundled documentation and version 0.6.0. Its executable also launched with no arguments through CMD from `C:/Users/hello`, without package-root or storage overrides, and exited 0. No Session 0 production condition was added. Integrated review passes; graphical interaction remains unverified in this headless runner. The earlier nested snapshot path below is historical and no longer the handover location.
 
 Final requested acceptance passed: CMake `app-distro` exited 0 with the desktop EXE, Python runtime, manager and all four documentation languages assembled under `build/windows-x64/product/build/source/build/windows-x64/stage/Release/app`. With the package-root override removed, all six bundle CTest checks passed, and the packaged `cadrumo.exe` launched from `Y:/` with `--version`, `--help`, and no arguments, each exiting 0. Version is CADRUMO 0.5.1. The actual artifact is the complete app directory; no ZIP was built. Interactive GUI acceptance remains unavailable in Session 0. Forty-four documentation-driver/search tests, repository lint, type checks and all import-check components passed. Repository-wide formatting reports unrelated `application/overview/calendar.py` drift; changed files pass formatting. Integrated review passes for this requested distribution scope.
 
