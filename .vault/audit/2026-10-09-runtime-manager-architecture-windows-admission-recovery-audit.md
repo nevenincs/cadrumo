@@ -5,7 +5,7 @@ tags:
 date: '2026-10-09'
 modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:c6d098bd7194fa5c6320b225cdb292d23a9a685151d35363b29761eb4eeafc34'
+body_hash: 'sha256:f52ccdf21253c69d599e00db8687073b10438b50a330d7c1aa6e04133685dfd4'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -80,4 +80,4 @@ Commit isolation: external installer/bootstrap changes in desktop manager source
 
 Final review: PASS for P02.S29/P02.S30/P03.S31 software. A GPT-6.1 Sol medium reviewer independently traced the combined flows and raised the coalescing and legacy stable-entry findings; both were corrected and covered by the applicable final checks. Root confirms no outstanding critical/high or unfixed in-scope software defect. Feature vault health has zero errors and two existing whitespace warnings; plan ordering warning is expected from append-only identifiers grouped by phase. Installed acceptance remains PENDING: machine/user installation, interactive GUI/COM launch, old-owner tray recovery, logout and two-release idle cutover were not run on this Session 0 development host. The installer session retains its provisioning and package-assembly verification scope; earlier historical pending statements are superseded only for this audit's software integration.
 
-Repository-wide vault check after the scoped commit failed with two errors and 47 warnings outside this software verification: an unreplaced {title} placeholder in `2026-10-09-desktop-frontend-coherence-audit` and missing grounding references in `2026-10-07-git-free-tooling-adr`. The feature-scoped check remains zero errors; unrelated records and concurrent work were not repaired by this audit continuation. This exception prevents claiming a repository-wide clean vault, but does not invalidate the applicable source/test results or reopen these scoped recovery Steps.
+Repository-wide vault check after the scoped commit failed with two errors and 47 warnings outside this software verification: an unreplaced audit-title placeholder (intended title: `Frontend style and component ownership`) in `2026-10-09-desktop-frontend-coherence-audit` and missing grounding references in `2026-10-07-git-free-tooling-adr`. The feature-scoped check remains zero errors; unrelated records and concurrent work were not repaired by this audit continuation. This exception prevents claiming a repository-wide clean vault, but does not invalidate the applicable source/test results or reopen these scoped recovery Steps.
