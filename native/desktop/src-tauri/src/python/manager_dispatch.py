@@ -6,7 +6,7 @@ import json
 import sys
 
 
-def dispatch(executable: str) -> None:
+def dispatch(executable: str, retry: bool) -> None:
     """Use Explorer's desktop-view automation object, not an in-process Shell object."""
     import pythoncom
     import pywintypes
@@ -39,20 +39,25 @@ def dispatch(executable: str) -> None:
     view = browser.QueryActiveShellView()
     background = view.GetItemObject(shellcon.SVGIO_BACKGROUND, pythoncom.IID_IDispatch)
     application = dynamic.Dispatch(background).Application
-    # No arguments, inherited overrides, or runtime handle cross this boundary.
-    application.ShellExecute(executable, "", "", "open", 0)
+    # Only the fixed recovery intent crosses this boundary.
+    application.ShellExecute(executable, "--retry" if retry else "", "", "open", 0)
 
 
 def main() -> int:
     """Emit a bounded launch acknowledgement without COM exception text."""
+    if len(sys.argv) == 2:
+        retry = False
+    elif len(sys.argv) == 3 and sys.argv[2] == "--retry":
+        retry = True
+    else:
+        return 2
+
     import pythoncom
 
     pythoncom.CoInitialize()
     try:
-        if len(sys.argv) != 2:
-            return 2
         try:
-            dispatch(sys.argv[1])
+            dispatch(sys.argv[1], retry)
         except Exception as error:
             # COM messages may contain paths; only the numeric failure escapes.
             code = getattr(error, "hresult", None) or getattr(error, "winerror", None)

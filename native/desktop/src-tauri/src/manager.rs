@@ -33,11 +33,16 @@ pub enum StartOutcome {
     Unsupported,
 }
 
+struct Attempt {
+    outcome: Result<StartOutcome>,
+    retry: bool,
+}
+
 pub struct ManagerStart {
     package_root: Result<Option<PathBuf>>,
     child: ChildConfiguration,
     diagnostics: Arc<Diagnostics>,
-    attempt: Arc<tokio::sync::Mutex<Option<Result<StartOutcome>>>>,
+    attempt: Arc<tokio::sync::Mutex<Option<Attempt>>>,
     generation: AtomicU64,
     closed: AtomicBool,
     cancellation: Arc<Cancellation>,
@@ -63,8 +68,11 @@ impl ManagerStart {
 
     /// Concurrent callers share the initial attempt; retries are explicit.
     pub async fn start(self: &Arc<Self>, retry: bool) -> Result<StartOutcome> {
-        self.start_with(retry, |owner| async move { owner.dispatch().await })
-            .await
+        self.start_with(
+            retry,
+            move |owner| async move { owner.dispatch(retry).await },
+        )
+        .await
     }
 
     async fn start_with<F, Work>(self: &Arc<Self>, retry: bool, work: F) -> Result<StartOutcome>
@@ -80,21 +88,26 @@ impl ManagerStart {
         if self.closed.load(Ordering::Acquire) {
             return Err(failure(ErrorCode::SessionUnavailable));
         }
-        if (!retry || observed != self.generation.load(Ordering::Acquire))
-            && let Some(outcome) = previous.as_ref()
+        if let Some(attempt) = previous.as_ref()
+            && (!retry || (attempt.retry && observed != self.generation.load(Ordering::Acquire)))
         {
-            return outcome.clone();
+            return attempt.outcome.clone();
         }
         let owner = self.clone();
         // The host owns settlement even if an IPC caller abandons its answer.
-        tokio::spawn(async move { owner.complete_attempt(previous, work(owner.clone())).await })
-            .await
-            .map_err(|_| failure(ErrorCode::Panic))?
+        tokio::spawn(async move {
+            owner
+                .complete_attempt(previous, retry, work(owner.clone()))
+                .await
+        })
+        .await
+        .map_err(|_| failure(ErrorCode::Panic))?
     }
 
     async fn complete_attempt(
         &self,
-        mut previous: tokio::sync::OwnedMutexGuard<Option<Result<StartOutcome>>>,
+        mut previous: tokio::sync::OwnedMutexGuard<Option<Attempt>>,
+        retry: bool,
         work: impl std::future::Future<Output = Result<StartOutcome>>,
     ) -> Result<StartOutcome> {
         self.diagnostics
@@ -114,7 +127,10 @@ impl ManagerStart {
                 .diagnostics
                 .host_failure(HostStage::Manager, error.clone()),
         }
-        *previous = Some(outcome.clone());
+        *previous = Some(Attempt {
+            outcome: outcome.clone(),
+            retry,
+        });
         self.generation.fetch_add(1, Ordering::Release);
         outcome
     }
@@ -135,7 +151,7 @@ impl ManagerStart {
         let _settled = self.attempt.lock().await;
     }
 
-    async fn dispatch(&self) -> Result<StartOutcome> {
+    async fn dispatch(&self, retry: bool) -> Result<StartOutcome> {
         if !cfg!(windows) {
             return Ok(StartOutcome::Unsupported);
         }
@@ -150,19 +166,32 @@ impl ManagerStart {
         if self.closed.load(Ordering::Acquire) {
             return Err(failure(ErrorCode::SessionUnavailable));
         }
+        let outcome = self
+            .run_dispatch(self.dispatch_command(&target, retry), DEADLINE)
+            .await;
+        drop(target);
+        outcome
+    }
+
+    fn dispatch_command(&self, target: &Selection, retry: bool) -> tokio::process::Command {
         let mut command = tokio::process::Command::from(self.child.command());
         command
             .args(["-I", "-c", DISPATCH])
-            .arg(&target.entrypoint)
+            .arg(if retry {
+                &target.manager
+            } else {
+                &target.entrypoint
+            })
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
             .kill_on_drop(true);
+        if retry {
+            command.arg("--retry");
+        }
         #[cfg(windows)]
         command.creation_flags(0x0800_0000);
-        let outcome = self.run_dispatch(command, DEADLINE).await;
-        drop(target);
-        outcome
+        command
     }
 
     async fn resolve_with<F, T>(&self, inspect: F) -> Result<T>

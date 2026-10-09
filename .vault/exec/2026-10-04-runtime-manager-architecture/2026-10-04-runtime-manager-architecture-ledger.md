@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:7fad0c5e12c8b20f40f475e5e7e8fe10c8c1d8c934a1d7541453a943b20768fa'
+body_hash: 'sha256:a05d756bb44e9008c1ded99edc7140a9c4e6956b22c043dec5b04d99c5f29bdd'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -762,6 +762,21 @@ related:
 - `S30` `verify:` `frozen configured Rust 1.96 clippy all-targets fixture-test-mode warnings denied` -> `pass`
 - `S30` `verify:` `configured native manager cargo fmt` -> `pass`
 - `S30` `verify:` `scoped git diff --check` -> `pass`
+- `S31` `M` `native/desktop/src-tauri/src/manager.rs`
+- `S31` `M` `native/desktop/src-tauri/src/manager/tests.rs`
+- `S31` `M` `native/desktop/src-tauri/src/python/manager_dispatch.py`
+- `S31` `A` `dev/packaging/native/tests/test_manager_dispatch.py`
+- `S31` `M` `.vault/audit/2026-10-09-runtime-manager-architecture-windows-admission-recovery-audit.md`
+- `S31` `verify:` `configured Rust 1.96 corrected integrated desktop manager22 tests` -> `pass`
+- `S31` `verify:` `configured Rust 1.96 isolated recovery staging manager21 tests with copied timestamps refreshed` -> `pass`
+- `S31` `verify:` `configured Rust 1.96 desktop clippy all-targets warnings denied` -> `pass`
+- `S31` `verify:` `adapter pytest8 tests final` -> `pass`
+- `S31` `verify:` `adapter/test scoped Ruff lint and format` -> `pass`
+- `S31` `verify:` `adapter/test ty win32 linux darwin` -> `pass`
+- `S31` `verify:` `configured Rust 1.96 desktop cargo fmt` -> `pass`
+- `S31` `verify:` `scoped git diff --check` -> `pass`
+- `S31` `verify:` `feature vault check errors0 warnings2` -> `pass`
+- `S31` `verify:` `plan check expected phase-order warning` -> `pass`
 
 ## Notes
 
@@ -829,3 +844,5 @@ related:
 - `S29` GPT-6.1 Sol medium worker owns build-helper source; root confirms configured actual compiler check. External installer/desktop changes preserved.
 - `S30` 209 distinct manager cases pass across the scoped checks. Two initial unchanged short-bound supervision cases failed during concurrent Tauri compilation and passed without source/expectation changes in subsequent serial37 suite; original failure retained.
 - `S30` Probe affirms metadata grammar only. Historical managers unsupported by it retain tray Retry; installed and cross-release graphical acceptance remains pending.
+- `S31` User released desktop files; external installer/bootstrap baseline preserved. Commit only recovery semantic blobs and tests without capturing external uncommitted bootstrap hunks; both isolated and integrated source variants verified.
+- `S31` Interactive installation/GUI/COM/logout/cross-release acceptance remains pending on a disposable interactive host. Current machine product/login state untouched.

@@ -12,7 +12,7 @@ related:
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
 modified: '2026-10-09'
 body_schema: body-v2
-body_hash: 'sha256:4f14ee4f11377aad27903b80eb309a53eb520fe5eabe13ac620225a120c7df08'
+body_hash: 'sha256:76fc9eb0e67ce308578a5c986120440b2240492c6d408ae7d0fc8bc0c0634d7e'
 ---
 
 # `runtime-manager-architecture` plan
@@ -104,7 +104,7 @@ Windows login registration in the installation scope and client remedies that na
 - [x] `P03.S27` - Resolve the audit's installed-version discovery blocker with a shared Windows versioned-prefix layout, complete-version catalogue and stable manager entry point consumed by packaging, manager startup and desktop dispatch; preserve root-level images, strict admission and existing process authority.; `dev/packaging/native installation/layout owners and tests, native/application shared discovery, native/manager startup, native/desktop manager target selection and owning tests`.
 - [ ] `P03.S14` - Generate Windows login registration and the manager Start-menu shortcut with AUMID in both installation scopes from the identity projection, gated on the versioned-install layout; `dev/packaging/native/installation.py, native/cmake/distribution/`.
 - [ ] `P03.S15` - Add localized UNAVAILABLE remedies naming the manager to CLI, TUI and MCP refusal output without automatic manager requests; `src/cadrumo/adapters/local_runtime/runtime_client.py consumers, src/cadrumo/locales/, src/cadrumo_harness/mcp/`.
-- [ ] `P03.S31` - Forward explicit desktop recovery as --retry while leaving startup and installation dispatch unchanged; verify the closed Explorer adapter grammar and real command construction; `native/desktop/src-tauri/src/manager.rs, manager/tests.rs, python/manager_dispatch.py and scoped adapter tests`.
+- [x] `P03.S31` - Forward explicit desktop recovery as --retry while leaving startup and installation dispatch unchanged; verify the closed Explorer adapter grammar and real command construction; `native/desktop/src-tauri/src/manager.rs, manager/tests.rs, python/manager_dispatch.py, dev/packaging/native/tests/test_manager_dispatch.py`.
 
 ### Phase `P04` - Version cutover
 

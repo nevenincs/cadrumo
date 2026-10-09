@@ -5,7 +5,7 @@ tags:
 date: '2026-10-09'
 modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:3352874d98705c2f8ca513acd0f450dc23919d0958b116df2151d61634610a77'
+body_hash: 'sha256:fa06daabcb42d71c3d781d6c72e3bc9657774eb91aa356b905247191bfae9fce'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
@@ -48,11 +48,21 @@ P02.S30 adds exact silent `--supports-retry` metadata admission before runtime s
 
 The first frozen full run passed activation and preceding suites but failed two unchanged supervision cases during fresh parallel Tauri compilation: one missing graceful session-end exit fact and repeated Hang events instead of one. Source review found no altered supervision argument path; the tests use 500ms readiness/session-end and 600ms heartbeat timing. The same frozen supervision suite rerun serially after compilation passed all 37 cases without expectation or policy changes. This supports contention as an explanation without proving the original scheduling cause. The initial failure remains in verification history.
 
+### desktop-retry-forwarding | medium | Explicit recovery is now distinct from automatic startup and installation
+
+After the operator released the desktop files, P03.S31 threads the existing retry boolean from start through dispatch and admits only optional exact --retry in the Explorer adapter. Retry uses the catalogue-verified versioned `Selection.manager`; ordinary startup and installation use the stable entrypoint. This avoids a legacy stable entrypoint rejecting the new flag before version dispatch. Discovery and the selected package lease remain mandatory; the desktop never supervises or signals the runtime. Native command construction and the actual Python adapter grammar/automation boundary have scoped tests.
+
+### retry-coalescing | medium | Review corrected a lost recovery request behind ordinary startup
+
+The first forwarding implementation retained a prior generation-only deduplication rule, which could share a non-retry outcome with an explicit Retry waiting behind startup or installation. Final code stores the settled attempt's intent privately: normal calls can reuse the cached outcome, while a concurrent Retry shares only a completed Retry. A barrier regression proves that recovery work runs after ordinary settlement; existing overlapping Retry coalescing, abandoned caller and close/cleanup tests continue to pass. Installation is classified as ordinary dispatch.
+
 ## Recommendations
 
-Integration handoff: desktop ownership should pass `--retry` only for an explicit recovery action; ordinary bootstrap retains its existing no-argument dispatch. As of this review, `native/desktop/src-tauri/src/manager.rs:start` still dispatches without the flag. That file and its Python Explorer-dispatch adapter remain owned by the concurrent desktop-service-installation session. Installer/bootstrap and end-to-end desktop recovery are not certified by this manager-only checkpoint.
+The remaining source integration recommendations from this audit are implemented under P02.S29, P02.S30 and P03.S31. Explicit recovery dispatches the verified selected manager with --retry; normal startup and installation use the stable entrypoint. Never interpret Explorer acknowledgement or metadata capability success as recovery completion: runtime readiness remains the authenticated handshake.
 
-The manager is an interactive per-user login background process, not an SCM service. A future SCM host requires separately authorized service-account/session bindings and cannot share the interactive-manager admission unchanged. Merely permitting Session 0 in this manager would violate its desktop and per-user runtime assumptions.
+Disposable interactive Windows acceptance remains required for a clean unregistered distribution with its companion kit, existing/restored manager recovery, historical unsupported-manager tray recovery, GUI close survival, session end and idle cross-release cutover. Preserve the development host; no service/login registration or user-session transition occurred during these checks.
+
+The manager remains an interactive per-user login background process, not an SCM service. A future SCM host requires separately authorized service-account/session bindings and cannot share the interactive-manager admission unchanged. Merely permitting Session 0 in this manager would violate its desktop and per-user runtime assumptions.
 
 ## Verification
 
@@ -63,3 +73,9 @@ PENDING for installed acceptance: native interactive installation, logout, clean
 P02.S29 PASS: eight focused Cargo/toolchain and build-timing tests passed; scoped Ruff lint/format, configured ty checks on Linux/Windows/macOS, and git diff --check passed. Test log: `var/storage/development/.logs/test-runs/2026-10-09/20261009T073708.909283Z-pytest-33324-612e00fe/run.log`. Root's configured Rust 1.96 manager Clippy check passed without a PATH override; output at `build/windows-x64/testing/recovery-followthrough-20261009/clippy-toolchain.log`. These developer files are outside the configured strict production subset. Desktop forwarding and restored-manager probe follow-through remain in progress under P03.S31 and P02.S30.
 
 P02.S30 PASS for scoped software: frozen source and generated contracts under `build/windows-x64/testing/recovery-followthrough-20261009`; configured Rust 1.96 Windows x64 locked tests with fixture-test-mode, static CRT and isolated native output. The initial run passed 168 tests before supervision failures; all 37 supervision cases subsequently passed serially, and the four termination/version-resource cases passed separately. Final aggregate covers 209 manager cases; no tests were skipped or expectations weakened. Clippy all-targets/fixture-test-mode with warnings denied and configured fmt passed. Inspect `manager-command.json`, `manager-tests.log`, `supervision-serial.log`, `manager-final-tests.log` and `manager-clippy.log`. The new probe can establish grammar compatibility only; actual installed restoration, old-manager tray recovery, GUI launch and authenticated runtime readiness remain pending disposable-host acceptance.
+
+P03.S31 PASS for scoped software: final corrected frozen desktop manager selection passed 22 tests (including real package admission, dispatch cleanup, concurrent calls and the lost-retry barrier regression), and full desktop all-targets Clippy passed with warnings denied under configured Rust 1.96. Eight Python adapter tests passed; scoped Ruff lint/format and ty checks for win32/linux/darwin passed for both adapter and test. Rust fmt and scoped whitespace checks passed. Final Python log: `var/storage/development/.logs/test-runs/2026-10-09/20261009T075519.455490Z-pytest-17488-d16d6489/run.log`. Native records: `desktop-integrated-test.log`, `desktop-integrated-clippy.log` and `desktop-test-command.json` under the follow-through snapshot root.
+
+Commit isolation: external installer/bootstrap changes in desktop manager source remain uncommitted and outside this checkpoint. HEAD-based staging-source variants contain only this recovery correction, command helper and tests; their standalone native manager selection passed 21 tests after explicitly refreshing copied-source timestamps to prevent stale Cargo reuse. Inspect `staging-src`, `desktop-staged-test.log` and `staging-verification-output.log`. Final working-source snapshot is restored to the verified integrated version. Root will commit only isolated recovery blobs, the adapter/test and its own records, preserving the external source diff.
+
+Final review: PASS for P02.S29/P02.S30/P03.S31 software. A GPT-6.1 Sol medium reviewer independently traced the combined flows and raised the coalescing and legacy stable-entry findings; both were corrected and covered by the applicable final checks. Root confirms no outstanding critical/high or unfixed in-scope software defect. Feature vault health has zero errors and two existing whitespace warnings; plan ordering warning is expected from append-only identifiers grouped by phase. Installed acceptance remains PENDING: machine/user installation, interactive GUI/COM launch, old-owner tray recovery, logout and two-release idle cutover were not run on this Session 0 development host. The installer session retains its provisioning and package-assembly verification scope; earlier historical pending statements are superseded only for this audit's software integration.

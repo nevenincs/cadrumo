@@ -1,5 +1,75 @@
 use super::*;
 
+#[test]
+fn dispatch_command_preserves_only_explicit_recovery_intent() {
+    use std::ffi::OsString;
+
+    let manager = fixture(Ok(None));
+    let target = Selection {
+        entrypoint: PathBuf::from("installed prefix/manager.exe"),
+        package: PathBuf::from("installed prefix/versions/0.6.0"),
+        manager: PathBuf::from("installed prefix/versions/0.6.0/manager.exe"),
+        version: [0, 6, 0],
+        lease: None,
+        registration: None,
+    };
+    for retry in [false, true] {
+        let command = manager.dispatch_command(&target, retry);
+        let mut expected: Vec<OsString> = ["-I", "-c", DISPATCH]
+            .into_iter()
+            .map(OsString::from)
+            .collect();
+        if retry {
+            expected.push("installed prefix/versions/0.6.0/manager.exe".into());
+            expected.push("--retry".into());
+        } else {
+            expected.push("installed prefix/manager.exe".into());
+        }
+        assert_eq!(command.as_std().get_args().collect::<Vec<_>>(), expected);
+    }
+}
+
+#[tokio::test]
+async fn overlapping_explicit_retry_does_not_share_an_ordinary_attempt() {
+    use std::{future::Future, task::Poll};
+
+    let manager = fixture(Ok(None));
+    let (entered, ready) = tokio::sync::oneshot::channel();
+    let (release, waiting) = tokio::sync::oneshot::channel();
+    let initial_owner = manager.clone();
+    let initial = tokio::spawn(async move {
+        initial_owner
+            .start_with(false, |_| async move {
+                entered.send(()).unwrap();
+                waiting.await.unwrap();
+                Ok(StartOutcome::Dispatched)
+            })
+            .await
+    });
+    ready.await.unwrap();
+
+    let ran = Arc::new(AtomicBool::new(false));
+    let recovery_ran = ran.clone();
+    let mut recovery = Box::pin(manager.start_with(true, |_| async move {
+        recovery_ran.store(true, Ordering::Release);
+        Ok(StartOutcome::Dispatched)
+    }));
+    std::future::poll_fn(|context| {
+        assert!(recovery.as_mut().poll(context).is_pending());
+        Poll::Ready(())
+    })
+    .await;
+    release.send(()).unwrap();
+    assert_eq!(initial.await.unwrap().unwrap(), StartOutcome::Dispatched);
+    assert_eq!(recovery.await.unwrap(), StartOutcome::Dispatched);
+    assert!(
+        ran.load(Ordering::Acquire),
+        "explicit recovery must execute"
+    );
+    assert_eq!(manager.generation.load(Ordering::Acquire), 2);
+    assert!(manager.attempt.lock().await.as_ref().unwrap().retry);
+}
+
 fn fixture(target: Result<Option<PathBuf>>) -> Arc<ManagerStart> {
     Arc::new(ManagerStart {
         package_root: target,
@@ -119,6 +189,7 @@ async fn close_cancels_then_joins_the_actual_verifier_and_refuses_late_retries()
                 .await
                 .as_ref()
                 .unwrap()
+                .outcome
                 .as_ref()
                 .unwrap_err()
                 .code,
@@ -194,7 +265,7 @@ async fn cancelled_ipc_caller_does_not_abandon_the_owned_helper() {
         .await
         .unwrap();
     assert_eq!(
-        settled.as_ref().unwrap().as_ref().unwrap(),
+        settled.as_ref().unwrap().outcome.as_ref().unwrap(),
         &StartOutcome::Dispatched
     );
     drop(settled);
@@ -210,6 +281,7 @@ async fn cancelled_ipc_caller_does_not_abandon_the_owned_helper() {
             .await
             .as_ref()
             .unwrap()
+            .outcome
             .as_ref()
             .unwrap(),
         &StartOutcome::Dispatched
