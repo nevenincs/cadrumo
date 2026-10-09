@@ -295,14 +295,14 @@ class CsvProvider(FinancialProvider):
     @override
     def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
         """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the CSV source."""
-        _logger.debug("csv_provider ingest: loading %s", path.name)
+        _logger.debug("csv_provider ingest: loading source")
         rows, source_sha256, _, _ = self._load_rows(path)
         if _has_aeat_ledger_export_header(rows):
             raise InvalidFinancialSourceError(_AEAT_LEDGER_EXPORT_REFUSAL)
         header_index, layout, headers, lookup = self._locate_header(rows)
         if layout is None or headers is None or lookup is None:
             raise InvalidFinancialSourceError("CSV headers do not match any supported bank layout")
-        _logger.info("csv_provider ingest: matched layout=%s path=%s", layout.bank_name, path.name)
+        _logger.info("csv_provider ingest: matched layout=%s", layout.bank_name)
         data_rows = rows[header_index + 1 :]
         for source_row_index, row in enumerate(data_rows, start=header_index + 2):
             raw_fields = _row_to_mapping(headers, row)
@@ -321,14 +321,14 @@ class CsvProvider(FinancialProvider):
                 )
             except (ValueError, FinancialValidationError) as exc:
                 _logger.warning(
-                    "csv_provider: parse error row=%d file=%s",
+                    "csv_provider: parse error row=%d reason=%s",
                     source_row_index,
-                    path.name,
-                    exc_info=True,
+                    "financial_validation" if isinstance(exc, FinancialValidationError) else "invalid_value",
                 )
                 raise InvalidFinancialSourceError(
-                    f"CSV row {source_row_index} could not be parsed: {resolve_error_message(exc)}",
-                ) from exc
+                    f"CSV row {source_row_index} could not be parsed: "
+                    f"{str(exc) if isinstance(exc, FinancialValidationError) else 'invalid field value'}",
+                ) from None
             yield build_provider_row(
                 provider=self,
                 path=path,
@@ -616,10 +616,10 @@ def _currency_from_aliases(
         return default_currency()
     try:
         return normalise_iso_4217_currency(raw)
-    except CoreValidationError as exc:
+    except CoreValidationError:
         raise FinancialValidationError(
-            f"{context} currency column {header!r} must be a three-letter ISO 4217 code; got {raw!r}",
-        ) from exc
+            "currency field must be a three-letter ISO 4217 code",
+        ) from None
 
 
 def _typed_value_from_aliases(
@@ -663,9 +663,9 @@ def _direction_from_aliases(
     normalized = "_".join(raw.replace("-", " ").replace("_", " ").upper().split())
     try:
         return TransactionDirection(normalized)
-    except ValueError as exc:
+    except ValueError:
         expected = ", ".join(direction.value for direction in TransactionDirection)
-        raise FinancialValidationError(f"unsupported direction value: {raw!r}; expected one of {expected}") from exc
+        raise FinancialValidationError(f"unsupported direction value; expected one of {expected}") from None
 
 
 def _required_value(

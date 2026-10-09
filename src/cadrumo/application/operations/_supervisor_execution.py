@@ -386,14 +386,12 @@ class SupervisorExecutionMixin(SupervisorHost):
             self.registry, snapshot.identity.definition_id, self._operands, error, written_at=settled_at
         )
         if registered is not None and registered.category is ErrorCategory.REFUSED:
-            # Persistence keeps only the registry code; the local log keeps which check refused.
+            # Log only registered lifecycle facts; the exception may carry private operands.
             _log.warning(
-                "operation refused definition=%s operation=%s code=%s denial=%s",
+                "operation refused definition=%s operation=%s code=%s",
                 snapshot.identity.definition_id,
                 snapshot.identity.operation_id,
                 registered.code,
-                getattr(error, "reason", None),
-                exc_info=error,
             )
             receipt = OperationTerminalReceipt(
                 identity=snapshot.identity,
@@ -406,13 +404,13 @@ class SupervisorExecutionMixin(SupervisorHost):
             )
         else:
             diagnostic_ref = self._executor_failure_diagnostic_reference(snapshot, error)
-            # The frontend shows only this opaque reference; the local log pairs it with the cause.
+            # The opaque reference correlates with the encrypted error detail.
             _log.error(
-                "operation failed definition=%s operation=%s diagnostic_ref=%s",
+                "operation failed definition=%s operation=%s diagnostic_ref=%s exception_type=%s",
                 snapshot.identity.definition_id,
                 snapshot.identity.operation_id,
                 diagnostic_ref,
-                exc_info=error,
+                type(error).__name__,
             )
             receipt = OperationTerminalReceipt(
                 identity=snapshot.identity,

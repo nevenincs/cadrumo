@@ -522,8 +522,7 @@ def suggest_llm_classification(
         ports=ports,
     )
     _logger.info(
-        "llm suggest: transaction=%s decided_by=%s classification=%s confidence=%s",
-        transaction_id,
+        "llm suggest: decided_by=%s classification=%s confidence=%s",
         provenance,
         response.classification.value,
         response.confidence,
@@ -691,8 +690,7 @@ def apply_llm_classification(
         replacement=updated_transaction,
     )
     _logger.info(
-        "llm apply: transaction=%s classified_by=%s classification=%s",
-        suggestion.transaction_id,
+        "llm apply: classified_by=%s classification=%s",
         suggestion.provenance,
         classification.value,
     )
@@ -840,8 +838,7 @@ def saturate_llm_classification(
         operation=operation,
     )
     _logger.info(
-        "llm saturate: transaction=%s provider=%s classification=%s iva_category=%s derivable=%s",
-        transaction_id,
+        "llm saturate: provider=%s classification=%s iva_category=%s derivable=%s",
         provenance,
         response.classification.value,
         _iva_category_label(response),
@@ -957,8 +954,7 @@ def apply_saturated_llm_classification(
         expected_current=expected_current,
     )
     _logger.info(
-        "llm saturate apply: transaction=%s classified_by=%s iva_category=%s derived=%s",
-        suggestion.transaction_id,
+        "llm saturate apply: classified_by=%s iva_category=%s derived=%s",
         suggestion.provenance,
         suggestion.iva_category.value if suggestion.iva_category is not None else "",
         suggestion.rate_derivable,
@@ -1056,12 +1052,8 @@ def derive_operator_iva_substrate(
         expected_current=expected_current,
     )
     _logger.info(
-        "operator iva derive: transaction=%s iva_category=%s rate=%s base=%s amount=%s",
-        transaction_id,
+        "operator iva derive: iva_category=%s",
         iva_category.value,
-        iva_rate,
-        taxable_base,
-        iva_amount,
     )
     return OperatorIvaDerivationResult(
         transaction_id=transaction_id,
@@ -1249,8 +1241,7 @@ def suggest_evidence_split(
         operation=operation,
     )
     _logger.info(
-        "llm split suggest: transaction=%s provider=%s children=%d",
-        transaction_id,
+        "llm split suggest: provider=%s children=%d",
         provenance,
         len(children),
     )
@@ -1386,9 +1377,7 @@ def apply_evidence_split(
     classified = len(split_result.child_transactions)
 
     _logger.info(
-        "llm split apply: parent=%s split_group=%s children=%d classified=%d classified_by=%s",
-        split_result.parent_transaction_id,
-        split_result.split_group_id,
+        "llm split apply: children=%d classified=%d classified_by=%s",
         len(split_result.child_transaction_ids),
         classified,
         suggestion.provenance,
@@ -1487,8 +1476,7 @@ def apply_evidence_classification(
         expected_current=expected_current,
     )
     _logger.info(
-        "llm auto-classify (no split): transaction=%s classified_by=%s category=%s iva_category=%s",
-        parent.transaction_id,
+        "llm auto-classify (no split): classified_by=%s category=%s iva_category=%s",
         suggestion.provenance,
         child.category.value if child.category is not None else "",
         child.iva_category.value if child.iva_category is not None else "",
@@ -1605,8 +1593,7 @@ def reject_llm_suggestion(
         expected_catalogue_revision=catalogue_revision,
     )
     _logger.info(
-        "llm reject: transaction=%s kind=%s provenance=%s",
-        suggestion.transaction_id,
+        "llm reject: kind=%s provenance=%s",
         suggestion_kind,
         suggestion.provenance,
     )

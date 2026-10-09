@@ -62,6 +62,7 @@ def test_ofx_provider_prefers_fitid_and_payee() -> None:
 def test_ofx_provider_refuses_non_finite_transaction_amounts(
     amount_token: str,
     tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Validation and ingestion refuse the same non-finite real OFX amount."""
     fixture = _FIXTURES / "synthetic-transactions.ofx"
@@ -77,14 +78,15 @@ def test_ofx_provider_refuses_non_finite_transaction_amounts(
     validation = provider.validate_source(source)
 
     assert not validation.is_valid
-    assert validation.warnings == (
-        f"OFX transaction 1 could not be parsed: unsupported amount value: {amount_token!r}",
-    )
+    assert validation.warnings == ("OFX transaction 1 could not be parsed: unsupported amount value",)
     with pytest.raises(
         InvalidFinancialSourceError,
-        match=rf"OFX transaction 1 could not be parsed: unsupported amount value: '{amount_token}'",
+        match="OFX transaction 1 could not be parsed: unsupported amount value",
     ):
         tuple(provider.ingest(source))
+    parse_warnings = [record for record in caplog.records if "ofx_provider: parse error" in record.message]
+    assert parse_warnings
+    assert all(record.exc_info is None and amount_token not in record.message for record in parse_warnings)
 
 
 def test_ofx_provider_ingests_every_account_statement(tmp_path: Path) -> None:

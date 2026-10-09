@@ -24,6 +24,7 @@ from ..base import (
     ProviderValidation,
     archive_cell_text,
     parse_amount_value,
+    parse_date_value,
 )
 from ..csv import CsvProvider
 from ..detection import detect_provider
@@ -126,6 +127,22 @@ def test_parse_amount_value_refuses_scientific_notation(raw: str, true_magnitude
     # Anchor the severity of the old behaviour: the silently-produced value was
     # not merely imprecise, it was a different number entirely.
     assert Decimal(raw) == true_magnitude
+
+
+@pytest.mark.parametrize("raw", ["1.23E+05", "private-amount", "1210.00"])
+def test_amount_parse_failures_do_not_embed_cell_values(raw: str) -> None:
+    with pytest.raises(FinancialValidationError) as raised:
+        parse_amount_value(raw, decimal_separator=DecimalSeparator.COMMA if raw == "1210.00" else None)
+    assert raw not in str(raised.value)
+
+
+def test_date_parse_failure_omits_source_cell_from_message_and_context() -> None:
+    raw = "private-date-918273"
+    with pytest.raises(FinancialValidationError) as raised:
+        parse_date_value(raw, label="private column")
+    assert raw not in str(raised.value)
+    assert raw not in repr(raised.value.context)
+    assert "private column" not in repr(raised.value.context)
 
 
 @pytest.mark.parametrize(

@@ -136,9 +136,9 @@ def test_csv_provider_rejects_short_currency_cell_with_column_context(tmp_path: 
 
     message = str(exc_info.value)
     assert "CSV row 2" in message
-    assert "currency column 'Currency'" in message
+    assert "currency field" in message
     assert "three-letter ISO 4217 code" in message
-    assert "'EU'" in message
+    assert "'EU'" not in message
 
 
 def test_csv_provider_ignores_invalid_configured_encoding_name() -> None:

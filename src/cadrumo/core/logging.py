@@ -13,6 +13,8 @@ formatting. Shape-based NIF, URL, and bearer-token matching is delegated
 to :func:`~cadrumo.core.redaction.rules.redact_for_log`; this module keeps only
 logging-specific key-paired placeholders such as cookies, passphrases, and
 certificate serial suffixes.
+Callers must omit private values before logging: the scrubber cannot infer
+that an ordinary decimal or validation input is taxpayer data.
 
 Encoded document payloads are contained at two seams, because the diagnostic
 log is plaintext on disk and a scanned invoice that reaches it has left secure

@@ -10,7 +10,7 @@ from contextlib import nullcontext, suppress
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
-from typing import cast, override
+from typing import Never, cast, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -56,7 +56,7 @@ def test_description_keeps_loop_responsive_and_retains_host_until_thread_settles
             request_id=uuid4(), session_id=uuid4(), definition_id="user-profile.field-mutation"
         )
 
-        def describe(session_id: UUID, definition_id: str) -> None:
+        def describe(session_id: UUID, definition_id: str) -> Never:
             assert threading.get_ident() != loop_thread
             assert (session_id, definition_id) == (request.session_id, request.definition_id)
             loop.call_soon_threadsafe(entered.set)
@@ -64,10 +64,17 @@ def test_description_keeps_loop_responsive_and_retains_host_until_thread_settles
             finished.set()
             raise refusal
 
-        context = cast(
-            worker_service._WorkerControl,
-            SimpleNamespace(operations=SimpleNamespace(describe=describe)),
-        )
+        class DescriptionOperations(ProfileWorkerOperationHost):
+            def __init__(self) -> None:
+                pass
+
+            @override
+            def describe(self, session_id: UUID, definition_id: str) -> Never:
+                return describe(session_id, definition_id)
+
+        # This path raises before channel or custody access; bind only its host.
+        context = object.__new__(worker_service._WorkerControl)
+        object.__setattr__(context, "operations", DescriptionOperations())
         handler = asyncio.create_task(worker_service._handle_metadata_control(context, request))
         started = asyncio.create_task(entered.wait())
         try:

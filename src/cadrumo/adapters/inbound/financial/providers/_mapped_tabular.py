@@ -256,10 +256,8 @@ class MappedTabularProvider(FinancialProvider):
                 fields = self._row_fields(row, table)
             except FinancialProviderError:
                 _logger.warning(
-                    "mapped_tabular: row at line %d of %s could not be parsed; skipping",
+                    "mapped_tabular: row at line %d could not be parsed; skipping",
                     row.source_line_number,
-                    path.name,
-                    exc_info=True,
                 )
                 continue
             yield build_raw_transaction(
@@ -317,7 +315,7 @@ class MappedTabularProvider(FinancialProvider):
             return default_currency()
         try:
             return normalise_iso_4217_currency(raw)
-        except CoreValidationError as exc:
+        except CoreValidationError:
             raise FinancialValidationError(
-                f"row at line {row.source_line_number} currency {raw!r} is not a three-letter ISO 4217 code",
-            ) from exc
+                f"row at line {row.source_line_number} currency is not a three-letter ISO 4217 code",
+            ) from None

@@ -462,23 +462,11 @@ def _emit_crash(exc: Exception) -> NoReturn:
 
     boundary = project_cli_boundary_error(exc, _emit_crash)
     if isinstance(boundary, CliUnexpectedBoundaryError):
-        # The INTERNAL envelope this path renders tells the operator to consult
-        # the diagnostic logs, so the traceback has to actually be in them;
-        # without this the isolated-run log carried two DEBUG lines and nothing
-        # else, and triage had to patch the emitter in-process to see the crash.
-        # Logged only for the untyped case, mirroring the command boundary in
-        # `errors.py`: a typed CadrumoError is an expected, already-classified
-        # refusal, and writing its traceback would make `aeat config repair
-        # logs` echo an operator-actionable condition back as a live crash.
-        #
-        # The extra keeps the record off the stderr handler. This function is
-        # about to write the JSON error document to that same stream, and the
-        # record carries the raw exception and its frames — echoing it would
-        # prepend an unredacted traceback to the translated document and break
-        # any parser reading stderr for the document alone.
+        # Log only the static exception type. The extra keeps this record off
+        # stderr while the JSON error document is written there.
         get_logger(__name__).error(
-            "cli terminal boundary: unexpected exception",
-            exc_info=exc,
+            "cli terminal boundary: unexpected exception type=%s",
+            type(exc).__name__,
             extra={OPERATOR_DOCUMENT_LOG_EXTRA: True},
         )
     with _requested_output_language():

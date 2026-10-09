@@ -549,7 +549,7 @@ def _resolve_active_profile_label() -> str | None:
 
         return active_profile_label()
     except Exception:  # identity resolution must never break error emit
-        _log.debug("cli error boundary: active-profile label resolution failed", exc_info=True)
+        _log.debug("cli error boundary: active-profile label resolution failed")
         return None
 
 
@@ -578,7 +578,7 @@ def _resolve_sandbox_notice() -> Notice | None:
 
         return sandbox_notice_for_active_bucket()
     except Exception:  # the sandbox indicator must never break error emit
-        _log.debug("cli error boundary: sandbox notice resolution failed", exc_info=True)
+        _log.debug("cli error boundary: sandbox notice resolution failed")
         return None
 
 
@@ -1102,19 +1102,25 @@ def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict
 
 
 def _project_validation_error(error: ValidationError, callback: Callable[..., object]) -> CadrumoError:
-    """Log the pydantic detail, then wrap the input-time validation failure.
+    """Log only validation structure, then wrap the input-time failure.
 
     The wrapped :class:`CliValidationBoundaryError` keeps the refusal SENTENCE
     free of the per-field error list, which is too noisy to read as prose, while
     carrying the failing record, field path and broken rule on the envelope's
-    ``context``. The log line stays: it holds the raw ``errors()`` payload,
-    including the input values the envelope deliberately withholds, which is
-    what an engineer triaging a failing surface or fixture needs.
+    ``context``. Pydantic messages, context and inputs can contain taxpayer
+    values, so the diagnostic record contains only error kinds and path shape.
     """
+    error_structure = [
+        {
+            "type": item["type"],
+            "loc": tuple(part if isinstance(part, int) else "<field>" for part in item["loc"]),
+        }
+        for item in error.errors(include_input=False, include_context=False, include_url=False)
+    ]
     _log.error(
         "command_error_boundary: pydantic ValidationError in %s: %s",
-        getattr(callback, "__name__", repr(callback)),
-        error.errors(),
+        getattr(callback, "__name__", type(callback).__name__),
+        error_structure,
     )
     boundary = CliValidationBoundaryError(error)
     from ...application.cli_exception_preconditions import nested_terminal_precondition_verdict
@@ -1154,15 +1160,11 @@ def _project_unexpected(error: Exception, callback: Callable[..., object]) -> Ca
     wrapped = _unwrap_cadrumo_error(error)
     if wrapped is not None:
         return _project_cadrumo_error(wrapped, callback)
-    # DEBUG, not ERROR: the stderr handler is level-gated while the file handler
-    # stays at DEBUG, so this keeps the traceback in the diagnostic log the
-    # operator's envelope points them at, and off the console. Printing it
-    # ahead of the translated envelope leaked absolute source paths and made a
-    # handled refusal read as a crash the CLI had failed to catch.
+    # Exception messages and traceback locals may contain private input.
     _log.debug(
-        "command_error_boundary: unexpected exception in %s",
-        getattr(callback, "__name__", repr(callback)),
-        exc_info=True,
+        "command_error_boundary: unexpected exception in %s type=%s",
+        getattr(callback, "__name__", type(callback).__name__),
+        type(error).__name__,
     )
     return CliUnexpectedBoundaryError(error)
 

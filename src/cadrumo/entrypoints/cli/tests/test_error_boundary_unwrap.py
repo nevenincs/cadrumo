@@ -21,7 +21,7 @@ from collections.abc import Callable
 import pytest
 import sqlalchemy.exc as sa_exc
 import typer
-from pydantic import TypeAdapter
+from pydantic import TypeAdapter, ValidationError
 
 from ....adapters.outbound.llm.models import LLMRequest, PromptDefinition
 from ....adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
@@ -30,6 +30,7 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ..errors import (
     CliUnexpectedBoundaryError,
+    _project_validation_error,
     _unwrap_cadrumo_error,
     command_error_boundary,
 )
@@ -40,6 +41,20 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # bucket session is unlocked — the exact error the boundary must
 # forward verbatim instead of mis-reporting as an internal defect.
 _ProbeRefusal = NoActiveBucketSessionError
+
+
+def test_validation_log_omits_rejected_financial_input(caplog: pytest.LogCaptureFixture) -> None:
+    rejected = "unparseable-918273.45"
+    with pytest.raises(ValidationError) as raised:
+        TypeAdapter(int).validate_python(rejected)
+
+    with caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli.errors"):
+        _project_validation_error(raised.value, lambda: None)
+
+    record = next(record for record in caplog.records if "pydantic ValidationError" in record.message)
+    assert rejected not in record.message
+    assert record.exc_info is None
+    assert "int_parsing" in record.message
 
 
 def test_terminal_nested_llm_validation_preserves_typed_refusal_in_every_locale(
@@ -199,8 +214,9 @@ def test_boundary_still_reports_genuine_bug_as_unexpected(
     crashes = [record for record in caplog.records if "unexpected exception" in record.message]
     assert crashes, [record.message for record in caplog.records]
     assert crashes[0].levelno == logging.DEBUG
-    assert crashes[0].exc_info is not None
-    assert crashes[0].exc_info[0] is RuntimeError
+    assert crashes[0].exc_info is None
+    assert "a genuine internal defect" not in crashes[0].message
+    assert "RuntimeError" in crashes[0].message
 
 
 def test_cli_unexpected_boundary_error_is_cadrumo_error() -> None:
@@ -243,8 +259,9 @@ def test_terminal_boundary_logs_the_traceback_for_a_genuine_crash(
 
     crashes = [record for record in caplog.records if "unexpected exception" in record.message]
     assert crashes, [record.message for record in caplog.records]
-    assert crashes[0].exc_info is not None
-    assert crashes[0].exc_info[0] is RuntimeError
+    assert crashes[0].exc_info is None
+    assert "a genuine internal defect" not in crashes[0].message
+    assert "RuntimeError" in crashes[0].message
 
 
 def test_terminal_boundary_logs_no_traceback_for_a_typed_refusal(

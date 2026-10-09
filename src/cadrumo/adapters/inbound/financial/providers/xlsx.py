@@ -113,12 +113,8 @@ class XlsxProvider(FinancialProvider):
                 # teardown must run unconditionally.
                 try:
                     workbook.close()
-                except Exception as close_exc:
-                    _logger.debug(
-                        "xlsx provider: workbook.close() after validate_source failed (%s)",
-                        close_exc,
-                        exc_info=True,
-                    )
+                except Exception:
+                    _logger.debug("xlsx provider: workbook.close() after validate_source failed")
         warnings: list[str] = []
         if layout is None:
             return ProviderValidation(
@@ -278,12 +274,8 @@ def _close_workbook_during_teardown(workbook: Workbook) -> None:
     """
     try:
         workbook.close()
-    except Exception as close_exc:
-        _logger.debug(
-            "xlsx provider: workbook.close() during parse-error teardown failed (%s)",
-            close_exc,
-            exc_info=True,
-        )
+    except Exception:
+        _logger.debug("xlsx provider: workbook.close() during parse-error teardown failed")
 
 
 def _materialize_selected_rows_or_refuse_formula_cells(
