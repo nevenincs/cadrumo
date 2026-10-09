@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#git-free-tooling'
 date: '2026-10-07'
-modified: '2026-10-07'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:0522a08f978a86fa978313023a56a88117706f10d052bd83503d131ed7061ff0'
+body_hash: 'sha256:c8ac8d27b48f16273e01fc4a95bfb99e5e6d0f08c59421a97f9d5afe949b4fff'
 related:
   - "[[2026-09-17-github-actions-adr]]"
   - "[[2026-10-04-application-distribution-adr]]"
+  - '[[2026-10-07-git-free-tooling-audit]]'
 ---
 # `git-free-tooling` adr: repository-owned code never invokes Git | (**status:** `accepted`)
 
@@ -19,6 +20,8 @@ Tests and build tools invoke Git to inspect the working checkout, derive build n
 ## Considerations
 
 Current callers include `dev/env/clean.py`, `dev/env/_dotenv.py`, `dev/ci/change_scope.py`, `dev/registry/edition_round_trip.py`, `dev/deploy/docs_delivery_policy.py`, packaging smoke scripts, `native/cmake/BuildNumber.cmake` and release workflow shells. The former optional-lock test permits these dependencies.
+
+Grounding: `2026-10-07-git-free-tooling-audit` records the former history-dependent tooling and Git-backed fixtures, the explicit-input and forge-API replacements, and the executable-call enforcement evidence. It is a retrospective implementation audit, not the authorization for this decision; its verification results and remaining installation/publication limits are preserved there.
 
 ## Considered options
 
