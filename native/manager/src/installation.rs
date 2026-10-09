@@ -101,12 +101,14 @@ pub(crate) fn admit_selection(
 
 /// Every successor repeats native admission, job escape and catalogue verification.
 /// Dispatch acknowledgement conveys no runtime readiness or ownership.
-pub fn dispatch_newest(image: &Path, sign_in: bool) -> io::Result<DispatchOutcome> {
+pub fn dispatch_newest(
+    image: &Path,
+    intent: crate::invocation::Intent,
+) -> io::Result<DispatchOutcome> {
     let mut selected = select(image)?;
     let root = ManagedLocations::resolve(&selected.manager)?;
-    let failures = crate::failed_versions::FailedVersions::read(root.storage_root())?;
     let release = selected.version.map(|part| part.to_string()).join(".");
-    if let Some(previous) = failures.restoration(&release) {
+    if let Some(previous) = restoration(root.storage_root(), &release, intent)? {
         let contract: DiscoveryContract =
             serde_json::from_str(crate::contract::INSTALLATION_CONTRACT)
                 .map_err(io::Error::other)?;
@@ -117,7 +119,7 @@ pub fn dispatch_newest(image: &Path, sign_in: bool) -> io::Result<DispatchOutcom
         selected = contract
             .inspect_version_cancellable(
                 prefix,
-                previous,
+                &previous,
                 &cadrumo_application::component::Cancellation::default(),
             )
             .map_err(io::Error::other)?;
@@ -128,7 +130,7 @@ pub fn dispatch_newest(image: &Path, sign_in: bool) -> io::Result<DispatchOutcom
         return Ok(DispatchOutcome::Current(current));
     }
     Command::new(selected.manager)
-        .args(sign_in.then_some("--sign-in"))
+        .args(intent.argument())
         .env_clear()
         .envs(cadrumo_platform::storage::strict_host_environment(
             std::env::vars_os(),
@@ -140,6 +142,22 @@ pub fn dispatch_newest(image: &Path, sign_in: bool) -> io::Result<DispatchOutcom
         .creation_flags(0x0800_0000)
         .spawn()?;
     Ok(DispatchOutcome::Dispatched)
+}
+
+fn restoration(
+    root: &Path,
+    release: &str,
+    intent: crate::invocation::Intent,
+) -> io::Result<Option<String>> {
+    // Preserve a verified restoration so activation can reach its exact-image
+    // IPC owner. Retry there clears failures and reassesses newer installations.
+    // A malformed record supplies no restoration authority; explicit recovery
+    // may still reach the selected owner, which alone can clear the record.
+    match crate::failed_versions::FailedVersions::read(root) {
+        Ok(failures) => Ok(failures.restoration(release).map(str::to_owned)),
+        Err(_) if intent == crate::invocation::Intent::Retry => Ok(None),
+        Err(error) => Err(error),
+    }
 }
 
 #[cfg(test)]
@@ -374,6 +392,39 @@ mod tests {
             manifest["build"]["application_id"] = json!("fixture.foreign");
         });
         assert!(fixture.admit().is_err());
+    }
+
+    #[test]
+    fn retry_selection_preserves_failures_until_session_ownership() {
+        use crate::{failed_versions::FailedVersions, invocation::Intent};
+        let fixture = Fixture::new();
+        let release = crate::identity::VERSION;
+        FailedVersions::record(&fixture.storage, release, "0.0.0").unwrap();
+        for intent in [Intent::Manual, Intent::SignIn, Intent::Retry] {
+            assert_eq!(
+                restoration(&fixture.storage, release, intent).unwrap(),
+                Some("0.0.0".into())
+            );
+        }
+        assert!(
+            FailedVersions::read(&fixture.storage)
+                .unwrap()
+                .contains(release)
+        );
+        // Explicit recovery can reach an existing owner even with malformed state;
+        // ordinary launches still refuse it instead of silently clearing failures.
+        crate::custody::write_local_record(
+            &crate::failed_versions::path(&fixture.storage),
+            b"malformed",
+            4096,
+        )
+        .unwrap();
+        assert!(restoration(&fixture.storage, release, Intent::Manual).is_err());
+        assert_eq!(
+            restoration(&fixture.storage, release, Intent::Retry).unwrap(),
+            None
+        );
+        assert!(FailedVersions::read(&fixture.storage).is_err());
     }
 }
 

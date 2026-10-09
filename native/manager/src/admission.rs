@@ -33,6 +33,8 @@ fn require_evidence(
 ) -> Result<(), Refusal> {
     match session {
         None => return Err(Refusal::SessionUnavailable),
+        // Windows reserves Session 0 for noninteractive processes. This host
+        // requires the user's desktop; headless clients have separate admission.
         Some(0) => return Err(Refusal::SessionZero),
         Some(_) => {}
     }
@@ -95,10 +97,15 @@ mod tests {
 
     #[test]
     fn interactive_desktop_required() {
-        assert_eq!(
-            require_evidence(Some(1), Some(false), || false),
-            Err(Refusal::DesktopUnavailable)
-        );
-        assert_eq!(require_evidence(Some(1), Some(false), || true), Ok(()));
+        for session in [1, 2, 37, u32::MAX] {
+            assert_eq!(
+                require_evidence(Some(session), Some(false), || false),
+                Err(Refusal::DesktopUnavailable)
+            );
+            assert_eq!(
+                require_evidence(Some(session), Some(false), || true),
+                Ok(())
+            );
+        }
     }
 }

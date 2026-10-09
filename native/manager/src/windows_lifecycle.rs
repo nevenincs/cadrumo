@@ -141,7 +141,7 @@ pub fn show_startup_failure() {
 
 /// Escape once, or refuse. The successor repeats native admission; the private
 /// argument records an attempt, never grants elevation or desktop admission.
-pub fn escape_job(already_attempted: bool, sign_in: bool) -> io::Result<bool> {
+pub fn escape_job(already_attempted: bool, intent: crate::invocation::Intent) -> io::Result<bool> {
     let mut in_job = 0;
     // SAFETY: current-process pseudo handle is borrowed, and output is writable.
     if unsafe { IsProcessInJob(GetCurrentProcess(), ptr::null_mut(), &mut in_job) } == 0 {
@@ -155,7 +155,7 @@ pub fn escape_job(already_attempted: bool, sign_in: bool) -> io::Result<bool> {
     }
     Command::new(std::env::current_exe()?)
         .arg("--breakaway-attempt")
-        .args(sign_in.then_some("--sign-in"))
+        .args(intent.argument())
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())

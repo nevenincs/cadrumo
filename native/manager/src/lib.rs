@@ -15,6 +15,7 @@ pub mod identity;
 #[cfg(windows)]
 pub mod installation;
 pub mod installed;
+pub mod invocation;
 pub mod ipc;
 pub mod lifecycle;
 pub mod preferences;

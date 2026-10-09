@@ -48,13 +48,39 @@ fn bare_start_refuses_noninteractive_or_unsupported_hosts() {
 
 #[test]
 fn unknown_arguments_are_refused() {
-    for arguments in [&["--help"][..], &["--version", "--version"], &["start"]] {
+    for arguments in [
+        &["--help"][..],
+        &["--version", "--version"],
+        &["start"],
+        &["--retry", "--sign-in"],
+        &["--retry", "--retry"],
+    ] {
         let output = Command::new(MANAGER)
             .args(arguments)
             .output()
             .expect("run the manager");
         assert_eq!(output.status.code(), Some(2), "{arguments:?}: {output:?}");
         assert!(output.stdout.is_empty(), "{arguments:?}: {output:?}");
+    }
+}
+
+#[cfg(windows)]
+#[test]
+fn explicit_recovery_keeps_native_admission_before_storage_or_dispatch() {
+    let Err(refusal) = cadrumo_manager::admission::require_current() else {
+        return;
+    };
+    for arguments in [&["--retry"][..], &["--breakaway-attempt", "--retry"]] {
+        let output = Command::new(MANAGER)
+            .args(arguments)
+            .output()
+            .expect("run manager recovery");
+        assert_eq!(output.status.code(), Some(77), "{arguments:?}: {output:?}");
+        assert!(output.stdout.is_empty());
+        assert_eq!(
+            String::from_utf8(output.stderr).unwrap(),
+            format!("{}\n", refusal.code())
+        );
     }
 }
 

@@ -10,9 +10,9 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-desktop-shell-adr]]'
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
-modified: '2026-10-08'
+modified: '2026-10-09'
 body_schema: body-v2
-body_hash: 'sha256:8084eea6e66fd371c9cdd2c2747e7c2ff0e1c1c45ae5535ea766cbee1ecbedbc'
+body_hash: 'sha256:f6fc0cfe618f9359a7a6c6a7f621f69fe23647688a7c7f96087ab3c959a9dac9'
 ---
 
 # `runtime-manager-architecture` plan
@@ -55,6 +55,9 @@ Named follow-on decisions remain outside this plan:
 
 2026-10-08 expanded authorization: the operator requested coding and building everything except signing certificates, which will not be available, and authorized dependency installation. This supersedes the earlier session limitation to defects and discovery: remaining installer, IPC/readiness, preferences, cutover/rollback, uninstall detection and platform source/build work are authorized. Produce unsigned artifacts and retain truthful platform/interactive acceptance limits; absence of signing must not be presented as completion of platform APIs requiring signed identity. No permission to publish, purchase certificates or treat a development host as a disposable acceptance machine is inferred.
 
+
+2026-10-09 recovery authorization: the operator requests managing and fixing the verified bootstrap/recovery defects and checking the Session 0 premise. The concurrent desktop-service-installation session owns installer, layout and desktop bootstrap/sign-in files; this recovery continuation owns native/manager only. Session 0 is the Windows noninteractive services session, not a machine-specific value or a blanket application prohibition. Retain the interactive manager's native session/elevation/desktop checks, expose an explicit --retry activation using existing authenticated manager IPC, and preserve the intent through version dispatch and job escape. Ordinary manual activation retains Reveal, sign-in retains opt-out and failed-version restoration, and Retry never forces a stop or bypasses ownership/cutover gates. Shared native validation uses isolated output directories while the desktop installation session is active. Code semantic discovery was unavailable; bounded current-code inspection supplements the linked decisions.
+
 ## Steps
 
 ### Phase `P01` - Runtime supervisor contract
@@ -84,6 +87,7 @@ The cadrumo-manager native image: identity-derived names, canonical locations, s
 - [ ] `P02.S13` - Implement the tray surface, manager log and per-user preference with strings from the canonical locale catalogues; `native/manager/, src/cadrumo/locales/ via the dev.locales workflow`.
 - [x] `P02.S23` - Gate supervisor restarts through the per-user start claim so an observing session cannot relaunch during the owner's backoff; `native/manager/src/supervision/supervisor.rs, native/manager/src/session/ownership.rs, owning tests`.
 - [x] `P02.S24` - Register the manager .runtime records, preference and log locations in the Python storage taxonomy and record the session lock, start claim and Quit marker grammar as a cross-version contract; `src/cadrumo/core/storage_taxonomy.py, storage_taxonomy_locations.py, native/CONTRACT.md, owning tests`.
+- [x] `P02.S28` - Preserve explicit Retry through manager activation, version redirection and job escape; verify native admission for Session 0 and arbitrary interactive session IDs without weakening user identity or supervision; `native/manager invocation, main, installation, Windows lifecycle, admission and entrypoint tests`.
 
 ### Phase `P03` - Installation and client remedies
 

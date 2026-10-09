@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-08'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:92e12767e1629559f93656c1b850ef6c073cb382735a4bd343d50177a60ade71'
+body_hash: 'sha256:94f56b96c90c66222c9a5584927354c59b84fd5c155a9879dff68ba5e79571ed'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -723,6 +723,20 @@ related:
 - `S19` `verify:` `Native Mac 108 manager library tests` -> `pass`
 - `S19` `verify:` `Native Mac all-target Clippy warnings denied` -> `pass`
 - `S19` `verify:` `Edition 2024 format and diff checks` -> `pass`
+- `S28` `A` `native/manager/src/invocation.rs`
+- `S28` `M` `native/manager/src/admission.rs`
+- `S28` `M` `native/manager/src/installation.rs`
+- `S28` `M` `native/manager/src/lib.rs`
+- `S28` `M` `native/manager/src/main.rs`
+- `S28` `M` `native/manager/src/windows_lifecycle.rs`
+- `S28` `M` `native/manager/tests/entrypoint.rs`
+- `S28` `A` `.vault/audit/2026-10-09-runtime-manager-architecture-windows-admission-recovery-audit.md`
+- `S28` `verify:` `configured Rust 1.96 Windows x64 manager tests frozen snapshot default 167 tests` -> `pass`
+- `S28` `verify:` `configured Rust 1.96 Windows x64 manager tests frozen snapshot fixture-test-mode final 205 tests` -> `pass`
+- `S28` `verify:` `cargo fmt --manifest-path native/manager/Cargo.toml -- --check` -> `pass`
+- `S28` `verify:` `configured Clippy with ambient driver first attempt E0514` -> `fail`
+- `S28` `verify:` `configured Rust 1.96 Clippy all-targets fixture-test-mode warnings denied final` -> `pass`
+- `S28` `verify:` `git diff --check -- native/manager` -> `pass`
 
 ## Notes
 
@@ -784,3 +798,6 @@ related:
 - `S19` Check14 warning corrected by using typed safe API; no suppression. Main activation remains gated; no GUI loop, host signal policy, login or session-ending tests performed.
 - `S19` Direct native verification using configured toolchain with current canonical generated Linux contract; no CMake package acceptance or production host activation.
 - `S19` Inactive menu source; native installation/login/cutover and interactive acceptance remain gates.
+- `S28` Concurrent desktop-service-installation session owns installer/bootstrap and desktop retry flag integration; only native/manager source changed by this Step.
+- `S28` Semantic code service unavailable; named-file inspection and accepted vault decision discovery used.
+- `S28` Interactive installed and cross-release acceptance remains pending on a disposable interactive host; current process is Session 0.

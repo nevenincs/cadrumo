@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#runtime-manager-architecture'
 date: '2026-10-03'
-modified: '2026-10-08'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:f4b41745eca9247c1f4923c8f71e102e852f3b83ac3745df098e53acdbcb7542'
+body_hash: 'sha256:dfa9174f71181becd0092a94d2d74eb35260edd4ffe977219d649633e718c12b'
 related:
   - '[[2026-10-03-runtime-manager-architecture-research]]'
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-10-08-runtime-manager-architecture-darwin-socket-paths-research]]'
   - '[[2026-10-08-runtime-manager-architecture-linux-placement-adr]]'
   - '[[2026-10-08-runtime-manager-architecture-linux-placement-research]]'
+  - '[[2026-10-09-runtime-manager-architecture-windows-admission-recovery-audit]]'
 ---
 
 # `runtime-manager-architecture` feature index
@@ -35,6 +36,7 @@ Auto-generated index of all documents tagged with `#runtime-manager-architecture
 ### audit
 
 - `2026-10-05-runtime-manager-architecture-audit` - `runtime-manager-architecture` audit: `Manager lane checkpoint review`
+- `2026-10-09-runtime-manager-architecture-windows-admission-recovery-audit` - `runtime-manager-architecture` audit: `Windows Session 0 and explicit manager recovery`
 
 ### exec
 

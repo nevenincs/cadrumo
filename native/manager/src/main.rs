@@ -7,7 +7,10 @@
 use cadrumo_application::diagnostics::{
     DiagnosticSource, Diagnostics, EventKind, HostOutcome, HostStage,
 };
-use cadrumo_manager::identity;
+use cadrumo_manager::{
+    identity,
+    invocation::{Intent, Invocation},
+};
 #[cfg(windows)]
 use std::sync::Arc;
 use std::{
@@ -23,7 +26,7 @@ const ADMISSION_REFUSED: u8 = 77;
 
 fn start(
     breakaway_attempted: bool,
-    sign_in: bool,
+    intent: Intent,
     designation: Option<cadrumo_manager::cutover::Designation>,
 ) -> ExitCode {
     #[cfg(windows)]
@@ -44,7 +47,7 @@ fn start(
     #[cfg(windows)]
     match run_windows(
         breakaway_attempted,
-        sign_in,
+        intent,
         designation,
         diagnostics.clone(),
     ) {
@@ -61,7 +64,7 @@ fn start(
     }
     #[cfg(not(windows))]
     {
-        let _ = (breakaway_attempted, sign_in, designation);
+        let _ = (breakaway_attempted, intent, designation);
         let _ = writeln!(io::stderr(), "manager_platform_unavailable");
         ExitCode::from(STARTUP_FAILED)
     }
@@ -70,7 +73,7 @@ fn start(
 #[cfg(windows)]
 fn run_windows(
     breakaway_attempted: bool,
-    sign_in: bool,
+    intent: Intent,
     designation: Option<cadrumo_manager::cutover::Designation>,
     diagnostics: Arc<Diagnostics>,
 ) -> io::Result<()> {
@@ -88,7 +91,7 @@ fn run_windows(
         HostStage::JobEscape,
         ErrorCode::ManagerUnavailable,
         Operation::Manager,
-        || windows_lifecycle::escape_job(breakaway_attempted || designation.is_some(), sign_in),
+        || windows_lifecycle::escape_job(breakaway_attempted || designation.is_some(), intent),
     )? {
         diagnostics.host_outcome(HostStage::JobEscape, HostOutcome::Dispatched);
         return Ok(());
@@ -105,7 +108,7 @@ fn run_windows(
             HostStage::Package,
             ErrorCode::PackageUnavailable,
             Operation::Manager,
-            || cadrumo_manager::installation::dispatch_newest(&env::current_exe()?, sign_in),
+            || cadrumo_manager::installation::dispatch_newest(&env::current_exe()?, intent),
         )? {
             DispatchOutcome::Dispatched => {
                 diagnostics.host_outcome(HostStage::Package, HostOutcome::Dispatched);
@@ -127,20 +130,29 @@ fn run_windows(
         if successor.is_some() {
             return Err(io::ErrorKind::WouldBlock.into());
         }
-        if !sign_in {
-            cadrumo_manager::ipc::windows::request(
-                &env::current_exe()?,
-                &cadrumo_manager::ipc::Request::Reveal { schema: 1 },
-            )?;
+        if let Some(request) = intent.existing_request() {
+            let response = cadrumo_manager::ipc::windows::request(&env::current_exe()?, &request)?;
+            if intent == Intent::Retry
+                && response.outcome != cadrumo_manager::ipc::Outcome::ReEvaluated
+            {
+                return Err(io::ErrorKind::WouldBlock.into());
+            }
         }
         return Ok(());
     };
     diagnostics.host_event(EventKind::StageStarted, HostStage::Storage);
     diagnostics.host_event(EventKind::StageCompleted, HostStage::Storage);
     configure(installation.locations(), &diagnostics);
+    if intent == Intent::Retry {
+        // Only an admitted session owner may clear failures for a fresh launch.
+        // Existing owners receive Retry over their authenticated IPC instead.
+        cadrumo_manager::failed_versions::FailedVersions::retry(
+            installation.locations().storage_root(),
+        )?;
+    }
     let preferences =
         cadrumo_manager::preferences::Preferences::read(installation.locations().storage_root())?;
-    if sign_in && !preferences.start_at_sign_in {
+    if intent == Intent::SignIn && !preferences.start_at_sign_in {
         return Ok(());
     }
     let tray =
@@ -165,7 +177,7 @@ fn run_windows(
         session,
         windows_lifecycle::activity,
         diagnostics.clone(),
-        if sign_in {
+        if intent == Intent::SignIn {
             cadrumo_manager::session::ownership::StartKind::SignIn
         } else {
             cadrumo_manager::session::ownership::StartKind::Manual
@@ -188,23 +200,10 @@ fn run_windows(
 
 fn main() -> ExitCode {
     let arguments: Vec<_> = env::args_os().skip(1).collect();
-    match arguments.as_slice() {
-        [] => start(false, false, None),
-        [flag] if flag == "--sign-in" => start(false, true, None),
-        [flag] if flag == "--breakaway-attempt" => start(true, false, None),
-        [first, second] if first == "--breakaway-attempt" && second == "--sign-in" => {
-            start(true, true, None)
-        }
-        [flag, value] if flag == "--cutover" => {
-            match value
-                .to_str()
-                .and_then(|value| cadrumo_manager::cutover::Designation::parse(value).ok())
-            {
-                Some(designation) => start(false, false, Some(designation)),
-                None => ExitCode::from(USAGE_ERROR),
-            }
-        }
-        [flag] if flag == "--version" => {
+    match Invocation::parse(&arguments) {
+        Ok(Invocation::Start { intent, breakaway }) => start(breakaway, intent, None),
+        Ok(Invocation::Cutover(designation)) => start(false, Intent::Manual, Some(designation)),
+        Ok(Invocation::Version) => {
             match writeln!(
                 io::stdout(),
                 "{} {}",
@@ -217,7 +216,7 @@ fn main() -> ExitCode {
         }
         _ => {
             // A GUI-subsystem image may have no stderr; the exit code carries the refusal.
-            let _ = writeln!(io::stderr(), "usage: cadrumo-manager [--version]");
+            let _ = writeln!(io::stderr(), "usage: cadrumo-manager [--version | --retry]");
             ExitCode::from(USAGE_ERROR)
         }
     }
