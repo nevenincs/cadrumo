@@ -244,7 +244,11 @@ export function scenarioHost(
       say("signInStatus");
       if (scenario.signIn.statusPending) return never();
       if (scenario.signIn.statusFailure)
-        return Promise.reject(failure(scenario.signIn.statusFailure, "cli"));
+        return Promise.reject(
+          typeof scenario.signIn.statusFailure === "string"
+            ? failure(scenario.signIn.statusFailure, "cli")
+            : scenario.signIn.statusFailure,
+        );
       if (managerDispatched && manager?.statusFailureAfterDispatch) {
         say("managerStatusRejected");
         return Promise.reject(

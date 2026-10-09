@@ -67,6 +67,38 @@ test("a failed initial readiness read exposes recovery without claiming readines
   expect(await calls(page, "startManager")).toBe(0);
 });
 
+test("automatic manager failure retains its cause and safe context through later status reads", async ({
+  page,
+}) => {
+  await page.goto(
+    "/scenarios.html?scenario=manager-installation-failed&latency=0",
+  );
+  const failure = page.locator(".sign-in");
+  await expect(ghost(page)).toHaveCount(0);
+  await expect(failure).toContainText(
+    label("desktop.signin.refused.manager", { code: "package_unavailable" }),
+  );
+  await expect(failure.locator("code")).toHaveText("manager · NotFound · 2");
+  await expect(failure).not.toContainText("private installation path");
+  await expect(failure).not.toContainText("exception payload");
+  await expect(
+    page.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    failure.getByRole("button", {
+      name: label("desktop.signin.start_services"),
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.clock.runFor(91_000);
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(failure).toContainText("package_unavailable");
+  await expect(failure.locator("code")).toHaveText("manager · NotFound · 2");
+  expect(await calls(page, "startManager")).toBe(0);
+  expect(await calls(page, "signIn")).toBe(0);
+  expect(await calls(page, "profiles")).toBe(0);
+});
+
 test("leaving startup cancels its timer and status polling", async ({
   page,
 }) => {

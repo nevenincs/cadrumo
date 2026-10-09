@@ -218,9 +218,25 @@ pub async fn sign_in_status(
     }
     // Dispatch completion is not runtime readiness. The canonical CLI below
     // remains the only authority on availability and authentication.
-    let _ = manager.start(false).await;
+    let started = manager.start(false).await;
     let state = state.inner().clone();
-    super::blocking(move || wire::status(state.run(&STATUS, None, None)?)).await
+    status_after_manager(
+        started,
+        super::blocking(move || wire::status(state.run(&STATUS, None, None)?)).await,
+    )
+}
+
+fn status_after_manager(
+    started: Result<crate::manager::StartOutcome>,
+    observed: Result<SignInStatus>,
+) -> Result<SignInStatus> {
+    let status = observed?;
+    // A working runtime remains authoritative even if manager dispatch failed.
+    // When it is unavailable, retain the preceding startup failure as the cause.
+    if !status.runtime_available {
+        started?;
+    }
+    Ok(status)
 }
 
 #[tauri::command]
@@ -367,6 +383,81 @@ fn encoded(body: &InvokeBody, confirmed: bool) -> Result<Zeroizing<Vec<u8>>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn status_observation(available: bool) -> Result<SignInStatus> {
+        wire::status(if available {
+            wire::Outcome::Success {
+                result: serde_json::json!({"status":{"presence":"absent"}}),
+                active_profile: Some("Test profile".into()),
+            }
+        } else {
+            wire::Outcome::Refused {
+                refusal: wire::Refusal {
+                    code: "runtime_unavailable".into(),
+                    retry_after_seconds: None,
+                },
+                active_profile: Some("Test profile".into()),
+            }
+        })
+    }
+
+    #[test]
+    fn unavailable_runtime_preserves_the_preceding_manager_failure_and_safe_context() {
+        let denied = if cfg!(windows) { 5 } else { 13 };
+        let error = ApplicationError::new(ErrorCode::ManagerDispatchFailed, Operation::Manager)
+            .caused_by(std::io::Error::from_raw_os_error(denied));
+        let failure = status_after_manager(Err(error), status_observation(false)).unwrap_err();
+        let document = serde_json::to_value(failure).unwrap();
+        assert_eq!(document["code"], "manager_dispatch_failed");
+        assert_eq!(document["operation"], "manager");
+        assert_eq!(document["ioKind"], "PermissionDenied");
+        assert_eq!(document["osCode"], denied);
+
+        let private = ApplicationError::new(ErrorCode::PackageUnavailable, Operation::Manager)
+            .caused_by(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "private installation path and exception payload",
+            ));
+        let failure = status_after_manager(Err(private), status_observation(false)).unwrap_err();
+        let document = serde_json::to_value(failure).unwrap();
+        assert_eq!(document["code"], "package_unavailable");
+        assert_eq!(document["operation"], "manager");
+        assert_eq!(document["ioKind"], "NotFound");
+        assert!(!document.to_string().contains("private"));
+    }
+
+    #[test]
+    fn a_working_runtime_remains_available_after_a_manager_dispatch_failure() {
+        let failure = ApplicationError::new(ErrorCode::PackageUnavailable, Operation::Manager);
+        let status = status_after_manager(Err(failure), status_observation(true)).unwrap();
+        assert!(status.runtime_available);
+        assert_eq!(status.state, wire::Presence::Absent);
+        assert_eq!(status.active_profile.as_deref(), Some("Test profile"));
+        assert!(status.refusal.is_none());
+    }
+
+    #[test]
+    fn successful_or_unmanaged_dispatch_never_claims_runtime_readiness() {
+        for outcome in [
+            crate::manager::StartOutcome::Dispatched,
+            crate::manager::StartOutcome::Unmanaged,
+            crate::manager::StartOutcome::Unsupported,
+        ] {
+            let status = status_after_manager(Ok(outcome), status_observation(false)).unwrap();
+            assert!(!status.runtime_available);
+            assert_eq!(status.refusal.unwrap().code, "runtime_unavailable");
+        }
+    }
+
+    #[test]
+    fn an_unreadable_cli_status_retains_its_own_failure() {
+        let manager = ApplicationError::new(ErrorCode::PackageUnavailable, Operation::Manager);
+        let cli = ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli);
+        let failure = status_after_manager(Err(manager), Err(cli)).unwrap_err();
+        assert_eq!(failure.code, ErrorCode::ReadFailed);
+        assert_eq!(failure.operation, Operation::Cli);
+    }
+
     #[test]
     fn secret_is_raw_utf8_and_bounded_after_json_encoding() {
         let encoded = secret(&InvokeBody::Raw("á\"\n漢".as_bytes().to_vec())).unwrap();

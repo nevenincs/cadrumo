@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
+  HostFailure,
   ProfileList,
   SignInRefusal,
   SignInStatus,
@@ -19,12 +20,16 @@ const unknownStatus: SignInStatus = {
 
 function refusalFrom(error: unknown): SignInRefusal {
   const seconds = (error as Partial<SignInRefusal> | null)?.retryAfterSeconds;
+  const failure = error as Partial<HostFailure> | null;
   return {
     code: failureCode(error),
     retryAfterSeconds:
       typeof seconds === "number" && Number.isFinite(seconds)
         ? Math.max(0, seconds)
         : null,
+    ...(failure?.operation ? { operation: failure.operation } : {}),
+    ...(failure?.ioKind ? { ioKind: failure.ioKind } : {}),
+    ...(Number.isInteger(failure?.osCode) ? { osCode: failure?.osCode } : {}),
   };
 }
 
@@ -261,11 +266,15 @@ export function useSignIn(host: Host) {
         } catch (error) {
           if (generation === request.current) {
             statusReadFailed.current = true;
+            const refusal = refusalFrom(error);
             const failed = {
               ...unknownStatus,
               runtimeAvailable:
-                latestStatus.current?.runtimeAvailable ?? !host.startManager,
-              refusal: refusalFrom(error),
+                refusal.operation === "manager"
+                  ? false
+                  : (latestStatus.current?.runtimeAvailable ??
+                    !host.startManager),
+              refusal,
             };
             latestStatus.current = failed;
             setStatus(failed);

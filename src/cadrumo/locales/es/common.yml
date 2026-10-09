@@ -762,6 +762,8 @@ desktop:
         así que la TUI te pedirá la contraseña.
       login_mismatch: Tu inicio de sesión es de una sesión anterior en este ordenador.
         Vuelve a iniciar sesión.
+      manager: No se han podido iniciar los servicios en segundo plano ({code}). Abre
+        Registros para ver los detalles.
       other: No se ha podido iniciar sesión ({code}).
       profile_locked: Este perfil está bloqueado. Continúa en la TUI para desbloquearlo.
       receipt_absent: No has iniciado sesión.

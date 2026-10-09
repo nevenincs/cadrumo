@@ -743,6 +743,8 @@ desktop:
         ezért a TUI kérni fogja a jelszavadat.
       login_mismatch: A bejelentkezésed egy korábbi munkamenetből származik ezen a
         számítógépen. Jelentkezz be újra.
+      manager: A háttérszolgáltatások nem tudtak elindulni ({code}). A részletekért
+        nyisd meg a Naplókat.
       other: A bejelentkezés nem sikerült ({code}).
       profile_locked: Ez a profil zárolva van. A feloldásához folytasd a TUI-ban.
       receipt_absent: Nem vagy bejelentkezve.

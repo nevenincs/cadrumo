@@ -733,6 +733,7 @@ desktop:
         TUI will ask for your password.
       login_mismatch: Your sign-in is from an earlier session on this computer. Sign
         in again.
+      manager: Background services could not start ({code}). Open Logs for details.
       other: Signing in didn't work ({code}).
       profile_locked: This profile is locked. Continue in the TUI to unlock it.
       receipt_absent: You're not signed in.

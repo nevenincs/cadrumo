@@ -82,6 +82,8 @@ export type HostErrorCode =
   | "webview_monitor_unavailable"
   | "unsupported_platform"
   | "instance_lock_foreign"
+  | "manager_unavailable"
+  | "manager_dispatch_failed"
   | "panic";
 
 /** `Operation` in `native/application/src/error/application.rs`. */
@@ -93,7 +95,8 @@ export type HostOperation =
   | "terminal"
   | "logging"
   | "webview"
-  | "shutdown";
+  | "shutdown"
+  | "manager";
 
 /**
  * The serialized `ApplicationError`: the value a refused command rejects
@@ -568,7 +571,14 @@ export type DiagnosticsSnapshot = {
  * `HostFailure`. Commands that return nothing resolve with `null`.
  * `terminal_write` takes a raw body instead: see `TerminalWriteBody`.
  */
-export type SignInRefusal = { code: string; retryAfterSeconds: number | null };
+export type SignInRefusal = {
+  code: string;
+  retryAfterSeconds: number | null;
+  /** Safe native failure context, without exception messages or paths. */
+  operation?: HostOperation;
+  ioKind?: string;
+  osCode?: number;
+};
 
 /** Presence only: reading this never resumes or extends a sign-in. */
 export type SignInStatus = {

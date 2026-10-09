@@ -129,7 +129,10 @@ function Refusal({
   const t = useStrings();
   if (!refusal) return null;
   const code = refusalCode(refusal);
-  const entry = (code && REFUSALS[code]) || OTHER;
+  const entry =
+    refusal.operation === "manager"
+      ? { ...OTHER, key: "desktop.signin.refused.manager" }
+      : (code && REFUSALS[code]) || OTHER;
   const total = refusal.retryAfterSeconds ?? 0;
   if (code === "THROTTLED") {
     if (seconds <= 0) return null;
@@ -155,6 +158,13 @@ function Refusal({
       icon={<Icon name={entry.icon} />}
     >
       {t(entry.key, { code: refusal.code })}
+      {refusal.operation && (
+        <code className="text-sm text-muted-foreground">
+          {[refusal.operation, refusal.ioKind, refusal.osCode]
+            .filter((value) => value !== undefined)
+            .join(" · ")}
+        </code>
+      )}
     </Alert>
   );
 }

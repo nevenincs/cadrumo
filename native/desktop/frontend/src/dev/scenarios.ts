@@ -4,7 +4,7 @@
 // summaries are tool text for developers, not product chrome, so they are not
 // in the locale catalogues.
 
-import type { HostErrorCode, SignInStatus } from "../ipc/contract";
+import type { HostErrorCode, HostFailure, SignInStatus } from "../ipc/contract";
 
 /** What a submitted password meets. */
 export type SubmitOutcome =
@@ -27,7 +27,7 @@ export type Scenario = {
     /** Status reads never answer. */
     statusPending?: boolean;
     /** Status reads reject with this host failure. */
-    statusFailure?: HostErrorCode;
+    statusFailure?: HostErrorCode | HostFailure;
     submit: SubmitOutcome;
     /** Sign-out answers, or rejects with this host failure. */
     signOutFailure?: HostErrorCode;
@@ -343,6 +343,26 @@ export const SCENARIOS: readonly Scenario[] = [
       profile: null,
     },
     terminals: "silent",
+  },
+  {
+    ...base,
+    id: "manager-installation-failed",
+    title: "Manager installation failed",
+    summary:
+      "Automatic startup reports its installation failure and safe OS classification.",
+    signIn: {
+      ...servicesDown,
+      statusFailure: {
+        code: "package_unavailable",
+        operation: "manager",
+        ioKind: "NotFound",
+        osCode: 2,
+        message: "private installation path and exception payload",
+      },
+    },
+    profiles: "one",
+    terminals: "silent",
+    manager: { result: "dispatched", autoDispatched: true },
   },
   {
     ...base,
