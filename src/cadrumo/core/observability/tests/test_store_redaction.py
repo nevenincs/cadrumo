@@ -23,10 +23,12 @@ from ....tests.aeat_literal_fixtures import (
 )
 from ....tests.storage_scope import storage_overrides
 from ...config import override_settings
+from ...redaction.tax_identity_admission import bind_tax_identity_admission
 from ...storage_taxonomy import StorageCategory
 from ..models import (
     ArgumentRecord,
     ArgumentSource,
+    FormFillPayload,
     NavigationPayload,
     RunEvent,
     RunEventKind,
@@ -113,3 +115,24 @@ def test_save_events_append_redacts_url_path(
         assert "/internal/path" not in on_disk
         assert "token=12345" not in on_disk
         assert AEAT_HOST_SUFFIX_EXPECTED in on_disk
+
+
+@pytest.mark.parametrize("account", ("DE89 3704 0044 0532 0130 00", "GB29 NWBK 6016 1331 9268 19"))
+def test_event_append_hashes_the_whole_account_without_identity_admission(tmp_path: Path, account: str) -> None:
+    """A partial identity hash must not leave bank-account digits in the event file."""
+    import hashlib
+    import json
+
+    event = RunEvent(
+        run_id="0123456789abcdef",
+        step_id="step-0",
+        kind=RunEventKind.FORM_FILL,
+        payload=RunEventPayload(form_fill=FormFillPayload(form_id="aeat-130", display_number="01", value=account)),
+        timestamp=_FINISHED_AT,
+        module=__name__,
+    )
+    with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)), bind_tax_identity_admission(None):
+        target = save_events_append(event.run_id, event)
+    document = json.loads(target.read_text(encoding="utf-8"))
+    expected = "sha256:" + hashlib.sha256(account.encode("utf-8")).hexdigest()[:8]
+    assert document["payload"]["form_fill"]["value"] == expected

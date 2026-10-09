@@ -248,11 +248,13 @@ _DIAGNOSTIC_RETENTION = timedelta(days=7)
 """Default retention for opt-in diagnostic capture."""
 
 _AUDIT_REDACTION_RULES = (
+    # Hash whole accounts before identity scans can consume an IBAN prefix.
+    # This also protects callers without host-bound tax-identity admission.
+    "iban-hash",
     "nif-hash",
     "nif-separated-hash",
     "cif-hash",
     "nif-iva-hash",
-    "iban-hash",
     "url-host-only",
     "token-fingerprint",
     "bearer-token-fingerprint",
@@ -280,13 +282,13 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
             sensitivity=SensitivityClass.IDENTITY,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(),
-            redaction_rules=("nif-hash", "nif-separated-hash", "cif-hash", "nif-iva-hash", "iban-hash"),
+            redaction_rules=("iban-hash", "nif-hash", "nif-separated-hash", "cif-hash", "nif-iva-hash"),
         ),
         SensitivityClass.FINANCIAL: ClassificationPolicy(
             sensitivity=SensitivityClass.FINANCIAL,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(),
-            redaction_rules=("nif-hash", "nif-separated-hash", "cif-hash", "nif-iva-hash", "iban-hash"),
+            redaction_rules=("iban-hash", "nif-hash", "nif-separated-hash", "cif-hash", "nif-iva-hash"),
         ),
         SensitivityClass.AUDIT: ClassificationPolicy(
             sensitivity=SensitivityClass.AUDIT,

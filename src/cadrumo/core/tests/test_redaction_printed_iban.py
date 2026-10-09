@@ -24,6 +24,7 @@ import pytest
 
 from ..iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ..redaction.rules import redact_for_cli_output, redact_for_log
+from ..redaction.tax_identity_admission import bind_tax_identity_admission
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
@@ -90,6 +91,17 @@ def test_a_printed_account_does_not_survive_the_funnel(printed: str, funnel: Cal
 
     assert redacted != printed
     assert redacted.startswith("sha256:"), redacted
+
+
+@pytest.mark.parametrize("printed", PRINTED_ACCOUNTS)
+@pytest.mark.parametrize("funnel", _FUNNELS)
+def test_an_account_is_fully_hashed_without_host_identity_admission(printed: str, funnel: Callable[[str], str]) -> None:
+    """Lexical identity fallback must not mask an account prefix and expose its tail."""
+    import hashlib
+
+    expected = "sha256:" + hashlib.sha256(printed.encode("utf-8")).hexdigest()[:8]
+    with bind_tax_identity_admission(None):
+        assert funnel(printed) == expected
 
 
 @pytest.mark.parametrize(("sentence", "survivors"), ACCOUNTS_IN_PROSE)
