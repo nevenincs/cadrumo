@@ -35,7 +35,7 @@ function refusalFrom(error: unknown): SignInRefusal {
 
 /**
  * The one reading of the account that every element shows: the sign-in
- * dialog, the TUI pane and its header, settings, the rail and the actions.
+ * dialog, the TUI pane and its header, the account menu, the rail and the actions.
  * Nothing else derives a state of its own from the raw status.
  */
 export type AccountPhase =

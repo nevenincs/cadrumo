@@ -273,7 +273,7 @@ const SURFACES: {
     },
   },
   {
-    name: "settings and the calendar with a locked profile",
+    name: "the account menu and the calendar with a locked profile",
     scenario: "profile-locked",
     reach: async (target) => {
       await expect(target.locator(".sign-in")).toBeVisible();
@@ -283,9 +283,9 @@ const SURFACES: {
         .getByRole("button", { name: label("desktop.calendar.title") })
         .click();
       await target
-        .getByRole("button", { name: label("desktop.rail.settings") })
+        .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
         .click();
-      await expect(target.locator(".settings")).toContainText(
+      await expect(target.locator(".account-menu")).toContainText(
         label("desktop.signin.refused.profile_locked"),
       );
     },

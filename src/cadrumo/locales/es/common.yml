@@ -733,7 +733,6 @@ desktop:
     light: Claro
     match_appearance: Según la apariencia
     reset_layout: Restablecer la disposición
-    session: Inicio de sesión
     side_by_side: Lado a lado
     stacked: Apiladas
     terminal_text: Texto del terminal
@@ -796,6 +795,14 @@ desktop:
     side_by_side: Poner documentación y TUI lado a lado
     stack: Apilar documentación y TUI
     swap: Intercambiar documentación y TUI
+  titlebar:
+    close: Cerrar ventana
+    failed: No se ha podido completar la acción de la ventana.
+    label: Barra de título de la aplicación
+    maximize: Maximizar ventana
+    minimize: Minimizar ventana
+    profile_menu: Menú de perfil
+    restore: Restaurar ventana
   toast:
     copied: Copiado
     copy_failed: No se ha podido copiar.

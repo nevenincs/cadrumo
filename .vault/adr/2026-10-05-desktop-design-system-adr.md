@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-design-system'
 date: '2026-10-05'
-modified: '2026-10-06'
+modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc654c0302fe49fa5847361c4571d88eff9b80c84c96ee0029e683b9636adba8'
+body_hash: 'sha256:30150bd6d07abecc8952b8423e713e65e774fa5d907c3e8c920f4cc797a0ce17'
 related:
   - "[[2026-10-05-desktop-design-system-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -27,6 +27,10 @@ related:
 ## Rationale
 
 ## Consequences
+
+### Amendment 2026-10-09: account controls move to the application header
+
+Authorized by the operator's approval of the dev-display title bar and instruction to implement it and retire the duplicated Settings profile switcher. The Settings constraint above is replaced for account placement: Settings retains frontend preferences and no account section. The application header owns the one account dropdown, current profile and sign-in state, reusing the canonical account controller and credential dialog. The existing sign-in dialog keeps its labelled profile choice when credentials are needed; it is not a second Settings switcher. Account-related acceptance selectors move from Settings to the header/menu under this explicit authorization. All other stable hooks and design-system ownership constraints stand.
 
 ## Context
 

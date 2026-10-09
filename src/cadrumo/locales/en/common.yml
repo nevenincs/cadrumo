@@ -705,7 +705,6 @@ desktop:
     light: Light
     match_appearance: Match appearance
     reset_layout: Reset layout
-    session: Sign-in
     side_by_side: Side by side
     stacked: Stacked
     terminal_text: Terminal text
@@ -765,6 +764,14 @@ desktop:
     side_by_side: Put docs and TUI side by side
     stack: Stack docs and TUI
     swap: Swap docs and TUI
+  titlebar:
+    close: Close window
+    failed: The window action could not be completed.
+    label: Application title bar
+    maximize: Maximize window
+    minimize: Minimize window
+    profile_menu: Profile menu
+    restore: Restore window
   toast:
     copied: Copied
     copy_failed: Couldn't copy that.

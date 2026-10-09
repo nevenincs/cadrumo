@@ -11,6 +11,7 @@ pub mod token;
 pub mod webview;
 #[cfg(windows)]
 pub mod webview_environment;
+pub mod window_controls;
 pub mod window_state;
 
 use crate::{app::Commands, docs, environment::Launch};
@@ -162,11 +163,13 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             app.manage(sign_in);
             app.manage(popups);
             app.manage(channel::Deliveries::default());
+            app.manage(window_controls::Controls::default());
             Ok(())
         })
         .on_window_ready(move |window| {
             window_states.attach(&window);
             single_instance::attach(&window, activation.clone());
+            window_controls::attach(&window);
         })
         .on_event(move |_, event| match event {
             RunEvent::MenuEvent(event) => recorder.record(&event.id().0),

@@ -1,7 +1,7 @@
 import { CreateProfile } from "./account/CreateProfile";
+import { AccountRefusal } from "./account/AccountRefusal";
 import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,170 +22,18 @@ import {
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
-import { Icon, type IconName } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import type { SignInRefusal } from "../ipc/contract";
 import { nameable } from "../shell/profiles";
-import type { AccountPhase, SignInController } from "../shell/signIn";
+import type { SignInController } from "../shell/signIn";
 import { useStrings } from "../shell/strings";
 import { accountLabel, GATES } from "./accountWords";
 import { Logo } from "./Logo";
 import { AccountLoading } from "./AccountLoading";
-
-type Tone = "neutral" | "warning" | "danger";
-
-// How each typed refusal is said: its text, its tone and its icon. A code the
-// shell does not name is still shown, with the code, never swallowed.
-const REFUSALS: Record<string, { key: string; tone: Tone; icon: IconName }> = {
-  INSTALLATION_UNAVAILABLE: {
-    key: "desktop.signin.refused.installation_unavailable",
-    tone: "warning",
-    icon: "unplug",
-  },
-  INSTALLATION_REFUSED: {
-    key: "desktop.signin.refused.installation_refused",
-    tone: "danger",
-    icon: "alert",
-  },
-  INSTALLATION_CANCELLED: {
-    key: "desktop.signin.refused.installation_cancelled",
-    tone: "neutral",
-    icon: "info",
-  },
-  INSTALLATION_FAILED: {
-    key: "desktop.signin.refused.installation_failed",
-    tone: "danger",
-    icon: "alert",
-  },
-  INSTALLATION_UNSETTLED: {
-    key: "desktop.signin.refused.installation_unsettled",
-    tone: "warning",
-    icon: "alert",
-  },
-  CREDENTIAL_REJECTED: {
-    key: "desktop.signin.refused.invalid",
-    tone: "danger",
-    icon: "alert",
-  },
-  THROTTLED: {
-    key: "desktop.signin.refused.throttled",
-    tone: "warning",
-    icon: "clock",
-  },
-  PROFILE_LOCKED: {
-    key: "desktop.signin.refused.profile_locked",
-    tone: "warning",
-    icon: "lock",
-  },
-  KEYRING_UNAVAILABLE: {
-    key: "desktop.signin.refused.keyring_unavailable",
-    tone: "warning",
-    icon: "lock",
-  },
-  RUNTIME_UNAVAILABLE: {
-    key: "desktop.signin.refused.runtime_unavailable",
-    tone: "warning",
-    icon: "unplug",
-  },
-  RECEIPT_ABSENT: {
-    key: "desktop.signin.refused.receipt_absent",
-    tone: "neutral",
-    icon: "info",
-  },
-  RECEIPT_EXPIRED: {
-    key: "desktop.signin.refused.receipt_expired",
-    tone: "neutral",
-    icon: "info",
-  },
-  CUSTODY_CHANGED: {
-    key: "desktop.signin.refused.custody_changed",
-    tone: "neutral",
-    icon: "info",
-  },
-  LOGIN_MISMATCH: {
-    key: "desktop.signin.refused.login_mismatch",
-    tone: "neutral",
-    icon: "info",
-  },
-  GENERATION_CHANGED: {
-    key: "desktop.signin.refused.generation_changed",
-    tone: "neutral",
-    icon: "info",
-  },
-};
-
-const OTHER = {
-  key: "desktop.signin.refused.other",
-  tone: "danger",
-  icon: "alert",
-} as const;
-
-const refusalCode = (refusal: SignInRefusal | null) =>
-  refusal?.code.toUpperCase() ?? null;
-
-/**
- * A refusal, said in the shell's own words. A throttle shows its wait as it
- * runs down and leaves when the wait is over; the running number is for the
- * eye only, so a screen reader hears the wait once, not every second.
- */
-function Refusal({
-  refusal,
-  seconds,
-  quiet = false,
-}: {
-  refusal: SignInRefusal | null;
-  seconds: number;
-  /** A second copy of what another pane already announces: read in place,
-   * not announced again. */
-  quiet?: boolean;
-}) {
-  const t = useStrings();
-  if (!refusal) return null;
-  const code = refusalCode(refusal);
-  const entry =
-    refusal.operation === "manager"
-      ? { ...OTHER, key: "desktop.signin.refused.manager" }
-      : (code && REFUSALS[code]) || OTHER;
-  const total = refusal.retryAfterSeconds ?? 0;
-  if (code === "THROTTLED") {
-    if (seconds <= 0) return null;
-    return (
-      <Alert tone="warning" icon={<Icon name="clock" />}>
-        <span className="sr-only">{t(entry.key, { seconds: total })}</span>
-        <span aria-hidden="true">{t(entry.key, { seconds })}</span>
-        {total > 0 && (
-          <Progress
-            className="mt-1.5"
-            value={total - seconds}
-            max={total}
-            aria-hidden="true"
-          />
-        )}
-      </Alert>
-    );
-  }
-  return (
-    <Alert
-      tone={entry.tone}
-      role={quiet ? "note" : entry.tone === "danger" ? "alert" : "status"}
-      icon={<Icon name={entry.icon} />}
-    >
-      {t(entry.key, { code: refusal.code })}
-      {refusal.operation && (
-        <code className="text-sm text-muted-foreground">
-          {[refusal.operation, refusal.ioKind, refusal.osCode]
-            .filter((value) => value !== undefined)
-            .join(" · ")}
-        </code>
-      )}
-    </Alert>
-  );
-}
 
 /**
  * The sign-in screen: a dialog over the window, opened while the active
@@ -278,7 +126,8 @@ export function SignInDialog({
     return null;
 
   const seconds = account.retrySeconds;
-  const rejected = refusalCode(account.refusal) === "CREDENTIAL_REJECTED";
+  const rejected =
+    account.refusal?.code.toUpperCase() === "CREDENTIAL_REJECTED";
   // Where a password cannot help, the form is not offered: with no profile
   // the dialog offers the way to set one up, and with no services running it
   // says so in its title, as the rest of the window does.
@@ -504,7 +353,7 @@ export function SignInDialog({
             </Field>
 
             {!rejected && (
-              <Refusal refusal={account.refusal} seconds={seconds} />
+              <AccountRefusal refusal={account.refusal} seconds={seconds} />
             )}
 
             <Button
@@ -517,7 +366,7 @@ export function SignInDialog({
             </Button>
           </form>
         ) : setUpInTui ? null : (
-          <Refusal refusal={account.refusal} seconds={seconds} />
+          <AccountRefusal refusal={account.refusal} seconds={seconds} />
         )}
 
         {!creating && servicesDown && account.canStartServices && (
@@ -702,7 +551,7 @@ export function SignedOut({
       </div>
       {refused && (
         <div className="w-full max-w-dialog text-left">
-          <Refusal
+          <AccountRefusal
             refusal={account.refusal}
             seconds={account.retrySeconds}
             quiet={quiet}
@@ -733,166 +582,5 @@ export function SignedOut({
         </Button>
       </div>
     </Empty>
-  );
-}
-
-const SESSION_TONE: Partial<
-  Record<AccountPhase, "success" | "warning" | "neutral">
-> = { "signed-in": "success", "services-down": "warning" };
-
-/**
- * The account in settings, as two sections: which profile this window works
- * in, and its sign-in. Each says the same phase the rest of the window shows.
- * It closes with the line that sets it apart from what follows, so settings
- * draws none where there is no account to show.
- */
-export function Account({
-  account,
-  onSignIn,
-  onSignOut,
-  onSwitch,
-  onOpenTui,
-}: {
-  account: SignInController;
-  onSignIn: () => void;
-  onSignOut: () => void;
-  /** Sign out of this profile and go on to the choice of another. */
-  onSwitch?: () => void;
-  onOpenTui: () => void;
-}) {
-  const t = useStrings();
-  const profileId = useId();
-  const sessionId = useId();
-  const status = account.status;
-  const phase = account.phase;
-  if (!status?.supported) return null;
-  const label = accountLabel(phase === "no-profile" ? "signed-out" : phase);
-  // The TUI's own flow is the way on where the account is not settled and
-  // no password can settle it. With no profile, that is the profile's line.
-  const handover =
-    !account.canSignIn &&
-    (phase === "signed-out" ||
-      phase === "unknown" ||
-      phase === "services-down");
-  // The profile is shown where it is known, by name or as none. With no
-  // runtime to ask it is simply not known, and the section is left out.
-  const profile = status.active_profile !== null || phase === "no-profile";
-  return (
-    <>
-      {profile && (
-        <section className="grid grid-cols-1 gap-2" aria-labelledby={profileId}>
-          <h3
-            id={profileId}
-            className="text-sm font-medium text-muted-foreground"
-          >
-            {t("desktop.signin.profile")}
-          </h3>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="flex min-w-0 items-center gap-2">
-              <Icon name="user" className="text-muted-foreground" />
-              <span
-                className={
-                  status.active_profile
-                    ? "truncate font-medium"
-                    : "text-muted-foreground"
-                }
-                title={status.active_profile ?? undefined}
-              >
-                {status.active_profile ?? t("desktop.account.no_profile")}
-              </span>
-            </span>
-            {phase === "no-profile" && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={account.canCreate ? onSignIn : onOpenTui}
-              >
-                {t(
-                  account.canCreate
-                    ? "desktop.account.new_profile"
-                    : "desktop.account.create_profile",
-                )}
-              </Button>
-            )}
-          </div>
-        </section>
-      )}
-      <section
-        className="account grid grid-cols-1 gap-2"
-        aria-labelledby={sessionId}
-      >
-        <h3
-          id={sessionId}
-          className="text-sm font-medium text-muted-foreground"
-        >
-          {t("desktop.settings.session")}
-        </h3>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          {label && (
-            <Badge variant={SESSION_TONE[phase] ?? "neutral"}>{t(label)}</Badge>
-          )}
-          {phase === "signed-in" ? (
-            <span className="flex flex-wrap items-center gap-2">
-              {account.canCreate && onSwitch && (
-                <Button
-                  className="switch-profile"
-                  variant="ghost"
-                  size="sm"
-                  aria-disabled={account.busy || undefined}
-                  onClick={account.busy ? undefined : onSwitch}
-                >
-                  <Icon name="swap" />
-                  {t("desktop.account.switch_profile")}
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                pending={account.busy}
-                onClick={onSignOut}
-              >
-                {!account.busy && <Icon name="signOut" />}
-                {t("desktop.account.sign_out")}
-              </Button>
-            </span>
-          ) : account.canSignIn ? (
-            <Button variant="outline" size="sm" onClick={onSignIn}>
-              {t("desktop.signin.submit")}
-            </Button>
-          ) : handover ? (
-            <Button variant="outline" size="sm" onClick={onOpenTui}>
-              {t("desktop.signin.open_tui")}
-            </Button>
-          ) : null}
-        </div>
-        {handover && (
-          <Refusal refusal={account.refusal} seconds={account.retrySeconds} />
-        )}
-        {phase === "signed-in" && (
-          <p className="text-sm text-muted-foreground">
-            {t("desktop.account.sign_out_hint")}
-          </p>
-        )}
-        {phase === "signed-in" && account.canCreate && (
-          <p className="switch-hint text-sm text-muted-foreground">
-            {t("desktop.account.switch_hint")}
-          </p>
-        )}
-        {account.remaining &&
-          account.remaining.remainingAccess.automationEnabled !== false && (
-            <Alert icon={<Icon name="info" />}>
-              {t("desktop.account.remaining_access")}
-            </Alert>
-          )}
-        {account.signOutFailure && (
-          <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
-            {t("desktop.account.sign_out_failed", {
-              code: account.signOutFailure.code,
-            })}
-          </Alert>
-        )}
-      </section>
-      <Separator />
-    </>
   );
 }

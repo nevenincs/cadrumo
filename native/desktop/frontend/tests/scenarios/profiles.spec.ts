@@ -8,6 +8,12 @@ import { label } from "../support/strings";
 const open = (target: Page, scenario: string) =>
   target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
 
+const menu = (target: Page) => target.locator(".account-menu");
+const menuButton = (target: Page) =>
+  target.getByRole("button", {
+    name: label("desktop.titlebar.profile_menu"),
+  });
+
 const dialog = (target: Page) => target.locator(".sign-in");
 
 const password = (target: Page) => target.locator("#profile-password");
@@ -155,32 +161,34 @@ test("another profile chosen is the one signed in to, and the one the window the
   const made = await everyCall(target);
   expect(made).toContain("signInProfile 2");
   expect(made).not.toContain("signInProfile 1");
-  await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
-    .click();
-  const settings = target.locator(".settings");
-  await expect(
-    settings.getByRole("region", { name: label("desktop.signin.profile") }),
-  ).toContainText("Ana Soler Vidal");
-  // Using another profile is said where the sign-out is.
-  await expect(settings.locator(".switch-hint")).toHaveText(
+  await expect(target.locator(".titlebar .profile-name")).toHaveText(
+    "Ana Soler Vidal",
+  );
+  await menuButton(target).click();
+  await expect(menu(target)).toContainText(
     label("desktop.account.switch_hint"),
   );
 });
 
-for (const from of ["settings", "palette"] as const)
+for (const from of ["header", "palette"] as const)
   test(`switching profile from ${from} signs out once and goes on to the choice of another`, async ({
     page: target,
   }) => {
     await open(target, "signed-in");
     await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
-    if (from === "settings") {
-      await target
-        .getByRole("button", { name: label("desktop.rail.settings") })
+    if (from === "header") {
+      await menuButton(target).click();
+      await menu(target)
+        .getByRole("menuitem", {
+          name: label("desktop.account.sign_out"),
+          exact: true,
+        })
         .click();
-      await target
-        .locator(".settings")
-        .getByRole("button", { name: label("desktop.account.switch_profile") })
+      await menu(target)
+        .getByRole("menuitem", {
+          name: label("desktop.signin.submit"),
+          exact: true,
+        })
         .click();
     } else {
       await target
@@ -215,17 +223,20 @@ test("a switch whose sign-out fails says so where it was asked, and asks for no 
   page: target,
 }) => {
   await open(target, "sign-out-refused");
-  await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+  await menuButton(target).click();
+  await menu(target)
+    .getByRole("menuitem", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    })
     .click();
-  const settings = target.locator(".settings");
-  await settings
-    .getByRole("button", { name: label("desktop.account.switch_profile") })
-    .click();
-  await expect(settings.getByRole("alert")).toBeVisible();
+  await expect(menu(target).getByRole("alert")).toBeVisible();
   await expect(dialog(target)).toHaveCount(0);
   await expect(
-    settings.getByRole("button", { name: label("desktop.account.sign_out") }),
+    menu(target).getByRole("menuitem", {
+      name: label("desktop.account.sign_out"),
+      exact: true,
+    }),
   ).toBeVisible();
   expect(await calls(target, "signOut")()).toBe(1);
   expect(await calls(target, "signIn")()).toBe(0);
@@ -490,17 +501,12 @@ test("a profile created beside others is the one then chosen for sign-in", async
   // Created, it is the selected profile: signed in to unnamed, and the one
   // the window then names.
   expect(await calls(target, "signInProfile")()).toBe(0);
-  await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
-    .click();
-  await expect(
-    target
-      .locator(".settings")
-      .getByRole("region", { name: label("desktop.signin.profile") }),
-  ).toContainText("Marta Ruiz Ferrer");
+  await expect(target.locator(".titlebar .profile-name")).toHaveText(
+    "Marta Ruiz Ferrer",
+  );
 });
 
-test("first run: the pane, settings and the palette all lead to the form in the window", async ({
+test("first run: the pane, header and the palette all lead to the form in the window", async ({
   page: target,
 }) => {
   await open(target, "first-run");
@@ -515,14 +521,13 @@ test("first run: the pane, settings and the palette all lead to the form in the 
   await expect(nameField(target)).toBeFocused();
   await target.keyboard.press("Escape");
 
-  await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+  await menuButton(target).click();
+  await menu(target)
+    .getByRole("menuitem", {
+      name: label("desktop.account.new_profile"),
+      exact: true,
+    })
     .click();
-  await target
-    .locator(".settings")
-    .getByRole("button", { name: label("desktop.account.new_profile") })
-    .click();
-  await expect(target.locator(".settings")).toHaveCount(0);
   await expect(nameField(target)).toBeFocused();
   await target.keyboard.press("Escape");
 
@@ -621,24 +626,15 @@ for (const [kind, long] of [
       await password(target).fill("correct horse");
       await submit(target).click();
       await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
-      await target
-        .getByRole("button", { name: label("desktop.rail.settings") })
-        .click();
-      const settings = target.locator(".settings");
-      // The name is cut, with the whole of it as its title; signing out
-      // and switching are where they can be pressed.
-      await expect(settings.locator(`[title="${long}"]`)).toBeVisible();
+      await expect(target.locator(`.titlebar [title="${long}"]`)).toBeVisible();
+      await menuButton(target).click();
       await expect(
-        settings.getByRole("button", {
+        menu(target).getByRole("menuitem", {
           name: label("desktop.account.sign_out"),
+          exact: true,
         }),
       ).toBeInViewport({ ratio: 1 });
-      await expect(
-        settings.getByRole("button", {
-          name: label("desktop.account.switch_profile"),
-        }),
-      ).toBeInViewport({ ratio: 1 });
-      expect(await inside(".settings")).toEqual([]);
+      expect(await inside(".account-menu")).toEqual([]);
     });
 
 test("one control shows both passwords of the form, and the keyboard meets each stop once", async ({

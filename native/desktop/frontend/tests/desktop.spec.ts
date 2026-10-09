@@ -699,7 +699,9 @@ test("throttling counts down without retry and a successful sign-in hands over t
   await submit.click();
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   expect((await signInState(target)).tuiStarts).toBe(1);
-  await target.getByRole("button", { name: /Settings/ }).click();
+  await target
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+    .click();
   await target.evaluate(() => {
     Object.assign(
       (window as unknown as { __signInTest: object }).__signInTest,
@@ -708,7 +710,7 @@ test("throttling counts down without retry and a successful sign-in hands over t
     window.dispatchEvent(new Event("focus"));
   });
   await target
-    .getByRole("button", {
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
@@ -829,9 +831,14 @@ test("unsupported platforms hide desktop sign-in and Account", async ({
   await expect(
     target.getByLabel(label("desktop.signin.password"), { exact: true }),
   ).toHaveCount(0);
-  await target.getByRole("button", { name: /Settings/ }).click();
+  await target
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+    .click();
   await expect(
-    target.getByRole("region", { name: label("desktop.settings.session") }),
+    target.locator(".account-menu").getByRole("menuitem", {
+      name: label("desktop.signin.submit"),
+      exact: true,
+    }),
   ).toHaveCount(0);
 });
 

@@ -130,6 +130,7 @@ pub fn run(launch: Launch) -> Result<i32> {
             docs::commands(),
             logs::commands(),
             shell::commands(),
+            shell::window_controls::commands(),
             shell::sign_in::commands(),
             manager::commands(),
         ],
@@ -247,6 +248,7 @@ mod tests {
             docs::commands(),
             logs::commands(),
             shell::commands(),
+            shell::window_controls::commands(),
             shell::sign_in::commands(),
             manager::commands(),
         ];

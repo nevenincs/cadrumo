@@ -92,10 +92,10 @@ test("signed in: the TUI runs and the account can sign out", async ({
   );
   await expect(password(target)).toHaveCount(0);
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
     .click();
   await target
-    .getByRole("button", {
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
@@ -268,18 +268,16 @@ test("sign-out refused: the sign-in stays and the failure shows", async ({
 }) => {
   await open(target, "sign-out-refused");
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
     .click();
   await target
-    .getByRole("button", {
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
     .click();
   await expect.poll(calls(target, "signOut")).toBe(1);
-  const account = target.getByRole("region", {
-    name: label("desktop.settings.session"),
-  });
+  const account = target.locator(".account-menu");
   await expect(account).toContainText("timed_out");
   await expect(
     account.getByText(label("desktop.account.signed_in"), { exact: true }),
@@ -1791,24 +1789,25 @@ for (const state of ACCOUNT_STATES)
     await calendarToggle.click();
     await expect(calendarRegion).toHaveCount(0);
 
-    // Settings: the session section says the same and offers the same.
+    // The header is the account surface; Settings has no account controls.
     await target
-      .getByRole("button", { name: label("desktop.rail.settings") })
+      .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
       .click();
-    const session = target.getByRole("region", {
-      name: label("desktop.settings.session"),
-    });
-    await expect(
-      session.getByText(label(state.badge), { exact: true }),
-    ).toBeVisible();
-    const settings = target.locator(".settings");
+    const accountMenu = target.locator(".account-menu");
+    await expect(accountMenu).toContainText(
+      label(
+        state.scenario === "no-profile"
+          ? "desktop.account.no_profile"
+          : state.badge,
+      ),
+    );
     for (const key of state.offers)
       await expect(
-        settings.getByRole("button", { name: label(key), exact: true }),
+        accountMenu.getByRole("menuitem", { name: label(key), exact: true }),
       ).toBeVisible();
     for (const key of state.withholds)
       await expect(
-        settings.getByRole("button", { name: label(key), exact: true }),
+        accountMenu.getByRole("menuitem", { name: label(key), exact: true }),
       ).toHaveCount(0);
     await target.keyboard.press("Escape");
 
@@ -1849,7 +1848,7 @@ test("no-profile: the dialog offers the TUI's setup and no password field", asyn
 const tui = (target: Page) => target.locator('[data-terminal="tui"] textarea');
 
 // Wherever the TUI's own flow is chosen from, the keyboard follows it there.
-for (const from of ["pane", "settings", "palette"] as const)
+for (const from of ["pane", "header", "palette"] as const)
   test(`no-profile: setting up a profile from the ${from} puts the keyboard in the TUI`, async ({
     page: target,
   }) => {
@@ -1863,12 +1862,15 @@ for (const from of ["pane", "settings", "palette"] as const)
     };
     if (from === "pane") {
       await target.locator(".pane-tui").getByRole("button", setUp).click();
-    } else if (from === "settings") {
+    } else if (from === "header") {
       await target
-        .getByRole("button", { name: label("desktop.rail.settings") })
+        .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
         .click();
-      await target.locator(".settings").getByRole("button", setUp).click();
-      await expect(target.locator(".settings")).toHaveCount(0);
+      await target
+        .locator(".account-menu")
+        .getByRole("menuitem", setUp)
+        .click();
+      await expect(target.locator(".account-menu")).toHaveCount(0);
     } else {
       await target
         .getByRole("button", { name: label("desktop.rail.search") })
@@ -2002,17 +2004,17 @@ test("one Escape closes the dialog from a button showing its tooltip", async ({
   await expect(target.locator(".sign-in")).toHaveCount(0);
 });
 
-test("sign-out-refused: the failure is said once, not again when settings reopens", async ({
+test("sign-out-refused: the failure is said once, not again when the account menu reopens", async ({
   page: target,
 }) => {
   await open(target, "sign-out-refused");
   const settingsButton = target.getByRole("button", {
-    name: label("desktop.rail.settings"),
+    name: label("desktop.titlebar.profile_menu"),
   });
   await settingsButton.click();
-  const settings = target.locator(".settings");
+  const settings = target.locator(".account-menu");
   await settings
-    .getByRole("button", {
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
@@ -2023,15 +2025,15 @@ test("sign-out-refused: the failure is said once, not again when settings reopen
   await settingsButton.click();
   await expect(settings).toBeVisible();
   await expect(settings.getByRole("alert")).toHaveCount(0);
-  // The same however settings is closed: by its own button this time.
+  // A click outside dismisses the menu and the failure it has shown.
   await settings
-    .getByRole("button", {
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
     .click();
   await expect(settings.getByRole("alert")).toBeVisible();
-  await settingsButton.click();
+  await target.mouse.click(8, 200);
   await expect(settings).toHaveCount(0);
   await settingsButton.click();
   await expect(settings).toBeVisible();
@@ -2045,10 +2047,10 @@ test("signing out leaves no running session showing in the TUI's header", async 
   const dot = target.locator(".pane-tui .pane-head [data-phase]");
   await expect(dot).toHaveAttribute("data-phase", "running");
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
     .click();
   await target
-    .getByRole("button", {
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
@@ -3939,11 +3941,11 @@ test("the calendar asks for a sign-in, then reads; a sign-out drops what was rea
   await expect.poll(calendarReads(target)).toBe(1);
   // Signed out again, nothing of the profile stays on screen.
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
     .click();
   await target
-    .locator(".settings")
-    .getByRole("button", {
+    .locator(".account-menu")
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
@@ -4146,14 +4148,14 @@ test("profile-locked: the dialog and settings say it and offer the TUI", async (
   );
   await target.keyboard.press("Escape");
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
     .click();
-  const settings = target.locator(".settings");
+  const settings = target.locator(".account-menu");
   await expect(settings).toContainText(
     label("desktop.signin.refused.profile_locked"),
   );
   await settings
-    .getByRole("button", {
+    .getByRole("menuitem", {
       name: label("desktop.signin.open_tui"),
       exact: true,
     })
@@ -4280,11 +4282,11 @@ test("messages are read at sign-in and dropped at sign-out, never while signed o
     named("desktop.messages.unread", { count: 3 }),
   );
   await target
-    .getByRole("button", { name: label("desktop.rail.settings") })
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
     .click();
   await target
-    .locator(".settings")
-    .getByRole("button", {
+    .locator(".account-menu")
+    .getByRole("menuitem", {
       name: label("desktop.account.sign_out"),
       exact: true,
     })
@@ -4333,7 +4335,7 @@ for (const origin of [
   "pane",
   "calendar",
   "palette",
-  "settings",
+  "header",
 ] as const)
   test(`the dialog's way to the TUI takes the keyboard there, opened from the ${origin}`, async ({
     page: target,
@@ -4364,11 +4366,14 @@ for (const origin of [
         .getByRole("combobox")
         .fill(label("desktop.signin.submit"));
       await target.keyboard.press("Enter");
-    } else if (origin === "settings") {
+    } else if (origin === "header") {
       await target
-        .getByRole("button", { name: label("desktop.rail.settings") })
+        .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
         .click();
-      await target.locator(".settings").getByRole("button", signIn).click();
+      await target
+        .locator(".account-menu")
+        .getByRole("menuitem", signIn)
+        .click();
     }
     await expect(password(target)).toBeFocused();
     await dialog

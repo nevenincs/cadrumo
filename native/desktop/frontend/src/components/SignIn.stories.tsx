@@ -1,11 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
-import { Specimen } from "@/dev/catalogue/Frame";
 import { accountFixture, refused, SIGNED_OUT } from "@/dev/fixtures/account";
 import type { ProfileList } from "../ipc/contract";
 import type { SignInController } from "../shell/signIn";
 import { useStrings } from "../shell/strings";
-import { Account, SignedOut, SignInDialog } from "./SignIn";
+import { SignedOut, SignInDialog } from "./SignIn";
 
 // Stories take a controller in a fixed state, so every state of the screen
 // can be looked at without a host. They prove presentation only.
@@ -84,7 +83,6 @@ const UNKNOWN = {
   state: "unknown",
   refusal: refused("timed_out"),
 } as const;
-const PRESENT = { ...SIGNED_OUT, state: "present" } as const;
 
 export const NoProfile: Story = {
   name: "No active profile",
@@ -304,52 +302,4 @@ export const BesideLocked: Story = {
 export const BesideNoProfile: Story = {
   name: "Two panes: no active profile",
   render: () => <Beside account={controller({ status: NO_PROFILE })} />,
-};
-
-// The account in settings, in every phase: the profile and its sign-in say
-// the same thing the rest of the window does.
-const present = controller({ status: PRESENT });
-const SECTIONS: [string, SignInController][] = [
-  ["Signed in", present],
-  ["Signing out", { ...present, busy: true }],
-  ["Sign-out refused", { ...present, signOutFailure: refused("timed_out") }],
-  [
-    "Signed out, agent access left on",
-    controller({
-      remaining: {
-        remainingAccess: { automationEnabled: true, automationRevoked: false },
-      },
-    }),
-  ],
-  ["No active profile", controller({ status: NO_PROFILE })],
-  ["Services not running", controller({ status: SERVICES_DOWN })],
-  ["State unknown", controller({ status: UNKNOWN })],
-  ["Profile locked", controller({ refusal: refused("PROFILE_LOCKED") })],
-  ["Continuing in the TUI", controller({ handover: true })],
-];
-
-export const AccountSection: Story = {
-  name: "Account in settings",
-  parameters: { fill: false, surface: "card" },
-  render: () => (
-    <div className="grid max-w-settings gap-8">
-      {SECTIONS.map(([name, account]) => (
-        // The account ends with the rule that sets it apart from what follows
-        // it in settings. Here a specimen's own rule follows, so it is left
-        // out rather than drawn twice.
-        <Specimen
-          key={name}
-          title={name}
-          className="grid gap-3 [&>[data-slot=separator]:last-child]:hidden"
-        >
-          <Account
-            account={account}
-            onSignIn={() => undefined}
-            onSignOut={() => undefined}
-            onOpenTui={() => undefined}
-          />
-        </Specimen>
-      ))}
-    </div>
-  ),
 };

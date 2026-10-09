@@ -1,5 +1,10 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
-import type { ContextMenuItem, LogBatch, ShellToken } from "../ipc/contract";
+import type {
+  ContextMenuItem,
+  LogBatch,
+  ShellToken,
+  WindowPresentation,
+} from "../ipc/contract";
 import type { Host } from "./host";
 import { hostCall } from "./hostCall";
 import { openTauriTerminal } from "./tauriTerminal";
@@ -43,6 +48,21 @@ export function tauriHost(): Host {
   return {
     available: true,
     nativeMenus: true,
+    window: {
+      action: (action) =>
+        call("shell_window_action", { action }).then(() => undefined),
+      async observe(listener) {
+        const updates = new Channel<WindowPresentation>();
+        updates.onmessage = listener;
+        const subscription = await call("shell_window_subscribe", { updates });
+        return () => {
+          updates.onmessage = () => undefined;
+          void call("shell_window_unsubscribe", { subscription }).catch(
+            () => undefined,
+          );
+        };
+      },
+    },
     environment: () => call("desktop_environment", {}),
     signInStatus: () => call("sign_in_status", {}),
     startManager: () => call("manager_start", {}),

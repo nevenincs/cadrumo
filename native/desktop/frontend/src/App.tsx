@@ -41,7 +41,9 @@ import {
 } from "./shell/records";
 import { Settings } from "./components/Settings";
 import { accountLabel } from "./components/accountWords";
-import { Account, SignedOut, SignInDialog } from "./components/SignIn";
+import { SignedOut, SignInDialog } from "./components/SignIn";
+import { AccountMenu } from "./components/AccountMenu";
+import { Titlebar } from "./components/Titlebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useFilingCalendar } from "./shell/calendar";
 import { useMessages } from "./shell/messages";
@@ -92,7 +94,6 @@ import {
   LIGHT_TUI,
 } from "./shell/terminalThemes";
 import { failureCode } from "./errors";
-import { identity } from "virtual:desktop-content";
 
 const COUNT_LIMIT = 99;
 const TOAST_MS = 2400;
@@ -152,8 +153,9 @@ const activeTerminal = (): TerminalKind | null => {
 export function App({ host }: { host: Host }) {
   const account = useSignIn(host);
   const environment = useDesktopEnvironment(host);
+  const workspace = useRef<HTMLDivElement>(null);
   const { viewportHeight, viewportWidth, prefersDark } =
-    useWindowPresentation();
+    useWindowPresentation(workspace);
   const { records, dropped, sourceStates } = useHostLogs(host);
   const initial = useMemo(loadState, []);
   const [prefs, setPrefs] = useState<Prefs>(initial.prefs);
@@ -239,23 +241,13 @@ export function App({ host }: { host: Host }) {
     setSignInDismissed(true);
     void accountRef.current.signOut();
   }, []);
-  // Another profile: this one is signed out, and the sign-in that follows
-  // offers the choice. Unlike a plain sign-out it is a reason to ask. A
-  // sign-out that fails is said in settings, wherever it was asked from.
-  const [switching, setSwitching] = useState(false);
+  // The palette shortcut enters the same account flow as the header.
   const switchProfile = useCallback(() => {
     setSettingsOpen(false);
     signInOpener.current = null;
     setSignInDismissed(false);
-    setSwitching(true);
     void accountRef.current.signOut();
   }, []);
-  const switchFailed = account.signOutFailure !== null;
-  useEffect(() => {
-    if (!switching) return;
-    if (switchFailed) setSettingsOpen(true);
-    if (gated || switchFailed) setSwitching(false);
-  }, [switching, gated, switchFailed]);
   useEffect(() => {
     if (gated) return;
     // Admitted: the next time the gate closes, the dialog opens again, and
@@ -344,10 +336,6 @@ export function App({ host }: { host: Host }) {
     askSignIn();
     setCreatingProfile(true);
   }, [askSignIn]);
-  // Settings closes by more than one way; what it showed is settled by all.
-  useEffect(() => {
-    if (!settingsOpen) accountRef.current.settle();
-  }, [settingsOpen]);
 
   // The window's language: the person's own choice where the documentation
   // is bundled in it, otherwise the language Cadrumo reports.
@@ -1853,301 +1841,312 @@ export function App({ host }: { host: Host }) {
   return (
     <StringsContext.Provider value={t}>
       <TooltipProvider>
-        <div className="shell grid h-dvh grid-cols-[auto_1fr] grid-rows-[minmax(0,1fr)] bg-chrome">
-          <header className="sr-only">
-            <h1>{identity.name}</h1>
-          </header>
-          <Rail
-            label={t("desktop.rail.label")}
-            top={railTop}
-            bottom={railBottom}
-          />
-          <div className="flex min-h-0 min-w-0 flex-col">
-            <main
-              className="main-area flex min-h-0 flex-auto"
-              hidden={maximized === "panel"}
-            >
-              <Split
-                orientation={orientation}
-                reversed={prefs.order === "tui"}
-                ratio={layout.splitRatio}
-                onRatio={(ratio) => patch({ splitRatio: ratio })}
-                minA={splitMinA}
-                minB={orientation === "row" ? splitMinBRow : splitMinBCol}
-                a={docsPane}
-                b={tuiPane}
-                aShown={maximized !== "tui"}
-                bShown={tuiVisible}
-                label={t("desktop.split.resize")}
-              />
-            </main>
-            <section
-              className={cn(
-                // A container in both dimensions: its content answers to its width
-                // and, in the log's bar, to its height.
-                "panel flex min-h-0 flex-col bg-chrome [container:panel/size]",
-                maximized === "panel" ? "flex-auto" : "flex-none",
-              )}
-              hidden={!panelVisible}
-              style={
-                maximized === "panel" ? undefined : { height: panelHeight }
-              }
-              aria-label={t("desktop.panel.label")}
-            >
-              {layout.panelOpen && !maximized && (
-                <ResizeHandle
-                  className="panel-separator"
-                  orientation="horizontal"
-                  aria-label={t("desktop.panel.resize")}
-                  value={(panelHeight / viewportHeight) * 100}
-                  // The panel sits on the window's bottom edge, so its height
-                  // is what lies below the pointer. Dragged well past its
-                  // smallest size, it collapses.
-                  onDrag={({ y }) => {
-                    const next = viewportHeight - y;
-                    if (next < panelMin - panelCollapseThreshold)
-                      patch({ panelOpen: false });
-                    else setPanelHeight(next);
-                  }}
-                  onStep={(direction) =>
-                    setPanelHeight(panelHeight - direction * panelResizeStep)
-                  }
-                  onLimit={(limit) =>
-                    setPanelHeight(
-                      limit === "min" ? panelMin : viewportHeight - docsMin,
-                    )
-                  }
-                  onReset={() =>
-                    setPanelHeight(DEFAULT_LAYOUT.panelRatio * viewportHeight)
-                  }
-                />
-              )}
-              <Tabs
-                value={layout.tab}
-                // Arrow keys move through the tabs and choose; a click or
-                // Enter also hands the keyboard to the chosen view.
-                onValueChange={(tab) => patch({ tab: tab as PanelTab })}
-                className="tabstrip h-control-lg shrink-0 flex-row items-center border-b pr-1.5 pl-1"
-                onDoubleClick={(event) => {
-                  if (!(event.target as HTMLElement).closest("button"))
-                    toggleMaximize("panel");
-                }}
+        <div className="desktop-window flex h-dvh min-w-0 flex-col bg-chrome">
+          <Titlebar
+            host={host}
+            onFailure={() => say(t("desktop.titlebar.failed"))}
+          >
+            <AccountMenu
+              account={account}
+              onSignIn={() => {
+                setSettingsOpen(false);
+                signInOpener.current = null;
+                setCreatingProfile(false);
+                setSignInDismissed(false);
+              }}
+              onSignOut={signOut}
+              onCreate={askNewProfile}
+              onOpenTui={continueInTui}
+            />
+          </Titlebar>
+          <div
+            ref={workspace}
+            className="shell grid min-h-0 flex-1 grid-cols-[auto_1fr] grid-rows-[minmax(0,1fr)] bg-chrome"
+          >
+            <Rail
+              label={t("desktop.rail.label")}
+              top={railTop}
+              bottom={railBottom}
+            />
+            <div className="flex min-h-0 min-w-0 flex-col">
+              <main
+                className="main-area flex min-h-0 flex-auto"
+                hidden={maximized === "panel"}
               >
-                <TabsList
-                  aria-label={t("desktop.panel.label")}
-                  className="h-full"
-                >
-                  {TABS.map(([tab, labelKey, icon]) => (
-                    <TabsTrigger
-                      key={tab}
-                      value={tab}
-                      id={`tab-${tab}`}
-                      aria-controls={`panel-${tab}`}
-                      title={t(labelKey)}
-                      onClick={() => openTab(tab, { toggle: false })}
-                      onKeyDown={(event) => {
-                        // Enter and Space choose a tab without a click, so
-                        // they hand the keyboard over here.
-                        if (event.key === "Enter" || event.key === " ")
-                          openTab(tab, { toggle: false });
-                      }}
-                    >
-                      <Icon name={icon} />
-                      {/* In a narrow panel the tab keeps its name, not its
-                          width. */}
-                      <span className="@max-md/panel:sr-only">
-                        {t(labelKey)}
-                      </span>
-                      {tab !== "logs" &&
-                        exitCode(status[tab]) !== undefined && (
-                          <span className="text-xs font-normal text-faint">
-                            {t("desktop.session.exited", {
-                              code: exitCode(status[tab]) ?? "?",
-                            })}
-                          </span>
-                        )}
-                      {tab !== "logs" && failure(status[tab]) !== undefined && (
-                        <>
-                          <Icon
-                            name="alert"
-                            size="xs"
-                            className="text-destructive"
-                          />
-                          <span className="sr-only">
-                            {t("desktop.session.failed", {
-                              reason: failure(status[tab]) ?? "",
-                            })}
-                          </span>
-                        </>
-                      )}
-                      {tab === "logs" && errorCount > 0 && (
-                        <>
-                          <Badge variant="count" aria-hidden="true">
-                            {errorCount > COUNT_LIMIT
-                              ? `${COUNT_LIMIT}+`
-                              : errorCount}
-                          </Badge>
-                          <span className="sr-only">
-                            {t("desktop.logs.errors", { count: errorCount })}
-                          </span>
-                        </>
-                      )}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                <span className="flex-1 self-stretch" />
-                <IconButton
-                  label={panelMax.label}
-                  shortcut={panelMax.shortcut}
-                  aria-pressed={panelMax.pressed}
-                  onClick={panelMax.run}
-                >
-                  <Icon name={panelMax.icon} />
-                </IconButton>
-                <IconButton
-                  label={t("desktop.panel.hide")}
-                  shortcut={primaryChord(byId("panel.toggle"))}
-                  onClick={() => runAction("panel.toggle")}
-                >
-                  <Icon name="chevronDown" />
-                </IconButton>
-              </Tabs>
-              <div className="relative flex min-h-0 flex-1">
-                {terminalPane("console", tabOpen("console"))}
-                {terminalPane("python", tabOpen("python"))}
-                <RecordList
-                  records={records}
-                  sourceStates={sourceStates}
-                  dropped={dropped}
-                  filters={filters}
-                  setFilters={setFilters}
-                  onMenu={recordMenu}
-                  shown={tabOpen("logs")}
+                <Split
+                  orientation={orientation}
+                  reversed={prefs.order === "tui"}
+                  ratio={layout.splitRatio}
+                  onRatio={(ratio) => patch({ splitRatio: ratio })}
+                  minA={splitMinA}
+                  minB={orientation === "row" ? splitMinBRow : splitMinBCol}
+                  a={docsPane}
+                  b={tuiPane}
+                  aShown={maximized !== "tui"}
+                  bShown={tuiVisible}
+                  label={t("desktop.split.resize")}
                 />
-              </div>
-            </section>
-          </div>
-
-          {settingsOpen && (
-            <Settings
-              account={
-                <Account
-                  account={account}
-                  onSignIn={() => {
-                    setSettingsOpen(false);
-                    signInOpener.current = null;
-                    setSignInDismissed(false);
+              </main>
+              <section
+                className={cn(
+                  // A container in both dimensions: its content answers to its width
+                  // and, in the log's bar, to its height.
+                  "panel flex min-h-0 flex-col bg-chrome [container:panel/size]",
+                  maximized === "panel" ? "flex-auto" : "flex-none",
+                )}
+                hidden={!panelVisible}
+                style={
+                  maximized === "panel" ? undefined : { height: panelHeight }
+                }
+                aria-label={t("desktop.panel.label")}
+              >
+                {layout.panelOpen && !maximized && (
+                  <ResizeHandle
+                    className="panel-separator"
+                    orientation="horizontal"
+                    aria-label={t("desktop.panel.resize")}
+                    value={(panelHeight / viewportHeight) * 100}
+                    // The panel sits on the window's bottom edge, so its height
+                    // is what lies below the pointer. Dragged well past its
+                    // smallest size, it collapses.
+                    onDrag={({ y }) => {
+                      const next =
+                        (workspace.current?.getBoundingClientRect().bottom ??
+                          window.innerHeight) - y;
+                      if (next < panelMin - panelCollapseThreshold)
+                        patch({ panelOpen: false });
+                      else setPanelHeight(next);
+                    }}
+                    onStep={(direction) =>
+                      setPanelHeight(panelHeight - direction * panelResizeStep)
+                    }
+                    onLimit={(limit) =>
+                      setPanelHeight(
+                        limit === "min" ? panelMin : viewportHeight - docsMin,
+                      )
+                    }
+                    onReset={() =>
+                      setPanelHeight(DEFAULT_LAYOUT.panelRatio * viewportHeight)
+                    }
+                  />
+                )}
+                <Tabs
+                  value={layout.tab}
+                  // Arrow keys move through the tabs and choose; a click or
+                  // Enter also hands the keyboard to the chosen view.
+                  onValueChange={(tab) => patch({ tab: tab as PanelTab })}
+                  className="tabstrip h-control-lg shrink-0 flex-row items-center border-b pr-1.5 pl-1"
+                  onDoubleClick={(event) => {
+                    if (!(event.target as HTMLElement).closest("button"))
+                      toggleMaximize("panel");
                   }}
-                  onSignOut={signOut}
-                  onSwitch={switchProfile}
-                  onOpenTui={continueInTui}
-                />
-              }
-              prefs={prefs}
-              setPrefs={setPrefs}
-              languages={languages}
-              close={() => setSettingsOpen(false)}
-              onReset={() => {
-                setPrefs(DEFAULT_PREFS);
-                setLayout(DEFAULT_LAYOUT);
-                setMaximized(null);
-                say(t("desktop.settings.layout_reset"));
+                >
+                  <TabsList
+                    aria-label={t("desktop.panel.label")}
+                    className="h-full"
+                  >
+                    {TABS.map(([tab, labelKey, icon]) => (
+                      <TabsTrigger
+                        key={tab}
+                        value={tab}
+                        id={`tab-${tab}`}
+                        aria-controls={`panel-${tab}`}
+                        title={t(labelKey)}
+                        onClick={() => openTab(tab, { toggle: false })}
+                        onKeyDown={(event) => {
+                          // Enter and Space choose a tab without a click, so
+                          // they hand the keyboard over here.
+                          if (event.key === "Enter" || event.key === " ")
+                            openTab(tab, { toggle: false });
+                        }}
+                      >
+                        <Icon name={icon} />
+                        {/* In a narrow panel the tab keeps its name, not its
+                          width. */}
+                        <span className="@max-md/panel:sr-only">
+                          {t(labelKey)}
+                        </span>
+                        {tab !== "logs" &&
+                          exitCode(status[tab]) !== undefined && (
+                            <span className="text-xs font-normal text-faint">
+                              {t("desktop.session.exited", {
+                                code: exitCode(status[tab]) ?? "?",
+                              })}
+                            </span>
+                          )}
+                        {tab !== "logs" &&
+                          failure(status[tab]) !== undefined && (
+                            <>
+                              <Icon
+                                name="alert"
+                                size="xs"
+                                className="text-destructive"
+                              />
+                              <span className="sr-only">
+                                {t("desktop.session.failed", {
+                                  reason: failure(status[tab]) ?? "",
+                                })}
+                              </span>
+                            </>
+                          )}
+                        {tab === "logs" && errorCount > 0 && (
+                          <>
+                            <Badge variant="count" aria-hidden="true">
+                              {errorCount > COUNT_LIMIT
+                                ? `${COUNT_LIMIT}+`
+                                : errorCount}
+                            </Badge>
+                            <span className="sr-only">
+                              {t("desktop.logs.errors", { count: errorCount })}
+                            </span>
+                          </>
+                        )}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  <span className="flex-1 self-stretch" />
+                  <IconButton
+                    label={panelMax.label}
+                    shortcut={panelMax.shortcut}
+                    aria-pressed={panelMax.pressed}
+                    onClick={panelMax.run}
+                  >
+                    <Icon name={panelMax.icon} />
+                  </IconButton>
+                  <IconButton
+                    label={t("desktop.panel.hide")}
+                    shortcut={primaryChord(byId("panel.toggle"))}
+                    onClick={() => runAction("panel.toggle")}
+                  >
+                    <Icon name="chevronDown" />
+                  </IconButton>
+                </Tabs>
+                <div className="relative flex min-h-0 flex-1">
+                  {terminalPane("console", tabOpen("console"))}
+                  {terminalPane("python", tabOpen("python"))}
+                  <RecordList
+                    records={records}
+                    sourceStates={sourceStates}
+                    dropped={dropped}
+                    filters={filters}
+                    setFilters={setFilters}
+                    onMenu={recordMenu}
+                    shown={tabOpen("logs")}
+                  />
+                </div>
+              </section>
+            </div>
+
+            {settingsOpen && (
+              <Settings
+                prefs={prefs}
+                setPrefs={setPrefs}
+                languages={languages}
+                close={() => setSettingsOpen(false)}
+                onReset={() => {
+                  setPrefs(DEFAULT_PREFS);
+                  setLayout(DEFAULT_LAYOUT);
+                  setMaximized(null);
+                  say(t("desktop.settings.layout_reset"));
+                }}
+              />
+            )}
+            {paletteOpen && (
+              <CommandPalette
+                actions={actions}
+                searchDocs={searchDocs}
+                openDoc={openDoc}
+                close={() => setPaletteOpen(false)}
+                fallbackFocus={focusRail}
+              />
+            )}
+            {menu && (
+              <ContextMenu
+                // Each menu is its own: it remembers where its own focus came
+                // from.
+                key={`${menu.at.x}:${menu.at.y}`}
+                label={t("desktop.palette.actions")}
+                items={menu.items.map((item) =>
+                  isSeparator(item)
+                    ? item
+                    : {
+                        id: item.id,
+                        label: item.label,
+                        shortcut: item.shortcut,
+                        enabled: item.enabled,
+                      },
+                )}
+                at={menu.at}
+                choose={(id) => {
+                  const items = menu.items;
+                  setMenu(null);
+                  const chosen = items.find(
+                    (item) => !isSeparator(item) && item.id === id,
+                  );
+                  if (chosen && !isSeparator(chosen)) chosen.run?.();
+                }}
+              />
+            )}
+            <Toast>{toast}</Toast>
+            <SignInDialog
+              account={account}
+              open={account.gated && !signInDismissed}
+              onOpenChange={(open) => {
+                setSignInDismissed(!open);
+                if (!open) accountRef.current.settle();
               }}
-            />
-          )}
-          {paletteOpen && (
-            <CommandPalette
-              actions={actions}
-              searchDocs={searchDocs}
-              openDoc={openDoc}
-              close={() => setPaletteOpen(false)}
-              fallbackFocus={focusRail}
-            />
-          )}
-          {menu && (
-            <ContextMenu
-              // Each menu is its own: it remembers where its own focus came
-              // from.
-              key={`${menu.at.x}:${menu.at.y}`}
-              label={t("desktop.palette.actions")}
-              items={menu.items.map((item) =>
-                isSeparator(item)
-                  ? item
-                  : {
-                      id: item.id,
-                      label: item.label,
-                      shortcut: item.shortcut,
-                      enabled: item.enabled,
-                    },
-              )}
-              at={menu.at}
-              choose={(id) => {
-                const items = menu.items;
-                setMenu(null);
-                const chosen = items.find(
-                  (item) => !isSeparator(item) && item.id === id,
-                );
-                if (chosen && !isSeparator(chosen)) chosen.run?.();
+              onOpenTui={continueInTui}
+              create={creatingProfile}
+              onCreateChange={setCreatingProfile}
+              // Opened by the gate closing rather than by a press, the dialog
+              // still took focus from somewhere: that is where it returns.
+              onOpening={(from) => {
+                signInOpener.current ??= {
+                  element: from,
+                  calendar: from?.closest(".calendar-page") != null,
+                };
               }}
-            />
-          )}
-          <Toast>{toast}</Toast>
-          <SignInDialog
-            account={account}
-            open={account.gated && !signInDismissed}
-            onOpenChange={(open) => {
-              setSignInDismissed(!open);
-              if (!open) accountRef.current.settle();
-            }}
-            onOpenTui={continueInTui}
-            create={creatingProfile}
-            onCreateChange={setCreatingProfile}
-            // Opened by the gate closing rather than by a press, the dialog
-            // still took focus from somewhere: that is where it returns.
-            onOpening={(from) => {
-              signInOpener.current ??= {
-                element: from,
-                calendar: from?.closest(".calendar-page") != null,
-              };
-            }}
-            // Put aside, focus goes back to what the dialog took it from
-            // while that is on screen, else to the page it was in, else to
-            // the TUI's way back in. Admitted, it goes on: to the calendar
-            // the sign-in was asked from, else to the TUI that has started.
-            // The rail is the last resort of both.
-            onClosed={() => {
-              const opener = signInOpener.current;
-              signInOpener.current = null;
-              // Something asked for while the dialog was up comes first.
-              grantFocus();
-              // The dialog takes a moment to leave. Focus the person has
-              // already put somewhere in that moment is left where it is.
-              const held = document.activeElement;
-              if (held && held !== document.body && !held.closest(".sign-in"))
-                return;
-              const shown = (element: Element | null): element is HTMLElement =>
-                element instanceof HTMLElement &&
-                element.isConnected &&
-                element.offsetParent !== null;
-              const from = opener?.element ?? null;
-              const page = calendarPage.current;
-              const frame = document.querySelector(".docs-frame");
-              if (account.gated) {
-                if (shown(from)) from.focus();
-                else if (opener?.calendar && shown(page)) page.focus();
-                else if (shown(signInButton.current))
-                  signInButton.current.focus();
+              // Put aside, focus goes back to what the dialog took it from
+              // while that is on screen, else to the page it was in, else to
+              // the TUI's way back in. Admitted, it goes on: to the calendar
+              // the sign-in was asked from, else to the TUI that has started.
+              // The rail is the last resort of both.
+              onClosed={() => {
+                const opener = signInOpener.current;
+                signInOpener.current = null;
+                // Something asked for while the dialog was up comes first.
+                grantFocus();
+                // The dialog takes a moment to leave. Focus the person has
+                // already put somewhere in that moment is left where it is.
+                const held = document.activeElement;
+                if (held && held !== document.body && !held.closest(".sign-in"))
+                  return;
+                const shown = (
+                  element: Element | null,
+                ): element is HTMLElement =>
+                  element instanceof HTMLElement &&
+                  element.isConnected &&
+                  element.offsetParent !== null;
+                const from = opener?.element ?? null;
+                const page = calendarPage.current;
+                const frame = document.querySelector(".docs-frame");
+                if (account.gated) {
+                  if (shown(from)) from.focus();
+                  else if (opener?.calendar && shown(page)) page.focus();
+                  else if (shown(signInButton.current))
+                    signInButton.current.focus();
+                  else if (shown(page)) page.focus();
+                  else if (shown(frame) && docs.current) docs.current.focus();
+                  else focusRail();
+                } else if (opener?.calendar && shown(page)) page.focus();
+                else if (panelMaximized) focusView(layout.tab);
+                else if (tuiVisible) focusView("tui");
                 else if (shown(page)) page.focus();
                 else if (shown(frame) && docs.current) docs.current.focus();
                 else focusRail();
-              } else if (opener?.calendar && shown(page)) page.focus();
-              else if (panelMaximized) focusView(layout.tab);
-              else if (tuiVisible) focusView("tui");
-              else if (shown(page)) page.focus();
-              else if (shown(frame) && docs.current) docs.current.focus();
-              else focusRail();
-            }}
-          />
+              }}
+            />
+          </div>
         </div>
       </TooltipProvider>
     </StringsContext.Provider>

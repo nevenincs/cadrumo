@@ -715,7 +715,6 @@ desktop:
     light: Világos
     match_appearance: A megjelenés szerint
     reset_layout: Elrendezés alaphelyzetbe
-    session: Bejelentkezés
     side_by_side: Egymás mellett
     stacked: Egymás alatt
     terminal_text: Terminál szövegmérete
@@ -778,6 +777,14 @@ desktop:
     side_by_side: Dokumentáció és TUI egymás mellé
     stack: Dokumentáció és TUI egymás alá
     swap: Dokumentáció és TUI felcserélése
+  titlebar:
+    close: Ablak bezárása
+    failed: Az ablakműveletet nem sikerült végrehajtani.
+    label: Az alkalmazás címsora
+    maximize: Ablak teljes méretre állítása
+    minimize: Ablak kis méretre állítása
+    profile_menu: Profilmenü
+    restore: Ablak méretének visszaállítása
   toast:
     copied: Másolva
     copy_failed: Nem sikerült a másolás.

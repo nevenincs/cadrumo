@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type ReactNode } from "react";
+import { useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -66,8 +66,7 @@ function languageName(code: string): string {
 /**
  * The settings popover, opened from the rail. Everything in it is a
  * preference of this window, kept in the browser's storage: it writes no
- * Cadrumo setting and reaches no backend. Account uses the dedicated sign-in
- * commands.
+ * Cadrumo setting and reaches no backend.
  */
 export function Settings({
   prefs,
@@ -75,7 +74,6 @@ export function Settings({
   languages,
   onReset,
   close,
-  account,
 }: {
   prefs: Prefs;
   setPrefs: (prefs: Prefs) => void;
@@ -83,7 +81,6 @@ export function Settings({
   languages: readonly string[];
   onReset: () => void;
   close: () => void;
-  account: ReactNode;
 }) {
   const t = useStrings();
   const languageId = useId();
@@ -132,7 +129,6 @@ export function Settings({
         }}
       >
         <h2 className="font-serif text-lg">{t("desktop.settings.title")}</h2>
-        {account}
         <section className="grid gap-3" aria-labelledby={windowId}>
           <h3
             id={windowId}

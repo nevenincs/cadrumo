@@ -634,6 +634,18 @@ export type ProfileCreateResult =
   { kind: "created"; name: string } | ({ kind: "refused" } & SignInRefusal);
 
 export interface HostCommands {
+  shell_window_action: {
+    args: Authorized<{ action: WindowAction }>;
+    result: null;
+  };
+  shell_window_subscribe: {
+    args: Authorized<{ updates: Channel<WindowPresentation> }>;
+    result: number;
+  };
+  shell_window_unsubscribe: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
+  };
   manager_install: {
     args: Authorized<{ scope: "user" | "machine" }>;
     result: "dispatched" | "unmanaged" | "unsupported";
@@ -733,6 +745,10 @@ export interface HostCommands {
   };
 }
 
+/** Native presentation only; no profile or runtime authority. */
+export type WindowPresentation = { maximized: boolean; fullscreen: boolean };
+export type WindowAction = "minimize" | "toggle_maximize" | "close" | "drag";
+
 export type HostCommand = keyof HostCommands;
 export type HostArguments<C extends HostCommand> = HostCommands[C]["args"];
 export type HostResult<C extends HostCommand> = HostCommands[C]["result"];
@@ -796,7 +812,7 @@ export type DocsSearchResult = {
   ranges: Array<readonly [start: number, end: number]>;
   /**
    * The controller's localized category line, such as
-   * `Casilla · Modelo 200 · 00562`; empty when it has none. Every page that
+   * `Casilla Â· Modelo 200 Â· 00562`; empty when it has none. Every page that
    * answers `search` sends it.
    */
   crumb?: string;

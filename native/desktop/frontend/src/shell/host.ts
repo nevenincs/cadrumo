@@ -13,6 +13,8 @@ import type {
   SignInStatus,
   SignInResult,
   SignOutResult,
+  WindowAction,
+  WindowPresentation,
 } from "../ipc/contract";
 import type { ProfileAccounts } from "./profiles";
 import type { ProfileViews } from "./views";
@@ -35,6 +37,11 @@ export type TerminalSession = {
 };
 
 export interface Host {
+  /** Absent in a browser: native window behavior is never simulated as real. */
+  readonly window?: {
+    action(action: WindowAction): Promise<void>;
+    observe(listener: (state: WindowPresentation) => void): Promise<() => void>;
+  };
   /** False when no desktop host exists (browser preview). */
   readonly available: boolean;
   /** Whether menus are drawn by the operating system. */
