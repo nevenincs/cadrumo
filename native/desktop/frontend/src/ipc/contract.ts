@@ -84,6 +84,11 @@ export type HostErrorCode =
   | "instance_lock_foreign"
   | "manager_unavailable"
   | "manager_dispatch_failed"
+  | "installation_unavailable"
+  | "installation_refused"
+  | "installation_cancelled"
+  | "installation_failed"
+  | "installation_unsettled"
   | "panic";
 
 /** `Operation` in `native/application/src/error/application.rs`. */
@@ -96,7 +101,8 @@ export type HostOperation =
   | "logging"
   | "webview"
   | "shutdown"
-  | "manager";
+  | "manager"
+  | "installation";
 
 /**
  * The serialized `ApplicationError`: the value a refused command rejects
@@ -628,6 +634,10 @@ export type ProfileCreateResult =
   { kind: "created"; name: string } | ({ kind: "refused" } & SignInRefusal);
 
 export interface HostCommands {
+  manager_install: {
+    args: Authorized<{ scope: "user" | "machine" }>;
+    result: "dispatched" | "unmanaged" | "unsupported";
+  };
   manager_start: {
     args: Authorized;
     result: "dispatched" | "unmanaged" | "unsupported";

@@ -24,8 +24,10 @@ MANIFEST = "data/linux-desktop-runtime.json"
 # Comments/line endings do not change dependency semantics. Refresh only together
 # with resolved feature/provider evidence; imported APIs still require artifact proof.
 DEPENDENCY_INPUTS = {
-    "native/desktop/src-tauri/Cargo.lock": "c0d9dea593e6c8a2dfdcf3fdccb0aa1686e296d4828d983867e69f87a823f618",
-    "native/desktop/src-tauri/Cargo.toml": "9868be898deb2ab69a2a022c8adaebeaae71d7c0859d37c9bdeb74dd2715aa38",
+    # Windows-only installer enrollment leaves the resolved Linux build/runtime
+    # feature graph identical; its existing native provider envelope still applies.
+    "native/desktop/src-tauri/Cargo.lock": "4e7d5a688e3a80384ea90127ab5e31b8736d743cec14a15c366c1624d0f959d6",
+    "native/desktop/src-tauri/Cargo.toml": "ccdfefd440cbfc3ea64f7a254127dcd13d3a64d971b229e43b8a9aa8d9925fb3",
     "native/application/Cargo.toml": "22705f29eda1d68f6c0adfba39665f5112cba9c0971135aa1b4b8d389d645a29",
     "native/platform/Cargo.toml": "34225e76a1da73fbb4dcf6654896d5ae85beebf12200cb5b72d0eea5ffa9675d",
 }

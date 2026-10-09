@@ -38,6 +38,7 @@ tauri = { version = "2", features = ["test"] }
 
 [target.'cfg(windows)'.dependencies]
 cadrumo-platform = { path = "../../platform", features = ["webview2"] }
+cadrumo-installer = { path = "../../installer" }
 
 [lints.rust]
 unsafe_code = "forbid"

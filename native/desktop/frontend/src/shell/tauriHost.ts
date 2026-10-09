@@ -46,6 +46,7 @@ export function tauriHost(): Host {
     environment: () => call("desktop_environment", {}),
     signInStatus: () => call("sign_in_status", {}),
     startManager: () => call("manager_start", {}),
+    installManager: (scope) => call("manager_install", { scope }),
     signOut: () => call("sign_out", {}),
     signIn: (password, profile) => submit("sign_in_submit", password, profile),
     profiles: {

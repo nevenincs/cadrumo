@@ -130,13 +130,20 @@ function crates(t) {
   );
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const native = join(root, "native");
-  for (const crate of ["application", "platform", "desktop/src-tauri"]) {
+  for (const crate of [
+    "application",
+    "platform",
+    "installer",
+    "desktop/src-tauri",
+  ]) {
     mkdirSync(join(native, crate, "src"), { recursive: true });
     writeFileSync(join(native, crate, "Cargo.toml"), crate);
     writeFileSync(join(native, crate, "src/old.rs"), crate);
   }
   for (const entry of ["Cargo.lock", "build.rs"])
     writeFileSync(join(native, "desktop/src-tauri", entry), entry);
+  mkdirSync(join(native, "interpreter/windows"), { recursive: true });
+  writeFileSync(join(native, "interpreter/windows/host.manifest"), "manifest");
   return { root, native, declared: join(root, "build/desktop/host") };
 }
 
@@ -144,7 +151,12 @@ test("a full host snapshot drops renamed sources and keeps generated files", (t)
   const { native, declared } = crates(t);
   const snapshot = snapshotHostSources(native, declared);
   writeFileSync(join(snapshot.crate, "tauri.conf.json"), "generated");
-  for (const crate of ["application", "platform", "desktop/src-tauri"])
+  for (const crate of [
+    "application",
+    "platform",
+    "installer",
+    "desktop/src-tauri",
+  ])
     renameSync(
       join(native, crate, "src/old.rs"),
       join(native, crate, "src/new.rs"),

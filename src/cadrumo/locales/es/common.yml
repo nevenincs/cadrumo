@@ -745,6 +745,10 @@ desktop:
     choose_profile: Elige un perfil
     dismiss: Ahora no
     hide_password: Ocultar la contraseña
+    install_machine_permission: La instalación para todos los usuarios requiere permisos
+      de administrador.
+    install_machine_services: Instalar para todos los usuarios
+    install_user_services: Instalar para este usuario
     lead: Escribe la contraseña de tu perfil para abrir tu espacio de trabajo.
     open_tui: Abrir la TUI
     open_tui_hint: ¿Configuración inicial, otro perfil o recuperación? Usa la TUI.
@@ -757,6 +761,14 @@ desktop:
         ha cambiado. Vuelve a iniciar sesión.
       generation_changed: Se ha cerrado tu sesión en otro lugar. Vuelve a iniciar
         sesión.
+      installation_cancelled: Se ha cancelado la instalación.
+      installation_failed: No se pudieron instalar los servicios en segundo plano.
+      installation_refused: No se pudo verificar el paquete de instalación. Usa una
+        distribución completa de la misma versión.
+      installation_unavailable: Falta el paquete de instalación. Usa la distribución
+        completa de Cadrumo.
+      installation_unsettled: No se pudo confirmar la instalación. Consulta los registros
+        antes de reintentarlo.
       invalid: Esa contraseña no ha funcionado. Vuelve a intentarlo.
       keyring_unavailable: Cadrumo no puede mantener tu sesión en este dispositivo,
         así que la TUI te pedirá la contraseña.

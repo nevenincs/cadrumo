@@ -727,6 +727,10 @@ desktop:
     choose_profile: Válassz profilt
     dismiss: Most nem
     hide_password: Jelszó elrejtése
+    install_machine_permission: A minden felhasználóra érvényes telepítéshez rendszergazdai
+      engedély szükséges.
+    install_machine_services: Telepítés minden felhasználónak
+    install_user_services: Telepítés ennek a felhasználónak
     lead: Add meg a profilod jelszavát a munkaterületed megnyitásához.
     open_tui: TUI megnyitása
     open_tui_hint: Első beállítás, másik profil vagy helyreállítás? Használd a TUI-t.
@@ -738,6 +742,14 @@ desktop:
       custody_changed: A profil jelszava vagy helyreállítási beállításai megváltoztak.
         Jelentkezz be újra.
       generation_changed: Máshol kijelentkeztettek. Jelentkezz be újra.
+      installation_cancelled: A telepítés megszakítva.
+      installation_failed: A háttérszolgáltatások telepítése nem sikerült.
+      installation_refused: A telepítőcsomag nem ellenőrizhető. Használj azonos verziójú,
+        teljes terjesztést.
+      installation_unavailable: Hiányzik a telepítőcsomag. Használd a teljes Cadrumo
+        terjesztést.
+      installation_unsettled: A telepítés nem igazolható. Újrapróbálkozás előtt ellenőrizd
+        a naplókat.
       invalid: Ez a jelszó nem működött. Próbáld újra.
       keyring_unavailable: A Cadrumo ezen az eszközön nem tud bejelentkezve tartani,
         ezért a TUI kérni fogja a jelszavadat.

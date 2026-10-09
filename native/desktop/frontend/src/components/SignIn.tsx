@@ -42,6 +42,31 @@ type Tone = "neutral" | "warning" | "danger";
 // How each typed refusal is said: its text, its tone and its icon. A code the
 // shell does not name is still shown, with the code, never swallowed.
 const REFUSALS: Record<string, { key: string; tone: Tone; icon: IconName }> = {
+  INSTALLATION_UNAVAILABLE: {
+    key: "desktop.signin.refused.installation_unavailable",
+    tone: "warning",
+    icon: "unplug",
+  },
+  INSTALLATION_REFUSED: {
+    key: "desktop.signin.refused.installation_refused",
+    tone: "danger",
+    icon: "alert",
+  },
+  INSTALLATION_CANCELLED: {
+    key: "desktop.signin.refused.installation_cancelled",
+    tone: "neutral",
+    icon: "info",
+  },
+  INSTALLATION_FAILED: {
+    key: "desktop.signin.refused.installation_failed",
+    tone: "danger",
+    icon: "alert",
+  },
+  INSTALLATION_UNSETTLED: {
+    key: "desktop.signin.refused.installation_unsettled",
+    tone: "warning",
+    icon: "alert",
+  },
   CREDENTIAL_REJECTED: {
     key: "desktop.signin.refused.invalid",
     tone: "danger",
@@ -507,6 +532,28 @@ export function SignInDialog({
                 : "desktop.signin.start_services",
             )}
           </Button>
+        )}
+
+        {!creating && servicesDown && account.canInstallServices && (
+          <div className="grid gap-2">
+            <Button
+              variant="outline"
+              pending={account.startingServices}
+              onClick={() => void account.startServices("user")}
+            >
+              {t("desktop.signin.install_user_services")}
+            </Button>
+            <Button
+              variant="outline"
+              pending={account.startingServices}
+              onClick={() => void account.startServices("machine")}
+            >
+              {t("desktop.signin.install_machine_services")}
+            </Button>
+            <p className="text-sm text-muted-foreground">
+              {t("desktop.signin.install_machine_permission")}
+            </p>
+          </div>
         )}
 
         {creating ? null : answerable ? (

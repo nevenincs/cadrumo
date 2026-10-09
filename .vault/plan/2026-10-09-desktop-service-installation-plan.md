@@ -10,7 +10,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-supervisor-contract-adr]]'
 modified: '2026-10-09'
 body_schema: body-v2
-body_hash: 'sha256:4a7cc6b5d80a3b68c3e37f92eaefdda279cd7a72675ee3f24280b96b2802f869'
+body_hash: 'sha256:64790f43b6d59a0a98532e787cd398a8778fc9ddaea326192d4df29d58203923'
 ---
 
 # `desktop-service-installation` plan
@@ -24,7 +24,7 @@ Authorization: the operator requests implementing an internal Tauri service inst
 ## Steps
 
 - [x] `S01` - Implement verified portable installation-kit admission, scoped native bootstrap, and authenticated owner-backed MSI installation admission.; `native/installer bootstrap and runner, native/application installation contract, package layout and installer CMake, dev/packaging native kit builder and Windows MSI authoring/database verification and tests, governing ADRs.`.
-- [ ] `S02` - Integrate the scoped Tauri install command and missing-installation recovery with verification; `native desktop manager and tests, shell IPC and sign-in contracts and UI, native build snapshot, scoped checks and review`.
+- [x] `S02` - Integrate the scoped Tauri install command and missing-installation recovery with verification; `native desktop manager and tests, shell IPC and sign-in contracts and UI, native build snapshot, scoped checks and review`.
 
 ## Parallelization
 

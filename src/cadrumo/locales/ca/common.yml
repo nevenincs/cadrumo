@@ -738,6 +738,10 @@ desktop:
     choose_profile: Tria un perfil
     dismiss: Ara no
     hide_password: Amaga la contrasenya
+    install_machine_permission: La instal·lació per a tots els usuaris requereix permisos
+      d’administrador.
+    install_machine_services: Instal·lar per a tots els usuaris
+    install_user_services: Instal·lar per a aquest usuari
     lead: Escriu la contrasenya del teu perfil per obrir el teu espai de treball.
     open_tui: Obre la TUI
     open_tui_hint: Configuració inicial, un altre perfil o recuperació? Fes servir
@@ -752,6 +756,14 @@ desktop:
         ha canviat. Torna a iniciar la sessió.
       generation_changed: S'ha tancat la teva sessió en un altre lloc. Torna a iniciar
         la sessió.
+      installation_cancelled: S’ha cancel·lat la instal·lació.
+      installation_failed: No s’han pogut instal·lar els serveis en segon pla.
+      installation_refused: No s’ha pogut verificar el paquet d’instal·lació. Fes
+        servir una distribució completa de la mateixa versió.
+      installation_unavailable: Falta el paquet d’instal·lació. Fes servir la distribució
+        completa de Cadrumo.
+      installation_unsettled: No s’ha pogut confirmar la instal·lació. Consulta els
+        registres abans de tornar-ho a provar.
       invalid: Aquesta contrasenya no ha funcionat. Torna-ho a provar.
       keyring_unavailable: Cadrumo no pot mantenir la teva sessió en aquest dispositiu,
         així que la TUI et demanarà la contrasenya.

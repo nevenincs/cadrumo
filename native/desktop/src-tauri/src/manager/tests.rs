@@ -82,11 +82,28 @@ fn fixture(target: Result<Option<PathBuf>>) -> Arc<ManagerStart> {
         diagnostics: Arc::new(Diagnostics::default()),
         attempt: Arc::new(tokio::sync::Mutex::new(None)),
         generation: AtomicU64::new(0),
-        closed: AtomicBool::new(false),
+        closed: Arc::new(AtomicBool::new(false)),
         cancellation: Arc::new(Cancellation::default()),
-        spawn_fence: Mutex::new(()),
+        spawn_fence: Arc::new(Mutex::new(())),
         closing: tokio::sync::Notify::new(),
     })
+}
+
+#[tokio::test]
+async fn explicit_install_refuses_unmanaged_hosts_and_closed_requests() {
+    for scope in [InstallScope::User, InstallScope::Machine] {
+        let manager = fixture(Ok(None));
+        let error = manager.install(scope).await.unwrap_err();
+        assert_eq!(error.code, ErrorCode::InstallationRefused);
+        assert_eq!(error.operation, Operation::Installation);
+        assert!(!manager.attempt.lock().await.as_ref().unwrap().retry);
+        assert!(manager.diagnostics.snapshot(0).processes.is_empty());
+        manager.close().await;
+        assert_eq!(
+            manager.install(scope).await.unwrap_err().code,
+            ErrorCode::SessionUnavailable
+        );
+    }
 }
 
 #[cfg(windows)]

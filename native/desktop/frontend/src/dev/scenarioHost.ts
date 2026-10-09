@@ -226,6 +226,21 @@ export function scenarioHost(
     ...(scenario.views === "none" ? {} : { views }),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
     ...managerCommand,
+    ...(manager?.installResult
+      ? {
+          async installManager(scope: "user" | "machine") {
+            say(`installManager ${scope}`);
+            const result = manager.installResult!;
+            if (result === "pending") return never<"dispatched">();
+            await wait(manager.delayMs ?? options.latencyMs);
+            if (typeof result === "object")
+              throw failure(result.code, "installation");
+            managerDispatched = true;
+            managerReads = 0;
+            return result;
+          },
+        }
+      : {}),
     // The shell draws its own menu here; the native popup is not simulated.
     nativeMenus: false,
 

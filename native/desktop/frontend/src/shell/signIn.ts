@@ -349,14 +349,17 @@ export function useSignIn(host: Host) {
     (settledPhase === "checking" || settledPhase === "services-down")
       ? "starting"
       : settledPhase;
-  const startServices = async () => {
+  const startServices = async (scope?: "user" | "machine") => {
     if (!host.startManager || startingManager.current || submitting.current)
       return;
     startingManager.current = true;
     setStartingServices(true);
     setRefusal(null);
     try {
-      const outcome = await host.startManager();
+      const outcome =
+        scope && host.installManager
+          ? await host.installManager(scope)
+          : await host.startManager();
       if (!mounted.current) return;
       if (outcome !== "dispatched") {
         setRefusal({ code: `manager_${outcome}`, retryAfterSeconds: null });
@@ -551,6 +554,7 @@ export function useSignIn(host: Host) {
     busy,
     startingServices,
     canStartServices: host.startManager !== undefined,
+    canInstallServices: host.installManager !== undefined,
     startServices,
     remaining,
     signOutFailure,

@@ -17,7 +17,7 @@ import { dirname, isAbsolute, relative, resolve } from "node:path";
 // and no copy lands beside the directory the build declares.
 const HOST_CRATE = "desktop/src-tauri";
 const HOST_CRATE_ENTRIES = ["Cargo.toml", "Cargo.lock", "build.rs", "src"];
-const PATH_CRATES = ["application", "platform"];
+const PATH_CRATES = ["application", "platform", "installer"];
 
 export function hostSnapshot(root) {
   return {
@@ -111,6 +111,7 @@ export function snapshotHostSources(
   mkdirSync(layout.crate, { recursive: true });
   for (const member of [
     ...PATH_CRATES,
+    "interpreter/windows/host.manifest",
     ...HOST_CRATE_ENTRIES.map((entry) => `${HOST_CRATE}/${entry}`),
   ]) {
     const source = resolve(native, member);

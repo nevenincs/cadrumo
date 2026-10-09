@@ -33,6 +33,13 @@ pub enum StartOutcome {
     Unsupported,
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum InstallScope {
+    User,
+    Machine,
+}
+
 struct Attempt {
     outcome: Result<StartOutcome>,
     retry: bool,
@@ -44,9 +51,9 @@ pub struct ManagerStart {
     diagnostics: Arc<Diagnostics>,
     attempt: Arc<tokio::sync::Mutex<Option<Attempt>>>,
     generation: AtomicU64,
-    closed: AtomicBool,
+    closed: Arc<AtomicBool>,
     cancellation: Arc<Cancellation>,
-    spawn_fence: Mutex<()>,
+    spawn_fence: Arc<Mutex<()>>,
     closing: tokio::sync::Notify,
 }
 
@@ -59,9 +66,9 @@ impl ManagerStart {
             diagnostics: launch.diagnostics.clone(),
             attempt: Arc::new(tokio::sync::Mutex::new(None)),
             generation: AtomicU64::new(0),
-            closed: AtomicBool::new(false),
+            closed: Arc::new(AtomicBool::new(false)),
             cancellation: Arc::new(Cancellation::default()),
-            spawn_fence: Mutex::new(()),
+            spawn_fence: Arc::new(Mutex::new(())),
             closing: tokio::sync::Notify::new(),
         }
     }
@@ -73,6 +80,25 @@ impl ManagerStart {
             move |owner| async move { owner.dispatch(retry).await },
         )
         .await
+    }
+
+    /// An explicit scope never shares a different caller's installation decision.
+    pub async fn install(self: &Arc<Self>, scope: InstallScope) -> Result<StartOutcome> {
+        let previous = self.attempt.clone().lock_owned().await;
+        if self.closed.load(Ordering::Acquire) {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
+        let owner = self.clone();
+        tokio::spawn(async move {
+            owner
+                .complete_attempt(previous, false, async {
+                    let target = owner.install_target(scope).await?;
+                    owner.dispatch_target(target, false).await
+                })
+                .await
+        })
+        .await
+        .map_err(|_| failure(ErrorCode::Panic))?
     }
 
     async fn start_with<F, Work>(self: &Arc<Self>, retry: bool, work: F) -> Result<StartOutcome>
@@ -160,9 +186,38 @@ impl ManagerStart {
         };
         let package_root = package_root.clone();
         // Recheck package bytes on every actual attempt, off the GUI/runtime thread.
-        let target = self
+        let selected = self
             .resolve_with(move |cancellation| target(&package_root, &cancellation))
-            .await?;
+            .await;
+        let target = match selected {
+            Ok(target) => target,
+            Err(error) if error.code == ErrorCode::PackageUnavailable => {
+                self.install_target(InstallScope::User).await?
+            }
+            Err(error) => return Err(error),
+        };
+        self.dispatch_target(target, retry).await
+    }
+
+    async fn install_target(&self, scope: InstallScope) -> Result<Selection> {
+        let Some(package) = self.package_root.as_ref().map_err(Clone::clone)? else {
+            return Err(installation_failure(ErrorCode::InstallationRefused));
+        };
+        let package = package.clone();
+        let temporary = self
+            .child
+            .environment()
+            .iter()
+            .find(|(name, _)| name.to_string_lossy().eq_ignore_ascii_case("TEMP"))
+            .map(|(_, value)| PathBuf::from(value))
+            .ok_or_else(|| installation_failure(ErrorCode::EnvironmentFailed))?;
+        let closed = self.closed.clone();
+        let fence = self.spawn_fence.clone();
+        self.resolve_with(move |_| install_package(&package, scope, &temporary, &closed, &fence))
+            .await
+    }
+
+    async fn dispatch_target(&self, target: Selection, retry: bool) -> Result<StartOutcome> {
         if self.closed.load(Ordering::Acquire) {
             return Err(failure(ErrorCode::SessionUnavailable));
         }
@@ -317,6 +372,62 @@ fn failure(code: ErrorCode) -> ApplicationError {
     ApplicationError::new(code, Operation::Manager)
 }
 
+fn installation_failure(code: ErrorCode) -> ApplicationError {
+    ApplicationError::new(code, Operation::Installation)
+}
+
+#[cfg(windows)]
+fn install_package(
+    package: &Path,
+    scope: InstallScope,
+    temporary: &Path,
+    closed: &AtomicBool,
+    fence: &Mutex<()>,
+) -> Result<Selection> {
+    use cadrumo_installer::{
+        admission::Scope,
+        runner::bootstrap::{self, Failure},
+    };
+    if !cadrumo_platform::desktop::available() {
+        return Err(installation_failure(ErrorCode::SessionUnavailable));
+    }
+    let contract: DiscoveryContract =
+        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).map_err(
+            |error| installation_failure(ErrorCode::InstallationRefused).caused_by(error),
+        )?;
+    let scope = match scope {
+        InstallScope::User => Scope::User,
+        InstallScope::Machine => Scope::Machine,
+    };
+    bootstrap::install(package, &contract, scope, temporary, || {
+        let guard = fence.lock().map_err(|_| Failure::NativeFailed)?;
+        if closed.load(Ordering::Acquire) {
+            return Err(Failure::Cancelled);
+        }
+        Ok(guard)
+    })
+    .map_err(|error| {
+        installation_failure(match error {
+            Failure::KitUnavailable => ErrorCode::InstallationUnavailable,
+            Failure::KitRefused => ErrorCode::InstallationRefused,
+            Failure::Cancelled => ErrorCode::InstallationCancelled,
+            Failure::NativeFailed => ErrorCode::InstallationFailed,
+            Failure::PublicationUnconfirmed => ErrorCode::InstallationUnsettled,
+        })
+    })
+}
+
+#[cfg(not(windows))]
+fn install_package(
+    _: &Path,
+    _: InstallScope,
+    _: &Path,
+    _: &AtomicBool,
+    _: &Mutex<()>,
+) -> Result<Selection> {
+    Err(installation_failure(ErrorCode::UnsupportedPlatform))
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct DispatchReply {
@@ -410,12 +521,20 @@ fn managed(_: &Launch) -> Result<bool> {
 }
 
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
-    crate::app::commands![manager_start]
+    crate::app::commands![manager_start, manager_install]
 }
 
 #[tauri::command]
 async fn manager_start(state: State<'_, Arc<ManagerStart>>) -> Result<StartOutcome> {
     state.start(true).await
+}
+
+#[tauri::command]
+async fn manager_install(
+    state: State<'_, Arc<ManagerStart>>,
+    scope: InstallScope,
+) -> Result<StartOutcome> {
+    state.install(scope).await
 }
 
 #[cfg(test)]

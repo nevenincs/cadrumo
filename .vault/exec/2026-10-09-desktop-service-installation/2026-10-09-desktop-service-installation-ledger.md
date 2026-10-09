@@ -5,7 +5,7 @@ tags:
 date: '2026-10-09'
 modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:13e5112039e6ea70e2730f029fec7964429429aba0accd524d143a3b4bb7f2ab'
+body_hash: 'sha256:3a3f85e8352013efbc2ba6d7e731ef9a9064bf49e43a93a750cf9a706ccecb55'
 related:
   - "[[2026-10-09-desktop-service-installation-plan]]"
 ---
@@ -80,6 +80,8 @@ related:
 - `S01` `verify:` `cmake --build build/windows-x64 --config Release --target native-installer sequential stable stage` -> `pass`
 - `S01` `verify:` `cargo test --lib assembled_kit_admits_both_scopes -- --ignored first integration invocation` -> `fail`
 - `S01` `verify:` `cargo test --manifest-path native/installer/Cargo.toml --lib assembled_kit_admits_both_scopes -- --ignored corrected fresh reader` -> `pass`
+- `S02` `verify:` `node native/desktop/scripts/tauri.mjs test-unit manager after e04722abb5 shared recovery integration` -> `pass`
+- `S02` `verify:` `node native/desktop/scripts/tauri.mjs clippy-backend after e04722abb5 shared recovery integration` -> `pass`
 
 ## Notes
 
@@ -88,3 +90,4 @@ related:
 - `S01` Initial full Windows MSI test invocation used an incorrect native-adapter path and failed the environment prerequisite. Corrected to `cargo/native/x86_64-pc-windows-msvc/release;` all 46 selected tests passed, including compiled conditional-owner refusal, without installing a valid native plan.
 - `S01` The assembled-kit test initially re-hashed the already-consumed custody reader at EOF, producing an empty-stream digest and a native owner mismatch. Production bootstrap opens a fresh retained reader for this second hash. Corrected the test to use that same real fresh-reader path; rerun pending. The change is within cfg(test), so the production build evidence remains applicable.
 - `S01` The final assembled-kit admission passed for both user and machine scopes against the full production stage and generated compiler contract, including wrong native role/runner refusal, absence of legacy MSI gate, native request serialization, and temporary-file cleanup. No installation ran; this completes the earlier pending build/read-only admission evidence.
+- `S02` The independent recovery commit e04722abb5 updated the owned attempt record and dispatch retry parameter. Scoped installation remains an ordinary dispatch after publication, preserving distinct explicit recovery authority. Latest focused desktop selection passed 28 tests. Independent frontend refactor changes remain outside this feature's staged scope.

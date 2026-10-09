@@ -29,6 +29,11 @@ pub enum ErrorCode {
     InstanceLockForeign,
     ManagerUnavailable,
     ManagerDispatchFailed,
+    InstallationUnavailable,
+    InstallationRefused,
+    InstallationCancelled,
+    InstallationFailed,
+    InstallationUnsettled,
     Panic,
 }
 
@@ -44,6 +49,7 @@ pub enum Operation {
     Webview,
     Shutdown,
     Manager,
+    Installation,
 }
 
 #[derive(Clone, Serialize)]
@@ -91,6 +97,17 @@ impl ApplicationError {
             ErrorCode::ManagerUnavailable => "The background-services manager is unavailable",
             ErrorCode::ManagerDispatchFailed => {
                 "The background-services manager could not be started"
+            }
+            ErrorCode::InstallationUnavailable => {
+                "The background-services installation kit is unavailable"
+            }
+            ErrorCode::InstallationRefused => {
+                "The background-services installation kit could not be verified"
+            }
+            ErrorCode::InstallationCancelled => "Background-services installation was cancelled",
+            ErrorCode::InstallationFailed => "Native background-services installation failed",
+            ErrorCode::InstallationUnsettled => {
+                "Background-services installation could not be confirmed"
             }
             ErrorCode::Panic => "An unexpected application failure occurred",
         };

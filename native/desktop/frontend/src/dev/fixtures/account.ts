@@ -43,6 +43,7 @@ export function accountFixture(
     busy: false,
     startingServices: false,
     canStartServices: false,
+    canInstallServices: false,
     startServices: async () => undefined,
     remaining: null,
     signOutFailure: null,

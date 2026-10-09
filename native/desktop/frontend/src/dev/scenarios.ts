@@ -66,6 +66,7 @@ export type Scenario = {
   services: "memory" | "refused";
   /** Explicit manager-start scenarios only; older hosts offer no command. */
   manager?: {
+    installResult?: "dispatched" | "pending" | { code: HostErrorCode };
     /** Simulate the native host's automatic dispatch before React mounts. */
     autoDispatched?: boolean;
     result:
@@ -406,7 +407,12 @@ export const SCENARIOS: readonly Scenario[] = [
     signIn: servicesDown,
     profiles: "one",
     terminals: "silent",
-    manager: { result: "dispatched", delayMs: 4_000, readyAfterReads: 3 },
+    manager: {
+      result: "dispatched",
+      delayMs: 4_000,
+      readyAfterReads: 3,
+      installResult: "dispatched",
+    },
   },
   {
     ...base,

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-09'
 modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:2f81a40f331bfd955e8c891edef672f26c06981972c99e154051bc643dab85db'
+body_hash: 'sha256:d777c764f310788753828e77527e630fd9a0ecdec3064159858a837d2d12faad'
 related:
   - "[[2026-10-09-desktop-service-installation-plan]]"
   - "[[2026-10-09-desktop-service-installation-adr]]"
@@ -64,6 +64,14 @@ The explicitly selected `assembled_kit_admits_both_scopes_and_refuses_wrong_nati
 ### final-code-review | low | Implementation verification passes with installed acceptance pending
 
 Review S01/S02 over d12514012b, including this feature's uncommitted source and subsequent test-only correction. No unresolved high or critical implementation finding remains. Source verification, full native package build, and both-scope read-only production-kit admission pass. Installed acceptance verdict remains PENDING: this Session 0 host cannot establish actual user/machine native commitment, UAC cancellation, login persistence, manager/runtime readiness after a clean installed launch, or future TUI/CLI connectivity after desktop exit. No native products or login registration were installed on the development host. The implementation Steps may close with this explicit acceptance limitation; do not report installed lifecycle acceptance or release readiness as complete.
+
+### shared-recovery-integration | low | Latest backend scope passes after concurrent recovery changes
+
+The concurrent recovery commit e04722abb5 introduced an intent-bearing attempt record and dispatch retry argument while preserving this feature's scoped installation code. Reviewed the current installer diff over that committed baseline: installation dispatch remains ordinary intent and does not acquire explicit runtime Retry authority. Latest `tauri.mjs test-unit manager` passed 28 tests (189 filtered), including installer unmanaged/closed refusal and distinct recovery dispatch/coalescing. Backend clippy passed. S01 is checkpointed as 44a3d2a5a3; S02 includes only this feature's backend/interface changes and the two installer UI hunks in shared SignIn.tsx. Installed acceptance remains PENDING for the previously recorded interactive-host requirements.
+
+### shared-frontend-verification | low | Completed refactor preserves verified installer presentation
+
+The independent frontend-coherence checkpoint cdebe64c0b preserves the installation controls/refusals as this feature's remaining 47-line SignIn.tsx diff. Its audit and execution ledger report passing current-source TypeScript, ESLint, formatting, nine guard tests, production/Storybook builds, and all 382 browser assertions through a full parallel run (380 passed) plus serial rerun of the two environment/timing failures (2 passed), with source inputs unchanged. That reviewed source included the installation UI. Reuse this evidence for its unchanged shared presentation; do not attribute the separate feature's edits or its browser results to native installation acceptance. Unrelated untracked proposal and Python test work remains outside this checkpoint.
 
 ## Recommendations
 

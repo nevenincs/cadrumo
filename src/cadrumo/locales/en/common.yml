@@ -717,6 +717,9 @@ desktop:
     choose_profile: Choose a profile
     dismiss: Not now
     hide_password: Hide password
+    install_machine_permission: Installing for all users requires administrator permission.
+    install_machine_services: Install for all users
+    install_user_services: Install for this user
     lead: Enter your profile password to open your workspace.
     open_tui: Open the TUI
     open_tui_hint: First-time setup, another profile or recovery? Use the TUI.
@@ -728,6 +731,14 @@ desktop:
       custody_changed: This profile's password or recovery settings changed. Sign
         in again.
       generation_changed: You were signed out elsewhere. Sign in again.
+      installation_cancelled: Installation was cancelled.
+      installation_failed: Background services could not be installed.
+      installation_refused: The installation kit could not be verified. Use a complete
+        matching distribution.
+      installation_unavailable: The installation kit is missing. Use the complete
+        Cadrumo distribution.
+      installation_unsettled: Installation could not be confirmed. Check the logs
+        before retrying.
       invalid: That password didn't work. Try again.
       keyring_unavailable: Cadrumo can't keep you signed in on this device, so the
         TUI will ask for your password.
