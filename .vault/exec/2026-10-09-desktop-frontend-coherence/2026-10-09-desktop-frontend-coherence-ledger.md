@@ -5,7 +5,7 @@ tags:
 date: '2026-10-09'
 modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:74a7fd098f5584b9fc01c04736098147d54781f4c04e5de95d39670e8c1e8c0a'
+body_hash: 'sha256:3465a1a03d7b44eeed52049bcbf6112e547f00d98afb62b4fafb74032247027b'
 related:
   - "[[2026-10-09-desktop-frontend-coherence-plan]]"
 ---
@@ -103,6 +103,18 @@ related:
 - `S03` `verify:` `Final application Storybook build` -> `pass`
 - `S03` `verify:` `Full frontend check during concurrent native header edits (formatting in six active source files)` -> `fail`
 - `S03` `verify:` `Final stylesheet guards and scoped tokens/titlebar/bundle Prettier` -> `pass`
+- `S04` `A` `native/desktop/frontend/src/components/account/AccountRefusal.tsx`
+- `S04` `M` `native/desktop/frontend/src/components/AccountMenu.tsx`
+- `S04` `M` `native/desktop/frontend/src/components/SignIn.tsx`
+- `S04` `M` `native/desktop/frontend/src/styles/titlebar.css`
+- `S04` `verify:` `npm run check (TypeScript, ESLint, ten guards, launcher syntax and full formatting)` -> `pass`
+- `S04` `verify:` `Initial titlebar/account and startup/manager browser run (24 of 26; stale selected-build catalogue)` -> `fail`
+- `S04` `verify:` `cmake --build build/windows-x64 --target desktop-frontend-generated` -> `pass`
+- `S04` `verify:` `Refreshed titlebar/account, window adapter and manager/startup browser run (26)` -> `pass`
+- `S04` `verify:` `Shared refusal credential, throttle, locked and unavailable browser checks (5)` -> `pass`
+- `S04` `verify:` `Production build and final refreshed-catalogue Storybook build` -> `pass`
+- `S04` `verify:` `Three responsive Logo/header/control token probes and screenshot inspection` -> `pass`
+- `S04` `verify:` `Integrated latest-titlebar style and shared-renderer review` -> `pass`
 
 ## Notes
 
@@ -110,3 +122,4 @@ related:
 - `S02` The complete frontend check fails on another session's titlebar-proposal/proposal.css placement and literal dimensions. Its files are preserved; guards and test scopes are not weakened. S02 required affected-path checks pass. Browser results retained in build/windows-x64/verification/frontend-coherence/helpers-browser-results.json.
 - `S03` The existing untracked visual study was aligned at the user request. Its untracked proposal.css was moved into styles; concurrent ScenarioBar/main integration and native titlebar work remain unstaged.
 - `S03` The native titlebar session retired the untracked prototype during S03. The Step was reopened and corrected to application stylesheet geometry. Initial prototype rows are historical; final checkpoint source paths are tokens.css, titlebar.css and bundle.spec.ts. The transient application layout probe is retained in the ignored verification directory to avoid committing tests that depend on another session uncommitted native header implementation. Full-check formatting failures are reported in the audit; native and account source work remains unstaged.
+- `S04` S04 source fixes were absorbed by the concurrently committed native titlebar revision c629d3acd0, including the shared component dependency and both caller imports. This checkpoint commits the frontend-coherence governance records, preserving unrelated staging. Initial/final/refusal JSON and geometry screenshots are retained under build/windows-x64/verification/frontend-coherence. Semantic search service was unavailable; known-source and accepted-decision reads supplied grounding.
