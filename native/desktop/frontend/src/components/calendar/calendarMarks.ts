@@ -1,5 +1,10 @@
 import type { IconName } from "@/components/ui/icon";
-import type { CalendarEvent, CalendarUserState } from "../shell/views";
+import type { CalendarEvent, CalendarUserState } from "@/shell/views";
+
+export const STATE_TONE: Record<
+  CalendarUserState,
+  "neutral" | "danger" | "success" | "warning"
+> = { due: "neutral", late: "danger", filed: "success", unknown: "warning" };
 
 /**
  * How what was observed is marked on its day: a filing made is a filled

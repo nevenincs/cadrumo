@@ -1,3 +1,6 @@
+import { useDesktopEnvironment } from "./shell/useDesktopEnvironment";
+import { useWindowPresentation } from "./shell/useWindowPresentation";
+import { useHostLogs } from "./shell/useHostLogs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
@@ -24,11 +27,8 @@ import type {
   ContextMenuAction,
   ContextMenuItem,
   ContextMenuSeparator,
-  DesktopEnvironment,
   DocsTheme,
   HostFailure,
-  LogRecord,
-  LogSourceStates,
 } from "./ipc/contract";
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
@@ -65,7 +65,7 @@ import {
   type Action,
   type FocusArea,
 } from "./shell/actions";
-import { HostUnavailable, type Host, type TerminalKind } from "./shell/host";
+import type { Host, TerminalKind } from "./shell/host";
 import {
   DEFAULT_LAYOUT,
   DEFAULT_PREFS,
@@ -94,7 +94,6 @@ import {
 import { failureCode } from "./errors";
 import { identity } from "virtual:desktop-content";
 
-const RECORD_CAP = 10000;
 const COUNT_LIMIT = 99;
 const TOAST_MS = 2400;
 // A dragged splitter changes the layout on every pointer move; it is written
@@ -107,14 +106,6 @@ const TABS: readonly (readonly [PanelTab, string, IconName])[] = [
   ["python", "desktop.rail.python", "python"],
   ["logs", "desktop.rail.logs", "logs"],
 ];
-
-type Environment =
-  | { state: "loading" }
-  | { state: "ready"; value: DesktopEnvironment }
-  /** There is no desktop host to ask: the page runs in a plain browser. */
-  | { state: "unavailable" }
-  /** The host was asked and could not answer. */
-  | { state: "failed" };
 
 type MenuEntry =
   (ContextMenuAction & { run?: () => void }) | ContextMenuSeparator;
@@ -160,6 +151,10 @@ const activeTerminal = (): TerminalKind | null => {
 
 export function App({ host }: { host: Host }) {
   const account = useSignIn(host);
+  const environment = useDesktopEnvironment(host);
+  const { viewportHeight, viewportWidth, prefersDark } =
+    useWindowPresentation();
+  const { records, dropped, sourceStates } = useHostLogs(host);
   const initial = useMemo(loadState, []);
   const [prefs, setPrefs] = useState<Prefs>(initial.prefs);
   const [layout, setLayout] = useState<Layout>(initial.layout);
@@ -176,16 +171,8 @@ export function App({ host }: { host: Host }) {
     element: Element | null;
     calendar: boolean;
   } | null>(null);
-  const [environment, setEnvironment] = useState<Environment>({
-    state: "loading",
-  });
-  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
-  const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [docsTheme, setDocsTheme] = useState<DocsTheme>("auto");
   const [docsSearchReady, setDocsSearchReady] = useState(false);
-  const [prefersDark, setPrefersDark] = useState(
-    () => matchMedia("(prefers-color-scheme: dark)").matches,
-  );
   const [status, setStatus] = useState<Record<TerminalKind, TerminalStatus>>({
     console: { phase: "starting" },
     python: { phase: "starting" },
@@ -201,22 +188,13 @@ export function App({ host }: { host: Host }) {
   // The dialog as the form that creates a profile, where one was asked for.
   const [creatingProfile, setCreatingProfile] = useState(false);
   const signInButton = useRef<HTMLButtonElement>(null);
-  // The log ring and what it has lost, held together: a batch changes both.
-  const [log, setLog] = useState<{
-    records: LogRecord[] | null;
-    dropped: number;
-  }>({ records: null, dropped: 0 });
-  const { records, dropped } = log;
-  const [sourceStates, setSourceStates] = useState<
-    LogSourceStates | "unavailable" | null
-  >(null);
   const [filters, setFilters] = useState<RecordFilters>(DEFAULT_FILTERS);
   const docs = useRef<DocsFrameApi>(null);
   const terminals = useRef<Partial<Record<TerminalKind, TerminalApi>>>({});
   const toastTimer = useRef(0);
   const nativeMenus = useRef(host.nativeMenus);
 
-  // Layout geometry, read from the canonical tokens (src/tokens.css) instead
+  // Layout geometry, read from the canonical tokens (src/styles/tokens.css) instead
   // of duplicated as literals; each metric re-reads on resize.
   const docsMin = useMetric("--docs-min", 200);
   const panelMin = useMetric("--panel-min", 140);
@@ -370,68 +348,6 @@ export function App({ host }: { host: Host }) {
   useEffect(() => {
     if (!settingsOpen) accountRef.current.settle();
   }, [settingsOpen]);
-
-  useEffect(() => {
-    let current = true;
-    host
-      .environment()
-      .then((value) => current && setEnvironment({ state: "ready", value }))
-      .catch(
-        (error: unknown) =>
-          current &&
-          setEnvironment({
-            state: error instanceof HostUnavailable ? "unavailable" : "failed",
-          }),
-      );
-    return () => {
-      current = false;
-    };
-  }, [host]);
-
-  useEffect(() => {
-    const query = matchMedia("(prefers-color-scheme: dark)");
-    const change = () => setPrefersDark(query.matches);
-    const resize = () => {
-      setViewportHeight(window.innerHeight);
-      setViewportWidth(window.innerWidth);
-    };
-    query.addEventListener("change", change);
-    window.addEventListener("resize", resize);
-    return () => {
-      query.removeEventListener("change", change);
-      window.removeEventListener("resize", resize);
-    };
-  }, []);
-
-  // Log batches: a bounded ring; a missing or unreadable source keeps its state.
-  useEffect(() => {
-    let unsubscribe: (() => void) | null = null;
-    let current = true;
-    host
-      .subscribeLogs((batch) => {
-        if (!current) return;
-        setSourceStates(batch.states);
-        setLog((held) => {
-          const next = [...(held.records ?? []), ...batch.records];
-          const over = Math.max(0, next.length - RECORD_CAP);
-          return {
-            records: over ? next.slice(over) : next,
-            dropped: held.dropped + batch.dropped + over,
-          };
-        });
-      })
-      .then((stop) => {
-        if (current) unsubscribe = stop;
-        else stop();
-      })
-      .catch(() => {
-        if (current) setSourceStates("unavailable");
-      });
-    return () => {
-      current = false;
-      unsubscribe?.();
-    };
-  }, [host]);
 
   // The window's language: the person's own choice where the documentation
   // is bundled in it, otherwise the language Cadrumo reports.

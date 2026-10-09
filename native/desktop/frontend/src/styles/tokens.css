@@ -1,6 +1,6 @@
 /* The shell's length, type, radius, density, layer and motion tokens. Each has
    one declaration, here. Colour is not declared in this file: values come
-   from the generated palette and roles from src/theme.css.
+   from the generated palette and roles from src/styles/theme.css.
 
    The first block is Tailwind's theme: every name in it is also a utility
    (`h-control-md`, `text-sm`, `rounded-lg`, `size-icon-sm`), so components use
@@ -72,6 +72,9 @@
   --spacing-menu: 13.75rem;
   --spacing-field: 13.75rem;
   --spacing-badge: 1rem;
+
+  /* Filing windows keep their text only when the bar has room for it. */
+  --container-calendar-bar: 4.5rem;
 }
 
 /* A finger needs more than a mouse does. Where the main pointer is coarse
@@ -109,6 +112,21 @@
   --calendar-tall: 22rem;
   /* Where a top-placed dialog sits: the same gap is kept below it. */
   --overlay-top: 12vh;
+  --overlay-gutter: calc(var(--spacing) * 8);
+  --elevation-raised-offset: 0.0625rem;
+  --elevation-raised-blur: 0.125rem;
+  --elevation-overlay-offset: 1rem;
+  --elevation-overlay-blur: 3rem;
+  --elevation-overlay-spread: -0.75rem;
+
+  /* Content grids: em tracks follow the log's type size. */
+  --log-time-width: 7.5em;
+  --log-level-width: 5.5em;
+  --log-logger-min: 8em;
+  --log-logger-max: 16em;
+  --calendar-month-min: 16rem;
+  --calendar-list-min: 20rem;
+  --calendar-list-max: 26rem;
 
   /* ── Layers, lowest first. Overlays are portalled to the document body,
      so only these few need an order. ─────────────────────────────── */
@@ -122,15 +140,20 @@
   --layer-toast: 80;
 
   /* ── Motion. Every transition and animation takes one of these; the base
-     layer in src/theme.css removes them under reduced motion. ─────── */
+     layer in src/styles/base.css removes them under reduced motion. ─────── */
   --motion-fast: 120ms;
   --motion-base: 200ms;
   --motion-slow: 320ms;
+  --motion-spin: 1s;
+  --motion-pulse: 2s;
+  --motion-reduced: 0.01ms;
   --motion-ease: cubic-bezier(0.2, 0, 0, 1);
 
   /* ── Device edges: the only lengths here that are not rem. ───────── */
   --hairline: 1px;
   --focus-ring: 2px;
+  --selection-edge: 2px;
+  --forced-double-edge: 3px;
 
   /* ── Terminal font-size steps: pixel numbers for xterm's canvas, behind
      the named "small"/"medium"/"large"/"x-large" preference
@@ -146,5 +169,20 @@
 @media (pointer: coarse) {
   :root {
     --panel-min: 13.75rem;
+  }
+}
+
+/* Query thresholds are declared here because CSS custom properties cannot
+   be resolved in container conditions. */
+/* The bottom panel at little more than its floor: what is inside gives up a
+   row to keep its content. */
+@custom-variant panel-short {
+  @container panel (height < 11rem) {
+    @slot;
+  }
+  @media (pointer: coarse) {
+    @container panel (height < 18rem) {
+      @slot;
+    }
   }
 }

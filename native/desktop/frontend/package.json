@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "check": "tsc --noEmit && eslint . && node --check ../scripts/tauri.mjs && prettier --check . ../scripts ../tests ../CMakeLists.txt --ignore-unknown",
+    "check": "tsc --noEmit && eslint . && node --test dev/eslint/tests/*.test.mjs && node --check ../scripts/tauri.mjs && prettier --check . ../scripts ../tests ../CMakeLists.txt --ignore-unknown",
     "format": "prettier --write . ../scripts ../tests --ignore-unknown",
     "test": "playwright test",
     "storybook": "node scripts/storybook.mjs dev",

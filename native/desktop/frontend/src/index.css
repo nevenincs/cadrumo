@@ -5,7 +5,7 @@
    run. */
 
 @import "tailwindcss" source(".");
-@import "./shell.css";
+@import "./styles/shell.css";
 
 @source not "./dev";
 @source not "./**/*.stories.tsx";

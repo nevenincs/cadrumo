@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { label } from "../support/strings";
+import { useDomTerminal } from "../support/terminal";
 
 // The development entry on the development server: the production shell on
 // the scenario host, with the documentation fixture on another origin. These
@@ -35,6 +36,7 @@ const openLogs = (target: Page) =>
     .click();
 
 test.beforeEach(async ({ page: target }) => {
+  await useDomTerminal(target);
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;
     localStorage.clear();
@@ -189,7 +191,7 @@ test("loading: nothing is invented while the host has not answered", async ({
   await open(target, "loading");
   // The pane and its header say the same thing: the check is in flight.
   const pane = target.locator(".pane-tui");
-  await expect(pane.locator("[data-slot=empty]")).toHaveText(
+  await expect(pane.locator("[data-slot=account-loading]")).toHaveText(
     label("desktop.signin.checking"),
   );
   await expect(pane.locator(".pane-head")).toContainText(
@@ -603,12 +605,12 @@ const errorsHeld = (target: Page) => async () =>
   );
 
 // The log's Follow toggle and its list, with the pointer over the list.
-async function overLog(target: Page) {
+async function overLog(target: Page, drawnCount = 400) {
   const list = target.locator(".logview-list");
   const follow = target.getByRole("button", {
     name: label("desktop.logs.follow"),
   });
-  await expect(list.locator(".record")).toHaveCount(400);
+  await expect(list.locator(".record")).toHaveCount(drawnCount);
   await expect(follow).toHaveAttribute("aria-pressed", "true");
   const box = await list.boundingBox();
   if (!box) throw new Error("The log's list is not on screen.");
@@ -833,11 +835,22 @@ test("Page Up and Page Down move the record the keyboard is on", async ({
     );
   await list.locator(".record").last().focus();
   const newest = await focusedSeq();
+  const position = () =>
+    list.evaluate((element) => ({
+      offset:
+        element.querySelector<HTMLElement>(".record:focus")?.offsetTop ?? 0,
+      viewport: element.clientHeight,
+    }));
+  const before = await position();
   for (let press = 0; press < 3; press++) await target.keyboard.press("PageUp");
   // Moving up from the end leaves it.
   await expect(follow).toHaveAttribute("aria-pressed", "false");
   const up = await focusedSeq();
-  expect(up).toBeLessThan(newest - 20);
+  expect(up).toBeLessThan(newest);
+  // Paging covers the view even when diagnostic metadata makes rows taller.
+  expect(before.offset - (await position()).offset).toBeGreaterThan(
+    2 * before.viewport,
+  );
   await expect(list.locator(".record:focus")).toHaveAttribute(
     "aria-current",
     "true",
@@ -856,8 +869,12 @@ test("Page Up and Page Down move the record the keyboard is on", async ({
   const next = await focusedSeq();
   expect(next).toBeLessThan(up);
   expect(up - next).toBeLessThan(10);
+  const downFrom = await position();
   await target.keyboard.press("PageDown");
-  expect(await focusedSeq()).toBeGreaterThan(next + 3);
+  expect(await focusedSeq()).toBeGreaterThan(next);
+  expect((await position()).offset - downFrom.offset).toBeGreaterThan(
+    downFrom.viewport / 2,
+  );
   expect(await inView()).toBe(true);
 });
 
@@ -1421,24 +1438,17 @@ test("maximizing the bottom panel over the pane that holds the keyboard takes it
 test("Space on a record with no detail does not scroll the log", async ({
   page: target,
 }) => {
-  await target.goto(
-    "/scenarios.html?scenario=signed-in&latency=0&bar=off&records=3000",
-  );
+  await target.setViewportSize({ width: 1440, height: 600 });
+  await open(target, "signed-in", "&bar=off");
   await openLogs(target);
-  const { list, follow } = await overLog(target);
+  const { list, follow } = await overLog(target, 14);
   await target.mouse.wheel(0, -1500);
   await expect(follow).toHaveAttribute("aria-pressed", "false");
-  // A record in view that has no detail to open.
-  const plain = await list.evaluate((element) => {
-    const box = element.getBoundingClientRect();
-    const row = [...element.querySelectorAll<HTMLElement>(".record")].find(
-      (candidate) =>
-        candidate.getBoundingClientRect().top >= box.top &&
-        !candidate.querySelector("[aria-expanded]"),
-    );
-    return Number(row?.dataset.seq);
-  });
-  await list.locator(`.record[data-seq="${plain}"]`).focus();
+  // The unnamed-source fixture has neither continuation text nor context.
+  // Generated measurement records all carry diagnostic metadata.
+  const plain = list.locator('.record[data-seq="8"]');
+  await expect(plain.locator("[aria-expanded]")).toHaveCount(0);
+  await plain.focus();
   const before = (await logPlace(target)).scrollTop;
   // The key is taken from the browser, whose own answer to it is to scroll.
   await target.evaluate(() => {

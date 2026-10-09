@@ -6,7 +6,7 @@ export type Maximized = "docs" | "tui" | "panel" | null;
 export type TerminalFontSize = "small" | "medium" | "large" | "x-large";
 
 /** Canonical order of the terminal font-size steps. Their sizes live in
- * src/tokens.css; Settings labels each step with its token's own size. */
+ * src/styles/tokens.css; Settings labels each step with its token's own size. */
 export const TERMINAL_FONT_SIZES: readonly TerminalFontSize[] = [
   "small",
   "medium",

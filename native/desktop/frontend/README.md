@@ -186,8 +186,8 @@ a value, so a change of palette, density or type reaches everything at once.
 | Layer       | Where                       | Rule                                                                                        |
 | ----------- | --------------------------- | ------------------------------------------------------------------------------------------- |
 | Colour      | the generated palette       | Generated from the documentation theme, which is the colour authority; never edited by hand |
-| Roles       | `src/theme.css`             | Maps palette values to roles (`background`, `chrome`, `card`, `selected`, `ring`, …)        |
-| Tokens      | `src/tokens.css`            | Lengths in rem: type scale, radii, density, icon sizes, fixed widths, layers and motion     |
+| Roles       | `src/styles/theme.css`      | Maps palette values to roles (`background`, `chrome`, `card`, `selected`, `ring`, …)        |
+| Tokens      | `src/styles/tokens.css`     | Lengths in rem: type scale, radii, density, icon sizes, fixed widths, layers and motion     |
 | Primitives  | `src/components/ui/`        | shadcn/ui components on Radix, restyled to roles and tokens; they know nothing of Cadrumo   |
 | Components  | `src/components/`           | The shell's own parts, built only from primitives                                           |
 | Composition | `src/App.tsx`, `src/shell/` | State, the action registry and the host port; the only layer that talks to a `Host`         |
@@ -197,6 +197,28 @@ component and nothing of the shell or the host contract, only the Tauri adapter
 imports `@tauri-apps/*`, and nothing in the product imports `src/dev/` or a
 story. A component may read the shell's strings, metrics and types from
 `src/shell/`; it never imports `src/App.tsx`.
+
+Styles have one shared entry, `src/styles/shell.css`, imported by the product
+and development CSS entries. `tokens.css` owns dimensions, query thresholds,
+layers and motion; `theme.css` owns semantic colors and elevations; `fonts.css`
+owns bundled typefaces; `base.css` owns document, focus and reduced-motion rules;
+`utilities.css` owns token-backed content grids and third-party adjustments.
+There are no CSS modules: components compose utilities and shared primitives.
+
+Public shell components use PascalCase filenames under `src/components/`.
+Feature internals live in `calendar/`, `account/` and `records/`, with a descriptive
+component per module. Generic primitives keep shadcn's kebab-case filenames
+under `ui/`. Stories stay beside their component. Non-component helpers use
+camelCase `.ts` files, and host subscriptions live in `src/shell/use*.ts`.
+Import the defining module directly; do not add barrel exports or forwarding
+components.
+
+`npm run check` enforces component filenames, import boundaries and token use,
+and tests these guards with deliberate violations. Literal dimensions, colors,
+layer numbers and durations are rejected in components and stories. Structural
+grids, system colors in forced-color mode and geometry computed from data
+remain valid arguments. Define a new design measure once in `tokens.css` and
+reference it through a variable or a named utility.
 
 Conventions a new component follows:
 
@@ -217,7 +239,7 @@ Conventions a new component follows:
   tooltip. The one exception is a control repeated in every row of a list,
   such as a log record's detail toggle: a named `Button`, since a tooltip for
   each row would cost more than it tells.
-- **Focus** is the single outline declared in `src/theme.css`; a component
+- **Focus** is the single outline declared in `src/styles/base.css`; a component
   may move it inward, never restyle it.
 - **Text** is a chrome string. Add it in English, Spanish, Catalan and
   Hungarian through `python -m dev.locales set-batch`, declare its key in
@@ -273,7 +295,7 @@ typed in `src/shell/views.ts`.
 The calendar has two faces over the one read, in
 `src/components/FilingCalendar.tsx`:
 
-- **The months** (`src/components/CalendarMonths.tsx`, laid out by
+- **The months** (`src/components/calendar/CalendarMonths.tsx`, laid out by
   `src/shell/calendarGrid.ts`) draw each obligation as a bar across the days
   its window is open, ending on the day that binds, in a row of its own where
   windows overlap. What was observed is a mark on its day, filled for a
@@ -488,19 +510,19 @@ is from the notes taken when it was read; a fresh run replaces it.
 
 ## Layout
 
-| Path                                       | Holds                                                                       |
-| ------------------------------------------ | --------------------------------------------------------------------------- |
-| `index.html`, `src/main.tsx`               | The production entry                                                        |
-| `scenarios.html`, `src/dev/`               | The development entry, the scenario host and its fixtures                   |
-| `dev/docs-fixture/`                        | The stand-in documentation site and the server plugin that serves it        |
-| `dev/product-boundary.ts`                  | The build check that keeps development modules out of the product           |
-| `src/App.tsx`, `src/shell/`                | Composition, the action registry, layout state and the host port            |
-| `src/shell/views.ts`                       | The read-only profile views a host may offer, types only                    |
-| `src/tokens.css`, `src/theme.css`          | The design tokens and the colour roles                                      |
-| `src/components/ui/`                       | The primitives                                                              |
-| `src/components/`                          | The shell's components and their stories                                    |
-| `.storybook/`, `src/dev/catalogue/`        | The catalogue's configuration and its foundations stories                   |
-| `src/ipc/contract.ts`                      | The published host and bridge contract, types only                          |
-| `virtual:desktop-strings`, `…-palette.css` | The generated chrome strings and palette, resolved from the build directory |
-| `scripts/`                                 | The bootstrap, the catalogue launcher, its screenshots, the benchmark       |
-| `tests/`                                   | The browser tests                                                           |
+| Path                                            | Holds                                                                       |
+| ----------------------------------------------- | --------------------------------------------------------------------------- |
+| `index.html`, `src/main.tsx`                    | The production entry                                                        |
+| `scenarios.html`, `src/dev/`                    | The development entry, the scenario host and its fixtures                   |
+| `dev/docs-fixture/`                             | The stand-in documentation site and the server plugin that serves it        |
+| `dev/product-boundary.ts`                       | The build check that keeps development modules out of the product           |
+| `src/App.tsx`, `src/shell/`                     | Composition, the action registry, layout state and the host port            |
+| `src/shell/views.ts`                            | The read-only profile views a host may offer, types only                    |
+| `src/styles/tokens.css`, `src/styles/theme.css` | The design tokens and the colour roles                                      |
+| `src/components/ui/`                            | The primitives                                                              |
+| `src/components/`                               | Public shell components, feature internals and colocated stories            |
+| `.storybook/`, `src/dev/catalogue/`             | The catalogue's configuration and its foundations stories                   |
+| `src/ipc/contract.ts`                           | The published host and bridge contract, types only                          |
+| `virtual:desktop-strings`, `…-palette.css`      | The generated chrome strings and palette, resolved from the build directory |
+| `scripts/`                                      | The bootstrap, the catalogue launcher, its screenshots, the benchmark       |
+| `tests/`                                        | The browser tests                                                           |

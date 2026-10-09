@@ -555,7 +555,7 @@ test("a log record's detail opens and closes by keyboard", async ({
   await rail(target)
     .getByRole("button", { name: label("desktop.rail.logs") })
     .click();
-  const toggle = target.getByRole("button", {
+  const toggle = target.locator('.record[data-seq="9"]').getByRole("button", {
     name: label("desktop.logs.details"),
   });
   await toggle.focus();
@@ -642,10 +642,7 @@ test("Enter on a record opens its detail", async ({ page: target }) => {
   await rail(target)
     .getByRole("button", { name: label("desktop.rail.logs") })
     .click();
-  const row = target
-    .locator(".logview-list .record")
-    .filter({ has: target.locator("[aria-expanded]") })
-    .first();
+  const row = target.locator('.logview-list .record[data-seq="9"]');
   await row.focus();
   await target.keyboard.press("Enter");
   await expect(row.locator("pre")).toContainText("Traceback");

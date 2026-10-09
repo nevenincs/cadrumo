@@ -1,0 +1,7 @@
+/* Shared by the product, scenarios and component catalogue. */
+@import "tw-animate-css";
+@import "./tokens.css";
+@import "./theme.css";
+@import "./fonts.css";
+@import "./base.css";
+@import "./utilities.css";
