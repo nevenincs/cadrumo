@@ -1,0 +1,139 @@
+@reference "./tokens.css";
+
+@layer components {
+  .titlebar {
+    display: flex;
+    align-items: center;
+    flex: 0 0 var(--titlebar-height);
+    min-width: 0;
+    border-bottom: var(--hairline) solid var(--border);
+    background: var(--chrome);
+    user-select: none;
+  }
+  .titlebar-brand {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    flex-shrink: 0;
+    padding-inline: calc(var(--spacing) * 4);
+  }
+  .titlebar-brand [data-slot="logo"] {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+  }
+  .titlebar-brand [data-slot="logo"] > span {
+    text-box: trim-both cap alphabetic;
+  }
+  .titlebar-brand img {
+    width: var(--spacing-icon-lg);
+    height: var(--spacing-icon-lg);
+  }
+  .titlebar-drag-space {
+    flex: 1;
+    min-width: var(--spacing);
+    align-self: stretch;
+  }
+  .titlebar-account {
+    min-width: 0;
+    padding-right: calc(var(--spacing) * 3);
+  }
+  .profile-name {
+    max-width: var(--spacing-field);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .profile-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing);
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    white-space: nowrap;
+  }
+  .profile-status > span {
+    width: calc(var(--spacing) * 1.5);
+    height: calc(var(--spacing) * 1.5);
+    border-radius: 50%;
+    background: var(--faint);
+  }
+  .profile-status.signed-in > span {
+    background: var(--success);
+  }
+  .account-menu {
+    max-width: min(
+      var(--spacing-palette-max),
+      calc(100vw - var(--spacing) * 4)
+    );
+  }
+  .profile-menu-heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing);
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 2.5);
+    overflow-wrap: anywhere;
+  }
+  .profile-menu-heading > span {
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+  }
+  .profile-menu-hint {
+    max-width: var(--spacing-dialog);
+    margin: calc(var(--spacing) * 2);
+    font-size: var(--text-sm);
+    color: var(--muted-foreground);
+  }
+  .window-controls {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    flex-shrink: 0;
+  }
+  .window-glyph {
+    display: block;
+    width: var(--spacing-icon-xs);
+  }
+  .window-glyph.minimize {
+    border-top: var(--hairline) solid currentColor;
+  }
+  @variant titlebar-compact {
+    .profile-status {
+      display: none;
+    }
+    .profile-name {
+      max-width: calc(var(--spacing-field) / 2);
+    }
+    .titlebar-brand {
+      padding-inline: calc(var(--spacing) * 2);
+    }
+    .titlebar-account {
+      padding-right: var(--spacing);
+    }
+  }
+  @variant titlebar-narrow {
+    .titlebar-brand [data-slot="logo"] > span {
+      display: none;
+    }
+  }
+}
+
+/* Header geometry customizes the shared Button size and shrink utilities. */
+@layer utilities {
+  .titlebar .profile-trigger {
+    flex-shrink: 1;
+    gap: calc(var(--spacing) * 2);
+    min-width: 0;
+    max-width: 100%;
+  }
+  .window-controls .window-control {
+    width: var(--titlebar-height);
+    height: 100%;
+    border-radius: 0;
+    color: var(--foreground);
+  }
+  .window-controls .window-close:hover {
+    background: var(--destructive);
+    color: var(--primary-foreground);
+  }
+}

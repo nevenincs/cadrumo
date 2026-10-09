@@ -93,6 +93,7 @@
   /* ── Structural measures the layout code reads as pixel numbers at run
      time (src/shell/metrics.ts). ─────────────────────────────────── */
   --rail-w: var(--spacing-rail);
+  --titlebar-height: calc(var(--spacing-control-lg) + var(--spacing) * 2);
   --docs-min: 12.5rem;
   /* Also the panel's floor: enough height for a usable handful of terminal
      rows at the smallest terminal font step. */
@@ -173,7 +174,7 @@
 }
 
 /* Query thresholds are declared here because CSS custom properties cannot
-   be resolved in container conditions. */
+   be resolved in media or container conditions. */
 /* The bottom panel at little more than its floor: what is inside gives up a
    row to keep its content. */
 @custom-variant panel-short {
@@ -184,5 +185,17 @@
     @container panel (height < 18rem) {
       @slot;
     }
+  }
+}
+
+/* The titlebar gives status and brand text up in stages as space narrows. */
+@custom-variant titlebar-compact {
+  @media (width <= 43.75rem) {
+    @slot;
+  }
+}
+@custom-variant titlebar-narrow {
+  @media (width <= 30rem) {
+    @slot;
   }
 }

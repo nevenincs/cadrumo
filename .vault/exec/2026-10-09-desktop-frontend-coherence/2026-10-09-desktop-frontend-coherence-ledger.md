@@ -5,7 +5,7 @@ tags:
 date: '2026-10-09'
 modified: '2026-10-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:e1ea868144987fde6780137c2cc429add83948ee09508459b368ffc5d278e6aa'
+body_hash: 'sha256:74a7fd098f5584b9fc01c04736098147d54781f4c04e5de95d39670e8c1e8c0a'
 related:
   - "[[2026-10-09-desktop-frontend-coherence-plan]]"
 ---
@@ -85,8 +85,28 @@ related:
 - `S02` `verify:` `npm run storybook:build` -> `pass`
 - `S02` `verify:` `Integrated S02 source and dependency review` -> `pass`
 - `S02` `verify:` `Final severity defaults/dropdown bindings: TypeScript, full ESLint, scoped Prettier, production build, Storybook build and eight record/browser checks` -> `pass`
+- `S03` `A` `native/desktop/frontend/src/dev/titlebar-proposal/TitlebarMockup.tsx`
+- `S03` `A` `native/desktop/frontend/src/styles/titlebar-proposal.css`
+- `S03` `M` `native/desktop/frontend/src/styles/tokens.css`
+- `S03` `M` `native/desktop/frontend/tests/bundle.spec.ts`
+- `S03` `A` `native/desktop/frontend/tests/scenarios/titlebar.spec.ts`
+- `S03` `verify:` `npm run check (TypeScript, full ESLint, ten guards, launcher syntax and full formatting)` -> `pass`
+- `S03` `verify:` `npm run build` -> `pass`
+- `S03` `verify:` `npm run storybook:build` -> `pass`
+- `S03` `verify:` `Playwright titlebar, design-system and product bundle checks (16)` -> `pass`
+- `S03` `verify:` `Integrated S03 style, composition and isolation review with screenshot inspection` -> `pass`
+- `S03` `D` `native/desktop/frontend/src/dev/titlebar-proposal/TitlebarMockup.tsx`
+- `S03` `D` `native/desktop/frontend/src/styles/titlebar-proposal.css`
+- `S03` `D` `native/desktop/frontend/tests/scenarios/titlebar.spec.ts`
+- `S03` `A` `native/desktop/frontend/src/styles/titlebar.css`
+- `S03` `verify:` `Application titlebar layout probe plus design-system and bundle checks (12)` -> `pass`
+- `S03` `verify:` `Final application Storybook build` -> `pass`
+- `S03` `verify:` `Full frontend check during concurrent native header edits (formatting in six active source files)` -> `fail`
+- `S03` `verify:` `Final stylesheet guards and scoped tokens/titlebar/bundle Prettier` -> `pass`
 
 ## Notes
 
 - `S01` Final fully-parallel workers=3 run: 380 passed, 2 failed (fast-feed timeout and browser `ERR_NO_BUFFER_SPACE).` Exact two-test rerun with workers=1: both passed in 36 seconds. Inputs unchanged. Initial failures and corrected existing test assumptions are detailed in the audit. Native runtime/install checks belong to separate sessions.
 - `S02` The complete frontend check fails on another session's titlebar-proposal/proposal.css placement and literal dimensions. Its files are preserved; guards and test scopes are not weakened. S02 required affected-path checks pass. Browser results retained in build/windows-x64/verification/frontend-coherence/helpers-browser-results.json.
+- `S03` The existing untracked visual study was aligned at the user request. Its untracked proposal.css was moved into styles; concurrent ScenarioBar/main integration and native titlebar work remain unstaged.
+- `S03` The native titlebar session retired the untracked prototype during S03. The Step was reopened and corrected to application stylesheet geometry. Initial prototype rows are historical; final checkpoint source paths are tokens.css, titlebar.css and bundle.spec.ts. The transient application layout probe is retained in the ignored verification directory to avoid committing tests that depend on another session uncommitted native header implementation. Full-check formatting failures are reported in the audit; native and account source work remains unstaged.
