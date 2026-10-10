@@ -149,6 +149,54 @@ def test_every_ratio_operation_is_period_independent_and_mutations_require_commi
     assert request.payload.profile_id == _PROFILE
 
 
+@pytest.mark.parametrize(
+    "definition_id",
+    [
+        contracts.LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID,
+        contracts.LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID,
+        contracts.LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID,
+    ],
+)
+def test_every_ratio_read_is_admitted_on_the_mcp_frontend_without_a_commit_door(definition_id: str) -> None:
+    registry, registrations = _registry()
+    registration = registrations[definition_id]
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(definition_id),
+        context=OperationAccessContext(
+            profile_id=_PROFILE,
+            destination_id=uuid4(),
+            action=AccessAction.SUBMIT,
+            frontend=OperationFrontendProjection.MCP,
+            contract=registration.contract,
+            published_authority=Availability.AVAILABLE,
+        ),
+    )
+
+    assert OperationFrontendProjection.MCP in registry.lookup(definition_id).permitted_frontends
+    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
+    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.profile_id == _PROFILE
+    assert resolved.request.period_independent is True
+    assert AccessAction.COMMIT not in resolved.policy.actions
+
+
+@pytest.mark.parametrize(
+    "definition_id",
+    [
+        contracts.LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
+        contracts.LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
+    ],
+)
+def test_ratio_writes_stay_off_the_mcp_frontend(definition_id: str) -> None:
+    registry, registrations = _registry()
+
+    expected = frozenset({OperationFrontendProjection.CLI})
+    assert registry.lookup(definition_id).permitted_frontends == expected
+    assert registrations[definition_id].contract.permitted_frontends == expected
+
+
 def test_read_access_refuses_a_foreign_profile_subject() -> None:
     registry, registrations = _registry()
     request = _request(contracts.LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID, profile_id=_OTHER_PROFILE)

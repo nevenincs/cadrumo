@@ -80,6 +80,9 @@ from .ratios_contracts import (
 from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
 from .usage_ratio_repository import load_usage_ratio_profile, usage_ratio_profile_with_censo_guard
 
+_WRITE_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
+_READ_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
+
 
 class _ProfileScopedRequest(Protocol):
     profile_id: UUID
@@ -393,6 +396,7 @@ def _definition(
     *,
     sensitive_input: bool,
     mutation: bool,
+    permitted_frontends: frozenset[OperationFrontendProjection],
     refusal_detail_codes: frozenset[str] = frozenset(),
 ) -> OperationDefinition:
     """Declare one ratio verb with only the capabilities its service needs."""
@@ -427,7 +431,7 @@ def _definition(
             permitted_effects=effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        permitted_frontends=permitted_frontends,
         refusal_detail_codes=refusal_detail_codes,
     )
 
@@ -595,6 +599,7 @@ def build_ledger_ratios_list_definition() -> OperationDefinition:
         LedgerRatiosListExecutor,
         sensitive_input=False,
         mutation=False,
+        permitted_frontends=_READ_FRONTENDS,
         refusal_detail_codes=frozenset({LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE}),
     )
 
@@ -618,6 +623,7 @@ def build_ledger_ratios_set_definition() -> OperationDefinition:
         LedgerRatiosSetExecutor,
         sensitive_input=True,
         mutation=True,
+        permitted_frontends=_WRITE_FRONTENDS,
     )
 
 
@@ -640,6 +646,7 @@ def build_ledger_ratios_unset_definition() -> OperationDefinition:
         LedgerRatiosUnsetExecutor,
         sensitive_input=True,
         mutation=True,
+        permitted_frontends=_WRITE_FRONTENDS,
         refusal_detail_codes=frozenset({LEDGER_RATIOS_NO_OVERRIDE_REFUSAL_CODE}),
     )
 
@@ -665,6 +672,7 @@ def build_ledger_ratios_eligible_definition() -> OperationDefinition:
         LedgerRatiosEligibleExecutor,
         sensitive_input=False,
         mutation=False,
+        permitted_frontends=_READ_FRONTENDS,
     )
 
 
@@ -689,6 +697,7 @@ def build_ledger_ratios_validate_definition() -> OperationDefinition:
         LedgerRatiosValidateExecutor,
         sensitive_input=False,
         mutation=False,
+        permitted_frontends=_READ_FRONTENDS,
     )
 
 

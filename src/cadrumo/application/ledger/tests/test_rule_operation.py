@@ -223,12 +223,13 @@ def _access_context(
     registration: OperationPublicDefinitionRegistrationV1,
     *,
     profile_id: UUID = _PROFILE,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
     )
@@ -274,13 +275,40 @@ def test_access_refuses_a_different_context_profile() -> None:
         )
 
 
-def test_registrations_are_cli_only_and_wire_graphs_are_closed() -> None:
+def test_rule_list_is_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
+    registry, registrations = _registry()
+    registration = registrations[LEDGER_RULE_LIST_OPERATION_DEFINITION_ID]
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(LEDGER_RULE_LIST_OPERATION_DEFINITION_ID),
+        context=_access_context(registration, frontend=OperationFrontendProjection.MCP),
+    )
+
+    definition = registry.lookup(LEDGER_RULE_LIST_OPERATION_DEFINITION_ID)
+    assert OperationFrontendProjection.MCP in definition.permitted_frontends
+    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
+    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.profile_id == _PROFILE
+    assert resolved.request.period_independent is True
+    assert AccessAction.COMMIT not in resolved.policy.actions
+
+
+@pytest.mark.parametrize(
+    "definition_id",
+    (LEDGER_RULE_ADD_OPERATION_DEFINITION_ID, LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID),
+)
+def test_rule_writes_stay_off_the_mcp_frontend(definition_id: str) -> None:
+    registry, registrations = _registry()
+
+    expected = frozenset({OperationFrontendProjection.CLI})
+    assert registry.lookup(definition_id).permitted_frontends == expected
+    assert registrations[definition_id].contract.permitted_frontends == expected
+
+
+def test_registrations_wire_graphs_are_closed() -> None:
     registry, registrations = _registry()
     assert {definition.definition_id for definition in registry.definitions} >= set(registrations)
-    assert all(
-        registry.lookup(definition_id).permitted_frontends == frozenset({OperationFrontendProjection.CLI})
-        for definition_id in registrations
-    )
     for definition_id in (LEDGER_RULE_ADD_OPERATION_DEFINITION_ID, LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID):
         definition = registry.lookup(definition_id)
         registration = registrations[definition_id]

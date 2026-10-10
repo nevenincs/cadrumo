@@ -88,6 +88,9 @@ LEDGER_RULE_ADD_OPERATION_DEFINITION_ID = "ledger.rule.add"
 LEDGER_RULE_LIST_OPERATION_DEFINITION_ID = "ledger.rule.list"
 LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID = "ledger.rule.apply"
 
+_WRITE_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
+_READ_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
+
 
 class _TrackedRuleRepository:
     """Track the canonical encrypted rule save without replacing its behavior."""
@@ -496,9 +499,10 @@ def _definition[RequestT: BaseModel, ResultT: BaseModel, ExecutorT](
     executor_type: type[ExecutorT],
     build: Callable[[], ExecutorT],
     effects: frozenset[OperationEffect],
+    permitted_frontends: frozenset[OperationFrontendProjection],
     refusal_detail_codes: frozenset[str] = frozenset({LEDGER_RULE_VALIDATION_REFUSAL_CODE}),
 ) -> OperationDefinition:
-    """Declare one CLI-only, exact-profile recorded rule operation."""
+    """Declare one exact-profile recorded rule operation."""
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
@@ -518,7 +522,7 @@ def _definition[RequestT: BaseModel, ResultT: BaseModel, ExecutorT](
             permitted_effects=effects,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        permitted_frontends=permitted_frontends,
         refusal_detail_codes=refusal_detail_codes,
     )
 
@@ -534,6 +538,7 @@ def build_ledger_rule_add_definition(
         executor_type=LedgerRuleAddExecutor,
         build=lambda: LedgerRuleAddExecutor(repository_factory),
         effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+        permitted_frontends=_WRITE_FRONTENDS,
     )
 
 
@@ -548,6 +553,7 @@ def build_ledger_rule_list_definition(
         executor_type=LedgerRuleListExecutor,
         build=lambda: LedgerRuleListExecutor(repository_factory),
         effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
+        permitted_frontends=_READ_FRONTENDS,
         refusal_detail_codes=frozenset(),
     )
 
@@ -566,6 +572,7 @@ def build_ledger_rule_apply_definition(
         effects=frozenset(
             {OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.PARTIAL, OperationEffect.UNKNOWN}
         ),
+        permitted_frontends=_WRITE_FRONTENDS,
     )
 
 

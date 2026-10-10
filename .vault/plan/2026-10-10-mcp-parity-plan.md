@@ -15,7 +15,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
 modified: '2026-10-10'
 body_schema: body-v2
-body_hash: 'sha256:f28b721fbfa638642eb8ac36fe959177da5ff8488f26042c2743b9d6e3c96d29'
+body_hash: 'sha256:75dce37afcb1269a9f3f4db7375fe17162085535dddc0667c2cee3d7d90630e4'
 ---
 
 # `mcp-parity` plan
@@ -112,7 +112,7 @@ Delivers an MCP server that resumes the person's sign-in for the exact profile, 
 
 Delivers the ratio, work, workflow and evidence reads on the MCP frontend, each through the admission checklist, with one contract cutover per family.
 
-- [ ] `P04.S27` - Admit ledger.ratios.list, ledger.ratios.eligible, ledger.ratios.validate and ledger.rule.list to the MCP frontend through the admission checklist, with one contract cutover for the family; `src/cadrumo/application/ledger/ratios_operation.py`.
+- [x] `P04.S27` - Admit ledger.ratios.list, ledger.ratios.eligible, ledger.ratios.validate and ledger.rule.list to the MCP frontend through the admission checklist, with one contract cutover for the family; `src/cadrumo/application/ledger/ratios_operation.py`.
 - [ ] `P04.S28` - Admit the work reads ruled admitted, from modelo.work.list to modelo.work.filing_record and profile.history, with the three workflow reads, config.collab.recipient.list and the three Google configuration reads, each after its result is checked fit for an agent host and with an agent-facing sibling where it is not, with one contract cutover per family; starts at work_inventory_operation.py and revision_selection_operation.py; `src/cadrumo/application/modelo`.
 - [ ] `P04.S29` - Admit the eight evidence reads ruled omissions once each result is shown, inside the operation, to carry no evidence bytes, with one contract cutover for the family; `src/cadrumo/application/ledger/evidence_read_operation.py`.
 
