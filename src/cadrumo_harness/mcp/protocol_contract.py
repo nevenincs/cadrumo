@@ -49,6 +49,8 @@ def _schema(required: Mapping[str, _FieldSchema], optional: Mapping[str, _FieldS
 
 _TEXT: _FieldSchema = {"type": "string"}
 _DOC: _FieldSchema = {"type": "object"}
+SEARCH_PAGE_DEFAULT = 50
+SEARCH_PAGE_MAX = 200
 MCP_TOOL_CATALOGUE = (
     ("status", "Current exact-profile authorization and availability", _schema({})),
     (
@@ -84,8 +86,18 @@ MCP_TOOL_CATALOGUE = (
     ),
     (
         "search",
-        "Rank currently permitted registered operations by relevance to a query; without one, list them",
-        _schema({}, {"query": _TEXT}),
+        "Rank currently permitted registered operations by relevance to a query; without one, list them. "
+        "Results come in pages: pass a returned next_cursor as cursor for the next page, and family to narrow "
+        "to one definition family",
+        _schema(
+            {},
+            {
+                "query": _TEXT,
+                "family": _TEXT,
+                "limit": {"type": "integer", "minimum": 1, "maximum": SEARCH_PAGE_MAX},
+                "cursor": _TEXT,
+            },
+        ),
     ),
     ("describe", "Read one current registered operation contract and input schema", _schema({"definition_id": _TEXT})),
     (
@@ -97,10 +109,16 @@ MCP_TOOL_CATALOGUE = (
         ),
     ),
     ("observe", "Read a currently authorized operation observation", _schema({"observation": _DOC})),
-    ("result", "Read a settled registered result with fresh disclosure checks per page", _schema({"result": _DOC})),
+    (
+        "result",
+        "Read a settled registered result with fresh disclosure checks per page; "
+        "the result object needs only operation_id, and the runtime supplies the other identifying values",
+        _schema({"result": _DOC}),
+    ),
     (
         "result_page",
-        "Read one bounded settled result page with fresh disclosure checks",
+        "Read one bounded settled result page with fresh disclosure checks; "
+        "the result object needs only operation_id, and the runtime supplies the other identifying values",
         _schema({"result": _DOC, "page": _DOC}),
     ),
     ("review", "Read a currently authorized review projection", _schema({"review": _DOC})),

@@ -40,6 +40,7 @@ from cadrumo.core.time.clock import now
 from .admitted_operations import call_admitted_operation
 from .authority_query import authority_query
 from .corpus_query import corpus_query
+from .operation_contract_cache import OperationContractCache
 from .protocol_contract import (
     MCP_TOOL_NAMES,
     parse_model,
@@ -77,6 +78,7 @@ class RuntimeMcpAdapter:
         self._enrollment_reference: UUID | None = None
         self._requester: AutomationRequesterJourney | None = None
         self._startup_denial: str | None = None
+        self._contracts = OperationContractCache()
         self._retiring_resources: dict[int, AsyncCloseable] = {}
 
     async def bootstrap_reference(self, credential_reference: UUID) -> None:
@@ -149,6 +151,7 @@ class RuntimeMcpAdapter:
             self._enrollment_reference = None
             self._requester = None
             self.client = None
+            self._contracts.clear()
             await close_async_resources(*owners, task_name="mcp-runtime-clients-close", primary_error=primary_error)
 
     async def _settle_release(self, primary_error: BaseException | None, failures: list[BaseException]) -> None:
@@ -341,6 +344,7 @@ class RuntimeMcpAdapter:
         result = {"outcome": "authenticated", "status": public_value(status)}
         old_client = self.client
         self.client = client
+        self._contracts.clear()
         self._startup_denial = None
         if old_client is not None:
             await self._retire_client(old_client, task_name="mcp-reauth-close")

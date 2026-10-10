@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import base64
 import json
-from typing import cast, override
+from datetime import UTC, datetime
+from typing import NoReturn, cast, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -12,13 +13,29 @@ from pydantic import JsonValue
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
+from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
+from cadrumo.application.operations.frontend_projection import (
+    OperationNoPendingInteractionV1,
+    OperationPublicProjectionV1,
+)
 from cadrumo.application.operations.frontend_requests import (
+    OperationObservationRefusalCode,
+    OperationObservationRefusalV1,
+    OperationObservationSuccessV1,
+    OperationPublicEventPageV1,
     OperationResultProjectionRefusalCode,
     OperationResultProjectionRefusalV1,
     OperationResultProjectionRequestV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.operations.persistence.replay import OperationReplayStatus
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionDescriptionV1,
+    OperationRegistry,
+)
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
+from cadrumo.application.runtime.operation_access import RuntimeOperationObserve, RuntimeOperationObserved
 from cadrumo.application.runtime.projection_pages import (
     PROJECTION_PAGE_BYTES,
     ProjectionPage,
@@ -26,13 +43,20 @@ from cadrumo.application.runtime.projection_pages import (
     project_document_page,
 )
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationLifecycle,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_DOCUMENT: dict[str, JsonValue] = {"outcome": "succeeded", "projection": {"records": "ñ" * 10_000}}
+# Two UTF-8 bytes per character: more than one page, fewer than two.
+_DOCUMENT: dict[str, JsonValue] = {"outcome": "succeeded", "projection": {"records": "ñ" * 20_000}}
 
 
 def _result() -> OperationResultProjectionRequestV1:
@@ -94,7 +118,7 @@ async def test_result_page_tool_retrieves_complete_bounded_public_projection() -
             first_document = first.structured_content
             assert first_document["outcome"] == "reply"
             first_page = ProjectionPage.model_validate(first_document["page"])
-            assert len(first_page.decode()) == 16_384
+            assert len(first_page.decode()) == PROJECTION_PAGE_BYTES
             second = await sdk.call_tool(
                 "result_page",
                 {
@@ -113,7 +137,10 @@ async def test_result_page_tool_retrieves_complete_bounded_public_projection() -
             assert sha256_hex(encoded) == first_page.document_digest
             assert client.calls == [
                 (result, ProjectionPageRequest()),
-                (result, ProjectionPageRequest(offset=16_384, expected_digest=first_page.document_digest)),
+                (
+                    result,
+                    ProjectionPageRequest(offset=PROJECTION_PAGE_BYTES, expected_digest=first_page.document_digest),
+                ),
             ]
     finally:
         await adapter.close()
@@ -217,7 +244,7 @@ async def test_result_page_refuses_malformed_continuation_before_dispatch() -> N
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
     try:
         refusal = await adapter.call(
-            "result_page", {"result": _result().model_dump(mode="json"), "page": {"offset": 16_384}}
+            "result_page", {"result": _result().model_dump(mode="json"), "page": {"offset": PROJECTION_PAGE_BYTES}}
         )
         assert refusal == {"outcome": "refused", "code": "invalid_request"}
         assert client.calls == []
@@ -242,9 +269,9 @@ async def test_result_page_continuation_refusal_releases_no_page() -> None:
             "result_page",
             {
                 "result": result.model_dump(mode="json"),
-                "page": ProjectionPageRequest(offset=16_384, expected_digest=first_page.document_digest).model_dump(
-                    mode="json"
-                ),
+                "page": ProjectionPageRequest(
+                    offset=PROJECTION_PAGE_BYTES, expected_digest=first_page.document_digest
+                ).model_dump(mode="json"),
             },
         )
         assert refused == {"outcome": "refused", "code": "grant_inactive"}
@@ -252,3 +279,179 @@ async def test_result_page_continuation_refusal_releases_no_page() -> None:
         assert len(client.calls) == 2
     finally:
         await adapter.close()
+
+
+def _unused_ports(*_args: object, **_kwargs: object) -> NoReturn:
+    raise AssertionError("contract description must not construct executor ports")
+
+
+def _auth_registry() -> OperationRegistry:
+    definition = build_auth_read_definition(_unused_ports)
+    registration = build_auth_read_registration(definition)
+    return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+
+
+def _observed_operation_id() -> str:
+    return _result().operation_id
+
+
+def _settled_request(registry: OperationRegistry) -> OperationResultProjectionRequestV1:
+    """The request a caller would assemble from an observation and a description."""
+    contract = registry.lookup_public_contract(AUTH_READ_OPERATION_DEFINITION_ID)
+    assert contract.result_schema is not None
+    return OperationResultProjectionRequestV1(
+        operation_id=_observed_operation_id(),
+        terminal_revision=4,
+        definition_contract_digest=contract.definition_contract_digest,
+        result_schema=contract.result_schema,
+    )
+
+
+class _ObservedClient(_PageClient):
+    """A lease whose runtime observes one settled operation of a real public contract."""
+
+    def __init__(self, profile_id: UUID, registry: OperationRegistry) -> None:
+        super().__init__(profile_id)
+        self.registry = registry
+        self.refusal: OperationObservationRefusalCode | None = None
+        self.observations: list[RuntimeOperationObserve] = []
+        self.described: list[str] = []
+        self.document_requests: list[OperationResultProjectionRequestV1] = []
+
+    def operation(self, request: RuntimeOperationObserve, *, deadline: float) -> RuntimeOperationObserved:
+        assert deadline > 0
+        self.observations.append(request)
+        observation: OperationObservationRefusalV1 | OperationObservationSuccessV1
+        if self.refusal is not None:
+            observation = OperationObservationRefusalV1(code=self.refusal, requested_version=None, diagnostic_ref=None)
+        else:
+            observation = self._settled()
+        return RuntimeOperationObserved(
+            request_id=request.request_id, runtime_boot_id=uuid4(), connection_id=uuid4(), observation=observation
+        )
+
+    def describe(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionDescriptionV1:
+        assert deadline > 0
+        self.described.append(definition_id)
+        return self.registry.describe_public_definition(definition_id)
+
+    @override
+    def read_result_document(
+        self, result: OperationResultProjectionRequestV1, *, deadline: float
+    ) -> dict[str, JsonValue]:
+        self.document_requests.append(result)
+        return super().read_result_document(result, deadline=deadline)
+
+    def _settled(self) -> OperationObservationSuccessV1:
+        contract = self.registry.lookup_public_contract(AUTH_READ_OPERATION_DEFINITION_ID)
+        moment = datetime(2026, 9, 29, tzinfo=UTC)
+        projection = OperationPublicProjectionV1(
+            operation_id=_observed_operation_id(),
+            definition_id=AUTH_READ_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(str(self.profile_id)),
+            revision=4,
+            anchor_cursor=0,
+            definition_contract=contract,
+            contract_set_digest=self.registry.public_contract_set.contract_set_digest,
+            lifecycle=OperationLifecycle.TERMINAL,
+            terminal_condition=OperationTerminalCondition.SUCCEEDED,
+            effect=OperationEffect.NONE,
+            phase_code=None,
+            started_at=moment,
+            updated_at=moment,
+            progress=None,
+            close_policy=contract.close_policy,
+            cancellation=contract.cancellation,
+            cancellable_now=False,
+            cancellation_requested=False,
+            cancellation_acknowledged=False,
+            execution_deadline_at=None,
+            cleanup_deadline_at=None,
+            pending_interaction=OperationNoPendingInteractionV1(),
+            result_ref="f" * 64,
+            refusal_ref=None,
+            failure_error_code=None,
+            diagnostic_ref=None,
+        )
+        return OperationObservationSuccessV1(
+            projection=projection,
+            event_page=OperationPublicEventPageV1(
+                operation_id=projection.operation_id,
+                anchor_cursor=0,
+                requested_cursor=0,
+                status=OperationReplayStatus.CAUGHT_UP,
+                events=(),
+                next_cursor=0,
+                restart_cursor=None,
+            ),
+        )
+
+
+@pytest.mark.anyio
+async def test_result_by_operation_id_alone_reads_what_the_full_request_reads() -> None:
+    profile_id = uuid4()
+    registry = _auth_registry()
+    client = _ObservedClient(profile_id, registry)
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    expected = _settled_request(registry)
+    complete = expected.model_dump(mode="json")
+    named = {"operation_id": expected.operation_id}
+    try:
+        full = await adapter.call("result", {"result": complete})
+        assert client.observations == []
+        alone = await adapter.call("result", {"result": named})
+        assert alone == full == {"outcome": "reply", "document": _DOCUMENT}
+        assert client.document_requests == [expected, expected]
+        observed = [(call.observation.operation_id, call.observation.after_cursor) for call in client.observations]
+        assert observed == [(expected.operation_id, 0)]
+        page = ProjectionPageRequest().model_dump(mode="json")
+        full_page = await adapter.call("result_page", {"result": complete, "page": page})
+        alone_page = await adapter.call("result_page", {"result": named, "page": page})
+        assert alone_page == full_page
+        assert client.calls == [(expected, ProjectionPageRequest())] * 2
+        # The contract read for the first lookup serves the second.
+        assert client.described == [AUTH_READ_OPERATION_DEFINITION_ID]
+    finally:
+        await adapter.close()
+
+
+@pytest.mark.anyio
+async def test_result_fills_only_what_the_caller_left_out() -> None:
+    profile_id = uuid4()
+    registry = _auth_registry()
+    client = _ObservedClient(profile_id, registry)
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    expected = _settled_request(registry)
+    try:
+        await adapter.call("result", {"result": {"operation_id": expected.operation_id, "terminal_revision": 3}})
+    finally:
+        await adapter.close()
+    assert client.document_requests == [expected.model_copy(update={"terminal_revision": 3})]
+
+
+@pytest.mark.anyio
+async def test_result_by_operation_id_reports_a_refused_observation_without_reading() -> None:
+    profile_id = uuid4()
+    client = _ObservedClient(profile_id, _auth_registry())
+    client.refusal = OperationObservationRefusalCode.UNKNOWN_OPERATION
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    try:
+        refused = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
+    finally:
+        await adapter.close()
+    assert refused == {"outcome": "refused", "code": "unknown_operation"}
+    assert client.document_requests == [] and client.described == []
+
+
+@pytest.mark.anyio
+async def test_result_refuses_a_malformed_operation_id_before_observing() -> None:
+    profile_id = uuid4()
+    client = _ObservedClient(profile_id, _auth_registry())
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    try:
+        refused = await adapter.call("result", {"result": {"operation_id": "not-an-operation"}})
+        missing = await adapter.call("result", {"result": {"terminal_revision": 4}})
+    finally:
+        await adapter.close()
+    assert refused == missing == {"outcome": "refused", "code": "invalid_request"}
+    assert client.observations == []

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:908ad6094e4d8dd8bac181a90604e440ea8506933c40b3c6125726bb9bc3a0a4'
+body_hash: 'sha256:4867c46ecfd2c0955d19ddd80f70669ecbcfa53ca318ed8086f4d7f914c7d9d8'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -65,3 +65,20 @@ related:
 - `S04` `verify:` `ty check --python-platform linux` -> `pass`
 - `S04` `verify:` `registry dump before and after: exactly seven definitions lost MCP` -> `pass`
 - `S04` `by:` `vaultspec-standard-executor`
+- `S08` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
+- `S08` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S08` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S08` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
+- `S08` `M` `src/cadrumo_harness/mcp/tests/test_result_page_tool.py`
+- `S08` `A` `src/cadrumo_harness/mcp/operation_contract_cache.py`
+- `S08` `A` `src/cadrumo_harness/mcp/operation_discovery.py`
+- `S08` `A` `src/cadrumo_harness/mcp/result_request.py`
+- `S08` `verify:` `pytest src/cadrumo_harness/mcp/tests src/cadrumo_harness/tests -n0 (188 tests)` -> `pass`
+- `S08` `verify:` `ruff check` -> `pass`
+- `S08` `verify:` `ruff format --check` -> `pass`
+- `S08` `verify:` `ty check --python-platform linux` -> `pass`
+- `S08` `by:` `vaultspec-standard-executor`
+
+## Notes
+
+- `S08` The subject-reference form could not be stated from inside the harness and moved to its own Step. One existing result-page test was already failing at HEAD on a stale page-size literal and is corrected here.

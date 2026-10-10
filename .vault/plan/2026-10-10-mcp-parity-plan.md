@@ -15,7 +15,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
 modified: '2026-10-10'
 body_schema: body-v2
-body_hash: 'sha256:deb35be330b217a9c1dd324da46e54465863f9ed528702de4d2d897d25373be3'
+body_hash: 'sha256:712bdd89f704611d5440951a1a68c36e9b260478abe29baa44efcac082e61e6c'
 ---
 
 # `mcp-parity` plan
@@ -70,10 +70,11 @@ Delivers the recorded MCP decision for every operation, the refusal of the sensi
 - [ ] `P01.S05` - Refuse at submission, where the frontend list is refused today, a mutating operation to a session whose scope lacks the commit action, so that no browser, classifier or subject lease is taken first; `src/cadrumo/application/user_profile/operation_access_policy.py`.
 - [ ] `P01.S06` - Define the named served surface as tool names, declared properties and an operation list held by Cadrumo, carry its name from the server launch to the runtime, and refuse at submission an operation outside it or one that changes records or reaches the network on a read-only or local surface, with a test over the whole operation list; also src/cadrumo_harness/mcp/main.py and protocol_contract.py; `src/cadrumo/application/user_profile/operation_access_policy.py`.
 - [ ] `P01.S07` - Create a shared host-path confinement guard that verifies the opened handle against roots taken from existing settings, and apply it to modelo.reconcile.import and the six live capture operations that take an output root; applies under src/cadrumo/application/live and modelo/reconciliation_import_operation.py; `src/cadrumo/core/path_confinement.py`.
-- [ ] `P01.S08` - Repair discovery in the generic tools: bound and page search, cache contracts by digest, state the subject-reference form in describe, and read a result by operation identifier; also operation_search.py and protocol_contract.py; `src/cadrumo_harness/mcp/admitted_operations.py`.
+- [x] `P01.S08` - Repair discovery in the generic tools: bound and page search, filter it by family, cache contracts within a session, report a refused operation without failing the search, and read a result by operation identifier alone; also operation_search.py and protocol_contract.py; `src/cadrumo_harness/mcp/admitted_operations.py`.
 - [ ] `P01.S09` - Generate the join from command-line commands to the operations they submit, from the command graph and the registry, and check it in the catalogue test; `src/cadrumo/entrypoints/cli/operator_surface_reconciliation.py`.
 - [x] `P01.S10` - Bring the packaged personas and skills into line with the amended hand-off rule: no persona or skill tells an agent to export or record the filed marker without the person approving, and the stale provider-configuration instruction and capability-manifest inputs are removed; also skills/cadrumo-exportar-declaracion/SKILL.md and skills/cadrumo-alta-contribuyente/SKILL.md; `src/cadrumo_harness/_data/agent/personas/cadrumo-verifier.md`.
 - [ ] `P01.S11` - Record in the decision table the owner ruling that an agent may originate modelo.reconcile.import, and keep it admitted with its findings presented for the person to review or approve; `src/cadrumo/application/modelo/reconciliation_import_operation.py`.
+- [ ] `P01.S45` - Declare a typed subject-reference form on the operation definition and its public contract, filled from the validator of each family, and state it in describe, with one contract cutover for every definition; `src/cadrumo/application/operations/operation_definition.py`.
 
 ### Phase `P03` - decide and build the approval step and the other first-release prerequisites
 
