@@ -27,12 +27,13 @@ from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...operations.execution_actor import OperationExecutionCaller
 from ...operations.interactions import OperationInteractionRequest
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ...operations.persistence.journal import serialize_operation_operand
 from ...operations.registry import OperationFrontendProjection, OperationRegistry, operation_public_schema_reference
-from ...user_profile.access_contracts import AccessAction, Availability
+from ...user_profile.access_contracts import AccessAction, Availability, SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import llm_review_execution as review_runtime
 from .. import llm_review_operation as operation
@@ -64,6 +65,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
+_SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 _Mode = Literal["classification", "saturated", "auto_split", "split"]
 _ORIGINS = {
     "classification": LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
@@ -593,6 +595,57 @@ async def test_resume_routes_single_classification_split_and_audit_rejection(
     assert case.operands.published.result.outcome == (
         "rejected" if response == "reject" else "classified" if children == 1 else "split"
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("frontend", "supplied", "recorded"),
+    [
+        (OperationFrontendProjection.MCP, "typed by the caller", f"agent:mcp.human.{_SESSION_CLIENT}"),
+        (OperationFrontendProjection.MCP, None, f"agent:mcp.human.{_SESSION_CLIENT}"),
+        (OperationFrontendProjection.CLI, "typed by the caller", "typed by the caller"),
+        (OperationFrontendProjection.TUI, None, str(_PROFILE)),
+        (None, "typed by the caller", "typed by the caller"),
+    ],
+    ids=["mcp-typed", "mcp-untyped", "cli-typed", "tui-untyped", "no-session-host"],
+)
+async def test_resume_records_the_session_label_for_an_agent_and_the_supplied_label_for_a_person(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection | None,
+    supplied: str | None,
+    recorded: str,
+) -> None:
+    case = _Case(authority_operation, "auto_split")
+    case.payload = LedgerLlmReviewRequest.model_validate({**case.payload.model_dump(), "actor": supplied})
+    case.request = case.request.model_copy(update={"payload": case.payload})
+    operand = case.operand("auto_split", children=1)
+    checkpoint = case.checkpoint(operand, "apply")
+    actors: list[object] = []
+
+    def writer(_suggestion: object, **kwargs: object) -> BaseModel:
+        actors.append(kwargs["actor"])
+        return ManualLedgerTransactionResult(
+            ref=BucketTransactionRef(bucket_id=str(_PROFILE), transaction_id=case.baseline.transaction_id),
+            transaction=case.baseline,
+            bucket_event_ids=("e" * 64,),
+        )
+
+    asked: list[OperationIdentity] = []
+
+    def session_host(identity: OperationIdentity) -> OperationExecutionCaller:
+        assert frontend is not None
+        asked.append(identity)
+        return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.HUMAN, client_id=_SESSION_CLIENT)
+
+    monkeypatch.setattr(review_runtime, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(review_runtime, "execute_reviewed_decision", writer)
+    executor = LedgerLlmReviewExecutor(case.factory, execution_caller_reader=None if frontend is None else session_host)
+
+    assert await executor.resume(case.request, checkpoint, case.context)
+
+    assert actors == [recorded]
+    assert asked == ([] if frontend is None else [case.identity])
 
 
 @pytest.mark.parametrize("outcome", ["classified", "split", "rejected"])

@@ -199,7 +199,11 @@ class InventoryValuationPreviewRequest(_InventoryRequest):
 
 
 class InventoryClosingAuthorityDecisionRequest(BaseModel):
-    """Strict wire DTO for an inventory closing-authority decision."""
+    """Strict wire DTO for an inventory closing-authority decision.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -308,8 +312,12 @@ class InventoryClosingAuthorityRecordInput(BaseModel):
             ),
         )
 
-    def to_domain(self) -> InventoryClosingAuthorityRecord:
-        """Build the canonical evidenced authority bundle inside worker custody."""
+    def to_domain(self, *, actor: str | None = None) -> InventoryClosingAuthorityRecord:
+        """Build the canonical evidenced authority bundle inside worker custody.
+
+        ``actor`` replaces the decision's typed actor when the executing session
+        names the one to record; the decision's fingerprint covers it.
+        """
         from ...domain.contribuyente.inventory.closing_authority_records import (
             InventoryClosingAuthorityDecision,
             InventoryClosingAuthorityRecord,
@@ -324,7 +332,7 @@ class InventoryClosingAuthorityRecordInput(BaseModel):
             physical_observation_id=self.decision.physical_observation_id,
             physical_observation_fingerprint=self.decision.physical_observation_fingerprint,
             reason=self.decision.reason,
-            actor=self.decision.actor,
+            actor=self.decision.actor if actor is None else actor,
             source_command=self.decision.source_command,
             decided_at=validate_utc_aware(self.decision.decided_at),
             evidence=self.decision.evidence,

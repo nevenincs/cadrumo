@@ -15,6 +15,7 @@ from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
@@ -78,10 +79,17 @@ _SERVICE_INPUT_REASONS: dict[str, str] = {
 class InventoryOperationExecutor:
     """Run one inventory service call under the supervisor's profile custody."""
 
-    def __init__(self, ports_factory: InventoryServicePortsFactory, *, definition_id: str) -> None:
+    def __init__(
+        self,
+        ports_factory: InventoryServicePortsFactory,
+        *,
+        definition_id: str,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Bind the exact operation type to the bucket service factory."""
         self._ports_factory = ports_factory
         self._definition_id = definition_id
+        self._execution_caller_reader = execution_caller_reader
 
     def _service(self, profile_id: UUID) -> InventoryService:
         profile = str(profile_id)
@@ -282,8 +290,11 @@ class InventoryOperationExecutor:
         profile_id: UUID,
         profile: str,
     ) -> str | OperationRefusalEvidence:
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=request.authority_record.decision.actor
+        )
         try:
-            authority_record = request.authority_record.to_domain()
+            authority_record = request.authority_record.to_domain(actor=actor)
         except (ValidationError, InventoryLedgerError):
             return await _record_precommit_validation_refusal(
                 context,

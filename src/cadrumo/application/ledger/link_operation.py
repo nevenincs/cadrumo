@@ -33,14 +33,15 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
-from ..review.filter import LedgerReviewStatus
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..review.filter import LedgerReviewStatus
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -69,7 +70,11 @@ class LedgerLinkValidationRefusedError(CoreValidationError):
 
 
 class LedgerLinkRequest(BaseModel):
-    """One transaction prefix and one existing invoice in the exact profile."""
+    """One transaction prefix and one existing invoice in the exact profile.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -140,9 +145,15 @@ class LedgerLinkExecutionResult(BaseModel):
 class LedgerLinkExecutor:
     """Delegate linkage and fence the single invoice/transaction/event co-commit."""
 
-    def __init__(self, factory: LedgerActionPortsFactory) -> None:
+    def __init__(
+        self,
+        factory: LedgerActionPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Retain the exact-profile canonical action-port factory."""
         self._factory = factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self, request: OperationRequest[BaseModel], context: OperationExecutorContext
@@ -155,11 +166,14 @@ class LedgerLinkExecutor:
         )
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(request.definition_id)
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=_supplied_link_actor(payload.actor)
+        )
         tracker = LedgerCommitAttemptTracker()
 
         try:
             projection = await run_with_ledger_commit_fence(
-                lambda: self._apply_link(payload, context, tracker),
+                lambda: self._apply_link(payload, context, tracker, actor=actor),
                 tracker=tracker,
                 context=context,
                 task_name=request.definition_id,
@@ -189,6 +203,8 @@ class LedgerLinkExecutor:
         payload: LedgerLinkRequest,
         context: OperationExecutorContext,
         tracker: LedgerCommitAttemptTracker,
+        *,
+        actor: str,
     ) -> LedgerLinkProjection:
         """Resolve and co-commit the canonical invoice link under registry authority."""
         profile_id = str(payload.profile_id)
@@ -200,7 +216,6 @@ class LedgerLinkExecutor:
             repository=ports.transaction_repository,
         )
         repository = RevisionGuardedTrackedLedgerTransactionRepository(original, tracker)
-        actor = (payload.actor or "operator").strip() or "operator"
         with validating_governed_facts(context.authority_operation):
             transaction_id = resolve_transaction_id(payload.transaction_id, repository.load().transactions)
             result = link_manual_transaction_invoice(
@@ -227,6 +242,10 @@ class LedgerLinkExecutor:
             review_status=canonical.review_status,
             transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
         )
+
+
+def _supplied_link_actor(actor: str | None) -> str:
+    return (actor or "operator").strip() or "operator"
 
 
 def _invoice_link_refusal_reason(
@@ -328,14 +347,19 @@ def resolve_ledger_link_access(
     )
 
 
-def build_ledger_link_definition(factory: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_link_definition(
+    factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Expose the existing value-safe link through the shared worker on all fronts."""
     return build_single_phase_definition(
         definition_id=LEDGER_LINK_OPERATION_DEFINITION_ID,
         request_type=LedgerLinkRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerLinkExecutionResult,
         executor_type=LedgerLinkExecutor,
-        build=lambda: LedgerLinkExecutor(factory),
+        build=lambda: LedgerLinkExecutor(factory, execution_caller_reader=execution_caller_reader),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -356,7 +380,6 @@ def build_ledger_link_definition(factory: LedgerActionPortsFactory) -> Operation
 
 def build_ledger_link_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind the canonical strict mutation projection to exact purpose and consent."""
-        subject_reference=OperationSubjectReferenceV1.profile(),
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerLinkOperationResult,

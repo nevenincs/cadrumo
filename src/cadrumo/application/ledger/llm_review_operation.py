@@ -23,6 +23,7 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.execution_actor import OperationExecutionCallerReader
 from ..operations.interactions import OperationInteractionRequest
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
@@ -34,8 +35,8 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
-from ..user_profile.access_contracts import (
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
     DisclosureCategory,
@@ -134,7 +135,10 @@ def _result_projector(result: BaseModel, receipt: OperationTerminalReceipt) -> B
 
 
 def build_ledger_llm_review_definition(
-    definition_id: str, factory: LedgerLlmOperationPortsFactory
+    definition_id: str,
+    factory: LedgerLlmOperationPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Declare the existing suggestion/review/writer workflow with secure continuation."""
     if definition_id not in LEDGER_LLM_REVIEW_DEFINITION_IDS:
@@ -142,12 +146,12 @@ def build_ledger_llm_review_definition(
     return OperationDefinition(
         definition_id=definition_id,
         request_type=LedgerLlmReviewRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerLlmExecutionResult,
         executor_factory=OperationExecutorFactory(
             request_type=LedgerLlmReviewRequest,
             executor_type=LedgerLlmReviewExecutor,
-        subject_reference=OperationSubjectReferenceV1.profile(),
-            build=lambda: LedgerLlmReviewExecutor(factory),
+            build=lambda: LedgerLlmReviewExecutor(factory, execution_caller_reader=execution_caller_reader),
         ),
         phase_codes=("ledger.llm.acquire", "ledger.llm.review", "ledger.llm.commit"),
         interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),

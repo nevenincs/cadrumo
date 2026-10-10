@@ -27,6 +27,7 @@ from ...domain.modelos.codes import ModeloCode
 from ..ledger.read_access import resolve_ledger_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import (
     CredentialFreeOperationRequest,
     OperationRequest,
@@ -41,8 +42,8 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from ..user_profile.access_contracts import (
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -110,7 +111,11 @@ _BucketSelector = Annotated[str, Field(min_length=1, max_length=128, pattern=r"\
 
 
 class ModeloReconciliationImportRequest(CredentialFreeOperationRequest):
-    """Address one work unit and one local evidence file in an exact profile."""
+    """Address one work unit and one local evidence file in an exact profile.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -379,6 +384,10 @@ class HandleVerifiedEvidenceParser(ReconciliationEvidenceParserPort):
 class ModeloReconciliationImportExecutor:
     """Prepare a local comparison, then atomically persist its record and event."""
 
+    def __init__(self, *, execution_caller_reader: OperationExecutionCallerReader | None = None) -> None:
+        """Retain the session host's reader of the admitting session, where one composed it."""
+        self._execution_caller_reader = execution_caller_reader
+
     async def execute(
         self,
         request: OperationRequest[ModeloReconciliationImportRequest],
@@ -392,6 +401,7 @@ class ModeloReconciliationImportExecutor:
         require_operation_profile(request, context, payload.profile_id)
 
         await context.events.phase(_PHASES[0])
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
 
         def prepare() -> tuple[ModeloReconciliationCommand, PreparedModeloReconciliation]:
             if require_active_bucket_id() != profile_id:
@@ -415,7 +425,7 @@ class ModeloReconciliationImportExecutor:
                 work_unit_id=selected_work_unit.work_unit_id,
                 source_kind=payload.source_kind,
                 source_path=Path(payload.source_path),
-                actor=payload.actor,
+                actor=actor,
                 calculation_revision_id=payload.calculation_revision_id,
             )
             with (
@@ -464,16 +474,20 @@ class ModeloReconciliationImportExecutor:
             return await context.operands.put(private_report, written_at=now())
 
 
-def build_modelo_reconciliation_import_definition() -> OperationDefinition:
+def build_modelo_reconciliation_import_definition(
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Declare an interrupt-on-restart, exact-profile local evidence import."""
     return OperationDefinition(
         definition_id=MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
         request_type=ModeloReconciliationImportRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloReconciliationImportOperationReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloReconciliationImportRequest,
             executor_type=ModeloReconciliationImportExecutor,
-            build=ModeloReconciliationImportExecutor,
+            build=lambda: ModeloReconciliationImportExecutor(execution_caller_reader=execution_caller_reader),
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset(),
@@ -482,7 +496,6 @@ def build_modelo_reconciliation_import_definition() -> OperationDefinition:
         permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
-        subject_reference=OperationSubjectReferenceV1.profile(),
 
 def resolve_modelo_reconciliation_import_access(
     request: OperationRequest[BaseModel],

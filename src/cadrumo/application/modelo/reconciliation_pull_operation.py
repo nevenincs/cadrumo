@@ -25,6 +25,7 @@ from ..live.justificante import (
 )
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import (
     CredentialFreeOperationRequest,
     OperationRequest,
@@ -39,8 +40,8 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from ..user_profile.access_contracts import (
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -62,7 +63,11 @@ _MAX_RESULT_DOCUMENT_BYTES = 48 * 1024
 
 
 class ModeloReconciliationPullRequest(CredentialFreeOperationRequest):
-    """Address a captured receipt and exact work unit in one bound profile."""
+    """Address a captured receipt and exact work unit in one bound profile.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -141,10 +146,13 @@ class ModeloReconciliationPullExecutor:
         self,
         service_factory: Callable[[str], JustificanteCaptureSnapshotService],
         observation_loader: Callable[[str, str], FiledObservationProtocol] | None = None,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
         """Bind the exact-profile secure snapshot service factory."""
         self._service_factory = service_factory
         self._observation_loader = observation_loader
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -159,6 +167,7 @@ class ModeloReconciliationPullExecutor:
         require_operation_profile(request, context, payload.profile_id)
 
         await context.events.phase(_PHASES[0])
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
 
         def prepare() -> PreparedModeloReconciliation:
             if require_active_bucket_id() != profile_id:
@@ -186,7 +195,7 @@ class ModeloReconciliationPullExecutor:
                         work_unit=unit,
                         observation=observation,
                         source_ref=reconciliation_pull_source_ref(payload.source_kind, None, payload.observation_id),
-                        actor=payload.actor,
+                        actor=actor,
                         calculation_revision_id=payload.calculation_revision_id,
                         operation=context.authority_operation,
                     )
@@ -207,7 +216,7 @@ class ModeloReconciliationPullExecutor:
                 source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
                 source_bytes=snapshot.decoded_pdf_bytes(),
                 source_ref=source_ref,
-                actor=payload.actor,
+                actor=actor,
                 calculation_revision_id=payload.calculation_revision_id,
             )
             with validating_governed_facts(context.authority_operation):
@@ -261,23 +270,27 @@ class ModeloReconciliationPullExecutor:
 def build_modelo_reconciliation_pull_definition(
     service_factory: Callable[[str], JustificanteCaptureSnapshotService],
     observation_loader: Callable[[str, str], FiledObservationProtocol] | None = None,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Declare a non-replayable write over an existing encrypted capture."""
     return OperationDefinition(
         definition_id=MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
         request_type=ModeloReconciliationPullRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloReconciliationPullOperationReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloReconciliationPullRequest,
             executor_type=ModeloReconciliationPullExecutor,
-            build=lambda: ModeloReconciliationPullExecutor(service_factory, observation_loader),
+            build=lambda: ModeloReconciliationPullExecutor(
+                service_factory, observation_loader, execution_caller_reader=execution_caller_reader
+            ),
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset(),
         capabilities=RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=ALL_OPERATION_FRONTENDS,
-        subject_reference=OperationSubjectReferenceV1.profile(),
     )
 
 

@@ -35,7 +35,11 @@ _MAX_PROJECTION_BYTES = 262_144
 
 
 class LedgerLlmReviewRequest(BaseModel):
-    """Immutable profile and explicit options for one existing suggestion service."""
+    """Immutable profile and explicit options for one existing suggestion service.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 

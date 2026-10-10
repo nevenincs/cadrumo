@@ -1156,7 +1156,7 @@ def build_production_operation_registry(
     inventory_movement_add_definition = build_inventory_movement_add_definition(build_inventory_service_ports)
     inventory_valuation_preview_definition = build_inventory_valuation_preview_definition(build_inventory_service_ports)
     inventory_closing_authority_record_definition = build_inventory_closing_authority_record_definition(
-        build_inventory_service_ports
+        build_inventory_service_ports, execution_caller_reader=execution_caller_reader
     )
     auth_read_definition = build_auth_read_definition(compose_auth_read_ports)
     apoderado_definitions = build_apoderado_operation_definitions(build_apoderado_operation_ports)
@@ -1384,9 +1384,13 @@ def build_production_operation_registry(
     compare_definition = build_modelo_compare_definition(
         factory=calculation_action_ports_factory, migration=projection_migration
     )
-    reconciliation_import_definition = build_modelo_reconciliation_import_definition()
+    reconciliation_import_definition = build_modelo_reconciliation_import_definition(
+        execution_caller_reader=execution_caller_reader
+    )
     reconciliation_pull_definition = build_modelo_reconciliation_pull_definition(
-        build_justificante_capture_service, load_reconciliation_filed_observation
+        build_justificante_capture_service,
+        load_reconciliation_filed_observation,
+        execution_caller_reader=execution_caller_reader,
     )
     reconciliation_list_definition = build_modelo_reconciliation_list_definition()
     work_list_definition = build_modelo_work_list_definition(work_lifecycle_ports_factory)
@@ -1428,7 +1432,9 @@ def build_production_operation_registry(
     ledger_history_definition = build_ledger_history_definition(ledger_action_ports_factory)
     ledger_history_typed_definition = build_ledger_history_typed_definition(ledger_action_ports_factory)
     ledger_export_definition = build_ledger_export_definition(build_ledger_export_link_operation_ports)
-    ledger_link_definition = build_ledger_link_definition(build_ledger_export_link_operation_ports)
+    ledger_link_definition = build_ledger_link_definition(
+        build_ledger_export_link_operation_ports, execution_caller_reader=execution_caller_reader
+    )
 
     if own_account_repository_factory is None:
         from ..adapters.persistence.profile.own_accounts import OwnAccountRepository
@@ -1456,7 +1462,9 @@ def build_production_operation_registry(
     )
     ledger_allocate_definition = build_ledger_allocate_definition(ledger_action_ports_factory)
     ledger_classify_definition = build_ledger_classify_definition(ledger_action_ports_factory)
-    ledger_operator_iva_definition = build_ledger_operator_iva_definition(ledger_action_ports_factory)
+    ledger_operator_iva_definition = build_ledger_operator_iva_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
 
     def ledger_llm_operation_ports_factory(
         *, bucket_id: str, operation: PinnedAuthorityOperation
@@ -1470,10 +1478,14 @@ def build_production_operation_registry(
         )
 
     ledger_classify_review_definition = build_ledger_llm_review_definition(
-        LEDGER_CLASSIFY_REVIEW_DEFINITION_ID, ledger_llm_operation_ports_factory
+        LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
+        ledger_llm_operation_ports_factory,
+        execution_caller_reader=execution_caller_reader,
     )
     ledger_split_review_definition = build_ledger_llm_review_definition(
-        LEDGER_SPLIT_REVIEW_DEFINITION_ID, ledger_llm_operation_ports_factory
+        LEDGER_SPLIT_REVIEW_DEFINITION_ID,
+        ledger_llm_operation_ports_factory,
+        execution_caller_reader=execution_caller_reader,
     )
     ledger_bulk_classify_definition = build_ledger_bulk_classify_definition(ledger_action_ports_factory)
     ledger_rule_add_definition = build_ledger_rule_add_definition(ledger_rule_repository_factory)
@@ -1515,7 +1527,9 @@ def build_production_operation_registry(
         )
 
         counterparty_repository_factory = build_counterparty_establishment_repository
-    ledger_counterparty_definition = build_ledger_counterparty_definition(counterparty_repository_factory)
+    ledger_counterparty_definition = build_ledger_counterparty_definition(
+        counterparty_repository_factory, execution_caller_reader=execution_caller_reader
+    )
     ledger_own_account_definition = build_ledger_own_account_definition(own_account_repository_factory)
     from ..adapters.persistence.profile.modelo_360_solicitud import Modelo360SolicitudRepository
 

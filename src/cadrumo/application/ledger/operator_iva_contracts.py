@@ -23,7 +23,11 @@ LEDGER_OPERATOR_IVA_DEFINITION_ID = "ledger.classify.iva-derive"
 
 
 class LedgerOperatorIvaRequest(BaseModel):
-    """Exact-profile operator-selected IVA category, without frontend tax resolution."""
+    """Exact-profile operator-selected IVA category, without frontend tax resolution.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 

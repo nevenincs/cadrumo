@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:8388a35d1baeda6039e1a02bdce701f825c639e69a8433ae5ecce7267284e018'
+body_hash: 'sha256:bfcb161d54233b6baf92b327fb65f091fbedf61408437f89a6a9816bcdf8e964'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -620,6 +620,28 @@ related:
 - `S45` `verify:` `ty check --python-platform linux (158 files)` -> `pass`
 - `S45` `verify:` `lint-imports (15 contracts)` -> `pass`
 - `S45` `by:` `vaultspec-high-executor`
+- `S37` `M` `src/cadrumo/application/inventory/registered_executor.py`
+- `S37` `M` `src/cadrumo/application/inventory/registered_operation.py`
+- `S37` `M` `src/cadrumo/application/inventory/registered_requests.py`
+- `S37` `M` `src/cadrumo/application/ledger/counterparty_operation.py`
+- `S37` `M` `src/cadrumo/application/ledger/link_operation.py`
+- `S37` `M` `src/cadrumo/application/ledger/llm_review_contracts.py`
+- `S37` `M` `src/cadrumo/application/ledger/llm_review_execution.py`
+- `S37` `M` `src/cadrumo/application/ledger/llm_review_operation.py`
+- `S37` `M` `src/cadrumo/application/ledger/operator_iva_contracts.py`
+- `S37` `M` `src/cadrumo/application/ledger/operator_iva_operation.py`
+- `S37` `M` `src/cadrumo/application/ledger/tests/test_llm_review_operation.py`
+- `S37` `M` `src/cadrumo/application/modelo/reconciliation_import_operation.py`
+- `S37` `M` `src/cadrumo/application/modelo/reconciliation_pull_operation.py`
+- `S37` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_export_link_support.py`
+- `S37` `M` `src/cadrumo/entrypoints/tests/test_operation_composition.py`
+- `S37` `A` `src/cadrumo/entrypoints/tests/test_operation_actor_label_by_frontend.py`
+- `S37` `verify:` `pytest actor label by frontend, review, inventory and reconciliation tests (185 tests with the census files)` -> `pass`
+- `S37` `verify:` `pytest registered executor conformance (327 tests)` -> `pass`
+- `S37` `verify:` `ruff check` -> `pass`
+- `S37` `verify:` `ruff format --check` -> `pass`
+- `S37` `verify:` `ty check --python-platform linux` -> `pass`
+- `S37` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -642,3 +664,4 @@ related:
 - `S37` Create, calculate and rename are open to MCP. The applicability gate was already in the create operation with a typed bypass, and the only recalculation confirmation is the terminal interface own prompt, kept there; recalculating deletes nothing, so the result now names the revision it replaced. Refused on MCP until the approval step exists: a calculation that states its own inputs, and one that states the joint-return election or the Modelo 390 attestation. modelo.work.amend is not admitted and is re-ruled behind approval: it verifies, records a local filing and retires the record it corrects in one act. The actor recorded for an MCP execution is derived from the admitting session and the typed one is ignored. Eleven failures in the wide run are outside this Step: six command-line tests report `runtime_unavailable` from the stale base-Python install; one asserts a message wording the catalogue no longer has; one fails in the IVA wallet gate and three in storage readiness, all in tests and code this Step did not touch, and all fail the same way run alone.
 - `S38` Read end to end: verification reads and writes the local profile store only. Its provider step constructs local objects with no browser or session, the readiness probes are skipped, and no network or subprocess call is reachable. Admitted with the actor taken from the session.
 - `S45` Every definition now declares where its subject comes from: 247 the admitted profile, 15 a request field, 6 the work unit that owns a stored record the request names, 1 a field or the profile, 1 a fixed literal. The declaration is in the public contract and its digest, the manifest version is 3, describe and search state it, and the MCP execute tool derives the subject so a client need not supply it. Each family keeps its own check; the declaration is held to it by running every real resolver and executor on the derived subject and on an altered one. Not done here and left as a follow-on: one central guard reading the declaration, and replacing the subject builders of the command line and terminal interface. Outside this Step and failing at HEAD: two failure-log tests assert a traceback another commit stopped logging; four form-layout tests; four IVA wallet tests reporting no usable authority; an M184 error-context key; an M100 export version; and a bulk-classify save count.
+- `S37` Follow-up to this Step: seven more operations already open to MCP recorded a caller-typed actor and now take it from the session for an agent: operator IVA, the classification and split reviews, ledger.link, the inventory closing-authority record, the reconciliation import and pull, and the counterparty confirmation. A closing-authority record retried from a different agent session has a different fingerprint and is refused as a conflict.

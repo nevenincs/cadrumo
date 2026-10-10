@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import (
@@ -17,8 +18,8 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
-from ..user_profile.access_contracts import (
 from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -95,6 +96,7 @@ def _definition(
     definition_id: str,
     request_type: type[BaseModel],
     ports_factory: InventoryServicePortsFactory,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     shape = INVENTORY_OPERATION_SHAPES[definition_id]
     if shape.request_type is not request_type:
@@ -102,10 +104,12 @@ def _definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=InventoryOperationExecutionResult,
         executor_type=InventoryOperationExecutor,
-        subject_reference=OperationSubjectReferenceV1.profile(),
-        build=lambda: InventoryOperationExecutor(ports_factory, definition_id=definition_id),
+        build=lambda: InventoryOperationExecutor(
+            ports_factory, definition_id=definition_id, execution_caller_reader=execution_caller_reader
+        ),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=shape.refusal_codes,
@@ -156,12 +160,15 @@ def build_inventory_valuation_preview_definition(ports_factory: InventoryService
 
 def build_inventory_closing_authority_record_definition(
     ports_factory: InventoryServicePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Build the guarded exact-profile closing-authority write definition."""
     return _definition(
         INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
         InventoryClosingAuthorityRecordRequest,
         ports_factory,
+        execution_caller_reader,
     )
 
 
