@@ -15,7 +15,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
 modified: '2026-10-10'
 body_schema: body-v2
-body_hash: 'sha256:d318445e44de8fe7f524396afde0e8b005db300d3eac2e33d8f4d2f0c3c775a2'
+body_hash: 'sha256:dfff49f18c3852a5ab003bcbe748c931915a5ee64392c054eba368388cc8186d'
 ---
 
 # `mcp-parity` plan
@@ -102,7 +102,7 @@ Delivers an MCP server that resumes the person's sign-in for the exact profile, 
 - [ ] `P02.S12` - Admit the receipt login method from the MCP frontend in the runtime login validation, keeping the password method and receipt persistence refused there; `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`.
 - [ ] `P02.S13` - Give the MCP adapter a resume path used when it holds no credential reference, require the profile launch argument only with a credential reference, and answer initialization, the tool list and public queries with no session and no profile; also runtime_admission.py, main.py and server.py; `src/cadrumo_harness/mcp/runtime_adapter.py`.
 - [ ] `P02.S14` - Handle session retirement in the MCP adapter from the pushed session events: refuse with the existing refusal shape, drop the session, and resume only when a later call finds a live sign-in; `src/cadrumo_harness/mcp/runtime_adapter.py`.
-- [ ] `P02.S15` - Trace whether a sign-in lease is bound through the worker five-minute in-process idle window, record the finding in the sign-in doors reference, and correct the window if a long-lived session would be refused before its lease ends; `src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py`.
+- [x] `P02.S15` - Trace whether a sign-in lease is bound through the worker five-minute in-process idle window, record the finding in the sign-in doors reference, and correct the window if a long-lived session would be refused before its lease ends; `src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py`.
 - [ ] `P02.S16` - Settle with the owner of the sign-in work whether a login or generation mismatch may delete the stored sign-in before the presented proof is verified, and verify the proof first if not; `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`.
 - [ ] `P02.S17` - Refuse the global sign-out and the lock of a session other than its own to a session on the MCP frontend, which may end only itself, as the owner ruled, with a refusal test for each; `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`.
 - [ ] `P02.S18` - Record as an amendment to the application sign-in record the owner ruling that a message the person sends to the assistant counts as their activity and the assistant own calls, commands and scripts do not, together with the decision on where the receipt-sealing key lives during extension, so the idle extension can be built; the key decision is still open; `.vault/adr/2026-10-04-application-sign-in-adr.md`.

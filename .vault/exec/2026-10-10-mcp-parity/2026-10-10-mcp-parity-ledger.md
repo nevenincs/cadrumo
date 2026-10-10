@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:59958f21343cafeb2a7bf5a7c9565b76f51d2f0d60989185d9849ba6926a404d'
+body_hash: 'sha256:ee00ddd4047900a3d0f3f5c12b99f9cddb79e43af2a041d5f2bc53e8d32fd842'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -109,9 +109,20 @@ related:
 - `S07` `verify:` `ruff format --check` -> `pass`
 - `S07` `verify:` `ty check --python-platform linux` -> `pass`
 - `S07` `by:` `vaultspec-high-executor`
+- `S15` `M` `src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py`
+- `S15` `A` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_profile_worker_custody_lease_window.py`
+- `S15` `M` `.vault/reference/2026-10-10-mcp-parity-sign-in-doors-reference.md`
+- `S15` `verify:` `pytest test_profile_worker_custody_lease_window.py -n0 (4 tests)` -> `pass`
+- `S15` `verify:` `pytest master_key neighbours: bucket session, absolute cap, idle timeout, worker binding (45 tests)` -> `pass`
+- `S15` `verify:` `pytest runtime: lease retirement, human login receipt, worker settlement (12 tests)` -> `pass`
+- `S15` `verify:` `ruff check` -> `pass`
+- `S15` `verify:` `ruff format --check` -> `pass`
+- `S15` `verify:` `ty check --python-platform linux` -> `pass`
+- `S15` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S08` The subject-reference form could not be stated from inside the harness and moved to its own Step. One existing result-page test was already failing at HEAD on a stale page-size literal and is corrected here.
 - `S01` The import-boundary gate fails for reasons outside this Step: two private cross-package findings under dev/packaging and a stale generated module inventory; all 15 contracts are kept and no chain involves these files. The inventory entries for the new modules are regenerated in a separate commit. Twelve MCP-listed operations are not proven through their real resolver and are pinned in a named set; the no-submission assertion covers what operations, tools and commands declare and cannot see executor or adapter behaviour.
 - `S07` Not delivered here and carried to the file-exchange Step: root confinement of the reconciliation import, for want of any existing setting, and a bytes entry for the declaracion parser, which is still parsed by path between two verified reads. The POSIX branch of the guard has not executed; tests ran on Windows only. The strict checkers were not run on these files with a working invocation.
+- `S15` Still reachable and not introduced here: a key read after the latest lease expiry and before the custody poll closes the session; a retire that finds no session when two root leases are still listed at that moment; and a lease installed or refreshed while a section is held, which is not covered until the last section exits. The worker can refresh only key leases, so extending a sign-in will need a way to move a human lease deadline. Tests do not cover held sections or the real worker loop.

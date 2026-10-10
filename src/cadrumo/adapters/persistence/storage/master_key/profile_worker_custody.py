@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+from datetime import timedelta
 from pathlib import Path
 from threading import RLock
 from uuid import UUID
@@ -197,10 +198,15 @@ class ProfileWorkerCustody:
             return
         opened = min(lease.issued_at for lease in leases.values())
         deadline = max(lease.expires_at for lease in leases.values())
+        # Each request is admitted against its own lease, so a key session that
+        # went idle sooner would refuse work a live lease still admits. A window
+        # no shorter than the whole lease span clamps every storage access to
+        # the latest lease expiry, which stays the only bound on this session.
+        whole_minutes, remainder = divmod(deadline - opened, timedelta(minutes=1))
         successor = BucketSession.open_resumed(
             bucket_id=str(self.identity.binding.profile_id),
             dek=dek,
-            idle_minutes=5,
+            idle_minutes=max(1, whole_minutes + (1 if remainder else 0)),
             opened_at=opened,
             idle_deadline=deadline,
             absolute_deadline=deadline,

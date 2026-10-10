@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:9d602878b3da623fe9394e29e8848f3b467f87c8a82ca764181fce629ebd89ad'
+body_hash: 'sha256:5f56d302ae11051adaf0006ecb76932bbe895dbe8333103474f65a2e496abb38'
 related: []
 ---
 # `mcp-parity` reference: `sign in doors`
@@ -177,9 +177,21 @@ Traced on 2026-10-10 after review, by static reading with nothing run, by a seco
 - Operation access has the session and the request's frontend in one function (`src/cadrumo/application/user_profile/operation_access_policy.py:159-179`). The lock, sign-out and refresh handlers are dispatched from the connection, which carries the declared frontend (`src/cadrumo/entrypoints/runtime/profile_connection_sessions.py:170-200`; `src/cadrumo/entrypoints/runtime/profile_host.py:95-104`), and sign-out checks the human kind through the authority (`profile_connection_sessions.py:202`).
 - Starting an operation and delivering its secret require the owning session (`src/cadrumo/entrypoints/runtime/operation_host.py:315-317`, `:372-388`), and so does answering a review (`:517-532`). Cancel and detach are not bound that way.
 
+### 15. The worker's five-minute window refuses a sign-in session before its lease ends
+
+Traced on 2026-10-10 by static reading; nothing was run.
+
+- There is one in-process storage session per profile worker, shared by every lease and not keyed by session id (`src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py:42-43`; `src/cadrumo/adapters/persistence/storage/master_key/active_session.py:97-117`). It is created only in `_replace_key_session` (`profile_worker_custody.py:191-218`), called when a lease is installed (`:78`), refreshed (`:115`) or retired with others remaining (`:189`). Its deadline is the latest expiry over the current leases and its idle window is five minutes (`:198-208`).
+- The only call that slides that window is the one in the secure-object freshness check (`src/cadrumo/adapters/persistence/storage/sql/secure_objects.py:361`). A connected but idle client does not keep it alive, and the worker's poll re-opens the session only when a lease actually retires (`src/cadrumo/entrypoints/runtime/worker_service.py:77-99`).
+- The freshness check raises a storage-session expiry once five quiet minutes pass and neither closes nor re-opens the session (`secure_objects.py:343-361`). Lease admission checks only the lease (`profile_worker_custody.py:52-58`, `:117-125`), so the next request is admitted and meets the same expired session. The error is registered as `REFUSED_STORAGE_SESSION_EXPIRED` (`src/cadrumo/core/errors/registry/_adapters_part1.py:451-458`), and nothing in the runtime or the operation supervisor handles it specially (`src/cadrumo/application/operations/_supervisor_execution.py:252-257`, `:383-424`).
+- It follows that a session admitted from the sign-in, alone in the worker, is refused after one storage access followed by more than five quiet minutes, although its lease is valid for up to the sign-in's idle deadline of fifteen minutes by default (`src/cadrumo/adapters/persistence/storage/master_key/idle_timeout.py:31`). Every later operation settles refused with that code until a lease is installed, refreshed or retired, or the lease ends. Another session's install, refresh or retire for the same profile re-opens the shared session and masks the refusal.
+- The five-minute value equals the maximum lease of a key session (`src/cadrumo/application/user_profile/access_contracts.py:28`), whose refresh rebuilds the storage session (`worker_service.py:108-109`; `profile_worker_custody.py:115`). It does not match a sign-in lease.
+- This affects the terminal interface and the command line today, and is not specific to MCP.
+- No test in `src/cadrumo/entrypoints/runtime/tests` checks a five-minute idle refusal against a longer lease.
+
 ## Not verified
 
-- Whether the sign-in lease of a long-lived session is bound through the worker's five-minute in-process window of section 14. If it is, a session with more than five quiet minutes between storage accesses is refused before its lease ends.
+- What the person sees in the terminal interface after a storage-session expiry receipt, and whether any code reaches the path that closes the bound session on expiry (`active_session.py:120-141`) before the freshness check does.
 - Whether the lock and sign-out handlers read the connection's frontend today, and the bodies of the receipt's deadline test and of the borrow door, which were not opened.
 - What happens to sessions and operations after the worker is contained, and whether a deadline overrun on a section read or write raises inside `read_document`; the containment branch was read, not the framing code.
 - Whether the command line has about 58 leaves that bind no runtime client at dispatch. The 24 declared exemption records were read; the count of such leaves and whether every one is exempt were not established.
