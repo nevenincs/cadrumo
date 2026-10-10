@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:861eabcdbcedbf9840da2638fe048135abba18a145fed14a4373aebab212e8ef'
+body_hash: 'sha256:fdf906c36f93d52b96e9c71c205533b91d406f7daff2f0b115a6ac49bac44f10'
 related:
   - "[[2026-10-10-mcp-parity-approval-step-reference]]"
   - "[[2026-10-10-mcp-parity-admission-rulings-adr]]"
@@ -114,7 +114,7 @@ The knockout is the command-line door. The owner confirmed that a reserved comma
 - The desktop shell gains its first surface that answers something other than sign-in. Its rule of no connection and no session is kept.
 - An approval needs a signed-in person, and a key session can still ask. The reserved operations can therefore be proved on the key route before the shared sign-in door opens; the hosted assistant's route needs that door.
 - Tree recognition does not exist in code, and neither does the assistant's host. Both are new work, and the Windows mechanism is a hypothesis until built.
-- Two sentences of the cadrumo-agent records read differently under this record and were relayed to that project: the runtime, not the host, holds the pending request, in memory only, which that project accepts as the same in substance; and the person-only commands have no approval path, which is the owner's to rule. Its requirement that an approval given after a turn has ended is never used is met by the withdrawal in line 10.
+- Two sentences of the cadrumo-agent records read differently under this record and were relayed to that project: the runtime, not the host, holds the pending request, in memory only, which that project accepts as the same in substance; and the person-only commands have no approval path, which is the owner's to rule. Its requirement that an approval given after a turn has ended is never used is met by the withdrawal in line 10. On 2026-10-10 the owner ruled on this first-hand in that project, relayed by its integration session: asked whether the short expiry was enough, the owner kept the rule and chose "Cadrumo withdraws the assistant's pending requests when a run ends, so an approval can only ever serve the run that asked." The withdrawal in line 10 is therefore a requirement by ruling, and the expiry times are not what guarantees it.
 - Amendments required once this record is accepted:
   - `2026-10-04-runtime-manager-architecture-adr`, line 109. "Approval prompts belong to the TUI. Application sign-in follows `2026-10-04-application-sign-in-adr`; the manager hosts neither" becomes "Approval prompts belong to the TUI, except the approval of a reserved act asked for by an agent, which `2026-10-10-mcp-parity-approval-step-adr` places in the desktop window and the TUI. Application sign-in follows `2026-10-04-application-sign-in-adr`; the manager hosts neither".
   - The same record, line 314. "Approval prompts belong to the TUI" gains "with the exception stated under Authority".
