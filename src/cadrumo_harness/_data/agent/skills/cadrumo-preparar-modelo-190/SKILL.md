@@ -127,7 +127,7 @@ per-perceptor detail rows that Modelo 390 has no equivalent of.
    stale, or was recalculated after 190 was created — re-check each 111
    quarter's revision before retrying, never edit the 190 casilla to force
    a match. Treat exit `1` as a verdict; do not export a BLOCKED revision.
-6. Export the local artefact: `aeat app modelo export <work-unit-id>`. It is
+6. Once the person approves that exact act in Cadrumo, export the local artefact: `aeat app modelo export <work-unit-id>`. It is
    NOT official AEAT evidence; the taxpayer uploads it in the AEAT portal.
 7. After the human files, pull official evidence with
    `aeat app modelo reconcile pull`.

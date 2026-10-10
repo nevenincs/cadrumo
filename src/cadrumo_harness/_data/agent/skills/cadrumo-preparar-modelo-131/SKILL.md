@@ -92,7 +92,8 @@ Before handing off, confirm in the calculate / revision JSON:
    a verdict; relay every finding, including ADVISORY findings — they are not
    errors, but they are never silently dropped (`no-silent-under-declaration`).
    Do not export a revision that verifies BLOCKED.
-6. When verified clean, export the local artefact:
+6. When verified clean and the person approves that exact act in Cadrumo, export
+   the local artefact:
    `aeat app modelo export <work-unit-id>`. This produces a fichero-BOE file. It
    is NOT official AEAT evidence and the return is NOT filed. Tell the taxpayer
    to upload it themselves in the AEAT portal.

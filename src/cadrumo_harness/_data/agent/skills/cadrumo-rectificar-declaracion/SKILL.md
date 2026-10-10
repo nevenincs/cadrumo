@@ -60,7 +60,8 @@ plain language; never guess the kind silently.
    correction; state the reason honestly, it is part of the audit trail.
 4. The amendment is a new internal filing envelope — it submits nothing to
    AEAT. Drive it through the standard verification and export: the
-   verifier persona verifies, `cadrumo-exportar-declaracion` exports, and the
+   verifier persona verifies, `cadrumo-exportar-declaracion` exports once the person
+   approves that exact act, and the
    taxpayer files the corrección in the AEAT portal themselves.
 5. Surface any recargo or interest consequence the CLI derives for the
    amendment verbatim; where a complementaria lands out of period, the

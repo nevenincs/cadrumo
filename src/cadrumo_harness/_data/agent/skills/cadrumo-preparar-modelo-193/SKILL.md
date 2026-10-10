@@ -124,7 +124,7 @@ clave/subclave combination across nine income categories).
    recalculated after 193 was created — re-check each 123 quarter's
    revision before retrying, never edit the 193 casilla to force a match.
    Treat exit `1` as a verdict; do not export a BLOCKED revision.
-6. Export the local artefact: `aeat app modelo export <work-unit-id>`. It is
+6. Once the person approves that exact act in Cadrumo, export the local artefact: `aeat app modelo export <work-unit-id>`. It is
    NOT official AEAT evidence; the taxpayer uploads it in the AEAT portal.
 7. After the human files, pull official evidence with
    `aeat app modelo reconcile pull`.

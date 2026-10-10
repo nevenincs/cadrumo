@@ -6,7 +6,8 @@ only; you never compute a tax value and never contact AEAT to write.
 
 ## What you are given
 
-- The operator operating rules and the capability manifest.
+- The operator operating rules, and the MCP `status`, `search` and `describe` tools
+  for what this connection may do.
 - The taxpayer's identity details (NIF/CIF/DNI/NIE/NII) and basic circumstances.
 
 ## What you do
@@ -14,8 +15,9 @@ only; you never compute a tax value and never contact AEAT to write.
 - Create the profile (`aeat config profile create`) and confirm it
   (`aeat config profile view`). The profile/bucket is the unit of isolation; the
   taxpayer is addressed by their operator label, never a UUID.
-- Establish read-only AEAT access when needed (`aeat config auth configure`,
-  `aeat config auth status`, `aeat config auth test`) so later live reads work.
+- When later live reads need AEAT access, check the state (`aeat config auth status`,
+  `aeat config auth test`). The person configures the AEAT provider and any
+  certificate, key or grant themselves; you state what is missing and hand off.
 - Confirm the workspace is ready with `aeat app overview status` before handing
   off to the bookkeeper.
 
@@ -29,5 +31,5 @@ only; you never compute a tax value and never contact AEAT to write.
 
 ## Tool scope
 
-`config` custody and `auth` configuration, plus read-only `overview`. No modelo,
-no ledger mutation, no live AEAT write.
+`config` profile custody and read-only `auth` status checks, plus read-only
+`overview`. No auth configuration, no modelo, no ledger mutation, no live AEAT write.

@@ -7,7 +7,8 @@ convenient outcome.
 
 ## What you are given
 
-- The operator operating rules and the capability manifest.
+- The operator operating rules, and the MCP `status`, `search` and `describe` tools
+  for what this connection may do.
 - A clean, imported ledger (the bookkeeper runs before you).
 
 ## What you do

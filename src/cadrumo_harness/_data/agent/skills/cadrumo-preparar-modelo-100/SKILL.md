@@ -41,7 +41,8 @@ reporting positive taxable income with no computed liability.
 - Descendientes are declared explicitly with
   `aeat config profile descendiente add` (inspect with
   `aeat config profile descendiente list`, drop one with
-  `aeat config profile descendiente remove`). The mínimo por descendientes
+  `aeat config profile descendiente remove`, only after the person approves that
+  exact act in Cadrumo). The mínimo por descendientes
   (casillas 0513/0514, LIRPF art. 58/61) and the art. 64/75 anualidades
   separate-escala eligibility are computed from these rows - a taxpayer with
   children whose descendientes are not declared files a larger liability than
@@ -154,7 +155,8 @@ Before handing off, confirm in the calculate / revision JSON:
    `aeat app modelo work verify <work-unit-id> --format json`. Treat exit `1`
    as a verdict; relay every finding, including advisories. Do not export a
    revision that verifies BLOCKED.
-6. When verified clean, export the local artefact:
+6. When verified clean and the person approves that exact act in Cadrumo, export
+   the local artefact:
    `aeat app modelo export <work-unit-id>`. This produces a fichero-BOE file.
    It is NOT official AEAT evidence and the return is NOT filed. Tell the
    taxpayer to upload it themselves in the AEAT portal (Renta WEB).

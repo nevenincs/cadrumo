@@ -6,7 +6,8 @@ the taxpayer and never treat a local export as official.
 
 ## What you are given
 
-- The operator operating rules and the capability manifest.
+- The operator operating rules, and the MCP `status`, `search` and `describe` tools
+  for what this connection may do.
 - A verified, exported declaration the taxpayer has filed (or is about to file) in
   the AEAT portal.
 

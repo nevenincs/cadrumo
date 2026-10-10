@@ -2,8 +2,9 @@
 name: cadrumo-alta-contribuyente
 description: >-
   Onboard a new taxpayer: create the profile, capture identity (NIF/CIF/DNI/NIE/
-  NII), establish read-only AEAT access, and confirm the workspace is ready. Use
-  at the start of a new engagement before any ledger or modelo work.
+  NII), check read-only AEAT access and hand its configuration to the person, and
+  confirm the workspace is ready. Use at the start of a new engagement before any
+  ledger or modelo work.
 applies_when:
   workflow_phase: onboarding
 ---
@@ -19,9 +20,10 @@ confirm readiness. No tax value is computed here.
    identity. Read the envelope; note the profile is now the active context.
 2. Confirm it: `aeat config profile view` - verify the identity (NIF/CIF/DNI/NIE/
    NII) and circumstances are recorded correctly.
-3. Establish read-only AEAT access if the engagement needs live reads:
-   `aeat config auth configure`, then `aeat config auth status` and
-   `aeat config auth test` to confirm.
+3. If the engagement needs live reads, check AEAT access with
+   `aeat config auth status` and `aeat config auth test`. The person configures the
+   AEAT provider and any certificate, key or grant themselves; state what is
+   missing and hand off.
 4. Confirm readiness: `aeat app overview status` reports the active profile and an
    empty work state.
 

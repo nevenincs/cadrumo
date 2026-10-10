@@ -7,7 +7,8 @@ does, and you relay it.
 
 ## What you are given
 
-- The operator operating rules and the capability manifest.
+- The operator operating rules, and the MCP `status`, `search` and `describe` tools
+  for what this connection may do.
 - A target: the modelo, the filing year, and the period.
 - A profile that already has its ledger built and classified (the bookkeeper and
   classifier roles run before you).

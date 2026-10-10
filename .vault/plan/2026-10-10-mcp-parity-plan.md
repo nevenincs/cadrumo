@@ -15,7 +15,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
 modified: '2026-10-10'
 body_schema: body-v2
-body_hash: 'sha256:2c8b65bdb39cbd998b6db7a6275834c1cc03b1dcd221238cd669fe70f30a6f92'
+body_hash: 'sha256:3b1c6080a9aeeb4cb8aa3f2b092d45b0ab69c9a4bfc2f863a045af817a5d0a28'
 ---
 
 # `mcp-parity` plan
@@ -72,7 +72,7 @@ Delivers the recorded MCP decision for every operation, the refusal of the sensi
 - [ ] `P01.S07` - Create a shared host-path confinement guard that verifies the opened handle against roots taken from existing settings, and apply it to modelo.reconcile.import and the six live capture operations that take an output root; applies under src/cadrumo/application/live and modelo/reconciliation_import_operation.py; `src/cadrumo/core/path_confinement.py`.
 - [ ] `P01.S08` - Repair discovery in the generic tools: bound and page search, cache contracts by digest, state the subject-reference form in describe, and read a result by operation identifier; also operation_search.py and protocol_contract.py; `src/cadrumo_harness/mcp/admitted_operations.py`.
 - [ ] `P01.S09` - Generate the join from command-line commands to the operations they submit, from the command graph and the registry, and check it in the catalogue test; `src/cadrumo/entrypoints/cli/operator_surface_reconciliation.py`.
-- [ ] `P01.S10` - Bring the packaged personas and skills into line with the amended hand-off rule: no persona or skill tells an agent to export or record the filed marker without the person approving, and the stale provider-configuration instruction and capability-manifest inputs are removed; also skills/cadrumo-exportar-declaracion/SKILL.md and skills/cadrumo-alta-contribuyente/SKILL.md; `src/cadrumo_harness/_data/agent/personas/cadrumo-verifier.md`.
+- [x] `P01.S10` - Bring the packaged personas and skills into line with the amended hand-off rule: no persona or skill tells an agent to export or record the filed marker without the person approving, and the stale provider-configuration instruction and capability-manifest inputs are removed; also skills/cadrumo-exportar-declaracion/SKILL.md and skills/cadrumo-alta-contribuyente/SKILL.md; `src/cadrumo_harness/_data/agent/personas/cadrumo-verifier.md`.
 - [ ] `P01.S11` - Record in the decision table the owner ruling that an agent may originate modelo.reconcile.import, and keep it admitted with its findings presented for the person to review or approve; `src/cadrumo/application/modelo/reconciliation_import_operation.py`.
 
 ### Phase `P03` - decide and build the approval step and the other first-release prerequisites

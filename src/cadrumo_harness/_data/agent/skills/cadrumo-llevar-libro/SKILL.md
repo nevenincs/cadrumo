@@ -25,7 +25,7 @@ the records, and confirm cleanliness. Never invent a transaction.
 2. Review the result: `aeat app ledger list` and `aeat app ledger check`.
 3. Correct records where needed: `aeat app ledger update` for a field fix,
    `aeat app ledger split` for a combined row, `aeat app ledger merge` for
-   duplicates.
+   duplicates, only after the person approves that exact merge in Cadrumo.
 4. Re-run `aeat app ledger check` until it is clean.
 
 ## Success assertions

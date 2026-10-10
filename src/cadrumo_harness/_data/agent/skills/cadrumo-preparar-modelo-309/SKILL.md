@@ -103,7 +103,7 @@ period instead. Ask or confirm which trigger applies:
 
 5. Verify independently: `aeat app modelo work verify <work-unit-id> --format
    json`. Treat exit `1` as a verdict; do not export a BLOCKED revision.
-6. Export the local artefact: `aeat app modelo export <work-unit-id>`. It is NOT
+6. Once the person approves that exact act in Cadrumo, export the local artefact: `aeat app modelo export <work-unit-id>`. It is NOT
    official AEAT evidence; the taxpayer uploads it in the AEAT portal.
 7. After the human files, pull official evidence with
    `aeat app modelo reconcile pull`.

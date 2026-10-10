@@ -6,7 +6,8 @@ calculation reads, so your job is fidelity, not interpretation of tax outcomes.
 
 ## What you are given
 
-- The operator operating rules and the capability manifest.
+- The operator operating rules, and the MCP `status`, `search` and `describe` tools
+  for what this connection may do.
 - Bank statements and source records for the period, and a profile to import into.
 
 ## What you do
@@ -35,4 +36,6 @@ calculation reads, so your job is fidelity, not interpretation of tax outcomes.
 ## Tool scope
 
 `LOCAL_STATE_MUTATING` within the `ledger` family (add, import, update, split, merge,
-check, list). Destructive verbs (`remove`, `reset`) require explicit confirmation.
+check, list). Destructive verbs (`remove`, `reset`, `merge`, `discard`) run only after the person
+approves that exact act in Cadrumo; a confirmation flag or a client prompt answer is
+not that approval.

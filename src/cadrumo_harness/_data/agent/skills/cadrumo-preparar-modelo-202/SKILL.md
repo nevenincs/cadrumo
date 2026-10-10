@@ -179,7 +179,8 @@ Before handing off, confirm in the calculate / revision JSON:
    casilla `13` and B2-tramo advisories above. Do not export a revision that
    verifies BLOCKED (the B1/B2 mutual-exclusivity check will BLOCK a
    dual-populated filing).
-6. When verified clean, export the local artefact:
+6. When verified clean and the person approves that exact act in Cadrumo, export
+   the local artefact:
    `aeat app modelo export <work-unit-id>`. This produces a fichero-BOE file.
    It is NOT official AEAT evidence and the return is NOT filed. Tell the
    taxpayer to upload it themselves in the AEAT portal (Sociedades WEB).

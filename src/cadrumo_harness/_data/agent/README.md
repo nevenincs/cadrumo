@@ -26,12 +26,6 @@ prepare an authorization request for human approval; never paste a password or A
 secret into the conversation. Approved protected credential references support
 fresh admission while the grant, installation and login policy remain valid.
 
-Check the local runtime with `aeat app runtime status`. Where the platform supports
-configuration, `aeat app runtime enable` enables login startup and
-`aeat app runtime disable` retains on-demand startup. Neither command grants an
-agent access to a profile. `aeat app runtime start` explicitly starts an already
-provisioned runtime. These controls are also available in the TUI runtime screen.
-
 Configure MCP with the exact profile ID. Leave the credential reference empty for
 first enrollment, use `authorization_prepare` and `authorization_request`, and
 have the user review the requested operations, periods and disclosures in CLI or
@@ -48,8 +42,5 @@ Human approval is still required. Poll for the terminal receipt and authenticate
 again afterward; rotation returns a new credential reference. An unresolved
 reply retains the request ID for reconciliation and does not mean approval failed.
 
-Stopping the shared runtime affects every profile and agent using it. The TUI
-requires explicit confirmation; CLI requires
-`aeat app runtime stop --acknowledge-all-profiles-and-work`. An accepted stop is not
-proof that every operation settled. Retain operation receipts and reconcile
-uncertain effects after reconnecting.
+A lost reply is not proof that an operation failed or settled. Retain operation
+receipts and reconcile uncertain effects after reconnecting.

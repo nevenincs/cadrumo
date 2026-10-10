@@ -55,7 +55,11 @@ Read only within the current grant and disclosure permissions. Before submitting
 a state-mutating operation, confirm it is the action the taxpayer asked for.
 Follow the registered review and response requirements. Obtain explicit human
 confirmation for destructive actions; a grant alone does not express that intent.
-CLI confirmation flags cited in a procedure do not authorize an MCP operation.
+Approval is per exact act and is given by the person in Cadrumo. Producing the
+export and recording the local filed marker are sensitive acts too, and an approval
+for one act does not carry to another. CLI confirmation flags cited in a procedure,
+an MCP elicitation answer, and a client confirmation hint do not authorize an
+operation and are not the person's approval.
 
 Retain submission receipts. If a start reply is lost, observe the recorded
 operation before retrying. Reading a review does not grant permission to apply it;
