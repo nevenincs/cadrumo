@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:b2c5f683a41b6d379a2e7f867c81801c1e5e94b192cb3adfe195f0f0b93ea96b'
+body_hash: 'sha256:821a523660c4712e863e098d279d21c1696e6b047c902308bf80229b63f43605'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -211,6 +211,18 @@ related:
 - `S06` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
 - `S06` `verify:` `catalogue entries for the new paragraph: present, not fuzzy, not empty, tokens preserved in es, ca, hu` -> `pass`
 - `S06` `verify:` `pytest dev/docs/tests -k locale/i18n/catalog/translation/po (179 passed, 5 failed)` -> `fail`
+- `S29` `M` `src/cadrumo/application/ledger/evidence_followup_registration.py`
+- `S29` `M` `src/cadrumo/application/ledger/tests/test_evidence_followup_operation.py`
+- `S29` `A` `src/cadrumo/entrypoints/tests/test_ledger_evidence_mcp_frontends.py`
+- `S29` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S29` `verify:` `pytest evidence follow-up and read operation tests (66 tests)` -> `pass`
+- `S29` `verify:` `pytest admission, surfaces, catalogue, evidence frontends (86 tests)` -> `pass`
+- `S29` `verify:` `pytest executor conformance for the touched families (66 tests)` -> `pass`
+- `S29` `verify:` `registry comparison: only intended operations gained MCP, none lost the command line or terminal interface` -> `pass`
+- `S29` `verify:` `ruff check` -> `pass`
+- `S29` `verify:` `ruff format --check` -> `pass`
+- `S29` `verify:` `ty check --python-platform linux` -> `pass`
+- `S29` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -223,3 +235,4 @@ related:
 - `S27` Checklist per operation, by reading: resolver present and frontend-agnostic; no command-line safeguard missing from the operation; no person-act field; no host path; results are typed data with no bytes, secrets or keys; executors read only and reach no network. The command line defaults the year and an MCP caller must supply it. The rule list result includes the stored creator string of each rule. A wide command-line run selected by keyword was still running at close and is not evidence for this Step.
 - `S06` Two files carry another session uncommitted changes; only the surface lines are committed from them (three in `access_contracts.py,` two in `profile_host.py).` The one format finding and the one noqa in those files are in the other session lines. Not built here: status still reports the unnarrowed scope on a narrowed surface; there is no single end-to-end test with a real worker, the chain is covered in three pieces; the packaged plugin launch line never names a surface. Four listed read-only operations rest on the over-declared effects set. The how-to translations for the new paragraph follow separately.
 - `S06` The five docs failures are in other pages and none concerns the agent connection guide: catalogue drift in how-to/profile-setup and reference/identity-and-naming, a composed Catalan root difference in filing-calendar and identity-and-naming, and a sequence golden for how-to/irpf-lifecycle whose command-line frames were refused while frontend sets were being edited by a running Step. The Hungarian wording for an agent that should only look is the translator own reading.
+- `S29` Four of the eight reads are admitted: attachment queue, attachment view, consent list and review list. Not admitted, each for a reason found in its result or executor: evidence list and view return the host path the operator typed; review view returns text taken verbatim from the document; reader readiness sends requests to the configured local-model endpoint, which settings can point off this machine, and its decision row now records that it reaches the network. A further Step gives these agent-facing projections.

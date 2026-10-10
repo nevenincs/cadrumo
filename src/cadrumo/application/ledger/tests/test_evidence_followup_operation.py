@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta, timezone
-from typing import cast
+from typing import cast, get_args
 from uuid import UUID, uuid4
 
 import pytest
@@ -254,12 +254,14 @@ def _access_context(
     contract: OperationPublicDefinitionContractV1,
     *,
     profile_id: UUID = _PROFILE,
+    action: AccessAction = AccessAction.RESULT,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
-        action=AccessAction.RESULT,
-        frontend=OperationFrontendProjection.CLI,
+        action=action,
+        frontend=frontend,
         contract=contract,
         published_authority=Availability.AVAILABLE,
     )
@@ -392,3 +394,129 @@ def test_each_projector_requires_its_successful_none_effect_receipt(definition_i
     wrong_effect = receipt.model_copy(update={"effect": OperationEffect.UPDATED})
     with pytest.raises(ValueError):
         projector(result, wrong_effect)
+
+
+_MCP_DEFINITION_IDS = (
+    LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
+    LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
+    LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,
+    LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID,
+)
+
+_ATTACHMENT_ITEM_FIELDS = frozenset(
+    {
+        "attachment_id",
+        "sha256",
+        "mime_type",
+        "bytes_size",
+        "source",
+        "provider_locator",
+        "captured_at",
+        "linked_invoice_ids",
+        "pending_review",
+    }
+)
+
+# Every model a result reaches and the fields it declares. A new field on any of
+# them changes a set and fails the test below, so it is read for document
+# content and host paths before an agent can receive it.
+_MCP_RESULT_FIELDS: dict[str, dict[str, frozenset[str]]] = {
+    LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID: {
+        "LedgerEvidenceAttachmentQueueProjection": frozenset({"profile_id", "count", "rows"}),
+        "AttachmentReviewItem": _ATTACHMENT_ITEM_FIELDS,
+    },
+    LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID: {
+        "LedgerEvidenceAttachmentViewProjection": frozenset({"profile_id", "item"}),
+        "AttachmentReviewItem": _ATTACHMENT_ITEM_FIELDS,
+    },
+    LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID: {
+        "LedgerEvidenceConsentListProjection": frozenset({"profile_id", "survey"}),
+        "ConsentWithdrawalSurveyProjection": frozenset(
+            {"consented_dispatches", "cloud_derived_artefacts", "transmitted_bytes_are_unrecallable"}
+        ),
+        "ConsentedDispatchProjection": frozenset(
+            {"profile_bucket_id", "evidence_content_address", "provider", "model", "surface", "recorded_at"}
+        ),
+        "CloudDerivedArtefactProjection": frozenset(
+            {"evidence_reference", "provenance_stamp", "transport", "drafted_at"}
+        ),
+    },
+    LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID: {
+        "LedgerEvidenceReviewListProjection": frozenset({"profile_id", "filters", "rows"}),
+        "EvidenceReviewQueueRowProjection": frozenset(
+            {
+                "evidence_reference",
+                "extractor",
+                "drafted_at",
+                "blocking_count",
+                "reasons",
+                "advisory_count",
+                "advisories",
+            }
+        ),
+    },
+}
+
+
+def _nested_models(annotation: object) -> tuple[type[BaseModel], ...]:
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        return (annotation,)
+    return tuple(model for argument in get_args(annotation) for model in _nested_models(argument))
+
+
+def _result_fields(root: type[BaseModel]) -> dict[str, frozenset[str]]:
+    """Name every model reachable from ``root`` through its fields, with the fields it declares."""
+    fields: dict[str, frozenset[str]] = {}
+    pending = [root]
+    while pending:
+        model = pending.pop()
+        if model.__name__ in fields:
+            continue
+        fields[model.__name__] = frozenset(model.model_fields)
+        for field in model.model_fields.values():
+            pending.extend(_nested_models(field.annotation))
+    return fields
+
+
+def _registered_result_model(registry: OperationRegistry, definition_id: str) -> type[BaseModel]:
+    registration = registry.lookup_public_registration(definition_id)
+    result_schema = registration.contract.result_schema
+    assert result_schema is not None
+    return next(binding.model_type for binding in registration.schema_bindings if binding.identity == result_schema)
+
+
+@pytest.mark.parametrize("definition_id", _MCP_DEFINITION_IDS)
+def test_each_evidence_metadata_read_is_admitted_on_the_mcp_frontend_without_a_commit_door(
+    definition_id: str,
+) -> None:
+    registry = _registry()
+    contract = registry.lookup_public_contract(definition_id)
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(definition_id),
+        context=_access_context(contract, action=AccessAction.SUBMIT, frontend=OperationFrontendProjection.MCP),
+    )
+
+    assert OperationFrontendProjection.MCP in registry.lookup(definition_id).permitted_frontends
+    assert OperationFrontendProjection.MCP in contract.permitted_frontends
+    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.profile_id == _PROFILE
+    assert resolved.request.period_independent is True
+    assert AccessAction.COMMIT not in resolved.policy.actions
+
+
+@pytest.mark.parametrize("definition_id", _MCP_DEFINITION_IDS)
+def test_each_mcp_admitted_evidence_read_declares_only_metadata_fields(definition_id: str) -> None:
+    result_model = _registered_result_model(_registry(), definition_id)
+
+    assert _result_fields(result_model) == _MCP_RESULT_FIELDS[definition_id]
+
+
+def test_the_review_view_keeps_to_the_command_line_and_the_terminal_interface() -> None:
+    registry = _registry()
+    expected = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
+
+    assert registry.lookup(LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID).permitted_frontends == expected
+    contract = registry.lookup_public_contract(LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID)
+    assert contract.permitted_frontends == expected

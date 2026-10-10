@@ -113,6 +113,7 @@ class _Facts(NamedTuple):
 
 
 _READS: Final = _Facts(changes_records=False, reaches_network=False)
+_READS_ONLINE: Final = _Facts(changes_records=False, reaches_network=True)
 _WRITES: Final = _Facts(changes_records=True, reaches_network=False)
 _WRITES_ONLINE: Final = _Facts(changes_records=True, reaches_network=True)
 
@@ -281,18 +282,18 @@ _LEDGER_ENTRIES: Final = (
 
 _LEDGER_EVIDENCE_AND_INVOICES: Final = (
     _admit("ledger.evidence.add", _WRITES, _FILES),
-    _admit("ledger.evidence.attachment_queue", _READS, _BYTES),
-    _admit("ledger.evidence.attachment_view", _READS, _BYTES),
+    _admit("ledger.evidence.attachment_queue", _READS),
+    _admit("ledger.evidence.attachment_view", _READS),
     _admit("ledger.evidence.batch", _WRITES_ONLINE, _FILES),
     # Confirmation creates the invoice, which may need an exchange rate.
     _approve("ledger.evidence.confirm", _WRITES_ONLINE),
-    _admit("ledger.evidence.consent.list", _READS, _BYTES),
+    _admit("ledger.evidence.consent.list", _READS),
     # Reading a document off the machine is a consent, never a field the caller sets.
     _admit("ledger.evidence.extract", _WRITES_ONLINE, _CHECKLIST, sensitive=("off_host",)),
     _admit("ledger.evidence.list", _READS, _BYTES),
-    _admit("ledger.evidence.reader-readiness", _READS, _BYTES),
+    _admit("ledger.evidence.reader-readiness", _READS_ONLINE, _BYTES),
     _approve("ledger.evidence.remove", _WRITES),
-    _admit("ledger.evidence.review.list", _READS, _BYTES),
+    _admit("ledger.evidence.review.list", _READS),
     _admit("ledger.evidence.review.view", _READS, _BYTES),
     _admit("ledger.evidence.update", _WRITES, _CHECKLIST),
     _admit("ledger.evidence.view", _READS, _BYTES),

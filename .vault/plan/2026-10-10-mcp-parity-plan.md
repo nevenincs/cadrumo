@@ -15,7 +15,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
 modified: '2026-10-10'
 body_schema: body-v2
-body_hash: 'sha256:5ca16f15207135ee45784fcf4e49e8aa01e1ed56098cb8b401b6a636eed46b42'
+body_hash: 'sha256:fdb1b1478bf33fde99b378fd647687bf959b3c0f1180f033460d9caa02627e75'
 ---
 
 # `mcp-parity` plan
@@ -114,7 +114,8 @@ Delivers the ratio, work, workflow and evidence reads on the MCP frontend, each 
 
 - [x] `P04.S27` - Admit ledger.ratios.list, ledger.ratios.eligible, ledger.ratios.validate and ledger.rule.list to the MCP frontend through the admission checklist, with one contract cutover for the family; `src/cadrumo/application/ledger/ratios_operation.py`.
 - [ ] `P04.S28` - Admit the work reads ruled admitted, from modelo.work.list to modelo.work.filing_record and profile.history, with the three workflow reads, config.collab.recipient.list and the three Google configuration reads, each after its result is checked fit for an agent host and with an agent-facing sibling where it is not, with one contract cutover per family; starts at work_inventory_operation.py and revision_selection_operation.py; `src/cadrumo/application/modelo`.
-- [ ] `P04.S29` - Admit the eight evidence reads ruled omissions once each result is shown, inside the operation, to carry no evidence bytes, with one contract cutover for the family; `src/cadrumo/application/ledger/evidence_read_operation.py`.
+- [x] `P04.S29` - Admit the eight evidence reads ruled omissions once each result is shown, inside the operation, to carry no evidence bytes, with one contract cutover for the family; `src/cadrumo/application/ledger/evidence_read_operation.py`.
+- [ ] `P04.S46` - Give an agent-facing projection to each read whose result carries a host path, verbatim document text, an open payload or a human-only resolver, and admit it: ledger.evidence.list, ledger.evidence.view, ledger.evidence.review.view, ledger.evidence.reader-readiness, modelo.filing_record.view, profile.history and the three Google configuration reads; `src/cadrumo/application/ledger/evidence_read_operation.py`.
 
 ### Phase `P05` - admit every ledger write that is not sensitive
 
@@ -179,7 +180,7 @@ The admission checklist, applied to every operation a Step admits and recorded i
 - Every confirmation or validation that the command line or terminal interface applies outside the operation is enforced inside it, or none exists.
 - The request has no field that stands for a person's act: no acknowledgement, consent or free-text actor. The actor is taken from the session.
 - The request and the result carry no host path, unless the operation is admitted over file exchange.
-- The result carries no evidence bytes, secret, key or raw secure payload, and nothing written only for a person.
+- The result carries no evidence bytes, no text taken verbatim from a document, no secret, key or raw secure payload, and no open payload whose content is not declared. Notes, reasons and actor labels the person typed are the person's data and may be returned, as the owner's rule that an agent has full control of that data implies; the first run of this checklist withheld them and was corrected.
 - An effectful operation requires the caller's replay identity once that decision is accepted.
 - The executor is read, and the decision row's two facts, whether it changes records and whether it reaches the network, match what it does.
 - The decision row loses its prerequisite, the frontend set changes with one contract cutover for the family, and a round trip and a refusal are tested on the MCP frontend.

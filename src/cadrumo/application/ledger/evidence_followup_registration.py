@@ -48,6 +48,9 @@ from .evidence_followup_operation import (
 )
 from .read_access import resolve_ledger_request_read_access
 
+_PERSON_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
+_AGENT_READ_FRONTENDS = _PERSON_FRONTENDS | {OperationFrontendProjection.MCP}
+
 
 def _build_definition(
     *,
@@ -56,6 +59,7 @@ def _build_definition(
     result_type: type[BaseModel],
     executor_type: type[object],
     build: Callable[[], object],
+    permitted_frontends: frozenset[OperationFrontendProjection],
 ) -> OperationDefinition:
     return build_single_phase_definition(
         definition_id=definition_id,
@@ -64,7 +68,7 @@ def _build_definition(
         executor_type=executor_type,
         build=build,
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=permitted_frontends,
     )
 
 
@@ -79,6 +83,7 @@ def build_ledger_evidence_followup_definitions(
             result_type=LedgerEvidenceAttachmentQueueExecutionResult,
             executor_type=LedgerEvidenceAttachmentQueueExecutor,
             build=lambda: LedgerEvidenceAttachmentQueueExecutor(ports),
+            permitted_frontends=_AGENT_READ_FRONTENDS,
         ),
         _build_definition(
             definition_id=LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
@@ -86,6 +91,7 @@ def build_ledger_evidence_followup_definitions(
             result_type=LedgerEvidenceAttachmentViewExecutionResult,
             executor_type=LedgerEvidenceAttachmentViewExecutor,
             build=lambda: LedgerEvidenceAttachmentViewExecutor(ports),
+            permitted_frontends=_AGENT_READ_FRONTENDS,
         ),
         _build_definition(
             definition_id=LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,
@@ -93,6 +99,7 @@ def build_ledger_evidence_followup_definitions(
             result_type=LedgerEvidenceConsentListExecutionResult,
             executor_type=LedgerEvidenceConsentListExecutor,
             build=lambda: LedgerEvidenceConsentListExecutor(ports),
+            permitted_frontends=_AGENT_READ_FRONTENDS,
         ),
         _build_definition(
             definition_id=LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID,
@@ -100,6 +107,7 @@ def build_ledger_evidence_followup_definitions(
             result_type=LedgerEvidenceReviewListExecutionResult,
             executor_type=LedgerEvidenceReviewListExecutor,
             build=lambda: LedgerEvidenceReviewListExecutor(ports),
+            permitted_frontends=_AGENT_READ_FRONTENDS,
         ),
         _build_definition(
             definition_id=LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID,
@@ -107,6 +115,7 @@ def build_ledger_evidence_followup_definitions(
             result_type=LedgerEvidenceReviewViewExecutionResult,
             executor_type=LedgerEvidenceReviewViewExecutor,
             build=lambda: LedgerEvidenceReviewViewExecutor(ports),
+            permitted_frontends=_PERSON_FRONTENDS,
         ),
     )
 
