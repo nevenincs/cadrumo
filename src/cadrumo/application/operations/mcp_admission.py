@@ -395,6 +395,9 @@ _MODELO_WORK: Final = (
     _serve_by("modelo.readiness", "modelo.readiness.summary"),
     _admit("modelo.readiness.summary", _READS),
     _admit("modelo.reconcile.export-xlsx", _WRITES, _FILES, _SAFEGUARD),
+    # An agent may originate the import: it compares a document with the local
+    # record, stores the comparison, and returns the verdict and differences
+    # for the person to review.
     _admit("modelo.reconcile.import", _WRITES),
     _admit("modelo.reconcile.list", _READS),
     _admit("modelo.reconcile.pull", _WRITES),

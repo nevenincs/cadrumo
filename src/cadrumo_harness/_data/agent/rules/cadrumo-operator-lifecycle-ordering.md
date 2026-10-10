@@ -31,7 +31,9 @@ work around, not a shortcut to take.
 - **Reconcile is a separate, later step.** `aeat app modelo reconcile pull` or
   `reconcile import --file ...` runs after the human has actually filed outside the
   application. Never report a filing as reconciled or accepted before this step
-  has actually run and returned official evidence.
+  has actually run and returned official evidence. You may start either one; what
+  it returns is a finding for the person. Relay its verdict and every difference
+  verbatim, and let the person decide what follows from a difference.
 
 ## Contradictions between surfaces are a stop, not a retry
 
