@@ -14,6 +14,9 @@ resolver wherever a request can be built from its registered schema alone.
 An operation that waits for the person's approval lists no MCP frontend. A
 definition that stays open while it names sensitive acts has each act put to
 that resolver, which must refuse it to MCP and to no other frontend it lists.
+Where the resolver reads the record a request addresses, this file judges the
+refusal alone, and the rest is judged beside the operation with the record
+stored.
 
 Like the exposure census beside it, this file passes on membership and shape
 and never on a count.
@@ -493,9 +496,21 @@ def _patch_answer_section(document: Mapping[str, Any]) -> str:
     return _CAPABILITY_SECTION if answered & _CAPABILITY_QUESTIONS else ""
 
 
+_M303_FILING_FACTS = "ordinary_m303_filing_evidence"
+_EXPLICIT_CALCULATION = "explicit"
+
+
+def _calculation_act(document: Mapping[str, Any]) -> str:
+    """What a calculation states for the person: the Modelo 303 filing facts, or inputs of its own."""
+    if document.get(_M303_FILING_FACTS) is not None:
+        return _M303_FILING_FACTS
+    return _EXPLICIT_CALCULATION if document.get("caller_context") == _EXPLICIT_CALCULATION else ""
+
+
 _SENSITIVE_ACT_READERS: Mapping[str, Callable[[Mapping[str, Any]], str]] = {
     "ledger.own_account": _action_value,
     "modelo.m360_solicitud": _action_value,
+    "modelo.work.calculate": _calculation_act,
     "user-profile.field-mutation": _fact_section,
     "user-profile.patch": _patch_answer_section,
 }
@@ -541,8 +556,10 @@ _MCP_RESOLUTION_NOT_PROVEN: frozenset[str] = frozenset(
         "ledger.split.review",
         "modelo.aggregate.capture_received_invoice_retencion",
         "modelo.reconcile.pull",
+        "modelo.work.calculate",
         "modelo.work.compare_taxation",
         "modelo.work.preview_maritime_exemption",
+        "modelo.work.rename",
         "modelo.work.review",
         "overview.calendar",
         "overview.explain",
@@ -648,6 +665,19 @@ _SOLICITUD_FACTS: Mapping[str, Any] = {
     "cuenta": {"titular_nombre": "TITULAR PRUEBA", "titular_en_calidad_de": "A", "divisa": "EUR"},
 }
 
+_SAMPLE_WORK_UNIT = "0" * 64
+_SAMPLE_CALCULATION: Mapping[str, Any] = {"work_unit_id": _SAMPLE_WORK_UNIT, "actor": "synthetic"}
+
+_RECORD_ADDRESSED: Mapping[str, str] = {"modelo.work.calculate": "work_unit_id"}
+"""Definitions that name sensitive acts and address a stored record, by the request member that names it.
+
+Such a request carries no profile id and its subject is the record. The
+resolver reads that record, and nothing is stored while this file runs, so
+only what precedes the read is judged here: the refusal of the sensitive act
+to MCP. What the definition keeps open, and the admission of its sensitive act
+on the other frontends, is judged beside the operation, where the record
+exists."""
+
 _SENSITIVE_ACT_SAMPLES: Mapping[str, tuple[Mapping[str, Any], ...]] = {
     "ledger.own_account": (
         {"action": "add", "label": "synthetic", "holding": "titular", "iban": _SAMPLE_IBAN},
@@ -660,6 +690,23 @@ _SENSITIVE_ACT_SAMPLES: Mapping[str, tuple[Mapping[str, Any], ...]] = {
     "modelo.m360_solicitud": (
         {"action": "declare", "filing_year": 2025, "own_account_id": _SAMPLE_ACCOUNT, "facts": _SOLICITUD_FACTS},
         {"action": "remove", "filing_year": 2025},
+    ),
+    "modelo.work.calculate": (
+        {**_SAMPLE_CALCULATION, "caller_context": _EXPLICIT_CALCULATION},
+        {
+            **_SAMPLE_CALCULATION,
+            "caller_context": _EXPLICIT_CALCULATION,
+            "inputs": {"casilla_overrides": [{"key": "01", "value": "100.00"}]},
+        },
+        {**_SAMPLE_CALCULATION, _M303_FILING_FACTS: {"joint_return_elected": False}},
+        {
+            **_SAMPLE_CALCULATION,
+            _M303_FILING_FACTS: {
+                "joint_return_elected": True,
+                "m303_exonerado_390_attachment_id": "0" * 64,
+                "m303_exonerado_390_sha256": "0" * 64,
+            },
+        },
     ),
     "user-profile.field-mutation": tuple(
         {**_FIELD_BASELINE, "path": capability.schema_path, "value": value}
@@ -706,11 +753,16 @@ asked. An operation leaves this set when its recorded decision changes."""
 
 def _sample_request(definition_id: str, document: Mapping[str, Any]) -> OperationRequest[BaseModel]:
     """Admit one written-out document through the registry's own decoder; a stale sample fails here."""
-    text = json.dumps({"profile_id": str(_PROBE_PROFILE), **document}, sort_keys=True)
+    record_member = _RECORD_ADDRESSED.get(definition_id)
+    if record_member is None:
+        subject_ref = profile_operation_subject(str(_PROBE_PROFILE))
+        document = {"profile_id": str(_PROBE_PROFILE), **document}
+    else:
+        subject_ref = str(document[record_member])
     return OperationRequest(
         definition_id=definition_id,
-        subject_ref=profile_operation_subject(str(_PROBE_PROFILE)),
-        payload=_registry().decode_request_payload(definition_id, text),
+        subject_ref=subject_ref,
+        payload=_registry().decode_request_payload(definition_id, json.dumps(document, sort_keys=True)),
     )
 
 
@@ -746,7 +798,8 @@ def test_every_sensitive_act_an_open_definition_names_has_a_request_that_carries
     assert named
     unread = sorted(set(named) - set(_SENSITIVE_ACT_READERS))
     assert not unread, f"definitions that name sensitive acts no request can be read for: {unread}"
-    stale = sorted((set(_SENSITIVE_ACT_SAMPLES) | set(_OPEN_ACT_SAMPLES) | set(_SENSITIVE_ACT_READERS)) - set(named))
+    described = set(_SENSITIVE_ACT_SAMPLES) | set(_OPEN_ACT_SAMPLES) | set(_SENSITIVE_ACT_READERS)
+    stale = sorted((described | set(_RECORD_ADDRESSED)) - set(named))
     assert not stale, f"sampled or read, but no longer open to MCP with a sensitive act named: {stale}"
     for definition_id, acts in named.items():
         carried = [
@@ -757,6 +810,9 @@ def test_every_sensitive_act_an_open_definition_names_has_a_request_that_carries
         unsampled = sorted(set(acts) - {act for act in carried if act is not None})
         assert not unsampled, f"{definition_id}: sensitive acts with no request to judge them by: {unsampled}"
         open_samples = _OPEN_ACT_SAMPLES.get(definition_id, ())
+        if definition_id in _RECORD_ADDRESSED:
+            assert not open_samples, f"{definition_id}: an open request needs its stored record and is not judged here"
+            continue
         assert open_samples, f"{definition_id}: no request shows what stays open to MCP"
         for document in open_samples:
             assert _sensitive_act(definition_id, _sample_request(definition_id, document).payload) is None, document
@@ -792,6 +848,8 @@ def test_every_named_sensitive_act_is_refused_to_mcp_and_to_no_other_listed_fron
             on_mcp = _answers_on(registration, request, _MCP, operation)
             if set(on_mcp.values()) != {_FRONTEND_REFUSAL}:
                 findings[f"{definition_id} {act} on mcp"] = on_mcp
+            if definition_id in _RECORD_ADDRESSED:
+                continue
             for frontend in others:
                 submitted = _answers_on(registration, request, frontend, operation)["submit"]
                 if submitted != _RESOLVED:
@@ -807,6 +865,8 @@ def test_what_a_definition_keeps_open_beside_its_sensitive_acts_is_answered_alik
     findings: dict[str, object] = {}
     judged = 0
     for definition_id in _open_definitions_that_name_sensitive_acts():
+        if definition_id in _RECORD_ADDRESSED:
+            continue
         registration = _registry().lookup_public_registration(definition_id)
         for index, document in enumerate(_OPEN_ACT_SAMPLES[definition_id]):
             request = _sample_request(definition_id, document)

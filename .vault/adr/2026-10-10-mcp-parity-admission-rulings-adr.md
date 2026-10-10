@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:a868e03861712e9a59e1086aae4099d3c63018cae183140538b0a6f29d4a70f8'
+body_hash: 'sha256:1d2169b88fb01cb68094d8d776ba50377fb5caaa0df14008060a4ed2c1f419d4'
 related:
   - "[[2026-10-10-mcp-parity-exclusion-intent-evidence-research]]"
   - "[[2026-10-10-mcp-parity-closed-operations-reference]]"
@@ -189,11 +189,12 @@ Rulings for operations closed today:
 | | `ledger.evidence.confirm` | Admit behind the person's approval. The agent prepares one resolution per blocking finding and the person approves each document's confirmation, which keeps the per-finding human review before an invoice is created |
 | | `ledger.evidence.extract` | Admit for the reader on the machine. A read off the machine is a consent: behind the person's approval each time, never a field the caller sets |
 | | `ledger.export` | Admit, pending file exchange, which decides where the file may be written |
-| Declaration preparation | `modelo.work.create`, `.calculate`, `.amend`, `.rename` | Admit, with the applicability check and the recalculation confirmation moved into the operations |
-| Verification | `modelo.work.verify` | Admit only after its executor is read and shown to read and nothing more |
+| Declaration preparation | `modelo.work.create`, `.calculate`, `.rename` | Admit. The applicability check lives in the create operation, and recalculating deletes nothing, so its result names the revision it replaced. A calculation that replays the stored inputs is open. One that states the inputs itself, or states the joint-return election or the Modelo 390 attestation, waits for the person's approval |
+| Verification | `modelo.work.verify` | Admit. Its executor was read end to end on 2026-10-10: it reads and writes the local profile store only and contacts no host |
 | Work reads | `modelo.work.list`, `.metadata`, `.review`, `.dependencies`, `.revisions`, `.revision`, `.revision_snapshot`, `modelo.work.filing_record`, `modelo.filing_record.list`, `.view`, `modelo.verification_report.list`, `.view`, `modelo.iva-wallet.balance`, `modelo.work.compare_taxation`, `.preview_maritime_exemption`, `profile.history`, `workflow.run.read`, `.list`, `workflow.resume.context`, `config.collab.recipient.list` | Admit as reads, each after a check that its result is fit for an agent host |
 | Hand-off | `modelo.export`, `modelo.work.file`, `modelo.quickfile` | Admit behind the person's approval. The elections and the bank account in an export are the person's inputs. Quickfile ends at the same local export |
 | | `modelo.work.discard` | Admit behind the person's approval |
+| | `modelo.work.amend` | Admit behind the person's approval. Reading the executor on 2026-10-10 showed that it verifies the correction, records it as filed locally and retires the record it corrects in one act, which is the same act as the filed marker. Moved here from declaration preparation under the owner's rule that sensitive acts wait for the person |
 | | `modelo.audit.read`, `modelo.036.read`, `live.borrador.100.read`, `modelo.history`, `modelo.work.history`, `modelo.bindings.resolve`, `modelo.readiness` | Excluded: projections written for a person, served to an agent by their agent-facing siblings |
 | IVA wallet | `modelo.iva-wallet.override`, `.seed`, `.correct` | Admit behind the person's approval; an accepted record requires the taxpayer's explicit override |
 | Workbench | `workbench.generation`, `modelo.work.form`, `.casilla_help`, `modelo.edit.renew`, `.preflight`, `.apply_prerequisite`, `.apply` | Excluded: the person's projection, and an interaction the MCP frontend cannot perform |

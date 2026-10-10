@@ -334,6 +334,7 @@ from ...application.operations.composition import (
     OperationSubmission,
     compose_operation_services,
 )
+from ...application.operations.execution_actor import OperationExecutionCallerReader
 from ...application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationReviewAvailableInteractionV1,
@@ -3662,6 +3663,7 @@ def _runtime(
     execution_timeout: timedelta = timedelta(hours=1),
     amendment_action_ports_factory: AmendmentActionPortsFactory | None = None,
     clock: Callable[[], datetime] = now,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> Generator[tuple[_ExecutionDriver, OperationRegistry, UUID]]:
     """Fresh production profile, inventory, journal, lease, and operand custody per case."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
@@ -3710,6 +3712,7 @@ def _runtime(
             verify_nif_iva_definition=verify_definition(VerifySurface.NIF_IVA),
             verify_tgvi_definition=verify_definition(VerifySurface.TGVI),
             amendment_action_ports_factory=amendment_action_ports_factory or build_amendment_action_ports,
+            execution_caller_reader=execution_caller_reader,
         )
         journal = OperationJournalRepository(storage_root=root / "operations")
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:

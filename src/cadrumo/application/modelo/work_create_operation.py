@@ -22,6 +22,7 @@ from ..operations.access_resolution import (
     bind_operation_access_profile,
 )
 from ..operations.capabilities import RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
@@ -33,7 +34,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..overview.status_report import build_filing_obligation_advisories
 from ..user_profile.access_contracts import (
     AccessAction,
@@ -66,7 +67,14 @@ MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE = "REFUSED_MODELO_WORK_CREATE_APPL
 
 
 class ModeloWorkCreateRequest(BaseModel):
-    """Private, bounded work target and operator intent for one profile."""
+    """Private, bounded work target and operator intent for one profile.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+
+    ``allow_not_applicable`` creates the work although the profile's facts say
+    the model does not apply to it; the result then says the check was bypassed.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -214,9 +222,15 @@ def _bound_ports(factory: ActiveWorkLifecyclePortsFactory, profile_id: str) -> W
 class ModeloWorkCreateExecutor:
     """Use the existing readiness, selector, and atomic work writer in custody."""
 
-    def __init__(self, factory: ActiveWorkLifecyclePortsFactory) -> None:
+    def __init__(
+        self,
+        factory: ActiveWorkLifecyclePortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Retain composition's active-profile lifecycle factory."""
         self._factory = factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self, request: OperationRequest[ModeloWorkCreateRequest], context: OperationExecutorContext
@@ -228,6 +242,7 @@ class ModeloWorkCreateExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(MODELO_WORK_CREATE_OPERATION_DEFINITION_ID)
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
         operation = context.authority_operation
         period = payload.period.to_period()
 
@@ -320,7 +335,7 @@ class ModeloWorkCreateExecutor:
                         period=period,
                         registry_revision_id=payload.revision_id,
                         name=payload.name,
-                        actor=payload.actor,
+                        actor=actor,
                         causante_ccaa=causante,
                         enforce_applicability=not payload.allow_not_applicable,
                         catalogue=ports.work_unit_repository.load(),
@@ -353,16 +368,20 @@ class ModeloWorkCreateExecutor:
         return await await_cancellation_complete(publish(), task_name="modelo-work-create-publication")
 
 
-def build_modelo_work_create_definition(factory: ActiveWorkLifecyclePortsFactory) -> OperationDefinition:
+def build_modelo_work_create_definition(
+    factory: ActiveWorkLifecyclePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Declare secure-reference create intent and one bounded refusal detail code."""
     return build_single_phase_definition(
         definition_id=MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkCreateRequest,
         result_type=ModeloWorkCreateResult,
         executor_type=ModeloWorkCreateExecutor,
-        build=lambda: ModeloWorkCreateExecutor(factory),
+        build=lambda: ModeloWorkCreateExecutor(factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=frozenset({MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE}),
         public_error_detail=True,
     )

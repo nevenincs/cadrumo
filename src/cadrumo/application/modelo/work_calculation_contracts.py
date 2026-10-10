@@ -55,6 +55,14 @@ class ModeloWorkCalculateRequest(BaseModel):
     names no inputs never discards what the operator entered. A request that
     carries inputs or detail rows must say it is explicit; mixing the two is
     refused rather than silently resolved.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+
+    An explicit calculation records its inputs as the person's own entries, and
+    the two Modelo 303 filing facts are the person's statements. An agent's
+    session may therefore only replay the head: an explicit request, or one
+    that supplies the filing facts, is refused to it.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -75,6 +83,35 @@ class ModeloWorkCalculateRequest(BaseModel):
         return self
 
 
+class ModeloOperatorEntriesCarry(StrEnum):
+    """What a calculation did with the entries the person made in the head it replaced."""
+
+    #: The earlier head recorded the person's own entries and this calculation
+    #: replayed them, so the new head holds them too.
+    REPLAYED = "replayed"
+    #: The earlier head did not record which of its values the person entered,
+    #: so none was replayed: a value no source supplies is absent from the new
+    #: head, and one a source supplies now reads as the source gives it.
+    NOT_RECORDED = "not_recorded"
+    #: The request carried its own inputs. They stand in the new head in place
+    #: of whatever the person had entered in the earlier one.
+    REPLACED_BY_REQUEST = "replaced_by_request"
+
+
+class ModeloWorkCalculateReplacedHead(BaseModel):
+    """The calculation head one calculation replaced as the declaration's current one.
+
+    Calculating stores a new revision and removes none. The earlier revision,
+    with every value it held, stays readable by its id; ``operator_entries``
+    says whether the person's entries in it reached the new head.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+    operator_entries: ModeloOperatorEntriesCarry
+
+
 class ModeloWorkCalculatePublicResultV2(BaseModel):
     """Writer-returned calculation facts and advisories under the same authority."""
 
@@ -87,9 +124,17 @@ class ModeloWorkCalculatePublicResultV2(BaseModel):
     advisories: ModeloCalculationAdvisories
     unit: ModeloWorkMetadataSnapshot
     revision_published: bool
+    #: ``None`` when the work unit had no calculation before this one, or when
+    #: this one left the same revision current.
+    replaced_head: ModeloWorkCalculateReplacedHead | None = None
 
     @model_validator(mode="after")
     def _same_publication(self) -> Self:
+        if (
+            self.replaced_head is not None
+            and self.replaced_head.calculation_revision_id == self.calculation_revision_id
+        ):
+            raise ValueError("a calculation does not replace the revision it returns")
         if (
             self.work_unit_id != self.calculation.work_unit_id
             or self.work_unit_id != self.unit.work_unit_id

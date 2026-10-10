@@ -19,6 +19,9 @@ class ModeloWorkVerifyRequest(CredentialFreeOperationRequest):
     carried here. It is resolved at execution from live state, so a request
     replayed later cannot verify against a profile the taxpayer has since
     changed.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
     """
 
     model_config = STRICT_FROZEN_CONFIG

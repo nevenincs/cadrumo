@@ -24,6 +24,7 @@ from ...application.operations.access_resolution import (
     ResolvedOperationAccess,
     resolve_operation_access,
 )
+from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.models import OperationId, OperationIdentity, OperationRequest
 from ...application.operations.provenance import OperationAdmissionProvenance
 from ...application.operations.registry import (
@@ -115,6 +116,20 @@ class ProfileWorkerOperationAuthority:
         if lease.kind is not SessionKind.HUMAN:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         return lease
+
+    def execution_caller(self, identity: OperationIdentity) -> OperationExecutionCaller:
+        """Name the frontend and live session that admitted this exact invocation.
+
+        The answer is read from the binding this worker made at admission, never
+        from the request, so an executor can tell an agent's execution from a
+        person's without trusting anything the caller typed.
+        """
+        binding = self._bindings.get(identity.operation_id)
+        if binding is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
+        self._require_binding_identity(identity, binding.request)
+        lease = self.custody.require(binding.session_id)
+        return OperationExecutionCaller(frontend=binding.frontend, session_kind=lease.kind, client_id=lease.client_id)
 
     def approval_binding(
         self, identity: OperationIdentity, *, profile_id: UUID, request_id: UUID, review_digest: str

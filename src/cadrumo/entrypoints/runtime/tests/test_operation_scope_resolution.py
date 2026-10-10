@@ -31,6 +31,7 @@ from cadrumo.application.operations.access_resolution import (
     bind_operation_access,
 )
 from cadrumo.application.operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
+from cadrumo.application.operations.execution_actor import OperationExecutionCaller
 from cadrumo.application.operations.models import (
     CredentialFreeOperationRequest,
     OperationIdentity,
@@ -374,3 +375,45 @@ async def test_every_action_and_held_require_resolves_freshly_without_lending_pe
     assert harness.reader.calls == [AccessAction.SUBMIT, action, action, action, action]
     assert harness.custody.section_tasks == [caller, caller]
     assert harness.client.released == 3
+
+
+def test_the_execution_caller_is_the_frontend_and_live_session_that_admitted_the_invocation(harness: _Harness) -> None:
+    """An executor learns who admitted its invocation from the worker's binding, never from the request."""
+    session = harness.custody.session
+
+    assert harness.authority.execution_caller(harness.identity) == OperationExecutionCaller(
+        frontend=OperationFrontendProjection.CLI, session_kind=session.kind, client_id=session.client_id
+    )
+
+    agent_identity = OperationIdentity(
+        operation_id=new_operation_id(), definition_id=_DEFINITION, subject_ref=harness.request.subject_ref
+    )
+    harness.authority.bind(
+        agent_identity.operation_id,
+        WorkerOperationBinding(session.session_id, OperationFrontendProjection.MCP, harness.request),
+    )
+
+    assert harness.authority.execution_caller(agent_identity) == OperationExecutionCaller(
+        frontend=OperationFrontendProjection.MCP, session_kind=session.kind, client_id=session.client_id
+    )
+    assert harness.authority.execution_caller(harness.identity).frontend is OperationFrontendProjection.CLI
+
+
+def test_the_execution_caller_refuses_an_invocation_this_worker_did_not_admit(harness: _Harness) -> None:
+    """An unbound id, an altered subject and a retired session each get no answer."""
+    unbound = OperationIdentity(
+        operation_id=new_operation_id(), definition_id=_DEFINITION, subject_ref=harness.request.subject_ref
+    )
+    with pytest.raises(ProfileAccessRefusedError) as unauthenticated:
+        harness.authority.execution_caller(unbound)
+    assert unauthenticated.value.reason is AccessDenialCode.AUTHENTICATION_REQUIRED
+
+    altered = harness.identity.model_copy(update={"subject_ref": "another-work-unit"})
+    with pytest.raises(ProfileAccessRefusedError) as denied:
+        harness.authority.execution_caller(altered)
+    assert denied.value.reason is AccessDenialCode.OPERATION_DENIED
+
+    harness.custody.retire(harness.custody.session.session_id)
+    with pytest.raises(AutomationCustodyError) as retired:
+        harness.authority.execution_caller(harness.identity)
+    assert retired.value.reason is AutomationCustodyCode.CREDENTIAL_REJECTED

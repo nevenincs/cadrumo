@@ -17,6 +17,7 @@ from ..operations.access_resolution import (
     require_single_period_admission,
 )
 from ..operations.models import OperationRequest
+from ..operations.registry import OperationFrontendProjection
 from ..user_profile.access_contracts import (
     AccessDenialCode,
     OperationAccessRequest,
@@ -33,7 +34,7 @@ from .operation_definitions import (
     MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
 )
-from .work_calculation_contracts import ModeloWorkCalculateRequest
+from .work_calculation_contracts import ModeloWorkCalculateCallerContext, ModeloWorkCalculateRequest
 from .work_change_contracts import ModeloWorkDiscardRequest, ModeloWorkRenameRequest
 from .work_lifecycle import get_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
@@ -63,7 +64,7 @@ def _metadata_target(
     target = _discard_target(request)
     if target is not None:
         return target, None
-    target = _calculate_target(request)
+    target = _calculate_target(request, context)
     if target is not None:
         return target, None
     target = _edit_target(request, context)
@@ -93,13 +94,28 @@ def _discard_target(request: OperationRequest[BaseModel]) -> str | None:
     return None
 
 
-def _calculate_target(request: OperationRequest[BaseModel]) -> str | None:
+def _calculate_target(request: OperationRequest[BaseModel], context: OperationAccessContext) -> str | None:
+    """Return the unit a calculation addresses, refusing an agent what only the person may state.
+
+    An explicit calculation stores the inputs it carries as the person's own
+    entries, in place of the ones the head records, and those inputs can
+    include elections. The joint-return election and the Modelo 390 exemption
+    attestation are the person's statements too. An MCP client is refused both
+    before any record is read; a calculation that replays the head and states
+    neither stays open to it.
+    """
     payload = request.payload
-    if request.definition_id == MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID and isinstance(
+    if request.definition_id != MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID or not isinstance(
         payload, ModeloWorkCalculateRequest
     ):
-        return payload.work_unit_id
-    return None
+        return None
+    states_person_facts = (
+        payload.caller_context is ModeloWorkCalculateCallerContext.EXPLICIT
+        or payload.ordinary_m303_filing_evidence is not None
+    )
+    if states_person_facts and context.frontend is OperationFrontendProjection.MCP:
+        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+    return payload.work_unit_id
 
 
 def _edit_target(request: OperationRequest[BaseModel], context: OperationAccessContext) -> str | None:

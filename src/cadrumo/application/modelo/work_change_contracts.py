@@ -36,6 +36,9 @@ class ModeloWorkRenameRequest(CredentialFreeOperationRequest):
 
     Credential-free by construction: a rename names a unit and a label, so the
     request carries nothing that would be unsafe to journal.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
     """
 
     model_config = STRICT_FROZEN_CONFIG

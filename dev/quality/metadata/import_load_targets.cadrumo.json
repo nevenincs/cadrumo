@@ -1429,6 +1429,7 @@
         "cadrumo.application.operations.errors",
         "cadrumo.application.operations.event_replay",
         "cadrumo.application.operations.events",
+        "cadrumo.application.operations.execution_actor",
         "cadrumo.application.operations.fenced_result",
         "cadrumo.application.operations.financial_operand_contract",
         "cadrumo.application.operations.financial_operand_custody",

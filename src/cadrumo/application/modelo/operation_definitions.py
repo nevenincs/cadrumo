@@ -44,12 +44,14 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import (
     OperationTerminalReceipt,
     require_succeeded_terminal_receipt,
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.registry import (
+    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -112,8 +114,10 @@ from .verification_actions import verify_modelo_revision_with_preconditions
 from .verification_projection import ModeloVerificationSnapshot
 from .work_amend_contracts import ModeloWorkAmendRequest
 from .work_calculation_contracts import (
+    ModeloOperatorEntriesCarry,
     ModeloWorkCalculateCallerContext,
     ModeloWorkCalculatePublicResultV2,
+    ModeloWorkCalculateReplacedHead,
     ModeloWorkCalculateRequest,
 )
 from .work_change_contracts import (
@@ -217,9 +221,15 @@ def _modelo_workspace_refresh_target_binding(definition_id: str) -> OperationSch
 class ModeloWorkRenameExecutor:
     """Run the existing rename writer under one recorded operation identity."""
 
-    def __init__(self, *, work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory) -> None:
+    def __init__(
+        self,
+        *,
+        work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Bind the active-profile lifecycle authorities at the composition root."""
         self._work_lifecycle_ports_factory = work_lifecycle_ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -239,6 +249,7 @@ class ModeloWorkRenameExecutor:
         phase no surface can ever show.
         """
         await context.events.phase(MODELO_WORK_RENAME_OPERATION_DEFINITION_ID)
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=request.payload.actor)
         ports = self._work_lifecycle_ports_factory()
 
         def observed_unit() -> WorkUnit:
@@ -261,7 +272,7 @@ class ModeloWorkRenameExecutor:
                     rename_work_unit,
                     request.payload.work_unit_id,
                     request.payload.new_name,
-                    actor=request.payload.actor,
+                    actor=actor,
                     ports=ports,
                     expected=current,
                 )
@@ -284,7 +295,10 @@ class ModeloWorkDiscardApprovalStaleError(CadrumoError):
 
 
 def calculation_public_result(
-    result: ModeloWorkCalculationServiceResult, *, operation: PinnedAuthorityOperation
+    result: ModeloWorkCalculationServiceResult,
+    *,
+    operation: PinnedAuthorityOperation,
+    replaced_head: ModeloWorkCalculateReplacedHead | None = None,
 ) -> ModeloWorkCalculatePublicResultV2:
     """Project the exact canonical return without post-publication catalogue reads."""
     return ModeloWorkCalculatePublicResultV2(
@@ -296,6 +310,7 @@ def calculation_public_result(
         advisories=ModeloCalculationAdvisories.from_result(result, operation=operation),
         unit=ModeloWorkMetadataSnapshot.from_work_unit(result.work_unit),
         revision_published=result.revision_published,
+        replaced_head=replaced_head,
     )
 
 
@@ -420,6 +435,29 @@ def _replayed_head_inputs(
     )
 
 
+def replaced_calculation_head(
+    prepared: PreparedModeloWorkCalculation,
+    payload: ModeloWorkCalculateRequest,
+    returned_unit: WorkUnit,
+) -> ModeloWorkCalculateReplacedHead | None:
+    """Name the head a calculation replaced and what became of the person's entries in it.
+
+    Read from the unit admitted before the calculation and the unit the writer
+    returned, so it states what this calculation did and nothing a later one
+    changed.
+    """
+    earlier = prepared.work_unit.current_calculation_revision_id
+    if earlier is None or returned_unit.current_calculation_revision_id == earlier:
+        return None
+    if payload.caller_context is ModeloWorkCalculateCallerContext.EXPLICIT:
+        carry = ModeloOperatorEntriesCarry.REPLACED_BY_REQUEST
+    elif prepared.inputs.record_operator_layer:
+        carry = ModeloOperatorEntriesCarry.REPLAYED
+    else:
+        carry = ModeloOperatorEntriesCarry.NOT_RECORDED
+    return ModeloWorkCalculateReplacedHead(calculation_revision_id=earlier, operator_entries=carry)
+
+
 def calculate_prepared_modelo_work(
     prepared: PreparedModeloWorkCalculation, *, actor: str
 ) -> ModeloWorkCalculationServiceResult:
@@ -498,10 +536,12 @@ class ModeloWorkCalculateExecutor:
         *,
         calculation_action_ports_factory: CalculationActionPortsFactory,
         attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
         """Retain the composition-owned calculation and encrypted-attachment factories."""
         self._calculation_action_ports_factory = calculation_action_ports_factory
         self._attachment_store_factory = attachment_store_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -511,6 +551,7 @@ class ModeloWorkCalculateExecutor:
         """Delegate calculation without reinterpreting ledger or tax inputs."""
         await context.events.phase("modelo.work.calculate.ledger")
         payload = request.payload
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
         prepared = await prepare_modelo_work_calculation(
             payload=payload,
             operation=context.authority_operation,
@@ -526,14 +567,17 @@ class ModeloWorkCalculateExecutor:
                 result = await asyncio.to_thread(
                     calculate_prepared_modelo_work,
                     prepared,
-                    actor=payload.actor,
+                    actor=actor,
                 )
                 # A revision no-op alone cannot establish that preparatory
                 # migrations and IVA decisions also made no changes.
                 if result.revision_published:
                     await context.events.effect(OperationEffect.UPDATED)
                 public_result = await asyncio.to_thread(
-                    calculation_public_result, result, operation=context.authority_operation
+                    calculation_public_result,
+                    result,
+                    operation=context.authority_operation,
+                    replaced_head=replaced_calculation_head(prepared, payload, result.work_unit),
                 )
                 return await context.operands.put(public_result, written_at=_utc_now())
 
@@ -544,6 +588,7 @@ def build_modelo_work_calculate_definition(
     *,
     calculation_action_ports_factory: CalculationActionPortsFactory,
     attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Bind the canonical calculation service to the shared operation platform."""
 
@@ -551,6 +596,7 @@ def build_modelo_work_calculate_definition(
         return ModeloWorkCalculateExecutor(
             calculation_action_ports_factory=calculation_action_ports_factory,
             attachment_store_factory=attachment_store_factory,
+            execution_caller_reader=execution_caller_reader,
         )
 
     return OperationDefinition(
@@ -566,7 +612,7 @@ def build_modelo_work_calculate_definition(
         interaction_kinds=frozenset[OperationInteractionKind](),
         capabilities=RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
         public_error_detail=True,
     )
 
@@ -810,12 +856,14 @@ class ModeloWorkVerifyExecutor:
         profile_resolver: ModeloWorkVerifyProfileResolver,
         operator_scope_ports: OperatorScopePorts,
         verification_repository_bundle_factory: VerificationRepositoryBundleFactory,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
         """Bind the live profile the gates are evaluated against."""
         self._certificate_secret_backend_factory = certificate_secret_backend_factory
         self._profile_resolver = profile_resolver
         self._operator_scope_ports = operator_scope_ports
         self._verification_repository_bundle_factory = verification_repository_bundle_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -832,6 +880,7 @@ class ModeloWorkVerifyExecutor:
         await context.events.phase(_MODELO_WORK_VERIFY_GATES_PHASE)
         from ...core.bucket_pointer import require_active_bucket_id
 
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=request.payload.actor)
         operation = context.authority_operation
         repositories = self._verification_repository_bundle_factory(require_active_bucket_id(), operation=operation)
 
@@ -848,7 +897,7 @@ class ModeloWorkVerifyExecutor:
         def verify_under_pinned_operation(profile: TaxpayerProfile):
             return verify_modelo_revision_with_preconditions(
                 request.payload.calculation_revision_id,
-                actor=request.payload.actor,
+                actor=actor,
                 certificate_secret_backend_factory=self._certificate_secret_backend_factory,
                 workflow_profile=profile,
                 operator_scope_ports=self._operator_scope_ports,
@@ -886,6 +935,7 @@ def build_modelo_work_verify_definition(
     operator_scope_ports: OperatorScopePorts,
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory,
     profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Bind the verification authority to its registered operation contract."""
 
@@ -895,6 +945,7 @@ def build_modelo_work_verify_definition(
             profile_resolver=profile_resolver,
             operator_scope_ports=operator_scope_ports,
             verification_repository_bundle_factory=verification_repository_bundle_factory,
+            execution_caller_reader=execution_caller_reader,
         )
 
     return OperationDefinition(
@@ -926,7 +977,7 @@ def build_modelo_work_verify_definition(
             close_policy=OperationClosePolicy.REQUEST_CANCEL,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
         public_error_detail=True,
     )
 
@@ -1442,9 +1493,15 @@ class ModeloWorkAmendExecutor:
     recorded here, and the operator submits it themselves.
     """
 
-    def __init__(self, *, amendment_action_ports_factory: AmendmentActionPortsFactory) -> None:
+    def __init__(
+        self,
+        *,
+        amendment_action_ports_factory: AmendmentActionPortsFactory,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Bind the amendment authorities supplied by the composition root."""
         self._amendment_action_ports_factory = amendment_action_ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -1460,6 +1517,7 @@ class ModeloWorkAmendExecutor:
         """
         await context.events.phase("modelo.work.amend.baseline")
         payload = request.payload
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
         from ...core.bucket_pointer import require_active_bucket_id
 
         def amend() -> ModeloRecord:
@@ -1475,7 +1533,7 @@ class ModeloWorkAmendExecutor:
                         None if payload.detail_rows is None else tuple(row.to_row() for row in payload.detail_rows)
                     ),
                     reason=payload.reason,
-                    actor=payload.actor,
+                    actor=actor,
                     ports=self._amendment_action_ports_factory(
                         bucket_id=require_active_bucket_id(), operation=context.authority_operation
                     ),
@@ -1507,11 +1565,15 @@ class ModeloWorkAmendExecutor:
 def build_modelo_work_amend_definition(
     *,
     amendment_action_ports_factory: AmendmentActionPortsFactory,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Bind the amendment authority to its registered operation contract."""
 
     def build() -> ModeloWorkAmendExecutor:
-        return ModeloWorkAmendExecutor(amendment_action_ports_factory=amendment_action_ports_factory)
+        return ModeloWorkAmendExecutor(
+            amendment_action_ports_factory=amendment_action_ports_factory,
+            execution_caller_reader=execution_caller_reader,
+        )
 
     return OperationDefinition(
         definition_id=MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
@@ -1758,11 +1820,15 @@ def build_modelo_edit_apply_registration(
 def build_modelo_work_rename_definition(
     *,
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Bind the rename writer to its registered operation contract."""
 
     def build() -> ModeloWorkRenameExecutor:
-        return ModeloWorkRenameExecutor(work_lifecycle_ports_factory=work_lifecycle_ports_factory)
+        return ModeloWorkRenameExecutor(
+            work_lifecycle_ports_factory=work_lifecycle_ports_factory,
+            execution_caller_reader=execution_caller_reader,
+        )
 
     return OperationDefinition(
         definition_id=MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
@@ -1789,7 +1855,7 @@ def build_modelo_work_rename_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
         public_error_detail=True,
     )
 
@@ -1834,6 +1900,7 @@ def build_modelo_lifecycle_operation_definitions(
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory,
     edit_prerequisite_observer: ModeloEditPrerequisiteObserver | None = None,
     profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> tuple[OperationDefinition, ...]:
     """Return the one canonical modelo lifecycle operation population.
 
@@ -1845,6 +1912,7 @@ def build_modelo_lifecycle_operation_definitions(
         build_modelo_work_calculate_definition(
             calculation_action_ports_factory=calculation_action_ports_factory,
             attachment_store_factory=attachment_store_factory,
+            execution_caller_reader=execution_caller_reader,
         ),
         build_modelo_edit_apply_definition(
             calculation_action_ports_factory=calculation_action_ports_factory,
@@ -1857,7 +1925,10 @@ def build_modelo_lifecycle_operation_definitions(
             signing_keypair_capability_factory=signing_keypair_capability_factory,
             calculation_summary_pdf_writer=calculation_summary_pdf_writer,
         ),
-        build_modelo_work_amend_definition(amendment_action_ports_factory=amendment_action_ports_factory),
+        build_modelo_work_amend_definition(
+            amendment_action_ports_factory=amendment_action_ports_factory,
+            execution_caller_reader=execution_caller_reader,
+        ),
         build_modelo_work_discard_definition(work_lifecycle_ports_factory=work_lifecycle_ports_factory),
         build_modelo_work_file_definition(
             profile_resolver=profile_resolver,
@@ -1865,12 +1936,16 @@ def build_modelo_lifecycle_operation_definitions(
             filing_action_ports_factory=filing_action_ports_factory,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
         ),
-        build_modelo_work_rename_definition(work_lifecycle_ports_factory=work_lifecycle_ports_factory),
+        build_modelo_work_rename_definition(
+            work_lifecycle_ports_factory=work_lifecycle_ports_factory,
+            execution_caller_reader=execution_caller_reader,
+        ),
         build_modelo_work_verify_definition(
             profile_resolver=profile_resolver,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             operator_scope_ports=operator_scope_ports,
             verification_repository_bundle_factory=verification_repository_bundle_factory,
+            execution_caller_reader=execution_caller_reader,
         ),
     )
     # A registry holds its definitions in definition-id order, so the
@@ -1961,4 +2036,5 @@ __all__ = [
     "calculate_prepared_modelo_work",
     "calculation_public_result",
     "prepare_modelo_work_calculation",
+    "replaced_calculation_head",
 ]

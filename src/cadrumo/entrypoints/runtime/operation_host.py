@@ -22,6 +22,7 @@ from ...application.auth.operation_definitions import PROFILE_ROTATION_OPERATION
 from ...application.operations.composition import OperationComposedServices, OperationSubmission
 from ...application.operations.drain import OperationDrainResult
 from ...application.operations.errors import OperationSubjectBusyError, OperationUnsettledError
+from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.frontend_requests import (
     OperationCancellationRequestV1,
     OperationDetachRequestV1,
@@ -129,6 +130,7 @@ class ProfileWorkerOperationHost:
                     workbench_generation_reader=self._workbench_generation,
                     profile_rotation_finalizer=self._finalize_password_rotation,
                     modelo_profile_resolver=self._modelo_profile,
+                    execution_caller_reader=self._execution_caller,
                 )
         return self._services
 
@@ -146,6 +148,12 @@ class ProfileWorkerOperationHost:
         """
         with startup_phase(_log, "worker_operation_prepare"):
             self._composed()
+
+    def _execution_caller(self, identity: OperationIdentity) -> OperationExecutionCaller:
+        """Answer from this worker's own admission binding, never from caller-supplied facts."""
+        if self._execution is None or self._closed:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        return self._execution.execution_caller(identity)
 
     def _modelo_profile(self, operation: PinnedAuthorityOperation) -> TaxpayerProfile:
         """Read filing facts only from this worker's immutable profile custody."""

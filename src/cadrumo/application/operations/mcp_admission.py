@@ -59,10 +59,6 @@ class McpAdmissionPrerequisite(StrEnum):
 
     FILE_EXCHANGE = "file_exchange"
     """The operation takes or writes a host path, and how files reach it is not decided."""
-    EXECUTOR_REVIEW = "executor_review"
-    """The executor has not been shown to read and do nothing more."""
-    EVIDENCE_BYTES_CHECK = "evidence_bytes_check"
-    """No result has been shown to carry evidence bytes held in custody."""
     SAFEGUARD_MOVE = "safeguard_move"
     """A confirmation or validation still lives in the command line or terminal interface."""
     ADMISSION_CHECKLIST = "admission_checklist"
@@ -412,12 +408,16 @@ _MODELO_WORK: Final = (
     _admit("modelo.spreadsheet.export", _WRITES, _FILES),
     _admit("modelo.verification_report.list", _READS),
     _admit("modelo.verification_report.view", _READS),
-    _admit("modelo.work.amend", _WRITES, _SAFEGUARD),
+    # Amending verifies and records the correction as filed locally in one act,
+    # and retires the record it corrects: the same act as marking a return filed.
+    _approve("modelo.work.amend", _WRITES, _SAFEGUARD),
     _exclude("modelo.work.amendment_context", _READS, _CANNOT_RUN),
-    _admit("modelo.work.calculate", _WRITES_ONLINE, _SAFEGUARD),
+    # An explicit calculation stores its inputs as the person's own entries, and the
+    # Modelo 303 election and exemption attestation are the person's statements.
+    _admit("modelo.work.calculate", _WRITES_ONLINE, sensitive=("explicit", "ordinary_m303_filing_evidence")),
     _exclude("modelo.work.casilla_help", _READS, _CANNOT_RUN),
     _admit("modelo.work.compare_taxation", _READS),
-    _admit("modelo.work.create", _WRITES, _SAFEGUARD),
+    _admit("modelo.work.create", _WRITES),
     _admit("modelo.work.dependencies", _READS),
     _approve("modelo.work.discard", _WRITES),
     _approve("modelo.work.file", _WRITES, _SAFEGUARD),
@@ -428,14 +428,15 @@ _MODELO_WORK: Final = (
     _approve("modelo.work.m303_attestation", _WRITES),
     _admit("modelo.work.metadata", _READS),
     _admit("modelo.work.preview_maritime_exemption", _READS),
-    _admit("modelo.work.rename", _WRITES, _SAFEGUARD),
+    _admit("modelo.work.rename", _WRITES),
     _admit("modelo.work.report_verify", _READS, _FILES),
     _admit("modelo.work.review", _READS),
     _admit("modelo.work.revision", _READS),
     _admit("modelo.work.revision_snapshot", _READS),
     _admit("modelo.work.revisions", _READS),
-    # Verification reads through the certificate backend; what that contacts is not settled.
-    _admit("modelo.work.verify", _WRITES_ONLINE, McpAdmissionPrerequisite.EXECUTOR_REVIEW),
+    # Verification reads and writes the profile's own store; its provider step builds
+    # local objects only and opens no browser or session.
+    _admit("modelo.work.verify", _WRITES),
     _exclude("modelo.work.wizard_attempt", _WRITES_ONLINE, _CANNOT_RUN),
     _exclude("modelo.work.wizard_context", _READS, _CANNOT_RUN),
     _exclude("workbench.generation", _READS, _CANNOT_RUN),

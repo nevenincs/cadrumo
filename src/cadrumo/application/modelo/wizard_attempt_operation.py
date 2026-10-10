@@ -41,6 +41,7 @@ from .operation_definitions import (
     calculate_prepared_modelo_work,
     calculation_public_result,
     prepare_modelo_work_calculation,
+    replaced_calculation_head,
 )
 from .work_calculation_contracts import ModeloWorkCalculatePublicResultV2, ModeloWorkCalculateRequest
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
@@ -202,6 +203,7 @@ class ModeloWorkWizardAttemptExecutor:
                         calculation_public_result,
                         result,
                         operation=context.authority_operation,
+                        replaced_head=replaced_calculation_head(prepared, payload.calculation, result.work_unit),
                     )
                     projection = ModeloWorkWizardAttemptProjection(
                         profile_id=payload.profile_id,

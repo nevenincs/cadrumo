@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-10'
+modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:7897ab9fc813f0140e5257b0122ec5de952e47a3b2d8a30b5007bbdb1796740d'
+body_hash: 'sha256:d8bb0dda5878d9b5313cfec51690b2db025b1496405fa4da27490b5fe9a84261'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -408,6 +408,43 @@ related:
 - `S46` `verify:` `ty check --python-platform linux` -> `pass`
 - `S46` `verify:` `lint-imports (15 contracts)` -> `pass`
 - `S46` `by:` `vaultspec-high-executor`
+- `S37` `A` `src/cadrumo/application/operations/execution_actor.py`
+- `S37` `A` `src/cadrumo/application/operations/tests/test_execution_actor.py`
+- `S37` `A` `src/cadrumo/application/modelo/tests/test_calculation_replaced_head.py`
+- `S37` `A` `src/cadrumo/entrypoints/tests/test_modelo_work_mcp_admission.py`
+- `S37` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S37` `M` `src/cadrumo/application/modelo/work_create_operation.py`
+- `S37` `M` `src/cadrumo/application/modelo/work_calculation_contracts.py`
+- `S37` `M` `src/cadrumo/application/modelo/work_change_contracts.py`
+- `S37` `M` `src/cadrumo/application/modelo/metadata_operation_access.py`
+- `S37` `M` `src/cadrumo/application/modelo/wizard_attempt_operation.py`
+- `S37` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S37` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S37` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
+- `S37` `M` `src/cadrumo/entrypoints/runtime/operation_authority.py`
+- `S37` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py`
+- `S37` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
+- `S37` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S37` `M` `src/cadrumo/entrypoints/tests/test_lifecycle_operation_composition.py`
+- `S37` `M` `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`
+- `S37` `M` `dev/quality/metadata/import_load_targets.json`
+- `S37` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S37` `M` `.vault/adr/2026-10-10-mcp-parity-admission-rulings-adr.md`
+- `S37` `verify:` `pytest new actor, replaced-head, admission and caller tests (32 tests)` -> `pass`
+- `S37` `verify:` `pytest registered executor conformance (326 tests)` -> `pass`
+- `S37` `verify:` `pytest census and registry (637 tests)` -> `pass`
+- `S37` `verify:` `pytest touched lifecycle, CLI and TUI suites (143 of 151 tests)` -> `pass`
+- `S37` `verify:` `ruff check` -> `pass`
+- `S37` `verify:` `ruff format --check` -> `pass`
+- `S37` `verify:` `ty check --python-platform linux` -> `pass`
+- `S37` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S37` `by:` `vaultspec-high-executor`
+- `S38` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S38` `M` `src/cadrumo/application/modelo/work_verification_contracts.py`
+- `S38` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S38` `verify:` `pytest registered executor conformance (326 tests)` -> `pass`
+- `S38` `verify:` `pytest census and registry (637 tests)` -> `pass`
+- `S38` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -427,3 +464,5 @@ related:
 - `S13` Found while proving the door in a real server process: the login-session port was never composed there, so the resume failed with an invariant error reported as an unavailable runtime. The server now composes it, an invariant failure has its own refusal code, and a test starts the server as a fresh process. Three installed-command tests in the oracle file fail on this machine with `runtime_unavailable` from the stale base-Python install; they do not exercise this Step. The translations of the two user pages are re-synced for es, ca and hu.
 - `S16` Traced first: a process of the same account in a different OS login could have the stored sign-in deleted by presenting any 32 bytes, because the login mismatch deleted before the proof was checked. The proof is now checked first for that one refusal; refusals that are facts about the stored record still delete at once. No session owning the sign-in work was reachable to settle it with, and the change removes no protection: the genuine proof under another login still deletes. One existing expectation changed with it: a record whose login binding was rewritten on disk now reads as tampered and is kept, as any other corrupt record is.
 - `S46` Eight of the nine reads are open. Evidence list and view are served by ledger.evidence.query, which returns the stored file name in place of the typed host path; the review view by ledger.evidence.review.summary, which withholds every free-text draft field and says so per row; profile.history by profile.history.timeline. Reader readiness returns the endpoint as scheme, host and port only. The filing record view returns typed rows at result version 2. Google folder view and status no longer require commit rights or a human-only session. Also made consistent: ledger.history released the same open event payload on MCP and is now served by ledger.history.typed. Not admitted: config.google.probe, whose result detail is the provider failure text. Open for the owner: the review summary also withholds short identifiers read from the document (tax id, invoice number, date).
+- `S37` Create, calculate and rename are open to MCP. The applicability gate was already in the create operation with a typed bypass, and the only recalculation confirmation is the terminal interface own prompt, kept there; recalculating deletes nothing, so the result now names the revision it replaced. Refused on MCP until the approval step exists: a calculation that states its own inputs, and one that states the joint-return election or the Modelo 390 attestation. modelo.work.amend is not admitted and is re-ruled behind approval: it verifies, records a local filing and retires the record it corrects in one act. The actor recorded for an MCP execution is derived from the admitting session and the typed one is ignored. Eleven failures in the wide run are outside this Step: six command-line tests report `runtime_unavailable` from the stale base-Python install; one asserts a message wording the catalogue no longer has; one fails in the IVA wallet gate and three in storage readiness, all in tests and code this Step did not touch, and all fail the same way run alone.
+- `S38` Read end to end: verification reads and writes the local profile store only. Its provider step constructs local objects with no browser or session, the readiness probes are skipped, and no network or subprocess call is reachable. Admitted with the actor taken from the session.

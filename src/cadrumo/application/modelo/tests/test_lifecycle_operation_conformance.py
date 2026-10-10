@@ -57,6 +57,7 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
     "prerequisite_observer": None,
     "signing_keypair_capability_factory": lambda **_: None,
     "calculation_summary_pdf_writer": lambda _request, /, **_: b"",
+    "execution_caller_reader": None,
 }
 
 #: The application authority each enrolment is allowed to supervise, by factory.

@@ -32,6 +32,7 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
     "calculation_summary_pdf_writer": lambda *args, **kwargs: b"",
     "operator_scope_ports": object(),
     "prerequisite_observer": None,
+    "execution_caller_reader": None,
 }
 
 
