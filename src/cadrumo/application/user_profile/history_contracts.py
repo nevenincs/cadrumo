@@ -1,4 +1,9 @@
-"""Typed public and private contracts for exact-profile history reads."""
+"""Typed public and private contracts for exact-profile history reads.
+
+The history is a person's projection: it returns each event's payload, a
+name-and-value list every producer in the application fills as it sees fit.
+The timeline serves the same events to an agent without that payload.
+"""
 
 from __future__ import annotations
 
@@ -9,9 +14,16 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
-from ...domain.buckets.event import BucketEvent, BucketEventType, bucket_event_order_key
+from ...domain.buckets.event import (
+    BUCKET_ACTOR_LABEL_MAX_LENGTH,
+    BucketEvent,
+    BucketEventObjectType,
+    BucketEventType,
+    bucket_event_order_key,
+)
 from ..bucket_event_projection import BucketEventProjection
 
 _FilterValue = Annotated[str, Field(min_length=1, max_length=4096)]
@@ -77,6 +89,88 @@ class ProfileHistoryExecutionResult(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     projection: ProfileHistoryProjection
+
+
+class ProfileTimelineEvent(BaseModel):
+    """One event's identity, kind, instant, actor and subject, without its payload."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    event_id: Hex64Str
+    event_type: BucketEventType
+    occurred_at: datetime
+    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
+    object_type: BucketEventObjectType
+    object_id: str = Field(min_length=1, max_length=128)
+    withheld_detail_count: int = Field(ge=0)
+
+    @field_validator("occurred_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _occurred_at_is_utc(cls, value: datetime) -> datetime:
+        return validate_utc_aware(value)
+
+    @classmethod
+    def from_event(cls, event: BucketEvent) -> Self:
+        """Copy the event's declared facts and count the payload entries left in custody."""
+        return cls(
+            event_id=event.event_id,
+            event_type=event.event_type,
+            occurred_at=event.occurred_at,
+            actor=event.actor,
+            object_type=event.object_type,
+            object_id=event.object_id,
+            withheld_detail_count=len(event.payload),
+        )
+
+
+class ProfileHistoryTimelineProjection(BaseModel):
+    """Every selected event's declared facts, in canonical order, and the filters that selected them."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    event_types: tuple[BucketEventType, ...] | None = None
+    since: datetime | None = None
+    until: datetime | None = None
+    object_id: _FilterValue | None = None
+    actor: _FilterValue | None = None
+    event_count: int = Field(ge=0)
+    events: tuple[ProfileTimelineEvent, ...]
+
+    @field_validator("since", "until")
+    @classmethod
+    @pydantic_validation_boundary
+    def _filters_are_utc(cls, value: datetime | None) -> datetime | None:
+        return validate_utc_aware(value) if value is not None else None
+
+    @model_validator(mode="after")
+    def _exact_filtered_timeline(self) -> Self:
+        _require_profile_history_range(self.since, self.until)
+        if self.event_count != len(self.events) or len({event.event_id for event in self.events}) != len(self.events):
+            raise ValueError("profile timeline count or event identities differ")
+        if tuple(sorted(self.events, key=lambda event: (event.occurred_at, event.event_id))) != self.events:
+            raise ValueError("profile timeline events are not in canonical order")
+        if any(not self._selects(event) for event in self.events):
+            raise ValueError("profile timeline event does not match its filters")
+        return self
+
+    def _selects(self, event: ProfileTimelineEvent) -> bool:
+        return not (
+            (self.event_types is not None and event.event_type not in self.event_types)
+            or (self.since is not None and event.occurred_at < self.since)
+            or (self.until is not None and event.occurred_at > self.until)
+            or (self.object_id is not None and event.object_id != self.object_id)
+            or (self.actor is not None and event.actor != self.actor)
+        )
+
+
+class ProfileHistoryTimelineExecutionResult(BaseModel):
+    """Private encrypted operand retained until the current timeline release."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    projection: ProfileHistoryTimelineProjection
 
 
 def _require_profile_history_range(since: datetime | None, until: datetime | None) -> None:
@@ -147,5 +241,8 @@ __all__ = [
     "ProfileHistoryExecutionResult",
     "ProfileHistoryProjection",
     "ProfileHistoryRequest",
+    "ProfileHistoryTimelineExecutionResult",
+    "ProfileHistoryTimelineProjection",
+    "ProfileTimelineEvent",
     "event_matches_profile_history_request",
 ]

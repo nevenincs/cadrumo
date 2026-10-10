@@ -9,13 +9,21 @@ import pytest
 from textual.screen import Screen
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from ....application.modelo.filing_record_view_operation import (
+    ModeloFilingRecordViewProjection,
+    ModeloFilingRecordViewRequest,
+)
+from ....application.operations.schema_identity import OperationSchemaIdentityV1
+from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.modelo_export_artefact import ModeloExportArtefact
-from ....core.operations import profile_operation_subject
+from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from .. import historical_export, reconciliation_export
 from ..components.host import ScreenHostApp
+from ..modelo import runtime_workbench_reads
 from ..modelo.workbench.ports import WorkbenchExportRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -89,8 +97,9 @@ async def test_historical_tui_resolves_saved_filing_before_offering_export(monke
     client = SimpleNamespace(profile_id=profile, session_id=UUID("33333333-3333-4333-8333-333333333333"))
     reads = []
 
-    async def read(_client, **kwargs):
-        reads.append(kwargs)
+    async def read(read_client, filing_record_id):
+        assert read_client is client
+        reads.append(filing_record_id)
         return SimpleNamespace(
             profile_id=profile,
             filing_record_id="a" * 64,
@@ -101,11 +110,96 @@ async def test_historical_tui_resolves_saved_filing_before_offering_export(monke
             observation_layers=SimpleNamespace(effective_revision="c" * 64),
         )
 
-    monkeypatch.setattr(historical_export, "read_runtime_workbench_operation", read)
+    monkeypatch.setattr(historical_export, "read_filing_view", read)
     screen = historical_export.HistoricalFilingExportScreen(cast(RuntimeFrontendClient, client), "a" * 64)
     async with ScreenHostApp[None](screen).run_test() as pilot:
         await pilot.pause()
-        assert reads[0]["definition_id"] == "modelo.filing_record.view"
-        assert reads[0]["payload"].filing_record_id == "a" * 64
+        assert reads == ["a" * 64]
         assert screen._revision_id == ("b" * 64 if available else None)
         assert isinstance(screen.app.screen, historical_export.WorkbenchExportScreen) is available
+
+
+class _FilingViewController:
+    """Stands in for the runtime controller; the read under test owns the sequence it is driven in."""
+
+    submitted: list[dict[str, object]]
+    settled_reads: list[tuple[object, object, int]]
+    released = object()
+
+    @classmethod
+    async def submit(cls, _client: object, **kwargs: object) -> "_FilingViewController":
+        cls.submitted.append(kwargs)
+        return cls()
+
+    async def start(self) -> None:
+        return None
+
+    async def read_settled_result(self, projection: object, result_type: object, *, result_version: int) -> object:
+        self.settled_reads.append((projection, result_type, result_version))
+        return self.released
+
+
+def _filing_view_state(
+    condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
+    effect: OperationEffect = OperationEffect.NONE,
+) -> SimpleNamespace:
+    return SimpleNamespace(terminal_condition=condition, effect=effect, refusal_ref=None, failure_error_code=None)
+
+
+def _bind_filing_view_read(monkeypatch, state: SimpleNamespace) -> list[dict[str, object]]:
+    waited: list[dict[str, object]] = []
+
+    async def terminal(controller: object, **kwargs: object) -> SimpleNamespace:
+        assert isinstance(controller, _FilingViewController)
+        waited.append(kwargs)
+        return state
+
+    _FilingViewController.submitted = []
+    _FilingViewController.settled_reads = []
+    monkeypatch.setattr(runtime_workbench_reads, "RuntimeOperationController", _FilingViewController)
+    monkeypatch.setattr(runtime_workbench_reads, "await_terminal_projection", terminal)
+    return waited
+
+
+@pytest.mark.asyncio
+async def test_historical_tui_reads_the_filing_view_at_its_current_result_version(monkeypatch) -> None:
+    profile = UUID("22222222-2222-4222-8222-222222222222")
+    client = SimpleNamespace(profile_id=profile, session_id=UUID("33333333-3333-4333-8333-333333333333"))
+    state = _filing_view_state()
+    waited = _bind_filing_view_read(monkeypatch, state)
+
+    result = await historical_export.read_filing_view(cast(RuntimeFrontendClient, client), "a" * 64)
+
+    assert result is _FilingViewController.released
+    (call,) = _FilingViewController.submitted
+    assert call["definition_id"] == "modelo.filing_record.view"
+    assert call["subject_ref"] == profile_operation_subject(str(profile))
+    assert call["expected_session_id"] == client.session_id
+    assert isinstance(call["payload"], ModeloFilingRecordViewRequest)
+    assert (call["payload"].profile_id, call["payload"].filing_record_id) == (profile, "a" * 64)
+    assert waited[0]["definition_id"] == "modelo.filing_record.view"
+    assert waited[0]["request_schema"] == OperationSchemaIdentityV1.from_model(
+        schema_id="modelo.filing_record.view.request", schema_version=1, model_type=ModeloFilingRecordViewRequest
+    )
+    assert _FilingViewController.settled_reads == [(state, ModeloFilingRecordViewProjection, 2)]
+    assert ModeloFilingRecordViewProjection.model_fields["result_version"].default == 2
+
+
+@pytest.mark.asyncio
+async def test_historical_tui_reads_no_result_from_a_filing_view_that_was_refused_or_left_an_effect(
+    monkeypatch,
+) -> None:
+    client = SimpleNamespace(
+        profile_id=UUID("22222222-2222-4222-8222-222222222222"),
+        session_id=UUID("33333333-3333-4333-8333-333333333333"),
+    )
+
+    _bind_filing_view_read(monkeypatch, _filing_view_state(condition=OperationTerminalCondition.REFUSED))
+    with pytest.raises(RuntimeFrontendRefusedError):
+        await historical_export.read_filing_view(cast(RuntimeFrontendClient, client), "a" * 64)
+    assert _FilingViewController.settled_reads == []
+
+    _bind_filing_view_read(monkeypatch, _filing_view_state(effect=OperationEffect.UPDATED))
+    with pytest.raises(RuntimeRefusalError):
+        await historical_export.read_filing_view(cast(RuntimeFrontendClient, client), "a" * 64)
+    assert _FilingViewController.settled_reads == []

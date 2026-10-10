@@ -187,12 +187,28 @@ class _GoogleConfigurationEffectTracker:
         await self._context.events.effect(current)
 
 
-class GoogleConfigurationExecutor:
-    """Admit every provider boundary and settle effects after owned work completes."""
+def _refuse_commit[ResultT](save: Callable[[], ResultT], *, changed: Callable[[ResultT], bool]) -> ResultT:
+    """Refuse a local save asked for by a leaf that was admitted as a read."""
+    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
-    def __init__(self, factory: GoogleConfigurationOperationPortsFactory) -> None:
+
+def _refuse_provider_boundary(action: str, *, writes: bool = False) -> None:
+    """Refuse a provider handoff asked for by a leaf that was admitted as a read."""
+    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+
+
+class GoogleConfigurationExecutor:
+    """Admit every provider boundary and settle effects after owned work completes.
+
+    A stored-record read was admitted without commit authority, so it runs on
+    a path of its own: it opens no irreversible section, and a save or a
+    provider handoff asked for under it is refused instead of performed.
+    """
+
+    def __init__(self, factory: GoogleConfigurationOperationPortsFactory, *, stored_record_read: bool = False) -> None:
         """Bind the canonical owning services without constructing credentials."""
         self._factory = factory
+        self._stored_record_read = stored_record_read
 
     async def execute(
         self, request: OperationRequest[BaseModel], context: OperationExecutorContext
@@ -273,9 +289,41 @@ class GoogleConfigurationExecutor:
         terminal_admission: Callable[[], None] | None,
     ) -> OperationExecutorResult:
         payload = _require_profile(request, context)
+        if self._stored_record_read:
+            return await await_cancellation_complete(
+                self._read_stored_record(request, context, payload), task_name=request.definition_id
+            )
         tracker = _GoogleConfigurationEffectTracker(request, context)
         work = self._run_provider(request, context, payload, tracker, terminal_admission)
         return await await_cancellation_complete(work, task_name=request.definition_id)
+
+    async def _read_stored_record(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+        payload: GoogleConfigurationRequest,
+    ) -> OperationExecutorResult:
+        """Report one stored record and declare no effect, with no commit section opened."""
+        ports = self._factory(profile_id=payload.profile_id, operation=context.authority_operation)
+        if ports.profile_id != payload.profile_id or ports.operation is not context.authority_operation:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        try:
+            projection = await asyncio.to_thread(
+                ports.run,
+                payload,
+                commit=_refuse_commit,
+                before_handoff=_refuse_provider_boundary,
+                acknowledged=_refuse_provider_boundary,
+                terminal_admission=None,
+            )
+        except GoogleConfigurationRefusedError as error:
+            if type(error) is not GoogleConfigurationRefusedError:
+                raise
+            private = self._refused_result(request, context, error.projection, OperationEffect.NONE)
+            detail_ref = await self._release(request, context, private, OperationEffect.NONE)
+            return OperationRefusalEvidence(refusal_code=GOOGLE_CONFIGURATION_REFUSAL_CODE, detail_ref=detail_ref)
+        private = self._succeeded_result(request, context, payload, projection, OperationEffect.NONE)
+        return await self._release(request, context, private, OperationEffect.NONE)
 
     async def _run_provider(
         self,
@@ -308,20 +356,20 @@ class GoogleConfigurationExecutor:
             await tracker.record_failure()
             raise
 
-    async def _store_success(
+    def _succeeded_result(
         self,
         request: OperationRequest[BaseModel],
         context: OperationExecutorContext,
         payload: GoogleConfigurationRequest,
         projection: GoogleConfigurationProjection,
-        tracker: _GoogleConfigurationEffectTracker,
-    ) -> OperationExecutorResult:
+        settled: OperationEffect,
+    ) -> GoogleConfigurationExecutionResult:
+        """Bind one leaf's own projection to the invocation and the effect it settled."""
         if (
             type(projection) is not GOOGLE_CONFIGURATION_CONTRACTS[request.definition_id][1]
             or projection.profile_id != payload.profile_id
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        settled = tracker.effect()
         private = GoogleConfigurationExecutionResult(
             identity=context.identity,
             projection=GoogleConfigurationOutcome(
@@ -331,19 +379,16 @@ class GoogleConfigurationExecutor:
         )
         if len(canonical_json_bytes(private.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        async with context.cancellation.irreversible_section():
-            _require_profile(request, context)
-            await context.events.effect(settled)
-            return await context.operands.put(private, written_at=now())
+        return private
 
-    async def _store_refusal(
+    def _refused_result(
         self,
         request: OperationRequest[BaseModel],
         context: OperationExecutorContext,
         refusal: GoogleConfigurationRefusalProjection,
         effect: OperationEffect,
-    ) -> OperationRefusalEvidence:
-        """Retain closed provider detail only after renewed exact-profile release authority."""
+    ) -> GoogleConfigurationExecutionResult:
+        """Bind closed provider detail to the invocation and the effect the refusal left."""
         payload = _require_profile(request, context)
         if refusal.profile_id != payload.profile_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -354,10 +399,44 @@ class GoogleConfigurationExecutor:
         )
         if len(canonical_json_bytes(private.model_dump(mode="json"))) > PROJECTION_DOCUMENT_MAX_BYTES:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        return private
+
+    async def _release(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+        private: GoogleConfigurationExecutionResult,
+        effect: OperationEffect,
+    ) -> str:
+        """Declare the settled effect and retain the result under renewed exact-profile authority."""
+        _require_profile(request, context)
+        await context.events.effect(effect)
+        return await context.operands.put(private, written_at=now())
+
+    async def _store_success(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+        payload: GoogleConfigurationRequest,
+        projection: GoogleConfigurationProjection,
+        tracker: _GoogleConfigurationEffectTracker,
+    ) -> OperationExecutorResult:
+        settled = tracker.effect()
+        private = self._succeeded_result(request, context, payload, projection, settled)
         async with context.cancellation.irreversible_section():
-            _require_profile(request, context)
-            await context.events.effect(effect)
-            detail_ref = await context.operands.put(private, written_at=now())
+            return await self._release(request, context, private, settled)
+
+    async def _store_refusal(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+        refusal: GoogleConfigurationRefusalProjection,
+        effect: OperationEffect,
+    ) -> OperationRefusalEvidence:
+        """Retain closed provider detail only after renewed exact-profile release authority."""
+        private = self._refused_result(request, context, refusal, effect)
+        async with context.cancellation.irreversible_section():
+            detail_ref = await self._release(request, context, private, effect)
         return OperationRefusalEvidence(refusal_code=GOOGLE_CONFIGURATION_REFUSAL_CODE, detail_ref=detail_ref)
 
 

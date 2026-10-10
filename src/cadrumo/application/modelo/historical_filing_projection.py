@@ -6,13 +6,15 @@
 
 from __future__ import annotations
 
-from typing import Literal, Self
+from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
+from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -27,16 +29,8 @@ from ...domain.modelos.calculation_revision_identity import (
 from ...domain.modelos.filing_record import ModeloRecord
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .calculation_projection import ModeloCalculationDetailSnapshot
 from .verification_report_public_facts import ModeloVerificationRegistrySnapshotProjection
-
-
-class ModeloHistoricalDetailRowProjection(BaseModel):
-    """Lossless saved row payload, without revalidation against today's registry."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    row_index: int = Field(ge=1)
-    payload_json: str
 
 
 class ModeloHistoricalCasillaProjection(BaseModel):
@@ -72,13 +66,61 @@ class ModeloHistoricalRowProvenanceProjection(BaseModel):
     materialization_rule_version: str
 
 
+class ModeloHistoricalContextEntryProjection(BaseModel):
+    """One name and value the formula engine recorded to explain an unresolved outcome."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    name: Annotated[str, Field(min_length=1, max_length=128)]
+    value: Annotated[str, Field(max_length=2_048)]
+
+
 class ModeloHistoricalUnresolvedProjection(BaseModel):
-    """Immutable saved unresolved formula outcome and its grounded context."""
+    """Immutable saved unresolved formula outcome, its lineage and its recorded context.
+
+    The fields are the saved outcome's own, as immutable wire scalars. They are
+    copied rather than revalidated: the outcome belongs to the calculation that
+    produced it, not to today's registry.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     casilla_id: CasillaId
-    payload_json: str
+    reason: RegistryUnresolvedOutcomeReason
+    formula_id: str
+    op: str
+    operand_refs: tuple[str, ...]
+    operand_casilla_refs: tuple[CasillaId, ...]
+    operand_values: tuple[str, ...]
+    legal_refs: tuple[str, ...]
+    source_refs: tuple[str, ...]
+    context: tuple[ModeloHistoricalContextEntryProjection, ...]
+
+    @model_validator(mode="after")
+    def _context_names_are_unique_and_sorted(self) -> Self:
+        names = tuple(entry.name for entry in self.context)
+        if names != tuple(sorted(set(names))):
+            raise ValueError("unresolved outcome context names must be unique and sorted")
+        return self
+
+    @classmethod
+    def from_outcome(cls, outcome: RegistryCalculationUnresolvedOutcome) -> Self:
+        """Copy every field the saved outcome declares, with its context in name order."""
+        return cls(
+            casilla_id=outcome.casilla_id,
+            reason=outcome.reason,
+            formula_id=outcome.formula_id,
+            op=outcome.op,
+            operand_refs=outcome.operand_refs,
+            operand_casilla_refs=outcome.operand_casilla_refs,
+            operand_values=tuple(str(value) for value in outcome.operand_values),
+            legal_refs=outcome.legal_refs,
+            source_refs=outcome.source_refs,
+            context=tuple(
+                ModeloHistoricalContextEntryProjection(name=name, value=value)
+                for name, value in sorted(outcome.context.items())
+            ),
+        )
 
 
 class ModeloHistoricalRowCasillaProjection(BaseModel):
@@ -108,7 +150,7 @@ class ModeloHistoricalFilingContentProjection(BaseModel):
     state: CalculationRevisionState | None = None
     observations: tuple[ModeloHistoricalCasillaProjection, ...] = ()
     row_casilla_values: tuple[ModeloHistoricalRowCasillaProjection, ...] = ()
-    detail_rows: tuple[ModeloHistoricalDetailRowProjection, ...] = ()
+    detail_rows: tuple[ModeloCalculationDetailSnapshot, ...] = ()
     source_provenance: tuple[CalculationSourceRef, ...] = ()
     source_issues: tuple[CalculationSourceIssue, ...] = ()
     unresolved_outcomes: tuple[ModeloHistoricalUnresolvedProjection, ...] = ()
@@ -197,14 +239,12 @@ def project_historical_filing_content(
             for (casilla_id, row_index), value in sorted(revision.row_casilla_values.items())
         ),
         detail_rows=tuple(
-            ModeloHistoricalDetailRowProjection(row_index=index, payload_json=row.model_dump_json())
-            for index, row in enumerate(revision.detail_rows, 1)
+            ModeloCalculationDetailSnapshot.from_row(index, row) for index, row in enumerate(revision.detail_rows, 1)
         ),
         source_provenance=revision.source_provenance,
         source_issues=revision.source_issues,
         unresolved_outcomes=tuple(
-            ModeloHistoricalUnresolvedProjection(casilla_id=row.casilla_id, payload_json=row.model_dump_json())
-            for row in revision.unresolved_outcomes
+            ModeloHistoricalUnresolvedProjection.from_outcome(row) for row in revision.unresolved_outcomes
         ),
     )
 

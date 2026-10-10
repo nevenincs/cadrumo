@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from collections.abc import Callable
 from datetime import datetime
 from typing import Annotated, Self
+from urllib.parse import urlsplit
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -25,7 +27,7 @@ from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..provisioning_host import RuntimeHostPlatform, RuntimeInstaller
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -48,16 +50,51 @@ class LedgerEvidenceReaderReadinessRequest(BaseModel):
     profile_id: UUID
 
 
+def _reader_endpoint_origin(endpoint_url: str) -> str | None:
+    """Return the scheme, host and port of the configured endpoint, or ``None`` without a host.
+
+    The configured address is free text in settings: it can carry a user name
+    and password, a token in its path or query, or no host at all. Only the
+    part that says where the reader answers is a readiness fact.
+    """
+    try:
+        parts = urlsplit(endpoint_url)
+        host, port = parts.hostname, parts.port
+    except ValueError:
+        return None
+    if not parts.scheme or not host:
+        return None
+    authority = f"[{host}]" if ":" in host else host
+    return f"{parts.scheme}://{authority}" if port is None else f"{parts.scheme}://{authority}:{port}"
+
+
+_VERSION_TOKEN = re.compile(r"[0-9A-Za-z][0-9A-Za-z.+_-]{0,63}")
+
+
+def _reported_version(version: str | None) -> str | None:
+    """Return what the endpoint reported as its version when it reads as one."""
+    # The text is whatever answered at the configured address, which settings
+    # can point at another machine. Anything but a version is not a readiness fact.
+    return version if version is not None and _VERSION_TOKEN.fullmatch(version) is not None else None
+
+
 class ReaderHostProjectionV1(BaseModel):
-    """Closed host facts; no provisioning action is available here."""
+    """Closed host facts; no provisioning action is available here.
+
+    ``endpoint_url`` is the endpoint's origin alone and is absent when the
+    configured address names no host. ``version`` is absent, with
+    ``version_withheld`` set, when the endpoint answered with something that
+    does not read as a version.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     platform: RuntimeHostPlatform
-    endpoint_url: Annotated[str, Field(min_length=1, max_length=2_048)]
+    endpoint_url: Annotated[str, Field(min_length=1, max_length=2_048)] | None = None
     endpoint_local: bool
     executable_located: bool
     reachable: bool
-    version: InvoiceEvidenceLabel | None = None
+    version: Annotated[str, Field(min_length=1, max_length=64)] | None = None
+    version_withheld: bool = False
     installer: RuntimeInstaller
     available: bool
     failed_condition_id: InvoiceEvidenceLabel | None = None
@@ -107,15 +144,17 @@ class LedgerEvidenceReaderReadinessProjection(BaseModel):
         """Copy measured host and role facts without a provisioning action."""
         host = status.host
         last_pull = status.last_pull
+        version = _reported_version(host.version)
         return cls(
             profile_id=profile_id,
             host=ReaderHostProjectionV1(
                 platform=host.platform,
-                endpoint_url=host.endpoint_url,
+                endpoint_url=_reader_endpoint_origin(host.endpoint_url),
                 endpoint_local=host.endpoint_local,
                 executable_located=host.executable_located,
                 reachable=host.reachable,
-                version=host.version,
+                version=version,
+                version_withheld=host.version is not None and version is None,
                 installer=host.installer,
                 available=host.available,
                 failed_condition_id=(
@@ -203,7 +242,7 @@ def build_ledger_evidence_reader_readiness_definition(
         executor_type=LedgerEvidenceReaderReadinessExecutor,
         build=lambda: LedgerEvidenceReaderReadinessExecutor(read_status),
         capabilities=invoice_evidence_operation_capabilities(mutates=False),
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 

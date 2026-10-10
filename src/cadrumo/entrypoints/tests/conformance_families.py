@@ -14,8 +14,10 @@ from .conformance_family_contract import ConformanceFamily
 from .conformance_google_support import GOOGLE_CONFORMANCE_FAMILY
 from .conformance_invoice_intake_support import INVOICE_INTAKE_CONFORMANCE_FAMILY
 from .conformance_ledger_classification_support import LEDGER_CLASSIFICATION_CONFORMANCE_FAMILY
+from .conformance_ledger_evidence_agent_support import LEDGER_EVIDENCE_AGENT_CONFORMANCE_FAMILY
 from .conformance_ledger_evidence_ingestion_support import LEDGER_EVIDENCE_INGESTION_CONFORMANCE_FAMILY
 from .conformance_ledger_export_link_support import LEDGER_EXPORT_LINK_CONFORMANCE_FAMILY
+from .conformance_ledger_history_support import LEDGER_HISTORY_TYPED_CONFORMANCE_FAMILY
 from .conformance_live_borrador_support import LIVE_BORRADOR_CONFORMANCE_FAMILY
 from .conformance_m036_support import M036_CONFORMANCE_FAMILY
 from .conformance_m145_support import M145_CONFORMANCE_FAMILY
@@ -36,8 +38,10 @@ CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     GOOGLE_CONFORMANCE_FAMILY,
     INVOICE_INTAKE_CONFORMANCE_FAMILY,
     LEDGER_CLASSIFICATION_CONFORMANCE_FAMILY,
+    LEDGER_EVIDENCE_AGENT_CONFORMANCE_FAMILY,
     LEDGER_EVIDENCE_INGESTION_CONFORMANCE_FAMILY,
     LEDGER_EXPORT_LINK_CONFORMANCE_FAMILY,
+    LEDGER_HISTORY_TYPED_CONFORMANCE_FAMILY,
     LIVE_BORRADOR_CONFORMANCE_FAMILY,
     M036_CONFORMANCE_FAMILY,
     M145_CONFORMANCE_FAMILY,

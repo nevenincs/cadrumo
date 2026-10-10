@@ -35,10 +35,16 @@ from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts
 from ..history_operation import (
     LEDGER_HISTORY_OPERATION_DEFINITION_ID,
+    LEDGER_HISTORY_TYPED_OPERATION_DEFINITION_ID,
+    LedgerHistoryEventDetails,
     LedgerHistoryProjection,
     LedgerHistoryRequest,
+    LedgerHistoryTypedEvent,
+    LedgerHistoryTypedProjection,
     build_ledger_history_definition,
     build_ledger_history_registration,
+    build_ledger_history_typed_definition,
+    build_ledger_history_typed_registration,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -331,3 +337,191 @@ def test_history_projection_requires_canonical_event_id_tie_order_across_anchors
             events=tuple(BucketEventProjection.from_event(event) for event in (current_event, previous_event)),
             event_count=2,
         )
+
+
+# ---------------------------------------------------------------------------
+# The agent-facing typed history
+# ---------------------------------------------------------------------------
+
+_EXPORT_PATH = r"C:\Users\synthetic-operator\Documents\exportes-privados\libro-2026.csv"
+_MODEL_REASON = "El documento adjunto dice: SUMINISTROS SINTETICOS DEL NORTE SL, mantenimiento trimestral"
+_OPERATOR_REASON = "no es un gasto de la actividad"
+_WITHHELD_FRAGMENTS = (
+    "synthetic-operator",
+    "exportes-privados",
+    "SUMINISTROS SINTETICOS",
+    "mantenimiento trimestral",
+    "synthetic-undeclared-value",
+)
+
+
+def _typed_registry() -> tuple[OperationRegistry, OperationPublicDefinitionRegistrationV1]:
+    definition = build_ledger_history_typed_definition(_unexpected_ports)
+    registration = build_ledger_history_typed_registration(definition)
+    return OperationRegistry(definitions=(definition,), public_registrations=(registration,)), registration
+
+
+def _typed_request() -> OperationRequest[BaseModel]:
+    return OperationRequest[BaseModel](
+        definition_id=LEDGER_HISTORY_TYPED_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=LedgerHistoryRequest(profile_id=_PROFILE, transaction_prefix=_TRANSACTION_ID[:12]),
+    )
+
+
+def _submission_context(
+    registration: OperationPublicDefinitionRegistrationV1, frontend: OperationFrontendProjection
+) -> OperationAccessContext:
+    return OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=uuid4(),
+        action=AccessAction.SUBMIT,
+        frontend=frontend,
+        contract=registration.contract,
+        published_authority=Availability.AVAILABLE,
+    )
+
+
+def test_the_typed_history_is_admitted_on_mcp_alone_and_the_history_keeps_to_a_person() -> None:
+    registry, registration = _typed_registry()
+    _person_registry, person_registration = _registry()
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_typed_request(),
+        context=_submission_context(registration, OperationFrontendProjection.MCP),
+    )
+
+    assert registration.contract.permitted_frontends == frozenset({OperationFrontendProjection.MCP})
+    assert person_registration.contract.permitted_frontends == frozenset(
+        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
+    )
+    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.period_independent is True and resolved.policy.requires_all_periods is True
+    # A session under the person's sign-in and one under an enrolled key differ
+    # in kind alone, and only a human-only policy tells the two apart.
+    assert resolved.policy.requires_human is False
+    assert AccessAction.COMMIT not in resolved.policy.actions
+    assert registration.contract.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
+    for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.TUI):
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            resolve_operation_access(
+                registry=registry, request=_typed_request(), context=_submission_context(registration, frontend)
+            )
+        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+
+
+def _rejection_event() -> BucketEvent:
+    return _event(
+        payload={
+            "suggestion_kind": "classification",
+            "classification": "business",
+            "category": "",
+            "confidence": "0.82",
+            "model_reason": _MODEL_REASON,
+            "provider": "local",
+            "provenance": "llm:local-text:synthetic-model",
+            "operator_reason": _OPERATOR_REASON,
+            "source_command": "aeat app ledger classify review",
+            "mutation_kind": "llm_suggestion_rejected",
+        }
+    )
+
+
+def test_a_typed_event_releases_every_declared_entry_and_neither_the_model_reason_nor_a_path() -> None:
+    rejected = LedgerHistoryTypedEvent.from_event(_rejection_event())
+    exported = LedgerHistoryTypedEvent.from_event(
+        _event(
+            payload={
+                "source_command": "aeat app ledger export",
+                "export_format": "csv",
+                "row_count": "12",
+                "output_path": _EXPORT_PATH,
+                "synthetic_undeclared_name": "synthetic-undeclared-value",
+            }
+        )
+    )
+
+    assert rejected.details.model_dump(exclude_none=True) == {
+        "suggestion_kind": "classification",
+        "classification": "business",
+        "category": "",
+        "confidence": "0.82",
+        "provider": "local",
+        "provenance": "llm:local-text:synthetic-model",
+        "operator_reason": _OPERATOR_REASON,
+        "source_command": "aeat app ledger classify review",
+        "mutation_kind": "llm_suggestion_rejected",
+    }
+    assert (rejected.model_reason_withheld, rejected.output_path_withheld, rejected.undeclared_detail_count) == (
+        True,
+        False,
+        0,
+    )
+    assert (rejected.actor, rejected.object_id, rejected.event_type) == (
+        "operator",
+        _TRANSACTION_ID,
+        BucketEventType.LEDGER_TRANSACTION_UPDATED,
+    )
+    assert exported.details.model_dump(exclude_none=True) == {
+        "source_command": "aeat app ledger export",
+        "export_format": "csv",
+        "row_count": "12",
+    }
+    assert (exported.model_reason_withheld, exported.output_path_withheld, exported.undeclared_detail_count) == (
+        False,
+        True,
+        1,
+    )
+    released = rejected.model_dump_json() + exported.model_dump_json()
+    assert [fragment for fragment in _WITHHELD_FRAGMENTS if fragment in released] == []
+    assert _OPERATOR_REASON in released
+
+
+def test_the_person_history_still_releases_the_complete_payload_of_the_same_event() -> None:
+    event = _rejection_event()
+
+    person = _history_projection(event)
+
+    assert person.to_history().events == (event,)
+    assert _MODEL_REASON in person.model_dump_json()
+
+
+def test_the_typed_history_projection_round_trips_and_rejects_a_miscount_or_a_missing_anchor() -> None:
+    event = _rejection_event()
+    projection = LedgerHistoryTypedProjection(
+        profile_id=_PROFILE,
+        transaction_prefix=_TRANSACTION_ID[:12],
+        include_split_siblings=False,
+        transaction_id=_TRANSACTION_ID,
+        object_ids=(_TRANSACTION_ID,),
+        events=(LedgerHistoryTypedEvent.from_event(event),),
+        event_count=1,
+    )
+
+    assert LedgerHistoryTypedProjection.model_validate_json(projection.model_dump_json()) == projection
+    with pytest.raises(ValidationError):
+        LedgerHistoryTypedProjection.model_validate({**projection.model_dump(), "event_count": 2})
+    with pytest.raises(ValidationError):
+        LedgerHistoryTypedProjection.model_validate({**projection.model_dump(), "object_ids": ("d" * 64,)})
+
+
+def test_the_typed_details_declare_no_field_for_the_model_reason_or_a_path() -> None:
+    declared = set(LedgerHistoryEventDetails.model_fields)
+
+    assert {"model_reason", "output_path", "source_path"}.isdisjoint(declared)
+    assert {"operator_reason", "reason", "prorrata_reference", "mutation_kind", "source_command"} <= declared
+    assert set(LedgerHistoryTypedEvent.model_fields) == {
+        "event_id",
+        "event_type",
+        "occurred_at",
+        "actor",
+        "object_type",
+        "object_id",
+        "details",
+        "model_reason_withheld",
+        "output_path_withheld",
+        "undeclared_detail_count",
+    }
+    schema = LedgerHistoryEventDetails.model_json_schema()
+    assert schema["additionalProperties"] is False

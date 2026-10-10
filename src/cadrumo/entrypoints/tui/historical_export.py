@@ -17,6 +17,7 @@ from ...application.export.calculation_review_xlsx_operation import (
 )
 from ...application.modelo.filing_record_view_operation import (
     MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
+    MODELO_FILING_RECORD_VIEW_RESULT_VERSION,
     ModeloFilingRecordViewProjection,
     ModeloFilingRecordViewRequest,
 )
@@ -33,6 +34,19 @@ from .modelo.workbench.export import WorkbenchExportScreen
 from .modelo.workbench.ports import WorkbenchExportOffer, WorkbenchExportRequest
 from .operations.modal import OperationModal, OperationModalSettledOutcomeV1
 from .operations.runtime_controller import RuntimeOperationController
+
+
+async def read_filing_view(client: RuntimeFrontendClient, filing_record_id: str) -> ModeloFilingRecordViewProjection:
+    """Read one filing view through the workbench read path, at the view's current result version."""
+    return await read_runtime_workbench_operation(
+        client,
+        definition_id=MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(client.profile_id)),
+        payload=ModeloFilingRecordViewRequest(profile_id=client.profile_id, filing_record_id=filing_record_id),
+        result_type=ModeloFilingRecordViewProjection,
+        session_id=client.session_id,
+        result_version=MODELO_FILING_RECORD_VIEW_RESULT_VERSION,
+    )
 
 
 class HistoricalFilingExportScreen(Screen[None]):
@@ -60,18 +74,8 @@ class HistoricalFilingExportScreen(Screen[None]):
 
     async def _read_selection(self) -> None:
         client = self._client
-        session_id = client.session_id
         try:
-            projection = await read_runtime_workbench_operation(
-                client,
-                definition_id=MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
-                subject_ref=profile_operation_subject(str(client.profile_id)),
-                payload=ModeloFilingRecordViewRequest(
-                    profile_id=client.profile_id, filing_record_id=self._filing_record_id
-                ),
-                result_type=ModeloFilingRecordViewProjection,
-                session_id=session_id,
-            )
+            projection = await read_filing_view(client, self._filing_record_id)
             if (
                 projection.profile_id != client.profile_id
                 or projection.filing_record_id != self._filing_record_id

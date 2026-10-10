@@ -53,6 +53,7 @@ async def read_runtime_workbench_operation[ResultT: BaseModel](
     financial_input: bool = False,
     request_model: type[BaseModel] | None = None,
     request_version: int = 1,
+    result_version: int = 1,
 ) -> ResultT:
     """Run one recorded read-only worker operation to its terminal state and return its typed result."""
     if deadline is None:
@@ -86,7 +87,7 @@ async def read_runtime_workbench_operation[ResultT: BaseModel](
         )
     if state.effect is not OperationEffect.NONE:
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-    return await controller.read_settled_result(state, result_type, result_version=1)
+    return await controller.read_settled_result(state, result_type, result_version=result_version)
 
 
 class RuntimeModeloWorkbenchSource:

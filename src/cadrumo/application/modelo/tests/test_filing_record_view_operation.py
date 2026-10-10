@@ -248,12 +248,13 @@ def _context(
     action: AccessAction = AccessAction.SUBMIT,
     profile_id: UUID = _PROFILE,
     admitted: OperationAccessRequest | None = None,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         authority_operation=operation,
@@ -316,6 +317,30 @@ def test_submission_scope_is_exact_and_result_disclosure_is_tax_values() -> None
     assert permission.projection_id == registration.contract.result_schema.schema_id
     assert permission.category is DisclosureCategory.TAX_VALUES
     assert definition.result_type is ModeloFilingRecordViewProjection
+
+
+@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
+def test_the_view_is_admitted_alike_on_every_frontend_for_either_kind_of_session(
+    frontend: OperationFrontendProjection,
+) -> None:
+    unit, record = _source()
+    _factory, definition, registration, registry = _registered(_bundle())
+    operation = cast(PinnedAuthorityOperation, object())
+
+    admitted = resolve_operation_access(
+        registry=registry,
+        request=_request(record),
+        context=_context(registration, operation=operation, frontend=frontend),
+    )
+
+    assert definition.permitted_frontends == frozenset(OperationFrontendProjection)
+    assert registration.contract.permitted_frontends == frozenset(OperationFrontendProjection)
+    assert admitted.request.frontend is frontend
+    assert admitted.request.periods == frozenset({unit.period})
+    # A session under the person's sign-in and one under an enrolled key differ
+    # in kind alone, and only a human-only policy tells the two apart.
+    assert admitted.policy.requires_human is False
+    assert AccessAction.COMMIT not in admitted.policy.actions
 
 
 def test_view_request_identity_refuses_before_missing_pin_and_shape() -> None:

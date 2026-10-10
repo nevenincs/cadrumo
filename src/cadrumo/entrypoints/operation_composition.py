@@ -193,6 +193,8 @@ from ..application.ledger.evidence_followup_contracts import (
 from ..application.ledger.evidence_followup_registration import (
     build_ledger_evidence_followup_definitions,
     build_ledger_evidence_followup_registrations,
+    build_ledger_evidence_review_summary_definition,
+    build_ledger_evidence_review_summary_registration,
 )
 from ..application.ledger.evidence_ingestion_operation import (
     build_ledger_evidence_ingestion_definitions,
@@ -207,6 +209,8 @@ from ..application.ledger.evidence_mutation_operation import (
 from ..application.ledger.evidence_read_operation import (
     build_ledger_evidence_list_definition,
     build_ledger_evidence_list_registration,
+    build_ledger_evidence_query_definition,
+    build_ledger_evidence_query_registration,
     build_ledger_evidence_view_definition,
     build_ledger_evidence_view_registration,
 )
@@ -214,6 +218,8 @@ from ..application.ledger.export_operation import build_ledger_export_definition
 from ..application.ledger.history_operation import (
     build_ledger_history_definition,
     build_ledger_history_registration,
+    build_ledger_history_typed_definition,
+    build_ledger_history_typed_registration,
 )
 from ..application.ledger.import_operation import (
     LedgerImportOperationPorts,
@@ -729,6 +735,8 @@ from ..application.user_profile.history_operation import (
     build_profile_history_definition,
     build_profile_history_registration,
 )
+    build_profile_history_timeline_definition,
+    build_profile_history_timeline_registration,
 from ..application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
@@ -1064,8 +1072,12 @@ def build_production_operation_registry(
     review_read_definitions = build_review_read_definitions(
         ReviewReadOperationPorts(settings=resolved_settings, draft_review_ports_factory=build_draft_review_ports)
     )
-    evidence_followup_definitions = build_ledger_evidence_followup_definitions(
-        _production_registry_evidence_followup_ports(evidence_followup_ports, resolved_settings)
+    resolved_evidence_followup_ports = _production_registry_evidence_followup_ports(
+        evidence_followup_ports, resolved_settings
+    )
+    evidence_followup_definitions = build_ledger_evidence_followup_definitions(resolved_evidence_followup_ports)
+    evidence_review_summary_definition = build_ledger_evidence_review_summary_definition(
+        resolved_evidence_followup_ports
     )
     modelo_bindings_list_definition = build_modelo_bindings_list_definition()
     modelo_bindings_resolve_definition = build_modelo_bindings_resolve_definition()
@@ -1097,6 +1109,7 @@ def build_production_operation_registry(
     profile_history_definition = build_profile_history_definition(_build_profile_history_read_ports)
     certificate_source_ports = CertificateSourceOperationPorts(
         operator_scope_ports=resolved_operator_scope_ports,
+    profile_history_timeline_definition = build_profile_history_timeline_definition(_build_profile_history_read_ports)
         operator_probe_ports=resolved_auth_ports.operator_probe_ports,
         certificate_secret_backend_factory=resolved_auth_ports.certificate_secret_backend_factory,
     )
@@ -1413,6 +1426,7 @@ def build_production_operation_registry(
 
     if own_account_repository_factory is None:
         from ..adapters.persistence.profile.own_accounts import OwnAccountRepository
+    ledger_history_typed_definition = build_ledger_history_typed_definition(ledger_action_ports_factory)
 
         own_account_repository_factory = OwnAccountRepository
 
@@ -1470,6 +1484,7 @@ def build_production_operation_registry(
     ledger_evidence_reader_readiness_definition = build_ledger_evidence_reader_readiness_definition(
         read_local_reader_status
     )
+    ledger_evidence_query_definition = build_ledger_evidence_query_definition(build_ledger_evidence_ports)
     ledger_evidence_extract_definition = build_ledger_evidence_extract_definition(
         build_invoice_evidence_operation_ports
     )
@@ -1558,6 +1573,7 @@ def build_production_operation_registry(
                 *google_configuration_definitions,
                 quickfile_definition,
                 modelo_bindings_list_definition,
+                evidence_review_summary_definition,
                 modelo_bindings_resolve_definition,
                 modelo_bindings_resolve_typed_definition,
                 modelo_requires_definition,
@@ -1613,6 +1629,7 @@ def build_production_operation_registry(
                 *modelo_definitions,
                 resolved_censal_definition,
                 censal_prepare_definition,
+                profile_history_timeline_definition,
                 censal_file_import_definition,
                 censal_preview_definition,
                 filed_history_definition,
@@ -1689,6 +1706,7 @@ def build_production_operation_registry(
                 ledger_import_definition,
                 ledger_add_definition,
                 ledger_allocate_definition,
+                ledger_history_typed_definition,
                 ledger_classify_definition,
                 ledger_operator_iva_definition,
                 ledger_classify_review_definition,
@@ -1705,6 +1723,7 @@ def build_production_operation_registry(
                 ledger_evidence_reader_readiness_definition,
                 ledger_evidence_extract_definition,
                 ledger_evidence_confirm_definition,
+                ledger_evidence_query_definition,
                 ledger_split_definition,
                 ledger_merge_definition,
                 ledger_update_definition,
@@ -1759,6 +1778,7 @@ def build_production_operation_registry(
                 *(
                     build_google_configuration_registration(definition)
                     for definition in google_configuration_definitions
+                build_ledger_evidence_review_summary_registration(evidence_review_summary_definition),
                 ),
                 build_quickfile_registration(quickfile_definition),
                 build_modelo_bindings_list_registration(modelo_bindings_list_definition),
@@ -1817,6 +1837,7 @@ def build_production_operation_registry(
                 *build_modelo_lifecycle_operation_registrations(
                     modelo_definitions,
                     metadata_access_resolver=compose_modelo_metadata_access(work_lifecycle_ports_factory),
+                build_profile_history_timeline_registration(profile_history_timeline_definition),
                     revision_access_resolver=compose_modelo_revision_access(verification_repository_bundle_factory),
                 ),
                 build_censal_operation_registration(resolved_censal_definition),
@@ -1897,6 +1918,7 @@ def build_production_operation_registry(
                 build_ledger_import_registration(ledger_import_definition),
                 build_ledger_add_registration(ledger_add_definition),
                 build_ledger_allocate_registration(ledger_allocate_definition),
+                build_ledger_history_typed_registration(ledger_history_typed_definition),
                 build_ledger_classify_registration(ledger_classify_definition),
                 build_ledger_operator_iva_registration(ledger_operator_iva_definition),
                 build_ledger_llm_review_registration(ledger_classify_review_definition),
@@ -1913,6 +1935,7 @@ def build_production_operation_registry(
                 build_ledger_evidence_reader_readiness_registration(ledger_evidence_reader_readiness_definition),
                 build_ledger_evidence_extract_registration(ledger_evidence_extract_definition),
                 build_ledger_evidence_confirm_registration(ledger_evidence_confirm_definition),
+                build_ledger_evidence_query_registration(ledger_evidence_query_definition),
                 build_ledger_split_registration(ledger_split_definition),
                 build_ledger_merge_registration(ledger_merge_definition),
                 build_ledger_update_registration(ledger_update_definition),

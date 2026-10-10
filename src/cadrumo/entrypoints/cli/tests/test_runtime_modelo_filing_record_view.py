@@ -125,7 +125,7 @@ def _bind(monkeypatch: pytest.MonkeyPatch, completion, submitted: list[ModeloFil
         assert kwargs["definition_id"] == MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID
         assert kwargs["subject_ref"] == profile_operation_subject(str(_PROFILE))
         assert kwargs["result_type"] is ModeloFilingRecordViewProjection
-        assert kwargs["request_version"] == kwargs["result_version"] == 1
+        assert (kwargs["request_version"], kwargs["result_version"]) == (1, 2)
         return completion
 
     monkeypatch.setattr(bridge, "run_registered_operation", submit)

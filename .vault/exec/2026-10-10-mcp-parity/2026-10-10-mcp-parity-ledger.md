@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:ec1031659f3cfcf9cdda5d3b13c0f3b34f92ece49fb89e800cc5c13513cf7141'
+body_hash: 'sha256:7897ab9fc813f0140e5257b0122ec5de952e47a3b2d8a30b5007bbdb1796740d'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -374,6 +374,40 @@ related:
 - `S11` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md`
 - `S11` `verify:` `pytest harness data and rule conformance (30 tests)` -> `pass`
 - `S11` `verify:` `ruff check` -> `pass`
+- `S46` `M` `src/cadrumo/application/ledger/evidence_read_operation.py`
+- `S46` `M` `src/cadrumo/application/ledger/evidence_followup_contracts.py`
+- `S46` `M` `src/cadrumo/application/ledger/evidence_followup_operation.py`
+- `S46` `M` `src/cadrumo/application/ledger/evidence_followup_registration.py`
+- `S46` `M` `src/cadrumo/application/ledger/history_operation.py`
+- `S46` `M` `src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py`
+- `S46` `M` `src/cadrumo/application/modelo/filing_record_view_operation.py`
+- `S46` `M` `src/cadrumo/application/modelo/historical_filing_projection.py`
+- `S46` `M` `src/cadrumo/application/user_profile/google_configuration_executor.py`
+- `S46` `M` `src/cadrumo/application/user_profile/google_configuration_operation.py`
+- `S46` `M` `src/cadrumo/application/user_profile/history_contracts.py`
+- `S46` `M` `src/cadrumo/application/user_profile/history_operation.py`
+- `S46` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S46` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S46` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S46` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_filing_record_view.py`
+- `S46` `M` `src/cadrumo/entrypoints/tui/historical_export.py`
+- `S46` `M` `src/cadrumo/entrypoints/tui/modelo/runtime_workbench_reads.py`
+- `S46` `A` `src/cadrumo/application/ledger/tests/test_evidence_query_operation.py`
+- `S46` `A` `src/cadrumo/application/ledger/tests/test_invoice_evidence_readiness_agent_access.py`
+- `S46` `A` `src/cadrumo/application/user_profile/tests/test_google_stored_record_reads_agent_access.py`
+- `S46` `A` `src/cadrumo/application/user_profile/tests/test_history_timeline_operation.py`
+- `S46` `A` `src/cadrumo/entrypoints/tests/conformance_ledger_evidence_agent_support.py`
+- `S46` `A` `src/cadrumo/entrypoints/tests/conformance_ledger_history_support.py`
+- `S46` `verify:` `pytest evidence, history and Google read tests (244 tests)` -> `pass`
+- `S46` `verify:` `pytest modelo, composition, CLI and TUI tests for the touched reads (98 tests)` -> `pass`
+- `S46` `verify:` `pytest census and registry (663 tests)` -> `pass`
+- `S46` `verify:` `pytest executor conformance for the touched families (37 tests)` -> `pass`
+- `S46` `verify:` `pytest harness and command join (275 tests)` -> `pass`
+- `S46` `verify:` `ruff check` -> `pass`
+- `S46` `verify:` `ruff format --check` -> `pass`
+- `S46` `verify:` `ty check --python-platform linux` -> `pass`
+- `S46` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S46` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -392,3 +426,4 @@ related:
 - `S03` The plan asked for the census review confirmation to move into the operation. That is not possible without changing the response contract for every review: apply, reject and inspect evaluate as one access action and carry no intent. The review leaves MCP whole until the approval step carries that intent; the census preview stays open. A capability can be written through user-profile.field-mutation and through user-profile.patch; both routes are refused on MCP. The other six profile writers have no route to a capability. Committed together with S02 because both share the invariant in one test file.
 - `S13` Found while proving the door in a real server process: the login-session port was never composed there, so the resume failed with an invariant error reported as an unavailable runtime. The server now composes it, an invariant failure has its own refusal code, and a test starts the server as a fresh process. Three installed-command tests in the oracle file fail on this machine with `runtime_unavailable` from the stale base-Python install; they do not exercise this Step. The translations of the two user pages are re-synced for es, ca and hu.
 - `S16` Traced first: a process of the same account in a different OS login could have the stored sign-in deleted by presenting any 32 bytes, because the login mismatch deleted before the proof was checked. The proof is now checked first for that one refusal; refusals that are facts about the stored record still delete at once. No session owning the sign-in work was reachable to settle it with, and the change removes no protection: the genuine proof under another login still deletes. One existing expectation changed with it: a record whose login binding was rewritten on disk now reads as tampered and is kept, as any other corrupt record is.
+- `S46` Eight of the nine reads are open. Evidence list and view are served by ledger.evidence.query, which returns the stored file name in place of the typed host path; the review view by ledger.evidence.review.summary, which withholds every free-text draft field and says so per row; profile.history by profile.history.timeline. Reader readiness returns the endpoint as scheme, host and port only. The filing record view returns typed rows at result version 2. Google folder view and status no longer require commit rights or a human-only session. Also made consistent: ledger.history released the same open event payload on MCP and is now served by ledger.history.typed. Not admitted: config.google.probe, whose result detail is the provider failure text. Open for the owner: the review summary also withholds short identifiers read from the document (tax id, invoice number, date).

@@ -33,6 +33,7 @@ from .evidence_followup_contracts import (
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_REVIEW_LIST_OPERATION_DEFINITION_ID,
+    LEDGER_EVIDENCE_REVIEW_SUMMARY_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID,
     MAX_EVIDENCE_FOLLOWUP_READ_ROWS,
     CountryVocabularyAdvisoryProjection,
@@ -51,6 +52,8 @@ from .evidence_followup_contracts import (
     LedgerEvidenceReviewListExecutionResult,
     LedgerEvidenceReviewListProjection,
     LedgerEvidenceReviewListRequest,
+    LedgerEvidenceReviewSummaryExecutionResult,
+    LedgerEvidenceReviewSummaryProjection,
     LedgerEvidenceReviewViewExecutionResult,
     LedgerEvidenceReviewViewProjection,
     LedgerEvidenceReviewViewRequest,
@@ -381,6 +384,30 @@ def _review_view_projection(
     )
 
 
+def _read_review_view(
+    ports: LedgerEvidenceFollowupOperationPorts,
+    bucket_id: str,
+    payload: LedgerEvidenceReviewViewRequest,
+    operation: PinnedAuthorityOperation,
+) -> LedgerEvidenceReviewViewProjection:
+    """Read one pending draft and derive its complete review under the retained authority."""
+    stored = _stored_review_view_draft(ports, bucket_id, payload.evidence_reference)
+    draft = stored.draft.with_label_reading_fallback(stored.label_reading_fallback)
+    party_advisory, country_advisory = _review_view_advisories(draft, operation)
+    projected_draft = _review_view_invoice_draft_projection(draft)
+    result = _review_view_projection(
+        payload.profile_id,
+        stored,
+        draft,
+        projected_draft,
+        _party_attribution_projection(party_advisory),
+        _country_vocabulary_projection(country_advisory),
+    )
+    if result.evidence_reference != payload.evidence_reference:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return result
+
+
 class LedgerEvidenceConsentListExecutor:
     """Enumerate consent entries and derived drafts within one profile."""
 
@@ -506,21 +533,7 @@ class LedgerEvidenceReviewViewExecutor:
         await context.events.effect(OperationEffect.NONE)
 
         def read() -> LedgerEvidenceReviewViewProjection:
-            stored = _stored_review_view_draft(self._ports, bucket_id, payload.evidence_reference)
-            draft = stored.draft.with_label_reading_fallback(stored.label_reading_fallback)
-            party_advisory, country_advisory = _review_view_advisories(draft, context.authority_operation)
-            projected_draft = _review_view_invoice_draft_projection(draft)
-            result = _review_view_projection(
-                payload.profile_id,
-                stored,
-                draft,
-                projected_draft,
-                _party_attribution_projection(party_advisory),
-                _country_vocabulary_projection(country_advisory),
-            )
-            if result.evidence_reference != payload.evidence_reference:
-                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            return result
+            return _read_review_view(self._ports, bucket_id, payload, context.authority_operation)
 
         return await _capture_result(
             context,
@@ -530,10 +543,50 @@ class LedgerEvidenceReviewViewExecutor:
         )
 
 
+class LedgerEvidenceReviewSummaryExecutor:
+    """Read one full draft review and retain only what an agent may hold of it."""
+
+    def __init__(self, ports: LedgerEvidenceFollowupOperationPorts) -> None:
+        """Bind the encrypted extraction-draft read capability."""
+        self._ports = ports
+
+    async def execute(
+        self,
+        request: OperationRequest[LedgerEvidenceReviewViewRequest],
+        context: OperationExecutorContext,
+    ) -> str:
+        """Read one pending draft's review and seal its summary without document text."""
+        payload = request.payload
+        bucket_id = _require_worker_identity(
+            request,
+            context,
+            definition_id=LEDGER_EVIDENCE_REVIEW_SUMMARY_OPERATION_DEFINITION_ID,
+            profile_id=payload.profile_id,
+        )
+        await context.events.phase(LEDGER_EVIDENCE_REVIEW_SUMMARY_OPERATION_DEFINITION_ID)
+        await context.events.effect(OperationEffect.NONE)
+
+        def read() -> LedgerEvidenceReviewSummaryProjection:
+            # The person's complete review is built once and stays in worker
+            # memory; the document's text never enters the result operand.
+            view = _read_review_view(self._ports, bucket_id, payload, context.authority_operation)
+            return LedgerEvidenceReviewSummaryProjection.from_review_view(view)
+
+        return await _capture_result(
+            context,
+            read=read,
+            wrap=lambda result: LedgerEvidenceReviewSummaryExecutionResult(
+                profile_id=payload.profile_id, result=result
+            ),
+            task_name="ledger-evidence-review-summary",
+        )
+
+
 __all__ = [
     "LedgerEvidenceAttachmentQueueExecutor",
     "LedgerEvidenceAttachmentViewExecutor",
     "LedgerEvidenceConsentListExecutor",
     "LedgerEvidenceReviewListExecutor",
+    "LedgerEvidenceReviewSummaryExecutor",
     "LedgerEvidenceReviewViewExecutor",
 ]

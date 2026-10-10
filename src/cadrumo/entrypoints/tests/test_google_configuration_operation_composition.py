@@ -125,6 +125,14 @@ def test_composed_local_leaves_preserve_full_records_and_idempotent_logout(
         at_rest = read_db_at_rest_bytes(profile.paths.database_file)
         assert SYNTHETIC_CLIENT_CREDENTIAL.encode() not in at_rest and b"synthetic-refresh-secret" not in at_rest
         assert SYNTHETIC_CLIENT_CREDENTIAL not in status.model_dump_json()
+        # The folder record is read again now that a credential is stored beside it.
+        reviewed = run(contracts.GoogleFolderViewRequest(profile_id=_PROFILE))
+        for stored_record in (status, reviewed):
+            released = stored_record.model_dump_json()
+            assert _REFRESH_CREDENTIAL not in released and _OAUTH_ENDPOINT not in released
+            assert SYNTHETIC_CLIENT_ID not in released
+        assert status.account_email == "synthetic@example.invalid"
+        assert reviewed == viewed
         first = run(contracts.GoogleLogoutRequest(profile_id=_PROFILE))
         second = run(contracts.GoogleLogoutRequest(profile_id=_PROFILE))
         assert isinstance(first, contracts.GoogleLogoutProjection) and first.token_removed and first.metadata_removed

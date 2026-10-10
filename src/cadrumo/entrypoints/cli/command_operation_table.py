@@ -409,7 +409,10 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
 """One row for each executable command and each operation it can submit."""
 
 OPERATIONS_WITHOUT_COMMAND: Final[tuple[str, ...]] = (
+    "ledger.evidence.query",
     "ledger.evidence.reader-readiness",
+    "ledger.evidence.review.summary",
+    "ledger.history.typed",
     "live.borrador.100.query",
     "local-reader.provision",
     "modelo.036.query",
@@ -423,6 +426,7 @@ OPERATIONS_WITHOUT_COMMAND: Final[tuple[str, ...]] = (
     "modelo.readiness.summary",
     "modelo.work.casilla_help",
     "modelo.work.form",
+    "profile.history.timeline",
     "user-profile.automation-renew",
     "user-profile.automation-request",
     "user-profile.automation-rotate",

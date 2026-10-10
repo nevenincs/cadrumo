@@ -39,7 +39,11 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
-from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import (
+    ALL_OPERATION_FRONTENDS,
+    OperationPublicDefinitionRegistrationV1,
+    OperationSchemaBindingV1,
+)
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -51,6 +55,7 @@ from .historical_filing_projection import ModeloHistoricalFilingContentProjectio
 from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
 
 MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID = "modelo.filing_record.view"
+MODELO_FILING_RECORD_VIEW_RESULT_VERSION = 2
 MAX_FILING_RECORD_VIEW_CASILLA_VALUES = 4_096
 _RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
@@ -197,7 +202,7 @@ class ModeloFilingRecordViewProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    result_version: Literal[1] = 1
+    result_version: Literal[2] = 2
     profile_id: UUID
     filing_record_id: FilingRecordId
     record: ModeloFilingRecordListEntryProjection
@@ -301,7 +306,7 @@ def build_modelo_filing_record_view_definition(
         executor_type=ModeloFilingRecordViewExecutor,
         build=lambda: ModeloFilingRecordViewExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
 
@@ -325,9 +330,16 @@ def build_modelo_filing_record_view_registration(
             fresh_period=lambda operation: _resolve_period(payload, factory, operation=operation).to_period(),
         )
 
-    return OperationPublicDefinitionRegistrationV1.compose_request_result(
+    return OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,
-        public_result_type=ModeloFilingRecordViewProjection,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id=definition.definition_id + ".request", schema_version=1, model_type=definition.request_type
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id=definition.definition_id + ".result",
+            schema_version=MODELO_FILING_RECORD_VIEW_RESULT_VERSION,
+            model_type=ModeloFilingRecordViewProjection,
+        ),
         access_resolver=resolve,
     )
 
@@ -335,6 +347,7 @@ def build_modelo_filing_record_view_registration(
 __all__ = [
     "MAX_FILING_RECORD_VIEW_CASILLA_VALUES",
     "MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID",
+    "MODELO_FILING_RECORD_VIEW_RESULT_VERSION",
     "ModeloFilingObservationLayerProjection",
     "ModeloFilingObservationLayersProjection",
     "ModeloFilingObservationOverrideProjection",

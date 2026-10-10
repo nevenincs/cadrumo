@@ -89,6 +89,14 @@ def _read_cases() -> tuple[_ReadCase, ...]:
             lambda ports: history.LedgerHistoryExecutor(cast(Any, ports)),
         ),
         _ReadCase(
+            "history-typed",
+            _request(
+                history.LEDGER_HISTORY_TYPED_OPERATION_DEFINITION_ID,
+                history.LedgerHistoryRequest(profile_id=_PROFILE_ID, transaction_prefix="a" * 12),
+            ),
+            lambda ports: history.LedgerHistoryTypedExecutor(cast(Any, ports)),
+        ),
+        _ReadCase(
             "list",
             _request(
                 list_ledger.LEDGER_LIST_OPERATION_DEFINITION_ID, list_ledger.LedgerListRequest(profile_id=_PROFILE_ID)

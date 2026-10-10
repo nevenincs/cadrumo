@@ -67,6 +67,8 @@ class McpAdmissionPrerequisite(StrEnum):
     """A confirmation or validation still lives in the command line or terminal interface."""
     ADMISSION_CHECKLIST = "admission_checklist"
     """Nothing specific is outstanding, but the definition has not been taken through admission."""
+    RESULT_TEXT_BOUND = "result_text_bound"
+    """A result field carries text from outside the application that no contract bounds."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,7 +122,7 @@ _WRITES_ONLINE: Final = _Facts(changes_records=True, reaches_network=True)
 _FILES: Final = McpAdmissionPrerequisite.FILE_EXCHANGE
 _SAFEGUARD: Final = McpAdmissionPrerequisite.SAFEGUARD_MOVE
 _CHECKLIST: Final = McpAdmissionPrerequisite.ADMISSION_CHECKLIST
-_BYTES: Final = McpAdmissionPrerequisite.EVIDENCE_BYTES_CHECK
+_TEXT: Final = McpAdmissionPrerequisite.RESULT_TEXT_BOUND
 
 _ACCESS: Final = McpExclusionReason.ACCESS_ADMINISTRATION
 _CANNOT_RUN: Final = McpExclusionReason.CANNOT_RUN_FROM_MCP
@@ -212,20 +214,22 @@ _GOOGLE_AND_SHARING: Final = (
     _admit("config.collab.recipient.list", _READS),
     _approve("config.collab.recipient.remove", _WRITES),
     _approve("config.google.folder.organize", _WRITES_ONLINE),
-    _admit("config.google.folder.view", _READS, _CHECKLIST),
+    _admit("config.google.folder.view", _READS),
     # The person gives this consent in a browser.
     _exclude("config.google.login", _WRITES_ONLINE, _CANNOT_RUN),
     # Sign-out deletes the stored session and contacts nothing.
     _approve("config.google.logout", _WRITES),
-    _admit("config.google.probe", _WRITES_ONLINE, _CHECKLIST),
-    _admit("config.google.status", _READS, _CHECKLIST),
+    # The probe report's detail is the provider's own failure text, whatever it says.
+    _admit("config.google.probe", _WRITES_ONLINE, _TEXT),
+    _admit("config.google.status", _READS),
     _admit("export.calculation-review-xlsx", _WRITES, _FILES, _SAFEGUARD),
     _approve("export.google-review", _WRITES_ONLINE, _SAFEGUARD),
     _exclude("export.google-sheets", _WRITES_ONLINE, _NOT_RUNNABLE),
     _approve("profile.archive.export", _WRITES, _FILES),
     _approve("profile.archive.push", _WRITES_ONLINE),
     _approve("profile.archive.reconcile", _WRITES),
-    _admit("profile.history", _READS, _CHECKLIST),
+    _serve_by("profile.history", "profile.history.timeline"),
+    _admit("profile.history.timeline", _READS),
 )
 
 # A ledger write that converts a foreign-currency amount looks its rate up at
@@ -245,7 +249,8 @@ _LEDGER_ENTRIES: Final = (
     _admit("ledger.detach", _WRITES, _CHECKLIST),
     _admit("ledger.exclude", _WRITES, _SAFEGUARD),
     _admit("ledger.export", _WRITES, _FILES),
-    _admit("ledger.history", _READS),
+    _serve_by("ledger.history", "ledger.history.typed"),
+    _admit("ledger.history.typed", _READS),
     _admit("ledger.import", _WRITES_ONLINE, _FILES, _SAFEGUARD),
     _admit("ledger.link", _WRITES),
     _admit("ledger.list", _READS),
@@ -290,13 +295,15 @@ _LEDGER_EVIDENCE_AND_INVOICES: Final = (
     _admit("ledger.evidence.consent.list", _READS),
     # Reading a document off the machine is a consent, never a field the caller sets.
     _admit("ledger.evidence.extract", _WRITES_ONLINE, _CHECKLIST, sensitive=("off_host",)),
-    _admit("ledger.evidence.list", _READS, _BYTES),
-    _admit("ledger.evidence.reader-readiness", _READS_ONLINE, _BYTES),
+    _serve_by("ledger.evidence.list", "ledger.evidence.query"),
+    _admit("ledger.evidence.query", _READS),
+    _admit("ledger.evidence.reader-readiness", _READS_ONLINE),
     _approve("ledger.evidence.remove", _WRITES),
     _admit("ledger.evidence.review.list", _READS),
-    _admit("ledger.evidence.review.view", _READS, _BYTES),
+    _admit("ledger.evidence.review.summary", _READS),
+    _serve_by("ledger.evidence.review.view", "ledger.evidence.review.summary"),
     _admit("ledger.evidence.update", _WRITES, _CHECKLIST),
-    _admit("ledger.evidence.view", _READS, _BYTES),
+    _serve_by("ledger.evidence.view", "ledger.evidence.query"),
     _admit("ledger.invoice.add", _WRITES_ONLINE),
     _admit("ledger.invoice.import", _WRITES_ONLINE, _FILES),
     _admit("ledger.invoice.list", _READS),
@@ -385,7 +392,7 @@ _MODELO_WORK: Final = (
     _approve("modelo.export", _WRITES, _FILES, _SAFEGUARD),
     _admit("modelo.filing_record.import", _WRITES, _FILES),
     _admit("modelo.filing_record.list", _READS),
-    _admit("modelo.filing_record.view", _READS, _CHECKLIST),
+    _admit("modelo.filing_record.view", _READS),
     _serve_by("modelo.history", "modelo.history.timeline"),
     _admit("modelo.history.timeline", _READS),
     _admit("modelo.observation.local", _WRITES, _CHECKLIST),
@@ -522,8 +529,6 @@ MCP_ADMISSION_DECISIONS: Final[tuple[McpAdmissionDecision, ...]] = tuple(_BY_DEF
 MCP_OVER_DECLARED_EFFECTS: Final[Mapping[str, str]] = MappingProxyType(
     {
         "auth.local-read": "reads stored authentication state under an update capability set",
-        "config.google.folder.view": "reports the stored folder; its family declares every effect",
-        "config.google.status": "reports the stored sign-in record; its family declares every effect",
         "ledger.bienes_inversion.list": "lists the register under its family's update capability set",
         "ledger.inventory.list": "lists the register under its family's update capability set",
         "ledger.prorrata.list": "lists the register under its family's update capability set",

@@ -8,6 +8,7 @@ import typer
 
 from ...application.modelo.filing_record_view_operation import (
     MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
+    MODELO_FILING_RECORD_VIEW_RESULT_VERSION,
     ModeloFilingObservationLayerProjection,
     ModeloFilingObservationLayersProjection,
     ModeloFilingObservationOverrideProjection,
@@ -83,7 +84,7 @@ def read_modelo_filing_record_view(
         subject_ref=profile_operation_subject(str(client.profile_id)),
         result_type=ModeloFilingRecordViewProjection,
         request_version=1,
-        result_version=1,
+        result_version=MODELO_FILING_RECORD_VIEW_RESULT_VERSION,
         timeout=60,
     )
     projection = completed.projection
