@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:69ef79c620081c8dbfdb0e7826c362ded3de9105b7862351a5dbf1852313c871'
+body_hash: 'sha256:b2c5f683a41b6d379a2e7f867c81801c1e5e94b192cb3adfe195f0f0b93ea96b'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -206,6 +206,11 @@ related:
 - `S06` `verify:` `ruff format --check on the files of this Step` -> `pass`
 - `S06` `verify:` `ty check --python-platform linux` -> `pass`
 - `S06` `by:` `vaultspec-high-executor`
+- `S06` `M` `docs/locales/es/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S06` `M` `docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S06` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S06` `verify:` `catalogue entries for the new paragraph: present, not fuzzy, not empty, tokens preserved in es, ca, hu` -> `pass`
+- `S06` `verify:` `pytest dev/docs/tests -k locale/i18n/catalog/translation/po (179 passed, 5 failed)` -> `fail`
 
 ## Notes
 
@@ -217,3 +222,4 @@ related:
 - `S09` The manifest assertion added to `test_command_surface_beside_retired_state.py` cannot run on this machine: that test setup creates a directory beside the checkout and a copy left on 2026-10-05 makes it fail before the assertion, as it does at HEAD. The claim is proven by a new test of the real emitter in `test_command_operation_join.py.` Eight tests in `test_cli_surface.py` fail with `runtime_unavailable` and are unrelated. Seventeen operations list the command line as a frontend although no command submits them. The generated import inventory entries for the two new product modules are added with the next regeneration.
 - `S27` Checklist per operation, by reading: resolver present and frontend-agnostic; no command-line safeguard missing from the operation; no person-act field; no host path; results are typed data with no bytes, secrets or keys; executors read only and reach no network. The command line defaults the year and an MCP caller must supply it. The rule list result includes the stored creator string of each rule. A wide command-line run selected by keyword was still running at close and is not evidence for this Step.
 - `S06` Two files carry another session uncommitted changes; only the surface lines are committed from them (three in `access_contracts.py,` two in `profile_host.py).` The one format finding and the one noqa in those files are in the other session lines. Not built here: status still reports the unnarrowed scope on a narrowed surface; there is no single end-to-end test with a real worker, the chain is covered in three pieces; the packaged plugin launch line never names a surface. Four listed read-only operations rest on the over-declared effects set. The how-to translations for the new paragraph follow separately.
+- `S06` The five docs failures are in other pages and none concerns the agent connection guide: catalogue drift in how-to/profile-setup and reference/identity-and-naming, a composed Catalan root difference in filing-calendar and identity-and-naming, and a sequence golden for how-to/irpf-lifecycle whose command-line frames were refused while frontend sets were being edited by a running Step. The Hungarian wording for an agent that should only look is the translator own reading.
