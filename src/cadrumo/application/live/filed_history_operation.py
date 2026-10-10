@@ -10,12 +10,13 @@ from collections.abc import Awaitable, Callable
 from contextlib import AbstractContextManager
 from datetime import date
 from pathlib import Path
-from typing import Protocol
+from typing import Final, Protocol
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.config import load_settings
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.filing_year import FilingYear
 from ...core.identity.profile import canonical_profile_bucket_id
@@ -28,7 +29,10 @@ from ...core.operations import (
     OperationEffect,
     profile_operation_subject,
 )
+from ...core.path_confinement import confined_directory_refusal, host_path_form_refusal
 from ...core.register_scoping_signal import RegisterScopingSignal
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_path
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.models import TaxpayerProfile
@@ -54,6 +58,7 @@ from ..operator_actions.models import ActionReference
 from ..storage.sync_runs.records import SyncRunRecordReference, SyncRunRecordRepositoryProtocol
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .errors import LiveApplicationInputError
 from .filed_data_ports import FiledDataCapturePort, FiledEffectGuard
 from .filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
 from .filed_history_events import (
@@ -97,6 +102,46 @@ _FILED_HISTORY_PHASES = (
     FILED_HISTORY_PHASE_CLEANUP,
     FILED_HISTORY_PHASE_SETTLEMENT,
 )
+
+_CAPTURE_ROOT_CATEGORIES: Final = (
+    StorageCategory.FILED_DECLARATIONS,
+    StorageCategory.IVA_COMPENSATION_HISTORY,
+    StorageCategory.IVA_READ_EVIDENCE,
+    StorageCategory.LIVE_STATE,
+)
+
+
+def require_capture_output_root(output_root: Path) -> None:
+    """Refuse a capture output root this worker cannot take as named.
+
+    A live capture keeps its records in the profile's encrypted object store;
+    the output root names where the capture reports them and is repeated in
+    its result. It is still a host path chosen by the request, so it must be
+    absolute and in a plain form. A root that claims a place inside this
+    worker's own storage, or inside one of its configured capture roots, must
+    really be there: no existing part of it may be reached through a link. A
+    root outside all of those is a directory the operator named and is
+    accepted as written.
+
+    Raises:
+        LiveApplicationInputError: With the reason only, never the path.
+    """
+    refusal = host_path_form_refusal(output_root)
+    if refusal is None:
+        settings = load_settings()
+        configured = (
+            Path(settings.cadrumo_local_storage_root),
+            *(storage_path(category, settings=settings) for category in _CAPTURE_ROOT_CATEGORIES),
+        )
+        containing = [root for root in configured if output_root.is_relative_to(root)]
+        if containing:
+            outermost = min(containing, key=lambda root: len(root.parts))
+            refusal = confined_directory_refusal(output_root, root=outermost)
+    if refusal is not None:
+        raise LiveApplicationInputError(
+            translated_message="errors.refused.refused_application_live_input",
+            context={"field": "output_root", "reason": refusal.value},
+        )
 
 
 class FiledHistoryOperationRequest(BaseModel):
@@ -518,6 +563,7 @@ class FiledHistoryOperationExecutor:
         profile_id = canonical_profile_bucket_id(request.payload.profile_id)
         if require_active_bucket_id() != profile_id or request.subject_ref != profile_operation_subject(profile_id):
             raise ValueError("filed-history operation subject must identify the active profile")
+        require_capture_output_root(request.payload.output_root)
         await context.events.phase(FILED_HISTORY_PHASE_PREFLIGHT)
         self._provider_preflight(request.payload.profile_id, context.authority_operation)
         profile = self._profile_resolver(context.authority_operation)
@@ -665,5 +711,6 @@ __all__ = [
     "bind_shared_filed_history_pull",
     "build_filed_history_operation_definition",
     "build_filed_history_operation_registration",
+    "require_capture_output_root",
     "resolve_filed_history_access",
 ]

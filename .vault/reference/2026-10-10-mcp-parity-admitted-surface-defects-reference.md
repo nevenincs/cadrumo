@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:191c430e2cd66a3c2173fbe802fc8d369221cfa6e6e23a65c4f031c63424da55'
+body_hash: 'sha256:c673038bd093cd2b7e7b69971e43be73554d474209e0359cc8f1ed3a4de77958'
 related: []
 ---
 # `mcp-parity` reference: `admitted surface defects`
@@ -62,6 +62,8 @@ The runtime process opens or writes the path itself; no bytes travel in the requ
 | `modelo.reconcile.import` | `source_path` | in | parses the PDF in place with the reconciliation parsers; I found no step that copies the bytes (`src/cadrumo/application/modelo/reconciliation_import_operation.py:301-309`; `src/cadrumo/application/modelo/reconciliation.py:403-433`) | non-blank, no NUL, at most 4096 characters (`reconciliation_import_operation.py:77-84,119-125`); a relative path resolves against the worker's working directory (inferred) | the path string is the evidence reference and is echoed in the result (`src/cadrumo/application/modelo/reconciliation_import_operation.py:328`; `src/cadrumo/application/modelo/reconciliation.py:414,433`) |
 | `live.filed-capture.single`, `.bulk`, `.source`; `live.filed-history.pull` | `output_root` | out | writes the capture's encrypted stores under the root (`src/cadrumo/application/live/filed_history_pull.py:304`) | type `Path` only, no absolute rule (`src/cadrumo/application/live/filed_single_capture_operation.py:51`; `src/cadrumo/application/live/filed_bulk_capture_operation.py:53`; `src/cadrumo/application/live/filed_source_capture_operation.py:53`; `src/cadrumo/application/live/filed_history_operation.py:108`) | the root is echoed in the public report (`src/cadrumo/application/live/filed_single_capture_operation.py:98,201`) |
 | `live.iva-wallet.history-capture`, `live.iva-wallet.evidence-capture` | `output_root` | out | same | type `Path` only (`src/cadrumo/application/live/iva_wallet_history_capture_operation.py:50`; `src/cadrumo/application/live/iva_remote_state_capture_operation.py:54`) | echoed, and compared with the request (`src/cadrumo/application/live/iva_wallet_history_capture_operation.py:149`) |
+
+Correction, 2026-10-10, from a second reading while the guard was built: the six `output_root` rows above overstate what the runtime does. In the production composition the root is stored, echoed in the report and compared with the request, and nothing opens or writes under it; the observation store keeps the value (`src/cadrumo/adapters/outbound/aeat/sede/observation_store.py:219`) and writes its records to the bucket's encrypted object store (`:407`). The command line accepts any `--output-root` (`src/cadrumo/entrypoints/cli/_app_live_command_spec_support.py:112`) and otherwise sends a settings root, as the terminal interface always does (`src/cadrumo/entrypoints/tui/runtime_workbench.py:301`).
 
 Other facts about paths in open operations:
 

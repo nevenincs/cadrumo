@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Final, Literal, override
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -18,6 +18,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.path_confinement import HostPathRefusal, opened_confined_file
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -49,9 +50,16 @@ from .reconciliation import (
     ModeloReconciliationCommand,
     ModeloReconciliationReport,
     PreparedModeloReconciliation,
+    ReconciliationEvidenceInvalidError,
     prepare_modelo_reconcile,
 )
 from .reconciliation_list_operation import MAX_MODELO_RECONCILIATION_SOURCE_PATH_LENGTH
+from .reconciliation_parsing import (
+    ReconciliationDeclaracionObservation,
+    ReconciliationEvidenceParserPort,
+    bind_reconciliation_evidence_parser,
+    reconciliation_evidence_parser,
+)
 from .reconciliation_records import (
     ModeloReconciliationAdvisory,
     ModeloReconciliationDiff,
@@ -63,7 +71,15 @@ from .work_addressing import ModeloWorkAddressNotFoundError
 from .work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
 from .work_unit_repository import work_unit_catalogue_repository
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.schema import RegistrySnapshot
+    from ...domain.justificante.schema import Justificante
+
 MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID = "modelo.reconcile.import"
+
+# The same ceiling the financial document readers apply to a supplied file.
+MAX_MODELO_RECONCILIATION_SOURCE_BYTES: Final = 64 * 1024 * 1024
+_SOURCE_CHANGED_REASON: Final = "changed_while_read"
 _PHASES = (
     "modelo-reconcile-import.prepare",
     "modelo-reconcile-import.persist",
@@ -263,6 +279,102 @@ def _reconciliation_import_work_selector(payload: ModeloReconciliationImportRequ
     )
 
 
+def _source_refusal(reason: str) -> ReconciliationEvidenceInvalidError:
+    """Refuse the supplied evidence file by reason, without repeating its path."""
+    return ReconciliationEvidenceInvalidError(
+        translated_message="errors.refused.reconciliation_evidence_invalid",
+        context={"reason": reason},
+    )
+
+
+class HandleVerifiedEvidenceParser(ReconciliationEvidenceParserPort):
+    """Hand the reconciliation parsers an evidence file whose opened handle was verified.
+
+    The request names a file on the host, and the worker is the process that
+    opens it. Every path the wrapped parser is asked to read is first opened
+    here: it must be absolute, a regular file that is not a link out of its
+    own directory, in a plain path form, and within the size ceiling.
+
+    A justificante is then parsed from the bytes read through that verified
+    handle, so replacing the path afterwards cannot change what is parsed. A
+    declaración has no path-free entry that selects its own registry design,
+    so it is parsed from the path while the verified handle stays open, and
+    the file is read through a fresh verified handle afterwards; a file that
+    no longer holds the same bytes is refused before anything is compared.
+    """
+
+    def __init__(
+        self,
+        parser: ReconciliationEvidenceParserPort,
+        *,
+        max_bytes: int = MAX_MODELO_RECONCILIATION_SOURCE_BYTES,
+    ) -> None:
+        """Wrap the composed parser and bind the size ceiling of one source file."""
+        self._parser = parser
+        self._max_bytes = max_bytes
+
+    def _verified_bytes(self, source: Path) -> bytes:
+        """Read ``source`` through a verified handle or raise its typed refusal."""
+        with opened_confined_file(source, max_bytes=self._max_bytes) as opened:
+            content = opened if isinstance(opened, HostPathRefusal) else opened.read_bytes()
+        if isinstance(content, HostPathRefusal):
+            raise _source_refusal(content.value)
+        return content
+
+    @override
+    def parse_justificante(self, source: Path) -> Justificante:
+        """Parse the justificante from the bytes of its verified handle."""
+        return self._parser.parse_justificante_bytes(self._verified_bytes(source))
+
+    @override
+    def parse_justificante_bytes(self, source: bytes) -> Justificante:
+        """Parse bytes that never named a host path."""
+        return self._parser.parse_justificante_bytes(source)
+
+    @override
+    def parse_declaracion(
+        self,
+        source: Path,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: str,
+    ) -> ReconciliationDeclaracionObservation:
+        """Parse the declaración between two verified reads that must agree."""
+        with opened_confined_file(source, max_bytes=self._max_bytes) as opened:
+            before = opened if isinstance(opened, HostPathRefusal) else opened.read_bytes()
+            if isinstance(before, HostPathRefusal):
+                raise _source_refusal(before.value)
+            observation = self._parser.parse_declaracion(
+                source,
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+            )
+            if self._verified_bytes(source) != before:
+                raise _source_refusal(_SOURCE_CHANGED_REASON)
+        return observation
+
+    @override
+    def parse_declaracion_bytes(
+        self,
+        source: bytes,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: str,
+        registry_snapshot: RegistrySnapshot,
+    ) -> ReconciliationDeclaracionObservation:
+        """Parse bytes that never named a host path."""
+        return self._parser.parse_declaracion_bytes(
+            source,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            registry_snapshot=registry_snapshot,
+        )
+
+
 class ModeloReconciliationImportExecutor:
     """Prepare a local comparison, then atomically persist its record and event."""
 
@@ -305,7 +417,10 @@ class ModeloReconciliationImportExecutor:
                 actor=payload.actor,
                 calculation_revision_id=payload.calculation_revision_id,
             )
-            with validating_governed_facts(context.authority_operation):
+            with (
+                validating_governed_facts(context.authority_operation),
+                bind_reconciliation_evidence_parser(HandleVerifiedEvidenceParser(reconciliation_evidence_parser())),
+            ):
                 prepared = prepare_modelo_reconcile(command, operation=context.authority_operation)
             return command, prepared
 
@@ -395,7 +510,9 @@ def build_modelo_reconciliation_import_registration(
 
 
 __all__ = [
+    "MAX_MODELO_RECONCILIATION_SOURCE_BYTES",
     "MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID",
+    "HandleVerifiedEvidenceParser",
     "ModeloReconciliationImportExecutor",
     "ModeloReconciliationImportOperationReport",
     "ModeloReconciliationImportProjection",

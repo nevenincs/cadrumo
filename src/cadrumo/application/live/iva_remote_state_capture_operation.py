@@ -25,6 +25,7 @@ from .filed_history_operation import (
     FiledHistoryBrowserResourcesFactory,
     FiledHistoryCompositionFactory,
     FiledHistoryProviderPreflight,
+    require_capture_output_root,
 )
 from .iva_remote_state import capture_iva_remote_state
 from .live_operation_execution import (
@@ -193,6 +194,7 @@ class IvaRemoteStateCaptureExecutor:
         require_exact_profile_worker(
             payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
         )
+        require_capture_output_root(payload.output_root)
         period = Period.from_year_and_code(payload.target_year, payload.target_period)
         composition, resources, session_receipt = await prepare_provider_capture(
             context,

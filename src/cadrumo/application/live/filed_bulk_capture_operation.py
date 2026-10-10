@@ -25,6 +25,7 @@ from .filed_history_operation import (
     FiledHistoryCompositionFactory,
     FiledHistoryProviderPreflight,
     FiledHistorySyncRunRepositoryFactory,
+    require_capture_output_root,
 )
 from .filed_single_capture_operation import (
     FiledCaptureNoticeV1,
@@ -183,6 +184,7 @@ class FiledBulkCaptureExecutor:
         require_exact_profile_worker(
             payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
         )
+        require_capture_output_root(payload.output_root)
         composition, resources, session_receipt = await prepare_provider_capture(
             context,
             payload.profile_id,

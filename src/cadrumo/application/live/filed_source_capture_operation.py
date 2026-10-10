@@ -24,6 +24,7 @@ from .filed_history_operation import (
     FiledHistoryBrowserResourcesFactory,
     FiledHistoryCompositionFactory,
     FiledHistoryProviderPreflight,
+    require_capture_output_root,
 )
 from .filed_single_capture_operation import (
     FiledCaptureNoticeV1,
@@ -116,6 +117,7 @@ class FiledSourceCaptureExecutor:
         require_exact_profile_worker(
             payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
         )
+        require_capture_output_root(payload.output_root)
         await context.events.phase(_PHASES[0])
         self._provider_preflight(payload.profile_id, context.authority_operation)
         period = Period.from_year_and_code(payload.year, payload.period)
