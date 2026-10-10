@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:bda0b5f33db1170fd9dc536c452bae42659c82dc0d049dc4a03464932b13f4cf'
+body_hash: 'sha256:ec1031659f3cfcf9cdda5d3b13c0f3b34f92ece49fb89e800cc5c13513cf7141'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -358,6 +358,22 @@ related:
 - `S17` `verify:` `ruff check` -> `pass`
 - `S17` `verify:` `ty check --python-platform linux` -> `pass`
 - `S17` `by:` `vaultspec-high-executor`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_supplied_human_receipt.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_sign_in_binding.py`
+- `S16` `M` `src/cadrumo/entrypoints/runtime/profile_login.py`
+- `S16` `M` `src/cadrumo/application/user_profile/login_session.py`
+- `S16` `M` `src/cadrumo/application/user_profile/login_session_port.py`
+- `S16` `verify:` `pytest custody receipt and login-session adapter tests (62 tests)` -> `pass`
+- `S16` `verify:` `pytest runtime receipt and sign-in tests (46 tests)` -> `pass`
+- `S16` `verify:` `ruff check` -> `pass`
+- `S16` `verify:` `ruff format --check` -> `pass`
+- `S16` `verify:` `ty check --python-platform linux` -> `pass`
+- `S16` `by:` `vaultspec-standard-executor`
+- `S11` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S11` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md`
+- `S11` `verify:` `pytest harness data and rule conformance (30 tests)` -> `pass`
+- `S11` `verify:` `ruff check` -> `pass`
 
 ## Notes
 
@@ -375,3 +391,4 @@ related:
 - `S02` Refused on MCP until the approval step exists: ledger.invoice.remove and auth.session.reset whole; the six writing actions of `ledger.own_account;` declare and remove of `modelo.m360_solicitud;` the three prorrata elections. The other five prorrata operations, auth.session.logout and the reads of the mixed definitions keep MCP. The off-machine read of ledger.evidence.extract is not covered by the invariant because that definition does not list MCP yet. Native command-line suites that need a running runtime could not run on this machine.
 - `S03` The plan asked for the census review confirmation to move into the operation. That is not possible without changing the response contract for every review: apply, reject and inspect evaluate as one access action and carry no intent. The review leaves MCP whole until the approval step carries that intent; the census preview stays open. A capability can be written through user-profile.field-mutation and through user-profile.patch; both routes are refused on MCP. The other six profile writers have no route to a capability. Committed together with S02 because both share the invariant in one test file.
 - `S13` Found while proving the door in a real server process: the login-session port was never composed there, so the resume failed with an invariant error reported as an unavailable runtime. The server now composes it, an invariant failure has its own refusal code, and a test starts the server as a fresh process. Three installed-command tests in the oracle file fail on this machine with `runtime_unavailable` from the stale base-Python install; they do not exercise this Step. The translations of the two user pages are re-synced for es, ca and hu.
+- `S16` Traced first: a process of the same account in a different OS login could have the stored sign-in deleted by presenting any 32 bytes, because the login mismatch deleted before the proof was checked. The proof is now checked first for that one refusal; refusals that are facts about the stored record still delete at once. No session owning the sign-in work was reachable to settle it with, and the change removes no protection: the genuine proof under another login still deletes. One existing expectation changed with it: a record whose login binding was rewritten on disk now reads as tampered and is kept, as any other corrupt record is.

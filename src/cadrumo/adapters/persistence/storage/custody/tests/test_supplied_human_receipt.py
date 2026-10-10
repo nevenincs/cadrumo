@@ -147,6 +147,40 @@ def test_a_wrong_proof_is_non_destructive_and_uses_no_keyring_lookup(
     receipt._zeroise(key)
 
 
+def test_a_wrong_proof_under_another_login_deletes_nothing_and_the_sign_in_survives(
+    tmp_path: Path, human_keyring: _HumanKeyring
+) -> None:
+    profile_id = uuid4()
+    opened = datetime(2026, 9, 27, 12, tzinfo=UTC)
+    dek = bytes(range(32))
+    record = _mint_receipt(tmp_path, profile_id, opened, dek)
+    path = receipt.profile_session_path(storage_root=tmp_path, profile_id=profile_id)
+    original = path.read_bytes()
+    account = (receipt.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{profile_id}:{record.session_id}")
+    _, key = receipt.borrow_profile_session_key(storage_root=tmp_path, profile_id=profile_id)
+    assert key is not None
+
+    # Which login presents a proof says nothing about whether the proof is the
+    # person's, so a caller that cannot unwrap the receipt cannot retire it.
+    refused, no_dek = _resume_with_key(
+        tmp_path,
+        profile_id,
+        bytearray(b"x" * 32),
+        now=opened + timedelta(minutes=1),
+        login_id=OTHER_LOGIN_ID,
+    )
+
+    assert refused.refusal is ProfileSessionRefusalReason.TAMPERED and no_dek is None
+    assert refused.deletion is receipt.ReceiptDeletion.NOT_REQUIRED
+    assert path.read_bytes() == original and account in human_keyring.entries
+    accepted, recovered = _resume_with_key(tmp_path, profile_id, key, now=opened + timedelta(minutes=2))
+    assert accepted.record == record and recovered == dek
+    assert path.read_bytes() == original and account in human_keyring.entries
+    assert recovered is not None
+    receipt._zeroise(recovered)
+    receipt._zeroise(key)
+
+
 @pytest.mark.parametrize(
     ("case", "reason", "binding"),
     [

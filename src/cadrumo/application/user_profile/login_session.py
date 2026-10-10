@@ -567,9 +567,11 @@ def resume_profile_candidate(
     the connection presenting the proof, and ``sign_in_binding``, its worker's
     custody binding. The receipt must name that login and the current sign-in
     generation; a receipt refused for its binding or its own metadata is
-    deleted by the reader, never by the presenting frontend. A valid proof
-    inherits the receipt's original deadlines. It never reads the OS keyring
-    for a key, renews human life, or changes the active frontend context.
+    deleted by the reader, never by the presenting frontend, except that a
+    login mismatch deletes only when the supplied proof unwraps the receipt.
+    A valid proof inherits the receipt's original deadlines. It never reads
+    the OS keyring for a key, renews human life, or changes the active
+    frontend context.
     """
     instant = _now() if now is None else now
     storage_root = effective_storage_root()

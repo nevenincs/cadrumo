@@ -269,7 +269,9 @@ class ProfileLoginSessionPort(Protocol):
         """Verify a supplied human wrap key against ``login_id`` and the current sign-in generation.
 
         It never reads a key from the OS store. A receipt refused for its own
-        metadata or binding is deleted by this runtime-side reader.
+        metadata or generation is deleted by this runtime-side reader; one
+        refused for the caller's login is deleted only when the supplied key
+        unwraps it.
         """
         ...
 

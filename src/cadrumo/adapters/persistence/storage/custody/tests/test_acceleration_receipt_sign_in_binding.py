@@ -233,13 +233,12 @@ class TestMintBinding:
     @pytest.mark.parametrize(
         ("field", "value"),
         [
-            ("login_binding", "f" * 64),
             ("sign_in", SignInGeneration(lineage=uuid4(), generation=1)),
             ("sign_in", "advanced"),
         ],
-        ids=("login-binding", "sign-in-lineage", "sign-in-generation"),
+        ids=("sign-in-lineage", "sign-in-generation"),
     )
-    def test_a_substituted_binding_fails_the_tag_and_is_removed(
+    def test_a_substituted_generation_fails_the_tag_and_is_removed(
         self, sign_in: SignInGenerationCustody, keychain: _Keyring, field: str, value: object
     ) -> None:
         record = _mint(sign_in)
@@ -254,13 +253,29 @@ class TestMintBinding:
         outcome = _resume(sign_in)
 
         assert outcome.refusal is ProfileSessionRefusalReason.ABSENT
-        assert outcome.binding is (
-            ReceiptBindingRefusal.LOGIN_MISMATCH
-            if field == "login_binding"
-            else ReceiptBindingRefusal.GENERATION_CHANGED
-        )
+        assert outcome.binding is ReceiptBindingRefusal.GENERATION_CHANGED
         assert not _path(sign_in).exists()
         assert _account(record.profile_id, record.session_id) not in keychain.entries
+
+    def test_a_substituted_login_binding_fails_the_tag_and_retires_nothing(
+        self, sign_in: SignInGenerationCustody, keychain: _Keyring
+    ) -> None:
+        record = _mint(sign_in)
+        forged = record.model_copy(update={"login_binding": "f" * 64})
+        key = keychain.entries[_account(record.profile_id, record.session_id)]
+        with pytest.raises(DecryptionError):
+            unwrap_profile_session_dek(session_key=b64_decode(key), record=forged)
+        _path(sign_in).write_bytes(receipt._receipt_bytes(forged))
+
+        outcome = _resume(sign_in)
+
+        # A login that does not match retires a sign-in only for a caller whose
+        # proof unwraps it, and no proof unwraps a record whose binding was
+        # rewritten: it reads as tampered, like any other corrupt record.
+        assert outcome.refusal is ProfileSessionRefusalReason.TAMPERED
+        assert outcome.binding is None
+        assert _path(sign_in).exists()
+        assert _account(record.profile_id, record.session_id) in keychain.entries
 
     def test_mint_refuses_uncommitted_custody_without_any_artifact(
         self, tmp_path: Path, profile_id: UUID, keychain: _Keyring

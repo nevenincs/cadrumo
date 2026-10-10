@@ -33,8 +33,9 @@ unless that generation is still the durable current one. It never creates the
 generation record: the runtime establishes it when it publishes the session
 the receipt belongs to. The runtime's supplied-key reader verifies the
 expected OS login and the current generation, under the custody root lock
-that every generation write also holds, before it unwraps the DEK; a receipt
-it refuses is deleted there through the typed deletion path. The frontend's
+that every generation write also holds, before it hands out the DEK; a
+receipt it refuses is deleted there through the typed deletion path, a login
+mismatch only once the supplied proof has unwrapped it. The frontend's
 proof borrow reads only the keychain proof and the receipt locator, so no DEK
 reaches a frontend and no frontend deletes either half.
 
@@ -1154,18 +1155,21 @@ def resume_profile_session_with_key(
     """Verify a supplied human wrap key; the runtime's only receipt unwrap.
 
     It never reads the keychain for a key. Before any unwrap it checks the
-    receipt against ``login_id``, the originating OS login of the connection
-    presenting the proof, and against the generation ``sign_in`` currently
-    holds, observed under the custody root lock that every generation write
-    also holds. A receipt that its own bytes refuse whatever proof is
-    supplied -- malformed, another schema, another profile, changed custody,
-    an elapsed deadline, another login, or a generation that is missing,
-    unreadable or no longer current -- is deleted here, both halves, and the
-    outcome reports how far that deletion got. A wrong client proof never
-    deletes the current record or its stored key, because a proof that fails
-    to unwrap cannot tell a stale or forged key from a corrupt record. The
-    verified record carries the original deadlines; this door does not
-    advance either deadline or publish an ambient process session.
+    receipt against the generation ``sign_in`` currently holds, observed under
+    the custody root lock that every generation write also holds, and against
+    ``login_id``, the originating OS login of the connection presenting the
+    proof. A receipt that its own bytes refuse whatever proof is supplied --
+    malformed, another schema, another profile, changed custody, an elapsed
+    deadline, or a generation that is missing, unreadable or no longer
+    current -- is deleted here, both halves, and the outcome reports how far
+    that deletion got. A login mismatch depends on who is calling, so it
+    deletes only once the supplied proof has unwrapped the receipt; the
+    unwrapped key is then discarded and the refusal is the same. A wrong
+    client proof never deletes the current record or its stored key, whatever
+    login presents it, because a proof that fails to unwrap cannot tell a
+    stale or forged key from a corrupt record. The verified record carries
+    the original deadlines; this door does not advance either deadline or
+    publish an ambient process session.
 
     Raises:
         StorageValidationError: When ``sign_in`` is bound to another storage
@@ -1301,7 +1305,7 @@ def _resume_supplied_key_locked(
     if reason is not None:
         return _refuse_supplied_key_receipt(reason, path=path, payload=payload, decoded=decoded)
     binding = _receipt_binding_refusal(record=record, login_id=expected.login_id, generation=expected.generation)
-    if binding is not None:
+    if binding is not None and binding is not ReceiptBindingRefusal.LOGIN_MISMATCH:
         return _refuse_supplied_key_receipt(
             ProfileSessionRefusalReason.ABSENT, path=path, payload=payload, decoded=decoded, binding=binding
         )
@@ -1309,6 +1313,14 @@ def _resume_supplied_key_locked(
         dek = _crypto.unwrap_profile_session_dek(session_key=bytes(receipt_key), record=record)
     except DecryptionError:
         return _refusal(ProfileSessionRefusalReason.TAMPERED, record)
+    if binding is not None:
+        # The login is the one refusal that depends on who is calling, so only
+        # the holder of the proof may retire the sign-in over it; the key
+        # recovered to prove that is not handed out.
+        _zeroise(dek)
+        return _refuse_supplied_key_receipt(
+            ProfileSessionRefusalReason.ABSENT, path=path, payload=payload, decoded=decoded, binding=binding
+        )
     return ProfileSessionResumeOutcome(resumed=True, record=record), dek
 
 

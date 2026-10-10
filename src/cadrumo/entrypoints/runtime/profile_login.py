@@ -106,8 +106,10 @@ class ProfileWorkerHumanLogin:
 
         ``login_id`` is the originating OS login the runtime captured for the
         presenting connection. The receipt must name it and the current
-        sign-in generation; a receipt refused for either, or for its own
-        metadata, is deleted by this worker before the refusal returns.
+        sign-in generation; a receipt refused for its generation or its own
+        metadata is deleted by this worker before the refusal returns. A
+        receipt refused only for the login is deleted likewise, but only when
+        the supplied proof unwraps it; a wrong proof deletes nothing.
         """
         with self._lock:
             self.cancel()
