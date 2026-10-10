@@ -15,7 +15,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
 modified: '2026-10-10'
 body_schema: body-v2
-body_hash: 'sha256:e74ac64e10ae0e06a87ef733370bd6bf0f2211db2f1c2d04e5eccbb6941e9af9'
+body_hash: 'sha256:f28b721fbfa638642eb8ac36fe959177da5ff8488f26042c2743b9d6e3c96d29'
 ---
 
 # `mcp-parity` plan
@@ -172,5 +172,16 @@ The project forbids test doubles for the behaviour under test, so "proved" means
 - One quarterly and one annual declaration are prepared through MCP alone and equal the command-line result for the same inputs.
 - No sensitive operation runs on the MCP frontend without the person's approval of that exact act, and an approval given for one act does not carry to another.
 - `just check-code`, `just check-import-boundaries`, `just check-types` and the covering tests pass for the files each Step touches.
+
+The admission checklist, applied to every operation a Step admits and recorded in that Step's ledger rows. Its items are the mechanism record's hypothesis made concrete, and they may be refined as Steps learn:
+
+- The operation has an access resolver, and the real resolver admits a valid request on the MCP frontend.
+- Every confirmation or validation that the command line or terminal interface applies outside the operation is enforced inside it, or none exists.
+- The request has no field that stands for a person's act: no acknowledgement, consent or free-text actor. The actor is taken from the session.
+- The request and the result carry no host path, unless the operation is admitted over file exchange.
+- The result carries no evidence bytes, secret, key or raw secure payload, and nothing written only for a person.
+- An effectful operation requires the caller's replay identity once that decision is accepted.
+- The executor is read, and the decision row's two facts, whether it changes records and whether it reaches the network, match what it does.
+- The decision row loses its prerequisite, the frontend set changes with one contract cutover for the family, and a round trip and a refusal are tested on the MCP frontend.
 
 Review follows the system cadence: one integrated review at each Phase close and at plan close, against the three decision records. The plan is complete when every Step is closed and the final review passes.
