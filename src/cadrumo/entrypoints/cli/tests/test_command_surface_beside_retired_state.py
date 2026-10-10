@@ -84,6 +84,13 @@ def test_the_command_surface_manifest_carries_the_published_modelos_beside_retir
         if parameter["name"] == "modelo"
     )
     assert modelo["choices"] == published_modelos
+    # The command-to-operation join is recorded beside the graph, so describing
+    # it asks neither the storage root nor an operation registry for anything.
+    join = manifest["command_operations"]
+    submitted = {tuple(row["cli_path"]): row["operation_ids"] for row in join["commands"]}
+    submitters = {row["operation_id"]: row["cli_paths"] for row in join["operations"]}
+    assert submitted["app", "ledger", "add"] == ["ledger.add"]
+    assert submitters["ledger.add"] == [["app", "ledger", "add"]]
     _assert_retired_state_untouched(retired)
 
 

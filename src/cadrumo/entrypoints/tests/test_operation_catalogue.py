@@ -31,6 +31,7 @@ from ...application.operations.operation_definition import OperationDefinition
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...tests.inventory import package_python_files, releases_parsed_sources
 from ..operation_composition import build_production_operation_registry
+from .source_tree_support import SourceTree, module_level_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -173,27 +174,22 @@ def _production_sources() -> tuple[str, ...]:
     return tuple(path for path in _source_files() if "/tests/" not in path)
 
 
-@releases_parsed_sources
 @cache
-def _parsed(path: str) -> ast.Module:
-    return ast.parse((_REPO_ROOT / path).read_text(encoding="utf-8"), filename=path)
+def _tree() -> SourceTree:
+    """The census files as one source tree, each parsed once and each import resolved once.
 
-
-def _module_level_bindings(module: ast.Module) -> Iterable[tuple[str, ast.expr]]:
-    """Every module-level ``name = value`` binding, annotated or not.
-
-    A declaration carries the same meaning whether or not its author
-    spelled a type for it, so both assignment forms are read. Reading only
-    the bare form would let an annotated family of ids leave the census
-    without any finding.
+    An import resolves only to a file of the census: a module outside its
+    denominator names no surface here, however real the file is on disk.
     """
-    for node in module.body:
-        if isinstance(node, ast.Assign):
-            for target in node.targets:
-                if isinstance(target, ast.Name):
-                    yield target.id, node.value
-        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.value is not None:
-            yield node.target.id, node.value
+    census_files = frozenset(_source_files())
+    return releases_parsed_sources(
+        SourceTree(
+            _REPO_ROOT,
+            packages=frozenset({"cadrumo", "cadrumo_harness"}),
+            prefix="src",
+            contains=census_files.__contains__,
+        )
+    )
 
 
 @cache
@@ -201,7 +197,7 @@ def _declared_definition_ids() -> Mapping[str, str]:
     """Every module-level ``*_DEFINITION_ID`` literal or enum-derived ID, id to path."""
     declared: dict[str, str] = dict(_dynamic_definition_ids())
     for path in _production_sources():
-        for name, value in _module_level_bindings(_parsed(path)):
+        for name, value in module_level_bindings(_tree().parsed(path)):
             if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
                 continue
             if name.endswith(_DEFINITION_ID_SUFFIX):
@@ -267,9 +263,9 @@ def _references_by_package() -> Mapping[str, frozenset[str]]:
 
     collected: dict[str, frozenset[str]] = {}
     for path in _production_sources():
-        origins = _name_origins(path)
+        origins = _tree().name_origins(path)
         found: set[str] = set(dispatch_ids.get(path, _NO_IDS))
-        for node in ast.walk(_parsed(path)):
+        for node in ast.walk(_tree().parsed(path)):
             if isinstance(node, ast.Name):
                 found |= named_by_name(node.id, origins)
             elif isinstance(node, ast.Attribute):
@@ -308,7 +304,7 @@ def _dispatched_literal_ids() -> Mapping[str, frozenset[str]]:
     dispatch from escaping the census.
     """
     ids = frozenset(_declared_definition_ids())
-    dispatched = {path: _dispatched_literals_in_tree(_parsed(path), ids) for path in _production_sources()}
+    dispatched = {path: _dispatched_literals_in_tree(_tree().parsed(path), ids) for path in _production_sources()}
     return {path: found for path, found in dispatched.items() if found}
 
 
@@ -337,69 +333,6 @@ def _binds_dispatch_argument(target: ast.expr) -> bool:
 
 
 @cache
-def _module_path_for(importer: str, module: str | None, level: int) -> str | None:
-    """Resolve one import statement's module to a file in the census tree.
-
-    The one-hop builder reading is only as good as the hop: a bare
-    function name such as ``run`` or ``resolve`` is defined dozens of
-    times across the tree, so a reference is resolved against the module
-    the importing file actually names, never against every same-named
-    helper in the repository.
-    """
-    sources = set(_source_files())
-    if level:
-        base = importer.split("/")[:-1]
-        if level > 1:
-            base = base[: -(level - 1)]
-        if not base:
-            return None
-    else:
-        if module is None:
-            return None
-        root, _, rest = module.partition(".")
-        if root not in {"cadrumo", "cadrumo_harness"}:
-            return None
-        base = ["src", root]
-        module = rest
-    tail = [part for part in (module or "").split(".") if part]
-    candidate = "/".join([*base, *tail])
-    for suffix in (".py", "/__init__.py"):
-        if candidate + suffix in sources:
-            return candidate + suffix
-    return None
-
-
-@cache
-def _name_origins(path: str) -> Mapping[str, tuple[str, str]]:
-    """Every name this file binds, mapped to where it was defined.
-
-    A name defined in the file itself resolves to the file; an imported
-    name resolves to the module it was imported from. A locally defined
-    name shadows an import of the same spelling, exactly as Python does.
-    """
-    tree = _parsed(path)
-    origins: dict[str, tuple[str, str]] = {}
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom):
-            for alias in node.names:
-                owner = _module_path_for(path, node.module, node.level)
-                if owner is None:
-                    continue
-                submodule = _module_path_for(
-                    path, f"{node.module}.{alias.name}" if node.module else alias.name, node.level
-                )
-                origins[alias.asname or alias.name] = (
-                    (submodule, alias.name) if submodule is not None and node.module is None else (owner, alias.name)
-                )
-    for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
-            origins[node.name] = (path, node.name)
-    for name, _value in _module_level_bindings(tree):
-        origins[name] = (path, name)
-    return origins
-
-
-@cache
 def _request_builders() -> Mapping[tuple[str, str], frozenset[str]]:
     """Application helpers that name an operation, and which one they name.
 
@@ -425,7 +358,7 @@ def _request_builders() -> Mapping[tuple[str, str], frozenset[str]]:
 
     def read(path: str, node: ast.AST, *, read_literals: bool) -> tuple[set[str], set[tuple[str, str]]]:
         """The ids this subtree names outright, and the helpers it defers to."""
-        origins = _name_origins(path)
+        origins = _tree().name_origins(path)
         named: set[str] = set()
         deferred: set[tuple[str, str]] = set()
         for inner in ast.walk(node):
@@ -461,7 +394,7 @@ def _request_builders() -> Mapping[tuple[str, str], frozenset[str]]:
         edges.setdefault(key, set()).update(deferred - {key})
 
     for path in _production_sources():
-        tree = _parsed(path)
+        tree = _tree().parsed(path)
         for node in tree.body:
             if not isinstance(node, ast.Assign) or isinstance(node.value, ast.Constant):
                 continue
@@ -490,7 +423,7 @@ def _definition_id_constants() -> Mapping[tuple[str, str], str]:
     """Canonical declaring module and constant name to the operation id it carries."""
     constants: dict[tuple[str, str], str] = {}
     for path in _production_sources():
-        for name, value in _module_level_bindings(_parsed(path)):
+        for name, value in module_level_bindings(_tree().parsed(path)):
             if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
                 continue
             if name.endswith(_DEFINITION_ID_SUFFIX):
@@ -628,7 +561,7 @@ def _asyncio_run_sites_in_tree(path: str, tree: ast.AST) -> tuple[tuple[str, str
 def _asyncio_run_sites(prefix: str) -> tuple[tuple[str, str], ...]:
     """Enumerate exact event-loop owners under one production frontend."""
     return tuple(
-        sorted(site for path in _paths_under(prefix) for site in _asyncio_run_sites_in_tree(path, _parsed(path)))
+        sorted(site for path in _paths_under(prefix) for site in _asyncio_run_sites_in_tree(path, _tree().parsed(path)))
     )
 
 
@@ -661,7 +594,7 @@ def test_event_loop_census_detects_an_extra_call_in_the_same_owner() -> None:
 def test_the_declaration_census_reads_an_annotated_declaration() -> None:
     """A typed declaration is a declaration; the bare form is not the contract."""
     module = ast.parse('X_DEFINITION_ID: OperationId = "domain.thing.do"\nY_DEFINITION_ID = "domain.thing.undo"\n')
-    assert dict(_module_level_bindings(module)).keys() == {"X_DEFINITION_ID", "Y_DEFINITION_ID"}
+    assert dict(module_level_bindings(module)).keys() == {"X_DEFINITION_ID", "Y_DEFINITION_ID"}
 
 
 def test_the_reference_census_detects_a_hard_coded_dispatch() -> None:
@@ -703,7 +636,7 @@ def test_no_full_screen_surface_reaches_an_outbound_adapter_directly() -> None:
     prefix = _FRONTEND_PACKAGES[OperationFrontendProjection.TUI]
     offenders: list[tuple[str, str]] = []
     for path in _paths_under(prefix):
-        for node in ast.walk(_parsed(path)):
+        for node in ast.walk(_tree().parsed(path)):
             if isinstance(node, ast.ImportFrom) and node.module and "adapters.outbound" in node.module:
                 offenders.append((path, node.module))
             elif isinstance(node, ast.Import):

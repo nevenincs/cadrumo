@@ -317,6 +317,7 @@ def _emit_command_surface_manifest() -> None:
     the harness import a sibling entrypoint.
     """
     from .command_schema import command_registration_projection, command_schema_refs, command_schema_type
+    from .operator_surface_reconciliation import recorded_command_operation_join
     from .verb_input_schema import build_verb_input_schemas, is_exposable_command
 
     references = command_schema_refs()
@@ -346,6 +347,7 @@ def _emit_command_surface_manifest() -> None:
         search_terms[key] = spec.search_terms
 
     payload = {
+        "command_operations": recorded_command_operation_join().model_dump(mode="json"),
         "command_schemas": tuple(reference.model_dump(mode="json") for reference in references),
         "global_flags": _command_surface_global_flags(),
         "exposable_commands": tuple(

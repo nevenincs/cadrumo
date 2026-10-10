@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:7f7d5b5dd1f0fbf11bee300af7c7f97d1da284a426ebf5ad04397c562dfed963'
+body_hash: 'sha256:62677f3bc2db0ece1c57bcac2afc6d57f5b9e00a61b351c84194d4d58b67f6c6'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -134,6 +134,25 @@ related:
 - `S05` `verify:` `ruff format --check` -> `pass`
 - `S05` `verify:` `ty check --python-platform linux` -> `pass`
 - `S05` `by:` `vaultspec-high-executor`
+- `S09` `A` `src/cadrumo/application/operator_surface/command_operations.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S09` `A` `src/cadrumo/entrypoints/tests/source_tree_support.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/tests/_operation_submission_flow_support.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/tests/command_operation_derivation.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/tests/test_command_operation_join.py`
+- `S09` `A` `src/cadrumo/application/operator_surface/tests/test_command_operations.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/operator_surface_reconciliation.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/main.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_operation_catalogue.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_command_surface_beside_retired_state.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
+- `S09` `verify:` `pytest test_command_operation_join.py test_command_operations.py -n0 (42 tests)` -> `pass`
+- `S09` `verify:` `pytest test_operation_catalogue.py test_operation_mcp_admission.py -n0 (33 tests)` -> `pass`
+- `S09` `verify:` `pytest src/cadrumo/application/operator_surface/tests (32 tests)` -> `pass`
+- `S09` `verify:` `ruff check` -> `pass`
+- `S09` `verify:` `ruff format --check` -> `pass`
+- `S09` `verify:` `ty check --python-platform linux` -> `pass`
+- `S09` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -142,3 +161,4 @@ related:
 - `S07` Not delivered here and carried to the file-exchange Step: root confinement of the reconciliation import, for want of any existing setting, and a bytes entry for the declaracion parser, which is still parsed by path between two verified reads. The POSIX branch of the guard has not executed; tests ran on Windows only. The strict checkers were not run on these files with a working invocation.
 - `S15` Still reachable and not introduced here: a key read after the latest lease expiry and before the custody poll closes the session; a retire that finds no session when two root leases are still listed at that moment; and a lease installed or refreshed while a section is held, which is not covered until the last section exits. The worker can refresh only key leases, so extending a sign-in will need a way to move a human lease deadline. Tests do not cover held sections or the real worker loop.
 - `S05` The 18 failures in the wide run are not from this Step. Two (session owner, worker drain) pass when run alone. Ten are the machine: the test child interpreter sees a stale cadrumo 0.5.1 install in the base Python while the environment is 0.6.0, so the runtime refuses with a version mismatch before announcing ready (supervised runtime, headless load, console interrupt). Three operation-provenance cases fail in the test process on a storage route mismatch, and three grant-change cases fail because the runtime now retires the key session when its grant changes and the test predates that; neither path is touched by this feature, and no earlier run of those files exists to compare. Three operations (filed list, filed discover, census preview) are now refused at submission for a scope without commit where they used to complete when the provider session was reusable.
+- `S09` The manifest assertion added to `test_command_surface_beside_retired_state.py` cannot run on this machine: that test setup creates a directory beside the checkout and a copy left on 2026-10-05 makes it fail before the assertion, as it does at HEAD. The claim is proven by a new test of the real emitter in `test_command_operation_join.py.` Eight tests in `test_cli_surface.py` fail with `runtime_unavailable` and are unrelated. Seventeen operations list the command line as a frontend although no command submits them. The generated import inventory entries for the two new product modules are added with the next regeneration.

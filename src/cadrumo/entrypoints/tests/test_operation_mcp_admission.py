@@ -55,7 +55,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period
 from ...domain.calculations.registry.remote_state_guard import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
-from .test_operation_catalogue import _parsed, _production_sources, _registry
+from .test_operation_catalogue import _production_sources, _registry, _tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -619,7 +619,7 @@ def _live_write_values(tree: ast.AST) -> Iterable[ast.expr]:
 
 def test_no_command_policy_in_the_source_tree_declares_a_live_write() -> None:
     """The one declaration a command has for a submission is never set anywhere."""
-    declared = [(path, value) for path in _production_sources() for value in _live_write_values(_parsed(path))]
+    declared = [(path, value) for path in _production_sources() for value in _live_write_values(_tree().parsed(path))]
     # The scan must reach the declarations it judges, or it would pass on nothing.
     assert declared
     offenders = sorted((path, value.lineno) for path, value in declared if not _declares_no_live_write(value))

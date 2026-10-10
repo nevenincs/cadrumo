@@ -23,6 +23,7 @@ import click
 from .command_spec import NON_LEAF_COMMAND_KINDS
 
 if TYPE_CHECKING:
+    from ...application.operator_surface.command_operations import CommandOperationJoin
     from ...application.operator_surface.command_ports import VerbInputSchema
     from ...application.operator_surface.manifest import (
         CommandSchemaRef,
@@ -37,7 +38,11 @@ if TYPE_CHECKING:
     )
     from .command_spec import CommandSpec, CommandSpecNode
 
-__all__ = ["current_operator_surface_reconciliation", "operator_surface_target_reconciliation"]
+__all__ = [
+    "current_operator_surface_reconciliation",
+    "operator_surface_target_reconciliation",
+    "recorded_command_operation_join",
+]
 
 _OPERATOR_SURFACE_RECONCILIATION_META_KEY = "cadrumo.operator_surface_reconciliation"
 
@@ -428,3 +433,18 @@ def operator_surface_target_reconciliation(command_key: str) -> OperatorSurfaceR
         surface_exposures=(_surface_exposure_row(command_key, exposed=is_exposable_command_spec(spec)),),
         exclusions=_root_landing_exclusions((command_key,) if root_landing else ()),
     )
+
+
+def recorded_command_operation_join() -> CommandOperationJoin:
+    """Return the recorded join between executable commands and the operations they submit.
+
+    The command graph declares each command's handler, not the operations that
+    handler submits, and this process holds no operation registry to ask. The
+    relation is therefore read from the table recorded beside the graph, which
+    is derived from the handlers' source and the registry and checked against
+    both, so reading it here loads no command family and no handler.
+    """
+    from ...application.operator_surface.command_operations import join_command_operations
+    from .command_operation_table import COMMAND_OPERATION_ROWS, OPERATIONS_WITHOUT_COMMAND
+
+    return join_command_operations(COMMAND_OPERATION_ROWS, operations_without_command=OPERATIONS_WITHOUT_COMMAND)
