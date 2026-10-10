@@ -274,7 +274,7 @@ class _FileChangingParser(ReconciliationEvidenceParserPort):
     reads it; the guard under test is the wrapper around it.
     """
 
-    def __init__(self, during_parse: Callable[[Path], None]) -> None:
+    def __init__(self, during_parse: Callable[[Path], object]) -> None:
         self._during_parse = during_parse
         self.parsed: list[Path] = []
         self.observation = cast(ReconciliationDeclaracionObservation, object())
