@@ -34,7 +34,11 @@ regulated work.
 
 ## Use the current interface's authority
 
-MCP exposes registered operations through `search` and `describe`. Read the
+MCP exposes registered operations through `search` and `describe`. `search`
+returns one page at a time: when a page carries `next_cursor`, pass it back as
+`cursor` until none is returned before concluding an operation is absent, or
+narrow the search with `family`. An operation listed under `unavailable` exists
+but is refused for the reason given. Read the
 current contract and input schema before using `execute`. CLI procedures in the
 orientation, skills, and recovery records identify workflows; use them through
 MCP only when the corresponding registered operation is exposed and permitted.

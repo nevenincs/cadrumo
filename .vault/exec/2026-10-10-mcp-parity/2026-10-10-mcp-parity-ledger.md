@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:4867c46ecfd2c0955d19ddd80f70669ecbcfa53ca318ed8086f4d7f914c7d9d8'
+body_hash: 'sha256:f6f5b6e58f35859ff82f6f79327623279d4462f36c589707cf540f60246cfc8b'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -78,6 +78,8 @@ related:
 - `S08` `verify:` `ruff format --check` -> `pass`
 - `S08` `verify:` `ty check --python-platform linux` -> `pass`
 - `S08` `by:` `vaultspec-standard-executor`
+- `S08` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
+- `S08` `verify:` `pytest dev/agent_eval/tests/test_rule_surface_conformance.py and harness data tests -n0 (14 tests)` -> `pass`
 
 ## Notes
 
