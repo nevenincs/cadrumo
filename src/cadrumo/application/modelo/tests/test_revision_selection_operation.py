@@ -328,6 +328,57 @@ def test_each_fresh_boundary_derives_period_from_selected_persisted_unit(
     assert calculation_loads == ([authority_operation, authority_operation] if positional_work_id else [])
 
 
+def test_revision_selection_is_admitted_on_the_mcp_frontend_without_a_commit_door(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    unit = _unit()
+
+    class WorkRepository:
+        bucket_id = str(_PROFILE)
+
+        def load(self) -> WorkUnitCatalogue:
+            return WorkUnitCatalogue(work_units={unit.work_unit_id: unit})
+
+    def bundle(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+        assert profile_id == str(_PROFILE)
+        assert operation is authority_operation
+        return cast(
+            VerificationRepositoryBundle,
+            cast(
+                object,
+                SimpleNamespace(work_unit=WorkRepository(), calculation=SimpleNamespace(bucket_id=str(_PROFILE))),
+            ),
+        )
+
+    definition = build_modelo_work_revision_definition(bundle)
+    registration = build_modelo_work_revision_registration(definition, bundle)
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=OperationRequest[BaseModel](
+            definition_id=MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(str(_PROFILE)),
+            payload=ModeloWorkRevisionRequest(profile_id=_PROFILE, work_unit_id=unit.work_unit_id),
+        ),
+        context=OperationAccessContext(
+            profile_id=_PROFILE,
+            destination_id=uuid4(),
+            action=AccessAction.SUBMIT,
+            frontend=OperationFrontendProjection.MCP,
+            contract=registration.contract,
+            published_authority=Availability.AVAILABLE,
+            authority_operation=authority_operation,
+        ),
+    )
+
+    assert OperationFrontendProjection.MCP in definition.permitted_frontends
+    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
+    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.periods == frozenset({unit.period})
+    assert AccessAction.COMMIT not in resolved.policy.actions
+
+
 def test_fresh_submission_without_authority_pin_refuses_before_repository_creation() -> None:
     bundle_calls = 0
 

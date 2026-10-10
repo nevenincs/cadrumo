@@ -15,7 +15,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
 modified: '2026-10-10'
 body_schema: body-v2
-body_hash: 'sha256:fdb1b1478bf33fde99b378fd647687bf959b3c0f1180f033460d9caa02627e75'
+body_hash: 'sha256:5c6b165dc7a5b7202b52960d4db93de148c8dc51968fa2d50b550ed536e6d0fc'
 ---
 
 # `mcp-parity` plan
@@ -113,7 +113,7 @@ Delivers an MCP server that resumes the person's sign-in for the exact profile, 
 Delivers the ratio, work, workflow and evidence reads on the MCP frontend, each through the admission checklist, with one contract cutover per family.
 
 - [x] `P04.S27` - Admit ledger.ratios.list, ledger.ratios.eligible, ledger.ratios.validate and ledger.rule.list to the MCP frontend through the admission checklist, with one contract cutover for the family; `src/cadrumo/application/ledger/ratios_operation.py`.
-- [ ] `P04.S28` - Admit the work reads ruled admitted, from modelo.work.list to modelo.work.filing_record and profile.history, with the three workflow reads, config.collab.recipient.list and the three Google configuration reads, each after its result is checked fit for an agent host and with an agent-facing sibling where it is not, with one contract cutover per family; starts at work_inventory_operation.py and revision_selection_operation.py; `src/cadrumo/application/modelo`.
+- [x] `P04.S28` - Admit the work reads ruled admitted, from modelo.work.list to modelo.work.filing_record and profile.history, with the three workflow reads, config.collab.recipient.list and the three Google configuration reads, each after its result is checked fit for an agent host and with an agent-facing sibling where it is not, with one contract cutover per family; starts at work_inventory_operation.py and revision_selection_operation.py; `src/cadrumo/application/modelo`.
 - [x] `P04.S29` - Admit the eight evidence reads ruled omissions once each result is shown, inside the operation, to carry no evidence bytes, with one contract cutover for the family; `src/cadrumo/application/ledger/evidence_read_operation.py`.
 - [ ] `P04.S46` - Give an agent-facing projection to each read whose result carries a host path, verbatim document text, an open payload or a human-only resolver, and admit it: ledger.evidence.list, ledger.evidence.view, ledger.evidence.review.view, ledger.evidence.reader-readiness, modelo.filing_record.view, profile.history and the three Google configuration reads; `src/cadrumo/application/ledger/evidence_read_operation.py`.
 

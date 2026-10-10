@@ -157,7 +157,9 @@ def build_modelo_work_revisions_definition(factory: VerificationRepositoryBundle
         executor_type=ModeloWorkRevisionsExecutor,
         build=lambda: ModeloWorkRevisionsExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
+        ),
     )
 
 

@@ -116,7 +116,9 @@ def build_modelo_work_filing_record_definition(factory: VerificationRepositoryBu
         executor_type=ModeloWorkFilingRecordExecutor,
         build=lambda: ModeloWorkFilingRecordExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
+        ),
     )
 
 

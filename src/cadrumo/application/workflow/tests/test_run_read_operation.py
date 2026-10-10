@@ -133,13 +133,17 @@ def _read_request(expected: PublicPeriod | None) -> OperationRequest[BaseModel]:
 
 
 def _context(
-    registration, *, action: AccessAction = AccessAction.SUBMIT, admitted: OperationAccessRequest | None = None
+    registration,
+    *,
+    action: AccessAction = AccessAction.SUBMIT,
+    admitted: OperationAccessRequest | None = None,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=_PROFILE,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         admitted_request=admitted,
@@ -239,3 +243,38 @@ def test_inventory_is_complete_profile_scope_and_rejects_duplicate_runs() -> Non
     snapshot = WorkflowRunSnapshot.from_run(reader.run)
     with pytest.raises(ValidationError):
         WorkflowRunListProjection(profile_id=_PROFILE, runs=(snapshot, snapshot))
+
+
+def test_workflow_reads_are_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
+    reader = _Reader(_run())
+    factory = _factory(reader)
+    read_definition = build_workflow_run_read_definition(factory)
+    read_registration = build_workflow_run_read_registration(read_definition, factory)
+    list_definition = build_workflow_run_list_definition(factory)
+    list_registration = build_workflow_run_list_registration(list_definition, factory)
+    registry = OperationRegistry(
+        definitions=(list_definition, read_definition), public_registrations=(list_registration, read_registration)
+    )
+    list_request = OperationRequest[BaseModel](
+        definition_id=WORKFLOW_RUN_LIST_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=WorkflowRunListRequest(profile_id=_PROFILE),
+    )
+    with override_settings(cadrumo_active_profile=str(_PROFILE)):
+        for request, registration in (
+            (_read_request(PublicPeriod.from_period(_PERIOD)), read_registration),
+            (_read_request(None), read_registration),
+            (list_request, list_registration),
+        ):
+            resolved = resolve_operation_access(
+                registry=registry,
+                request=request,
+                context=_context(registration, frontend=OperationFrontendProjection.MCP),
+            )
+
+            definition = registry.lookup(request.definition_id)
+            assert OperationFrontendProjection.MCP in definition.permitted_frontends
+            assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
+            assert resolved.request.frontend is OperationFrontendProjection.MCP
+            assert resolved.request.profile_id == _PROFILE
+            assert AccessAction.COMMIT not in resolved.policy.actions

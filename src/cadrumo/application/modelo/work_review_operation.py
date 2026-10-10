@@ -101,7 +101,9 @@ def build_modelo_work_review_definition(factory: ModeloHistoryPortsFactory) -> O
         executor_type=ModeloWorkReviewExecutor,
         build=lambda: ModeloWorkReviewExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
+        ),
     )
 
 

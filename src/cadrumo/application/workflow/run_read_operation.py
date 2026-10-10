@@ -257,7 +257,9 @@ def build_workflow_run_read_definition(factory: WorkflowRunReadPortsFactory) -> 
         executor_type=WorkflowRunReadExecutor,
         build=lambda: WorkflowRunReadExecutor(factory),
         capabilities=_capabilities(),
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
+        ),
     )
 
 
@@ -270,7 +272,9 @@ def build_workflow_run_list_definition(factory: WorkflowRunReadPortsFactory) -> 
         executor_type=WorkflowRunListExecutor,
         build=lambda: WorkflowRunListExecutor(factory),
         capabilities=_capabilities(),
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
+        ),
     )
 
 

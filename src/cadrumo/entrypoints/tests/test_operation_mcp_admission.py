@@ -527,10 +527,15 @@ def test_every_mcp_listed_definition_is_admitted_by_its_real_resolver() -> None:
     assert listed - unproven
 
 
+        "modelo.work.compare_taxation",
+        "modelo.work.preview_maritime_exemption",
+        "modelo.work.review",
 def test_every_admission_the_probe_reports_is_refused_for_another_profile() -> None:
     """The admissions above are decisions: the same resolvers refuse the same requests for a foreign profile."""
     registry = _registry()
     foreign_profile = UUID("5aa00000-0000-4000-8000-0000000000cc")
+        "workflow.resume.context",
+        "workflow.run.read",
     admitted = 0
     unrefused: list[tuple[str, str]] = []
     for definition_id in _mcp_listed_ids():

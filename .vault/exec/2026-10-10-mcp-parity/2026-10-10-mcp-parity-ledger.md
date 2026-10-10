@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:821a523660c4712e863e098d279d21c1696e6b047c902308bf80229b63f43605'
+body_hash: 'sha256:065183d2b2457b46b5b3dbe70be0c18493cea8ebc2baefe2a36deb9d0323b039'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -223,6 +223,50 @@ related:
 - `S29` `verify:` `ruff format --check` -> `pass`
 - `S29` `verify:` `ty check --python-platform linux` -> `pass`
 - `S29` `by:` `vaultspec-standard-executor`
+- `S28` `A` `src/cadrumo/application/modelo/tests/test_calculation_detail_projection.py`
+- `S28` `A` `src/cadrumo/application/modelo/tests/test_metadata_read_operation.py`
+- `S28` `A` `src/cadrumo/application/modelo/tests/test_revision_inventory_operation.py`
+- `S28` `A` `src/cadrumo/application/modelo/tests/test_revision_snapshot_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/calculation_projection.py`
+- `S28` `M` `src/cadrumo/application/modelo/dependency_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/filing_record_list_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/filing_selection_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/iva_wallet_balance_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/maritime_preview_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/metadata_read_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/review_package_recipient_operations.py`
+- `S28` `M` `src/cadrumo/application/modelo/revision_inventory_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/revision_selection_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/revision_snapshot_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/taxation_comparison_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/tests/test_dependency_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/tests/test_filing_record_list_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/tests/test_filing_selection_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/tests/test_iva_wallet_balance_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/tests/test_maritime_preview_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/tests/test_review_package_recipient_operations.py`
+- `S28` `M` `src/cadrumo/application/modelo/tests/test_revision_selection_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/tests/test_taxation_comparison_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/tests/test_verification_report_read_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/tests/test_work_inventory_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/tests/test_work_review_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/verification_report_read_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/work_inventory_operation.py`
+- `S28` `M` `src/cadrumo/application/modelo/work_review_operation.py`
+- `S28` `M` `src/cadrumo/application/workflow/resume_operation.py`
+- `S28` `M` `src/cadrumo/application/workflow/run_read_operation.py`
+- `S28` `M` `src/cadrumo/application/workflow/tests/test_resume_operation.py`
+- `S28` `M` `src/cadrumo/application/workflow/tests/test_run_read_operation.py`
+- `S28` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S28` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
+- `S28` `verify:` `pytest eighteen modelo and workflow operation test files (129 tests)` -> `pass`
+- `S28` `verify:` `pytest admission, surfaces, catalogue (86 tests)` -> `pass`
+- `S28` `verify:` `pytest executor conformance for the touched families (66 tests)` -> `pass`
+- `S28` `verify:` `registry comparison: only intended operations gained MCP, none lost the command line or terminal interface` -> `pass`
+- `S28` `verify:` `ruff check` -> `pass`
+- `S28` `verify:` `ruff format --check` -> `pass`
+- `S28` `verify:` `ty check --python-platform linux` -> `pass`
+- `S28` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -236,3 +280,4 @@ related:
 - `S06` Two files carry another session uncommitted changes; only the surface lines are committed from them (three in `access_contracts.py,` two in `profile_host.py).` The one format finding and the one noqa in those files are in the other session lines. Not built here: status still reports the unnarrowed scope on a narrowed surface; there is no single end-to-end test with a real worker, the chain is covered in three pieces; the packaged plugin launch line never names a surface. Four listed read-only operations rest on the over-declared effects set. The how-to translations for the new paragraph follow separately.
 - `S06` The five docs failures are in other pages and none concerns the agent connection guide: catalogue drift in how-to/profile-setup and reference/identity-and-naming, a composed Catalan root difference in filing-calendar and identity-and-naming, and a sequence golden for how-to/irpf-lifecycle whose command-line frames were refused while frontend sets were being edited by a running Step. The Hungarian wording for an agent that should only look is the translator own reading.
 - `S29` Four of the eight reads are admitted: attachment queue, attachment view, consent list and review list. Not admitted, each for a reason found in its result or executor: evidence list and view return the host path the operator typed; review view returns text taken verbatim from the document; reader readiness sends requests to the configured local-model endpoint, which settings can point off this machine, and its decision row now records that it reaches the network. A further Step gives these agent-facing projections.
+- `S28` Eighteen of twenty-three reads admitted. Not admitted: `modelo.filing_record.view` and profile.history return an open payload, and the three Google configuration reads have a human-only resolver; a further Step gives them agent-facing projections. The first pass withheld results carrying notes, reasons and actor labels the person typed; that reading of the checklist was stricter than the owner rule and was corrected in the plan. Five of the admitted operations cannot be admitted by the generic resolver probe and are in its not-proven set; each has its own test through the real resolver.

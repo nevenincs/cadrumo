@@ -228,7 +228,7 @@ class ModeloMaritimePreviewExecutor:
 
 
 def build_modelo_maritime_preview_definition(factory: ModeloMaritimePreviewPortsFactory) -> OperationDefinition:
-    """Enroll the existing private CLI calculation without additional frontends."""
+    """Enroll the profile-bound maritime exemption calculation."""
     return build_single_phase_definition(
         definition_id=MODELO_MARITIME_PREVIEW_OPERATION_DEFINITION_ID,
         request_type=ModeloMaritimePreviewRequest,
@@ -236,7 +236,7 @@ def build_modelo_maritime_preview_definition(factory: ModeloMaritimePreviewPorts
         executor_type=ModeloMaritimePreviewExecutor,
         build=lambda: ModeloMaritimePreviewExecutor(factory),
         capabilities=RECORDED_NON_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}),
     )
 
 

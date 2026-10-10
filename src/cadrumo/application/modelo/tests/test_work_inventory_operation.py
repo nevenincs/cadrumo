@@ -101,12 +101,17 @@ def _request(
     )
 
 
-def _context(registration, *, action: AccessAction = AccessAction.SUBMIT) -> OperationAccessContext:
+def _context(
+    registration,
+    *,
+    action: AccessAction = AccessAction.SUBMIT,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
+) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=_PROFILE,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
     )
@@ -147,6 +152,23 @@ def test_profile_wide_access_requires_unrestricted_period_ceiling() -> None:
         )
         denied = operation_scope_refusal(request=resolved.request, policy=resolved.policy, scope=scope)
         assert denied is not None and denied.code is AccessDenialCode.PERIOD_DENIED
+
+
+def test_work_list_is_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
+    registry, registration = _registration()
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=cast(OperationRequest[BaseModel], cast(object, _request())),
+        context=_context(registration, frontend=OperationFrontendProjection.MCP),
+    )
+
+    definition = registry.lookup(MODELO_WORK_LIST_OPERATION_DEFINITION_ID)
+    assert OperationFrontendProjection.MCP in definition.permitted_frontends
+    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
+    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.profile_id == _PROFILE
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 @pytest.mark.parametrize("include_discarded", [False, True])

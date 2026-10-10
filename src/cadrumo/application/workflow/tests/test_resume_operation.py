@@ -79,12 +79,13 @@ def _context(
     profile_id: UUID = _PROFILE,
     action: AccessAction = AccessAction.SUBMIT,
     admitted: OperationAccessRequest | None = None,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         admitted_request=admitted,
@@ -184,6 +185,26 @@ def test_exact_expected_period_is_finite_without_claiming_a_natural_target() -> 
     assert unconstrained.scope_period() is None
     broad = resolve_operation_access(registry=registry, request=_request(unconstrained), context=_context(registration))
     assert broad.policy.requires_all_periods
+
+
+def test_resume_context_is_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
+    registry, registration = _registration()
+    visible = _request(
+        WorkflowResumeRequest(profile_id=_PROFILE, modelo="303", period=PublicPeriod.from_period(_PERIOD))
+    )
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=visible,
+        context=_context(registration, frontend=OperationFrontendProjection.MCP),
+    )
+
+    definition = registry.lookup(WORKFLOW_RESUME_OPERATION_DEFINITION_ID)
+    assert OperationFrontendProjection.MCP in definition.permitted_frontends
+    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
+    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.periods == frozenset({_PERIOD})
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 def test_exact_address_uses_independent_all_period_scope_and_visible_target_is_finite() -> None:

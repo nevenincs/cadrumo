@@ -255,3 +255,60 @@ def test_review_period_is_admitted_once_and_sealed_for_result(authority_operatio
     )
     assert historical.request.periods == fresh.request.periods
     assert loads == ["load"]
+
+
+def test_work_review_is_admitted_on_the_mcp_frontend_without_a_commit_door(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    unit = _unit()
+
+    class Repository:
+        bucket_id = str(_PROFILE)
+
+        def load(self) -> WorkUnitCatalogue:
+            return WorkUnitCatalogue(work_units={unit.work_unit_id: unit})
+
+    def factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloHistoryPorts:
+        assert bucket_id == str(_PROFILE) and operation is authority_operation
+        return cast(
+            ModeloHistoryPorts,
+            cast(
+                object,
+                SimpleNamespace(
+                    work_unit_repository=Repository(),
+                    calculation_repository=SimpleNamespace(bucket_id=str(_PROFILE)),
+                    verification_repository=SimpleNamespace(bucket_id=str(_PROFILE)),
+                    filing_repository=SimpleNamespace(bucket_id=str(_PROFILE)),
+                ),
+            ),
+        )
+
+    typed_factory = cast(ModeloHistoryPortsFactory, factory)
+    definition = build_modelo_work_review_definition(typed_factory)
+    registration = build_modelo_work_review_registration(definition, typed_factory)
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+    request = OperationRequest[BaseModel](
+        definition_id=MODELO_WORK_REVIEW_OPERATION_DEFINITION_ID,
+        subject_ref=unit.work_unit_id,
+        payload=ModeloWorkReviewRequest(profile_id=_PROFILE, work_unit_id=unit.work_unit_id),
+    )
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=request,
+        context=OperationAccessContext(
+            profile_id=_PROFILE,
+            destination_id=uuid4(),
+            action=AccessAction.SUBMIT,
+            frontend=OperationFrontendProjection.MCP,
+            contract=registration.contract,
+            published_authority=Availability.AVAILABLE,
+            authority_operation=authority_operation,
+        ),
+    )
+
+    assert OperationFrontendProjection.MCP in definition.permitted_frontends
+    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
+    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.periods == frozenset({_PERIOD})
+    assert AccessAction.COMMIT not in resolved.policy.actions

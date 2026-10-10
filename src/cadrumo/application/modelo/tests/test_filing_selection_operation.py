@@ -151,13 +151,17 @@ def _request(record: ModeloRecord, *, profile_id: UUID = _PROFILE) -> OperationR
 
 
 def _access_context(
-    registration, *, operation: PinnedAuthorityOperation | None, profile_id: UUID = _PROFILE
+    registration,
+    *,
+    operation: PinnedAuthorityOperation | None,
+    profile_id: UUID = _PROFILE,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         authority_operation=operation,
@@ -251,6 +255,25 @@ def test_filing_reader_scopes_submission_to_exact_profile_record_and_period(
     )
     assert result_binding.identity == registration.contract.result_schema
     assert result_binding.model_type is ModeloWorkFilingRecordProjection
+
+
+def test_filing_reader_is_admitted_on_the_mcp_frontend_without_a_commit_door(
+    *, operation: PinnedAuthorityOperation
+) -> None:
+    unit, record = _source()
+    definition, registration, registry = _build(_bundle(unit=unit, record=record))
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(record),
+        context=_access_context(registration, operation=operation, frontend=OperationFrontendProjection.MCP),
+    )
+
+    assert OperationFrontendProjection.MCP in definition.permitted_frontends
+    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
+    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.periods == frozenset({unit.period})
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 @pytest.mark.parametrize(

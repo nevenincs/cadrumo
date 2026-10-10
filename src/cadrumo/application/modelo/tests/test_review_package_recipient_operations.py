@@ -404,6 +404,49 @@ def test_definitions_and_access_resolvers_are_exact_profile_and_profile_values()
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
+def test_recipient_list_is_admitted_on_the_mcp_frontend_and_the_writes_stay_off_it() -> None:
+    def registry_factory(*, bucket_id: str) -> RecipientFingerprintRegistryPorts:
+        raise AssertionError(bucket_id)
+
+    def event_factory(*, bucket_id: str) -> BucketEventHistoryRepositoryProtocol:
+        raise AssertionError(bucket_id)
+
+    events = cast(BucketEventHistoryRepositoryFactory, event_factory)
+    list_definition = operation.build_review_package_recipient_list_definition(registry_factory)
+    list_registration = operation.build_review_package_recipient_list_registration(list_definition)
+    add_definition = operation.build_review_package_recipient_add_definition(registry_factory, events)
+    add_registration = operation.build_review_package_recipient_add_registration(add_definition)
+    remove_definition = operation.build_review_package_recipient_remove_definition(registry_factory, events)
+    remove_registration = operation.build_review_package_recipient_remove_registration(remove_definition)
+    request = OperationRequest[BaseModel](
+        definition_id=list_definition.definition_id,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=operation.ReviewPackageRecipientListRequest(profile_id=_PROFILE),
+    )
+
+    resolved = operation.resolve_review_package_recipient_list_access(
+        request,
+        OperationAccessContext(
+            profile_id=_PROFILE,
+            destination_id=uuid4(),
+            action=AccessAction.SUBMIT,
+            frontend=OperationFrontendProjection.MCP,
+            contract=list_registration.contract,
+            published_authority=Availability.AVAILABLE,
+        ),
+    )
+
+    assert OperationFrontendProjection.MCP in list_definition.permitted_frontends
+    assert OperationFrontendProjection.MCP in list_registration.contract.permitted_frontends
+    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.profile_id == _PROFILE
+    assert AccessAction.COMMIT not in resolved.policy.actions
+    expected = frozenset({OperationFrontendProjection.CLI})
+    for definition, registration in ((add_definition, add_registration), (remove_definition, remove_registration)):
+        assert definition.permitted_frontends == expected
+        assert registration.contract.permitted_frontends == expected
+
+
 def test_result_projector_requires_successful_exact_effect_receipt() -> None:
     row = _record("accountant")
     projection = operation.ReviewPackageRecipientAddProjection(

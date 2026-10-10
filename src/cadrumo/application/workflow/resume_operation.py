@@ -255,7 +255,9 @@ def build_workflow_resume_definition(
         executor_type=WorkflowResumeExecutor,
         build=lambda: WorkflowResumeExecutor(runs, calculations),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+        permitted_frontends=frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.MCP}
+        ),
         refusal_detail_codes=frozenset({WORKFLOW_RESUME_REFUSAL_CODE, WORKFLOW_RESUME_AMBIGUITY_CODE}),
     )
 

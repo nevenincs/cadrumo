@@ -120,12 +120,13 @@ def _access_context(
     profile_id: UUID = _PROFILE,
     admitted=None,
     authority_operation: PinnedAuthorityOperation | None = _AUTHORITY,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
         admitted_request=admitted,
@@ -180,6 +181,24 @@ def test_registered_access_pins_one_profile_period_and_tax_value_result() -> Non
     assert permission.projection_id == registration.contract.result_schema.schema_id
     assert factory_calls == [str(_PROFILE)]
     assert reader.loads == 1
+
+
+def test_taxation_comparison_is_admitted_on_the_mcp_frontend_without_a_commit_door() -> None:
+    unit = _unit()
+    reader = _Reader(WorkUnitCatalogue(work_units={unit.work_unit_id: unit}))
+    _factory, _factory_calls, definition, registration, registry = _registered(reader)
+
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(unit),
+        context=_access_context(registration, frontend=OperationFrontendProjection.MCP),
+    )
+
+    assert OperationFrontendProjection.MCP in definition.permitted_frontends
+    assert OperationFrontendProjection.MCP in registration.contract.permitted_frontends
+    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.request.periods == frozenset({unit.period})
+    assert AccessAction.COMMIT not in resolved.policy.actions
 
 
 @pytest.mark.parametrize("failure", ["missing", "foreign_bucket"])

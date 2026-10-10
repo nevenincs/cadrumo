@@ -139,7 +139,7 @@ def build_modelo_filing_record_list_definition(
         executor_type=ModeloFilingRecordListExecutor,
         build=lambda: ModeloFilingRecordListExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}),
     )
 
 

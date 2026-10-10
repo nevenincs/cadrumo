@@ -170,7 +170,7 @@ def build_modelo_taxation_comparison_definition(factory: TaxationComparisonPorts
         executor_type=ModeloTaxationComparisonExecutor,
         build=lambda: ModeloTaxationComparisonExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}),
     )
 
 
