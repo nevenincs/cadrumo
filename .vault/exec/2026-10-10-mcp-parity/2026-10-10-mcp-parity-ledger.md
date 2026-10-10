@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:065183d2b2457b46b5b3dbe70be0c18493cea8ebc2baefe2a36deb9d0323b039'
+body_hash: 'sha256:0fcf10ace7225f10d5011258ab66a880c5d199d2da09f2a54d207a2262d72d6a'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -267,6 +267,41 @@ related:
 - `S28` `verify:` `ruff format --check` -> `pass`
 - `S28` `verify:` `ty check --python-platform linux` -> `pass`
 - `S28` `by:` `vaultspec-standard-executor`
+- `S02` `M` `src/cadrumo/application/invoices/catalogue_remove_operation.py`
+- `S02` `M` `src/cadrumo/application/invoices/tests/test_catalogue_remove_operation.py`
+- `S02` `M` `src/cadrumo/application/auth/operation_definitions.py`
+- `S02` `M` `src/cadrumo/application/auth/teardown_operation_access.py`
+- `S02` `M` `src/cadrumo/application/auth/tests/test_operation_definitions.py`
+- `S02` `M` `src/cadrumo/application/ledger/own_account_operation.py`
+- `S02` `M` `src/cadrumo/application/ledger/tests/test_own_account_operation.py`
+- `S02` `M` `src/cadrumo/application/modelo/m360_solicitud_operation.py`
+- `S02` `M` `src/cadrumo/application/modelo/tests/test_m360_solicitud_operation.py`
+- `S02` `M` `src/cadrumo/application/prorrata_register/registered_operations.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
+- `S02` `verify:` `pytest admission, surfaces, catalogue (73 tests)` -> `pass`
+- `S02` `verify:` `pytest touched operation and access tests (520 tests)` -> `pass`
+- `S02` `verify:` `pytest executor conformance for the touched families (75 tests)` -> `pass`
+- `S02` `verify:` `pytest neighbouring suites: user_profile, prorrata, auth, invoices, harness (1592 tests)` -> `pass`
+- `S02` `verify:` `registry comparison: six definitions lost MCP, none lost the command line or terminal interface` -> `pass`
+- `S02` `verify:` `ruff check` -> `pass`
+- `S02` `verify:` `ruff format --check` -> `pass`
+- `S02` `verify:` `ty check --python-platform linux` -> `pass`
+- `S02` `by:` `vaultspec-high-executor`
+- `S03` `M` `src/cadrumo/application/user_profile/profile_operation_access.py`
+- `S03` `M` `src/cadrumo/application/user_profile/tests/test_profile_operation_access.py`
+- `S03` `M` `src/cadrumo/application/user_profile/censal_operation.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/test_censal_access_policy.py`
+- `S03` `M` `src/cadrumo/entrypoints/runtime/tests/test_response_scope.py`
+- `S03` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S03` `verify:` `pytest admission, surfaces, catalogue (73 tests)` -> `pass`
+- `S03` `verify:` `pytest touched operation and access tests (520 tests)` -> `pass`
+- `S03` `verify:` `pytest executor conformance for the touched families (75 tests)` -> `pass`
+- `S03` `verify:` `pytest neighbouring suites: user_profile, prorrata, auth, invoices, harness (1592 tests)` -> `pass`
+- `S03` `verify:` `registry comparison: six definitions lost MCP, none lost the command line or terminal interface` -> `pass`
+- `S03` `verify:` `ruff check` -> `pass`
+- `S03` `verify:` `ruff format --check` -> `pass`
+- `S03` `verify:` `ty check --python-platform linux` -> `pass`
+- `S03` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -281,3 +316,5 @@ related:
 - `S06` The five docs failures are in other pages and none concerns the agent connection guide: catalogue drift in how-to/profile-setup and reference/identity-and-naming, a composed Catalan root difference in filing-calendar and identity-and-naming, and a sequence golden for how-to/irpf-lifecycle whose command-line frames were refused while frontend sets were being edited by a running Step. The Hungarian wording for an agent that should only look is the translator own reading.
 - `S29` Four of the eight reads are admitted: attachment queue, attachment view, consent list and review list. Not admitted, each for a reason found in its result or executor: evidence list and view return the host path the operator typed; review view returns text taken verbatim from the document; reader readiness sends requests to the configured local-model endpoint, which settings can point off this machine, and its decision row now records that it reaches the network. A further Step gives these agent-facing projections.
 - `S28` Eighteen of twenty-three reads admitted. Not admitted: `modelo.filing_record.view` and profile.history return an open payload, and the three Google configuration reads have a human-only resolver; a further Step gives them agent-facing projections. The first pass withheld results carrying notes, reasons and actor labels the person typed; that reading of the checklist was stricter than the owner rule and was corrected in the plan. Five of the admitted operations cannot be admitted by the generic resolver probe and are in its not-proven set; each has its own test through the real resolver.
+- `S02` Refused on MCP until the approval step exists: ledger.invoice.remove and auth.session.reset whole; the six writing actions of `ledger.own_account;` declare and remove of `modelo.m360_solicitud;` the three prorrata elections. The other five prorrata operations, auth.session.logout and the reads of the mixed definitions keep MCP. The off-machine read of ledger.evidence.extract is not covered by the invariant because that definition does not list MCP yet. Native command-line suites that need a running runtime could not run on this machine.
+- `S03` The plan asked for the census review confirmation to move into the operation. That is not possible without changing the response contract for every review: apply, reject and inspect evaluate as one access action and carry no intent. The review leaves MCP whole until the approval step carries that intent; the census preview stays open. A capability can be written through user-profile.field-mutation and through user-profile.patch; both routes are refused on MCP. The other six profile writers have no route to a capability. Committed together with S02 because both share the invariant in one test file.

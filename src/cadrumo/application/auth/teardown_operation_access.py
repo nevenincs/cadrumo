@@ -14,7 +14,6 @@ from ..operations.access_resolution import (
     require_declared_frontend_and_action,
 )
 from ..operations.models import OperationRequest
-from ..operations.registry import ALL_OPERATION_FRONTENDS
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -34,13 +33,21 @@ _DEFINITIONS = frozenset({AUTH_LOGOUT_OPERATION_DEFINITION_ID, AUTH_RESET_OPERAT
 def resolve_auth_teardown_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Require an explicit grant for local teardown; confer no remote authority."""
-    if type(request.payload) is not AuthTeardownOperationRequest or request.definition_id not in _DEFINITIONS:
+    """Require an explicit grant for local teardown; confer no remote authority.
+
+    Logout and reset declare different frontends, so each is held to the list
+    its own registered contract carries.
+    """
+    if (
+        type(request.payload) is not AuthTeardownOperationRequest
+        or request.definition_id not in _DEFINITIONS
+        or request.definition_id != context.contract.definition_id
+    ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     if request.subject_ref != profile_operation_subject(str(context.profile_id)):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     require_declared_frontend_and_action(
-        context, frontends=ALL_OPERATION_FRONTENDS, actions=SINGLE_RUN_COMMITTING_ACTIONS
+        context, frontends=context.contract.permitted_frontends, actions=SINGLE_RUN_COMMITTING_ACTIONS
     )
     disclosures = operation_disclosures(
         context,

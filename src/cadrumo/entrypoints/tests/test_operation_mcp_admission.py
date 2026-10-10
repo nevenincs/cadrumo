@@ -11,6 +11,10 @@ A frontend list is a declaration. Several access resolvers compare the
 frontend themselves, so a listed frontend is also put to each operation's real
 resolver wherever a request can be built from its registered schema alone.
 
+An operation that waits for the person's approval lists no MCP frontend. A
+definition that stays open while it names sensitive acts has each act put to
+that resolver, which must refuse it to MCP and to no other frontend it lists.
+
 Like the exposure census beside it, this file passes on membership and shape
 and never on a count.
 """
@@ -51,9 +55,12 @@ from ...application.user_profile.access_contracts import (
     OperationAccessRequest,
 )
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
+from ...application.wizard.catalogue import build_setup_flow
+from ...core.capabilities import ServiceCapability
 from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.remote_state_guard import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
 from .test_operation_catalogue import _production_sources, _registry, _tree
 
@@ -111,9 +118,10 @@ def _listing_finding(decision: McpAdmissionDecision, *, lists_mcp: bool) -> str 
     if decision.ruling is McpRuling.EXCLUDED:
         return "is excluded but lists the MCP frontend" if lists_mcp else None
     if decision.ruling is McpRuling.ADMITTED_BEHIND_APPROVAL:
-        # Whether a sensitive act is listed follows from whether the person's
-        # approval reaches it, which a frontend list cannot show.
-        return None
+        # A frontend list cannot show that the person approved the act, so an
+        # operation that waits for that approval is closed to MCP until a
+        # decision records how the approval reaches it.
+        return "awaits the person's approval but lists the MCP frontend" if lists_mcp else None
     if decision.prerequisites and lists_mcp:
         outstanding = sorted(item.value for item in decision.prerequisites)
         return f"lists the MCP frontend with a prerequisite outstanding: {outstanding}"
@@ -123,13 +131,13 @@ def _listing_finding(decision: McpAdmissionDecision, *, lists_mcp: bool) -> str 
 
 
 def test_every_definition_lists_mcp_as_its_recorded_decision_says() -> None:
-    """An excluded or still-gated operation is closed; an admitted one with nothing outstanding is open."""
+    """An excluded, still-gated or approval-bound operation is closed; a clear admission is open."""
     findings = _findings(lambda item: _listing_finding(_decision(item), lists_mcp=_lists_mcp(item)))
     assert not findings, f"definitions whose MCP listing contradicts their recorded decision: {findings}"
 
 
 def test_the_listing_rule_detects_each_contradiction() -> None:
-    """The rule fails an open exclusion, an open gated admission and a closed clear admission."""
+    """The rule fails an open exclusion, gated admission or approval-bound act, and a closed clear admission."""
     excluded = McpAdmissionDecision(
         definition_id="domain.thing.administer",
         ruling=McpRuling.EXCLUDED,
@@ -148,6 +156,7 @@ def test_the_listing_rule_detects_each_contradiction() -> None:
     sensitive = replace(clear, definition_id="domain.thing.remove", ruling=McpRuling.ADMITTED_BEHIND_APPROVAL)
     open_while_gated = "lists the MCP frontend with a prerequisite outstanding: ['file_exchange']"
     closed_while_clear = "is admitted with nothing outstanding but does not list the MCP frontend"
+    open_while_unapproved = "awaits the person's approval but lists the MCP frontend"
 
     assert _listing_finding(excluded, lists_mcp=True) == "is excluded but lists the MCP frontend"
     assert _listing_finding(excluded, lists_mcp=False) is None
@@ -155,8 +164,12 @@ def test_the_listing_rule_detects_each_contradiction() -> None:
     assert _listing_finding(gated, lists_mcp=False) is None
     assert _listing_finding(clear, lists_mcp=False) == closed_while_clear
     assert _listing_finding(clear, lists_mcp=True) is None
-    assert _listing_finding(sensitive, lists_mcp=True) is None
+    assert _listing_finding(sensitive, lists_mcp=True) == open_while_unapproved
     assert _listing_finding(sensitive, lists_mcp=False) is None
+    # An approval-bound operation is closed whatever else is recorded as outstanding.
+    gated_sensitive = replace(sensitive, prerequisites=gated.prerequisites)
+    assert _listing_finding(gated_sensitive, lists_mcp=True) == open_while_unapproved
+    assert _listing_finding(gated_sensitive, lists_mcp=False) is None
 
 
 def _is_runnable_but_recorded_as_not(registration: OperationPublicDefinitionRegistrationV1) -> bool:
@@ -460,12 +473,54 @@ def _resolution(request: OperationRequest[BaseModel], context: OperationAccessCo
     return _RESOLVED
 
 
+def _action_value(document: Mapping[str, Any]) -> str:
+    return str(document["action"])
+
+
+def _fact_section(document: Mapping[str, Any]) -> str:
+    """The profile section a fact path lies in, trimmed as the fact writer trims it."""
+    return str(document["path"]).strip().partition(".")[0]
+
+
+_CAPABILITY_SECTION = "capabilities"
+_CAPABILITY_QUESTIONS = frozenset({"google-export", "llm-vision"})
+"""The setup questions whose answer is a capability fact; held to the live catalogue further down."""
+
+
+def _patch_answer_section(document: Mapping[str, Any]) -> str:
+    """The capability section, where a wizard patch answers a question stored in it."""
+    answered = {str(item["question_id"]) for item in document.get("values", ())}
+    return _CAPABILITY_SECTION if answered & _CAPABILITY_QUESTIONS else ""
+
+
+_SENSITIVE_ACT_READERS: Mapping[str, Callable[[Mapping[str, Any]], str]] = {
+    "ledger.own_account": _action_value,
+    "modelo.m360_solicitud": _action_value,
+    "user-profile.field-mutation": _fact_section,
+    "user-profile.patch": _patch_answer_section,
+}
+"""How a request of each definition that names sensitive acts says which act it carries."""
+
+
+def _sensitive_act(definition_id: str, payload: BaseModel) -> str | None:
+    """The recorded sensitive act a request carries, if it carries one."""
+    reader = _SENSITIVE_ACT_READERS.get(definition_id)
+    if reader is None:
+        return None
+    act = reader(payload.model_dump(mode="json"))
+    return act if act in mcp_admission_decision(definition_id).sensitive_actions else None
+
+
 @cache
 def _resolutions(definition_id: str) -> Mapping[str, Mapping[OperationFrontendProjection, str]]:
     """Every probe's answer for each frontend the definition lists; empty without a request."""
     registration = _registry().lookup_public_registration(definition_id)
     answers: dict[str, dict[OperationFrontendProjection, str]] = {}
     for index, request in enumerate(_probe_requests(definition_id)):
+        if _sensitive_act(definition_id, request.payload) is not None:
+            # A recorded sensitive act is the one request a resolver answers
+            # differently for MCP. It is judged on its own further down.
+            continue
         for frontend in sorted(registration.contract.permitted_frontends):
             for position, context in _probe_contexts(registration, frontend):
                 answers.setdefault(f"request {index}, {position}", {})[frontend] = _resolution(request, context)
@@ -486,10 +541,14 @@ _MCP_RESOLUTION_NOT_PROVEN: frozenset[str] = frozenset(
         "ledger.split.review",
         "modelo.aggregate.capture_received_invoice_retencion",
         "modelo.reconcile.pull",
+        "modelo.work.compare_taxation",
+        "modelo.work.preview_maritime_exemption",
+        "modelo.work.review",
         "overview.calendar",
         "overview.explain",
         "overview.prepare",
-        "user-profile.censo-review",
+        "workflow.resume.context",
+        "workflow.run.read",
     }
 )
 """Operations that list MCP whose resolver could not be brought to admit it here.
@@ -527,15 +586,10 @@ def test_every_mcp_listed_definition_is_admitted_by_its_real_resolver() -> None:
     assert listed - unproven
 
 
-        "modelo.work.compare_taxation",
-        "modelo.work.preview_maritime_exemption",
-        "modelo.work.review",
 def test_every_admission_the_probe_reports_is_refused_for_another_profile() -> None:
     """The admissions above are decisions: the same resolvers refuse the same requests for a foreign profile."""
     registry = _registry()
     foreign_profile = UUID("5aa00000-0000-4000-8000-0000000000cc")
-        "workflow.resume.context",
-        "workflow.run.read",
     admitted = 0
     unrefused: list[tuple[str, str]] = []
     for definition_id in _mcp_listed_ids():
@@ -578,6 +632,211 @@ def test_the_schema_sample_keeps_to_required_members_and_declared_shapes() -> No
     assert second == {**fixed, "mode": "apply", "count": 50, "label": "1T1"}
     with pytest.raises(_NoGenericSampleError):
         _schema_sample({"type": "string", "pattern": "^never-[a-z]{40}-matches$"}, {}, _SAMPLE_CHOICES[0])
+
+
+# ---------------------------------------------------------------------------
+# The sensitive acts, put to the real resolver on the MCP frontend
+# ---------------------------------------------------------------------------
+
+_SAMPLE_ACCOUNT = "acc-01"
+_SAMPLE_IBAN = "ES9121000418450200051332"
+"""A published example account number; no account is read while a resolver is asked."""
+_FIELD_BASELINE: Mapping[str, Any] = {"expected_revision": 1, "expected_content_digest": "0" * 64}
+_SOLICITUD_FACTS: Mapping[str, Any] = {
+    "solicitud": {"nivel_calidad_datos": "2", "pais_destino": "FR", "causa_presentacion": "0"},
+    "solicitante": {"email": "solicitante@example.es", "establecimiento": {"ambito": "territorio_comun"}},
+    "cuenta": {"titular_nombre": "TITULAR PRUEBA", "titular_en_calidad_de": "A", "divisa": "EUR"},
+}
+
+_SENSITIVE_ACT_SAMPLES: Mapping[str, tuple[Mapping[str, Any], ...]] = {
+    "ledger.own_account": (
+        {"action": "add", "label": "synthetic", "holding": "titular", "iban": _SAMPLE_IBAN},
+        {"action": "update", "own_account_id": _SAMPLE_ACCOUNT, "label": "synthetic"},
+        {"action": "close", "own_account_id": _SAMPLE_ACCOUNT, "closed_on": "2026-06-30"},
+        {"action": "remove", "own_account_id": _SAMPLE_ACCOUNT},
+        {"action": "designate", "own_account_id": _SAMPLE_ACCOUNT, "role": "charge"},
+        {"action": "undesignate", "role": "charge"},
+    ),
+    "modelo.m360_solicitud": (
+        {"action": "declare", "filing_year": 2025, "own_account_id": _SAMPLE_ACCOUNT, "facts": _SOLICITUD_FACTS},
+        {"action": "remove", "filing_year": 2025},
+    ),
+    "user-profile.field-mutation": tuple(
+        {**_FIELD_BASELINE, "path": capability.schema_path, "value": value}
+        for capability in ServiceCapability
+        for value in ("true", "")
+    ),
+    "user-profile.patch": tuple(
+        {**_FIELD_BASELINE, "values": [{"question_id": question_id, "value": value}]}
+        for question_id in sorted(_CAPABILITY_QUESTIONS)
+        for value in ("false", "")
+    ),
+}
+"""Well-formed requests that carry each sensitive act an open definition names.
+
+A sensitive act needs a request no schema sample reaches, so these are written
+out. Each is admitted through the registry's own decoder before it is used."""
+
+_OPEN_ACT_SAMPLES: Mapping[str, tuple[Mapping[str, Any], ...]] = {
+    "ledger.own_account": ({"action": "list"}, {"action": "show", "own_account_id": _SAMPLE_ACCOUNT}),
+    "modelo.m360_solicitud": ({"action": "list"},),
+    "user-profile.field-mutation": ({**_FIELD_BASELINE, "path": "preferences.output_language", "value": "es"},),
+    "user-profile.patch": (
+        {**_FIELD_BASELINE, "values": [{"question_id": "notes", "value": "synthetic"}]},
+        {**_FIELD_BASELINE, "colegio_concertado": True},
+    ),
+}
+"""Requests of the same definitions that carry no sensitive act and stay open to MCP."""
+
+_APPROVAL_REFUSED_BY_THE_RESOLVER: frozenset[str] = frozenset(
+    {
+        "auth.session.reset",
+        "ledger.invoice.remove",
+        "ledger.prorrata.elect_especial",
+        "ledger.prorrata.elect_general",
+        "ledger.prorrata.revoke_especial",
+    }
+)
+"""Approval-bound operations whose own resolver refuses the MCP frontend.
+
+The access policy refuses a frontend a definition does not list. These
+resolvers refuse it as well, so the refusal holds wherever the resolver is
+asked. An operation leaves this set when its recorded decision changes."""
+
+
+def _sample_request(definition_id: str, document: Mapping[str, Any]) -> OperationRequest[BaseModel]:
+    """Admit one written-out document through the registry's own decoder; a stale sample fails here."""
+    text = json.dumps({"profile_id": str(_PROBE_PROFILE), **document}, sort_keys=True)
+    return OperationRequest(
+        definition_id=definition_id,
+        subject_ref=profile_operation_subject(str(_PROBE_PROFILE)),
+        payload=_registry().decode_request_payload(definition_id, text),
+    )
+
+
+def _answers_on(
+    registration: OperationPublicDefinitionRegistrationV1,
+    request: OperationRequest[BaseModel],
+    frontend: OperationFrontendProjection,
+    authority: PinnedAuthorityOperation | None = None,
+) -> dict[str, str]:
+    """What the real resolver answers one frontend, at each position it can be asked from.
+
+    The host always holds a pinned authority. A resolver that reads the setup
+    catalogue needs it, so the checks of sensitive acts supply it.
+    """
+    return {
+        position: _resolution(request, replace(context, authority_operation=authority))
+        for position, context in _probe_contexts(registration, frontend)
+    }
+
+
+def _open_definitions_that_name_sensitive_acts() -> dict[str, tuple[str, ...]]:
+    listed = set(_mcp_listed_ids())
+    return {
+        decision.definition_id: decision.sensitive_actions
+        for decision in MCP_ADMISSION_DECISIONS
+        if decision.sensitive_actions and decision.definition_id in listed
+    }
+
+
+def test_every_sensitive_act_an_open_definition_names_has_a_request_that_carries_it() -> None:
+    """No named act goes unjudged, and no sample stands for an act it does not carry."""
+    named = _open_definitions_that_name_sensitive_acts()
+    assert named
+    unread = sorted(set(named) - set(_SENSITIVE_ACT_READERS))
+    assert not unread, f"definitions that name sensitive acts no request can be read for: {unread}"
+    stale = sorted((set(_SENSITIVE_ACT_SAMPLES) | set(_OPEN_ACT_SAMPLES) | set(_SENSITIVE_ACT_READERS)) - set(named))
+    assert not stale, f"sampled or read, but no longer open to MCP with a sensitive act named: {stale}"
+    for definition_id, acts in named.items():
+        carried = [
+            _sensitive_act(definition_id, _sample_request(definition_id, document).payload)
+            for document in _SENSITIVE_ACT_SAMPLES.get(definition_id, ())
+        ]
+        assert None not in carried, f"{definition_id}: a sensitive sample carries no recorded sensitive act"
+        unsampled = sorted(set(acts) - {act for act in carried if act is not None})
+        assert not unsampled, f"{definition_id}: sensitive acts with no request to judge them by: {unsampled}"
+        open_samples = _OPEN_ACT_SAMPLES.get(definition_id, ())
+        assert open_samples, f"{definition_id}: no request shows what stays open to MCP"
+        for document in open_samples:
+            assert _sensitive_act(definition_id, _sample_request(definition_id, document).payload) is None, document
+
+
+def test_the_capability_questions_named_here_are_the_ones_the_setup_catalogue_asks(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A capability question the catalogue gains must be named here before its refusal counts as judged."""
+    asked = {
+        question.id
+        for section in build_setup_flow(operation).sections
+        for question in section.questions
+        if question.profile_key is not None and _fact_section({"path": question.profile_key}) == _CAPABILITY_SECTION
+    }
+    assert asked == _CAPABILITY_QUESTIONS
+
+
+def test_every_named_sensitive_act_is_refused_to_mcp_and_to_no_other_listed_frontend(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The real resolver refuses the act on MCP at every position, and admits its submission elsewhere."""
+    findings: dict[str, object] = {}
+    judged = 0
+    for definition_id in _open_definitions_that_name_sensitive_acts():
+        registration = _registry().lookup_public_registration(definition_id)
+        others = sorted(registration.contract.permitted_frontends - {_MCP})
+        assert others, definition_id
+        for document in _SENSITIVE_ACT_SAMPLES[definition_id]:
+            request = _sample_request(definition_id, document)
+            act = _sensitive_act(definition_id, request.payload)
+            judged += 1
+            on_mcp = _answers_on(registration, request, _MCP, operation)
+            if set(on_mcp.values()) != {_FRONTEND_REFUSAL}:
+                findings[f"{definition_id} {act} on mcp"] = on_mcp
+            for frontend in others:
+                submitted = _answers_on(registration, request, frontend, operation)["submit"]
+                if submitted != _RESOLVED:
+                    findings[f"{definition_id} {act} on {frontend.value}"] = submitted
+    assert judged
+    assert not findings, f"sensitive acts the resolver does not refuse to MCP alone: {findings}"
+
+
+def test_what_a_definition_keeps_open_beside_its_sensitive_acts_is_answered_alike_on_every_frontend(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refusing the sensitive acts closes nothing else: the other requests resolve for MCP as for a person."""
+    findings: dict[str, object] = {}
+    judged = 0
+    for definition_id in _open_definitions_that_name_sensitive_acts():
+        registration = _registry().lookup_public_registration(definition_id)
+        for index, document in enumerate(_OPEN_ACT_SAMPLES[definition_id]):
+            request = _sample_request(definition_id, document)
+            judged += 1
+            on_mcp = _answers_on(registration, request, _MCP, operation)
+            if on_mcp["submit"] != _RESOLVED:
+                findings[f"{definition_id} open request {index} on mcp"] = on_mcp
+            for frontend in sorted(registration.contract.permitted_frontends - {_MCP}):
+                elsewhere = _answers_on(registration, request, frontend, operation)
+                if elsewhere != on_mcp:
+                    findings[f"{definition_id} open request {index} on {frontend.value}"] = elsewhere
+    assert judged
+    assert not findings, f"requests beside a sensitive act that MCP is not answered for as a person is: {findings}"
+
+
+def test_the_approval_bound_operations_named_here_are_refused_to_mcp_by_their_own_resolver() -> None:
+    """Each is closed on the frontend list and at the resolver, and still resolves on the frontends it lists."""
+    for definition_id in sorted(_APPROVAL_REFUSED_BY_THE_RESOLVER):
+        registration = _registry().lookup_public_registration(definition_id)
+        assert mcp_admission_decision(definition_id).ruling is McpRuling.ADMITTED_BEHIND_APPROVAL, definition_id
+        assert not _lists_mcp(registration), definition_id
+        listed = sorted(registration.contract.permitted_frontends)
+        assert listed, definition_id
+        requests = _probe_requests(definition_id)
+        assert requests, f"{definition_id}: no request could be built to ask its resolver"
+        for request in requests:
+            on_mcp = _answers_on(registration, request, _MCP)
+            assert set(on_mcp.values()) == {_FRONTEND_REFUSAL}, (definition_id, on_mcp)
+            for frontend in listed:
+                assert _answers_on(registration, request, frontend)["submit"] == _RESOLVED, (definition_id, frontend)
 
 
 # ---------------------------------------------------------------------------

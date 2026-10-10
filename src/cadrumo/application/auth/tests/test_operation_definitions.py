@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import pytest
+from pydantic import BaseModel
 
 from cadrumo.application.auth.operation_definitions import (
     AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
@@ -11,12 +14,19 @@ from cadrumo.application.auth.operation_definitions import (
     AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
     PROFILE_ROTATION_OPERATION_DEFINITION_ID,
     AuthOperationPorts,
+    AuthTeardownOperationRequest,
     build_auth_operation_definitions,
+    build_auth_operation_registrations,
 )
 from cadrumo.application.auth.protocols import BrowserSessionPort
+from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
-from cadrumo.application.operations.registry import OperationRegistry
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.config import Settings
+from cadrumo.core.operations import profile_operation_subject
 
 from ._operator_probe_fakes import fake_operator_probe_ports
 from ._operator_scope_fakes import build_inward_operator_scope_ports
@@ -79,3 +89,86 @@ def test_auth_families_have_one_canonical_registered_operation_each() -> None:
             AUTH_RESET_OPERATION_DEFINITION_ID,
         )
     )
+
+
+_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000c1")
+_DESTINATION = UUID("5aa00000-0000-4000-8000-0000000000c2")
+_PERSON_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
+_TEARDOWN_FRONTENDS = {
+    AUTH_LOGOUT_OPERATION_DEFINITION_ID: frozenset(OperationFrontendProjection),
+    AUTH_RESET_OPERATION_DEFINITION_ID: _PERSON_FRONTENDS,
+}
+_TEARDOWN_ACCESSES = (AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, AccessAction.OBSERVE)
+
+
+def _teardown_registry() -> OperationRegistry:
+    return OperationRegistry(
+        definitions=AUTH_DEFINITIONS,
+        public_registrations=build_auth_operation_registrations(AUTH_DEFINITIONS),
+    )
+
+
+def test_reset_is_declared_for_a_persons_frontends_and_logout_for_every_frontend() -> None:
+    registry = _teardown_registry()
+
+    for definition_id, expected in _TEARDOWN_FRONTENDS.items():
+        assert registry.lookup(definition_id).permitted_frontends == expected
+        assert registry.lookup_public_contract(definition_id).permitted_frontends == expected
+
+
+@pytest.mark.parametrize("access", _TEARDOWN_ACCESSES)
+@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
+@pytest.mark.parametrize("definition_id", sorted(_TEARDOWN_FRONTENDS))
+def test_teardown_resolves_on_exactly_the_frontends_its_definition_declares(
+    definition_id: str, frontend: OperationFrontendProjection, access: AccessAction
+) -> None:
+    registry = _teardown_registry()
+    request = OperationRequest[BaseModel](
+        definition_id=definition_id,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=AuthTeardownOperationRequest(),
+    )
+    context = OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=_DESTINATION,
+        action=access,
+        frontend=frontend,
+        contract=registry.lookup_public_contract(definition_id),
+        published_authority=Availability.AVAILABLE,
+    )
+
+    if frontend in _TEARDOWN_FRONTENDS[definition_id]:
+        resolved = resolve_operation_access(registry=registry, request=request, context=context)
+        assert resolved.request.frontend is frontend
+        assert resolved.request.definition_id == definition_id
+        assert AccessAction.COMMIT in resolved.policy.actions
+        return
+    assert (definition_id, frontend) == (AUTH_RESET_OPERATION_DEFINITION_ID, OperationFrontendProjection.MCP)
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_operation_access(registry=registry, request=request, context=context)
+    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+
+
+def test_teardown_refuses_a_request_resolved_under_the_other_definitions_contract() -> None:
+    """Reset cannot borrow the frontends logout declares."""
+    registry = _teardown_registry()
+    request = OperationRequest[BaseModel](
+        definition_id=AUTH_RESET_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=AuthTeardownOperationRequest(),
+    )
+    registration = registry.lookup_public_registration(AUTH_RESET_OPERATION_DEFINITION_ID)
+    assert registration.access_resolver is not None
+    borrowed = OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=_DESTINATION,
+        action=AccessAction.SUBMIT,
+        frontend=OperationFrontendProjection.MCP,
+        contract=registry.lookup_public_contract(AUTH_LOGOUT_OPERATION_DEFINITION_ID),
+        published_authority=Availability.AVAILABLE,
+    )
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        registration.access_resolver(request, borrowed)
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE

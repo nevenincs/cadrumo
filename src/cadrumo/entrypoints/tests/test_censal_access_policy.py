@@ -68,24 +68,57 @@ def _request(profile_id: UUID) -> OperationRequest[BaseModel]:
     )
 
 
-def _context(registry: OperationRegistry, profile_id: UUID, action: AccessAction) -> OperationAccessContext:
+_PERSON_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
+
+
+def _context(
+    registry: OperationRegistry,
+    profile_id: UUID,
+    action: AccessAction,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
+) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=action,
-        frontend=OperationFrontendProjection.MCP,
+        frontend=frontend,
         contract=registry.lookup_public_contract(CENSAL_OPERATION_DEFINITION_ID),
         published_authority=Availability.AVAILABLE,
     )
 
 
-def test_registered_censal_review_resolves_exact_profile_and_policy_axes() -> None:
+def test_censal_review_is_declared_for_a_persons_frontends_only() -> None:
+    registry = _registry()
+
+    assert registry.lookup(CENSAL_OPERATION_DEFINITION_ID).permitted_frontends == _PERSON_FRONTENDS
+    assert registry.lookup_public_contract(CENSAL_OPERATION_DEFINITION_ID).permitted_frontends == _PERSON_FRONTENDS
+
+
+@pytest.mark.parametrize("action", sorted(AccessAction))
+def test_censal_review_is_refused_to_an_mcp_client_at_every_access(action: AccessAction) -> None:
+    """Submitting, reading the review and answering it are all refused, so no apply can follow."""
+    registry = _registry()
+    profile_id = uuid4()
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_operation_access(
+            registry=registry,
+            request=_request(profile_id),
+            context=_context(registry, profile_id, action, OperationFrontendProjection.MCP),
+        )
+
+    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+
+
+@pytest.mark.parametrize("frontend", sorted(_PERSON_FRONTENDS))
+def test_registered_censal_review_resolves_exact_profile_and_policy_axes(frontend: OperationFrontendProjection) -> None:
     registry = _registry()
     profile_id = uuid4()
     request = _request(profile_id)
     for action in AccessAction:
-        context = _context(registry, profile_id, action)
+        context = _context(registry, profile_id, action, frontend)
         resolved = resolve_operation_access(registry=registry, request=request, context=context)
+        assert resolved.request.frontend is frontend
         assert resolved.request.profile_id == profile_id
         assert resolved.request.period_independent and not resolved.request.periods
         assert resolved.policy.allow_period_independent and resolved.policy.periods == frozenset()

@@ -6,6 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from ...core.capabilities import ServiceCapability
 from ...core.operations import profile_operation_subject as _profile_subject
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
@@ -18,6 +19,7 @@ from ..operations.access_resolution import (
     require_period_independent_admission,
 )
 from ..operations.models import OperationRequest
+from ..operations.registry import OperationFrontendProjection
 from .access_contracts import AccessDenialCode
 from .access_errors import ProfileAccessRefusedError
 from .profile_operation_contracts import (
@@ -35,11 +37,66 @@ from .view_operation import (
     ProfileViewOperationRequest,
 )
 
+_CAPABILITY_SECTIONS = frozenset(capability.schema_path.partition(".")[0] for capability in ServiceCapability)
+"""The profile sections whose facts opt a service capability in or out."""
+
+
+def _addresses_service_capability(path: str) -> bool:
+    """Tell whether a fact path lies in a capability section, read as the fact writer reads it.
+
+    The writer trims the path before it stores the fact, so the same trimmed
+    text decides here. The whole section is matched, not the members known
+    today, so a capability added later is covered without a second list.
+    """
+    return path.strip().partition(".")[0] in _CAPABILITY_SECTIONS
+
+
+def _capability_question_ids(context: OperationAccessContext) -> frozenset[str]:
+    """Name the wizard questions whose answer is stored in a capability section.
+
+    The set is read from the setup catalogue under the host's pinned authority,
+    so a capability question added later is covered without a list here.
+    Without that authority the catalogue cannot be read, no answer can be shown
+    to leave the capabilities alone, and the access is refused.
+    """
+    operation = context.authority_operation
+    if operation is None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    # Deferred because the wizard package imports this package.
+    from ..wizard.catalogue import build_setup_flow
+
+    return frozenset(
+        question.id
+        for section in build_setup_flow(operation).sections
+        for question in section.questions
+        if question.profile_key is not None and _addresses_service_capability(question.profile_key)
+    )
+
+
+def _changes_service_capability(payload: BaseModel, context: OperationAccessContext) -> bool:
+    """Tell whether a profile change sets or clears a service capability.
+
+    A field change names its path. A wizard patch names questions, and a blank
+    answer clears the fact its question owns, so naming the question is enough.
+    """
+    if isinstance(payload, ProfileFieldMutationOperationRequest):
+        return _addresses_service_capability(payload.path)
+    if isinstance(payload, ProfilePatchOperationRequest) and payload.values:
+        answered = {item.question_id for item in payload.values}
+        return not answered.isdisjoint(_capability_question_ids(context))
+    return False
+
 
 def resolve_profile_mutation_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Authorize profile facts as profile-wide work, without tax-period impersonation."""
+    """Authorize profile facts as profile-wide work, without tax-period impersonation.
+
+    Setting or clearing a service capability is the person's consent to a
+    service, whichever operation writes it. A field change or a wizard patch
+    that does so is refused to an MCP client; every other change stays open
+    to it.
+    """
     payload = request.payload
     if not isinstance(
         payload,
@@ -53,6 +110,8 @@ def resolve_profile_mutation_access(
         | ProfileCompleteSetupOperationRequest,
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if context.frontend is OperationFrontendProjection.MCP and _changes_service_capability(payload, context):
+        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
     return _bind_exact_profile_access(
         request,
         context,

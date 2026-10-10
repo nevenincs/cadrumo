@@ -1,4 +1,4 @@
-"""Invoice removal refuses foreign active profiles before composing capabilities."""
+"""Invoice removal refuses foreign active profiles and any frontend but a person's."""
 
 from __future__ import annotations
 
@@ -8,24 +8,104 @@ from typing import cast
 from uuid import UUID
 
 import pytest
+from pydantic import BaseModel
 
 from ....core.operations import profile_operation_subject
 from ...operations import profile_guard
+from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...user_profile.access_contracts import AccessDenialCode
+from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..catalogue_lifecycle_ports import CatalogueLifecyclePorts
 from ..catalogue_remove_operation import (
     INVOICE_REMOVE_OPERATION_DEFINITION_ID,
     InvoiceRemoveExecutor,
     InvoiceRemoveRequest,
+    build_invoice_remove_definition,
+    build_invoice_remove_registration,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
+_DESTINATION = UUID("5aa00000-0000-4000-8000-0000000000ab")
+_PERSON_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
+_ACCESSES = (AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, AccessAction.OBSERVE, AccessAction.RESULT)
+
+
+def _unreached_ports(*, bucket_id: str) -> CatalogueLifecyclePorts:
+    raise AssertionError(f"access resolution reached invoice removal ports for {bucket_id}")
+
+
+def _registry() -> OperationRegistry:
+    definition = build_invoice_remove_definition(_unreached_ports)
+    return OperationRegistry(
+        definitions=(definition,),
+        public_registrations=(build_invoice_remove_registration(definition),),
+    )
+
+
+def _removal() -> OperationRequest[BaseModel]:
+    return OperationRequest[BaseModel](
+        definition_id=INVOICE_REMOVE_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=InvoiceRemoveRequest(profile_id=_PROFILE, invoice_id="a" * 64),
+    )
+
+
+def _context(
+    registry: OperationRegistry, frontend: OperationFrontendProjection, access: AccessAction
+) -> OperationAccessContext:
+    return OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=_DESTINATION,
+        action=access,
+        frontend=frontend,
+        contract=registry.lookup_public_contract(INVOICE_REMOVE_OPERATION_DEFINITION_ID),
+        published_authority=Availability.AVAILABLE,
+    )
+
+
+def test_removal_is_declared_for_a_persons_frontends_only() -> None:
+    registry = _registry()
+
+    assert registry.lookup(INVOICE_REMOVE_OPERATION_DEFINITION_ID).permitted_frontends == _PERSON_FRONTENDS
+    contract = registry.lookup_public_contract(INVOICE_REMOVE_OPERATION_DEFINITION_ID)
+    assert contract.permitted_frontends == _PERSON_FRONTENDS
+
+
+@pytest.mark.parametrize("access", _ACCESSES)
+@pytest.mark.parametrize("frontend", sorted(_PERSON_FRONTENDS))
+def test_removal_resolves_whole_profile_commit_access_on_a_persons_frontend(
+    frontend: OperationFrontendProjection, access: AccessAction
+) -> None:
+    registry = _registry()
+
+    resolved = resolve_operation_access(
+        registry=registry, request=_removal(), context=_context(registry, frontend, access)
+    )
+
+    assert resolved.request.frontend is frontend
+    assert resolved.request.action is access
+    assert resolved.request.period_independent and resolved.policy.requires_all_periods
+    assert AccessAction.COMMIT in resolved.policy.actions
+
+
+@pytest.mark.parametrize("access", _ACCESSES)
+def test_removal_is_refused_to_an_mcp_client_at_every_access(access: AccessAction) -> None:
+    registry = _registry()
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_operation_access(
+            registry=registry,
+            request=_removal(),
+            context=_context(registry, OperationFrontendProjection.MCP, access),
+        )
+
+    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
 
 
 def test_remove_executor_refuses_foreign_active_profile_before_phase_or_factory(

@@ -13,11 +13,13 @@ from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import get_args
 from uuid import UUID
 
 import pydantic
 import pytest
 
+from ....core.operations import profile_operation_subject
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
@@ -29,9 +31,19 @@ from ....domain.transactions.own_accounts import (
 )
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...operations.access_resolution import (
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    resolve_operation_access,
+)
+from ...operations.models import OperationRequest
+from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
+from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..own_account_operation import (
     LedgerOwnAccountRequest,
     LedgerOwnAccountResult,
+    OwnAccountAction,
     apply_own_account_request,
     build_ledger_own_account_definition,
     build_ledger_own_account_registration,
@@ -42,8 +54,22 @@ from ..transaction_repository import bind_transaction_catalogue_repository_facto
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("7a1c0e52-3b64-4d85-9e96-0acc00000a01")
+_DESTINATION = UUID("7a1c0e52-3b64-4d85-9e96-0acc00000a02")
 _ES_IBAN = "ES9121000418450200051332"
 _ES_IBAN_2 = "ES7921000813610123456789"
+_READS = ("list", "show")
+_ACTION_FIELDS: dict[str, dict[str, object]] = {
+    "add": {"label": "synthetic account", "holding": OwnAccountHolding.TITULAR, "iban": _ES_IBAN},
+    "list": {},
+    "show": {"own_account_id": "acc-01"},
+    "update": {"own_account_id": "acc-01", "label": "renamed"},
+    "close": {"own_account_id": "acc-01", "closed_on": date(2026, 6, 30)},
+    "remove": {"own_account_id": "acc-01"},
+    "designate": {"own_account_id": "acc-01", "role": OwnAccountRole.CHARGE},
+    "undesignate": {"role": OwnAccountRole.CHARGE},
+}
+"""One well-formed request for every action the operation declares."""
+_CHANGES = tuple(sorted(set(_ACTION_FIELDS) - set(_READS)))
 
 
 class _Register:
@@ -276,3 +302,69 @@ def test_an_account_referenced_by_transactions_is_refused_removal() -> None:
             )
 
     assert [account.own_account_id for account in register.document.accounts] == ["acc-01"]
+
+
+def _resolve(
+    action: str, frontend: OperationFrontendProjection, access: AccessAction = AccessAction.SUBMIT
+) -> ResolvedOperationAccess:
+    """Ask the registered resolver, through the registry's own door, for one action on one frontend."""
+    definition = build_ledger_own_account_definition(_unused_repository)
+    registry = OperationRegistry(
+        definitions=(definition,),
+        public_registrations=(build_ledger_own_account_registration(definition),),
+    )
+    request = OperationRequest[pydantic.BaseModel](
+        definition_id=definition.definition_id,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=_request(action, **_ACTION_FIELDS[action]),
+    )
+    context = OperationAccessContext(
+        profile_id=_PROFILE,
+        destination_id=_DESTINATION,
+        action=access,
+        frontend=frontend,
+        contract=registry.lookup_public_contract(definition.definition_id),
+        published_authority=Availability.AVAILABLE,
+    )
+    return resolve_operation_access(registry=registry, request=request, context=context)
+
+
+def test_the_access_cases_cover_every_declared_action() -> None:
+    assert set(_ACTION_FIELDS) == set(get_args(OwnAccountAction))
+    assert set(_READS) < set(_ACTION_FIELDS)
+    assert _CHANGES
+
+
+@pytest.mark.parametrize("frontend", [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI])
+@pytest.mark.parametrize("action", sorted(_ACTION_FIELDS))
+def test_a_persons_frontend_is_admitted_to_every_action_and_commits_only_a_change(
+    action: str, frontend: OperationFrontendProjection
+) -> None:
+    resolved = _resolve(action, frontend)
+
+    assert resolved.request.frontend is frontend
+    assert resolved.request.profile_id == _PROFILE
+    assert (AccessAction.COMMIT in resolved.policy.actions) is (action in _CHANGES)
+
+
+@pytest.mark.parametrize(
+    "access",
+    [AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, AccessAction.OBSERVE, AccessAction.RESULT],
+)
+@pytest.mark.parametrize("action", _CHANGES)
+def test_an_mcp_client_is_refused_every_change_at_every_access(action: str, access: AccessAction) -> None:
+    assert _resolve(action, OperationFrontendProjection.CLI, access).request.action is access
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        _resolve(action, OperationFrontendProjection.MCP, access)
+
+    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+
+
+@pytest.mark.parametrize("action", _READS)
+def test_an_mcp_client_keeps_the_reads_under_the_policy_a_person_gets(action: str) -> None:
+    resolved = _resolve(action, OperationFrontendProjection.MCP)
+
+    assert resolved.request.frontend is OperationFrontendProjection.MCP
+    assert resolved.policy == _resolve(action, OperationFrontendProjection.CLI).policy
+    assert AccessAction.COMMIT not in resolved.policy.actions

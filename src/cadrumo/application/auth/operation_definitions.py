@@ -544,6 +544,8 @@ def build_auth_operation_definitions(
             build=lambda: AuthResetOperationExecutor(ports=ports, reset=reset),
             phases=("auth.reset.preflight", "auth.reset.execute", "auth.reset.settlement"),
             request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+            # Reset destroys stored sessions, sources and secrets, so only a person's frontend offers it.
+            permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         ),
         _definition(
             definition_id=PROFILE_ROTATION_OPERATION_DEFINITION_ID,

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:7fceed684cebbca7c33902c81321b5aaeb7b6f24c2db5a1168da4b5b18e23558'
+body_hash: 'sha256:a868e03861712e9a59e1086aae4099d3c63018cae183140538b0a6f29d4a70f8'
 related:
   - "[[2026-10-10-mcp-parity-exclusion-intent-evidence-research]]"
   - "[[2026-10-10-mcp-parity-closed-operations-reference]]"
@@ -215,8 +215,8 @@ Rulings for operations that admit MCP today with no approval in front of a sensi
 | `ledger.invoice.remove`, `auth.session.reset` | Destructive. Behind the person's approval; refused on MCP until that step exists |
 | `ledger.own_account` writes, the declare and remove actions of `modelo.m360_solicitud` | They change who is paid and carry account numbers. Behind the person's approval |
 | `ledger.prorrata.elect_especial`, `.elect_general`, `.revoke_especial` | The taxpayer's elections. Behind the person's approval. The four other prorrata operations stay admitted |
-| the capability toggle within `user-profile.field-mutation` | A consent. Behind the person's approval |
-| `user-profile.censo-review` apply | The per-field confirmation the command line shows moves into the operation |
+| a capability opt-in, whichever operation writes it: the capability paths of `user-profile.field-mutation` and the capability answers of `user-profile.patch` | A consent. Behind the person's approval |
+| `user-profile.censo-review` | Behind the person's approval. Applying it rewrites profile facts in bulk from a census document. The runtime evaluates apply, reject and inspect as one access action, so the apply cannot be held back alone; the whole review leaves MCP until the approval step carries the response intent. The census preview stays open |
 | `user-profile.bundle-export` and the six definitions without an access resolver | Not runnable. Their MCP claim is removed until they are made runnable |
 
 Ruled by the owner on 2026-10-10 (typing lightly corrected): "agent can and should be

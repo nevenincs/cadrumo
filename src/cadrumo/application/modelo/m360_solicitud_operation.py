@@ -49,7 +49,11 @@ from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import (
+    ALL_OPERATION_FRONTENDS,
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+)
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 
@@ -355,14 +359,22 @@ def resolve_modelo_360_solicitud_access(
     context: OperationAccessContext,
     /,
 ) -> ResolvedOperationAccess:
-    """Require whole-profile scope, and COMMIT for a declaration or removal."""
+    """Require whole-profile scope, and COMMIT for a declaration or removal.
+
+    A declaration names the account a refund is paid to and a removal withdraws
+    it. An MCP client is refused both and keeps the listing.
+    """
     if request.definition_id != MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID or not isinstance(
         request.payload,
         Modelo360SolicitudRequest,
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolve = resolve_ledger_read_access if request.payload.action in _READ_ACTIONS else resolve_ledger_commit_access
-    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    payload = request.payload
+    if payload.action in _READ_ACTIONS:
+        return resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
+    if context.frontend is OperationFrontendProjection.MCP:
+        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+    return resolve_ledger_commit_access(request, context, profile_id=payload.profile_id, periods=frozenset())
 
 
 def build_modelo_360_solicitud_registration(

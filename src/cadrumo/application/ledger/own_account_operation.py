@@ -44,7 +44,11 @@ from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import (
+    ALL_OPERATION_FRONTENDS,
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+)
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .own_account_ports import OwnAccountRepositoryFactory, OwnAccountRepositoryProtocol
@@ -374,14 +378,22 @@ def resolve_ledger_own_account_access(
     context: OperationAccessContext,
     /,
 ) -> ResolvedOperationAccess:
-    """Require whole-profile scope, and COMMIT for mutations."""
+    """Require whole-profile scope, and COMMIT for mutations.
+
+    Every mutation changes which account is charged or refunded, or carries an
+    account number. An MCP client is refused them and keeps the two reads.
+    """
     if request.definition_id != LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID or not isinstance(
         request.payload,
         LedgerOwnAccountRequest,
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolve = resolve_ledger_read_access if request.payload.action in _READ_ACTIONS else resolve_ledger_commit_access
-    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    payload = request.payload
+    if payload.action in _READ_ACTIONS:
+        return resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
+    if context.frontend is OperationFrontendProjection.MCP:
+        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+    return resolve_ledger_commit_access(request, context, profile_id=payload.profile_id, periods=frozenset())
 
 
 def build_ledger_own_account_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

@@ -138,7 +138,7 @@ def response_case() -> ResponseCase:
             profile_id=binding.profile_id,
             destination_id=client_id,
             action=AccessAction.RESPOND,
-            frontend=OperationFrontendProjection.MCP,
+            frontend=OperationFrontendProjection.CLI,
             contract=registry.lookup_public_contract(CENSAL_OPERATION_DEFINITION_ID),
             published_authority=Availability.AVAILABLE,
         ),

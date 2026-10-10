@@ -474,12 +474,12 @@ _PROFILE: Final = (
     _admit("user-profile.censo-file-import", _WRITES, _FILES),
     _admit("user-profile.censo-prepare", _READS),
     _admit("user-profile.censo-preview", _WRITES_ONLINE),
-    _admit("user-profile.censo-review", _WRITES_ONLINE),
+    _approve("user-profile.censo-review", _WRITES_ONLINE),
     _admit("user-profile.complete-setup", _WRITES),
     _admit("user-profile.descendants", _WRITES),
-    # Opting a service capability in is a consent.
+    # Opting a service capability in is a consent, whichever operation writes it.
     _admit("user-profile.field-mutation", _WRITES, sensitive=("capabilities",)),
-    _admit("user-profile.patch", _WRITES),
+    _admit("user-profile.patch", _WRITES, sensitive=("capabilities",)),
     _admit("user-profile.plantilla-media", _WRITES),
     _admit("user-profile.recovery.status", _READS),
     _admit("user-profile.repeatable-row-mutation", _WRITES),

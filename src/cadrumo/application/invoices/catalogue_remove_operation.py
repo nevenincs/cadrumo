@@ -18,7 +18,7 @@ from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
-from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -93,7 +93,11 @@ class InvoiceRemoveExecutor:
 
 
 def build_invoice_remove_definition(factory: CatalogueLifecyclePortsFactory) -> OperationDefinition:
-    """Declare one durable, guarded removal with honest uncertain effects."""
+    """Declare one durable, guarded removal with honest uncertain effects.
+
+    A removal destroys a record, so it is offered only on the frontends a
+    person operates.
+    """
     return build_single_phase_definition(
         definition_id=INVOICE_REMOVE_OPERATION_DEFINITION_ID,
         request_type=InvoiceRemoveRequest,
@@ -101,18 +105,20 @@ def build_invoice_remove_definition(factory: CatalogueLifecyclePortsFactory) -> 
         executor_type=InvoiceRemoveExecutor,
         build=lambda: InvoiceRemoveExecutor(factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 
 def resolve_invoice_remove_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Require whole-profile ledger rights and a fresh commit fence."""
+    """Require a declared frontend, whole-profile ledger rights and a fresh commit fence."""
     if request.definition_id != INVOICE_REMOVE_OPERATION_DEFINITION_ID or not isinstance(
         request.payload, InvoiceRemoveRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if context.frontend not in context.contract.permitted_frontends:
+        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
     resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
     return with_commit_action(resolved)
 

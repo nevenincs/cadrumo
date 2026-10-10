@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:7939846c330c2d2572d8b82fb8630bcdf223df4e23c15ff5065a79fa6aeedb21'
+body_hash: 'sha256:861eabcdbcedbf9840da2638fe048135abba18a145fed14a4373aebab212e8ef'
 related:
   - "[[2026-10-10-mcp-parity-approval-step-reference]]"
   - "[[2026-10-10-mcp-parity-admission-rulings-adr]]"
@@ -82,6 +82,7 @@ Hypotheses, free to change within the commitments:
 - The assistant's tree is a named Job Object on Windows that the runtime opens and tests the retained peer handle against.
 - A pending request waits ten minutes and an approval stays usable for two.
 - Each reserved definition may register a presenter for its act; a field table is the floor.
+- Access evaluation learns the intent of a review response. Today apply, reject and inspect evaluate as one access action, so an apply cannot be refused or gated without refusing a reject; an optional response intent on the access context would separate them.
 - A command that submits more than one reserved operation gets one grouped approval.
 - A person's answer counts as that person's activity once the idle extension is built.
 - The desktop's command-line children use the same explicit option to use the stored sign-in that a command run without a console needs.
