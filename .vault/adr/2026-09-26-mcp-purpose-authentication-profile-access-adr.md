@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-04'
+modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:285cfee7b69ce8c4e3b55a1aebe1021ab34a6bdfad58c98d6e92550e50e4f919'
+body_hash: 'sha256:301478f1c34fe8e4917f98580a029930445e3802d0c2ea893d418a2ce1a12152'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -69,6 +69,7 @@ Effective permission is the intersection of grant, child/session restrictions, c
 | --- | --- | --- |
 | Public capability discovery and tax-authority queries | Local connection; applicable valid publication for tax facts | Public access only |
 | Human CLI/TUI profile login | Explicit profile and password; bounded valid human receipt may resume | Human session with its own timeout |
+| MCP server without an enrolled key | Resume of a bounded valid human receipt for the exact profile; never a password | A human-kind session that ends with the sign-in, limited by per-operation MCP admission and the served surface |
 | Attended agent access | Explicit delegation tied to a valid human authorization | Access ending no later than that authorization |
 | Unattended agent, machine CLI or restricted TUI login | Active enrolled API key/grant plus available protected unlock capability | Fresh bounded session for the exact profile |
 | Key enrollment, rotation, grant renewal or expansion | Fresh profile-password proof and exact local consent | Only the reviewed change; never implicit elevation |
@@ -79,7 +80,7 @@ Effective permission is the intersection of grant, child/session restrictions, c
 
 ### Enrollment and first login
 
-1. A new adapter or machine client can connect without an unlocked profile and inspect non-private status. Requesting private work without a matching key returns an authorization-required result.
+1. A new adapter or machine client can connect without an unlocked profile and inspect non-private status. Requesting private work with neither a matching key nor a live sign-in to resume returns an authorization-required result.
 2. Cadrumo creates a bounded single-use request binding the requesting connection, enrolled-client candidate, exact profile, requested scopes, output destination and duration. A pending request ID is safe to show; it is not authorization.
 3. The user opens either trusted CLI or TUI, inspects that request and proves the profile password through the dedicated secret channel. A password login elsewhere does not approve a waiting request.
 4. The user approves attended access or explicitly enables unattended access, including whether it may continue during OS lock. Approval binds the exact request and reviewed permissions. Decline, expiry, mismatch and cancellation leave no active grant.
@@ -135,7 +136,7 @@ Each private call and result/resource read validates the live session, current g
 
 ### Four lifetimes
 
-Human sessions keep their own idle/absolute settings; polling and API activity never prolong human login. Human and attended sessions depend on their originating OS login context; logout invalidates them and their descendants even when another login exists. Attended access is bounded by its parent human authorization. Independent API grants survive that logout. Unattended continuation or re-admission requires a specifically verified eligible login context, available required credential facilities and permitting grant policy. Another login's existence alone proves none of those dependencies; unknown eligibility refuses dependent work. OS observations come only from trusted lifecycle owners. Runtime loss invalidates live leases and a replacement requires fresh admission.
+Human sessions keep their own idle/absolute settings; polling and API activity never prolong human login, and neither does any submission on the MCP frontend. Human and attended sessions depend on their originating OS login context; logout invalidates them and their descendants even when another login exists. Attended access is bounded by its parent human authorization. Independent API grants survive that logout. Unattended continuation or re-admission requires a specifically verified eligible login context, available required credential facilities and permitting grant policy. Another login's existence alone proves none of those dependencies; unknown eligibility refuses dependent work. OS observations come only from trusted lifecycle owners. Runtime loss invalidates live leases and a replacement requires fresh admission.
 
 The automation grant has an explicit user-approved calendar end date. The enrollment default is 365 days, adjustable by the user; it is not a perpetual credential. Grant extension or scope expansion requires fresh password authorization.
 
@@ -200,4 +201,6 @@ Cadrumo gains an optional delegated unlock path and a visible administration sur
 
 Local API authentication cannot guarantee perpetual AEAT authentication, filing readiness or hostile same-user isolation. Accepted 2026-09-26 on the operator's instruction to continue the presented plan after the documentation handoff. Acceptance records the design; the plan separately records authorization for product implementation. It is not evidence that API keys or runtime behavior already work.
 
-Amendment accepted 2026-10-04 under the operator's acceptance of `2026-10-04-application-sign-in-adr`. The human login receipt is the runtime-owned shared sign-in. It is bound to the originating login and to a durable sign-in generation, and revoked by human sign-out and positive lock-down. Automatic resume defaults to interactive surfaces. That is a client-side default, not an authority control: agents authenticate with enrolled API keys or explicit attended delegation.
+Amendment accepted 2026-10-04 under the operator's acceptance of `2026-10-04-application-sign-in-adr`. The human login receipt is the runtime-owned shared sign-in. It is bound to the originating login and to a durable sign-in generation, and revoked by human sign-out and positive lock-down. Automatic resume defaults to interactive surfaces and to the MCP server when it holds no enrolled credential reference (`2026-10-10-mcp-parity-shared-sign-in-door-adr`). That is a client-side default, not an authority control. With no signed-in person an agent authenticates with an enrolled API key. Attended delegation remains defined and is not used by the MCP server.
+
+Amendment accepted 2026-10-10 under the acceptance of `2026-10-10-mcp-parity-shared-sign-in-door-adr`, on the operator's ruling of that day that MCP resumes the shared sign-in as the CLI and TUI do. It changed the sentence above, added the MCP row to the capability matrix, reworded enrollment step 1, and extended the four-lifetimes rule to submissions on the MCP frontend. The rejected option of extending the human login stands: the login is not extended, and an MCP session ends with it. The enrolled API key remains the only way to work with no signed-in person.
