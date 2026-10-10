@@ -47,7 +47,7 @@ from .operations.capabilities import (
 )
 from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .operations.registry import (
-    ALL_OPERATION_FRONTENDS,
+    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
@@ -108,7 +108,7 @@ def build_local_reader_operation_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=ALL_OPERATION_FRONTENDS,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
     )
 
 

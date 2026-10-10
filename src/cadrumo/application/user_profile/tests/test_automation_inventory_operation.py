@@ -39,6 +39,10 @@ from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
     AUTOMATION_DECLINE_OPERATION_DEFINITION_ID,
     AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID,
+    AUTOMATION_RENEW_OPERATION_DEFINITION_ID,
+    AUTOMATION_REQUEST_OPERATION_DEFINITION_ID,
+    AUTOMATION_ROTATE_OPERATION_DEFINITION_ID,
+    AUTOMATION_SCOPE_OPERATION_DEFINITION_ID,
     AutomationOperationRequest,
     build_automation_operation_definitions,
     build_automation_operation_registrations,
@@ -80,6 +84,22 @@ def test_inventory_and_reviewed_decisions_expose_typed_human_cli_and_tui_results
             )
         else:
             assert contract.result_schema is None
+
+
+@pytest.mark.parametrize(
+    "definition_id",
+    (
+        AUTOMATION_REQUEST_OPERATION_DEFINITION_ID,
+        AUTOMATION_ROTATE_OPERATION_DEFINITION_ID,
+        AUTOMATION_RENEW_OPERATION_DEFINITION_ID,
+        AUTOMATION_SCOPE_OPERATION_DEFINITION_ID,
+    ),
+)
+def test_proposal_operations_do_not_admit_mcp(definition_id: str) -> None:
+    registry = _registry()
+    expected = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
+    assert registry.lookup(definition_id).permitted_frontends == expected
+    assert registry.lookup_public_contract(definition_id).permitted_frontends == expected
 
 
 @pytest.mark.parametrize(

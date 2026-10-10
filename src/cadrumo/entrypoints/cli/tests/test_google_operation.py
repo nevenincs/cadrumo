@@ -32,7 +32,7 @@ from ....application.operations.capabilities import OperationRequestStoragePolic
 from ....application.operations.composition import compose_operation_services
 from ....application.operations.models import OperationRequest
 from ....application.operations.persistence.leases import operation_conflict_scope_reference
-from ....application.operations.registry import OperationRegistry
+from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ....application.operations.tests.authority_test_support import unread_authority_operation
 from ....core.operations import (
     OperationEffect,
@@ -124,6 +124,9 @@ def test_google_sheets_export_definition_declares_one_safe_credential_free_contr
     assert definition.executor_factory.create().__class__.__name__ == "GoogleSheetsExportOperationExecutor"
     assert registry.lookup(GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID).capabilities.request_storage is (
         OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
+    )
+    assert registration.contract.permitted_frontends == frozenset(
+        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
     )
     assert registration.contract.request_schema.schema_id == "export.google-sheets.request"
     assert registration.contract.result_schema is not None

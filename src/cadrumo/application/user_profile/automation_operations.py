@@ -36,7 +36,6 @@ from ..operations.models import (
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
-    ALL_OPERATION_FRONTENDS,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -410,11 +409,7 @@ def build_automation_operation_definitions(
                 interaction_kinds=frozenset(),
                 capabilities=RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES,
                 reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-                permitted_frontends=(
-                    frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
-                    if identity in _HUMAN_DEFINITIONS
-                    else ALL_OPERATION_FRONTENDS
-                ),
+                permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
                 ephemeral_secret=None
                 if secret_kind is None
                 else OperationEphemeralSecretDeclaration(secret_kind=secret_kind, lifetime=timedelta(minutes=5)),

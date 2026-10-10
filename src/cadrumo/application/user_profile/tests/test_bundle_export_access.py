@@ -51,6 +51,18 @@ def test_runtime_bundle_export_refuses_relative_destination() -> None:
         )
 
 
+def test_bundle_export_alone_excludes_mcp_among_the_profile_operations() -> None:
+    registry = _registry()
+    for definition in USER_PROFILE_OPERATION_DEFINITIONS:
+        expected = (
+            frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
+            if definition.definition_id == PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID
+            else frozenset(OperationFrontendProjection)
+        )
+        assert definition.permitted_frontends == expected
+        assert registry.lookup_public_contract(definition.definition_id).permitted_frontends == expected
+
+
 @pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.START, AccessAction.RESULT, AccessAction.OBSERVE])
 def test_bundle_export_resolution_requires_exact_profile_and_scoped_projection(
     action: AccessAction, tmp_path: Path

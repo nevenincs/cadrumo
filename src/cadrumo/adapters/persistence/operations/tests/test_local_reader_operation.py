@@ -48,7 +48,7 @@ from .....application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from .....application.operations.models import OperationRequest
-from .....application.operations.registry import OperationRegistry
+from .....application.operations.registry import OperationFrontendProjection, OperationRegistry
 from .....application.operations.tests.authority_test_support import unread_authority_operation
 from .....application.provisioning_contracts import ProvisioningPreconditionCondition
 from .....application.provisioning_host import RuntimeInstaller
@@ -396,6 +396,9 @@ def test_the_published_result_schema_is_immutable_and_registers() -> None:
     OperationRegistry(definitions=(definition,), public_registrations=(registration,))
 
     assert registration.contract.definition_id == LOCAL_READER_OPERATION_DEFINITION_ID
+    assert registration.contract.permitted_frontends == frozenset(
+        {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}
+    )
     assert registration.contract.result_schema is not None
     schema = json.dumps(LocalReaderProvisionPublicResultV1.model_json_schema(mode="validation"))
     assert '"additionalProperties": {' not in schema, "a published mapping would be mutable"

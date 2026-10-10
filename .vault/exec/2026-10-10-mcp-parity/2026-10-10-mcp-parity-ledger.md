@@ -5,40 +5,14 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:61da75708339a17ec813d0ca4136d3a2521b1aeea9a6715dab4cd39f32698691'
+body_hash: 'sha256:908ad6094e4d8dd8bac181a90604e440ea8506933c40b3c6125726bb9bc3a0a4'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `mcp-parity` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S10` `M` `src/cadrumo_harness/_data/agent/README.md`
 - `S10` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-classifier.md`
@@ -76,3 +50,18 @@ related:
 - `S10` `verify:` `pytest dev/agent_eval/tests/test_rule_surface_conformance.py -n0 -m "unit or integration"` -> `pass`
 - `S10` `verify:` `pytest src/cadrumo_harness/tests/test_skill_applies_when.py src/cadrumo_harness/tests/test_harness_data_ships.py -n0 -m "unit or integration"` -> `pass`
 - `S10` `by:` `vaultspec-standard-executor`
+- `S04` `M` `src/cadrumo/application/user_profile/automation_operations.py`
+- `S04` `M` `src/cadrumo/application/export/google_operation.py`
+- `S04` `M` `src/cadrumo/application/local_reader_operation.py`
+- `S04` `M` `src/cadrumo/application/user_profile/operations.py`
+- `S04` `M` `src/cadrumo/application/user_profile/tests/test_automation_inventory_operation.py`
+- `S04` `M` `src/cadrumo/application/user_profile/tests/test_bundle_export_access.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_google_operation.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_operation.py`
+- `S04` `M` `docs/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md`
+- `S04` `verify:` `pytest (13 covering test files) -n0 -m "(unit or integration) and not perf ..."` -> `pass`
+- `S04` `verify:` `ruff check` -> `pass`
+- `S04` `verify:` `ruff format --check` -> `pass`
+- `S04` `verify:` `ty check --python-platform linux` -> `pass`
+- `S04` `verify:` `registry dump before and after: exactly seven definitions lost MCP` -> `pass`
+- `S04` `by:` `vaultspec-standard-executor`
