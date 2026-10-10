@@ -1039,26 +1039,14 @@ def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort:
     assert initialize["result"]["serverInfo"]["name"] == "cadrumo"
     tool_names = [tool["name"] for tool in tools["result"]["tools"]]
     assert len(tool_names) == len(set(tool_names))
-    assert set(tool_names) == {
-        "status",
-        "authorization_prepare",
-        "authorization_request",
-        "authorization_poll",
-        "authenticate",
-        "authority",
-        "search",
-        "describe",
-        "execute",
-        "observe",
-        "result",
-        "result_page",
-        "review",
-        "respond",
-        "control",
-    }
-    # The degradation is visible, never silent: the startup note names the
-    # storage-root refusal on stderr, which the client's MCP log captures.
-    assert "serving without run records" in stderr_text
+    from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_NAMES
+
+    # The default surface advertises every tool of the catalogue.
+    assert set(tool_names) == MCP_TOOL_NAMES
+    # The server writes no run records, so a refusing storage root has no startup
+    # degradation to announce: the refusal surfaces on the calls that need
+    # storage, and stderr carries no note about it.
+    assert "serving without" not in stderr_text
 
 
 async def _call_dev_installed_mcp_authenticate(
@@ -1201,8 +1189,6 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
         authentication_error, authentication, status_error, status = asyncio.run(
             _call_dev_installed_mcp_authenticate(
                 mcp_executable,
-            "session": "none",
-            "surface": "full",
                 storage_root=storage_root,
                 profile_id=str(profile_id),
                 credential_reference=str(credential_reference),
@@ -1215,5 +1201,7 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
             "outcome": "status",
             "profile_id": str(profile_id),
             "authenticated": False,
+            "session": "none",
+            "surface": "full",
             "denial": "authentication_required",
         }
