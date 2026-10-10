@@ -43,6 +43,7 @@ from cadrumo.application.user_profile.automation_custody_port import AutomationC
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
+from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.async_cleanup import close_async_resources
@@ -107,6 +108,16 @@ def _login_human(profile_id: UUID) -> None:
         passphrase_callback=lambda: PROFILE_INPUT,
         profile_decode_context=decode,
     )
+
+
+def _select_profile(root: Path, profile_id: UUID) -> None:
+    """Move the shared default pointer as a person's profile switch does.
+
+    Signing in binds a profile for the invocation and leaves the pointer
+    alone, so the switch this case needs is the selection itself.
+    """
+    with active_profile_pointer_transaction(root) as pointer:
+        pointer.select(str(profile_id))
 
 
 def _record_snapshot(profile_id: UUID) -> tuple[int, str, dict[str, str]]:
@@ -273,7 +284,7 @@ def test_simultaneous_profile_operations_survive_human_switch_and_stale_revision
     root, ((identity_a, key_a), (identity_b, key_b)) = profiles
     baseline_a = _record_snapshot(identity_a.binding.profile_id)
     baseline_b = _record_snapshot(identity_b.binding.profile_id)
-    _login_human(identity_a.binding.profile_id)
+    _select_profile(root, identity_a.binding.profile_id)
     assert read_pointer(root).bucket_id == str(identity_a.binding.profile_id)
 
     authority = _AllowWorkerOperations()
@@ -286,9 +297,9 @@ def test_simultaneous_profile_operations_survive_human_switch_and_stale_revision
         worker_a.install(lease_a, bytearray(key_a))
         worker_b.install(lease_b, bytearray(key_b))
 
-        # A real human login changes the shared default pointer while both workers retain
+        # A human switch changes the shared default pointer while both workers retain
         # their immutable bindings and installed custody.
-        _login_human(identity_b.binding.profile_id)
+        _select_profile(root, identity_b.binding.profile_id)
         assert read_pointer(root).bucket_id == str(identity_b.binding.profile_id)
 
         request_a = _field_request(
@@ -340,8 +351,12 @@ def test_simultaneous_profile_operations_survive_human_switch_and_stale_revision
     assert observed_a[2][PROFILE_OUTPUT_LANGUAGE_PATH] == "es"
     assert observed_b[0] > baseline_b[0]
     assert observed_b[2][PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
-    _login_human(identity_b.binding.profile_id)
-    assert read_pointer(root).bucket_id == str(identity_b.binding.profile_id)
+    # Signing in after the writes proves the profile still opens, and leaves the selection where it was.
+    try:
+        _login_human(identity_b.binding.profile_id)
+        assert read_pointer(root).bucket_id == str(identity_b.binding.profile_id)
+    finally:
+        close_active_bucket_session()
 
 
 class _WindowsBrowserAdmission(BaseModel):
