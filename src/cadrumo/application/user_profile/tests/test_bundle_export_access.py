@@ -108,15 +108,21 @@ def test_bundle_export_resolution_requires_exact_profile_and_scoped_projection(
     else:
         assert not resolved.policy.disclosures
 
+    # Writing the bundle opens a COMMIT door, so a scope may submit the export only while holding it.
+    committing = frozenset({AccessAction.COMMIT}) if action is AccessAction.SUBMIT else frozenset[AccessAction]()
     allowed_scope = AccessScope(
         operations=frozenset({PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID}),
-        actions=frozenset({action}),
+        actions=frozenset({action}) | committing,
         disclosures=resolved.policy.disclosures,
         periods=None,
         allow_period_independent=True,
         allow_delegation=False,
     )
     assert operation_scope_refusal(request=resolved.request, policy=resolved.policy, scope=allowed_scope) is None
+    if action is AccessAction.SUBMIT:
+        submit_only = allowed_scope.model_copy(update={"actions": frozenset({AccessAction.SUBMIT})})
+        uncommitted = operation_scope_refusal(request=resolved.request, policy=resolved.policy, scope=submit_only)
+        assert uncommitted is not None and uncommitted.code is AccessDenialCode.OPERATION_DENIED
     if resolved.policy.disclosures:
         narrow = allowed_scope.model_copy(update={"disclosures": frozenset()})
         denied = operation_scope_refusal(request=resolved.request, policy=resolved.policy, scope=narrow)

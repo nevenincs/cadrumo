@@ -52,9 +52,30 @@ def _operation_action_refusal(
         request.definition_id not in scope.operations
         or request.action not in scope.actions
         or request.action not in policy.actions
+        or _submission_needs_unheld_commit(request, policy, scope)
     ):
         return AccessDenied(code=AccessDenialCode.OPERATION_DENIED)
     return None
+
+
+def _submission_needs_unheld_commit(
+    request: OperationAccessRequest,
+    policy: OperationAccessPolicy,
+    scope: AccessScope,
+) -> bool:
+    """Tell whether a submission could reach a COMMIT door this ceiling does not hold.
+
+    The policy is the owning operation's resolution of this exact request, so it
+    grants COMMIT only where the request can open an irreversible section. A
+    ceiling without COMMIT would be refused there, after the submission had been
+    stored, journaled and leased and its executor had run up to that section.
+    COMMIT is still evaluated in its own right when the section opens.
+    """
+    return (
+        request.action is AccessAction.SUBMIT
+        and AccessAction.COMMIT in policy.actions
+        and AccessAction.COMMIT not in scope.actions
+    )
 
 
 def _operation_period_refusal(

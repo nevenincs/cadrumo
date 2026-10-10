@@ -15,7 +15,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
 modified: '2026-10-10'
 body_schema: body-v2
-body_hash: 'sha256:dfff49f18c3852a5ab003bcbe748c931915a5ee64392c054eba368388cc8186d'
+body_hash: 'sha256:67d63f5d3234693cabd48dfad1d997916645f07200815fbcd73861b873416f3b'
 ---
 
 # `mcp-parity` plan
@@ -67,7 +67,7 @@ Delivers the recorded MCP decision for every operation, the refusal of the sensi
 - [ ] `P01.S02` - Refuse on the MCP frontend, until the approval step exists, the sensitive operations that are open today with no approval: ledger.invoice.remove, auth.session.reset, the writes of ledger.own_account, the declare and remove actions of modelo.m360_solicitud and the three prorrata elections, with a refusal test for each and one contract cutover; also auth/operation_definitions.py, ledger/own_account_operation.py, modelo/m360_solicitud_operation.py and prorrata_register/registered_operations.py; `src/cadrumo/application/invoices/catalogue_remove_operation.py`.
 - [ ] `P01.S03` - Establish which paths user-profile.field-mutation accepts, refuse the capability opt-ins on the MCP frontend until the approval step exists, and move the per-field confirmation of the census review into user-profile.censo-review; also user_profile/censal_operation.py; `src/cadrumo/application/user_profile/operations.py`.
 - [x] `P01.S04` - Remove the MCP claim from the seven definitions that cannot run: the four automation proposals, export.google-sheets, local-reader.provision and user-profile.bundle-export; also export/google_operation.py, local_reader_operation.py and user_profile/operations.py; `src/cadrumo/application/user_profile/automation_operations.py`.
-- [ ] `P01.S05` - Refuse at submission, where the frontend list is refused today, a mutating operation to a session whose scope lacks the commit action, so that no browser, classifier or subject lease is taken first; `src/cadrumo/application/user_profile/operation_access_policy.py`.
+- [x] `P01.S05` - Refuse at submission, where the frontend list is refused today, a mutating operation to a session whose scope lacks the commit action, so that no browser, classifier or subject lease is taken first; `src/cadrumo/application/user_profile/operation_access_policy.py`.
 - [ ] `P01.S06` - Define the named served surface as tool names, declared properties and an operation list held by Cadrumo, carry its name from the server launch to the runtime, and refuse at submission an operation outside it or one that changes records or reaches the network on a read-only or local surface, with a test over the whole operation list; also src/cadrumo_harness/mcp/main.py and protocol_contract.py; `src/cadrumo/application/user_profile/operation_access_policy.py`.
 - [x] `P01.S07` - Create a shared host-path confinement guard that verifies the opened handle against roots taken from existing settings, and apply it to modelo.reconcile.import and the six live capture operations that take an output root; applies under src/cadrumo/application/live and modelo/reconciliation_import_operation.py; `src/cadrumo/core/path_confinement.py`.
 - [x] `P01.S08` - Repair discovery in the generic tools: bound and page search, filter it by family, cache contracts within a session, report a refused operation without failing the search, and read a result by operation identifier alone; also operation_search.py and protocol_contract.py; `src/cadrumo_harness/mcp/admitted_operations.py`.

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee00ddd4047900a3d0f3f5c12b99f9cddb79e43af2a041d5f2bc53e8d32fd842'
+body_hash: 'sha256:7f7d5b5dd1f0fbf11bee300af7c7f97d1da284a426ebf5ad04397c562dfed963'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -119,6 +119,21 @@ related:
 - `S15` `verify:` `ruff format --check` -> `pass`
 - `S15` `verify:` `ty check --python-platform linux` -> `pass`
 - `S15` `by:` `vaultspec-high-executor`
+- `S05` `M` `src/cadrumo/application/user_profile/operation_access_policy.py`
+- `S05` `M` `src/cadrumo/application/user_profile/profile_operation_access.py`
+- `S05` `M` `src/cadrumo/application/user_profile/tests/test_profile_operation_access.py`
+- `S05` `M` `src/cadrumo/application/user_profile/tests/test_bundle_export_access.py`
+- `S05` `A` `src/cadrumo/application/user_profile/tests/test_submission_commit_scope.py`
+- `S05` `A` `src/cadrumo/entrypoints/runtime/tests/test_submission_commit_admission.py`
+- `S05` `verify:` `pytest user_profile access tests: commit scope, profile operation access, bundle export, access policy (204 tests)` -> `pass`
+- `S05` `verify:` `pytest runtime: submission commit admission, scope resolution, execution authority (23 tests)` -> `pass`
+- `S05` `verify:` `pytest ledger remove and reset, key authentication, justificante verbs (15 tests)` -> `pass`
+- `S05` `verify:` `pytest executor conformance, MCP admission, operation catalogue (356 tests)` -> `pass`
+- `S05` `verify:` `pytest src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/runtime/tests -n4 (1033 passed, 18 failed)` -> `fail`
+- `S05` `verify:` `ruff check` -> `pass`
+- `S05` `verify:` `ruff format --check` -> `pass`
+- `S05` `verify:` `ty check --python-platform linux` -> `pass`
+- `S05` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -126,3 +141,4 @@ related:
 - `S01` The import-boundary gate fails for reasons outside this Step: two private cross-package findings under dev/packaging and a stale generated module inventory; all 15 contracts are kept and no chain involves these files. The inventory entries for the new modules are regenerated in a separate commit. Twelve MCP-listed operations are not proven through their real resolver and are pinned in a named set; the no-submission assertion covers what operations, tools and commands declare and cannot see executor or adapter behaviour.
 - `S07` Not delivered here and carried to the file-exchange Step: root confinement of the reconciliation import, for want of any existing setting, and a bytes entry for the declaracion parser, which is still parsed by path between two verified reads. The POSIX branch of the guard has not executed; tests ran on Windows only. The strict checkers were not run on these files with a working invocation.
 - `S15` Still reachable and not introduced here: a key read after the latest lease expiry and before the custody poll closes the session; a retire that finds no session when two root leases are still listed at that moment; and a lease installed or refreshed while a section is held, which is not covered until the last section exits. The worker can refresh only key leases, so extending a sign-in will need a way to move a human lease deadline. Tests do not cover held sections or the real worker loop.
+- `S05` The 18 failures in the wide run are not from this Step. Two (session owner, worker drain) pass when run alone. Ten are the machine: the test child interpreter sees a stale cadrumo 0.5.1 install in the base Python while the environment is 0.6.0, so the runtime refuses with a version mismatch before announcing ready (supervised runtime, headless load, console interrupt). Three operation-provenance cases fail in the test process on a storage route mismatch, and three grant-change cases fail because the runtime now retires the key session when its grant changes and the test predates that; neither path is touched by this feature, and no earlier run of those files exists to compare. Three operations (filed list, filed discover, census preview) are now refused at submission for a scope without commit where they used to complete when the provider session was reusable.

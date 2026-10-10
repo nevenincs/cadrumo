@@ -66,6 +66,7 @@ _ALL_ACTIONS = (
     AccessAction.RESULT,
 )
 _ROUTES = ("view", "field_mutation", "bundle_export")
+_COMMITTING_ROUTES = frozenset({"field_mutation", "bundle_export"})
 _RESOLVERS = {
     "view": resolve_profile_view_access,
     "field_mutation": resolve_profile_mutation_access,
@@ -119,7 +120,7 @@ def _context(
 
 @pytest.mark.parametrize("action", _ALL_ACTIONS)
 @pytest.mark.parametrize("route", _ROUTES)
-def test_registered_profile_route_binds_committing_period_independent_profile_access(
+def test_registered_profile_route_binds_period_independent_access_and_commits_only_to_change_or_export(
     route: str, action: AccessAction
 ) -> None:
     registry = _registry()
@@ -132,7 +133,8 @@ def test_registered_profile_route_binds_committing_period_independent_profile_ac
     assert resolved.request.action is action
     assert resolved.request.period_independent and resolved.request.periods == frozenset()
     policy = resolved.policy
-    assert policy.actions == frozenset(_ALL_ACTIONS)
+    assert (AccessAction.COMMIT in policy.actions) is (route in _COMMITTING_ROUTES)
+    assert policy.actions | {AccessAction.COMMIT} == frozenset(_ALL_ACTIONS)
     assert policy.periods == frozenset() and policy.allow_period_independent
     assert not policy.requires_all_periods and not policy.requires_human
     assert policy.provider is Availability.NOT_REQUIRED and policy.backend is Availability.AVAILABLE
