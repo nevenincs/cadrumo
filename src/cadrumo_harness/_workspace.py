@@ -200,13 +200,19 @@ def _plugin_user_config() -> dict[str, object]:
         "profile_id": {
             "type": "string",
             "title": "Cadrumo profile ID",
-            "description": "Exact profile UUID. Labels and the human active profile do not select agent authority.",
+            "description": (
+                "Exact profile UUID. Labels do not select agent authority, and the person's sign-in "
+                "serves this profile only while it is the selected one."
+            ),
             "required": True,
         },
         "credential_reference": {
             "type": "string",
             "title": "Protected credential reference",
-            "description": "Nonsecret reference UUID from approved enrollment. Leave empty to request authorization.",
+            "description": (
+                "Nonsecret reference UUID from approved enrollment. "
+                "Leave empty to follow the person's sign-in or to request authorization."
+            ),
             "default": "",
             "required": False,
         },

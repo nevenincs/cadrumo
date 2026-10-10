@@ -1,13 +1,15 @@
 # Connect an agent (MCP)
 
 The installed `cadrumo-mcp` command connects an MCP client to Cadrumo's local
-runtime. Each connection is bound to one profile ID. The client can discover and
-run only operations allowed by its current grant and session; a later switch of
-the human active profile does not retarget it.
+runtime. A connection works in one of two ways: it follows your own Cadrumo
+sign-in, or it uses an enrolled key. The client can discover and run only
+operations allowed by its current session and, for a key, its grant. A connection
+started with a profile ID is not retargeted by a later switch of the human active
+profile.
 
-Before authorizing an agent or managing its access, set up the intended profile
-using [Set up a profile](profile-setup.md) and establish a human password-authorized
-session for it. Checking installation does not require profile authentication.
+Before connecting an agent or managing its access, set up the intended profile
+using [Set up a profile](profile-setup.md) and sign in to it. Checking
+installation does not require profile authentication.
 
 ## Check the installation
 
@@ -21,7 +23,7 @@ Cadrumo distribution. The adapter connects to an already running local runtime.
 An unavailable or untrusted endpoint returns a connection refusal; connecting
 does not install or start a service.
 
-## Register one profile-bound server
+## Register the server
 
 Find the intended profile ID in Cadrumo. CLI output hides profile IDs by default;
 set `CADRUMO_CLI_REVEAL_IDENTIFIERS=1` for the command's process and run
@@ -45,11 +47,38 @@ accept a JSON server definition:
 }
 ```
 
-Use a separate server entry for each profile. The profile ID is required; the
-server does not select the human's active profile. Keep credentials out of the
-configuration and conversation. An approved protected credential reference can
-be supplied with `--credential-reference` for a later connection, while its
-grant and the profile remain eligible.
+Use a separate server entry for each profile you name. Keep credentials out of
+the configuration and conversation. The server never asks for or accepts a
+password. Whether you start it with `--credential-reference` decides how it
+connects.
+
+**Following your sign-in.** Start the server without `--credential-reference`.
+It follows your own Cadrumo sign-in for the selected profile. It answers
+initialization, its tool list and the public tools (`authority` and
+`corpus_search`) while nobody is signed in. A tool that needs the profile makes
+one attempt to resume your stored sign-in. With a live sign-in the call works.
+With none it is refused with `authentication_required`: sign in to Cadrumo, then
+call again. `--profile-id` is optional. Given alone, it is honoured only while
+that profile is the selected one; otherwise profile calls return
+`profile_mismatch`. Without it, the server acts for whichever profile is
+selected.
+
+Your sign-in governs this session. When you sign out, lock, or the sign-in
+reaches its deadline, the session ends with it and profile calls are refused
+until you sign in again. By default a sign-in ends 15 minutes after you enter
+the password, and activity through MCP does not extend it.
+
+**With an enrolled key.** Start the server with `--profile-id` and
+`--credential-reference`. An approved protected credential reference, delivered
+by the authorization flow below, can be supplied for a later connection while
+its grant and the profile remain eligible. The server authenticates with the
+enrolled key for that profile and works whether or not anyone is signed in.
+`--credential-reference` without `--profile-id` is refused at start-up.
+
+Either way, a client connected through MCP can end only its own session. It
+cannot sign you out or lock another session. The `status` tool reports whether
+the connection's session is `none`, `sign_in` or `key`, and which surface it
+serves.
 
 The optional `--surface NAME` argument pins the view of the server that the
 connection is served. Without it the server uses `full`, which advertises every
@@ -74,12 +103,13 @@ profile data.
 
 ## Authorize the connection
 
-On a first connection, ask the agent to use `status`, then
-`authorization_prepare` and `authorization_request` for the operations, periods
-and disclosures it needs. Review and approve that request in Cadrumo's CLI or
-TUI. The agent uses `authorization_poll` to receive the protected reference and
-`authenticate` to start an independently tracked session. A password or stored
-credential alone is not an authenticated agent session.
+A connection that follows your sign-in needs no key. To let an agent work while
+nobody is signed in, enroll one. On a first connection, ask the agent to use
+`status`, then `authorization_prepare` and `authorization_request` for the
+operations, periods and disclosures it needs. Review and approve that request in
+Cadrumo's CLI or TUI. The agent uses `authorization_poll` to receive the
+protected reference and `authenticate` to start an independently tracked
+session. A password is never an agent session: the server does not accept one.
 
 After admission, `search` ranks permitted operations by the query, using their
 current contracts and request vocabulary; omit the query to list them.
@@ -102,7 +132,9 @@ reference and prepare a new authorization request. Human approval is required
 for the change. Revoking the grant prevents future admission under that key.
 
 Discover the currently supported operations with `search`; a CLI command's
-availability alone does not make it available through MCP. Calculations use
+availability alone does not make it available through MCP. Some sensitive
+operations are refused through MCP for now; they need the person and are done in
+the command line or terminal interface. Calculations use
 Cadrumo's deterministic engine and published tax authority. Connecting an agent
 does not authorize submission to AEAT. Review the prepared filing yourself as
 described in the [filing guide](file-at-aeat.md).
@@ -111,7 +143,8 @@ described in the [filing guide](file-at-aeat.md).
 
 Use a human password-authorized session for the intended profile, as described
 in [Set up a profile](profile-setup.md). The agent's API-key session cannot approve
-its own request or administer other clients. Check the profile ID in each result.
+its own request or administer other clients, and a connection that follows your
+sign-in can end only its own session. Check the profile ID in each result.
 
 List pending requests and inspect the exact request before deciding:
 

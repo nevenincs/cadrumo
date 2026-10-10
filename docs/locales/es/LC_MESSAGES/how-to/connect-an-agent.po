@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 20:11+0200\n"
+"POT-Creation-Date: 2026-10-10 22:21+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -25,33 +25,36 @@ msgstr "Conectar un agente (MCP)"
 #: ../../how-to/connect-an-agent.md:3
 msgid ""
 "The installed `cadrumo-mcp` command connects an MCP client to Cadrumo's "
-"local runtime. Each connection is bound to one profile ID. The client can"
-" discover and run only operations allowed by its current grant and "
-"session; a later switch of the human active profile does not retarget it."
+"local runtime. A connection works in one of two ways: it follows your own"
+" Cadrumo sign-in, or it uses an enrolled key. The client can discover and"
+" run only operations allowed by its current session and, for a key, its "
+"grant. A connection started with a profile ID is not retargeted by a "
+"later switch of the human active profile."
 msgstr ""
-"El comando instalado `cadrumo-mcp` conecta un cliente MCP al entorno de "
-"ejecución local de Cadrumo. Cada conexión queda vinculada a un único ID "
-"de perfil. El cliente solo puede descubrir y ejecutar operaciones "
-"permitidas por su autorización y sesión actuales; un cambio posterior del"
-" perfil activo de la persona no cambia el perfil de esa conexión."
+"El comando instalado `cadrumo-mcp` conecta un cliente MCP al entorno "
+"de ejecución local de Cadrumo. Una conexión funciona de una de dos "
+"maneras: sigue tu propio inicio de sesión en Cadrumo o usa una clave "
+"dada de alta. El cliente solo puede descubrir y ejecutar operaciones "
+"permitidas por su sesión actual y, en el caso de una clave, por su "
+"autorización. Un cambio posterior del perfil activo de la persona no "
+"cambia el perfil de una conexión iniciada con un ID de perfil."
 
-#: ../../how-to/connect-an-agent.md:8
+#: ../../how-to/connect-an-agent.md:10
 msgid ""
-"Before authorizing an agent or managing its access, set up the intended "
-"profile using [Set up a profile](profile-setup.md) and establish a human "
-"password-authorized session for it. Checking installation does not "
-"require profile authentication."
+"Before connecting an agent or managing its access, set up the intended "
+"profile using [Set up a profile](profile-setup.md) and sign in to it. "
+"Checking installation does not require profile authentication."
 msgstr ""
-"Antes de autorizar a un agente o gestionar su acceso, configura el perfil"
-" deseado siguiendo [Configurar un perfil](profile-setup.md) y abre para "
-"él una sesión humana autorizada mediante contraseña. Comprobar la "
-"instalación no requiere autenticarse en el perfil."
+"Antes de conectar un agente o gestionar su acceso, configura el perfil "
+"deseado siguiendo [Configurar un perfil](profile-setup.md) e inicia "
+"sesión en él. Comprobar la instalación no requiere autenticarse en el "
+"perfil."
 
-#: ../../how-to/connect-an-agent.md:12
+#: ../../how-to/connect-an-agent.md:14
 msgid "Check the installation"
 msgstr "Comprobar la instalación"
 
-#: ../../how-to/connect-an-agent.md:18
+#: ../../how-to/connect-an-agent.md:20
 msgid ""
 "If `cadrumo-mcp` is unavailable, install Cadrumo first; see [Get "
 "Cadrumo](../download.md). The command and the `aeat` CLI ship in the same"
@@ -66,11 +69,11 @@ msgstr ""
 "disponible o no es de confianza, la conexión se rechaza; conectarse no "
 "instala ni inicia ningún servicio."
 
-#: ../../how-to/connect-an-agent.md:24
-msgid "Register one profile-bound server"
-msgstr "Registrar un servidor vinculado a un perfil"
-
 #: ../../how-to/connect-an-agent.md:26
+msgid "Register the server"
+msgstr "Registrar el servidor"
+
+#: ../../how-to/connect-an-agent.md:28
 msgid ""
 "Find the intended profile ID in Cadrumo. CLI output hides profile IDs by "
 "default; set `CADRUMO_CLI_REVEAL_IDENTIFIERS=1` for the command's process"
@@ -84,7 +87,7 @@ msgstr ""
 "revela los ID opacos de perfil y depósito; las credenciales siguen "
 "ocultas."
 
-#: ../../how-to/connect-an-agent.md:34
+#: ../../how-to/connect-an-agent.md:36
 msgid ""
 "Register `cadrumo-mcp` as a stdio server in your MCP client. For clients "
 "that accept a JSON server definition:"
@@ -92,22 +95,93 @@ msgstr ""
 "Registra `cadrumo-mcp` como servidor stdio en tu cliente MCP. Para los "
 "clientes que aceptan una definición de servidor en JSON:"
 
-#: ../../how-to/connect-an-agent.md:48
+#: ../../how-to/connect-an-agent.md:50
 msgid ""
-"Use a separate server entry for each profile. The profile ID is required;"
-" the server does not select the human's active profile. Keep credentials "
-"out of the configuration and conversation. An approved protected "
-"credential reference can be supplied with `--credential-reference` for a "
-"later connection, while its grant and the profile remain eligible."
+"Use a separate server entry for each profile you name. Keep credentials "
+"out of the configuration and conversation. The server never asks for or "
+"accepts a password. Whether you start it with `--credential-reference` "
+"decides how it connects."
 msgstr ""
-"Usa una entrada de servidor distinta para cada perfil. El ID de perfil es"
-" obligatorio; el servidor no selecciona el perfil activo de la persona. "
-"No incluyas credenciales en la configuración ni en la conversación. "
-"Puedes proporcionar una referencia protegida de credencial aprobada "
-"mediante `--credential-reference` para una conexión posterior, mientras "
-"su autorización y el perfil sigan cumpliendo las condiciones de acceso."
+"Usa una entrada de servidor distinta para cada perfil que indiques. No "
+"incluyas credenciales en la configuración ni en la conversación. El "
+"servidor nunca solicita ni acepta una contraseña. Que lo arranques o "
+"no con `--credential-reference` determina cómo se conecta."
 
-#: ../../how-to/connect-an-agent.md:54
+#: ../../how-to/connect-an-agent.md:55
+msgid ""
+"**Following your sign-in.** Start the server without `--credential-"
+"reference`. It follows your own Cadrumo sign-in for the selected profile."
+" It answers initialization, its tool list and the public tools "
+"(`authority` and `corpus_search`) while nobody is signed in. A tool that "
+"needs the profile makes one attempt to resume your stored sign-in. With a"
+" live sign-in the call works. With none it is refused with "
+"`authentication_required`: sign in to Cadrumo, then call again. "
+"`--profile-id` is optional. Given alone, it is honoured only while that "
+"profile is the selected one; otherwise profile calls return "
+"`profile_mismatch`. Without it, the server acts for whichever profile is "
+"selected."
+msgstr ""
+"**Siguiendo tu inicio de sesión.** Arranca el servidor sin "
+"`--credential-reference`. Sigue tu propio inicio de sesión en Cadrumo "
+"para el perfil seleccionado. Responde a la inicialización, a su lista "
+"de herramientas y a las herramientas públicas (`authority` y "
+"`corpus_search`) mientras nadie tenga una sesión iniciada. Una "
+"herramienta que necesita el perfil hace un intento de reanudar tu "
+"inicio de sesión almacenado. Si hay un inicio de sesión vigente, la "
+"llamada funciona. Si no lo hay, se rechaza con "
+"`authentication_required`: inicia sesión en Cadrumo y vuelve a llamar. "
+"`--profile-id` es opcional. Si se indica solo, se respeta únicamente "
+"mientras ese perfil sea el seleccionado; en caso contrario, las "
+"llamadas de perfil devuelven `profile_mismatch`. Sin él, el servidor "
+"actúa para el perfil que esté seleccionado en cada momento."
+
+#: ../../how-to/connect-an-agent.md:66
+msgid ""
+"Your sign-in governs this session. When you sign out, lock, or the sign-"
+"in reaches its deadline, the session ends with it and profile calls are "
+"refused until you sign in again. By default a sign-in ends 15 minutes "
+"after you enter the password, and activity through MCP does not extend "
+"it."
+msgstr ""
+"Tu inicio de sesión gobierna esta sesión. Cuando cierras sesión, "
+"bloqueas o el inicio de sesión llega a su límite de tiempo, la sesión "
+"termina con él y las llamadas de perfil se rechazan hasta que vuelvas "
+"a iniciar sesión. De forma predeterminada, un inicio de sesión termina "
+"15 minutos después de que introduces la contraseña, y la actividad a "
+"través de MCP no lo prolonga."
+
+#: ../../how-to/connect-an-agent.md:71
+msgid ""
+"**With an enrolled key.** Start the server with `--profile-id` and "
+"`--credential-reference`. An approved protected credential reference, "
+"delivered by the authorization flow below, can be supplied for a later "
+"connection while its grant and the profile remain eligible. The server "
+"authenticates with the enrolled key for that profile and works whether or"
+" not anyone is signed in. `--credential-reference` without `--profile-id`"
+" is refused at start-up."
+msgstr ""
+"**Con una clave dada de alta.** Arranca el servidor con `--profile-id` "
+"y `--credential-reference`. Puedes proporcionar una referencia "
+"protegida de credencial aprobada, entregada por el flujo de "
+"autorización descrito más abajo, para una conexión posterior, mientras "
+"su autorización y el perfil sigan cumpliendo las condiciones de "
+"acceso. El servidor se autentica con la clave dada de alta para ese "
+"perfil y funciona haya o no alguien con la sesión iniciada. "
+"`--credential-reference` sin `--profile-id` se rechaza al arrancar."
+
+#: ../../how-to/connect-an-agent.md:78
+msgid ""
+"Either way, a client connected through MCP can end only its own session. "
+"It cannot sign you out or lock another session. The `status` tool reports"
+" whether the connection's session is `none`, `sign_in` or `key`, and "
+"which surface it serves."
+msgstr ""
+"En ambos casos, un cliente conectado mediante MCP solo puede terminar "
+"su propia sesión. No puede cerrar tu sesión ni bloquear otra sesión. "
+"La herramienta `status` indica si la sesión de la conexión es `none`, "
+"`sign_in` o `key`, y qué vista atiende."
+
+#: ../../how-to/connect-an-agent.md:83
 msgid ""
 "The optional `--surface NAME` argument pins the view of the server that "
 "the connection is served. Without it the server uses `full`, which "
@@ -131,7 +205,7 @@ msgstr ""
 "arrancar, antes de cualquier conexión, y el error enumera las vistas "
 "disponibles."
 
-#: ../../how-to/connect-an-agent.md:63
+#: ../../how-to/connect-an-agent.md:92
 msgid ""
 "If the configured reference cannot authenticate, the MCP connection stays"
 " open. Use `status` to inspect the refusal; private operations remain "
@@ -146,7 +220,7 @@ msgstr ""
 "llama explícitamente a `authenticate`. Las consultas públicas de "
 "`authority` siguen disponibles."
 
-#: ../../how-to/connect-an-agent.md:68
+#: ../../how-to/connect-an-agent.md:97
 msgid ""
 "Before authentication, `corpus_search` searches the bundled BOE/AEAT "
 "corpus and approved tax terminology. Supply `query` and optionally "
@@ -163,30 +237,33 @@ msgstr ""
 "identifica la generación de publicación usada para buscar la cita. Esta "
 "búsqueda pública no lee datos de ningún perfil."
 
-#: ../../how-to/connect-an-agent.md:75
+#: ../../how-to/connect-an-agent.md:104
 msgid "Authorize the connection"
 msgstr "Autorizar la conexión"
 
-#: ../../how-to/connect-an-agent.md:77
+#: ../../how-to/connect-an-agent.md:106
 msgid ""
-"On a first connection, ask the agent to use `status`, then "
-"`authorization_prepare` and `authorization_request` for the operations, "
-"periods and disclosures it needs. Review and approve that request in "
-"Cadrumo's CLI or TUI. The agent uses `authorization_poll` to receive the "
-"protected reference and `authenticate` to start an independently tracked "
-"session. A password or stored credential alone is not an authenticated "
-"agent session."
+"A connection that follows your sign-in needs no key. To let an agent work"
+" while nobody is signed in, enroll one. On a first connection, ask the "
+"agent to use `status`, then `authorization_prepare` and "
+"`authorization_request` for the operations, periods and disclosures it "
+"needs. Review and approve that request in Cadrumo's CLI or TUI. The agent"
+" uses `authorization_poll` to receive the protected reference and "
+"`authenticate` to start an independently tracked session. A password is "
+"never an agent session: the server does not accept one."
 msgstr ""
-"En la primera conexión, pide al agente que use `status` y después "
-"`authorization_prepare` y `authorization_request` para las operaciones, "
-"los períodos y las divulgaciones de datos que necesita. Revisa y aprueba "
-"la solicitud en la CLI o TUI de Cadrumo. El agente usa "
-"`authorization_poll` para recibir la referencia protegida y "
-"`authenticate` para iniciar una sesión con seguimiento independiente. Una"
-" contraseña o una credencial almacenada, por sí solas, no constituyen una"
-" sesión de agente autenticada."
+"Una conexión que sigue tu inicio de sesión no necesita clave. Para que "
+"un agente trabaje mientras nadie tenga una sesión iniciada, da de alta "
+"una. En la primera conexión, pide al agente que use `status` y después "
+"`authorization_prepare` y `authorization_request` para las "
+"operaciones, los períodos y las divulgaciones de datos que necesita. "
+"Revisa y aprueba la solicitud en la CLI o TUI de Cadrumo. El agente "
+"usa `authorization_poll` para recibir la referencia protegida y "
+"`authenticate` para iniciar una sesión con seguimiento independiente. "
+"Una contraseña nunca es una sesión de agente: el servidor no la "
+"acepta."
 
-#: ../../how-to/connect-an-agent.md:84
+#: ../../how-to/connect-an-agent.md:114
 msgid ""
 "After admission, `search` ranks permitted operations by the query, using "
 "their current contracts and request vocabulary; omit the query to list "
@@ -208,7 +285,7 @@ msgstr ""
 "los ID de operación y reconcilia los efectos inciertos tras una "
 "desconexión, en lugar de enviar de nuevo el mismo efecto sin comprobarlo."
 
-#: ../../how-to/connect-an-agent.md:93
+#: ../../how-to/connect-an-agent.md:123
 msgid ""
 "Read a settled operation's approved projection with `result`. For a large"
 " result, use `result_page` with the same result request and an initial "
@@ -227,7 +304,7 @@ msgstr ""
 "un bloqueo o una revocación pueden impedir recibir las páginas restantes."
 " Un documento incompleto no es un resultado completo."
 
-#: ../../how-to/connect-an-agent.md:100
+#: ../../how-to/connect-an-agent.md:130
 msgid ""
 "To rotate or narrow an existing grant, reconnect with its protected "
 "credential reference and prepare a new authorization request. Human "
@@ -239,45 +316,53 @@ msgstr ""
 "de autorización. El cambio requiere aprobación humana. Revocar la "
 "autorización impide futuras admisiones con esa clave."
 
-#: ../../how-to/connect-an-agent.md:104
+#: ../../how-to/connect-an-agent.md:134
 msgid ""
 "Discover the currently supported operations with `search`; a CLI "
-"command's availability alone does not make it available through MCP. "
+"command's availability alone does not make it available through MCP. Some"
+" sensitive operations are refused through MCP for now; they need the "
+"person and are done in the command line or terminal interface. "
 "Calculations use Cadrumo's deterministic engine and published tax "
 "authority. Connecting an agent does not authorize submission to AEAT. "
 "Review the prepared filing yourself as described in the [filing guide"
 "](file-at-aeat.md)."
 msgstr ""
 "Descubre las operaciones admitidas actualmente con `search`; que un "
-"comando esté disponible en la CLI no significa que lo esté mediante MCP. "
-"Los cálculos usan el motor determinista de Cadrumo y la información "
-"publicada por la autoridad tributaria. Conectar un agente no autoriza la "
-"presentación ante la AEAT. Revisa personalmente la declaración preparada "
-"como se describe en la [guía de presentación](file-at-aeat.md)."
+"comando esté disponible en la CLI no significa que lo esté mediante "
+"MCP. Algunas operaciones sensibles se rechazan por ahora mediante MCP; "
+"requieren a la persona y se hacen en la línea de comandos o en la "
+"interfaz de terminal. Los cálculos usan el motor determinista de "
+"Cadrumo y la información publicada por la autoridad tributaria. "
+"Conectar un agente no autoriza la presentación ante la AEAT. Revisa "
+"personalmente la declaración preparada como se describe en la [guía de "
+"presentación](file-at-aeat.md)."
 
-#: ../../how-to/connect-an-agent.md:110
+#: ../../how-to/connect-an-agent.md:142
 msgid "Review and manage access as the profile owner"
 msgstr "Revisar y gestionar el acceso como titular del perfil"
 
-#: ../../how-to/connect-an-agent.md:112
+#: ../../how-to/connect-an-agent.md:144
 msgid ""
 "Use a human password-authorized session for the intended profile, as "
 "described in [Set up a profile](profile-setup.md). The agent's API-key "
-"session cannot approve its own request or administer other clients. Check"
+"session cannot approve its own request or administer other clients, and a"
+" connection that follows your sign-in can end only its own session. Check"
 " the profile ID in each result."
 msgstr ""
-"Usa una sesión humana autorizada con contraseña para el perfil deseado, "
-"como se describe en [Configurar un perfil](profile-setup.md). La sesión "
-"del agente con clave de API no puede aprobar su propia solicitud ni "
-"administrar otros clientes. Comprueba el ID de perfil en cada resultado."
+"Usa una sesión humana autorizada con contraseña para el perfil "
+"deseado, como se describe en [Configurar un perfil](profile-setup.md). "
+"La sesión del agente con clave de API no puede aprobar su propia "
+"solicitud ni administrar otros clientes, y una conexión que sigue tu "
+"inicio de sesión solo puede terminar su propia sesión. Comprueba el ID "
+"de perfil en cada resultado."
 
-#: ../../how-to/connect-an-agent.md:116
+#: ../../how-to/connect-an-agent.md:149
 msgid "List pending requests and inspect the exact request before deciding:"
 msgstr ""
 "Enumera las solicitudes pendientes e inspecciona la solicitud exacta "
 "antes de decidir:"
 
-#: ../../how-to/connect-an-agent.md:121
+#: ../../how-to/connect-an-agent.md:154
 msgid ""
 "Replace `REQUEST_UUID` with the returned request ID. Review the client "
 "and destination, operations, actions, disclosures, periods, expiry, "
@@ -292,7 +377,7 @@ msgstr ""
 " de esa inspección. Aprueba únicamente los permisos revisados o rechaza "
 "la solicitud:"
 
-#: ../../how-to/connect-an-agent.md:129
+#: ../../how-to/connect-an-agent.md:162
 msgid ""
 "Run one decision command. Approval asks for a fresh profile password "
 "through a hidden terminal prompt; decline does not. For controlled "
@@ -314,7 +399,7 @@ msgstr ""
 "entrega protegida. El agente debe terminar el sondeo y autenticarse con "
 "la referencia entregada."
 
-#: ../../how-to/connect-an-agent.md:137
+#: ../../how-to/connect-an-agent.md:170
 msgid ""
 "The same review procedure applies to rotation, renewal and scope-change "
 "requests. Enrollment and rotation can deliver a new protected reference; "
@@ -337,13 +422,13 @@ msgstr ""
 "correspondiente en la autorización. Bloquear la sesión actual no revoca "
 "esa autorización independiente."
 
-#: ../../how-to/connect-an-agent.md:146
+#: ../../how-to/connect-an-agent.md:179
 msgid "Use the inventory's non-secret key or grant ID to revoke access:"
 msgstr ""
 "Usa el ID no secreto de clave o autorización del inventario para revocar "
 "el acceso:"
 
-#: ../../how-to/connect-an-agent.md:151
+#: ../../how-to/connect-an-agent.md:184
 msgid ""
 "Check `access_denied` and `cleanup_pending` in text output; in the JSON "
 "result, inspect `receipt.access_denied` and `receipt.cleanup_pending`. "
@@ -356,7 +441,7 @@ msgstr ""
 "credenciales esté pendiente es distinto de que se haya denegado el "
 "acceso."
 
-#: ../../how-to/connect-an-agent.md:155
+#: ../../how-to/connect-an-agent.md:188
 msgid ""
 "List sessions, then choose the intended lock scope. A current-session "
 "lock ends the caller's session; a selected-session lock ends that "
@@ -367,7 +452,7 @@ msgstr ""
 "de una sesión seleccionada termina esa sesión. Un bloqueo de todo el "
 "perfil suspende su automatización."
 
-#: ../../how-to/connect-an-agent.md:163
+#: ../../how-to/connect-an-agent.md:196
 msgid ""
 "To resume, supply the fresh password at the hidden prompt. Add `--grant "
 "GRANT_UUID` for each grant you deliberately reactivate; omitting it "
@@ -378,11 +463,36 @@ msgstr ""
 "reactivar; si lo omites, se restaura el acceso humano sin reactivar "
 "autorizaciones."
 
-#: ../../how-to/connect-an-agent.md:170
+#: ../../how-to/connect-an-agent.md:203
 msgid ""
 "Confirm the returned grant IDs, then let agents reconnect and "
 "authenticate afresh."
 msgstr ""
 "Confirma los ID de las autorizaciones devueltos y permite que los agentes"
 " vuelvan a conectarse y se autentiquen de nuevo."
+
+#~ msgid ""
+#~ "Use a separate server entry for "
+#~ "each profile. The profile ID is "
+#~ "required; the server does not select "
+#~ "the human's active profile. Keep "
+#~ "credentials out of the configuration and"
+#~ " conversation. An approved protected "
+#~ "credential reference can be supplied "
+#~ "with `--credential-reference` for a "
+#~ "later connection, while its grant and"
+#~ " the profile remain eligible."
+#~ msgstr ""
+#~ "Usa una entrada de servidor distinta "
+#~ "para cada perfil. El ID de perfil"
+#~ " es obligatorio; el servidor no "
+#~ "selecciona el perfil activo de la "
+#~ "persona. No incluyas credenciales en la"
+#~ " configuración ni en la conversación. "
+#~ "Puedes proporcionar una referencia protegida"
+#~ " de credencial aprobada mediante "
+#~ "`--credential-reference` para una conexión "
+#~ "posterior, mientras su autorización y el"
+#~ " perfil sigan cumpliendo las condiciones"
+#~ " de acceso."
 

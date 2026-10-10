@@ -45,13 +45,19 @@ MCP only when the corresponding registered operation is exposed and permitted.
 Never construct a tool name or operation payload from a CLI command's spelling.
 When the required operation is unavailable, report that limit for human handoff.
 
-Bind the connection to an exact profile UUID. Use `status` to inspect current
-authority. When access is absent, use `authorization_prepare`,
-`authorization_request`, and `authorization_poll` for human-approved enrollment,
-then `authenticate` with the delivered protected credential reference.
+A connection is either under the person's own Cadrumo sign-in or under an enrolled
+key for one exact profile UUID. Use `status` to inspect current authority: it
+reports whether the session is `sign_in`, `key` or `none`. Under the sign-in, a
+refusal with `authentication_required` means the person must sign in to Cadrumo;
+tell them so and call again. Never ask for or accept a password. The sign-in
+session ends with the person's sign-out, lock or sign-in deadline, and you can
+end only your own session. To work while nobody is signed in, use
+`authorization_prepare`, `authorization_request`, and `authorization_poll` for
+human-approved enrollment of a key, then `authenticate` with the delivered
+protected credential reference.
 Keep API secrets in protected storage; only the nonsecret credential reference
 belongs in agent configuration. A grant can permit fresh admission after an
-earlier session expires; expiry, revocation and profile-wide lock still apply.
+earlier key session expires; expiry, revocation and profile-wide lock still apply.
 
 ## Respect mutability
 

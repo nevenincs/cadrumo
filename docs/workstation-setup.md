@@ -122,17 +122,18 @@ Run `aeat config check` again after each change to confirm the gap is closed.
 ## Connect an AI assistant
 
 Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an agent
-to registered operations through the local runtime and binds each connection
-to an explicit profile ID. Run `cadrumo-mcp --help` to confirm it is on your
-path. In a source checkout, check the installed entrypoint with:
+to registered operations through the local runtime, either under your own
+Cadrumo sign-in or under an enrolled key for an explicit profile ID. Run
+`cadrumo-mcp --help` to confirm it is on your path. In a source checkout, check
+the installed entrypoint with:
 
 ```bash
 uv sync
 uv run --no-sync cadrumo-mcp --help
 ```
 
-[Connect an agent](how-to/connect-an-agent.md) shows profile-bound registration
-and the grant request flow.
+[Connect an agent](how-to/connect-an-agent.md) shows both ways to connect and
+the grant request flow.
 
 ## Next steps
 
