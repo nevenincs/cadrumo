@@ -15,7 +15,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
 modified: '2026-10-10'
 body_schema: body-v2
-body_hash: 'sha256:712bdd89f704611d5440951a1a68c36e9b260478abe29baa44efcac082e61e6c'
+body_hash: 'sha256:0fc266ce15ed7bb416168ad3bb69129fc7b608448ffa3b59f48fb339181ecd39'
 ---
 
 # `mcp-parity` plan
@@ -63,7 +63,7 @@ Overlap with plans in flight, to coordinate and not to duplicate: `2026-10-04-ap
 
 Delivers the recorded MCP decision for every operation, the refusal of the sensitive operations that are open today with no approval, refusal at submission, and confined host paths, so that opening the shared sign-in exposes nothing unguarded.
 
-- [ ] `P01.S01` - Add the recorded MCP decision table, one row per registered operation with its ruling, reason and whether it changes records or reaches the network, seeded from the admission rulings, and extend the catalogue test to fail on an operation with no row, an admitted row the real access resolver refuses to the MCP frontend, an excluded row that still lists MCP, a human-only policy that admits MCP, and any operation or tool that declares a submission to the tax agency; creates src/cadrumo/application/operations/mcp_admission.py; `src/cadrumo/entrypoints/tests/test_operation_catalogue.py`.
+- [x] `P01.S01` - Add the recorded MCP decision table, one row per registered operation with its ruling, reason and whether it changes records or reaches the network, seeded from the admission rulings, and extend the catalogue test to fail on an operation with no row, an admitted row the real access resolver refuses to the MCP frontend, an excluded row that still lists MCP, a human-only policy that admits MCP, and any operation or tool that declares a submission to the tax agency; creates src/cadrumo/application/operations/mcp_admission.py; `src/cadrumo/entrypoints/tests/test_operation_catalogue.py`.
 - [ ] `P01.S02` - Refuse on the MCP frontend, until the approval step exists, the sensitive operations that are open today with no approval: ledger.invoice.remove, auth.session.reset, the writes of ledger.own_account, the declare and remove actions of modelo.m360_solicitud and the three prorrata elections, with a refusal test for each and one contract cutover; also auth/operation_definitions.py, ledger/own_account_operation.py, modelo/m360_solicitud_operation.py and prorrata_register/registered_operations.py; `src/cadrumo/application/invoices/catalogue_remove_operation.py`.
 - [ ] `P01.S03` - Establish which paths user-profile.field-mutation accepts, refuse the capability opt-ins on the MCP frontend until the approval step exists, and move the per-field confirmation of the census review into user-profile.censo-review; also user_profile/censal_operation.py; `src/cadrumo/application/user_profile/operations.py`.
 - [x] `P01.S04` - Remove the MCP claim from the seven definitions that cannot run: the four automation proposals, export.google-sheets, local-reader.provision and user-profile.bundle-export; also export/google_operation.py, local_reader_operation.py and user_profile/operations.py; `src/cadrumo/application/user_profile/automation_operations.py`.

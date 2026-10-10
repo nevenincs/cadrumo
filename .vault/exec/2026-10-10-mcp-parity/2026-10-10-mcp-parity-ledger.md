@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:f6f5b6e58f35859ff82f6f79327623279d4462f36c589707cf540f60246cfc8b'
+body_hash: 'sha256:7a219b4c7d3f63dee8569ff7a1df86fc3427f4d669b9c37da57d24e8dd473f2a'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -80,7 +80,18 @@ related:
 - `S08` `by:` `vaultspec-standard-executor`
 - `S08` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
 - `S08` `verify:` `pytest dev/agent_eval/tests/test_rule_surface_conformance.py and harness data tests -n0 (14 tests)` -> `pass`
+- `S01` `A` `src/cadrumo/application/operations/mcp_admission.py`
+- `S01` `A` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
+- `S01` `A` `src/cadrumo/application/operations/tests/test_mcp_admission.py`
+- `S01` `verify:` `pytest test_operation_mcp_admission.py test_mcp_admission.py test_operation_catalogue.py -n0 (47 tests)` -> `pass`
+- `S01` `verify:` `ruff check` -> `pass`
+- `S01` `verify:` `ruff format --check` -> `pass`
+- `S01` `verify:` `ty check --python-platform linux` -> `pass`
+- `S01` `verify:` `basedpyright and pyrefly on mcp_admission.py` -> `pass`
+- `S01` `verify:` `just check-import-boundaries` -> `fail`
+- `S01` `by:` `vaultspec-high-executor`
 
 ## Notes
 
 - `S08` The subject-reference form could not be stated from inside the harness and moved to its own Step. One existing result-page test was already failing at HEAD on a stale page-size literal and is corrected here.
+- `S01` The import-boundary gate fails for reasons outside this Step: two private cross-package findings under dev/packaging and a stale generated module inventory; all 15 contracts are kept and no chain involves these files. The inventory entries for the new modules are regenerated in a separate commit. Twelve MCP-listed operations are not proven through their real resolver and are pinned in a named set; the no-submission assertion covers what operations, tools and commands declare and cannot see executor or adapter behaviour.
