@@ -40,15 +40,18 @@ from .operation_contract_cache import OperationContractCache
 from .operation_discovery import search_operations
 from .protocol_contract import parse_model, public_value, refusal_code
 from .result_request import resolve_result_request
+from .runtime_admission import McpAdmission, status_on_surface
 
 _TIMEOUT = 30.0
+_NO_SESSION = "none"
 
 
 class _AdmittedConnection(Protocol):
-    profile_id: UUID
+    profile_id: UUID | None
     client: RuntimeFrontendClient | None
+    admission: McpAdmission | None
     surface: McpSurface
-    _startup_denial: str | None
+    _admission_denial: str | None
     _contracts: OperationContractCache
 
     def _admitted(self) -> RuntimeFrontendClient: ...
@@ -61,6 +64,7 @@ class _Binding:
     profile_id: UUID
     contracts: OperationContractCache
     surface: McpSurface
+    admission: McpAdmission
 
 
 type _ToolHandler = Callable[[RuntimeFrontendClient, _Binding, dict[str, Any], float], dict[str, Any]]
@@ -69,23 +73,31 @@ type _ToolHandler = Callable[[RuntimeFrontendClient, _Binding, dict[str, Any], f
 def call_admitted_operation(connection: _AdmittedConnection, name: str, args: dict[str, Any]) -> dict[str, Any]:
     """Route one authenticated tool to its existing typed runtime operation."""
     if name == "status" and connection.client is None:
-        return _unauthenticated_status(connection.profile_id, connection._startup_denial)
+        return _unauthenticated_status(connection)
     client = connection._admitted()
+    profile_id, admission = connection.profile_id, connection.admission
+    if profile_id is None or admission is None:
+        # A lease is held only for a bound profile and a known admission.
+        raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
     if name == "status":
-        return {"outcome": "status", "status": public_value(client.status().status)}
+        return _admitted_status(client, admission, connection.surface)
     deadline = time.monotonic() + _TIMEOUT
     handler = _ADMITTED_TOOL_HANDLERS.get(name)
     if handler is None:
         raise ValueError("unsupported tool")
-    binding = _Binding(connection.profile_id, connection._contracts, connection.surface)
+    binding = _Binding(profile_id, connection._contracts, connection.surface, admission)
     return handler(client, binding, args, deadline)
 
 
-def _unauthenticated_status(profile_id: UUID, denial: str | None) -> dict[str, Any]:
+def _unauthenticated_status(connection: _AdmittedConnection) -> dict[str, Any]:
+    """Say that no session is held, for which profile, and what the last admission was refused for."""
+    denial = connection._admission_denial
     reply: dict[str, Any] = {
         "outcome": "status",
-        "profile_id": str(profile_id),
+        "profile_id": None if connection.profile_id is None else str(connection.profile_id),
         "authenticated": False,
+        "session": _NO_SESSION,
+        "surface": connection.surface.name.value,
         "denial": denial or "authentication_required",
     }
     if remedy := runtime_unavailable_remedy(denial):
@@ -93,8 +105,22 @@ def _unauthenticated_status(profile_id: UUID, denial: str | None) -> dict[str, A
     return reply
 
 
+def _admitted_status(client: RuntimeFrontendClient, admission: McpAdmission, surface: McpSurface) -> dict[str, Any]:
+    """Say how the held session was admitted, and its scope as the surface leaves it."""
+    status = status_on_surface(client.status().status, surface)
+    return {
+        "outcome": "status",
+        # A lease the runtime now denies is no session, whatever admitted it.
+        "session": admission.value if status.denial is None else _NO_SESSION,
+        "surface": surface.name.value,
+        "status": public_value(status),
+    }
+
+
 def _search(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
-    return search_operations(client, binding.contracts, binding.profile_id, args, deadline, binding.surface)
+    return search_operations(
+        client, binding.contracts, binding.profile_id, args, deadline, binding.surface, admission=binding.admission
+    )
 
 
 def _describe(

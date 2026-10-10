@@ -113,6 +113,27 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
 
 
 @pytest.mark.anyio
+async def test_public_authority_answers_a_connection_with_no_key_no_profile_and_nobody_signed_in(
+    tmp_path: Path,
+) -> None:
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
+        adapter = RuntimeMcpAdapter(profile_id=None, client=None, resumes_sign_in=True)
+        try:
+            async with connected_server_and_client_session(build_server(adapter)) as client:
+                names = {tool.name for tool in (await client.list_tools()).tools}
+                support = await client.call_tool("authority", {"query": "support"})
+        finally:
+            await adapter.close()
+
+    assert {"status", "authority", "corpus_search", "search", "execute"} <= names
+    assert support.is_error is False
+    assert isinstance(support.structured_content, dict)
+    assert support.structured_content["outcome"] == "published"
+    # A public query binds no profile and asks the runtime for nothing.
+    assert adapter.client is None and adapter.profile_id is None
+
+
+@pytest.mark.anyio
 async def test_authority_response_provenance_matches_the_pin_passed_to_the_real_query(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

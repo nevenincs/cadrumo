@@ -14,6 +14,7 @@ from cadrumo.application.operations.frontend_requests import OperationResultProj
 from cadrumo.application.runtime.contracts import RuntimeRefusalError
 from cadrumo.application.runtime.projection_pages import ProjectionPage
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.domain.calculations.registry.authority_store import AuthorityStoreError
 from cadrumo.domain.calculations.registry.errors import (
@@ -215,6 +216,9 @@ def refusal_code(error: Exception) -> str:
         return "published_authority_query_refused"
     if isinstance(error, (AuthorityStoreError, RegistryError)):
         return "published_authority_invalid"
+    if isinstance(error, InternalInvariantError):
+        # A port this process failed to compose is a defect here, not an absent runtime.
+        return "internal_error"
     if isinstance(error, (ValidationError, ValueError, TypeError, KeyError)):
         return "invalid_request"
     return "runtime_unavailable"

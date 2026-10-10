@@ -11,6 +11,7 @@ from pydantic import SecretBytes
 
 from ...adapters.local_runtime.runtime_frame_io import read_secret, write_document
 from ...adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion
+from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
     RuntimeRefusalCode,
@@ -120,7 +121,7 @@ class ProfileConnectionSessionMixin:
                 raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
             connection.human_secret = secret
         try:
-            return host.authority.admit_human(connection_id=context.connection_id)
+            return host.authority.admit_human(connection_id=context.connection_id, surface=connection.surface)
         finally:
             with host.guard:
                 connection.human_secret = None
@@ -195,18 +196,39 @@ class ProfileConnectionSessionMixin:
             if request.target_session_id is not None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
             if request.action == "human_sign_out":
-                return self._human_sign_out(host, context, request)
+                return self._human_sign_out(connection, host, context, request)
             if request.action == "session_refresh":
                 return self._refresh_session(connection, host, context, request)
             return self._status(connection, host, request.request_id, request.session_id)
 
+    @staticmethod
+    def _require_person_frontend(
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: RuntimeConnectionContext,
+        request: RuntimeSessionRequest,
+    ) -> None:
+        """Refuse an act on the person's other sessions to their session on the MCP frontend.
+
+        A session resumed from the person's sign-in is of the human kind on
+        every frontend, and that kind is what the authority admits to sign the
+        person out and to lock another session. An MCP client holds such a
+        session to work under the sign-in, not to end it elsewhere, so it may
+        end only itself. A session that is not the person's is refused first,
+        as it is on every frontend.
+        """
+        host.authority.human_administration_facts(connection_id=context.connection_id, session_id=request.session_id)
+        if connection.frontend is OperationFrontendProjection.MCP:
+            raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+
     def _human_sign_out(
         self: RuntimeProfileConnections,
+        connection: ProfileConnection,
         host: RuntimeProfileHost,
         context: RuntimeConnectionContext,
         request: RuntimeSessionRequest,
     ) -> RuntimeHumanSignedOut:
-        host.authority.human_administration_facts(connection_id=context.connection_id, session_id=request.session_id)
+        self._require_person_frontend(connection, host, context, request)
         try:
             automation_enabled = host.store.enrollment_state().automation_enabled
         except AutomationCustodyError:
@@ -231,10 +253,13 @@ class ProfileConnectionSessionMixin:
         context: RuntimeConnectionContext,
         request: RuntimeSessionRequest,
     ) -> RuntimeSessionsLocked | AccessDenied:
+        target_session_id = request.target_session_id or request.session_id
+        if target_session_id != request.session_id and connection.frontend is OperationFrontendProjection.MCP:
+            self._require_person_frontend(connection, host, context, request)
         retired = host.authority.lock_session(
             connection_id=context.connection_id,
             session_id=request.session_id,
-            target_session_id=request.target_session_id or request.session_id,
+            target_session_id=target_session_id,
         )
         if isinstance(retired, AccessDenied):
             return retired

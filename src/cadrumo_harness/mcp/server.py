@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
@@ -47,18 +48,26 @@ def build_server(adapter: RuntimeMcpAdapter) -> Server:
 
 def serve(
     *,
-    profile_id: UUID,
+    profile_id: UUID | None = None,
     credential_reference: UUID | None = None,
     surface: McpSurface = MCP_SURFACES[DEFAULT_MCP_SURFACE],
 ) -> None:
-    """Run one stdio adapter on one surface; EOF closes its lease, never the shared runtime."""
+    """Run one stdio adapter on one surface; EOF closes its lease, never the shared runtime.
+
+    With a credential reference the adapter authenticates by that enrolled key
+    for the named profile and never resumes a sign-in. Without one it starts
+    with no session, and asks the runtime to resume the person's sign-in when
+    a call first needs the profile.
+    """
     from mcp.server.lowlevel import NotificationOptions
     from mcp.server.stdio import stdio_server
 
     async def run() -> None:
         from .runtime_adapter import RuntimeMcpAdapter
 
-        adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None, surface=surface)
+        adapter = RuntimeMcpAdapter(
+            profile_id=profile_id, client=None, surface=surface, resumes_sign_in=credential_reference is None
+        )
         try:
             if credential_reference is not None:
                 await adapter.bootstrap_reference(credential_reference)
@@ -72,7 +81,27 @@ def serve(
         finally:
             await adapter.close()
 
-    _serve_until_orderly_shutdown(lambda: anyio.run(run))
+    with _resume_composition(resumes_sign_in=credential_reference is None):
+        _serve_until_orderly_shutdown(lambda: anyio.run(run))
+
+
+@contextmanager
+def _resume_composition(*, resumes_sign_in: bool) -> Generator[None]:
+    """Bind, for the life of the process, the ports a resumed sign-in reads its receipt through.
+
+    The proof a resume presents is read through the login-session port, which
+    the command line and the terminal interface bind before they present it.
+    This process is a root of its own and binds the same composition, so the
+    resume reaches the runtime instead of failing here. A connection that
+    serves an enrolled key presents no receipt and binds nothing.
+    """
+    if not resumes_sign_in:
+        yield
+        return
+    from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
+
+    with composed_profile_persistence_ports():
+        yield
 
 
 def _serve_until_orderly_shutdown(serve_transport: Callable[[], object]) -> None:

@@ -52,6 +52,8 @@ async def test_fresh_adapter_orients_without_claiming_profile_access() -> None:
             "outcome": "status",
             "profile_id": str(profile_id),
             "authenticated": False,
+            "session": "none",
+            "surface": "full",
             "denial": "authentication_required",
         }
 
@@ -147,6 +149,8 @@ async def test_authenticate_admits_exact_profile_for_mcp_and_close_releases_clie
             assert status.is_error is False
             assert status.structured_content == {
                 "outcome": "status",
+                "session": "key",
+                "surface": "full",
                 "status": admitted.status().status.model_dump(mode="json"),
             }
             assert adapter.client is admitted

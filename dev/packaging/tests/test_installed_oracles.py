@@ -1201,6 +1201,8 @@ def test_dev_installed_mcp_authenticate_fails_closed_for_an_unavailable_or_missi
         authentication_error, authentication, status_error, status = asyncio.run(
             _call_dev_installed_mcp_authenticate(
                 mcp_executable,
+            "session": "none",
+            "surface": "full",
                 storage_root=storage_root,
                 profile_id=str(profile_id),
                 credential_reference=str(credential_reference),

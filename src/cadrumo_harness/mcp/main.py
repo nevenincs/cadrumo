@@ -12,16 +12,26 @@ from uuid import UUID
 
 
 def main() -> None:
-    """Serve one explicitly bound profile and protected credential reference."""
+    """Serve the person's sign-in on the selected profile, or one profile's enrolled key."""
     os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
     if isinstance(sys.stderr, io.TextIOWrapper):
         # The generic form is for static analysis; TextIOWrapper is not subscriptable at runtime.
         cast("io.TextIOWrapper[BinaryIO]", sys.stderr).reconfigure(newline="\n")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--profile-id", type=UUID, required=True)
-    parser.add_argument("--credential-reference", type=lambda value: UUID(value) if value else None)
+    parser.add_argument(
+        "--profile-id",
+        type=UUID,
+        help="the profile of the enrolled key; given alone, its sign-in is resumed only while it is selected",
+    )
+    parser.add_argument(
+        "--credential-reference",
+        type=lambda value: UUID(value) if value else None,
+        help="the protected reference of an enrolled key; requires --profile-id",
+    )
     parser.add_argument("--surface", help="the named surface to serve; every tool and operation when omitted")
     args = parser.parse_args()
+    if args.credential_reference is not None and args.profile_id is None:
+        parser.error("--credential-reference names the key of one profile; give that profile with --profile-id")
     required_version = os.environ.get("CADRUMO_MCP_REQUIRED_VERSION")
     if required_version is not None and version("cadrumo") != required_version:
         parser.error("installed Cadrumo cohort does not match the required version")

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:0fcf10ace7225f10d5011258ab66a880c5d199d2da09f2a54d207a2262d72d6a'
+body_hash: 'sha256:bda0b5f33db1170fd9dc536c452bae42659c82dc0d049dc4a03464932b13f4cf'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -302,6 +302,62 @@ related:
 - `S03` `verify:` `ruff format --check` -> `pass`
 - `S03` `verify:` `ty check --python-platform linux` -> `pass`
 - `S03` `by:` `vaultspec-high-executor`
+- `S12` `M` `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`
+- `S12` `A` `src/cadrumo/entrypoints/runtime/tests/stored_sign_in_runtime.py`
+- `S12` `A` `src/cadrumo/entrypoints/runtime/tests/test_login_methods.py`
+- `S12` `M` `src/cadrumo/entrypoints/runtime/tests/test_receipt_login.py`
+- `S12` `verify:` `pytest runtime sign-in tests (49 tests)` -> `pass`
+- `S12` `verify:` `ruff check` -> `pass`
+- `S12` `verify:` `ruff format --check` -> `pass`
+- `S12` `verify:` `ty check --python-platform linux` -> `pass`
+- `S12` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S12` `by:` `vaultspec-high-executor`
+- `S13` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S13` `M` `src/cadrumo_harness/mcp/runtime_admission.py`
+- `S13` `M` `src/cadrumo_harness/mcp/main.py`
+- `S13` `M` `src/cadrumo_harness/mcp/server.py`
+- `S13` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
+- `S13` `M` `src/cadrumo_harness/mcp/operation_discovery.py`
+- `S13` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S13` `M` `src/cadrumo/application/user_profile/session_authority_admission.py`
+- `S13` `M` `src/cadrumo/application/user_profile/tests/test_session_surface_lease.py`
+- `S13` `A` `src/cadrumo_harness/mcp/tests/test_installed_sign_in_resume.py`
+- `S13` `A` `src/cadrumo_harness/mcp/tests/test_internal_failure_refusal.py`
+- `S13` `M` `src/cadrumo_harness/mcp/tests/test_bootstrap_reference_recovery.py`
+- `S13` `M` `src/cadrumo_harness/mcp/tests/test_installed_stdio.py`
+- `S13` `M` `src/cadrumo_harness/mcp/tests/test_runtime_authority.py`
+- `S13` `M` `src/cadrumo_harness/mcp/tests/test_runtime_manager_remedy.py`
+- `S13` `M` `src/cadrumo_harness/mcp/tests/test_runtime_protocol.py`
+- `S13` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
+- `S13` `M` `dev/packaging/tests/test_installed_oracles.py`
+- `S13` `M` `dev/agent_eval/tests/test_installed_mcp_first_enrollment.py`
+- `S13` `M` `docs/how-to/connect-an-agent.md`
+- `S13` `M` `docs/workstation-setup.md`
+- `S13` `M` `docs/technical/articles/187-filing-skills-and-the-mcp-operator-harness.md`
+- `S13` `M` `docs/technical/topics/runtime-tui-and-agent-harness.md`
+- `S13` `M` `src/cadrumo_harness/_workspace.py`
+- `S13` `M` `src/cadrumo_harness/_data/agent/README.md`
+- `S13` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
+- `S13` `verify:` `pytest harness suite (241 tests)` -> `pass`
+- `S13` `verify:` `pytest admission, operations and user_profile suites (1498 tests)` -> `pass`
+- `S13` `verify:` `pytest harness data and rule conformance (30 tests)` -> `pass`
+- `S13` `verify:` `pytest fresh-process sign-in resume` -> `pass`
+- `S13` `verify:` `ruff check` -> `pass`
+- `S13` `verify:` `ruff format --check` -> `pass`
+- `S13` `verify:` `ty check --python-platform linux` -> `pass`
+- `S13` `by:` `vaultspec-high-executor`
+- `S14` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S14` `A` `src/cadrumo_harness/mcp/tests/test_sign_in_resume.py`
+- `S14` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_adapter.py`
+- `S14` `verify:` `pytest harness suite (241 tests)` -> `pass`
+- `S14` `verify:` `pytest runtime sign-in tests (49 tests)` -> `pass`
+- `S14` `by:` `vaultspec-high-executor`
+- `S17` `M` `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`
+- `S17` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_door.py`
+- `S17` `verify:` `pytest runtime sign-in tests (49 tests)` -> `pass`
+- `S17` `verify:` `ruff check` -> `pass`
+- `S17` `verify:` `ty check --python-platform linux` -> `pass`
+- `S17` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -318,3 +374,4 @@ related:
 - `S28` Eighteen of twenty-three reads admitted. Not admitted: `modelo.filing_record.view` and profile.history return an open payload, and the three Google configuration reads have a human-only resolver; a further Step gives them agent-facing projections. The first pass withheld results carrying notes, reasons and actor labels the person typed; that reading of the checklist was stricter than the owner rule and was corrected in the plan. Five of the admitted operations cannot be admitted by the generic resolver probe and are in its not-proven set; each has its own test through the real resolver.
 - `S02` Refused on MCP until the approval step exists: ledger.invoice.remove and auth.session.reset whole; the six writing actions of `ledger.own_account;` declare and remove of `modelo.m360_solicitud;` the three prorrata elections. The other five prorrata operations, auth.session.logout and the reads of the mixed definitions keep MCP. The off-machine read of ledger.evidence.extract is not covered by the invariant because that definition does not list MCP yet. Native command-line suites that need a running runtime could not run on this machine.
 - `S03` The plan asked for the census review confirmation to move into the operation. That is not possible without changing the response contract for every review: apply, reject and inspect evaluate as one access action and carry no intent. The review leaves MCP whole until the approval step carries that intent; the census preview stays open. A capability can be written through user-profile.field-mutation and through user-profile.patch; both routes are refused on MCP. The other six profile writers have no route to a capability. Committed together with S02 because both share the invariant in one test file.
+- `S13` Found while proving the door in a real server process: the login-session port was never composed there, so the resume failed with an invariant error reported as an unavailable runtime. The server now composes it, an invariant failure has its own refusal code, and a test starts the server as a fresh process. Three installed-command tests in the oracle file fail on this machine with `runtime_unavailable` from the stale base-Python install; they do not exercise this Step. The translations of the two user pages are re-synced for es, ca and hu.

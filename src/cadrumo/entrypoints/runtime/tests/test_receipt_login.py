@@ -210,13 +210,15 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
                     for denied in (invalid_api_reply, invalid_receipt_reply, invalid_mcp_reply):
                         assert isinstance(denied, RuntimeAccessRefusal)
                         assert denied.code is RuntimeRefusalCode.INVALID_FRAME
-                    for method in ("password", "receipt"):
+                    # An MCP connection never sends a password and never asks for a sign-in to be stored.
+                    for method, persist_receipt in (("password", False), ("receipt", True)):
                         mcp_human = _login(
                             invalid_mcp,
                             profile_id,
                             method,
                             bytearray(b"nonsecret-rejected-before-delivery"),
                             frontend=OperationFrontendProjection.MCP,
+                            persist_receipt=persist_receipt,
                         )
                         assert isinstance(mcp_human, RuntimeAccessRefusal)
                         assert mcp_human.code is RuntimeRefusalCode.INVALID_FRAME

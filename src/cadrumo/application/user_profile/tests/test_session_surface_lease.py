@@ -1,10 +1,10 @@
-"""A key lease carries the MCP surface it was admitted under for as long as it lives.
+"""A lease carries the MCP surface it was admitted under for as long as it lives.
 
 The session authority, the session and lineage policy, the operation access
 policy and the profile operation registry are real. The host and custody ports
-are held in memory: they supply fixed trusted facts, one enrolled key and no
-worker, which is everything a lease needs to be admitted, refreshed and
-delegated.
+are held in memory: they supply fixed trusted facts, one enrolled key, one
+verified sign-in and no worker, which is everything a lease needs to be
+admitted, refreshed and delegated.
 """
 
 from __future__ import annotations
@@ -38,10 +38,12 @@ from cadrumo.application.user_profile.access_contracts import (
     OsLoginContext,
     ProfileAccessBinding,
     ProfileAccessState,
+    SessionKind,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyPort, AutomationCustodySnapshot
 from cadrumo.application.user_profile.automation_enrollment import AutomationKeyIssuer
+from cadrumo.application.user_profile.login_session import ProfileLoginOutcome
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
@@ -67,6 +69,8 @@ _RECIPIENT_CONNECTION = UUID("5cc00000-0000-4000-8000-000000000003")
 _CLIENT = UUID("5cc00000-0000-4000-8000-000000000004")
 _GRANT = UUID("5cc00000-0000-4000-8000-000000000005")
 _KEY = UUID("5cc00000-0000-4000-8000-000000000006")
+_LOGIN = "login-a"
+_SIGN_IN_IDLE_DEADLINE = _NOW + timedelta(minutes=14)
 _BINDING = ProfileAccessBinding(
     profile_id=UUID("5cc00000-0000-4000-8000-000000000007"),
     installation_id=UUID("5cc00000-0000-4000-8000-000000000008"),
@@ -137,7 +141,7 @@ class _Host:
                 authenticated_client_id=_CLIENT,
                 login_contexts=(
                     OsLoginContext(
-                        login_id="login-a",
+                        login_id=_LOGIN,
                         os_owner_id=_BINDING.os_owner_id,
                         active=True,
                         lock_state=OsLockState.UNLOCKED,
@@ -165,6 +169,32 @@ class _Host:
 
     def refresh(self, session: AccessSession) -> None:
         return None
+
+    @contextmanager
+    def authenticate_human(self, connection_id: UUID) -> Generator[tuple[ProfileLoginOutcome, str]]:
+        """Lend the outcome of a sign-in the worker has already verified for this connection's login."""
+        assert connection_id == _CONNECTION
+        outcome = ProfileLoginOutcome(
+            bucket_id=str(_BINDING.profile_id),
+            label="synthetic profile",
+            authenticated_at=_NOW - timedelta(minutes=1),
+            idle_deadline=_SIGN_IN_IDLE_DEADLINE,
+            absolute_deadline=_NOW + timedelta(hours=8),
+            session_persisted=True,
+            already_authenticated=True,
+        )
+        yield outcome, _LOGIN
+
+    def human_admission_deadline(self, connection_id: UUID) -> float:
+        assert connection_id == _CONNECTION
+        return 160.0
+
+    def bind_human(self, session: AccessSession) -> None:
+        assert session.originating_login_id == _LOGIN
+
+    def capture_human_sign_in(self, session_id: UUID) -> bool:
+        # A resumed sign-in asks for no receipt, so none is pending.
+        return False
 
 
 class _Custody:
@@ -227,6 +257,17 @@ def _admit(authority: ProfileSessionAuthority, surface: McpSurfaceName | None) -
     return admitted
 
 
+def _resume(authority: ProfileSessionAuthority, surface: McpSurfaceName | None) -> AccessSession:
+    """Admit the person's sign-in on the connection, under the surface the connection named."""
+    if surface is None:
+        # No surface named: the admission is asked for exactly as the command line asks for it.
+        admitted = authority.admit_human(connection_id=_CONNECTION)
+    else:
+        admitted = authority.admit_human(connection_id=_CONNECTION, surface=surface)
+    assert isinstance(admitted, AccessSession), admitted
+    return admitted
+
+
 def _submission(
     authority: ProfileSessionAuthority, registry: OperationRegistry, session: AccessSession, definition_id: str
 ) -> str:
@@ -283,6 +324,23 @@ def test_a_lease_carries_the_surface_it_was_admitted_under(surface: McpSurfaceNa
 
     session = _admit(authority, surface)
 
+    assert session.surface is surface
+    assert _submission(authority, registry, session, _READ) == _ALLOWED
+    assert _submission(authority, registry, session, _WRITE) == (_FRONTEND_DENIED if narrowed else _ALLOWED)
+
+
+@pytest.mark.parametrize("surface", [None, *McpSurfaceName])
+def test_a_sign_in_lease_carries_the_surface_its_connection_named(surface: McpSurfaceName | None) -> None:
+    authority, registry = _authority(), _registry()
+    narrowed = surface is _READ_ONLY_LOCAL
+
+    session = _resume(authority, surface)
+
+    # It is the person's own lease: no grant narrows it, so the surface is all that does.
+    assert session.kind is SessionKind.HUMAN
+    assert session.grant_id is None and session.key_id is None
+    assert session.scope == _SCOPE
+    assert session.expires_at == _SIGN_IN_IDLE_DEADLINE
     assert session.surface is surface
     assert _submission(authority, registry, session, _READ) == _ALLOWED
     assert _submission(authority, registry, session, _WRITE) == (_FRONTEND_DENIED if narrowed else _ALLOWED)

@@ -43,6 +43,8 @@ async def test_installed_stdio_public_authority_and_private_admission(tmp_path: 
                 "outcome": "status",
                 "profile_id": str(profile_id),
                 "authenticated": False,
+                "session": "none",
+                "surface": "full",
                 "denial": "authentication_required",
             }
             private = await client.call_tool("search", {})

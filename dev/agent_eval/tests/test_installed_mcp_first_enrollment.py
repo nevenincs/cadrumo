@@ -275,6 +275,8 @@ async def test_installed_sdk_first_enrollment_delivers_native_reference_and_reco
                         "outcome": "status",
                         "profile_id": str(profile.profile_id),
                         "authenticated": False,
+                        "session": "none",
+                        "surface": "full",
                         "denial": "authentication_required",
                     }
                     private_arguments = {

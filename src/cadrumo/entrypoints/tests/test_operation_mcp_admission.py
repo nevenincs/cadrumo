@@ -840,6 +840,105 @@ def test_the_approval_bound_operations_named_here_are_refused_to_mcp_by_their_ow
 
 
 # ---------------------------------------------------------------------------
+# No access an MCP client can ask for is one reserved for a person
+# ---------------------------------------------------------------------------
+
+
+def _every_access(
+    registration: OperationPublicDefinitionRegistrationV1, frontend: OperationFrontendProjection
+) -> Iterable[tuple[str, OperationAccessContext]]:
+    """Every action a resolver can be asked for, fresh and as a replay of each admitted scope."""
+    for position, context in _probe_contexts(registration, frontend):
+        admission = "fresh" if context.admitted_request is None else position.removeprefix("observe-")
+        for action in AccessAction:
+            yield f"{action.value} ({admission})", replace(context, action=action)
+
+
+def _reserved_for_a_person(request: OperationRequest[BaseModel], context: OperationAccessContext) -> bool | None:
+    """Whether the real resolver reserves this exact access for a person; ``None`` where it grants nothing."""
+    try:
+        resolved = resolve_operation_access(registry=_registry(), request=request, context=context)
+    except (ProfileAccessRefusedError, CadrumoError, ValueError, LookupError):
+        return None
+    return resolved.policy.requires_human
+
+
+def _written_requests(definition_id: str) -> tuple[OperationRequest[BaseModel], ...]:
+    """The written-out requests of a definition, which reach acts no schema sample does."""
+    documents = (*_SENSITIVE_ACT_SAMPLES.get(definition_id, ()), *_OPEN_ACT_SAMPLES.get(definition_id, ()))
+    return tuple(_sample_request(definition_id, document) for document in documents)
+
+
+def _person_only_accesses(
+    definition_id: str, frontend: OperationFrontendProjection, authority: PinnedAuthorityOperation
+) -> tuple[int, list[str]]:
+    """How many accesses the real resolver grants one frontend, and which of them it reserves for a person."""
+    registration = _registry().lookup_public_registration(definition_id)
+    # A schema sample is asked as the generic probe asks it, with no held authority; a written-out
+    # request reaches a resolver that reads the setup catalogue, so it is asked under the pinned one.
+    asked: list[tuple[OperationRequest[BaseModel], PinnedAuthorityOperation | None]] = []
+    asked.extend((request, None) for request in _probe_requests(definition_id))
+    asked.extend((request, authority) for request in _written_requests(definition_id))
+    granted = 0
+    reserved: list[str] = []
+    for index, (request, held) in enumerate(asked):
+        for access, context in _every_access(registration, frontend):
+            answer = _reserved_for_a_person(request, replace(context, authority_operation=held))
+            if answer is None:
+                continue
+            granted += 1
+            if answer:
+                reserved.append(f"request {index}, {access}")
+    return granted, reserved
+
+
+def test_no_access_an_mcp_client_can_ask_for_is_reserved_for_a_person(operation: PinnedAuthorityOperation) -> None:
+    """A human-only policy does not keep an act off MCP, so no MCP-listed operation may rely on one.
+
+    A session resumed from the person's sign-in is of the human kind on every
+    frontend, and the human gate compares the kind alone. What keeps a
+    person's act off MCP is the definition's frontend list and its resolver's
+    own frontend refusal, so a resolver that grants an MCP request while
+    reserving it for a person would open that act to an MCP client.
+    """
+    reserved: dict[str, list[str]] = {}
+    unjudged: set[str] = set()
+    for definition_id in _mcp_listed_ids():
+        granted, found = _person_only_accesses(definition_id, _MCP, operation)
+        if found:
+            reserved[definition_id] = found
+        if not granted:
+            unjudged.add(definition_id)
+    assert not reserved, f"accesses granted to the MCP frontend and reserved for a person: {reserved}"
+    # Where the resolver grants no probe, nothing was judged. Only the operations already named as
+    # unproven may be left that way, so a new listing cannot escape this check unnoticed.
+    unnamed = sorted(unjudged - _MCP_RESOLUTION_NOT_PROVEN)
+    assert not unnamed, f"definitions that list MCP and whose human-only requirement was not judged: {unnamed}"
+    # The judgement must rest on real grants, or leaving every operation unjudged would pass.
+    assert set(_mcp_listed_ids()) - unjudged
+
+
+_PERSON_ONLY_WITNESS = "auth.session.acquire"
+"""An operation closed to MCP whose resolver reserves every access it grants for a person."""
+
+
+def test_the_person_only_reading_finds_the_requirement_where_a_resolver_declares_it(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The check above would pass on nothing if the reading could not see a human-only policy."""
+    registration = _registry().lookup_public_registration(_PERSON_ONLY_WITNESS)
+    assert not _lists_mcp(registration)
+    listed = sorted(registration.contract.permitted_frontends)
+    assert listed
+    for frontend in listed:
+        granted, reserved = _person_only_accesses(_PERSON_ONLY_WITNESS, frontend, operation)
+        assert granted, frontend
+        assert len(reserved) == granted, (frontend, granted, reserved)
+    # The frontend list is what closes it: the same resolver grants the MCP frontend nothing.
+    assert _person_only_accesses(_PERSON_ONLY_WITNESS, _MCP, operation) == (0, [])
+
+
+# ---------------------------------------------------------------------------
 # No operation and no tool declares a submission to the tax agency
 # ---------------------------------------------------------------------------
 

@@ -98,6 +98,8 @@ async def test_failed_configured_reference_preserves_public_tools_and_fences_eve
                 "outcome": "status",
                 "profile_id": str(profile_id),
                 "authenticated": False,
+                "session": "none",
+                "surface": "full",
                 "denial": failure.value,
             }
             published = await sdk.call_tool("authority", {"query": "modelos"})
@@ -163,6 +165,8 @@ async def test_explicit_successful_authentication_clears_failed_bootstrap_status
                 "outcome": "status",
                 "profile_id": str(profile_id),
                 "authenticated": False,
+                "session": "none",
+                "surface": "full",
                 "denial": "missing",
             }
             recovered = await sdk.call_tool("authenticate", {"credential_reference": str(replacement_reference)})
@@ -175,6 +179,8 @@ async def test_explicit_successful_authentication_clears_failed_bootstrap_status
             assert current.is_error is False
             assert current.structured_content == {
                 "outcome": "status",
+                "session": "key",
+                "surface": "full",
                 "status": candidate.status().status.model_dump(mode="json"),
             }
         assert opened == [configured_reference, configured_reference, replacement_reference]

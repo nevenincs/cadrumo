@@ -17,7 +17,7 @@ from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from .operation_contract_cache import OperationContractCache
 from .operation_search import rank_operations
 from .protocol_contract import SEARCH_PAGE_DEFAULT, public_value, refusal_code
-from .runtime_admission import require_exact_admitted_status
+from .runtime_admission import McpAdmission, require_exact_admitted_status
 
 # An operation outside the session's frontend or scope is simply not offered.
 _NOT_OFFERED = frozenset({AccessDenialCode.FRONTEND_DENIED.value, AccessDenialCode.OPERATION_DENIED.value})
@@ -46,6 +46,8 @@ def search_operations(
     args: dict[str, Any],
     deadline: float,
     surface: McpSurface,
+    *,
+    admission: McpAdmission,
 ) -> dict[str, Any]:
     """Return one page of the operations this exact session may describe on its surface.
 
@@ -55,7 +57,7 @@ def search_operations(
     spares a call the runtime refuses; the runtime holds the connection to its
     surface.
     """
-    status = require_exact_admitted_status(client, profile_id=profile_id)
+    status = require_exact_admitted_status(client, profile_id=profile_id, admission=admission)
     family = args.get("family", "").strip()
     granted = sorted(item for item in status.effective_scope.operations if surface.admits(item))
     scope = [definition_id for definition_id in granted if _in_family(definition_id, family)]

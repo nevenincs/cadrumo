@@ -278,8 +278,15 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         decision = self._evaluate(candidate.session, current, candidate.grant, candidate.key)
         return decision if isinstance(decision, AccessDenied) else None
 
-    def admit_human(self: SessionAuthorityAdmission, *, connection_id: UUID) -> AccessSession | AccessDenied:
-        """Bind existing password admission without consulting automation custody."""
+    def admit_human(
+        self: SessionAuthorityAdmission, *, connection_id: UUID, surface: McpSurfaceName | None = None
+    ) -> AccessSession | AccessDenied:
+        """Bind existing password admission without consulting automation custody.
+
+        ``surface`` is the MCP surface the connection named. A sign-in has no
+        grant to narrow it, so the lease carries the surface for its whole
+        life, as a key lease does.
+        """
         with self.owner.admission_guard():
             facts = self._facts(connection_id)
             if isinstance(facts, AccessDenied):
@@ -289,7 +296,9 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         retirement = _ProspectiveSessionRetirement(self.owner, lambda: self._retire({identity}))
         primary: BaseException | None = None
         try:
-            candidate = self._authenticate_human_candidate(connection_id, identity, facts, retirement, generation)
+            candidate = self._authenticate_human_candidate(
+                connection_id, identity, facts, retirement, generation, surface
+            )
             if isinstance(candidate, AccessDenied):
                 return candidate
             return self._publish_human_candidate(connection_id, candidate, retirement)
@@ -306,6 +315,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         baseline: SessionAuthorityFacts,
         retirement: _ProspectiveSessionRetirement,
         generation: int,
+        surface: McpSurfaceName | None,
     ) -> _HumanAdmissionCandidate | AccessDenied:
         with self.owner.authenticate_human(connection_id) as authenticated:
             if authenticated is None:
@@ -328,7 +338,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
                 refusal = self._human_admission_denial(baseline, current, deadline, outcome)
                 if refusal is not None:
                     return refusal
-                session = self._human_admission_session(connection_id, identity, current, outcome, login_id)
+                session = self._human_admission_session(connection_id, identity, current, outcome, login_id, surface)
                 decision = self._evaluate(session, current, None, None)
                 if isinstance(decision, AccessDenied):
                     return decision
@@ -361,6 +371,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         facts: SessionAuthorityFacts,
         outcome: ProfileLoginOutcome,
         login_id: str,
+        surface: McpSurfaceName | None,
     ) -> AccessSession:
         return AccessSession(
             session_id=identity,
@@ -376,6 +387,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             issued_at=facts.context.now,
             expires_at=min(outcome.idle_deadline, outcome.absolute_deadline),
             issued_monotonic=facts.context.monotonic_now,
+            surface=surface,
         )
 
     def _publish_human_candidate(
