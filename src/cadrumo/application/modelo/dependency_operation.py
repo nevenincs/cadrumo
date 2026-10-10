@@ -36,6 +36,7 @@ from ..operations.profile_guard import require_access_request_profile_payload, r
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -234,6 +235,7 @@ def build_modelo_dependency_definition(factory: DependencyReadPortsFactory) -> O
     return build_single_phase_definition(
         definition_id=MODELO_DEPENDENCY_OPERATION_DEFINITION_ID,
         request_type=ModeloDependencyRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloDependencyResult,
         executor_type=ModeloDependencyExecutor,
         build=lambda: ModeloDependencyExecutor(factory),

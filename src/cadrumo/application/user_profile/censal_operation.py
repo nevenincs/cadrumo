@@ -65,6 +65,7 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ..operator_actions.models import ActionReference
 from .access_contracts import (
@@ -745,6 +746,7 @@ def build_censal_operation_definition(
     return OperationDefinition(
         definition_id=CENSAL_OPERATION_DEFINITION_ID,
         request_type=CensalOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field("baseline", "profile_id"),
         result_type=CensalOperationResult,
         executor_factory=OperationExecutorFactory(
             request_type=CensalOperationRequest,

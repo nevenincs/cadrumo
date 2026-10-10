@@ -38,6 +38,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_wallet_mutation import (
@@ -261,6 +262,7 @@ def build_modelo_iva_wallet_override_definition(factory: ModeloIvaWalletSeedPort
     return OperationDefinition(
         definition_id=MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID,
         request_type=ModeloIvaWalletOverrideRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloIvaWalletOverrideReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloIvaWalletOverrideRequest,

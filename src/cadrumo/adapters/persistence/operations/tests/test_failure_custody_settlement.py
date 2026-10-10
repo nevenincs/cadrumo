@@ -51,6 +51,7 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
 )
+from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.application.operations.tests.financial_operand_models import (
@@ -160,6 +161,7 @@ def _supervisor(
     definition = OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=_Request,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=None,
         executor_factory=OperationExecutorFactory(
             request_type=_Request,

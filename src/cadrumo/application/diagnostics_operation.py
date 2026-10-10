@@ -52,6 +52,7 @@ from .operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
+from .operations.subject_reference import OperationSubjectReferenceV1
 from .user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -186,6 +187,7 @@ def build_diagnostics_read_definition(factory: DiagnosticsReadPortsFactory) -> O
     return OperationDefinition(
         definition_id=DIAGNOSTICS_READ_OPERATION_DEFINITION_ID,
         request_type=DiagnosticsReadRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=DiagnosticsReadExecutionResult,
         executor_factory=OperationExecutorFactory(
             request_type=DiagnosticsReadRequest,

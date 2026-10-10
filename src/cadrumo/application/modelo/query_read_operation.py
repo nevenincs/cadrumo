@@ -54,6 +54,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..state_projection import (
     ModeloReadinessRequest,
     ProjectionModeloReadiness,
@@ -458,6 +459,7 @@ def _read_definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_type=executor_type,
         build=build_executor,

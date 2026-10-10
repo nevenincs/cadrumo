@@ -24,6 +24,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
@@ -197,6 +198,7 @@ def build_ledger_remove_definition(ports_factory: LedgerActionPortsFactory) -> O
     return build_single_phase_definition(
         definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID,
         request_type=LedgerRemoveRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerRemoveOperationResult,
         executor_type=LedgerRemoveExecutor,
         build=lambda: LedgerRemoveExecutor(ports_factory),

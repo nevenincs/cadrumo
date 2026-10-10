@@ -77,6 +77,7 @@ from cadrumo.application.operations.registry import (
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
+from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
     OperationCancellation,
@@ -156,6 +157,7 @@ def _registry() -> OperationRegistry:
     definition = OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=ObservationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=None,
         executor_factory=OperationExecutorFactory(
             request_type=ObservationRequest,
@@ -185,6 +187,7 @@ def _review_registry(
     definition = OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=ObservationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=None,
         executor_factory=OperationExecutorFactory(
             request_type=ObservationRequest,

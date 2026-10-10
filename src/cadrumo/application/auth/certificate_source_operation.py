@@ -33,6 +33,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationResultProjector,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -106,6 +107,7 @@ def _definition(
     return OperationDefinition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_factory=OperationExecutorFactory(
             request_type=request_type,

@@ -102,6 +102,7 @@ from cadrumo.application.operations.registry import (
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
+from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
@@ -256,6 +257,7 @@ def _registry(
     definition = OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=ProjectionRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_factory=OperationExecutorFactory(
             request_type=ProjectionRequest,

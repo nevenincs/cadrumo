@@ -35,6 +35,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -283,6 +284,7 @@ def build_modelo_filing_record_import_definition(
     return OperationDefinition(
         definition_id=MODELO_FILING_RECORD_IMPORT_OPERATION_DEFINITION_ID,
         request_type=ModeloFilingRecordImportRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloFilingRecordImportOperationReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloFilingRecordImportRequest,

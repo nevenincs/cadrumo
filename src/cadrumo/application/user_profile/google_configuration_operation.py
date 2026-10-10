@@ -34,6 +34,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -162,6 +163,7 @@ def build_google_configuration_definitions(
             OperationDefinition(
                 definition_id=definition_id,
                 request_type=request_type,
+                subject_reference=OperationSubjectReferenceV1.profile(),
                 result_type=GoogleConfigurationExecutionResult,
                 executor_factory=OperationExecutorFactory(
                     request_type=request_type,

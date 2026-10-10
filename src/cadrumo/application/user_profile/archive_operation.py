@@ -55,6 +55,7 @@ from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .access_contracts import (
     AccessDenialCode,
 )
@@ -518,6 +519,7 @@ def build_profile_archive_operation_definitions(
         build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID,
             request_type=ProfileArchiveExportRequest,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=ProfileArchiveExportExecutionResult,
             executor_type=ProfileArchiveExportExecutor,
             build=lambda: ProfileArchiveExportExecutor(factory),
@@ -529,6 +531,7 @@ def build_profile_archive_operation_definitions(
         build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID,
             request_type=ProfileArchivePushRequest,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=ProfileArchivePushExecutionResult,
             executor_type=ProfileArchivePushExecutor,
             build=lambda: ProfileArchivePushExecutor(factory),
@@ -542,6 +545,7 @@ def build_profile_archive_operation_definitions(
         build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_RECONCILE_OPERATION_DEFINITION_ID,
             request_type=ProfileArchiveReconcileRequest,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=ProfileArchiveReconcileExecutionResult,
             executor_type=ProfileArchiveReconcileExecutor,
             build=lambda: ProfileArchiveReconcileExecutor(factory),

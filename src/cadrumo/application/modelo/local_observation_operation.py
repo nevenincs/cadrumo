@@ -22,6 +22,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -190,6 +191,7 @@ def build_modelo_local_observation_definition(factory: CalculationActionPortsFac
     return build_single_phase_definition(
         definition_id=MODELO_LOCAL_OBSERVATION_OPERATION_DEFINITION_ID,
         request_type=ModeloLocalObservationMutationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloLocalObservationMutationReport,
         executor_type=ModeloLocalObservationMutationExecutor,
         build=lambda: ModeloLocalObservationMutationExecutor(factory),

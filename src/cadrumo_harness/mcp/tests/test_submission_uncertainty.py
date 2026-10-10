@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal, cast
+from typing import Literal, NoReturn, cast
 from uuid import UUID, uuid4
 
 import pytest
@@ -10,7 +10,12 @@ import pytest
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionDescriptionV1,
+    OperationRegistry,
+)
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.operation_access import RuntimeOperationSubmit, RuntimeOperationSubmitted
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal
@@ -21,6 +26,18 @@ from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+
+
+def _unused_ports(*_args: object, **_kwargs: object) -> NoReturn:
+    raise AssertionError("a contract description must not construct executor ports")
+
+
+def _registry() -> OperationRegistry:
+    """Compose the real public contract of the one operation these submissions name."""
+    definition = build_auth_read_definition(_unused_ports)
+    return OperationRegistry(
+        definitions=(definition,), public_registrations=(build_auth_read_registration(definition),)
+    )
 
 
 class _SubmitClient:
@@ -38,12 +55,13 @@ class _SubmitClient:
         self.submit_failure = submit_failure
         self.submissions: list[RuntimeOperationSubmit] = []
         self.closed = False
+        self._registry = _registry()
 
-    def describe(self, _definition_id: str, *, deadline: float) -> object:
+    def describe(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionDescriptionV1:
         assert deadline > 0
         if self.fail_description:
             raise RuntimeFrontendRefusedError("operation_denied")
-        return object()
+        return self._registry.describe_public_definition(definition_id)
 
     def operation(self, request: RuntimeOperationSubmit, *, deadline: float) -> object:
         assert deadline > 0

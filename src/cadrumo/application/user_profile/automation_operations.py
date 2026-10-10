@@ -42,6 +42,7 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .access_contracts import (
     AccessDenialCode,
     Availability,
@@ -397,6 +398,7 @@ def build_automation_operation_definitions(
             OperationDefinition(
                 definition_id=identity,
                 request_type=AutomationOperationRequest,
+                subject_reference=OperationSubjectReferenceV1.profile(),
                 result_type=AutomationInventory
                 if identity == AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
                 else EnrollmentReceipt,

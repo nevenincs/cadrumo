@@ -40,6 +40,7 @@ from ..operations.profile_guard import require_access_request_payload, require_o
 from ..operations.refusal_evidence import OperationExecutorResult, OperationRefusalEvidence
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..review.filter import LedgerReviewStatus
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -355,6 +356,7 @@ def build_ledger_link_definition(factory: LedgerActionPortsFactory) -> Operation
 
 def build_ledger_link_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind the canonical strict mutation projection to exact purpose and consent."""
+        subject_reference=OperationSubjectReferenceV1.profile(),
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerLinkOperationResult,

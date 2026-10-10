@@ -130,7 +130,16 @@ this connection is admitted for its bound profile. Once admitted, use
 `search` to find operations permitted by that profile, then `describe` with the
 returned `definition_id` to inspect an operation's contract and input schema.
 Review that contract before submitting work with `execute`, which requires the
-`definition_id`, `subject_ref`, and a payload matching the described schema.
+`definition_id` and a payload matching the described schema.
+
+The contract's `subject_reference` says what the operation's subject is, and
+the server derives it: the admitted profile (`profile`), the payload field its
+`payload_path` names (`payload_field`, or `payload_field_or_profile` when that
+field may be left unset), or a fixed literal (`fixed`). Leave `subject_ref` out
+for those. Only a `stored_work_unit` operation needs `subject_ref`: give the id
+of the work unit that owns the stored record its `payload_path` names. A
+`subject_ref` that contradicts the contract is refused before anything is
+submitted.
 
 The MCP server takes the profile ID at launch and uses a protected credential
 reference when one is configured. It does not translate shell verbs to tool

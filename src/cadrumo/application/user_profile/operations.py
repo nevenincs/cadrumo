@@ -35,6 +35,7 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .bundle_export_contracts import (
     ProfileBundleExportResult,
 )
@@ -126,6 +127,7 @@ def _definition(
     return OperationDefinition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_factory=OperationExecutorFactory(
             request_type=request_type,

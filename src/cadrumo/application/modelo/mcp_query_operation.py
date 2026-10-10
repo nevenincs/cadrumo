@@ -20,6 +20,7 @@ from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.preconditions import PROFILE_SETUP_DECLARED_COMPLETE_CONDITION
 from ..operator_actions.projection import PreconditionVerdictSnapshot
 from ..state_projection import ModeloProfileRefusalCause, ProjectionModeloReadiness
@@ -198,6 +199,7 @@ def build_modelo_bindings_resolve_typed_definition() -> OperationDefinition:
     return build_single_phase_definition(
         definition_id=MODELO_BINDINGS_RESOLVE_TYPED_OPERATION_DEFINITION_ID,
         request_type=ModeloBindingsResolveRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloBindingsResolveTypedProjection,
         executor_type=ModeloBindingsResolveTypedExecutor,
         build=ModeloBindingsResolveTypedExecutor,
@@ -211,6 +213,7 @@ def build_modelo_readiness_summary_definition(factory: ModeloQueryReadPortsFacto
     return build_single_phase_definition(
         definition_id=MODELO_READINESS_SUMMARY_OPERATION_DEFINITION_ID,
         request_type=ModeloReadinessOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloReadinessSummaryProjection,
         executor_type=ModeloReadinessSummaryExecutor,
         build=lambda: ModeloReadinessSummaryExecutor(factory),

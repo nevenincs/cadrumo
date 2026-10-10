@@ -34,6 +34,7 @@ from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_wor
 from ...operations.financial_operand_contract import OperationTransientFinancialOperandPublicDeclarationV1
 from ...operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from ...operations.schema_identity import OperationSchemaIdentityV1
+from ...operations.subject_reference import OperationSubjectReferenceV1
 from ..edit_admission import admit_modelo_edit_baseline
 from ..edit_models import (
     ModeloEditAdmittedV1,
@@ -166,9 +167,10 @@ def _contracts(*, include_edit: bool = True) -> OperationPublicContractSetV1:
         schema_id="modelo.edit.apply.request", schema_version=1, schema_fingerprint=_DIGEST
     )
     contract = OperationPublicDefinitionContractV1.model_construct(
-        manifest_version=1,
+        manifest_version=3,
         definition_id="modelo.edit.apply",
         request_schema=schema,
+        subject_reference=OperationSubjectReferenceV1.payload_field("work_unit_id"),
         result_schema=OperationSchemaIdentityV1(
             schema_id="modelo.edit.apply.result", schema_version=1, schema_fingerprint="b" * 64
         ),

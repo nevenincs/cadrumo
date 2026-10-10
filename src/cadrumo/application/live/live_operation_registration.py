@@ -25,6 +25,7 @@ from ..operations.models import (
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.profile_guard import ProfileAccessPayload, require_access_request_profile_payload
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationReconciliationPolicy
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.models import ActionReference
 
 
@@ -43,6 +44,7 @@ def build_live_operation_definition[ExecutorT](
     return OperationDefinition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_factory=OperationExecutorFactory(request_type=request_type, executor_type=executor_type, build=build),
         phase_codes=phase_codes,

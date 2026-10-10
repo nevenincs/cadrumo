@@ -34,6 +34,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_wallet_mutation import (
@@ -232,6 +233,7 @@ def build_modelo_iva_wallet_seed_definition(factory: ModeloIvaWalletSeedPortsFac
     return OperationDefinition(
         definition_id=MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
         request_type=ModeloIvaWalletSeedRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloIvaWalletSeedReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloIvaWalletSeedRequest,

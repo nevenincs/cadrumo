@@ -11,6 +11,7 @@ from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABIL
 from ..operations.models import OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .read_contracts import (
     REVIEW_QUEUE_OPERATION_DEFINITION_ID,
     REVIEW_VIEW_OPERATION_DEFINITION_ID,
@@ -40,6 +41,7 @@ def _build_definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_type=executor_type,
         build=build,

@@ -89,7 +89,8 @@ MCP_TOOL_CATALOGUE = (
         "search",
         "Rank currently permitted registered operations by relevance to a query; without one, list them. "
         "Results come in pages: pass a returned next_cursor as cursor for the next page, and family to narrow "
-        "to one definition family",
+        "to one definition family. Each row is the operation's contract; its subject_reference says what the "
+        "operation's subject is",
         _schema(
             {},
             {
@@ -100,13 +101,21 @@ MCP_TOOL_CATALOGUE = (
             },
         ),
     ),
-    ("describe", "Read one current registered operation contract and input schema", _schema({"definition_id": _TEXT})),
+    (
+        "describe",
+        "Read one current registered operation contract and input schema. The contract's subject_reference says "
+        "what the operation's subject is: the admitted profile, the payload field its payload_path names, a fixed "
+        "literal, or the work unit that owns the stored record its payload_path names",
+        _schema({"definition_id": _TEXT}),
+    ),
     (
         "execute",
-        "Submit one registered operation under current profile authority",
+        "Submit one registered operation under current profile authority. Leave subject_ref out: it is derived "
+        "from the contract's subject_reference, the admitted profile and the payload. Only a stored_work_unit "
+        "operation needs it, as the id of the work unit that owns the record its payload_path names",
         _schema(
-            {"definition_id": _TEXT, "subject_ref": _TEXT, "payload": _DOC},
-            {"idempotency_key": _TEXT, "start": {"type": "boolean"}},
+            {"definition_id": _TEXT, "payload": _DOC},
+            {"subject_ref": _TEXT, "idempotency_key": _TEXT, "start": {"type": "boolean"}},
         ),
     ),
     ("observe", "Read a currently authorized operation observation", _schema({"observation": _DOC})),

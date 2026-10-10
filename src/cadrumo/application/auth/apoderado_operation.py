@@ -37,6 +37,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -177,6 +178,7 @@ def build_apoderado_operation_definitions(factory: ApoderadoOperationPortsFactor
             build_single_phase_definition(
                 definition_id=operation_id,
                 request_type=request_type,
+                subject_reference=OperationSubjectReferenceV1.profile(),
                 result_type=ApoderadoExecutionResult,
                 executor_type=ApoderadoOperationExecutor,
                 build=lambda: ApoderadoOperationExecutor(factory),

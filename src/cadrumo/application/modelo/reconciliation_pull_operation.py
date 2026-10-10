@@ -40,6 +40,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
 )
 from ..user_profile.access_contracts import (
+from ..operations.subject_reference import OperationSubjectReferenceV1
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -276,6 +277,7 @@ def build_modelo_reconciliation_pull_definition(
         capabilities=RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=ALL_OPERATION_FRONTENDS,
+        subject_reference=OperationSubjectReferenceV1.profile(),
     )
 
 

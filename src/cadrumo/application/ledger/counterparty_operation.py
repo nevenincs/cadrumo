@@ -24,6 +24,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
+from ..operations.subject_reference import OperationSubjectReferenceV1
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -406,6 +407,7 @@ def resolve_ledger_counterparty_access(
     resolve = resolve_ledger_read_access if request.payload.action == "view" else resolve_ledger_commit_access
     return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
+        subject_reference=OperationSubjectReferenceV1.profile(),
 
 def build_ledger_counterparty_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Enroll the exact request and encrypted result schemas."""

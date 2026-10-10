@@ -1465,6 +1465,7 @@
         "cadrumo.application.operations.schema_identity",
         "cadrumo.application.operations.secret_submission",
         "cadrumo.application.operations.settlement_snapshot",
+        "cadrumo.application.operations.subject_reference",
         "cadrumo.application.operations.supervisor",
         "cadrumo.application.operations.supervisor_context",
         "cadrumo.application.operations.terminated_owner",

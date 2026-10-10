@@ -31,6 +31,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -153,6 +154,7 @@ def build_modelo_work_revisions_definition(factory: VerificationRepositoryBundle
     return build_single_phase_definition(
         definition_id=MODELO_WORK_REVISIONS_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkRevisionsRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloWorkRevisionsProjection,
         executor_type=ModeloWorkRevisionsExecutor,
         build=lambda: ModeloWorkRevisionsExecutor(factory),

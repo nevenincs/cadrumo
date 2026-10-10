@@ -316,6 +316,7 @@ def definition_contract_policy_value(contract: OperationPublicDefinitionContract
         if contract.transient_financial_operand is None
         else contract.transient_financial_operand.model_dump(mode="json"),
         "refusal_detail_codes": tuple(sorted(contract.refusal_detail_codes)),
+        "subject_reference": contract.subject_reference.model_dump(mode="json"),
     }
 
 
@@ -346,6 +347,7 @@ def build_public_contract(
         definition_id=definition.definition_id,
         action_reference=definition.action_reference,
         request_schema=request_schema,
+        subject_reference=definition.subject_reference,
         result_schema=result_schema,
         review_projection_schema=review_projection_schema,
         interaction_response_schema=interaction_response_schema,
@@ -373,6 +375,7 @@ def build_public_contract(
         definition_id=provisional.definition_id,
         action_reference=provisional.action_reference,
         request_schema=provisional.request_schema,
+        subject_reference=provisional.subject_reference,
         result_schema=provisional.result_schema,
         review_projection_schema=provisional.review_projection_schema,
         interaction_response_schema=provisional.interaction_response_schema,

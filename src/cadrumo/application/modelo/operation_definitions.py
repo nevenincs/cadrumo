@@ -57,6 +57,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ._edit_execution import apply_modelo_edit
@@ -602,6 +603,7 @@ def build_modelo_work_calculate_definition(
     return OperationDefinition(
         definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkCalculateRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field("work_unit_id"),
         result_type=ModeloWorkCalculatePublicResultV2,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloWorkCalculateRequest,
@@ -720,6 +722,7 @@ def build_modelo_work_discard_definition(
     return OperationDefinition(
         definition_id=MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkDiscardRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field("baseline", "work_unit_id"),
         result_type=ModeloWorkDiscardPublicResultV2,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloWorkDiscardRequest,
@@ -951,6 +954,7 @@ def build_modelo_work_verify_definition(
     return OperationDefinition(
         definition_id=MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkVerifyRequest,
+        subject_reference=OperationSubjectReferenceV1.stored_work_unit("calculation_revision_id"),
         result_type=ModeloWorkVerifyPublicResultV2,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloWorkVerifyRequest,
@@ -1131,6 +1135,7 @@ def build_modelo_work_file_definition(
     return OperationDefinition(
         definition_id=MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkFileRequest,
+        subject_reference=OperationSubjectReferenceV1.stored_work_unit("approval", "calculation_revision_id"),
         result_type=ModeloWorkFilePublicResultV2,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloWorkFileRequest,
@@ -1434,6 +1439,7 @@ def build_modelo_export_definition(
     return OperationDefinition(
         definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
         request_type=ModeloExportRequest,
+        subject_reference=OperationSubjectReferenceV1.stored_work_unit("calculation_revision_id"),
         result_type=ModeloExportSettledResult,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloExportRequest,
@@ -1578,6 +1584,7 @@ def build_modelo_work_amend_definition(
     return OperationDefinition(
         definition_id=MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkAmendRequest,
+        subject_reference=OperationSubjectReferenceV1.stored_work_unit("baseline", "from_filing_record_id"),
         result_type=ModeloWorkAmendPublicResultV2,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloWorkAmendRequest,
@@ -1765,6 +1772,7 @@ def build_modelo_edit_apply_definition(
     return OperationDefinition(
         definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
         request_type=ModeloEditApplyOperationRequestV2,
+        subject_reference=OperationSubjectReferenceV1.payload_field("work_unit_id"),
         result_type=ModeloEditApplyPublicResultV1,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloEditApplyOperationRequestV2,
@@ -1833,6 +1841,7 @@ def build_modelo_work_rename_definition(
     return OperationDefinition(
         definition_id=MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkRenameRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field("work_unit_id"),
         result_type=ModeloWorkRenamePublicResultV2,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloWorkRenameRequest,

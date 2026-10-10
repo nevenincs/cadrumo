@@ -15,7 +15,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
 modified: '2026-10-10'
 body_schema: body-v2
-body_hash: 'sha256:55af053d56a06c6ea6e176d84e471e5430b4ecb7cfcc9fe9f14cb48131841ce7'
+body_hash: 'sha256:6e4ffc2150911c93063ced2e7d7acd6adc856482fcdfdc882a158166da6beabd'
 ---
 
 # `mcp-parity` plan
@@ -74,7 +74,7 @@ Delivers the recorded MCP decision for every operation, the refusal of the sensi
 - [x] `P01.S09` - Generate the join from command-line commands to the operations they submit, from the command graph and the registry, and check it in the catalogue test; `src/cadrumo/entrypoints/cli/operator_surface_reconciliation.py`.
 - [x] `P01.S10` - Bring the packaged personas and skills into line with the amended hand-off rule: no persona or skill tells an agent to export or record the filed marker without the person approving, and the stale provider-configuration instruction and capability-manifest inputs are removed; also skills/cadrumo-exportar-declaracion/SKILL.md and skills/cadrumo-alta-contribuyente/SKILL.md; `src/cadrumo_harness/_data/agent/personas/cadrumo-verifier.md`.
 - [x] `P01.S11` - Record in the decision table the owner ruling that an agent may originate modelo.reconcile.import, and keep it admitted with its findings presented for the person to review or approve; `src/cadrumo/application/modelo/reconciliation_import_operation.py`.
-- [ ] `P01.S45` - Declare a typed subject-reference form on the operation definition and its public contract, filled from the validator of each family, and state it in describe, with one contract cutover for every definition; `src/cadrumo/application/operations/operation_definition.py`.
+- [x] `P01.S45` - Declare a typed subject-reference form on the operation definition and its public contract, filled from the validator of each family, and state it in describe, with one contract cutover for every definition; `src/cadrumo/application/operations/operation_definition.py`.
 
 ### Phase `P03` - decide and build the approval step and the other first-release prerequisites
 

@@ -33,6 +33,7 @@ from ..operations.models import (
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -382,6 +383,7 @@ def _build_definition(ports_factory: LedgerEvidencePortsFactory) -> OperationDef
     return build_single_phase_definition(
         definition_id=LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_type=LedgerEvidenceAddExecutor,
         build=lambda: LedgerEvidenceAddExecutor(ports_factory),

@@ -50,6 +50,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessAction,
@@ -293,6 +294,7 @@ def build_quickfile_definition(factory: QuickfileOperationPortsFactory) -> Opera
     return build_single_phase_definition(
         definition_id=QUICKFILE_OPERATION_DEFINITION_ID,
         request_type=QuickfileRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=QuickfileExecutionResult,
         executor_type=QuickfileExecutor,
         build=lambda: QuickfileExecutor(factory),

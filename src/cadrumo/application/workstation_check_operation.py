@@ -32,6 +32,7 @@ from .operations.owner import OperationExecutorContext
 from .operations.profile_guard import require_access_request_profile_payload
 from .operations.public_scalar import PublicNamedScalar, project_facts, restore_facts
 from .operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from .operations.subject_reference import OperationSubjectReferenceV1
 from .operator_actions.projection import PreconditionVerdictSnapshot
 from .preflight import HealthSeverity, PreflightCheck
 from .provisioning import DependencyStatus
@@ -283,6 +284,7 @@ def build_workstation_check_definition(factory: WorkstationCheckPortsFactory) ->
     return build_single_phase_definition(
         definition_id=WORKSTATION_CHECK_OPERATION_DEFINITION_ID,
         request_type=WorkstationCheckRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=WorkstationCheckExecutionResult,
         executor_type=WorkstationCheckExecutor,
         build=lambda: WorkstationCheckExecutor(factory),

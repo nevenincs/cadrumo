@@ -24,6 +24,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -162,6 +163,7 @@ def build_ledger_classify_definition(ports_factory: LedgerActionPortsFactory) ->
     return build_single_phase_definition(
         definition_id=LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
         request_type=LedgerClassifyRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerClassifyExecutionResult,
         executor_type=LedgerClassifyExecutor,
         build=lambda: LedgerClassifyExecutor(ports_factory),

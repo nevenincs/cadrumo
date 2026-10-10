@@ -50,6 +50,7 @@ from ..registry import (
     OperationResultProjector,
     OperationSchemaBindingV1,
 )
+from ..subject_reference import OperationSubjectReferenceV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -130,6 +131,7 @@ def _definition(
     return OperationDefinition(
         definition_id="test.refusal.evidence",
         request_type=_RequestPayload,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=_PrivateRefusalDetail,
         executor_factory=OperationExecutorFactory(
             request_type=_RequestPayload,

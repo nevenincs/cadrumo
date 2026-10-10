@@ -351,6 +351,8 @@ async def test_search_rows_carry_what_selects_an_operation_without_the_request_s
     assert len(operations) == len(_PERMITTED_IDS)
     for row in operations:
         assert {"definition_id", "permitted_effects", "interaction_kinds", "review_projection_schema"} <= set(row)
+        # Each of these three addresses the admitted profile, and the row says so.
+        assert row["subject_reference"] == {"kind": "profile", "payload_path": [], "literal": None}
         assert "request_json_schema" not in row
 
 

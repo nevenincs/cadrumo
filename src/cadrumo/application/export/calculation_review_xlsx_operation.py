@@ -50,6 +50,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_payload, require_operation_profile
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..storage.calc_sheets.review_labels import ReviewWorkbookLabels
 from ..storage.calc_sheets.review_workbook import build_review_workbook
 from ..storage.calc_sheets.workbook_export import SheetWorkbookMaterializer
@@ -197,6 +198,7 @@ def build_calculation_review_xlsx_definition(factory: CalculationReviewXlsxPorts
     return build_single_phase_definition(
         definition_id=CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
         request_type=CalculationReviewXlsxRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=CalculationReviewXlsxExecutionResult,
         executor_type=CalculationReviewXlsxExecutor,
         build=lambda: CalculationReviewXlsxExecutor(factory),

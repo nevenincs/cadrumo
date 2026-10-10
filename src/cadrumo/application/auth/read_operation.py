@@ -31,6 +31,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..state_projection_ports import StateProjectionReadPorts
 from ..user_profile.access_contracts import (
     AccessAction,
@@ -223,6 +224,7 @@ def build_auth_read_definition(ports_factory: Callable[[UUID], AuthReadPorts]) -
     return OperationDefinition(
         definition_id=AUTH_READ_OPERATION_DEFINITION_ID,
         request_type=AuthReadRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=AuthReadResult,
         executor_factory=OperationExecutorFactory(
             request_type=AuthReadRequest,

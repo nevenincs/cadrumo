@@ -44,6 +44,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -302,6 +303,7 @@ def build_modelo_filing_record_view_definition(
     return build_single_phase_definition(
         definition_id=MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
         request_type=ModeloFilingRecordViewRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloFilingRecordViewProjection,
         executor_type=ModeloFilingRecordViewExecutor,
         build=lambda: ModeloFilingRecordViewExecutor(factory),

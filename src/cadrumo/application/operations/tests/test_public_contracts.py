@@ -80,6 +80,7 @@ from ..registry import (
     OperationSchemaBindingV1,
 )
 from ..schema_identity import OperationSchemaIdentityV1
+from ..subject_reference import OperationSubjectReferenceV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -125,6 +126,7 @@ def _projection_contract_set(
     definition = OperationDefinition(
         definition_id="operations.public.projection",
         request_type=SafeProjection,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=SafeProjection,
         executor_factory=OperationExecutorFactory(
             request_type=SafeProjection,

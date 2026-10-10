@@ -44,6 +44,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .catalogue_lifecycle import resolve_catalogue_invoice
@@ -299,6 +300,7 @@ def _definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_type=InvoiceCatalogueReadExecutor,
         build=lambda: InvoiceCatalogueReadExecutor(factory, definition_id),

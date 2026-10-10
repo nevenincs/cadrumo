@@ -28,6 +28,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -251,6 +252,7 @@ def build_workflow_resume_definition(
     return build_single_phase_definition(
         definition_id=WORKFLOW_RESUME_OPERATION_DEFINITION_ID,
         request_type=WorkflowResumeRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=WorkflowResumeResult,
         executor_type=WorkflowResumeExecutor,
         build=lambda: WorkflowResumeExecutor(runs, calculations),

@@ -23,6 +23,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .read_access import resolve_ledger_commit_access
@@ -102,6 +103,7 @@ def build_ledger_participation_rebuild_definition(ports: ParticipationIndexRebui
     return build_single_phase_definition(
         definition_id=LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID,
         request_type=LedgerParticipationRebuildRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerParticipationRebuildProjection,
         executor_type=LedgerParticipationRebuildExecutor,
         build=lambda: LedgerParticipationRebuildExecutor(ports),

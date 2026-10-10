@@ -33,6 +33,7 @@ from .operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
+from .operations.subject_reference import OperationSubjectReferenceV1
 from .runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from .user_profile.access_contracts import AccessDenialCode, Availability, DisclosureCategory
 from .user_profile.access_errors import ProfileAccessRefusedError
@@ -129,6 +130,7 @@ def build_workbench_generation_operation_definition(
     return OperationDefinition(
         definition_id=WORKBENCH_GENERATION_OPERATION_DEFINITION_ID,
         request_type=WorkbenchGenerationOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=WorkbenchGenerationOperationProjection,
         executor_factory=OperationExecutorFactory(
             request_type=WorkbenchGenerationOperationRequest,

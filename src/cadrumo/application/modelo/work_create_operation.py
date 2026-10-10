@@ -35,6 +35,7 @@ from ..operations.profile_guard import require_access_request_profile_payload, r
 from ..operations.public_period import PublicPeriod
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..overview.status_report import build_filing_obligation_advisories
 from ..user_profile.access_contracts import (
     AccessAction,
@@ -377,6 +378,7 @@ def build_modelo_work_create_definition(
     return build_single_phase_definition(
         definition_id=MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkCreateRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloWorkCreateResult,
         executor_type=ModeloWorkCreateExecutor,
         build=lambda: ModeloWorkCreateExecutor(factory, execution_caller_reader=execution_caller_reader),

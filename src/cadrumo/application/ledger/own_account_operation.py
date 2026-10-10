@@ -49,6 +49,7 @@ from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .own_account_ports import OwnAccountRepositoryFactory, OwnAccountRepositoryProtocol
@@ -365,6 +366,7 @@ def build_ledger_own_account_definition(repository_factory: OwnAccountRepository
     return build_single_phase_definition(
         definition_id=LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
         request_type=LedgerOwnAccountRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerOwnAccountResult,
         executor_type=LedgerOwnAccountExecutor,
         build=lambda: LedgerOwnAccountExecutor(repository_factory),

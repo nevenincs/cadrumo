@@ -35,6 +35,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -147,6 +148,7 @@ def build_google_review_operation_definition(factory: GoogleReviewOperationPorts
     return OperationDefinition(
         definition_id=GOOGLE_REVIEW_OPERATION_DEFINITION_ID,
         request_type=GoogleReviewRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=GoogleReviewExecutionResult,
         executor_factory=OperationExecutorFactory(
             request_type=GoogleReviewRequest,

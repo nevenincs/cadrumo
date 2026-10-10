@@ -63,6 +63,7 @@ from ..operations.profile_guard import (
     require_operation_profile,
 )
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -538,6 +539,7 @@ def build_modelo_audit_operation_definitions(
         build_single_phase_definition(
             definition_id=definition_id,
             request_type=ModeloAuditReadRequest,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=result_type,
             executor_type=ModeloAuditReadExecutor,
             build=lambda query=query: ModeloAuditReadExecutor(factory, query=query),
@@ -552,6 +554,7 @@ def build_modelo_audit_operation_definitions(
     recording = build_single_phase_definition(
         definition_id=MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID,
         request_type=ModeloAuditExportRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloAuditExportExecutionResult,
         executor_type=ModeloAuditExportExecutor,
         build=lambda: ModeloAuditExportExecutor(factory),

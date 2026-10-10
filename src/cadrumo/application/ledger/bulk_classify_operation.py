@@ -24,6 +24,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..runtime.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -230,6 +231,7 @@ def build_ledger_bulk_classify_definition(ports_factory: LedgerActionPortsFactor
     return build_single_phase_definition(
         definition_id=LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,
         request_type=LedgerBulkClassifyRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerBulkClassifyExecutionResult,
         executor_type=LedgerBulkClassifyExecutor,
         build=lambda: LedgerBulkClassifyExecutor(ports_factory),

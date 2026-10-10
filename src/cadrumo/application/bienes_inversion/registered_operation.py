@@ -18,6 +18,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -91,6 +92,7 @@ def _definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=BienesInversionOperationExecutionResult,
         executor_type=BienesInversionOperationExecutor,
         build=lambda: BienesInversionOperationExecutor(repository_factory, definition_id=definition_id),

@@ -29,6 +29,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -303,6 +304,7 @@ def build_ledger_evidence_ingestion_definitions(
         build_single_phase_definition(
             definition_id=LEDGER_EVIDENCE_BATCH_OPERATION_DEFINITION_ID,
             request_type=LedgerEvidenceBatchRequest,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=LedgerEvidenceBatchExecutionResult,
             executor_type=LedgerEvidenceBatchExecutor,
             build=lambda: LedgerEvidenceBatchExecutor(factory),

@@ -36,6 +36,7 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
 )
+from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
@@ -143,6 +144,7 @@ def _registry(executor: _ProcessExecutor) -> OperationRegistry:
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        subject_reference=OperationSubjectReferenceV1.profile(),
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,

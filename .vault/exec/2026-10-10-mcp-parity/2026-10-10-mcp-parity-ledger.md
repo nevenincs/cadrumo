@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:d8bb0dda5878d9b5313cfec51690b2db025b1496405fa4da27490b5fe9a84261'
+body_hash: 'sha256:8388a35d1baeda6039e1a02bdce701f825c639e69a8433ae5ecce7267284e018'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -445,6 +445,181 @@ related:
 - `S38` `verify:` `pytest registered executor conformance (326 tests)` -> `pass`
 - `S38` `verify:` `pytest census and registry (637 tests)` -> `pass`
 - `S38` `by:` `vaultspec-high-executor`
+- `S45` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S45` `M` `src/cadrumo/adapters/local_runtime/tests/test_operation_process_scope.py`
+- `S45` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_real_resource_lifecycle.py`
+- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_cancellation_cleanup.py`
+- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_deadline_settlement.py`
+- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_ephemeral_secret_submission.py`
+- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_executor_contract.py`
+- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_failure_custody_settlement.py`
+- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_observation.py`
+- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_projection_services.py`
+- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_restart_reconciliation.py`
+- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_supervisor.py`
+- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_supervisor_lifecycle.py`
+- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_supervisor_replay.py`
+- `S45` `M` `src/cadrumo/adapters/persistence/operations/tests/test_typed_financial_operation.py`
+- `S45` `M` `src/cadrumo/application/actividad_asset/registered_operations.py`
+- `S45` `M` `src/cadrumo/application/auth/apoderado_operation.py`
+- `S45` `M` `src/cadrumo/application/auth/certificate_secret_operation.py`
+- `S45` `M` `src/cadrumo/application/auth/certificate_source_operation.py`
+- `S45` `M` `src/cadrumo/application/auth/diagnostic_report_operation.py`
+- `S45` `M` `src/cadrumo/application/auth/operation_definitions.py`
+- `S45` `M` `src/cadrumo/application/auth/read_operation.py`
+- `S45` `M` `src/cadrumo/application/bienes_inversion/registered_operation.py`
+- `S45` `M` `src/cadrumo/application/diagnostics_operation.py`
+- `S45` `M` `src/cadrumo/application/export/calculation_review_xlsx_operation.py`
+- `S45` `M` `src/cadrumo/application/export/google_operation.py`
+- `S45` `M` `src/cadrumo/application/export/google_review_operation.py`
+- `S45` `M` `src/cadrumo/application/invoices/catalogue_add_operation.py`
+- `S45` `M` `src/cadrumo/application/invoices/catalogue_intake_operation.py`
+- `S45` `M` `src/cadrumo/application/invoices/catalogue_read_operation.py`
+- `S45` `M` `src/cadrumo/application/invoices/catalogue_remove_operation.py`
+- `S45` `M` `src/cadrumo/application/invoices/catalogue_update_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/add_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/allocate_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/attachment_mutation_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/bulk_classify_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/check_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/classify_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/evidence_add_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/evidence_followup_registration.py`
+- `S45` `M` `src/cadrumo/application/ledger/evidence_ingestion_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/evidence_mutation_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/evidence_read_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/export_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/history_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/import_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/invoice_evidence_confirm_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/invoice_evidence_extract_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/lifecycle_mutation_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/list_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/llm_diagnostics_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/merge_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/own_account_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/participation_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/participation_rebuild_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/preflight_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/ratios_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/remove_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/reset_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/review_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/rule_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/split_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/status_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/track_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/update_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/view_operation.py`
+- `S45` `M` `src/cadrumo/application/live/borrador_100_operation.py`
+- `S45` `M` `src/cadrumo/application/live/iva_wallet_history_operation.py`
+- `S45` `M` `src/cadrumo/application/live/live_operation_registration.py`
+- `S45` `M` `src/cadrumo/application/local_reader_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/aggregate_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/amendment_context_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/audit_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/calculation_report_verification_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/dependency_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/filing_record_import_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/filing_record_list_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/filing_record_view_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/filing_selection_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/history_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/history_timeline_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/invoice_withholding_capture_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/iva_wallet_balance_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/iva_wallet_correction_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/iva_wallet_override_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/iva_wallet_seed_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/lifecycle_history_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/local_observation_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/m036_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/m145_communication_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/m303_attestation_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/m360_solicitud_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/maritime_preview_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/mcp_query_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/metadata_read_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S45` `M` `src/cadrumo/application/modelo/projection_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/query_read_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/quickfile_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/reconciliation_export_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/reconciliation_list_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/review_package_exchange_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/review_package_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/review_package_recipient_operations.py`
+- `S45` `M` `src/cadrumo/application/modelo/revision_inventory_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/revision_selection_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/revision_snapshot_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/taxation_comparison_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/tests/test_edit_admission.py`
+- `S45` `M` `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`
+- `S45` `M` `src/cadrumo/application/modelo/verification_report_read_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/wizard_attempt_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/wizard_context_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/work_create_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/work_inventory_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/work_review_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S45` `M` `src/cadrumo/application/operations/_registry_contracts.py`
+- `S45` `M` `src/cadrumo/application/operations/operation_definition.py`
+- `S45` `M` `src/cadrumo/application/operations/registry.py`
+- `S45` `M` `src/cadrumo/application/operations/tests/test_operation_definition.py`
+- `S45` `M` `src/cadrumo/application/operations/tests/test_public_contracts.py`
+- `S45` `M` `src/cadrumo/application/operations/tests/test_refusal_evidence.py`
+- `S45` `M` `src/cadrumo/application/operations/tests/test_registry.py`
+- `S45` `M` `src/cadrumo/application/overview/pipeline_operation.py`
+- `S45` `M` `src/cadrumo/application/overview/read_operation.py`
+- `S45` `M` `src/cadrumo/application/prorrata_register/registered_operations.py`
+- `S45` `M` `src/cadrumo/application/review/read_registration.py`
+- `S45` `M` `src/cadrumo/application/user_profile/archive_operation.py`
+- `S45` `M` `src/cadrumo/application/user_profile/automation_operations.py`
+- `S45` `M` `src/cadrumo/application/user_profile/censal_file_import_operation.py`
+- `S45` `M` `src/cadrumo/application/user_profile/censal_operation.py`
+- `S45` `M` `src/cadrumo/application/user_profile/censal_prepare_operation.py`
+- `S45` `M` `src/cadrumo/application/user_profile/censal_preview_operation.py`
+- `S45` `M` `src/cadrumo/application/user_profile/google_configuration_operation.py`
+- `S45` `M` `src/cadrumo/application/user_profile/history_operation.py`
+- `S45` `M` `src/cadrumo/application/user_profile/operations.py`
+- `S45` `M` `src/cadrumo/application/user_profile/recovery_status_operation.py`
+- `S45` `M` `src/cadrumo/application/workbench_generation_operation.py`
+- `S45` `M` `src/cadrumo/application/workflow/resume_operation.py`
+- `S45` `M` `src/cadrumo/application/workflow/run_read_operation.py`
+- `S45` `M` `src/cadrumo/application/workstation_check_operation.py`
+- `S45` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_scope_resolution.py`
+- `S45` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S45` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
+- `S45` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
+- `S45` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S45` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
+- `S45` `A` `src/cadrumo/application/operations/subject_reference.py`
+- `S45` `A` `src/cadrumo/application/operations/tests/test_subject_reference.py`
+- `S45` `A` `src/cadrumo/entrypoints/tests/test_operation_subject_binding.py`
+- `S45` `A` `src/cadrumo_harness/mcp/tests/test_execute_subject_tool.py`
+- `S45` `M` `src/cadrumo/application/modelo/edit_contract.py`
+- `S45` `M` `src/cadrumo_harness/mcp/tests/test_submission_uncertainty.py`
+- `S45` `M` `src/cadrumo/application/inventory/registered_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/counterparty_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/link_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/llm_review_operation.py`
+- `S45` `M` `src/cadrumo/application/ledger/operator_iva_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/reconciliation_import_operation.py`
+- `S45` `M` `src/cadrumo/application/modelo/reconciliation_pull_operation.py`
+- `S45` `M` `dev/quality/metadata/import_load_targets.json`
+- `S45` `verify:` `pytest per-definition subject binding through real resolvers and executors (271 tests)` -> `pass`
+- `S45` `verify:` `pytest registered executor conformance on derived subjects (327 tests)` -> `pass`
+- `S45` `verify:` `pytest application suite (11051 of 11055 tests)` -> `pass`
+- `S45` `verify:` `pytest entrypoint suite (1431 of 1438 tests)` -> `pass`
+- `S45` `verify:` `pytest harness suite (263 tests)` -> `pass`
+- `S45` `verify:` `pytest operations, persistence and runtime scope tests (1074 of 1076 tests)` -> `pass`
+- `S45` `verify:` `ruff check (158 files)` -> `pass`
+- `S45` `verify:` `ruff format --check (158 files)` -> `pass`
+- `S45` `verify:` `ty check --python-platform linux (158 files)` -> `pass`
+- `S45` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S45` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -466,3 +641,4 @@ related:
 - `S46` Eight of the nine reads are open. Evidence list and view are served by ledger.evidence.query, which returns the stored file name in place of the typed host path; the review view by ledger.evidence.review.summary, which withholds every free-text draft field and says so per row; profile.history by profile.history.timeline. Reader readiness returns the endpoint as scheme, host and port only. The filing record view returns typed rows at result version 2. Google folder view and status no longer require commit rights or a human-only session. Also made consistent: ledger.history released the same open event payload on MCP and is now served by ledger.history.typed. Not admitted: config.google.probe, whose result detail is the provider failure text. Open for the owner: the review summary also withholds short identifiers read from the document (tax id, invoice number, date).
 - `S37` Create, calculate and rename are open to MCP. The applicability gate was already in the create operation with a typed bypass, and the only recalculation confirmation is the terminal interface own prompt, kept there; recalculating deletes nothing, so the result now names the revision it replaced. Refused on MCP until the approval step exists: a calculation that states its own inputs, and one that states the joint-return election or the Modelo 390 attestation. modelo.work.amend is not admitted and is re-ruled behind approval: it verifies, records a local filing and retires the record it corrects in one act. The actor recorded for an MCP execution is derived from the admitting session and the typed one is ignored. Eleven failures in the wide run are outside this Step: six command-line tests report `runtime_unavailable` from the stale base-Python install; one asserts a message wording the catalogue no longer has; one fails in the IVA wallet gate and three in storage readiness, all in tests and code this Step did not touch, and all fail the same way run alone.
 - `S38` Read end to end: verification reads and writes the local profile store only. Its provider step constructs local objects with no browser or session, the readiness probes are skipped, and no network or subprocess call is reachable. Admitted with the actor taken from the session.
+- `S45` Every definition now declares where its subject comes from: 247 the admitted profile, 15 a request field, 6 the work unit that owns a stored record the request names, 1 a field or the profile, 1 a fixed literal. The declaration is in the public contract and its digest, the manifest version is 3, describe and search state it, and the MCP execute tool derives the subject so a client need not supply it. Each family keeps its own check; the declaration is held to it by running every real resolver and executor on the derived subject and on an altered one. Not done here and left as a follow-on: one central guard reading the declaration, and replacing the subject builders of the command line and terminal interface. Outside this Step and failing at HEAD: two failure-log tests assert a traceback another commit stopped logging; four form-layout tests; four IVA wallet tests reporting no usable authority; an M184 error-context key; an M100 export version; and a bulk-classify save count.

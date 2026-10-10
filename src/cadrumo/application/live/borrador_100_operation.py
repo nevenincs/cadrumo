@@ -54,6 +54,7 @@ from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository, Borrador100SnapshotService
@@ -409,6 +410,7 @@ def build_borrador_100_operation_definitions(
         build_single_phase_definition(
             definition_id=definition_id,
             request_type=Borrador100ReadRequest,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=result_type,
             executor_type=Borrador100ReadExecutor,
             build=lambda query=query: Borrador100ReadExecutor(factory, query=query),
@@ -428,6 +430,7 @@ def build_borrador_100_operation_definitions(
     importing = build_single_phase_definition(
         definition_id=BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID,
         request_type=Borrador100ImportRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=Borrador100ImportExecutionResult,
         executor_type=Borrador100ImportExecutor,
         build=lambda: Borrador100ImportExecutor(factory),

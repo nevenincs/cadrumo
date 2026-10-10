@@ -48,6 +48,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessAction, Availability, DisclosureCategory
 from ._ports import FicheroBoeRecordRenderer
 from .m145_communication_contracts import (
@@ -129,6 +130,7 @@ def _build_definition(
     return OperationDefinition(
         definition_id=operation_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=M145CommunicationExecutionResult,
         executor_factory=OperationExecutorFactory(
             request_type=request_type,

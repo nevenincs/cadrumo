@@ -33,6 +33,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -251,6 +252,7 @@ def build_ledger_evidence_confirm_definition(
     return build_single_phase_definition(
         definition_id=LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
         request_type=LedgerEvidenceConfirmRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerEvidenceConfirmExecutionResult,
         executor_type=LedgerEvidenceConfirmExecutor,
         build=lambda: LedgerEvidenceConfirmExecutor(ports_factory),

@@ -16,6 +16,7 @@ from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
@@ -121,6 +122,7 @@ def build_ledger_preflight_definition(ports: LedgerActionPortsFactory) -> Operat
     return build_single_phase_definition(
         definition_id=LEDGER_PREFLIGHT_OPERATION_DEFINITION_ID,
         request_type=LedgerPreflightRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerPreflightProjection,
         executor_type=LedgerPreflightExecutor,
         build=lambda: LedgerPreflightExecutor(ports),

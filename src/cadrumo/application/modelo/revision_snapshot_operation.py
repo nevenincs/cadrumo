@@ -15,6 +15,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.profile_record_repository import ProfileRecordRepository
@@ -113,6 +114,7 @@ def build_modelo_work_revision_snapshot_definition(factory: VerificationReposito
     return build_single_phase_definition(
         definition_id=MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkRevisionSnapshotRequest,
+        subject_reference=OperationSubjectReferenceV1.stored_work_unit("calculation_revision_id"),
         result_type=ModeloWorkRevisionSnapshotProjection,
         executor_type=ModeloWorkRevisionSnapshotExecutor,
         build=lambda: ModeloWorkRevisionSnapshotExecutor(factory),

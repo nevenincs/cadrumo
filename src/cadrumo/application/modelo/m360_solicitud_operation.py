@@ -54,6 +54,7 @@ from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 
@@ -346,6 +347,7 @@ def build_modelo_360_solicitud_definition(
     return build_single_phase_definition(
         definition_id=MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID,
         request_type=Modelo360SolicitudRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=Modelo360SolicitudResult,
         executor_type=Modelo360SolicitudExecutor,
         build=lambda: Modelo360SolicitudExecutor(repository_factory, own_account_repository_factory),

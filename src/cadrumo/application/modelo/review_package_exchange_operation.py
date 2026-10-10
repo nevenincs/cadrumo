@@ -40,6 +40,7 @@ from ..operations.profile_guard import (
     require_operation_profile,
 )
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -570,6 +571,7 @@ def build_review_package_exchange_operation_definitions(
         build_single_phase_definition(
             definition_id=identifier,
             request_type=models[0],
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=ReviewPackageExchangeExecutionResult,
             executor_type=ReviewPackageExchangeExecutor,
             build=lambda: ReviewPackageExchangeExecutor(factory),

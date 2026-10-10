@@ -71,6 +71,7 @@ from ..registry import (
 )
 from ..registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
 from ..schema_identity import OperationSchemaIdentityV1
+from ..subject_reference import OperationSubjectReferenceV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -412,6 +413,7 @@ def definition(*, definition_id: str, action_id: str | None = None) -> Operation
     return OperationDefinition(
         definition_id=definition_id,
         request_type=RequestPayload,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ResultPayload,
         executor_factory=OperationExecutorFactory(
             request_type=RequestPayload,
@@ -580,6 +582,7 @@ def test_definition_refuses_mismatched_factory_payload_and_factory_output() -> N
         OperationDefinition(
             definition_id="profile.sync",
             request_type=RequestPayload,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=ResultPayload,
             executor_factory=wrong_payload_factory,
             phase_codes=("profile.sync.read",),
@@ -1068,10 +1071,10 @@ def test_registry_public_contract_is_a_live_definition_fixed_point() -> None:
 
     assert registration.contract.refusal_detail_codes == frozenset()
     assert registration.contract.definition_contract_digest == (
-        "63a310bee0a2fd9224252fa54abb9361d199fffcbc6347c407b96fef37852aac"
+        "3ef244fa1187a9e7628e44abe6ac89b4f49e5ee338455fa749b169877d13c3f6"
     )
     assert registry.public_contract_set.contract_set_digest == (
-        "48c5c7b4cc31335e95beceb581b13c4ede197c59d43ccb184252bf7737e8e719"
+        "4ca9ef18671ad7cb4ea5f0d63fcfaa6b03ab17376d6c998bc51a04c2e5427c72"
     )
     assert registry.public_contract_set.definitions == (registration.contract,)
     assert registry.lookup_public_contract(item.definition_id) == registration.contract
@@ -1159,6 +1162,7 @@ def _no_interaction_definition(definition_id: str = "profile.sync.settled") -> O
     return OperationDefinition(
         definition_id=definition_id,
         request_type=RequestPayload,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ResultPayload,
         executor_factory=OperationExecutorFactory(
             request_type=RequestPayload,

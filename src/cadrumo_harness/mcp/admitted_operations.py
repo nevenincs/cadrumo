@@ -21,6 +21,11 @@ from cadrumo.application.operations.frontend_requests import (
     OperationReviewProjectionRequestV1,
 )
 from cadrumo.application.operations.mcp_surfaces import McpSurface
+from cadrumo.application.operations.subject_reference import (
+    OperationSubjectKind,
+    OperationSubjectReferenceV1,
+    expected_operation_subject,
+)
 from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.operation_access import (
@@ -136,8 +141,13 @@ def _describe(
 
 def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     definition_id = args["definition_id"]
-    binding.contracts.description(client, definition_id, deadline=deadline)
-    submission = _submission(client, args, definition_id)
+    description = binding.contracts.description(client, definition_id, deadline=deadline)
+    try:
+        subject_ref = _subject(description.contract.subject_reference, client.profile_id, args)
+    except _SubjectRefusedError as refused:
+        # Nothing was submitted, and the wording quotes only the public contract.
+        return {"outcome": "refused", "code": "invalid_request", "message": str(refused)}
+    submission = _submission(client, args, definition_id, subject_ref)
     try:
         reply = client.operation(submission, deadline=deadline)
         if not isinstance(reply, RuntimeOperationSubmitted):
@@ -154,14 +164,59 @@ def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, A
     return response
 
 
-def _submission(client: RuntimeFrontendClient, args: dict[str, Any], definition_id: str) -> RuntimeOperationSubmit:
+class _SubjectRefusedError(ValueError):
+    """The call cannot be given the subject its operation's contract declares."""
+
+
+def _subject_form(reference: OperationSubjectReferenceV1) -> str:
+    """Say in words where the declared subject comes from."""
+    field = ".".join(reference.payload_path)
+    if reference.kind is OperationSubjectKind.PROFILE:
+        return "the admitted profile"
+    if reference.kind is OperationSubjectKind.FIXED:
+        return f"the fixed subject {reference.literal}"
+    if reference.kind is OperationSubjectKind.PAYLOAD_FIELD:
+        return f"payload field {field}"
+    if reference.kind is OperationSubjectKind.PAYLOAD_FIELD_OR_PROFILE:
+        return f"payload field {field} when it is set, otherwise the admitted profile"
+    return f"the work unit that owns the record named by payload field {field}"
+
+
+def _subject(reference: OperationSubjectReferenceV1, profile_id: UUID, args: dict[str, Any]) -> str:
+    """Derive the subject the contract declares, holding a supplied one to it.
+
+    A stored work unit is the one subject the payload cannot yield, so there
+    the caller's own value is passed on for the runtime to check.
+    """
+    supplied = args.get("subject_ref")
+    try:
+        derived = expected_operation_subject(reference, profile_id=profile_id, payload=args["payload"])
+    except ValueError:
+        raise _SubjectRefusedError(
+            f"payload does not carry {'.'.join(reference.payload_path)}, which is this operation's subject"
+        ) from None
+    if derived is None:
+        if not isinstance(supplied, str):
+            raise _SubjectRefusedError(f"subject_ref is required: it is {_subject_form(reference)}")
+        return supplied
+    if supplied is not None and supplied != derived:
+        raise _SubjectRefusedError(
+            f"subject_ref does not match this operation's subject, which is {_subject_form(reference)}; "
+            "leave subject_ref out and it is derived"
+        )
+    return derived
+
+
+def _submission(
+    client: RuntimeFrontendClient, args: dict[str, Any], definition_id: str, subject_ref: str
+) -> RuntimeOperationSubmit:
     payload_json = json.dumps(args["payload"], ensure_ascii=False, separators=(",", ":"), allow_nan=False)
     return RuntimeOperationSubmit(
         request_id=uuid4(),
         profile_id=client.profile_id,
         session_id=client.session_id,
         definition_id=definition_id,
-        subject_ref=args["subject_ref"],
+        subject_ref=subject_ref,
         payload_json=payload_json,
         idempotency_key=args.get("idempotency_key"),
     )

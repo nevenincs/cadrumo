@@ -53,6 +53,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
     AccessAction,
@@ -524,6 +525,7 @@ def _definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
         executor_type=executor_type,
         build=build,

@@ -24,6 +24,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.public_scalar import PublicDecimal
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -167,6 +168,7 @@ def build_invoice_update_definition(factory: CatalogueLifecyclePortsFactory) -> 
     return build_single_phase_definition(
         definition_id=INVOICE_UPDATE_OPERATION_DEFINITION_ID,
         request_type=InvoiceUpdateRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=InvoiceUpdateResult,
         executor_type=InvoiceUpdateExecutor,
         build=lambda: InvoiceUpdateExecutor(factory),

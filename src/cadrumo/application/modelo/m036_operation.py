@@ -58,6 +58,7 @@ from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -466,6 +467,7 @@ def build_m036_operation_definitions(factory: M036OperationPortsFactory) -> tupl
         build_single_phase_definition(
             definition_id=definition_id,
             request_type=M036ReadRequest,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=result_type,
             executor_type=M036ReadExecutor,
             build=lambda query=query: M036ReadExecutor(factory, query=query),
@@ -480,6 +482,7 @@ def build_m036_operation_definitions(factory: M036OperationPortsFactory) -> tupl
     recording = build_single_phase_definition(
         definition_id=M036_RECORD_OPERATION_DEFINITION_ID,
         request_type=M036RecordRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=M036RecordExecutionResult,
         executor_type=M036RecordExecutor,
         build=lambda: M036RecordExecutor(factory),

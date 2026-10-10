@@ -32,6 +32,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -194,6 +195,7 @@ def _definition(*, removing: bool, ports: CertificateSecretOperationPorts) -> Op
     return OperationDefinition(
         definition_id=definition_id,
         request_type=CertificateSecretMutationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=CertificateSourceSecretMutationResult,
         executor_factory=OperationExecutorFactory(
             request_type=CertificateSecretMutationRequest,

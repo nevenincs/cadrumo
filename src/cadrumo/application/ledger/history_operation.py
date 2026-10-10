@@ -37,6 +37,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
@@ -314,6 +315,7 @@ def build_ledger_history_definition(ports: LedgerActionPortsFactory) -> Operatio
     return build_single_phase_definition(
         definition_id=LEDGER_HISTORY_OPERATION_DEFINITION_ID,
         request_type=LedgerHistoryRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerHistoryProjection,
         executor_type=LedgerHistoryExecutor,
         build=lambda: LedgerHistoryExecutor(ports),
@@ -327,6 +329,7 @@ def build_ledger_history_typed_definition(ports: LedgerActionPortsFactory) -> Op
     return build_single_phase_definition(
         definition_id=LEDGER_HISTORY_TYPED_OPERATION_DEFINITION_ID,
         request_type=LedgerHistoryRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerHistoryTypedProjection,
         executor_type=LedgerHistoryTypedExecutor,
         build=lambda: LedgerHistoryTypedExecutor(ports),

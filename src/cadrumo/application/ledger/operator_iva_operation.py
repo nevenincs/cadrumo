@@ -25,6 +25,7 @@ from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_contracts import (
+from ..operations.subject_reference import OperationSubjectReferenceV1
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -178,6 +179,7 @@ def build_ledger_operator_iva_definition(ports_factory: LedgerActionPortsFactory
 def build_ledger_operator_iva_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind the bounded operator IVA request/result and exact access policy."""
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
+        subject_reference=OperationSubjectReferenceV1.profile(),
         definition=definition,
         public_result_type=LedgerOperatorIvaResult,
         result_projector=project_operator_iva_result,

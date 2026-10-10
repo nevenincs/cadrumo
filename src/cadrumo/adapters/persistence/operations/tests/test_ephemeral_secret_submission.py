@@ -39,6 +39,7 @@ from .....application.operations.secret_submission import (
     OperationEphemeralSecretDeclaration,
     OperationSecretRequirement,
 )
+from .....application.operations.subject_reference import OperationSubjectReferenceV1
 from .....application.operations.supervisor import OperationSupervisor
 from .....application.operations.tests.authority_test_support import unread_authority_operation
 from .....core.models import STRICT_FROZEN_CONFIG
@@ -163,6 +164,7 @@ def _definition(executor: ConsumingExecutor | BlockingExecutor) -> OperationDefi
     return OperationDefinition(
         definition_id="profile.unlock.ephemeral",
         request_type=SafeUnlockRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=None,
         executor_factory=OperationExecutorFactory(
             request_type=SafeUnlockRequest,

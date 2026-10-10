@@ -27,6 +27,7 @@ from .local_reader import (
 from .local_reader_contracts import (
     LOCAL_READER_EXECUTE_PHASE,
     LOCAL_READER_OPERATION_DEFINITION_ID,
+    LOCAL_READER_OPERATION_SUBJECT,
     LOCAL_READER_PREFLIGHT_PHASE,
     LOCAL_READER_SETTLEMENT_PHASE,
     LocalReaderProvisionOutcome,
@@ -52,6 +53,7 @@ from .operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from .operations.subject_reference import OperationSubjectReferenceV1
 from .provisioning_host import (
     InstallerRunner,
     RuntimeSpawner,
@@ -84,6 +86,7 @@ def build_local_reader_operation_definition(
     return OperationDefinition(
         definition_id=LOCAL_READER_OPERATION_DEFINITION_ID,
         request_type=LocalReaderProvisionRequest,
+        subject_reference=OperationSubjectReferenceV1.fixed(LOCAL_READER_OPERATION_SUBJECT),
         result_type=LocalReaderProvisionOutcome,
         executor_factory=OperationExecutorFactory(
             request_type=LocalReaderProvisionRequest,

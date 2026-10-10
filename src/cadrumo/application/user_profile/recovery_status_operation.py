@@ -33,6 +33,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .access_contracts import AccessAction, AccessDenialCode, Availability, DisclosureCategory
 from .access_errors import ProfileAccessRefusedError
 from .recovery_custody import profile_recovery_status
@@ -148,6 +149,7 @@ def build_recovery_status_definition() -> OperationDefinition:
     return build_single_phase_definition(
         definition_id=RECOVERY_STATUS_OPERATION_DEFINITION_ID,
         request_type=RecoveryStatusRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=RecoveryStatusResult,
         executor_type=RecoveryStatusExecutor,
         build=RecoveryStatusExecutor,

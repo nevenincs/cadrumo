@@ -54,6 +54,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from .access_contracts import AccessDenialCode, Availability
 from .access_errors import ProfileAccessRefusedError
@@ -405,6 +406,7 @@ def build_censal_preview_operation_definition(
     return OperationDefinition(
         definition_id=CENSAL_PREVIEW_OPERATION_DEFINITION_ID,
         request_type=CensalPreviewOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=CensalPreviewOperationResult,
         executor_factory=OperationExecutorFactory(
             request_type=CensalPreviewOperationRequest,

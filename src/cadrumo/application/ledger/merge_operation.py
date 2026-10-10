@@ -26,6 +26,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -312,6 +313,7 @@ def build_ledger_merge_definition(ports_factory: LedgerActionPortsFactory) -> Op
     return build_single_phase_definition(
         definition_id=LEDGER_MERGE_OPERATION_DEFINITION_ID,
         request_type=LedgerMergeRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerMergeExecutionResult,
         executor_type=LedgerMergeExecutor,
         build=lambda: LedgerMergeExecutor(ports_factory),

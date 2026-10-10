@@ -22,6 +22,7 @@ from .owner import OperationExecutor, OperationResumableExecutor
 from .refusal_evidence import validate_refusal_code
 from .registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
 from .secret_submission import OperationEphemeralSecretDeclaration
+from .subject_reference import OperationSubjectReferenceV1, require_declared_subject_path
 
 
 def _is_operation_executor(executor: object) -> TypeIs[OperationExecutor[BaseModel]]:
@@ -60,6 +61,7 @@ class OperationDefinition(BaseModel):
 
     definition_id: OperationDefinitionId
     request_type: type[BaseModel]
+    subject_reference: OperationSubjectReferenceV1
     result_type: type[BaseModel] | None
     executor_factory: OperationExecutorFactory
     phase_codes: tuple[OperationEventCode, ...] = Field(min_length=1)
@@ -90,6 +92,7 @@ class OperationDefinition(BaseModel):
     def _validate_factory_request_type(self) -> OperationDefinition:
         self._validate_refusal_evidence_declaration()
         self._validate_factory_request_binding()
+        require_declared_subject_path(self.request_type, self.subject_reference)
         self._validate_request_storage()
         self._validate_ephemeral_secret()
         self._validate_typed_financial_operand()
@@ -174,6 +177,7 @@ def build_single_phase_definition(
     *,
     definition_id: str,
     request_type: type[BaseModel],
+    subject_reference: OperationSubjectReferenceV1,
     result_type: type[BaseModel] | None,
     executor_type: type[object],
     build: Callable[[], object],
@@ -189,6 +193,7 @@ def build_single_phase_definition(
     return OperationDefinition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=subject_reference,
         result_type=result_type,
         executor_factory=OperationExecutorFactory(
             request_type=request_type,

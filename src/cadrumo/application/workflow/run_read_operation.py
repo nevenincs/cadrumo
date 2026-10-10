@@ -27,6 +27,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -253,6 +254,7 @@ def build_workflow_run_read_definition(factory: WorkflowRunReadPortsFactory) -> 
     return build_single_phase_definition(
         definition_id=WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID,
         request_type=WorkflowRunReadRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field("run_id"),
         result_type=WorkflowRunReadResult,
         executor_type=WorkflowRunReadExecutor,
         build=lambda: WorkflowRunReadExecutor(factory),
@@ -268,6 +270,7 @@ def build_workflow_run_list_definition(factory: WorkflowRunReadPortsFactory) -> 
     return build_single_phase_definition(
         definition_id=WORKFLOW_RUN_LIST_OPERATION_DEFINITION_ID,
         request_type=WorkflowRunListRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=WorkflowRunListResult,
         executor_type=WorkflowRunListExecutor,
         build=lambda: WorkflowRunListExecutor(factory),

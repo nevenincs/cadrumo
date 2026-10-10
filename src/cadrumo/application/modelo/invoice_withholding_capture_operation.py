@@ -16,6 +16,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     MODELO_INVOICE_WITHHOLDING_CAPTURE_PHASES,
@@ -40,6 +41,7 @@ def build_modelo_invoice_withholding_capture_definition(
     return OperationDefinition(
         definition_id=MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
         request_type=ModeloInvoiceWithholdingCaptureRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloInvoiceWithholdingCaptureReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloInvoiceWithholdingCaptureRequest,

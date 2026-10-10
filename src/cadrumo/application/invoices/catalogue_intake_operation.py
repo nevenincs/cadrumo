@@ -10,6 +10,7 @@ from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_PARTIAL_U
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -36,6 +37,7 @@ def _definition(definition_id: str, factory: InvoiceIntakePortsFactory) -> Opera
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=InvoiceIntakeExecutionResult,
         executor_type=InvoiceIntakeExecutor,
         build=lambda: InvoiceIntakeExecutor(factory),

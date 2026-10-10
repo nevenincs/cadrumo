@@ -32,6 +32,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .access_contracts import AccessDenialCode, Availability
 from .access_errors import ProfileAccessRefusedError
 from .censal_access import bind_whole_profile_censal_access
@@ -248,6 +249,7 @@ def build_censal_file_import_operation_definition() -> OperationDefinition:
     return OperationDefinition(
         definition_id=CENSAL_FILE_IMPORT_OPERATION_DEFINITION_ID,
         request_type=CensalFileImportOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=CensalFileImportOperationResult,
         executor_factory=OperationExecutorFactory(
             request_type=CensalFileImportOperationRequest,

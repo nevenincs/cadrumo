@@ -25,6 +25,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_remote_state import list_iva_compensation_history
@@ -229,6 +230,7 @@ def build_iva_wallet_history_definition(
     return build_single_phase_definition(
         definition_id=IVA_WALLET_HISTORY_OPERATION_DEFINITION_ID,
         request_type=IvaWalletHistoryRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=IvaWalletHistoryProjection,
         executor_type=IvaWalletHistoryExecutor,
         build=lambda: IvaWalletHistoryExecutor(ports_factory),

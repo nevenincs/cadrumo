@@ -28,6 +28,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..provisioning_host import RuntimeHostPlatform, RuntimeInstaller
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -238,6 +239,7 @@ def build_ledger_evidence_reader_readiness_definition(
     return build_single_phase_definition(
         definition_id=LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
         request_type=LedgerEvidenceReaderReadinessRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerEvidenceReaderReadinessExecutionResult,
         executor_type=LedgerEvidenceReaderReadinessExecutor,
         build=lambda: LedgerEvidenceReaderReadinessExecutor(read_status),

@@ -31,6 +31,7 @@ from ..operations.profile_guard import (
 )
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -165,6 +166,7 @@ def build_modelo_work_history_definition(factory: ModeloHistoryPortsFactory) -> 
     return build_single_phase_definition(
         definition_id=MODELO_WORK_HISTORY_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkHistoryRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field("work_unit_id"),
         result_type=ModeloWorkHistoryProjection,
         executor_type=ModeloWorkHistoryExecutor,
         build=lambda: ModeloWorkHistoryExecutor(factory),

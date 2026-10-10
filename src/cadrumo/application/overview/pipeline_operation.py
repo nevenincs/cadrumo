@@ -33,6 +33,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.public_period import PublicPeriod
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .pipeline_health import build_pipeline_health_report
@@ -257,6 +258,7 @@ def build_overview_pipeline_definition(factory: PipelineReadPortsFactory) -> Ope
     return build_single_phase_definition(
         definition_id=OVERVIEW_PIPELINE_OPERATION_DEFINITION_ID,
         request_type=OverviewPipelineRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=OverviewPipelineResult,
         executor_type=OverviewPipelineExecutor,
         build=lambda: OverviewPipelineExecutor(factory),

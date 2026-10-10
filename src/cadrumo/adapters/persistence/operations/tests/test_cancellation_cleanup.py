@@ -53,6 +53,7 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
 )
+from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
@@ -225,6 +226,7 @@ def _definition(executor: PhaseGatedProcessExecutor) -> OperationDefinition:
     return OperationDefinition(
         definition_id=_DEFINITION_ID,
         request_type=CancellationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=CancellationResult,
         executor_factory=OperationExecutorFactory(
             request_type=CancellationRequest,

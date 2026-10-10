@@ -36,6 +36,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_wallet_mutation import bind_iva_wallet_profile_ports
@@ -200,6 +201,7 @@ def build_modelo_iva_wallet_balance_definition(
     return OperationDefinition(
         definition_id=MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
         request_type=ModeloIvaWalletBalanceRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloIvaWalletBalanceOperationReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloIvaWalletBalanceRequest,

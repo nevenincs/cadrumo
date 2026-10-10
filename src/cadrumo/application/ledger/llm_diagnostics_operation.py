@@ -34,6 +34,7 @@ from ..operations.profile_guard import (
 from ..operations.public_scalar import PublicDecimal
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -381,6 +382,7 @@ def build_ledger_llm_diagnostics_definition(
     return build_single_phase_definition(
         definition_id=LEDGER_LLM_DIAGNOSTICS_OPERATION_DEFINITION_ID,
         request_type=LedgerLlmDiagnosticsRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerLlmDiagnosticsExecutionResult,
         executor_type=LedgerLlmDiagnosticsExecutor,
         build=lambda: LedgerLlmDiagnosticsExecutor(factory),

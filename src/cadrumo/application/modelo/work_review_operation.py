@@ -22,6 +22,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_work_unit_payload, require_operation_profile
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -97,6 +98,7 @@ def build_modelo_work_review_definition(factory: ModeloHistoryPortsFactory) -> O
     return build_single_phase_definition(
         definition_id=MODELO_WORK_REVIEW_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkReviewRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field("work_unit_id"),
         result_type=ModeloWorkReviewResult,
         executor_type=ModeloWorkReviewExecutor,
         build=lambda: ModeloWorkReviewExecutor(factory),

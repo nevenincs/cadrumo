@@ -33,6 +33,7 @@ from ..operations.profile_guard import (
 )
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -265,6 +266,7 @@ def build_auth_diagnostic_report_definition(factory: AuthDiagnosticReportPortsFa
     return build_single_phase_definition(
         definition_id=AUTH_DIAGNOSTIC_REPORT_OPERATION_DEFINITION_ID,
         request_type=AuthDiagnosticReportRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=AuthDiagnosticReportExecutionResult,
         executor_type=AuthDiagnosticReportExecutor,
         build=lambda: AuthDiagnosticReportExecutor(factory),

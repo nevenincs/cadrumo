@@ -20,6 +20,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..prorrata_register.ports import ProrrataRegisterRepositoryFactory
 from ..user_profile.access_contracts import (
     AccessDenialCode,
@@ -170,6 +171,7 @@ def build_ledger_add_definition(
     return build_single_phase_definition(
         definition_id=LEDGER_ADD_OPERATION_DEFINITION_ID,
         request_type=LedgerAddRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerAddExecutionResult,
         executor_type=LedgerAddExecutor,
         build=lambda: LedgerAddExecutor(

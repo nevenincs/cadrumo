@@ -53,6 +53,7 @@ from ..operations.registry import (
     OperationPublicContractSetV1,
     OperationPublicDefinitionRegistrationV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -477,6 +478,8 @@ class ModeloEditApplyPrerequisiteExecutor:
 _READ_CAPABILITIES = RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 #: Owner reads for a human at a password-authenticated CLI or TUI; never an agent or off-host destination.
 _HUMAN_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI})
+#: Four of the reads name their declaration directly; the renewal names it inside the baseline it renews.
+_WORK_UNIT_SUBJECT = OperationSubjectReferenceV1.payload_field("work_unit_id")
 #: Each read's public request and result models, in registration order.
 _SCHEMAS: Final[Mapping[str, tuple[type[BaseModel], type[BaseModel]]]] = MappingProxyType(
     {
@@ -495,6 +498,7 @@ _SCHEMAS: Final[Mapping[str, tuple[type[BaseModel], type[BaseModel]]]] = Mapping
 def _definition(
     definition_id: str,
     request_type: type[CredentialFreeOperationRequest],
+    subject_reference: OperationSubjectReferenceV1,
     result_type: type[BaseModel],
     executor_type: type[object],
     build: Callable[[], object],
@@ -502,6 +506,7 @@ def _definition(
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
+        subject_reference=subject_reference,
         result_type=result_type,
         executor_type=executor_type,
         build=build,
@@ -528,6 +533,7 @@ def build_modelo_workbench_operation_definitions(
         _definition(
             MODELO_WORK_FORM_OPERATION_DEFINITION_ID,
             ModeloWorkbenchFormRequest,
+            _WORK_UNIT_SUBJECT,
             ModeloWorkbenchFormProjectionV1,
             ModeloWorkbenchFormExecutor,
             lambda: ModeloWorkbenchFormExecutor(ports_factory=ports_factory, contracts=contracts),
@@ -535,6 +541,7 @@ def build_modelo_workbench_operation_definitions(
         _definition(
             MODELO_WORK_CASILLA_HELP_OPERATION_DEFINITION_ID,
             ModeloCasillaHelpRequest,
+            _WORK_UNIT_SUBJECT,
             ModeloCasillaHelpProjectionV1,
             ModeloCasillaHelpExecutor,
             lambda: ModeloCasillaHelpExecutor(ports_factory=ports_factory),
@@ -542,6 +549,7 @@ def build_modelo_workbench_operation_definitions(
         _definition(
             MODELO_EDIT_RENEW_OPERATION_DEFINITION_ID,
             ModeloEditRenewRequest,
+            OperationSubjectReferenceV1.payload_field("baseline", "work_unit_id"),
             ModeloEditRenewalProjectionV1,
             ModeloEditRenewExecutor,
             lambda: ModeloEditRenewExecutor(ports_factory=ports_factory, contracts=contracts),
@@ -549,6 +557,7 @@ def build_modelo_workbench_operation_definitions(
         _definition(
             MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID,
             ModeloEditPreflightRequestV2,
+            _WORK_UNIT_SUBJECT,
             ModeloEditPreflightProjectionV1,
             ModeloEditPreflightExecutor,
             lambda: ModeloEditPreflightExecutor(ports_factory=ports_factory),
@@ -556,6 +565,7 @@ def build_modelo_workbench_operation_definitions(
         _definition(
             MODELO_EDIT_APPLY_PREREQUISITE_OPERATION_DEFINITION_ID,
             ModeloEditApplyPrerequisiteRequest,
+            _WORK_UNIT_SUBJECT,
             ModeloEditApplyPrerequisiteProjectionV1,
             ModeloEditApplyPrerequisiteExecutor,
             lambda: ModeloEditApplyPrerequisiteExecutor(ports_factory=ports_factory, store=prerequisites),

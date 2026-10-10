@@ -18,6 +18,7 @@ from ..operations.registry import (
     OperationResultProjector,
 )
 from ..user_profile.access_contracts import (
+from ..operations.subject_reference import OperationSubjectReferenceV1
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -103,6 +104,7 @@ def _definition(
         request_type=request_type,
         result_type=InventoryOperationExecutionResult,
         executor_type=InventoryOperationExecutor,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         build=lambda: InventoryOperationExecutor(ports_factory, definition_id=definition_id),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         permitted_frontends=ALL_OPERATION_FRONTENDS,

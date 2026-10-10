@@ -48,6 +48,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_errors import M303Exonerado390AttestationUnadmissibleError
@@ -214,6 +215,7 @@ def build_modelo_work_m303_attestation_definition(
     return OperationDefinition(
         definition_id=MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkM303AttestationRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field_or_profile("work_unit_id"),
         result_type=ModeloWorkM303AttestationPublicResultV2,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloWorkM303AttestationRequest,

@@ -54,6 +54,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
@@ -345,6 +346,7 @@ def build_modelo_review_package_build_definition(
     return OperationDefinition(
         definition_id=MODELO_REVIEW_PACKAGE_BUILD_OPERATION_DEFINITION_ID,
         request_type=ModeloReviewPackageBuildRequest,
+        subject_reference=OperationSubjectReferenceV1.stored_work_unit("calculation_revision_id"),
         result_type=ModeloReviewPackageBuildPublicResultV1,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloReviewPackageBuildRequest,

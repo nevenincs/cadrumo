@@ -70,6 +70,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -536,6 +537,7 @@ def build_modelo_aggregate_operation_definition(
     return OperationDefinition(
         definition_id=MODELO_AGGREGATE_OPERATION_DEFINITION_ID,
         request_type=ModeloAggregateOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloAggregateReport,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloAggregateOperationRequest,

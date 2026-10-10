@@ -279,6 +279,7 @@ def _pending_superseded_invocation(
     legacy_definition = OperationDefinition(
         definition_id=current.definition_id,
         request_type=request_type,
+        subject_reference=current.subject_reference,
         result_type=_HistoricalCalculatePublicResultV1,
         executor_factory=OperationExecutorFactory(
             request_type=request_type,

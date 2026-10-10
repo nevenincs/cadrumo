@@ -39,6 +39,7 @@ from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
 )
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from .access_contracts import AccessDenialCode, Availability, DisclosureCategory
 from .access_errors import ProfileAccessRefusedError
 from .history_contracts import (
@@ -222,6 +223,7 @@ def build_profile_history_definition(factory: ProfileHistoryReadPortsFactory) ->
     return build_single_phase_definition(
         definition_id=PROFILE_HISTORY_OPERATION_DEFINITION_ID,
         request_type=ProfileHistoryRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ProfileHistoryExecutionResult,
         executor_type=ProfileHistoryExecutor,
         build=lambda: ProfileHistoryExecutor(factory),
@@ -235,6 +237,7 @@ def build_profile_history_timeline_definition(factory: ProfileHistoryReadPortsFa
     return build_single_phase_definition(
         definition_id=PROFILE_HISTORY_TIMELINE_OPERATION_DEFINITION_ID,
         request_type=ProfileHistoryRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ProfileHistoryTimelineExecutionResult,
         executor_type=ProfileHistoryTimelineExecutor,
         build=lambda: ProfileHistoryTimelineExecutor(factory),

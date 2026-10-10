@@ -30,6 +30,7 @@ from ..operations.operation_definition import OperationDefinition, build_single_
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessAction,
     AccessDenialCode,
@@ -224,6 +225,7 @@ def build_modelo_work_wizard_attempt_definition(
     return build_single_phase_definition(
         definition_id=MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkWizardAttemptRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field("calculation", "work_unit_id"),
         result_type=ModeloWorkWizardAttemptProjection,
         executor_type=ModeloWorkWizardAttemptExecutor,
         build=lambda: ModeloWorkWizardAttemptExecutor(

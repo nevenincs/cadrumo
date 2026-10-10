@@ -45,6 +45,7 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
+from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
 from cadrumo.application.runtime.worker_authorization import WorkerAuthorityRequest
 from cadrumo.application.user_profile.access_contracts import (
@@ -246,6 +247,7 @@ def harness(authority_operation: PinnedAuthorityOperation, tmp_path: Path) -> _H
     definition = build_single_phase_definition(
         definition_id=_DEFINITION,
         request_type=_ScopeRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=None,
         executor_type=_UnusedExecutor,
         build=_UnusedExecutor,

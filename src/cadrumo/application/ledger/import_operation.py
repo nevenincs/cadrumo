@@ -31,6 +31,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..transactions.diagnostics import LedgerImportDiagnosticKind
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -655,6 +656,7 @@ def build_ledger_import_definition(ports: LedgerImportOperationPortsFactory) -> 
     return build_single_phase_definition(
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
         request_type=LedgerImportRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerImportExecutionResult,
         executor_type=LedgerImportExecutor,
         build=lambda: LedgerImportExecutor(ports),

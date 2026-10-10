@@ -319,6 +319,7 @@ from ...application.modelo.wizard_context_operation import (
     ModeloWorkWizardContextProjection,
     ModeloWorkWizardContextRequest,
 )
+from ...application.modelo.work_amend_contracts import ModeloWorkAmendRequest
 from ...application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
 from ...application.modelo.work_create_operation import (
     MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE,
@@ -363,6 +364,7 @@ from ...application.operations.observation import OperationObservationService
 from ...application.operations.operation_definition import OperationDefinition
 from ...application.operations.public_period import PublicPeriod
 from ...application.operations.registry import OperationRegistry
+from ...application.operations.subject_reference import OperationSubjectReferenceV1, expected_operation_subject
 from ...application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ...application.overview.pipeline_operation import OverviewPipelineProjection, OverviewPipelineRequest
 from ...application.overview.pipeline_projection import PipelineHealthSnapshot
@@ -511,8 +513,12 @@ from .conformance_family_contract import (
     closed_model_runtime,
 )
 from .conformance_variants import CONFORMANCE_VARIANT_FAMILIES
-from .evidence_followup_operation_test_support import prepare_evidence_followup_conformance_case
+from .evidence_followup_operation_test_support import (
+    EvidenceFollowupConformanceCase,
+    prepare_evidence_followup_conformance_case,
+)
 from .invoice_evidence_operation_test_support import (
+    InvoiceEvidenceConformanceCase,
     assert_invoice_evidence_confirmation_persisted,
     prepare_invoice_evidence_conformance_case,
 )
@@ -523,6 +529,7 @@ from .invoice_withholding_operation_test_support import (
     seed_invoice_withholding_conformance_case,
 )
 from .ledger_attachment_operation_test_support import (
+    LedgerAttachmentOperationConformanceCase,
     assert_ledger_attachment_operation_conformance_result,
     prepare_ledger_attachment_operation_conformance_case,
 )
@@ -532,11 +539,15 @@ from .ledger_lifecycle_operation_test_support import (
     prepare_ledger_lifecycle_operation_conformance_case,
 )
 from .ledger_rule_operation_test_support import (
+    LedgerRuleOperationConformanceCase,
     assert_ledger_rule_operation_conformance_result,
     prepare_ledger_rule_operation_conformance_case,
 )
-from .modelo_projection_history_conformance_support import prepare_modelo_projection_history_conformance_case
-from .modelo_query_operation_test_support import prepare_modelo_query_conformance_case
+from .modelo_projection_history_conformance_support import (
+    ModeloProjectionHistoryConformanceCase,
+    prepare_modelo_projection_history_conformance_case,
+)
+from .modelo_query_operation_test_support import ModeloQueryConformanceCase, prepare_modelo_query_conformance_case
 from .profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
@@ -551,10 +562,11 @@ from .prorrata_operation_test_support import (
     read_prorrata_operation_conformance_register,
 )
 from .recipient_operation_test_support import (
+    RecipientOperationConformanceCase,
     assert_recipient_operation_conformance_result,
     prepare_recipient_operation_case,
 )
-from .review_read_operation_test_support import prepare_review_read_conformance_case
+from .review_read_operation_test_support import ReviewReadConformanceCase, prepare_review_read_conformance_case
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -3555,10 +3567,12 @@ def _payload(
             }
         case "modelo.work.amend":
             filing_record_id, casilla_id = _seeded_modelo_filing_record(profile_id, operation=operation)
-            # The subject is the FILED RECORD, not the work unit: two amendments
-            # of one filed return describe competing corrections to the same
-            # declaration and must serialise against each other.
-            subject_ref = filing_record_id
+            # The subject is the work unit that owns the filed record: the
+            # access resolver reads that unit from the stored filing and
+            # refuses any other subject.
+            filed = ModeloRecordCatalogueRepository().load().get(filing_record_id)
+            assert filed is not None
+            subject_ref = filed.work_unit_id
             values = {
                 "baseline": {"from_filing_record_id": filing_record_id},
                 # The request model is strict: the enum instance and a tuple,
@@ -4050,6 +4064,221 @@ def _assert_calculation_report_verification_projection(
     assert check.reason is CalculationSummaryVerificationReason.PDF_UNREADABLE
 
 
+@dataclass(frozen=True, slots=True)
+class _ConformanceSubmission:
+    """One seeded request, the subject its definition declares for it, and its family's scenario.
+
+    ``payload`` is what the driver is handed; ``registered_payload`` is the
+    request model the definition itself takes, which differs only where an
+    intake turns operator input into that request.
+    """
+
+    subject_ref: str
+    payload: BaseModel
+    registered_payload: BaseModel
+    secret: bytes | None
+    family_preparation: ConformancePreparation | None
+    projection_history_case: ModeloProjectionHistoryConformanceCase | None
+    query_case: ModeloQueryConformanceCase | None
+    review_case: ReviewReadConformanceCase | None
+    followup_case: EvidenceFollowupConformanceCase | None
+    recipient_case: RecipientOperationConformanceCase | None
+    attachment_case: LedgerAttachmentOperationConformanceCase | None
+    lifecycle_case: LedgerLifecycleOperationConformanceCase | None
+    rule_case: LedgerRuleOperationConformanceCase | None
+    prorrata_case: ProrrataOperationConformanceCase | None
+    evidence_case: InvoiceEvidenceConformanceCase | None
+
+
+def _registered_payload(definition_id: str, *, written_subject: str, payload: BaseModel) -> BaseModel:
+    """The request model the definition takes; an edit arrives as operator input its intake turns into one."""
+    if not isinstance(payload, ModeloEditOperatorInputV2):
+        return payload
+    prepared = prepare_modelo_edit_operand(
+        definition_id=definition_id,
+        profile_id=UUID(payload.submission.baseline.bucket_id),
+        subject_ref=written_subject,
+        input_json=payload.model_dump_json(),
+    )
+    try:
+        return prepared.request
+    finally:
+        prepared.release()
+
+
+def _stored_work_unit_id(
+    reference: OperationSubjectReferenceV1, payload: BaseModel, *, operation: PinnedAuthorityOperation
+) -> str:
+    """Read from the real catalogues the work unit that owns the record the declared key names."""
+    key: object = payload
+    for name in reference.payload_path:
+        key = getattr(key, name)
+    assert isinstance(key, str)
+    if reference.payload_path[-1] == "from_filing_record_id":
+        filing = ModeloRecordCatalogueRepository().load().get(key)
+        assert filing is not None
+        return filing.work_unit_id
+    revision = CalculationRevisionCatalogueRepository().load(operation=operation).get(key)
+    assert revision is not None
+    return revision.work_unit_id
+
+
+def _declared_subject(
+    definition: OperationDefinition, *, profile_id: UUID, payload: BaseModel, operation: PinnedAuthorityOperation
+) -> str:
+    """Render the subject from the definition's own declaration, asking the store only for a stored work unit."""
+    declared = expected_operation_subject(definition.subject_reference, profile_id=profile_id, payload=payload)
+    if declared is not None:
+        return declared
+    return _stored_work_unit_id(definition.subject_reference, payload, operation=operation)
+
+
+def _seeded_conformance_submission(
+    definition: OperationDefinition,
+    *,
+    profile_id: UUID,
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    family: ConformanceFamily | None = None,
+) -> _ConformanceSubmission:
+    """Seed one operation's scenario and address it by the subject its definition declares.
+
+    Each scenario also writes the subject it expects by hand. The two are
+    compared here, so the declaration is held to an independently written
+    value before any executor or resolver sees the derived one.
+    """
+    family_preparation = _prepare_family_case(
+        definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation, family=family
+    )
+    projection_history_case = (
+        prepare_modelo_projection_history_conformance_case(
+            definition.definition_id, profile_id=profile_id, operation=operation
+        )
+        if definition.definition_id in {"modelo.history", "modelo.history.timeline", "modelo.project", "modelo.compare"}
+        else None
+    )
+    query_case = (
+        prepare_modelo_query_conformance_case(definition.definition_id, profile_id=profile_id, operation=operation)
+        if definition.definition_id
+        in {
+            "modelo.bindings.list",
+            "modelo.bindings.resolve",
+            "modelo.bindings.resolve.typed",
+            "modelo.requires",
+            "modelo.readiness",
+            "modelo.readiness.summary",
+        }
+        else None
+    )
+    review_case = (
+        prepare_review_read_conformance_case(definition.definition_id, profile_id=profile_id, operation=operation)
+        if definition.definition_id in {"app.review.queue", "app.review.view"}
+        else None
+    )
+    followup_case = (
+        prepare_evidence_followup_conformance_case(definition.definition_id, profile_id=profile_id, operation=operation)
+        if definition.definition_id
+        in {
+            "ledger.evidence.attachment_queue",
+            "ledger.evidence.attachment_view",
+            "ledger.evidence.consent.list",
+            "ledger.evidence.review.list",
+            "ledger.evidence.review.view",
+        }
+        else None
+    )
+    recipient_case = (
+        prepare_recipient_operation_case(definition.definition_id, profile_id)
+        if definition.definition_id.startswith("config.collab.recipient.")
+        else None
+    )
+    attachment_case = (
+        prepare_ledger_attachment_operation_conformance_case(definition.definition_id, profile_id, operation=operation)
+        if definition.definition_id in {"ledger.attach", "ledger.detach"}
+        else None
+    )
+    lifecycle_case = (
+        _ledger_lifecycle_case(definition.definition_id, profile_id=profile_id, operation=operation)
+        if definition.definition_id in {"ledger.archive", "ledger.stash", "ledger.restore", "ledger.exclude"}
+        else None
+    )
+    rule_case = (
+        prepare_ledger_rule_operation_conformance_case(definition.definition_id, profile_id, operation=operation)
+        if definition.definition_id in {"ledger.rule.add", "ledger.rule.list", "ledger.rule.apply"}
+        else None
+    )
+    prorrata_case = (
+        _prorrata_case(definition.definition_id, profile_id=profile_id, operation=operation)
+        if definition.definition_id.startswith("ledger.prorrata.")
+        else None
+    )
+    evidence_case = (
+        prepare_invoice_evidence_conformance_case(definition.definition_id, profile_id=profile_id, operation=operation)
+        if definition.definition_id
+        in {"ledger.evidence.reader-readiness", "ledger.evidence.extract", "ledger.evidence.confirm"}
+        else None
+    )
+    if family_preparation is not None:
+        subject_ref, payload, secret = (
+            family_preparation.subject_ref,
+            family_preparation.request,
+            family_preparation.secret,
+        )
+    elif query_case is not None:
+        subject_ref, payload, secret = profile_operation_subject(str(profile_id)), query_case.request, None
+    elif projection_history_case is not None:
+        subject_ref, payload, secret = (
+            profile_operation_subject(str(profile_id)),
+            projection_history_case.request,
+            None,
+        )
+    elif review_case is not None:
+        subject_ref, payload, secret = profile_operation_subject(str(profile_id)), review_case.request, None
+    elif followup_case is not None:
+        subject_ref, payload, secret = profile_operation_subject(str(profile_id)), followup_case.request, None
+    elif recipient_case is not None:
+        subject_ref, payload, secret = profile_operation_subject(str(profile_id)), recipient_case.request, None
+    elif attachment_case is not None:
+        subject_ref, payload, secret = profile_operation_subject(str(profile_id)), attachment_case.request, None
+    elif lifecycle_case is not None:
+        subject_ref, payload, secret = profile_operation_subject(str(profile_id)), lifecycle_case.request, None
+    elif rule_case is not None:
+        subject_ref, payload, secret = profile_operation_subject(str(profile_id)), rule_case.request, None
+    elif evidence_case is not None:
+        subject_ref, payload, secret = profile_operation_subject(str(profile_id)), evidence_case.request, None
+    elif prorrata_case is None:
+        subject_ref, payload, secret = _payload(
+            definition, profile_id=profile_id, tmp_path=tmp_path / definition.definition_id, operation=operation
+        )
+    else:
+        subject_ref, payload, secret = profile_operation_subject(str(profile_id)), prorrata_case.request, None
+    registered_payload = _registered_payload(definition.definition_id, written_subject=subject_ref, payload=payload)
+    declared_subject = _declared_subject(
+        definition, profile_id=profile_id, payload=registered_payload, operation=operation
+    )
+    assert declared_subject == subject_ref, (
+        f"{definition.definition_id} declares {definition.subject_reference.model_dump(mode='json')}, "
+        f"which renders {declared_subject!r}; its scenario addresses it as {subject_ref!r}"
+    )
+    return _ConformanceSubmission(
+        subject_ref=declared_subject,
+        payload=payload,
+        registered_payload=registered_payload,
+        secret=secret,
+        family_preparation=family_preparation,
+        projection_history_case=projection_history_case,
+        query_case=query_case,
+        review_case=review_case,
+        followup_case=followup_case,
+        recipient_case=recipient_case,
+        attachment_case=attachment_case,
+        lifecycle_case=lifecycle_case,
+        rule_case=rule_case,
+        prorrata_case=prorrata_case,
+        evidence_case=evidence_case,
+    )
+
+
 def _run_registered_executor_conformance_case(
     tmp_path: Path,
     case: RegisteredExecutorConformanceCase,
@@ -4070,111 +4299,21 @@ def _run_registered_executor_conformance_case(
     ):
         definitions = {definition.definition_id: definition for definition in registry.definitions}
         definition = definitions[case.definition_id]
-        family_preparation = _prepare_family_case(
+        submission = _seeded_conformance_submission(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation, family=family
         )
-        projection_history_case = (
-            prepare_modelo_projection_history_conformance_case(
-                case.definition_id, profile_id=profile_id, operation=operation
-            )
-            if case.definition_id in {"modelo.history", "modelo.history.timeline", "modelo.project", "modelo.compare"}
-            else None
-        )
-        query_case = (
-            prepare_modelo_query_conformance_case(case.definition_id, profile_id=profile_id, operation=operation)
-            if case.definition_id
-            in {
-                "modelo.bindings.list",
-                "modelo.bindings.resolve",
-                "modelo.bindings.resolve.typed",
-                "modelo.requires",
-                "modelo.readiness",
-                "modelo.readiness.summary",
-            }
-            else None
-        )
-        review_case = (
-            prepare_review_read_conformance_case(case.definition_id, profile_id=profile_id, operation=operation)
-            if case.definition_id in {"app.review.queue", "app.review.view"}
-            else None
-        )
-        followup_case = (
-            prepare_evidence_followup_conformance_case(case.definition_id, profile_id=profile_id, operation=operation)
-            if case.definition_id
-            in {
-                "ledger.evidence.attachment_queue",
-                "ledger.evidence.attachment_view",
-                "ledger.evidence.consent.list",
-                "ledger.evidence.review.list",
-                "ledger.evidence.review.view",
-            }
-            else None
-        )
-        recipient_case = (
-            prepare_recipient_operation_case(case.definition_id, profile_id)
-            if case.definition_id.startswith("config.collab.recipient.")
-            else None
-        )
-        attachment_case = (
-            prepare_ledger_attachment_operation_conformance_case(case.definition_id, profile_id, operation=operation)
-            if case.definition_id in {"ledger.attach", "ledger.detach"}
-            else None
-        )
-        lifecycle_case = (
-            _ledger_lifecycle_case(case.definition_id, profile_id=profile_id, operation=operation)
-            if case.definition_id in {"ledger.archive", "ledger.stash", "ledger.restore", "ledger.exclude"}
-            else None
-        )
-        rule_case = (
-            prepare_ledger_rule_operation_conformance_case(case.definition_id, profile_id, operation=operation)
-            if case.definition_id in {"ledger.rule.add", "ledger.rule.list", "ledger.rule.apply"}
-            else None
-        )
-        prorrata_case = (
-            _prorrata_case(case.definition_id, profile_id=profile_id, operation=operation)
-            if case.definition_id.startswith("ledger.prorrata.")
-            else None
-        )
-        evidence_case = (
-            prepare_invoice_evidence_conformance_case(case.definition_id, profile_id=profile_id, operation=operation)
-            if case.definition_id
-            in {"ledger.evidence.reader-readiness", "ledger.evidence.extract", "ledger.evidence.confirm"}
-            else None
-        )
-        if family_preparation is not None:
-            subject_ref, payload, secret = (
-                family_preparation.subject_ref,
-                family_preparation.request,
-                family_preparation.secret,
-            )
-        elif query_case is not None:
-            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), query_case.request, None
-        elif projection_history_case is not None:
-            subject_ref, payload, secret = (
-                profile_operation_subject(str(profile_id)),
-                projection_history_case.request,
-                None,
-            )
-        elif review_case is not None:
-            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), review_case.request, None
-        elif followup_case is not None:
-            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), followup_case.request, None
-        elif recipient_case is not None:
-            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), recipient_case.request, None
-        elif attachment_case is not None:
-            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), attachment_case.request, None
-        elif lifecycle_case is not None:
-            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), lifecycle_case.request, None
-        elif rule_case is not None:
-            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), rule_case.request, None
-        elif evidence_case is not None:
-            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), evidence_case.request, None
-        elif prorrata_case is None:
-            subject_ref, payload, secret = _payload(
-                definition, profile_id=profile_id, tmp_path=tmp_path / case.definition_id, operation=operation
-            )
-        else:
-            subject_ref, payload, secret = profile_operation_subject(str(profile_id)), prorrata_case.request, None
+        family_preparation = submission.family_preparation
+        projection_history_case = submission.projection_history_case
+        query_case = submission.query_case
+        review_case = submission.review_case
+        followup_case = submission.followup_case
+        recipient_case = submission.recipient_case
+        attachment_case = submission.attachment_case
+        lifecycle_case = submission.lifecycle_case
+        rule_case = submission.rule_case
+        prorrata_case = submission.prorrata_case
+        evidence_case = submission.evidence_case
+        subject_ref, payload, secret = submission.subject_ref, submission.payload, submission.secret
         bulk_classify_before = (
             (
                 TransactionCatalogueRepository(bucket_id=str(profile_id)).load(),
@@ -6072,7 +6211,8 @@ def test_amendment_co_commit_refuses_each_stale_catalogue_without_partial_writes
             operation=operation,
         )
         assert secret is None
-        filing_record_id = subject_ref
+        assert isinstance(payload, ModeloWorkAmendRequest)
+        filing_record_id = payload.baseline.from_filing_record_id
 
         records_before = ModeloRecordCatalogueRepository().load()
         baseline = records_before.get(filing_record_id)

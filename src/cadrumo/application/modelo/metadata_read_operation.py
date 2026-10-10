@@ -30,6 +30,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.public_period import PublicPeriod
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
@@ -128,6 +129,7 @@ def build_modelo_metadata_definition(factory: ActiveWorkLifecyclePortsFactory) -
     return build_single_phase_definition(
         definition_id=MODELO_WORK_METADATA_OPERATION_DEFINITION_ID,
         request_type=ModeloWorkMetadataRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=ModeloWorkMetadataProjection,
         executor_type=ModeloWorkMetadataExecutor,
         build=lambda: ModeloWorkMetadataExecutor(factory),

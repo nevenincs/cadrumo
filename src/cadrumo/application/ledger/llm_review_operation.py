@@ -35,6 +35,7 @@ from ..operations.registry import (
     operation_public_schema_reference,
 )
 from ..user_profile.access_contracts import (
+from ..operations.subject_reference import OperationSubjectReferenceV1
     AccessAction,
     AccessDenialCode,
     DisclosureCategory,
@@ -145,6 +146,7 @@ def build_ledger_llm_review_definition(
         executor_factory=OperationExecutorFactory(
             request_type=LedgerLlmReviewRequest,
             executor_type=LedgerLlmReviewExecutor,
+        subject_reference=OperationSubjectReferenceV1.profile(),
             build=lambda: LedgerLlmReviewExecutor(factory),
         ),
         phase_codes=("ledger.llm.acquire", "ledger.llm.review", "ledger.llm.commit"),

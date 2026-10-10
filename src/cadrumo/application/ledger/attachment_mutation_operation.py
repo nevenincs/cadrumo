@@ -52,6 +52,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.filter import LedgerReviewStatus
 from ..runtime.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 from ..user_profile.access_contracts import (
@@ -506,6 +507,7 @@ def _build_definition(
     return build_single_phase_definition(
         definition_id=operation_id,
         request_type=request_type,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerAttachmentExecutionResult,
         executor_type=executor_type,
         build=lambda: executor_type(ports_factory),

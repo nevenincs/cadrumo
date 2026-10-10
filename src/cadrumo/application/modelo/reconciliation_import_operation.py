@@ -42,6 +42,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
 )
 from ..user_profile.access_contracts import (
+from ..operations.subject_reference import OperationSubjectReferenceV1
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -481,6 +482,7 @@ def build_modelo_reconciliation_import_definition() -> OperationDefinition:
         permitted_frontends=ALL_OPERATION_FRONTENDS,
     )
 
+        subject_reference=OperationSubjectReferenceV1.profile(),
 
 def resolve_modelo_reconciliation_import_access(
     request: OperationRequest[BaseModel],

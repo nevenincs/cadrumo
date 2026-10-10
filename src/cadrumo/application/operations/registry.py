@@ -68,6 +68,7 @@ from .models import (
 from .refusal_evidence import validate_refusal_code
 from .registry_schema_validation import strict_model_json_schema
 from .schema_identity import OperationPublicSchemaId, OperationSchemaIdentityV1
+from .subject_reference import OperationSubjectReferenceV1
 
 _STRICT_RUNTIME_BINDING_CONFIG = ConfigDict(
     strict=True,
@@ -82,10 +83,11 @@ class OperationPublicDefinitionContractV1(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    manifest_version: Literal[2] = 2
+    manifest_version: Literal[3] = 3
     definition_id: OperationDefinitionId
     action_reference: ActionReference | None
     request_schema: OperationSchemaIdentityV1
+    subject_reference: OperationSubjectReferenceV1
     result_schema: OperationSchemaIdentityV1 | None
     refusal_detail_codes: frozenset[OperationFailureErrorCode]
     review_projection_schema: OperationSchemaIdentityV1 | None

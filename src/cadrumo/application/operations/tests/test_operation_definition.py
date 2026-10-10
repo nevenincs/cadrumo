@@ -10,6 +10,7 @@ from ..capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operation_definition import OperationDefinition, build_single_phase_definition
 from ..owner import OperationExecutorContext
 from ..registry import OperationFrontendProjection, OperationReconciliationPolicy
+from ..subject_reference import OperationSubjectReferenceV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -38,6 +39,7 @@ def _definition(*, executor: object | None = None, public_error_detail: bool = F
     return build_single_phase_definition(
         definition_id=_DEFINITION_ID,
         request_type=_Request,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=_Result,
         executor_type=_Executor,
         build=(lambda: executor) if executor is not None else _Executor,
@@ -78,6 +80,7 @@ def test_definition_refuses_an_unregistered_error_detail_declaration_without_a_r
         build_single_phase_definition(
             definition_id=_DEFINITION_ID,
             request_type=_Request,
+            subject_reference=OperationSubjectReferenceV1.profile(),
             result_type=None,
             executor_type=_Executor,
             build=_Executor,

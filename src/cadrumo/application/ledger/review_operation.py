@@ -16,6 +16,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.read_capture import capture_read_result
 from ..operations.registry import ALL_OPERATION_FRONTENDS, OperationPublicDefinitionRegistrationV1
+from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.errors import FilterParseError
 from ..review.filter import LedgerReviewFilterSpec, LedgerReviewStatus
 from ..user_profile.access_contracts import AccessDenialCode
@@ -139,6 +140,7 @@ def build_ledger_review_definition(ports: LedgerActionPortsFactory) -> Operation
     return build_single_phase_definition(
         definition_id=LEDGER_REVIEW_OPERATION_DEFINITION_ID,
         request_type=LedgerReviewRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerReviewProjection,
         executor_type=LedgerReviewExecutor,
         build=lambda: LedgerReviewExecutor(ports),
