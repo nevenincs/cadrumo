@@ -9,6 +9,7 @@ from typing import Final, Literal, Self
 from uuid import UUID, uuid4
 
 from ...application.bucket_deletion_contracts import BucketDeletionFingerprint
+from ...application.operations.mcp_surfaces import McpSurfaceName
 from ...application.operations.registry import (
     OperationFrontendProjection,
 )
@@ -94,12 +95,22 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
     """
 
     def __init__(
-        self, connection: VerifiedRuntimeConnection, *, profile_id: UUID, frontend: OperationFrontendProjection
+        self,
+        connection: VerifiedRuntimeConnection,
+        *,
+        profile_id: UUID,
+        frontend: OperationFrontendProjection,
+        surface: McpSurfaceName | None = None,
     ) -> None:
-        """Bind one verified connection to an explicit immutable frontend target."""
+        """Bind one verified connection to an explicit immutable frontend target.
+
+        ``surface`` is the MCP surface every login on this connection names.
+        The runtime holds the connection to it; ``None`` names none.
+        """
         self._connection = connection
         self._profile_id = profile_id
         self._frontend = frontend
+        self._surface = surface
         self._session_id: UUID | None = None
         self._connection_purpose: Literal["fresh", "admission", "recovery", "enrollment", "bootstrap"] = "fresh"
         self._event_guard = RLock()
@@ -182,9 +193,10 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
         profile_id: UUID,
         frontend: OperationFrontendProjection,
         timeout: float = 10,
+        surface: McpSurfaceName | None = None,
     ) -> Self:
         """Use the canonical owner-verified launch door before any credential."""
-        return cls(await launch.open(timeout=timeout), profile_id=profile_id, frontend=frontend)
+        return cls(await launch.open(timeout=timeout), profile_id=profile_id, frontend=frontend, surface=surface)
 
     def __enter__(self) -> Self:
         """Retain this owned connection for a synchronous frontend scope."""
@@ -230,15 +242,16 @@ class RuntimeFrontendClient(RuntimeProfileViewFrontend):
             if self._session_id is not None:
                 raise RuntimeFrontendRefusedError(AutomationCustodyCode.CONFLICT.value)
             self._connection_purpose = "admission"
-            request = RuntimeProfileLogin.model_validate(
-                {
-                    "request_id": uuid4(),
-                    "profile_id": self.profile_id,
-                    "frontend": self.frontend,
-                    "method": method,
-                    "persist_receipt": persist_receipt,
-                }
-            )
+            document: dict[str, object] = {
+                "request_id": uuid4(),
+                "profile_id": self.profile_id,
+                "frontend": self.frontend,
+                "method": method,
+                "persist_receipt": persist_receipt,
+            }
+            if self._surface is not None:
+                document["surface"] = self._surface.value
+            request = RuntimeProfileLogin.model_validate(document)
             with self._event_guard:
                 epoch = self._retirement_epoch
             reply = self._reply(

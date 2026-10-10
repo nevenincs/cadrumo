@@ -13,6 +13,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.application.operations.mcp_surfaces import McpSurfaceName
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeServerHello
 from cadrumo.application.user_profile.automation_custody_port import (
@@ -84,10 +85,11 @@ def _admission_ports(
     reference = uuid4()
 
     async def open_transport(
-        *, profile_id: UUID, frontend: OperationFrontendProjection, timeout: float
+        *, profile_id: UUID, frontend: OperationFrontendProjection, timeout: float, surface: McpSurfaceName | None
     ) -> RuntimeFrontendClient:
         assert profile_id == client.profile_id
         assert frontend is client.frontend
+        assert surface is None
         assert timeout > 0
         return client
 

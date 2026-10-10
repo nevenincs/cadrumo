@@ -12,6 +12,7 @@ from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.posix_endpoint import PosixRuntimeEndpoint
 from cadrumo.adapters.local_runtime.startup import RuntimeLaunchDoor
 from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
+from cadrumo.application.operations.mcp_surfaces import McpSurfaceName
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
@@ -52,13 +53,18 @@ async def _close_owned_resource(
 
 
 async def open_installed_runtime_client(
-    *, profile_id: UUID, frontend: OperationFrontendProjection, timeout: float = 10
+    *,
+    profile_id: UUID,
+    frontend: OperationFrontendProjection,
+    timeout: float = 10,
+    surface: McpSurfaceName | None = None,
 ) -> RuntimeFrontendClient:
     """Connect to the exact running owner through the installed transport.
 
     This opens no profile and reads no credential. The caller must explicitly
     authenticate the returned connection and own it for its frontend lifetime.
-    An absent or untrusted endpoint returns a typed refusal.
+    An absent or untrusted endpoint returns a typed refusal. ``surface`` is the
+    MCP surface the connection's logins name.
     """
     try:
         root = effective_storage_root().resolve(strict=True)
@@ -83,7 +89,9 @@ async def open_installed_runtime_client(
                 authority_generation=published_authority_generation(),
             ),
         )
-        client = await RuntimeFrontendClient.open(launch, profile_id=profile_id, frontend=frontend, timeout=timeout)
+        client = await RuntimeFrontendClient.open(
+            launch, profile_id=profile_id, frontend=frontend, timeout=timeout, surface=surface
+        )
     except BaseException as error:
         await _close_owned_resource(endpoint_cleanup, task_name="installed-runtime-endpoint-close", primary_error=error)
         raise

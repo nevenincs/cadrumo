@@ -31,6 +31,7 @@ from ...adapters.persistence.storage.errors import StorageError
 from ...adapters.persistence.storage.profile_custody import build_profile_custody_port
 from ...application.auth.operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID
 from ...application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from ...application.operations.mcp_surfaces import McpSurfaceName
 from ...application.operations.models import OperationIdentity
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.runtime.approval_binding import RuntimeApprovalBinding
@@ -107,6 +108,7 @@ class ProfileConnection:
     persist_human_receipt: bool = False
     recovery_generation: int | None = None
     bootstrap_digest: str | None = None
+    surface: McpSurfaceName | None = None
 
 
 @dataclass(frozen=True)

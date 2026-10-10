@@ -20,6 +20,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.profile_session import ProfileSessionRefusalReason
 from ...core.time.utc import UtcInstant
+from ..operations.mcp_surfaces import McpSurfaceName
 from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationFrontendProjection
 from ..operations.schema_identity import OperationPublicSchemaId
@@ -241,6 +242,8 @@ class AccessSession(BaseModel):
     issued_at: UtcInstant
     expires_at: UtcInstant
     issued_monotonic: Annotated[float, Field(ge=0, allow_inf_nan=False)]
+    surface: McpSurfaceName | None = None
+    """The MCP surface the connection named at login; ``None`` narrows nothing."""
 
     @model_validator(mode="after")
     def _validate_origin_and_lease(self) -> AccessSession:

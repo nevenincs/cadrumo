@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.application.operations.mcp_surfaces import McpSurfaceName
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime import deadline_budget
 from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
@@ -31,9 +32,10 @@ async def test_protected_reference_uses_profile_admission_budget_and_preserves_e
     authenticated: list[float] = []
 
     async def open_client(
-        *, profile_id: UUID, frontend: OperationFrontendProjection, timeout: float
+        *, profile_id: UUID, frontend: OperationFrontendProjection, timeout: float, surface: McpSurfaceName | None
     ) -> RuntimeFrontendClient:
         assert profile_id == client.profile_id and frontend is OperationFrontendProjection.MCP
+        assert surface is None
         opened.append(timeout)
         return client
 

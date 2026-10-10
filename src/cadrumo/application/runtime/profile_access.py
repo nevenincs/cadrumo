@@ -71,7 +71,12 @@ class RuntimeHumanProof:
 
 
 class RuntimeProfileLogin(BaseModel):
-    """Name an exact profile and credential class, without asserting native identity."""
+    """Name an exact profile and credential class, without asserting native identity.
+
+    ``surface`` names the MCP surface the connection asks to be held to. It is
+    absent from the document when no surface is named, and the runtime refuses
+    a name it does not know.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     action: Literal["profile_login"] = "profile_login"
@@ -81,6 +86,7 @@ class RuntimeProfileLogin(BaseModel):
     frontend: OperationFrontendProjection
     scope: AccessScope | None = None
     persist_receipt: bool = False
+    surface: Annotated[str, Field(min_length=1, max_length=64)] | None = None
 
 
 class RuntimeSessionRequest(BaseModel):

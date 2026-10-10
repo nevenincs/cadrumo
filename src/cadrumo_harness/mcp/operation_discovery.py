@@ -9,6 +9,7 @@ from uuid import UUID
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo.application.operations.mcp_surfaces import McpSurface
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
@@ -44,16 +45,19 @@ def search_operations(
     profile_id: UUID,
     args: dict[str, Any],
     deadline: float,
+    surface: McpSurface,
 ) -> dict[str, Any]:
-    """Return one page of the operations this exact session may describe.
+    """Return one page of the operations this exact session may describe on its surface.
 
     Without a query the page follows definition ID order and only the page's own
     contracts are read. With a query every contract in scope is needed to rank,
-    so the ranked list is paged by position.
+    so the ranked list is paged by position. Leaving an operation out here only
+    spares a call the runtime refuses; the runtime holds the connection to its
+    surface.
     """
     status = require_exact_admitted_status(client, profile_id=profile_id)
     family = args.get("family", "").strip()
-    granted = sorted(status.effective_scope.operations)
+    granted = sorted(item for item in status.effective_scope.operations if surface.admits(item))
     scope = [definition_id for definition_id in granted if _in_family(definition_id, family)]
     limit = args.get("limit", SEARCH_PAGE_DEFAULT)
     cursor = args.get("cursor")

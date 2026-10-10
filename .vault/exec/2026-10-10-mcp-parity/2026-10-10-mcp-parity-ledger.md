@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e4c8316e8ac8d9db6db1a9fd77805853501af5ce5423b7e3e7e0dbba0f3c965'
+body_hash: 'sha256:69ef79c620081c8dbfdb0e7826c362ded3de9105b7862351a5dbf1852313c871'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -165,6 +165,47 @@ related:
 - `S27` `verify:` `ruff format --check` -> `pass`
 - `S27` `verify:` `ty check --python-platform linux` -> `pass`
 - `S27` `by:` `vaultspec-standard-executor`
+- `S06` `A` `src/cadrumo/application/operations/mcp_surfaces.py`
+- `S06` `A` `src/cadrumo/application/operations/tests/test_mcp_surfaces.py`
+- `S06` `A` `src/cadrumo/application/user_profile/tests/test_session_surface_lease.py`
+- `S06` `A` `src/cadrumo/entrypoints/tests/test_operation_mcp_surfaces.py`
+- `S06` `A` `src/cadrumo/entrypoints/runtime/tests/test_login_surface.py`
+- `S06` `A` `src/cadrumo/adapters/local_runtime/tests/test_login_surface_frame.py`
+- `S06` `A` `src/cadrumo_harness/mcp/tests/test_surface_tools.py`
+- `S06` `M` `src/cadrumo/application/user_profile/operation_access_policy.py`
+- `S06` `M` `src/cadrumo/application/user_profile/session_authority_admission.py`
+- `S06` `M` `src/cadrumo/application/runtime/profile_access.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/runtime_frame_io.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/runtime_client.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/runtime_credentials.py`
+- `S06` `M` `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`
+- `S06` `M` `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`
+- `S06` `M` `src/cadrumo/entrypoints/runtime/profile_connection_operations.py`
+- `S06` `M` `src/cadrumo_harness/mcp/main.py`
+- `S06` `M` `src/cadrumo_harness/mcp/server.py`
+- `S06` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S06` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
+- `S06` `M` `src/cadrumo_harness/mcp/operation_discovery.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/tests/test_runtime_credential_admission_budget.py`
+- `S06` `M` `src/cadrumo/adapters/local_runtime/tests/test_runtime_credentials_cleanup.py`
+- `S06` `M` `docs/how-to/connect-an-agent.md`
+- `S06` `M` `docs/technical/articles/187-filing-skills-and-the-mcp-operator-harness.md`
+- `S06` `M` `dev/smoke/smoke_check.py`
+- `S06` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S06` `M` `src/cadrumo/application/user_profile/access_contracts.py`
+- `S06` `M` `src/cadrumo/entrypoints/runtime/profile_host.py`
+- `S06` `M` `dev/quality/metadata/import_load_targets.json`
+- `S06` `verify:` `pytest surfaces, session lease, access policy, commit scope (108 tests)` -> `pass`
+- `S06` `verify:` `pytest entrypoint surfaces, admission, catalogue (45 tests)` -> `pass`
+- `S06` `verify:` `pytest runtime login surface, submission admission, receipt login, sign-in refusals, login lifecycle (53 tests)` -> `pass`
+- `S06` `verify:` `pytest local runtime frames and credential fakes (20 tests)` -> `pass`
+- `S06` `verify:` `pytest src/cadrumo_harness (207 tests)` -> `pass`
+- `S06` `verify:` `pytest src/cadrumo/application/user_profile/tests src/cadrumo/application/runtime -n4 (763 tests)` -> `pass`
+- `S06` `verify:` `ruff check` -> `pass`
+- `S06` `verify:` `ruff format --check on the files of this Step` -> `pass`
+- `S06` `verify:` `ty check --python-platform linux` -> `pass`
+- `S06` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -175,3 +216,4 @@ related:
 - `S05` The 18 failures in the wide run are not from this Step. Two (session owner, worker drain) pass when run alone. Ten are the machine: the test child interpreter sees a stale cadrumo 0.5.1 install in the base Python while the environment is 0.6.0, so the runtime refuses with a version mismatch before announcing ready (supervised runtime, headless load, console interrupt). Three operation-provenance cases fail in the test process on a storage route mismatch, and three grant-change cases fail because the runtime now retires the key session when its grant changes and the test predates that; neither path is touched by this feature, and no earlier run of those files exists to compare. Three operations (filed list, filed discover, census preview) are now refused at submission for a scope without commit where they used to complete when the provider session was reusable.
 - `S09` The manifest assertion added to `test_command_surface_beside_retired_state.py` cannot run on this machine: that test setup creates a directory beside the checkout and a copy left on 2026-10-05 makes it fail before the assertion, as it does at HEAD. The claim is proven by a new test of the real emitter in `test_command_operation_join.py.` Eight tests in `test_cli_surface.py` fail with `runtime_unavailable` and are unrelated. Seventeen operations list the command line as a frontend although no command submits them. The generated import inventory entries for the two new product modules are added with the next regeneration.
 - `S27` Checklist per operation, by reading: resolver present and frontend-agnostic; no command-line safeguard missing from the operation; no person-act field; no host path; results are typed data with no bytes, secrets or keys; executors read only and reach no network. The command line defaults the year and an MCP caller must supply it. The rule list result includes the stored creator string of each rule. A wide command-line run selected by keyword was still running at close and is not evidence for this Step.
+- `S06` Two files carry another session uncommitted changes; only the surface lines are committed from them (three in `access_contracts.py,` two in `profile_host.py).` The one format finding and the one noqa in those files are in the other session lines. Not built here: status still reports the unnarrowed scope on a narrowed surface; there is no single end-to-end test with a real worker, the chain is covered in three pieces; the packaged plugin launch line never names a surface. Four listed read-only operations rest on the over-declared effects set. The how-to translations for the new paragraph follow separately.

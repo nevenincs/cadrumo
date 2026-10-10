@@ -104,6 +104,7 @@ class ProfileConnectionSessionMixin:
                     target=host.store.binding,
                     credential=api_login.credential,
                     scope=api_login.scope,
+                    surface=connection.surface,
                 )
         return self._finish_login(connection, host, context, request, admitted)
 

@@ -128,14 +128,22 @@ def write_session_event(channel: RuntimeByteChannel, event: RuntimeConnectionEve
         raise
 
 
+def _unnamed_optional_members(document: BaseModel) -> set[str]:
+    """Name the members a document leaves out while they are unset.
+
+    A peer built before such a member existed refuses a document that carries
+    it, so the member travels only when it says something.
+    """
+    if isinstance(document, RuntimeClientHello) and document.lifecycle_notices is None:
+        return {"lifecycle_notices"}
+    if isinstance(document, RuntimeProfileLogin) and document.surface is None:
+        return {"surface"}
+    return set()
+
+
 def document_frame(document: BaseModel) -> bytes:
     """Build one bounded credential-free JSON frame before channel ownership changes."""
-    excluded = (
-        {"lifecycle_notices"}
-        if isinstance(document, RuntimeClientHello) and document.lifecycle_notices is None
-        else set()
-    )
-    payload = canonical_json_bytes(document.model_dump(mode="json", exclude=excluded))
+    payload = canonical_json_bytes(document.model_dump(mode="json", exclude=_unnamed_optional_members(document)))
     if not 0 < len(payload) <= MAXIMUM_FRAME_BYTES:
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     return DOCUMENT_FRAME_KIND + struct.pack("!I", len(payload)) + payload

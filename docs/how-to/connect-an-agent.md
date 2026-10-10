@@ -51,6 +51,15 @@ configuration and conversation. An approved protected credential reference can
 be supplied with `--credential-reference` for a later connection, while its
 grant and the profile remain eligible.
 
+The optional `--surface NAME` argument pins the view of the server that the
+connection is served. Without it the server uses `full`, which advertises every
+tool and every operation the session may use. Choose `read-only-local` for an
+agent that should only look: it leaves out the `review` and `respond` tools and
+offers only operations that change no record and reach no network. Cadrumo's
+local runtime enforces the surface when an operation is submitted, so hiding a
+tool is not what keeps the agent read-only. An unknown name stops the server at
+start-up, before any connection, and the error lists the surfaces available.
+
 If the configured reference cannot authenticate, the MCP connection stays open.
 Use `status` to inspect the refusal; private operations remain unavailable.
 Restore access to the protected store or obtain an approved replacement reference,

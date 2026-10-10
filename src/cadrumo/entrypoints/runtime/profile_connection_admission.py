@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 from ...adapters.local_runtime.installation import runtime_installation
 from ...adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from ...adapters.persistence.storage.custody.automation_store import AutomationControlStore
+from ...application.operations.mcp_surfaces import McpSurfaceName, mcp_surface
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.access_management import (
     RuntimeAutomationDeny,
@@ -123,7 +124,8 @@ class ProfileConnectionAdmissionMixin:
         request: RuntimeProfileLogin,
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
         self._validate_login_request(request)
-        connection = self._existing_or_captured_connection(context, channel, request)
+        surface = self._login_surface(request)
+        connection = self._existing_or_captured_connection(context, channel, request, surface)
         host = self._host(request.profile_id, context)
         with host.guard:
             self._prepare_profile_login(connection, host, context, request)
@@ -144,11 +146,29 @@ class ProfileConnectionAdmissionMixin:
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
+    @staticmethod
+    def _login_surface(request: RuntimeProfileLogin) -> McpSurfaceName | None:
+        """Resolve the MCP surface a login names, refusing a name that cannot be enforced.
+
+        A surface narrows what the MCP frontend is admitted to, so no other
+        frontend may name one. An unknown name is refused, never ignored: the
+        connection would otherwise run without the narrowing it asked for.
+        """
+        if request.surface is None:
+            return None
+        if request.frontend is not OperationFrontendProjection.MCP:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        try:
+            return mcp_surface(request.surface).name
+        except KeyError:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME) from None
+
     def _existing_or_captured_connection(
         self: RuntimeProfileConnections,
         context: RuntimeConnectionContext,
         channel: RuntimeByteChannel,
         request: RuntimeProfileLogin,
+        surface: McpSurfaceName | None,
     ) -> ProfileConnection:
         with self._guard:
             previous = self._connections.get(context.connection_id)
@@ -157,6 +177,8 @@ class ProfileConnectionAdmissionMixin:
                 previous.context != context
                 or previous.profile_id != request.profile_id
                 or previous.frontend != request.frontend
+                # The first login fixes the surface; a later one cannot widen or swap it.
+                or previous.surface is not surface
                 or previous.method in {"enrollment", "bootstrap-reset", "bootstrap-delete"}
             ):
                 raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
@@ -165,7 +187,7 @@ class ProfileConnectionAdmissionMixin:
         observed = login.observe(credential_facilities=Availability.UNAVAILABLE)
         if not observed.active or observed.os_owner_id != context.peer.os_owner_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
-        return ProfileConnection(context, login, uuid4(), request.profile_id, request.frontend)
+        return ProfileConnection(context, login, uuid4(), request.profile_id, request.frontend, surface=surface)
 
     def _prepare_profile_login(
         self: RuntimeProfileConnections,

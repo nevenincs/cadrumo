@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from ...adapters.local_runtime.runtime_frame_io import read_secret, write_document
+from ...application.operations.mcp_surfaces import MCP_SURFACES
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.runtime.contracts import (
     RuntimeByteChannel,
@@ -73,6 +74,16 @@ type _RuntimeOperationReplyRequest = (
     | RuntimeOperationReview
     | RuntimeOperationManage
 )
+
+
+def _require_surface_admits(connection: ProfileConnection, definition_id: str) -> None:
+    """Refuse early an operation outside the MCP surface the connection named.
+
+    This spares a description or an upload that the access policy refuses. The
+    policy is the enforcement and is applied to every access regardless.
+    """
+    if connection.surface is not None and not MCP_SURFACES[connection.surface].admits(definition_id):
+        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
 
 
 class ProfileConnectionOperationMixin:
@@ -240,6 +251,7 @@ class ProfileConnectionOperationMixin:
         contract = description.contract
         if connection.frontend not in contract.permitted_frontends:
             raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+        _require_surface_admits(connection, contract.definition_id)
         reply = RuntimeOperationContractReply(
             request_id=request.request_id,
             runtime_boot_id=self.boot,
@@ -262,6 +274,7 @@ class ProfileConnectionOperationMixin:
         contract = host.owner.operation_worker().describe(request.session_id, request.definition_id).contract
         if connection.frontend not in contract.permitted_frontends:
             raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+        _require_surface_admits(connection, contract.definition_id)
         if isinstance(request.descriptor, FinancialOperandInputDescriptor) != (
             contract.transient_financial_operand is not None
         ):

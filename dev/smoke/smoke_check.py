@@ -156,7 +156,7 @@ def check_mcp_script() -> None:
     result = _run(MCP_SCRIPT, ["--help"])
     if result.returncode != 0:
         _fail(f"{MCP_SCRIPT} --help exited {result.returncode}: {result.stderr.strip()[:400]}")
-    for option in ("--profile-id", "--credential-reference"):
+    for option in ("--profile-id", "--credential-reference", "--surface"):
         if option not in result.stdout:
             _fail(f"{MCP_SCRIPT} --help does not offer {option}: {result.stdout.strip()[:200]}")
     imported = asyncio.run(

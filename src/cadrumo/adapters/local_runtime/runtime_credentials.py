@@ -17,6 +17,7 @@ from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import NativeClientCredentialStore
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
+from cadrumo.application.operations.mcp_surfaces import McpSurfaceName
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.deadline_budget import deadline_after, remaining_budget
@@ -80,6 +81,7 @@ async def open_installed_credential_client(
     timeout: float = PROFILE_ADMISSION_TIMEOUT_SECONDS,
     secrets_store: AutomationSecretStore | None = None,
     on_connected: Callable[[RuntimeFrontendClient], None] | None = None,
+    surface: McpSurfaceName | None = None,
 ) -> RuntimeFrontendClient:
     """Own a newly admitted exact-profile client without exporting its key.
 
@@ -87,6 +89,7 @@ async def open_installed_credential_client(
     callers use the installed non-prompting platform port. The reference is not
     authentication: native peer checks, current custody and fresh API proof
     must all succeed. Failure or cancellation closes only this new connection.
+    ``surface`` is the MCP surface the admission names to the runtime.
     """
     deadline = deadline_after(timeout)
     try:
@@ -94,7 +97,7 @@ async def open_installed_credential_client(
     except OSError:
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
     client = await open_installed_runtime_client(
-        profile_id=profile_id, frontend=frontend, timeout=remaining_budget(deadline)
+        profile_id=profile_id, frontend=frontend, timeout=remaining_budget(deadline), surface=surface
     )
     try:
         if on_connected is not None:

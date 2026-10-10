@@ -10,6 +10,7 @@ from typing import Any, Protocol
 from uuid import UUID, uuid4
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.operations.frontend_requests import (
     OperationCancellationRequestV1,
     OperationDetachRequestV1,
@@ -19,6 +20,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResponseRejectRequestV1,
     OperationReviewProjectionRequestV1,
 )
+from cadrumo.application.operations.mcp_surfaces import McpSurface
 from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.operation_access import (
@@ -31,6 +33,7 @@ from cadrumo.application.runtime.operation_access import (
     RuntimeOperationSubmitted,
 )
 from cadrumo.application.runtime.projection_pages import ProjectionPageRequest
+from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.core.time.clock import now
 
 from .operation_contract_cache import OperationContractCache
@@ -44,6 +47,7 @@ _TIMEOUT = 30.0
 class _AdmittedConnection(Protocol):
     profile_id: UUID
     client: RuntimeFrontendClient | None
+    surface: McpSurface
     _startup_denial: str | None
     _contracts: OperationContractCache
 
@@ -56,6 +60,7 @@ class _Binding:
 
     profile_id: UUID
     contracts: OperationContractCache
+    surface: McpSurface
 
 
 type _ToolHandler = Callable[[RuntimeFrontendClient, _Binding, dict[str, Any], float], dict[str, Any]]
@@ -72,7 +77,8 @@ def call_admitted_operation(connection: _AdmittedConnection, name: str, args: di
     handler = _ADMITTED_TOOL_HANDLERS.get(name)
     if handler is None:
         raise ValueError("unsupported tool")
-    return handler(client, _Binding(connection.profile_id, connection._contracts), args, deadline)
+    binding = _Binding(connection.profile_id, connection._contracts, connection.surface)
+    return handler(client, binding, args, deadline)
 
 
 def _unauthenticated_status(profile_id: UUID, denial: str | None) -> dict[str, Any]:
@@ -88,13 +94,17 @@ def _unauthenticated_status(profile_id: UUID, denial: str | None) -> dict[str, A
 
 
 def _search(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
-    return search_operations(client, binding.contracts, binding.profile_id, args, deadline)
+    return search_operations(client, binding.contracts, binding.profile_id, args, deadline, binding.surface)
 
 
 def _describe(
     client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], deadline: float
 ) -> dict[str, Any]:
-    description = binding.contracts.description(client, args["definition_id"], deadline=deadline, fresh=True)
+    definition_id = args["definition_id"]
+    if not binding.surface.admits(definition_id):
+        # The runtime refuses the operation itself; this only answers as it would.
+        raise RuntimeFrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
+    description = binding.contracts.description(client, definition_id, deadline=deadline, fresh=True)
     return {"outcome": "described", "description": public_value(description)}
 
 

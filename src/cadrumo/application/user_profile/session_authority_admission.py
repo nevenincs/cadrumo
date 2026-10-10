@@ -20,6 +20,7 @@ from pydantic import SecretBytes
 
 from ...core.async_cleanup import AsyncResourceCleanupError
 from ...core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+from ..operations.mcp_surfaces import McpSurfaceName
 from .access_contracts import (
     ACCESS_LEASE_MAXIMUM,
     AccessDenialCode,
@@ -136,14 +137,17 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         target: ProfileAccessBinding,
         credential: SecretBytes,
         scope: AccessScope,
+        surface: McpSurfaceName | None = None,
     ) -> AccessSession | AccessDenied:
         """Prove key possession and admit a fresh lease without any human session.
 
         The transport verifies the native peer before providing this credential.
         A parsed key identifier is routing only; unwrap must prove possession.
         Both durable state and trusted lifecycle facts are checked again after it.
+        ``surface`` is the MCP surface the connection named; the lease carries it
+        for its whole life, refresh included.
         """
-        candidate = self._prepare_api_key_candidate(connection_id, target, credential, scope, uuid4())
+        candidate = self._prepare_api_key_candidate(connection_id, target, credential, scope, uuid4(), surface)
         if isinstance(candidate, AccessDenied):
             return candidate
         return self._publish_api_key_candidate(candidate, credential)
@@ -155,6 +159,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         credential: SecretBytes,
         scope: AccessScope,
         identity: UUID,
+        surface: McpSurfaceName | None,
     ) -> _ApiKeyAdmissionCandidate | AccessDenied:
         with self.owner.admission_guard():
             if target != self.binding:
@@ -189,6 +194,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
                 issued_at=facts.context.now,
                 expires_at=expires,
                 issued_monotonic=facts.context.monotonic_now,
+                surface=surface,
             )
             decision = self._evaluate(session, facts, grant, key)
             if isinstance(decision, AccessDenied):
@@ -571,4 +577,5 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             issued_at=recipient.context.now,
             issued_monotonic=recipient.context.monotonic_now,
             expires_at=expires,
+            surface=parent.surface,
         )

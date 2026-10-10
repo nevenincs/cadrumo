@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from ...core.operations import OperationInteractionKind
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from ..operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
+from ..operations.mcp_surfaces import MCP_SURFACES, McpSurface
+from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1, OperationRegistry
 from .access_contracts import (
     AccessAction,
     AccessDecision,
@@ -143,6 +144,9 @@ def _evaluate_operation_scope(
     contract = _registered_contract_or_refusal(request, policy, registry, session)
     if isinstance(contract, AccessDenied):
         return contract
+    refusal = _surface_refusal(request, policy, (session, *ancestors))
+    if refusal is not None:
+        return refusal
     scope = _effective_operation_scope(session, ancestors, grant, profile)
     refusal = operation_scope_refusal(request=request, policy=policy, scope=scope)
     if refusal is not None:
@@ -198,6 +202,44 @@ def _registered_contract_or_refusal(
     if request.frontend not in contract.permitted_frontends:
         return AccessDenied(code=AccessDenialCode.FRONTEND_DENIED)
     return contract
+
+
+def _surface_refusal(
+    request: OperationAccessRequest,
+    policy: OperationAccessPolicy,
+    leases: tuple[AccessSession, ...],
+) -> AccessDenied | None:
+    """Apply the MCP surface each lease was admitted under, after the frontend list.
+
+    A surface narrows what the registry opens to the MCP frontend, so it is
+    refused as that frontend is. A lease that names none is not narrowed, and a
+    child is held to every surface its ancestors named.
+    """
+    for lease in leases:
+        if lease.surface is not None and _surface_refuses(MCP_SURFACES[lease.surface], request, policy):
+            return AccessDenied(code=AccessDenialCode.FRONTEND_DENIED)
+    return None
+
+
+def _surface_refuses(surface: McpSurface, request: OperationAccessRequest, policy: OperationAccessPolicy) -> bool:
+    if request.frontend is not OperationFrontendProjection.MCP:
+        # Only an MCP connection is admitted under a surface.
+        return True
+    if not surface.admits(request.definition_id):
+        return True
+    return not surface.changes_records and _reaches_commit(request, policy)
+
+
+def _reaches_commit(request: OperationAccessRequest, policy: OperationAccessPolicy) -> bool:
+    """Tell whether an access opens, or could come to open, an irreversible section.
+
+    The policy is the owning operation's resolution of this exact request, so
+    it holds COMMIT only where the request can commit. A read-only surface
+    refuses that submission before anything is stored, and the section itself.
+    """
+    return request.action is AccessAction.COMMIT or (
+        request.action is AccessAction.SUBMIT and AccessAction.COMMIT in policy.actions
+    )
 
 
 def _registered_disclosure_refusal(

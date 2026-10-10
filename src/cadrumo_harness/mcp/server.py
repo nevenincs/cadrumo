@@ -9,6 +9,7 @@ from uuid import UUID
 
 import anyio
 
+from cadrumo.application.operations.mcp_surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 from cadrumo.domain.calculations.registry.authority import release_bundled_indexed_authority
 
 from .protocol_contract import MCP_TOOL_CATALOGUE, has_refusal
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
 
 
 def build_server(adapter: RuntimeMcpAdapter) -> Server:
-    """Register the stable protocol surface around one connection-owned adapter."""
+    """Register the tools of the adapter's surface around one connection-owned adapter."""
     from mcp.server import Server
     from mcp.types import CallToolRequestParams, CallToolResult, ListToolsResult, TextContent, Tool
 
@@ -29,6 +30,7 @@ def build_server(adapter: RuntimeMcpAdapter) -> Server:
             tools=[
                 Tool(name=name, description=description, input_schema=cast(dict[str, Any], schema))
                 for name, description, schema in MCP_TOOL_CATALOGUE
+                if name in adapter.surface.tools
             ]
         )
 
@@ -43,15 +45,20 @@ def build_server(adapter: RuntimeMcpAdapter) -> Server:
     return Server("cadrumo", on_list_tools=list_tools, on_call_tool=call_tool)
 
 
-def serve(*, profile_id: UUID, credential_reference: UUID | None = None) -> None:
-    """Run one stdio adapter; EOF closes its lease, never the shared runtime."""
+def serve(
+    *,
+    profile_id: UUID,
+    credential_reference: UUID | None = None,
+    surface: McpSurface = MCP_SURFACES[DEFAULT_MCP_SURFACE],
+) -> None:
+    """Run one stdio adapter on one surface; EOF closes its lease, never the shared runtime."""
     from mcp.server.lowlevel import NotificationOptions
     from mcp.server.stdio import stdio_server
 
     async def run() -> None:
         from .runtime_adapter import RuntimeMcpAdapter
 
-        adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
+        adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None, surface=surface)
         try:
             if credential_reference is not None:
                 await adapter.bootstrap_reference(credential_reference)

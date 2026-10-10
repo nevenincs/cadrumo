@@ -19,9 +19,11 @@ from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFron
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
+from cadrumo.application.operations.mcp_surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
@@ -64,14 +66,27 @@ WireResultT = TypeVar("WireResultT")
 class RuntimeMcpAdapter:
     """One MCP connection owns one admitted lease and independent enrollment door."""
 
-    def __init__(self, *, profile_id: UUID, client: RuntimeFrontendClient | None) -> None:
-        """Bind a protocol connection to one immutable profile and optional lease."""
+    def __init__(
+        self,
+        *,
+        profile_id: UUID,
+        client: RuntimeFrontendClient | None,
+        surface: McpSurface = MCP_SURFACES[DEFAULT_MCP_SURFACE],
+    ) -> None:
+        """Bind a protocol connection to one immutable profile, surface and optional lease.
+
+        The surface decides which tools answer and which operations search and
+        describe reveal. That is a convenience: every admission this adapter
+        opens names the surface to the runtime, which is what holds the
+        connection to it.
+        """
         if client is not None and (
             client.profile_id != profile_id or client.frontend is not OperationFrontendProjection.MCP
         ):
             raise RuntimeFrontendRefusedError(AccessDenialCode.PROFILE_MISMATCH.value)
         self.profile_id = profile_id
         self.client = client
+        self.surface = surface
         self._lock = asyncio.Lock()
         self._enrollment_client: RuntimeFrontendClient | None = None
         self._enrollment: NativeEnrollmentClient | None = None
@@ -116,6 +131,16 @@ class RuntimeMcpAdapter:
 
     async def _open_reference_client(self, reference: UUID, *, timeout: float | None = None) -> RuntimeFrontendClient:
         try:
+            if self.surface.narrows:
+                # A surface that narrows nothing is not named, so that
+                # admission is opened exactly as it is without a surface.
+                return await open_installed_credential_client(
+                    profile_id=self.profile_id,
+                    credential_reference=reference,
+                    frontend=OperationFrontendProjection.MCP,
+                    timeout=PROFILE_ADMISSION_TIMEOUT_SECONDS if timeout is None else timeout,
+                    surface=self.surface.name,
+                )
             if timeout is not None:
                 return await open_installed_credential_client(
                     profile_id=self.profile_id,
@@ -189,7 +214,7 @@ class RuntimeMcpAdapter:
 
     async def call(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         """Serialize all blocking wire calls; cancellation waits for cleanup."""
-        if name not in MCP_TOOL_NAMES:
+        if name not in MCP_TOOL_NAMES or name not in self.surface.tools:
             return {"outcome": "refused", "code": "unknown_tool"}
         async with self._lock:
             try:
