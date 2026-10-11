@@ -11,6 +11,12 @@ any nested operation response before deciding what happened.
 - `outcome: unresolved` means the reply did not establish what happened. Preserve
   the returned `request_id` and other correlation fields. A request ID is not an
   operation receipt, and an unresolved reply is not evidence that an effect failed.
+  Do not repeat the call: the effect may already be committed, and a repeat can
+  commit it twice. The reply's `unknown_outcome` says what to read instead: the
+  operation with `observe` or `result`, or the installation action named in
+  `outcome_read_by`. Only an `execute` that carried an `idempotency_key` may be
+  repeated, with that same key, operation and payload. An observation whose
+  operation is settling, or whose effect is unknown, carries `unknown_outcome` too.
 - `outcome: submitted` carries a `receipt`. Submission does not establish
   completion. Preserve the receipt and use `observe` to read the operation's
   current state. If the nested `start` is unresolved, reconcile the recorded
@@ -19,12 +25,21 @@ any nested operation response before deciding what happened.
   discriminator and nested outcome. A reply can contain an access refusal, a
   refused observation, or a refused result document. Use `result` for the settled
   projection and `review` for a review projection; follow their declared schemas.
+- An operation that settled `refused` or `failed` has no result. Its `result`
+  reply carries the refused document and, beside it, `error_detail`: the
+  registered `error_code`, the `message_key`, the `context` entries and any
+  `precondition_verdict_json` the operation recorded, which is what the command
+  line prints for the same refusal. Report them. A reply without `error_detail`
+  leaves the code the observation carries as `refusal_ref` or
+  `failure_error_code`.
 - `status`, discovery, authorization, authentication, and `authority` have their
   own result shapes. Read the fields actually returned by that tool.
 
-The MCP error indicator can mark a refused or unresolved response. Read the
-structured response even when that indicator is set. Report the actual operation
-verdict and findings; do not invent a CLI exit code or success envelope for it.
+The MCP error indicator marks a refused response and never an unresolved one: an
+outcome that is not known is not an error, and is not to be retried as one. Read
+the structured response whether or not that indicator is set. Report the actual
+operation verdict and findings; do not invent a CLI exit code or success envelope
+for it.
 
 ## Recovery must remain eligible in the current interface
 

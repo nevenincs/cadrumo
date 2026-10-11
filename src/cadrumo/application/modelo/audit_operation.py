@@ -96,6 +96,13 @@ class ModeloAuditExportRequest(BaseModel):
     output: Path
     force_incomplete: bool = False
 
+    @model_validator(mode="after")
+    def _absolute_output(self) -> Self:
+        # A relative path would resolve against the runtime's working directory, not the caller's.
+        if not self.output.is_absolute():
+            raise ValueError("audit export output path must be absolute")
+        return self
+
 
 class ModeloAuditBundleSnapshot(BaseModel):
     """Lossless protected human manifest, including existing notes and record addresses."""

@@ -13,7 +13,9 @@ directory - never the repository's own developer tooling ``.claude/`` tree:
   definitions;
 - operator operating rules -> ``.claude/rules/<name>.md``, aggregated by a root
   ``CLAUDE.md`` that ``@``-imports each rule so the always-on operating contract
-  loads at session start.
+  loads at session start;
+- generated reference documents -> ``.claude/reference/<name>.md``, which a rule
+  names and the agent opens when it needs them.
 
 This is a REPLACEMENT of the prior flat ``{rules,personas,skills}/`` layout, not
 an addition (the no-legacy discipline): the flat layout is gone. It writes only
@@ -37,7 +39,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
-from .resources import harness_root, iter_operator_rules, iter_personas
+from .resources import harness_root, iter_operator_rules, iter_personas, iter_reference_documents
 
 _UTF_8 = "utf-8"
 
@@ -47,6 +49,7 @@ _CLAUDE_DIR = ".claude"
 _RULES_SUBDIR = "rules"
 _AGENTS_SUBDIR = "agents"
 _SKILLS_SUBDIR = "skills"
+_REFERENCE_SUBDIR = "reference"
 _SKILL_ENTRYPOINT = "SKILL.md"
 _CLAUDE_MEMORY_FILE = "CLAUDE.md"
 
@@ -54,8 +57,8 @@ _CLAUDE_MEMORY_FILE = "CLAUDE.md"
 #
 # The plugin layout target re-materialises the SAME authored harness source
 # as a one-click Claude plugin: a ``.claude-plugin/``
-# manifest, a top-level ``skills/`` and ``agents/`` tree, and an ``.mcp.json``
-# declaring the stdio ``cadrumo-mcp`` server. The manifest schema is the one the
+# manifest, a top-level ``skills/``, ``agents/`` and ``reference/`` tree, and an
+# ``.mcp.json`` declaring the stdio ``cadrumo-mcp`` server. The manifest schema is the one the
 # live ``claude plugin validate --strict`` oracle accepts; every field name here
 # is verified against that validator, not trusted from documentation.
 _PLUGIN_DIR = ".claude-plugin"
@@ -145,8 +148,9 @@ _RUNTIME_WHEELHOUSE_FLOORS = {
 class PluginManifest(BaseModel):
     """Result of materialising a Claude plugin from the shipped harness source.
 
-    ``skills_written`` / ``agents_written`` count the ``skills/<name>/SKILL.md``
-    and ``agents/<persona>.md`` documents written at the plugin root;
+    ``skills_written`` / ``agents_written`` / ``references_written`` count the
+    ``skills/<name>/SKILL.md``, ``agents/<persona>.md`` and
+    ``reference/<document>.md`` documents written at the plugin root.
     """
 
     model_config = _STRICT_FROZEN
@@ -156,6 +160,7 @@ class PluginManifest(BaseModel):
     version: str = Field(min_length=1)
     skills_written: int = Field(ge=0)
     agents_written: int = Field(ge=0)
+    references_written: int = Field(ge=0)
 
 
 class _PluginPythonCohort(Protocol):
@@ -242,20 +247,39 @@ def _plugin_manifest_document(version: str) -> dict[str, object]:
     }
 
 
-def _emit_plugin_skills(output_dir: Path) -> int:
+_FRONTMATTER_FENCE = "---\n"
+
+
+def _after_frontmatter(document: str, inserted: str) -> str:
+    """Put ``inserted`` between a document's frontmatter and its body, changing neither."""
+    if not inserted or not document.startswith(_FRONTMATTER_FENCE):
+        return inserted + document
+    opening = len(_FRONTMATTER_FENCE)
+    frontmatter, closed, body = document[opening:].partition(f"\n{_FRONTMATTER_FENCE}")
+    if not closed:
+        return inserted + document
+    return f"{_FRONTMATTER_FENCE}{frontmatter}\n{_FRONTMATTER_FENCE}\n{inserted}{body.lstrip(chr(10))}"
+
+
+def _emit_plugin_skills(output_dir: Path, references: Sequence[Traversable]) -> int:
     """Copy every shipped skill subtree under the plugin's top-level ``skills/``.
 
     The plugin skill layout (``skills/<name>/SKILL.md`` plus each skill's
     ``reference/`` progressive-disclosure material) is the same authored source
     the workspace layout emits, moved from ``.claude/skills`` to the plugin root
-    so a Claude plugin loads it natively.
+    so a Claude plugin loads it natively. A skill names commands, so each one
+    is also told where the plugin's reference documents are.
     """
+    pointer = _plugin_reference_pointer(references)
     skills = 0
     skills_root = harness_root().joinpath(_SKILLS_SUBDIR)
     if skills_root.is_dir():
         for skill_dir in sorted(skills_root.iterdir(), key=lambda item: item.name):
             if skill_dir.is_dir() and skill_dir.joinpath(_SKILL_ENTRYPOINT).is_file():
-                _copy_skill(skill_dir, output_dir / _SKILLS_SUBDIR / skill_dir.name)
+                written = output_dir / _SKILLS_SUBDIR / skill_dir.name
+                _copy_skill(skill_dir, written)
+                authored = skill_dir.joinpath(_SKILL_ENTRYPOINT).read_text(encoding=_UTF_8)
+                _write(written, _SKILL_ENTRYPOINT, _after_frontmatter(authored, pointer))
                 skills += 1
     return skills
 
@@ -321,29 +345,70 @@ def _persona_is_read_only(text: str) -> bool:
     return "\n".join(body).strip().lower().startswith("read-only")
 
 
-def _persona_agent_document(slug: str, text: str) -> str:
+def _persona_agent_document(slug: str, text: str, *, reference_pointer: str) -> str:
     """Render a persona as a Claude-native ``agents/<slug>.md`` document.
 
     The Claude agent frontmatter carries ``name`` and ``description`` and, for a
     read-only persona, a ``disallowedTools`` denylist. It NEVER carries the
-    harness-authoring ``mode:`` field, which is not a Claude field. The persona's
-    original prose follows the frontmatter unchanged as the agent's system prompt.
+    harness-authoring ``mode:`` field, which is not a Claude field. The pointer
+    to the plugin's reference documents comes next, and the persona's original
+    prose closes the document unchanged as the agent's system prompt.
     """
     front = ["---", f"name: {slug}", f"description: {json.dumps(_persona_description(text))}"]
     if _persona_is_read_only(text):
         front.append("disallowedTools:")
         front.extend(f"  - {tool}" for tool in _WORKSPACE_MUTATION_TOOLS)
     front.append("---")
-    return "\n".join(front) + "\n\n" + text
+    return "\n".join(front) + "\n\n" + reference_pointer + text
 
 
-def _emit_plugin_agents(output_dir: Path) -> int:
+def _document_title(text: str) -> str:
+    """Return a markdown document's level-one heading, which says what the document is."""
+    for line in text.splitlines():
+        if line.startswith("# "):
+            return line[2:].strip()
+    raise ValueError("a reference document opens with a level-one heading")
+
+
+def _plugin_reference_pointer(references: Sequence[Traversable]) -> str:
+    """Tell a plugin skill or agent where the shipped reference documents are and what each one is.
+
+    A workspace is told by its operating rules, which a plugin does not carry,
+    so every plugin skill and agent is told here. Each document is named by
+    its own title, under the plugin root that Claude replaces with where the
+    plugin is installed when it loads the skill or the agent.
+    """
+    if not references:
+        return ""
+    listed = "\n".join(
+        f"- `{_CLAUDE_PLUGIN_ROOT}/{_REFERENCE_SUBDIR}/{reference.name}`: "
+        f"{_document_title(reference.read_text(encoding=_UTF_8))}"
+        for reference in references
+    )
+    return (
+        "Reference documents ship with this plugin. The text below names command-line commands; through MCP\n"
+        "you run the operations a command submits. Open the document you need and read it there, never from\n"
+        "memory:\n\n"
+        f"{listed}\n\n"
+    )
+
+
+def _emit_plugin_references(output_dir: Path) -> tuple[Traversable, ...]:
+    """Copy every shipped reference document under the plugin's top-level ``reference/``."""
+    references = tuple(iter_reference_documents())
+    for reference in references:
+        _write(output_dir / _REFERENCE_SUBDIR, reference.name, reference.read_text(encoding=_UTF_8))
+    return references
+
+
+def _emit_plugin_agents(output_dir: Path, references: Sequence[Traversable]) -> int:
     """Write each persona as a Claude-native ``agents/<slug>.md`` document."""
     agents_dir = output_dir / _AGENTS_SUBDIR
+    pointer = _plugin_reference_pointer(references)
     count = 0
     for persona in iter_personas():
         slug = _persona_slug(persona.name)
-        document = _persona_agent_document(slug, persona.read_text(encoding=_UTF_8))
+        document = _persona_agent_document(slug, persona.read_text(encoding=_UTF_8), reference_pointer=pointer)
         _write(agents_dir, persona.name, document)
         count += 1
     return count
@@ -618,7 +683,8 @@ def materialise_plugin(
     Emits ``.claude-plugin/plugin.json`` carrying the plugin manifest (including
     the ``userConfig`` profile binding), the top-level ``skills/<name>/SKILL.md``
     tree (plus each skill's ``reference/`` material), the ``agents/<persona>.md``
-    tree with Claude-native frontmatter, and the ``.mcp.json`` stdio server
+    tree with Claude-native frontmatter, the ``reference/<document>.md`` documents
+    each skill and agent is pointed at, and the ``.mcp.json`` stdio server
     declaration, all from the single authored harness source. The validated
     ``cohort`` supplies the plugin version and every exact product wheel; the
     plugin embeds and launches that closed set without an index, installed
@@ -634,8 +700,9 @@ def materialise_plugin(
         _PLUGIN_MANIFEST,
         _plugin_manifest_document(resolved_version),
     )
-    skills = _emit_plugin_skills(output_dir)
-    agents = _emit_plugin_agents(output_dir)
+    references = _emit_plugin_references(output_dir)
+    skills = _emit_plugin_skills(output_dir, references)
+    agents = _emit_plugin_agents(output_dir, references)
     _materialise_plugin_python_cohort(output_dir, cohort)
     _write_json(
         output_dir,
@@ -649,16 +716,18 @@ def materialise_plugin(
         version=resolved_version,
         skills_written=skills,
         agents_written=agents,
+        references_written=len(references),
     )
 
 
 class WorkspaceManifest(BaseModel):
     """Result of materialising a Claude-native operator workspace.
 
-    ``rules_written`` / ``personas_written`` / ``skills_written`` count the
-    ``.claude/rules``, ``.claude/agents``, and ``.claude/skills`` documents
-    written; the aggregating ``CLAUDE.md`` is derived from the rules and is not
-    separately counted.
+    ``rules_written`` / ``personas_written`` / ``skills_written`` /
+    ``references_written`` count the ``.claude/rules``, ``.claude/agents``,
+    ``.claude/skills`` and ``.claude/reference`` documents written; the
+    aggregating ``CLAUDE.md`` is derived from the rules and is not separately
+    counted.
     """
 
     model_config = _STRICT_FROZEN
@@ -667,6 +736,7 @@ class WorkspaceManifest(BaseModel):
     rules_written: int = Field(ge=0)
     personas_written: int = Field(ge=0)
     skills_written: int = Field(ge=0)
+    references_written: int = Field(ge=0)
 
 
 def _write(dest_dir: Path, name: str, text: str) -> None:
@@ -689,7 +759,8 @@ def _claude_memory(rule_names: Sequence[str]) -> str:
         "safely. The operating rules imported below are your always-on operating\n"
         "contract. Tax-advisor personas are Claude subagents under\n"
         f"`{_CLAUDE_DIR}/{_AGENTS_SUBDIR}/`, and the workflow skills are under\n"
-        f"`{_CLAUDE_DIR}/{_SKILLS_SUBDIR}/`.\n\n"
+        f"`{_CLAUDE_DIR}/{_SKILLS_SUBDIR}/`. The reference documents the rules send you to\n"
+        f"are under `{_CLAUDE_DIR}/{_REFERENCE_SUBDIR}/`.\n\n"
         "## Operating rules\n\n"
         f"{imports}\n"
     )
@@ -699,8 +770,9 @@ def materialise_workspace(output_dir: Path) -> WorkspaceManifest:
     """Write the shipped harness under ``output_dir`` in the Claude-native layout.
 
     Emits ``.claude/skills/<name>/SKILL.md`` (plus each skill's ``reference/``
-    material), ``.claude/agents/<persona>.md``, ``.claude/rules/<rule>.md``, and a
-    root ``CLAUDE.md`` importing every rule.
+    material), ``.claude/agents/<persona>.md``, ``.claude/rules/<rule>.md``,
+    ``.claude/reference/<document>.md``, and a root ``CLAUDE.md`` importing every
+    rule.
 
     Returns:
         :class:`WorkspaceManifest` describing the files written.
@@ -727,6 +799,13 @@ def materialise_workspace(output_dir: Path) -> WorkspaceManifest:
                 _copy_skill(skill_dir, claude_dir / _SKILLS_SUBDIR / skill_dir.name)
                 skills += 1
 
+    # A rule names these documents and reads none of them in, so they travel beside the rules.
+    reference_dir = claude_dir / _REFERENCE_SUBDIR
+    references = 0
+    for reference in iter_reference_documents():
+        _write(reference_dir, reference.name, reference.read_text(encoding=_UTF_8))
+        references += 1
+
     _write(output_dir, _CLAUDE_MEMORY_FILE, _claude_memory(rule_names))
 
     return WorkspaceManifest(
@@ -734,6 +813,7 @@ def materialise_workspace(output_dir: Path) -> WorkspaceManifest:
         rules_written=len(rule_names),
         personas_written=personas,
         skills_written=skills,
+        references_written=references,
     )
 
 

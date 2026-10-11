@@ -15,7 +15,7 @@ related:
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
 modified: '2026-10-11'
 body_schema: body-v2
-body_hash: 'sha256:f2cdf691a8a910f5ba9fe1d1b2b3ef1130dc78b8a70f1f2b44ee2c781100971b'
+body_hash: 'sha256:12070960a111ec9d72b13eab521b62c47b00ba7b40b2ccd0cc2a6003c7177198'
 ---
 
 <!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
@@ -142,10 +142,10 @@ Delivers the rest of parity: about forty-five command-line commands do their wor
 - [x] `P09.S56` - Build the profile acts (list, archive inspect and import, recovery enrolment), register recovery revocation, and move into the operations what the censo import, archive export and profile delete commands did on the caller's side; `src/cadrumo/application/user_profile`.
 - [x] `P09.S57` - Serve the reference reads (modelo catalogue, categories, portals, authentication providers, apoderado scopes) from one application service through the extended authority query, for all three frontends; `src/cadrumo_harness/mcp/authority_query.py`.
 - [x] `P09.S58` - Build the review-package and report verification acts and move into the reconcile pull and report verify operations what their commands did on the caller's side; `src/cadrumo/application/modelo`.
-- [ ] `P09.S59` - Give the MCP harness an installation tool for the installation acts, with secrets on the protected frame and recovery enrolment on the session tool; `src/cadrumo_harness/mcp/protocol_contract.py`.
+- [x] `P09.S59` - Give the MCP harness an installation tool for the installation acts, with secrets on the protected frame and recovery enrolment on the session tool; `src/cadrumo_harness/mcp/protocol_contract.py`.
 - [x] `P09.S60` - Give the terminal interface a destination that runs every registered operation, with typed secrets and the input and choice interactions it refused, and destinations for the installation acts, reachable before sign-in, and the reference reads; `src/cadrumo/entrypoints/tui`.
 - [ ] `P09.S61` - Wire the new operations and acts into composition and the surface facts, regenerate the command table to record runtime-request rows, and prove with one suite that every command-line leaf has an operation or a runtime request and that the three frontends agree on each result; `src/cadrumo/entrypoints/operation_composition.py`.
-- [ ] `P09.S62` - Let a tool call name a secret the person stored at a terminal by reference beside the typed argument, report an unresolved outcome as an outcome and not a tool error, mark the pure reads read-only, and test the handshake-free protocol revision; `src/cadrumo_harness/mcp/protocol_contract.py`.
+- [x] `P09.S62` - Let a tool call name a secret the person stored at a terminal by reference beside the typed argument, report an unresolved outcome as an outcome and not a tool error, mark the pure reads read-only, and test the handshake-free protocol revision; `src/cadrumo_harness/mcp/protocol_contract.py`.
 
 ## Parallelization
 

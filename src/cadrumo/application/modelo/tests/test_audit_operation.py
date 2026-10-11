@@ -13,7 +13,7 @@ from typing import Literal, cast, override
 from uuid import UUID, uuid4
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -367,3 +367,9 @@ def test_projector_requires_exact_profile_purpose_and_actual_successful_write_re
     wrong = receipt.identity.model_copy(update={"definition_id": module.MODELO_AUDIT_QUERY_OPERATION_DEFINITION_ID})
     with pytest.raises(ValueError):
         module.project_modelo_audit_operation_result(result, receipt.model_copy(update={"identity": wrong}))
+
+
+@pytest.mark.parametrize("output", [Path("bundle.zip"), Path("exports/bundle.zip")])
+def test_export_request_refuses_an_output_path_that_is_not_absolute(output: Path) -> None:
+    with pytest.raises(ValidationError, match="audit export output path must be absolute"):
+        module.ModeloAuditExportRequest(profile_id=PROFILE_ID, bundle_id="0" * 64, output=output)

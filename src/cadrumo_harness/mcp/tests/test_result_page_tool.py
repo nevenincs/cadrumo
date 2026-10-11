@@ -15,6 +15,12 @@ from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
+from cadrumo.application.operations.error_detail import (
+    OperationErrorContextEntryV1,
+    OperationErrorDetailKind,
+    OperationErrorDetailV1,
+    operation_error_detail_schema,
+)
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -27,6 +33,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRefusalCode,
     OperationResultProjectionRefusalV1,
     OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.registry import (
@@ -455,3 +462,127 @@ async def test_result_refuses_a_malformed_operation_id_before_observing() -> Non
         await adapter.close()
     assert refused == missing == {"outcome": "refused", "code": "invalid_request"}
     assert client.observations == []
+
+
+_DETAIL = OperationErrorDetailV1(
+    kind=OperationErrorDetailKind.REGISTERED_ERROR,
+    error_code="REFUSED_MODELO_CALCULATION_BLOCKED",
+    message_key="application.modelo.calc_diagnostic.unresolved_binding.what",
+    context=(
+        OperationErrorContextEntryV1(key="action", value="verify"),
+        OperationErrorContextEntryV1(key="box", value="05"),
+    ),
+)
+
+
+def _not_successful() -> dict[str, JsonValue]:
+    refusal = OperationResultProjectionRefusalV1(
+        code=OperationResultProjectionRefusalCode.OPERATION_NOT_SUCCESSFUL, requested_version=1, diagnostic_ref=None
+    )
+    return cast(dict[str, JsonValue], refusal.model_dump(mode="json"))
+
+
+class _StoppedClient(_ObservedClient):
+    """A lease whose runtime settled the operation refused, with or without a recorded detail."""
+
+    def __init__(self, profile_id: UUID, registry: OperationRegistry, *, detail: str) -> None:
+        super().__init__(profile_id, registry)
+        self.detail = detail
+
+    @override
+    def read_result_document(
+        self, result: OperationResultProjectionRequestV1, *, deadline: float
+    ) -> dict[str, JsonValue]:
+        assert deadline > 0
+        self.document_requests.append(result)
+        if result.result_schema != operation_error_detail_schema():
+            return _not_successful()
+        if self.detail == "denied":
+            raise RuntimeFrontendRefusedError("disclosure_denied")
+        if self.detail == "absent":
+            unavailable = OperationResultProjectionRefusalV1(
+                code=OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
+                requested_version=1,
+                diagnostic_ref=None,
+            )
+            return cast(dict[str, JsonValue], unavailable.model_dump(mode="json"))
+        released = OperationResultProjectionSuccessV1[OperationErrorDetailV1](
+            result_schema=operation_error_detail_schema(),
+            definition_contract_digest=result.definition_contract_digest,
+            projection=_DETAIL,
+        )
+        return cast(dict[str, JsonValue], released.model_dump(mode="json"))
+
+
+@pytest.mark.anyio
+async def test_the_result_of_a_stopped_operation_carries_what_it_recorded_about_why() -> None:
+    profile_id = uuid4()
+    registry = _auth_registry()
+    client = _StoppedClient(profile_id, registry, detail="recorded")
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    expected = _settled_request(registry)
+    try:
+        async with connected_server_and_client_session(build_server(adapter)) as sdk:
+            alone = await sdk.call_tool("result", {"result": {"operation_id": expected.operation_id}})
+            full = await sdk.call_tool("result", {"result": expected.model_dump(mode="json")})
+    finally:
+        await adapter.close()
+
+    # The operation has no result, so the call still reads as an error, and the reason travels beside it.
+    assert alone.is_error is True and full.is_error is True
+    assert alone.structured_content == full.structured_content
+    assert alone.structured_content == {
+        "outcome": "reply",
+        "document": _not_successful(),
+        "error_detail": _DETAIL.model_dump(mode="json"),
+    }
+    detail_request = expected.model_copy(update={"result_schema": operation_error_detail_schema()})
+    assert client.document_requests == [expected, detail_request] * 2
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("detail", ["absent", "denied"])
+async def test_a_stopped_operation_with_no_readable_detail_leaves_only_its_refusal(detail: str) -> None:
+    profile_id = uuid4()
+    registry = _auth_registry()
+    client = _StoppedClient(profile_id, registry, detail=detail)
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    try:
+        stopped = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
+    finally:
+        await adapter.close()
+    assert stopped == {"outcome": "reply", "document": _not_successful()}
+    assert len(client.document_requests) == 2
+
+
+@pytest.mark.anyio
+async def test_a_caller_that_asks_for_the_detail_itself_is_answered_by_one_read() -> None:
+    profile_id = uuid4()
+    registry = _auth_registry()
+    client = _StoppedClient(profile_id, registry, detail="recorded")
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    named = {
+        "operation_id": _observed_operation_id(),
+        "result_schema": operation_error_detail_schema().model_dump(mode="json"),
+    }
+    try:
+        asked = await adapter.call("result", {"result": named})
+    finally:
+        await adapter.close()
+    assert asked["outcome"] == "reply" and "error_detail" not in asked
+    assert asked["document"]["projection"] == _DETAIL.model_dump(mode="json")
+    assert len(client.document_requests) == 1
+
+
+@pytest.mark.anyio
+async def test_a_refusal_that_is_not_about_the_operation_stopping_reads_no_detail() -> None:
+    profile_id = uuid4()
+    client = _ObservedClient(profile_id, _auth_registry())
+    client.document = _refusal_document()
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    try:
+        stale = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
+    finally:
+        await adapter.close()
+    assert stale == {"outcome": "reply", "document": _refusal_document()}
+    assert len(client.document_requests) == 1

@@ -17,7 +17,7 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 
 from .._workspace import materialise_workspace
-from ..resources import harness_root, iter_operator_rules, iter_personas
+from ..resources import harness_root, iter_operator_rules, iter_personas, iter_reference_documents
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -75,9 +75,21 @@ def test_written_skill_document_matches_the_shipped_bytes(tmp_path: Path) -> Non
     assert written == shipped
 
 
+def test_written_reference_documents_match_the_shipped_bytes(tmp_path: Path) -> None:
+    manifest = materialise_workspace(tmp_path)
+    shipped = list(iter_reference_documents())
+    assert shipped and manifest.references_written == len(shipped)
+    for document in shipped:
+        written = (tmp_path / ".claude" / "reference" / document.name).read_text(encoding=_UTF_8)
+        assert written == document.read_text(encoding=_UTF_8)
+    # The memory file tells the agent where the documents its rules name were put.
+    assert "`.claude/reference/`" in (tmp_path / "CLAUDE.md").read_text(encoding=_UTF_8)
+
+
 def test_manifest_counts_match_written_files(tmp_path: Path) -> None:
     manifest = materialise_workspace(tmp_path)
     claude = tmp_path / ".claude"
+    assert len(list(scan_directory(claude / "reference", pattern="*.md"))) == manifest.references_written
     assert len(list(scan_directory(claude / "rules", pattern="*.md"))) == manifest.rules_written
     assert len(list(scan_directory(claude / "agents", pattern="*.md"))) == manifest.personas_written
     assert len(list((claude / "skills").glob("*/SKILL.md"))) == manifest.skills_written

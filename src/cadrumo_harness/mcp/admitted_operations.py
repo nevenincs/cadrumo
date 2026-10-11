@@ -6,7 +6,7 @@ import json
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, Final, Protocol
 from uuid import UUID, uuid4
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
@@ -21,7 +21,10 @@ from cadrumo.application.operations.frontend_requests import (
     OperationReviewProjectionRequestV1,
 )
 from cadrumo.application.operations.mcp_surfaces import McpSurface
-from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import (
+    OperationPublicDefinitionContractV1,
+    OperationPublicDefinitionDescriptionV1,
+)
 from cadrumo.application.operations.subject_reference import (
     OperationSubjectKind,
     OperationSubjectReferenceV1,
@@ -42,12 +45,14 @@ from cadrumo.application.runtime.operation_access import (
 )
 from cadrumo.application.runtime.projection_pages import ProjectionPageRequest
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
 from cadrumo.core.time.clock import now
 
 from .operation_contract_cache import OperationContractCache
 from .operation_discovery import search_operations
-from .protocol_contract import parse_model, public_value, refusal_code
-from .result_request import resolve_result_request
+from .payload_vocabulary import PAYLOAD_VOCABULARY_MEMBER, payload_vocabulary
+from .protocol_contract import BY_REFERENCE_SUFFIX, parse_model, public_value, refusal_code
+from .result_request import resolve_result_request, stopped_operation_detail
 from .runtime_admission import McpAdmission, status_on_surface
 from .session_acts import NO_SESSION, act_on_sessions
 
@@ -65,6 +70,8 @@ class _AdmittedConnection(Protocol):
 
     def _admitted(self) -> RuntimeFrontendClient: ...
 
+    def held_secret(self, reference: UUID) -> bytearray: ...
+
 
 @dataclass(frozen=True, slots=True)
 class _Binding:
@@ -74,6 +81,7 @@ class _Binding:
     contracts: OperationContractCache
     surface: McpSurface
     admission: McpAdmission
+    held_secret: Callable[[UUID], bytearray]
 
 
 type _ToolHandler = Callable[[RuntimeFrontendClient, _Binding, dict[str, Any], float], dict[str, Any]]
@@ -94,7 +102,7 @@ def call_admitted_operation(connection: _AdmittedConnection, name: str, args: di
     handler = _ADMITTED_TOOL_HANDLERS.get(name)
     if handler is None:
         raise ValueError("unsupported tool")
-    binding = _Binding(profile_id, connection._contracts, connection.surface, admission)
+    binding = _Binding(profile_id, connection._contracts, connection.surface, admission, connection.held_secret)
     return handler(client, binding, args, deadline)
 
 
@@ -143,6 +151,9 @@ def _describe(
     reply: dict[str, Any] = {"outcome": "described", "description": public_value(description)}
     if description.contract.transient_financial_operand is not None:
         reply["operator_input_json_schema"] = _operator_input_json_schema()
+    vocabulary = payload_vocabulary(definition_id)
+    if vocabulary is not None:
+        reply[PAYLOAD_VOCABULARY_MEMBER] = vocabulary
     return reply
 
 
@@ -163,11 +174,13 @@ def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, A
     definition_id = args["definition_id"]
     # Taken out of the call before anything can fail, so no later step holds or repeats the text.
     secret_text = args.pop("secret", None)
-    contract = binding.contracts.description(client, definition_id, deadline=deadline).contract
+    secret_reference = args.pop(f"secret{BY_REFERENCE_SUFFIX}", None)
+    description = binding.contracts.description(client, definition_id, deadline=deadline)
+    contract = description.contract
     secret: bytearray | None = None
     try:
         try:
-            secret = _typed_secret(contract, secret_text)
+            secret = _typed_secret(contract, secret_text, secret_reference, binding.held_secret)
             submission = _submission(client, contract, args)
         except _ContractRefusedError as refused:
             # Nothing was submitted, and the wording quotes only the public contract.
@@ -176,6 +189,16 @@ def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, A
             reply = client.operation(submission, deadline=deadline)
             if not isinstance(reply, RuntimeOperationSubmitted):
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        except RuntimeFrontendRefusedError as refused:
+            faults = _named_field_faults(refused, description, args["payload"])
+            if not faults:
+                raise
+            return {
+                "outcome": "refused",
+                "code": refusal_code(refused),
+                "faults": faults,
+                "faults_cover": _FAULTS_COVER,
+            }
         except RuntimeRefusalError as error:
             return _unresolved_submission(error, submission.request_id, definition_id)
         except TimeoutError:
@@ -200,20 +223,70 @@ def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, A
             secret[:] = bytes(len(secret))
 
 
+_FAULTS_COVER: Final = (
+    "the payload's own fields by name, against the request schema describe returns; the request model can "
+    "refuse a payload for a rule about a value, which this list does not show"
+)
+
+
+def _named_field_faults(
+    refused: RuntimeFrontendRefusedError, description: OperationPublicDefinitionDescriptionV1, payload: object
+) -> list[dict[str, Any]]:
+    """Name the fields that explain why the runtime's request model refused a payload, where names do.
+
+    The runtime answers a payload its model refuses with a code and nothing
+    else. Which fields the model requires and which it knows are in the schema
+    already described, so a missing or unknown field is named from there. Only
+    a refusal the runtime gave is explained: nothing is refused here, and no
+    fault carries a value.
+    """
+    schema = description.request_json_schema
+    properties = schema.get("properties")
+    if (
+        refused.reason != AutomationCustodyCode.INVALID.value
+        or description.contract.transient_financial_operand is not None
+        or not isinstance(payload, dict)
+        or not isinstance(properties, dict)
+    ):
+        return []
+    required = schema.get("required")
+    missing = [name for name in required if name not in payload] if isinstance(required, list) else []
+    closed = schema.get("additionalProperties") is False
+    unknown = sorted(str(name) for name in payload if name not in properties) if closed else []
+    return [
+        *({"location": [name], "type": "missing", "message": "this field is required"} for name in missing),
+        *(
+            {"location": [name], "type": "extra_forbidden", "message": "the request has no such field"}
+            for name in unknown
+        ),
+    ]
+
+
 class _ContractRefusedError(ValueError):
     """The call does not fit what its operation's contract declares."""
 
 
-def _typed_secret(contract: OperationPublicDefinitionContractV1, text: object) -> bytearray | None:
-    """Hold the call to the typed secret its contract declares, and encode one that belongs.
+def _typed_secret(
+    contract: OperationPublicDefinitionContractV1,
+    text: object,
+    reference: object,
+    held_secret: Callable[[UUID], bytearray],
+) -> bytearray | None:
+    """Hold the call to the typed secret its contract declares, and return one that belongs as a buffer.
 
-    The bytes are the text's UTF-8 encoding, which is what the command line
-    sends for the same operation.
+    Given as text, the bytes are its UTF-8 encoding, which is what the
+    command line sends for the same operation. Given by reference, they are
+    the bytes held under it in the credential store, read here only once the
+    contract is known to take them.
     """
     if not contract.ephemeral_secret_required:
-        if text is not None:
+        if text is not None or reference is not None:
             raise _ContractRefusedError("secret is not accepted: this operation's contract declares no typed secret")
         return None
+    if reference is not None:
+        if text is not None:
+            raise _ContractRefusedError("secret is given as text or by reference, not both")
+        return held_secret(UUID(str(reference)))
     if not isinstance(text, str) or not text:
         raise _ContractRefusedError("secret is required: this operation's contract says ephemeral_secret_required")
     return bytearray(text, "utf-8")
@@ -381,7 +454,12 @@ def _observe(
 
 def _result(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     request = resolve_result_request(client, binding.contracts, args["result"], deadline)
-    return {"outcome": "reply", "document": client.read_result_document(request, deadline=deadline)}
+    document = client.read_result_document(request, deadline=deadline)
+    reply: dict[str, Any] = {"outcome": "reply", "document": document}
+    detail = stopped_operation_detail(client, request, document, deadline)
+    if detail is not None:
+        reply["error_detail"] = detail
+    return reply
 
 
 def _result_page(

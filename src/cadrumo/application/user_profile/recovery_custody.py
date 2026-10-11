@@ -3,8 +3,11 @@
 Recovery is a second wrapper over the same data-encryption key, opened by a
 minted recovery code instead of the operator's passphrase. It is off by
 default. An operator who wants it enrols after the profile exists, proves the
-current passphrase to do so, and copies the code down once; the code is never
-persisted, never logged, and never enters a result envelope. The only thing
+current passphrase to do so, and takes delivery of the code once, through the
+enrolment's handover; this service and the profile's custody never persist the
+code, never log it, and never put it in a result envelope. A frontend with no
+terminal to show the code on may hold the delivered copy for the operator
+until they have read it and confirmed they kept it. The only thing
 the code is good for is :func:`reset_profile_passphrase_with_recovery`: it
 proves the enrolled wrapper against the capsule's own sentinel and re-wraps
 the key under a new passphrase, so a forgotten passphrase is replaced rather

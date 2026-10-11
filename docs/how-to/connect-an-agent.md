@@ -48,9 +48,11 @@ accept a JSON server definition:
 ```
 
 Use a separate server entry for each profile you name. Keep credentials out of
-the configuration and conversation. The server never asks for or accepts a
-password. Whether you start it with `--credential-reference` decides how it
-connects.
+the configuration. The server asks for no password when it starts. An agent can
+sign in with your profile password through the `session` tool, either typed into
+the call or by reference; the section "Give an agent a secret by reference"
+below explains the form that keeps it out of the conversation. Whether you
+start the server with `--credential-reference` decides how it connects.
 
 **Following your sign-in.** Start the server without `--credential-reference`.
 It follows your own Cadrumo sign-in for the selected profile. It answers
@@ -76,7 +78,9 @@ enrolled key for that profile and works whether or not anyone is signed in.
 `--credential-reference` without `--profile-id` is refused at start-up.
 
 Either way, the `status` tool reports whether the connection's session is
-`none`, `sign_in` or `key`, and which surface it serves.
+`none`, `sign_in`, `typed_sign_in` or `key`, and which surface it serves.
+`typed_sign_in` is a session the agent started with your profile password
+through the `session` tool.
 
 The optional `--surface NAME` argument pins the view of the server that the
 connection is served. Without it the server uses `full`, which advertises every
@@ -107,7 +111,9 @@ nobody is signed in, enroll one. On a first connection, ask the agent to use
 operations, periods and disclosures it needs. Review and approve that request in
 Cadrumo's CLI or TUI. The agent uses `authorization_poll` to receive the
 protected reference and `authenticate` to start an independently tracked
-session. A password is never an agent session: the server does not accept one.
+session. The `session` tool can instead sign the connection in with your profile
+password, typed or by reference. That session is your own sign-in, with its
+deadline, and not an independently tracked key session.
 
 After admission, `search` ranks permitted operations by the query, using their
 current contracts and request vocabulary; omit the query to list them.
@@ -136,6 +142,100 @@ before anything destructive or hard to reverse, and wait for your go-ahead in th
 conversation. Calculations use Cadrumo's deterministic engine and published tax
 authority. Connecting an agent does not authorize submission to AEAT. Review the
 prepared filing yourself as described in the [filing guide](file-at-aeat.md).
+
+## Give an agent a secret by reference
+
+Some tools take a secret. The `session` tool takes your profile password to sign
+in, to resume a locked profile or to change the password. The `installation`
+tool takes it to import a profile archive or to enable recovery. The `execute`
+tool takes one for an operation whose contract asks for it. A secret that you
+type into the conversation has passed through the model and the client's
+transcript before it reaches Cadrumo. To keep it out of the conversation, enter
+it yourself, in a terminal of your own:
+
+```text
+cadrumo-mcp --hold-secret
+```
+
+The command asks for a label, so that you can recognise the secret in a listing,
+and then for the secret twice, without showing what you type. It keeps the
+secret in this computer's protected credential store and prints a reference.
+Give the agent only that reference. The agent puts it in the argument whose name
+ends in `_reference` (`secret_reference`, `new_secret_reference` or
+`new_secret_confirmation_reference`) in place of the secret. The MCP server
+reads the secret from the store and sends it to the local runtime on the same
+protected channel that a typed secret uses. The secret never appears in the
+conversation, in a tool result or in a log.
+
+A secret held this way stays until you delete it, so the agent can sign in again
+with the same reference after a lock or after your sign-in reaches its deadline.
+To hold a secret for one use only, add `--once`. The first tool call that
+presents the reference then deletes the secret, whatever that call answers.
+
+```text
+cadrumo-mcp --hold-secret --once
+```
+
+`cadrumo-mcp --list-held-secrets` lists what you have entered, by label and
+without showing it, and `cadrumo-mcp --delete-held-secret REFERENCE` deletes one.
+A secret that you entered is never shown back to you. A reference works only on
+this computer and under your user account. While a secret is held, an agent
+connected to this MCP server can use it by naming its reference, so delete a
+password that you no longer want an agent to use. An agent still accepts a
+secret that you type into the conversation; the reference is the form that keeps
+it out.
+
+## Storage, repair and other work that needs no profile
+
+Some work needs no profile and no sign-in: inspecting and reclaiming storage,
+resetting all profiles, listing profiles, inspecting and importing a profile
+archive, enabling a recovery code, diagnosing and repairing the installation,
+and verifying a review package or a calculation summary that you hold. The
+`installation` tool does this work through the running local runtime, with one
+`action` for each act, and gives the same result as the matching `aeat` command.
+It is not a registered operation, so `search` does not list it; the tool's own
+description names every action and its arguments.
+
+A destructive action, such as reclaiming storage or resetting all profiles,
+takes `confirm`. Unless `confirm` is true it changes nothing: it reports what it
+would do, or refuses and says so, exactly as the command does without its
+confirmation flag. The packaged agent
+guidance has the agent show you that report and wait for your go-ahead before it
+confirms. On the `read-only-local` surface the tool offers only the reads and
+those reports.
+
+### Read a recovery code that an agent enabled
+
+An agent can enable a recovery code with the `installation` tool's
+`recovery_enroll` action or the `session` tool's `enable_recovery` action. There
+is no terminal to show the code on, and the code never appears in the
+conversation or in a tool result. Cadrumo's runtime and the profile do not store
+it. The MCP server keeps one copy in this computer's protected credential store
+and gives the agent only a reference to it. Read the code yourself, in a
+terminal of your own:
+
+```text
+cadrumo-mcp --show-held-secret REFERENCE
+```
+
+The command shows what the code was issued for and when, and then the code
+itself. Write it down, then type `kept` to delete the stored copy. Press Enter
+alone to leave it stored and read it again later. Until you confirm that you
+have kept it, the copy stays in the credential store.
+
+To list what is still held without showing any code, or to delete a copy
+without reading it:
+
+```text
+cadrumo-mcp --list-held-secrets
+cadrumo-mcp --delete-held-secret REFERENCE
+```
+
+These commands work only at a terminal. They refuse when their input or output
+is redirected, so an agent cannot run them for you. If you delete a code that
+nobody has kept, it is lost: disable recovery and enable it again to get a new
+one. [Protect access to your data](protect-data-access.md) explains what a
+recovery code is for and how to use it.
 
 ## Review and manage access as the profile owner
 

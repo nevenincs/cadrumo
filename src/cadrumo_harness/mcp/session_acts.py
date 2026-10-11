@@ -3,8 +3,10 @@
 The acts a held session takes are its inventory, locks, automation denial and
 the person's sign-out. The others need no held session: signing in, reading
 the sign-in's status, resuming a locked profile, resetting or changing the
-password, and deleting a profile. Every secret one of them takes arrives as a
-mutable buffer and leaves on the runtime's protected secret frame.
+password, deleting a profile, and enabling recovery, which is the installation
+tool's recovery enrolment reached with the profile this tool resolves. Every
+secret one of them takes arrives as a mutable buffer and leaves on the
+runtime's protected secret frame.
 """
 
 from __future__ import annotations
@@ -18,7 +20,7 @@ from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.application.bucket_deletion_contracts import BucketDeletionFingerprint
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 
-from .protocol_contract import public_value
+from .protocol_contract import BY_REFERENCE_SUFFIX, public_value
 from .runtime_admission import McpAdmission
 
 NO_SESSION = "none"
@@ -28,7 +30,7 @@ SECRET_FIELDS: Final = ("secret", "new_secret", "new_secret_confirmation")
 """The write-only tool fields; each one's text travels only as a wiped buffer."""
 
 UNADMITTED_SESSION_ACTIONS: Final = frozenset(
-    {"sign_in", "sign_in_status", "resume", "reset_password", "change_password", "delete_profile"}
+    {"sign_in", "sign_in_status", "resume", "reset_password", "change_password", "delete_profile", "enable_recovery"}
 )
 """The acts that open their own connection instead of using the held session."""
 
@@ -47,18 +49,54 @@ class SessionActRefusedError(Exception):
 
 
 class SessionSecrets:
-    """The secret texts of one call, taken out of its arguments as mutable buffers."""
+    """The secrets of one call, taken out of its arguments as mutable buffers.
+
+    A secret arrives as text in its field, or by reference in the field of
+    the same name ending in ``_reference``. Both forms end as the same
+    buffer, so everything after this class treats them alike.
+    """
 
     def __init__(self, args: dict[str, Any]) -> None:
-        """Remove every secret field from the call, so nothing later can repeat its text."""
+        """Remove every secret field and every reference from the call, so nothing later can repeat either."""
         self._buffers: dict[str, bytearray] = {}
+        self._references: dict[str, str] = {}
         for name in SECRET_FIELDS:
             if name in args:
                 self._buffers[name] = bytearray(args.pop(name), "utf-8")
+            if (by_reference := f"{name}{BY_REFERENCE_SUFFIX}") in args:
+                self._references[name] = args.pop(by_reference)
+
+    @property
+    def by_reference(self) -> bool:
+        """Whether any secret of the call is still to be read from the store."""
+        return bool(self._references)
+
+    def resolve(self, read: Callable[[UUID], bytearray]) -> None:
+        """Read each secret given by reference into its buffer, refusing one given in both forms.
+
+        Two fields that name one reference share one read, so a secret held
+        for a single use can fill a value and its confirmation.
+
+        Raises:
+            ValueError: A field was given as text and by reference, or a reference is not one.
+        """
+        if set(self._references) & set(self._buffers):
+            raise ValueError("a secret is given as text or by reference, not both")
+        named = {name: UUID(text) for name, text in self._references.items()}
+        read_once: dict[UUID, bytearray] = {}
+        try:
+            for name, reference in named.items():
+                if reference not in read_once:
+                    read_once[reference] = read(reference)
+                self._buffers[name] = bytearray(read_once[reference])
+                del self._references[name]
+        finally:
+            for buffer in read_once.values():
+                buffer[:] = bytes(len(buffer))
 
     def require(self, action: str, *names: str) -> tuple[bytearray, ...]:
-        """Return exactly the buffers the act takes, refusing a missing, empty or extra one."""
-        if set(self._buffers) != set(names) or not all(self._buffers[name] for name in names):
+        """Return exactly the buffers the act takes, refusing a missing, empty, extra or unread one."""
+        if self._references or set(self._buffers) != set(names) or not all(self._buffers[name] for name in names):
             expected = ", ".join(names) if names else "no secret field"
             raise ValueError(f"{action} takes {expected}")
         return tuple(self._buffers[name] for name in names)

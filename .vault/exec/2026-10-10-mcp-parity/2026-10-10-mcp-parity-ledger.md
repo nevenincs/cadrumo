@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:78089d7e1037cf10532ec261b84895b0171b4d0f3a59e166aa069d548e086a4c'
+body_hash: 'sha256:a2e5ff7cd189f2a1bcd29ced95dbad00c643b645cdf87d0cd013c75a061d16df'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -1804,6 +1804,66 @@ related:
 - `S60` `verify:` `ruff, format and ty on the touched files` -> `pass`
 - `S60` `verify:` `lint-imports (15 contracts)` -> `pass`
 - `S60` `by:` `vaultspec-high-executor`
+- `S59` `M` `docs/how-to/connect-an-agent.md`
+- `S59` `M` `docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S59` `M` `docs/locales/es/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S59` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S59` `M` `src/cadrumo/application/operations/mcp_surfaces.py`
+- `S59` `M` `src/cadrumo/application/user_profile/recovery_custody.py`
+- `S59` `M` `src/cadrumo_harness/mcp/runtime_cleanup.py`
+- `S59` `M` `src/cadrumo_harness/mcp/session_acts.py`
+- `S59` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_installation_tool.py`
+- `S59` `A` `src/cadrumo_harness/mcp/held_secrets.py`
+- `S59` `A` `src/cadrumo_harness/mcp/installation_acts.py`
+- `S59` `A` `src/cadrumo_harness/mcp/tests/test_held_secrets.py`
+- `S59` `A` `src/cadrumo_harness/mcp/tests/test_installation_tool.py`
+- `S59` `verify:` `pytest harness tool and package suites on the lane (452, 3 deselected for the credential store)` -> `pass`
+- `S59` `verify:` `pytest the six runtime MCP test files against the real runtime (43)` -> `pass`
+- `S59` `verify:` `pytest rule surface conformance (7)` -> `pass`
+- `S59` `verify:` `pytest audit operation and audit verbs (28)` -> `pass`
+- `S59` `verify:` `ruff, format, ty on the changed files` -> `pass`
+- `S59` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S59` `by:` `vaultspec-high-executor`
+- `S62` `M` `src/cadrumo/application/modelo/audit_operation.py`
+- `S62` `M` `src/cadrumo/application/modelo/tests/test_audit_operation.py`
+- `S62` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_audit.py`
+- `S62` `M` `src/cadrumo_harness/_data/agent/README.md`
+- `S62` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-envelope-reading.md`
+- `S62` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
+- `S62` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
+- `S62` `M` `src/cadrumo_harness/_workspace.py`
+- `S62` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
+- `S62` `M` `src/cadrumo_harness/mcp/main.py`
+- `S62` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S62` `M` `src/cadrumo_harness/mcp/result_request.py`
+- `S62` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S62` `M` `src/cadrumo_harness/mcp/server.py`
+- `S62` `M` `src/cadrumo_harness/mcp/tests/session.py`
+- `S62` `M` `src/cadrumo_harness/mcp/tests/test_execute_typed_input_tool.py`
+- `S62` `M` `src/cadrumo_harness/mcp/tests/test_installed_stdio.py`
+- `S62` `M` `src/cadrumo_harness/mcp/tests/test_result_page_tool.py`
+- `S62` `M` `src/cadrumo_harness/mcp/tests/test_submission_uncertainty.py`
+- `S62` `M` `src/cadrumo_harness/resources.py`
+- `S62` `M` `src/cadrumo_harness/tests/test_harness_data_ships.py`
+- `S62` `M` `src/cadrumo_harness/tests/test_plugin_workspace.py`
+- `S62` `M` `src/cadrumo_harness/tests/test_workspace.py`
+- `S62` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_secret_by_reference.py`
+- `S62` `A` `src/cadrumo_harness/_data/agent/reference/command-operations.md`
+- `S62` `A` `src/cadrumo_harness/mcp/payload_vocabulary.py`
+- `S62` `A` `src/cadrumo_harness/mcp/tests/test_describe_payload_vocabulary.py`
+- `S62` `A` `src/cadrumo_harness/mcp/tests/test_execute_request_faults.py`
+- `S62` `A` `src/cadrumo_harness/mcp/tests/test_handshake_free_revision.py`
+- `S62` `A` `src/cadrumo_harness/mcp/tests/test_installed_secret_by_reference.py`
+- `S62` `A` `src/cadrumo_harness/mcp/tests/test_secret_by_reference.py`
+- `S62` `A` `src/cadrumo_harness/mcp/tests/test_tool_annotations.py`
+- `S62` `A` `src/cadrumo_harness/mcp/tests/test_unknown_outcome_results.py`
+- `S62` `verify:` `pytest harness tool and package suites on the lane (452, 3 deselected for the credential store)` -> `pass`
+- `S62` `verify:` `pytest the six runtime MCP test files against the real runtime (43)` -> `pass`
+- `S62` `verify:` `pytest rule surface conformance (7)` -> `pass`
+- `S62` `verify:` `pytest audit operation and audit verbs (28)` -> `pass`
+- `S62` `verify:` `ruff, format, ty on the changed files` -> `pass`
+- `S62` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S62` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1863,3 +1923,5 @@ related:
 - `S56` Profile list, archive inspect and import, and recovery enrolment as acts; recovery revocation and a censo certificate import with preview as operations; the archive export target checks and the delete preflight lifted so a direct client gets them. Replies carry real identifiers and the command line redacts when it prints. The cold profile listing no longer loads the runtime client. Logged here too: the door's models file and its tests, which all four families changed.
 - `S58` Review package and report document verification as acts. The report verification operation hashes the bytes it reads when no digest is given. Reconciliation takes the work by coordinates and the observation by the identifier the capture returns, so any client runs capture then reconcile; captures only read.
 - `S60` Three native launcher tests and eight sign-in and registration tests fail at the sign-in screen as they did at the last commit. Review interactions were not run on a real runtime here, since each needs Google, a model or a census specimen. The catalogue hunks of another session's two desktop keys are left uncommitted.
+- `S59` The installation tool derives its actions and arguments from the act table and the request models. A recovery code minted through MCP is held under a reference in the protected credential store and is never a tool result. The guide for connecting an agent and its three catalogues describe both.
+- `S62` A secret can be named by reference beside the typed argument, an unknown outcome is a result and not a tool error, each tool declares the protocol hints, and the handshake-free revision is tested beside the legacy one. Logged here too: the result tool returning a refused operation's recorded detail, the fault names on an invalid request, the profile patch vocabulary on describe, the plugin shipping the generated reference, and the absolute path rule of the audit bundle export. Not run on this machine: the two cases against the real Windows credential store, skipped with error 1312 in this logon session and marked for just test-os-keychain. Results carry no source-kind tag; that earlier ruling is not built here.

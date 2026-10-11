@@ -20,18 +20,26 @@ Subtrees:
   persona name.
 - `skills/` — executable workflow playbooks (preconditions, command sequence, JSON
   success assertions) for the canonical end-to-end tax flows.
+- `reference/`: generated documents a rule sends the agent to. `command-operations.md`
+  lists, for every command a skill names, the registered operations that command
+  submits, which are what an agent on MCP runs.
 
 Start with MCP `status`, then `search` and `describe` for the operations of this
 session. Every operation the command line can run is among them, with the same
 results. Public tax queries use `authority`. A connection is either under
 the person's own Cadrumo sign-in or under an enrolled key, and `status` says which:
-its session is `sign_in`, `key` or `none`, and it names the surface the connection
-serves. Never ask for or accept a password, and never paste a password or API
-secret into the conversation.
+its session is `sign_in`, `typed_sign_in`, `key` or `none`, and it names the
+surface the connection serves. Take a password or any other secret by reference:
+ask the person to run `cadrumo-mcp --hold-secret` in a terminal of their own and to
+give you only the reference it prints, which goes in `secret_reference`,
+`new_secret_reference` or `new_secret_confirmation_reference`. Do not ask for a secret to be typed into the conversation, and never
+repeat one there. A secret the person types anyway goes in the secret argument of
+that one call and nowhere else.
 
 Under the person's sign-in, a profile tool is refused with `authentication_required`
 when nobody is signed in to Cadrumo. Tell the person to sign in to Cadrumo, then
-call again. The session ends when the person signs out, locks, or the sign-in
+call again, or sign the connection in with the `session` tool's `sign_in` action
+and a held password's reference. The session ends when the person signs out, locks, or the sign-in
 reaches its deadline, which by default is 15 minutes after the password was
 entered. Activity through MCP does not extend it. To work while nobody is signed in,
 prepare an authorization request for human approval, which enrolls a key.

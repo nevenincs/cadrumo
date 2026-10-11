@@ -1,9 +1,11 @@
-"""Complete a settled-result request from the operation identity alone."""
+"""Complete a settled-result request from the operation identity alone, and read why a stopped operation stopped."""
 
 from __future__ import annotations
 
 from typing import Any
 from uuid import uuid4
+
+from pydantic import JsonValue
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
@@ -66,3 +68,37 @@ def resolve_result_request(
             raise RuntimeFrontendRefusedError(OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE.value)
         supplied["result_schema"] = contract.result_schema.model_dump(mode="json")
     return parse_model(OperationResultProjectionRequestV1, supplied | value)
+
+
+def stopped_operation_detail(
+    client: RuntimeFrontendClient,
+    request: OperationResultProjectionRequestV1,
+    document: dict[str, JsonValue],
+    deadline: float,
+) -> JsonValue:
+    """Return the recorded detail of a refused or failed operation, or ``None`` when there is none to give.
+
+    Such an operation has no result, so its result read says only that it was
+    not successful. What it recorded about why (the registered code, the
+    message key, the scrubbed context and any typed verdict) is read with the
+    same settled-result read under the detail's own schema, which is how the
+    command line reads it for the error it prints. An operation that recorded
+    none, or a session that may not read it, leaves the code its observation
+    already carries.
+    """
+    if (
+        document.get("outcome") != "refused"
+        or document.get("code") != OperationResultProjectionRefusalCode.OPERATION_NOT_SUCCESSFUL.value
+    ):
+        return None
+    # Imported on use so that serving the other tools loads none of it.
+    from cadrumo.application.operations.error_detail import operation_error_detail_schema
+
+    schema = operation_error_detail_schema()
+    if request.result_schema == schema:
+        return None
+    try:
+        detail = client.read_result_document(request.model_copy(update={"result_schema": schema}), deadline=deadline)
+    except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+        return None
+    return detail.get("projection") if detail.get("outcome") == "success" else None

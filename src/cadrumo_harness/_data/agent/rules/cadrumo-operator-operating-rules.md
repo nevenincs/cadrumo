@@ -46,10 +46,28 @@ found, or a call is refused, report exactly what you searched and what came back
 
 A connection is either under the person's own Cadrumo sign-in or under an enrolled
 key for one exact profile UUID. Use `status` to inspect current authority: it
-reports whether the session is `sign_in`, `key` or `none`. Under the sign-in, a
-refusal with `authentication_required` means the person must sign in to Cadrumo;
-tell them so and call again. Never ask for or accept a password. The sign-in
-session ends with the person's sign-out, lock or sign-in deadline. To work while nobody is signed in, use
+reports whether the session is `sign_in`, `typed_sign_in`, `key` or `none`. Under
+the sign-in, a refusal with `authentication_required` means nobody is signed in to
+Cadrumo. The person can sign in to Cadrumo themselves, after which you call again,
+or you can sign the connection in with the `session` tool's `sign_in` action, which
+takes the profile password.
+
+Take a password, a recovery code or any other secret by reference. Do not ask the
+person to type it into the conversation: whatever is typed there has passed through
+you and the host's transcript before it reaches Cadrumo. Ask them to run
+`cadrumo-mcp --hold-secret` in a terminal of their own, enter the secret there, and
+give you only the reference it prints. Put that reference in `secret_reference`,
+`new_secret_reference` or `new_secret_confirmation_reference`, whichever stands
+for the secret argument the action takes, and leave that secret argument out; a
+call gives one form or the other, never both. A secret held that way stays until the
+person deletes it, so keep the reference and use it again after a lock or an
+expiry. One held with `--once` is spent by the first call that presents it. Do not
+run `cadrumo-mcp --hold-secret` yourself: it works only at a person's terminal. If
+the person gives you the secret as text anyway, put it in the secret argument of
+that one call and nowhere else, and never repeat it.
+
+The sign-in session ends with the person's sign-out, lock or sign-in deadline. To
+work while nobody is signed in without any password, use
 `authorization_prepare`, `authorization_request`, and `authorization_poll` for
 human-approved enrollment of a key, then `authenticate` with the delivered
 protected credential reference.

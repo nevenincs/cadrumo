@@ -17,6 +17,10 @@ from cadrumo.adapters.local_runtime.automation_requester import (
 from cadrumo.adapters.local_runtime.enrollment_client import NativeEnrollmentClient
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
+from cadrumo.adapters.local_runtime.installation_client import (
+    RuntimeInstallationClient,
+    open_installed_installation_client,
+)
 from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
 from cadrumo.adapters.local_runtime.runtime_credentials import open_installed_credential_client
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
@@ -24,8 +28,10 @@ from cadrumo.application.operations.mcp_surfaces import DEFAULT_MCP_SURFACE, MCP
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operator_output.runtime_remedies import runtime_unavailable_remedy
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from cadrumo.application.runtime.installation_requests import InstallationAct
 from cadrumo.application.runtime.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS, RuntimeProfileStatus
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode, ProfileAccessStatus
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
     EnrollmentKind,
@@ -43,6 +49,8 @@ from cadrumo.core.time.clock import now
 from .admitted_operations import call_admitted_operation
 from .authority_query import authority_query
 from .corpus_query import corpus_query
+from .held_secrets import held_secret_custody
+from .installation_acts import perform_installation_act, prepare_installation_act
 from .lifecycle_notices import LifecycleNoticeBoard
 from .operation_contract_cache import OperationContractCache
 from .protocol_contract import (
@@ -149,7 +157,7 @@ class RuntimeMcpAdapter:
         code = result.get("code")
         self._admission_denial = code if isinstance(code, str) else "runtime_unavailable"
 
-    def _retirement(self, client: RuntimeFrontendClient) -> AsyncCloseable:
+    def _retirement(self, client: RuntimeFrontendClient | RuntimeInstallationClient) -> AsyncCloseable:
         identity = id(client)
         owner = self._retiring_resources.get(identity)
         if owner is None:
@@ -337,7 +345,7 @@ class RuntimeMcpAdapter:
 
     async def _retire_client(
         self,
-        client: RuntimeFrontendClient,
+        client: RuntimeFrontendClient | RuntimeInstallationClient,
         *,
         task_name: str,
         primary_error: BaseException | None = None,
@@ -394,6 +402,28 @@ class RuntimeMcpAdapter:
             raise RuntimeFrontendRefusedError(self._admission_denial or "authentication_required")
         return self.client
 
+    def held_secret(self, reference: UUID) -> bytearray:
+        """Read the secret held under ``reference`` into a buffer the call wipes.
+
+        A reference that names nothing held is a mistaken argument, and is
+        answered as any other one is.
+
+        Raises:
+            ValueError: No secret is held under the reference.
+            AutomationCustodyError: The credential store could not be read.
+        """
+        try:
+            return held_secret_custody(installed_automation_secret_store()).take(reference)
+        except AutomationCustodyError as refused:
+            if refused.reason in {AutomationCustodyCode.MISSING, AutomationCustodyCode.INVALID}:
+                raise ValueError("no secret is held under that reference") from None
+            raise
+
+    async def _read_references(self, secrets: SessionSecrets) -> None:
+        """Fill the secrets a call gave by reference, off the event loop as every store read is."""
+        if secrets.by_reference:
+            await self._wire(lambda: secrets.resolve(self.held_secret))
+
     async def call(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         """Serialize all blocking wire calls; cancellation waits for cleanup."""
         if name not in MCP_TOOL_NAMES or name not in self.surface.tools:
@@ -415,6 +445,8 @@ class RuntimeMcpAdapter:
                 return await self._call_key_route_tool(name, args)
             if name == "session":
                 return await self._call_session_tool(args)
+            if name == "installation":
+                return await self._call_installation_tool(args)
             await self._hold_or_restore_session()
             return await self._wire(lambda: call_admitted_operation(self, name, args))
         except AutomationRequesterUncertainError as error:
@@ -444,6 +476,7 @@ class RuntimeMcpAdapter:
         """Serve one session act; its secrets leave the call here and are wiped whatever follows."""
         secrets = SessionSecrets(args)
         try:
+            await self._read_references(secrets)
             action = args["action"]
             if action in UNADMITTED_SESSION_ACTIONS:
                 reply = await self._unadmitted_session_act(action, args, secrets)
@@ -458,6 +491,36 @@ class RuntimeMcpAdapter:
             return reply
         finally:
             secrets.wipe()
+
+    async def _call_installation_tool(self, args: dict[str, Any]) -> dict[str, Any]:
+        """Serve one installation act; its secret leaves the call here and is wiped whatever follows."""
+        secrets = SessionSecrets(args)
+        try:
+            await self._read_references(secrets)
+            return await self._installation_act(args, secrets)
+        finally:
+            secrets.wipe()
+
+    async def _installation_act(self, args: dict[str, Any], secrets: SessionSecrets) -> dict[str, Any]:
+        """Send one sessionless act on a connection opened for it alone.
+
+        No profile session is asked for, resumed or held: the runtime admits
+        the act on the verified connection and the person's own login.
+        """
+        prepared = prepare_installation_act(args, secrets, self.surface)
+        try:
+            client = await open_installed_installation_client()
+        except BaseException as error:
+            self._retain_admission_cleanup(error)
+            raise
+        try:
+            return await self._wire(
+                lambda: perform_installation_act(
+                    client, prepared, held_secrets=lambda: held_secret_custody(installed_automation_secret_store())
+                )
+            )
+        finally:
+            await self._retire_client(client, task_name="mcp-installation-act-close", primary_error=sys.exception())
 
     async def _open_unadmitted_client(self, profile_id: UUID, *, on_surface: bool = False) -> RuntimeFrontendClient:
         """Open a connection for one profile that holds no session yet."""
@@ -490,6 +553,11 @@ class RuntimeMcpAdapter:
             return await self._sign_in(args, secrets)
         if action == "delete_profile":
             return await self._delete_profile(args, secrets)
+        if action == "enable_recovery":
+            require_only(args, action, "profile")
+            profile_id = await self._named_or_bound_profile(args)
+            enrolment = {"action": InstallationAct.RECOVERY_ENROLL.value, "profile_id": str(profile_id)}
+            return await self._installation_act(enrolment, secrets)
         if action == "sign_in_status":
             secrets.require(action)
             require_only(args, action)

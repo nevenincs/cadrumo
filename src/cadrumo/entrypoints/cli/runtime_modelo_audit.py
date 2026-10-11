@@ -107,7 +107,7 @@ def export_modelo_audit(
     request = ModeloAuditExportRequest(
         profile_id=client.profile_id,
         bundle_id=bundle_id,
-        output=output,
+        output=output.absolute(),
         force_incomplete=force_incomplete,
     )
     completed = _submit(

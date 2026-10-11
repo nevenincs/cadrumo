@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 from typing import Literal, NoReturn, cast
 from uuid import UUID, uuid4
 
 import pytest
+from mcp.types import TextContent
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
@@ -116,7 +118,8 @@ async def test_lost_submit_reply_is_unresolved_with_only_safe_request_correlatio
                     "payload": {"kind": "status"},
                 },
             )
-            assert submitted.is_error is True
+            # An effect that is not known is no error: an errored call invites the repeat that could run it twice.
+            assert submitted.is_error is False
             result = submitted.structured_content
             assert result is not None
             assert result["outcome"] == "unresolved"
@@ -125,6 +128,12 @@ async def test_lost_submit_reply_is_unresolved_with_only_safe_request_correlatio
             assert "operation_id" not in result and "receipt" not in result
             assert len(client.submissions) == 1
             assert UUID(str(result["request_id"])) == client.submissions[0].request_id
+            told = result["unknown_outcome"]
+            assert "not known" in told and "Do not repeat this call" in told
+            assert "request_id" in told and "definition_id" in told and "idempotency_key" in told
+            # The text block carries the same document for a client that reads no structured content.
+            (block,) = submitted.content
+            assert isinstance(block, TextContent) and json.loads(block.text) == result
     finally:
         await adapter.close()
     assert client.closed
@@ -136,15 +145,18 @@ async def test_known_pre_submit_description_denial_stays_refused_without_dispatc
     client = _SubmitClient(profile_id, fail_description=True)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
     try:
-        result = await adapter.call(
-            "execute",
-            {
-                "definition_id": AUTH_READ_OPERATION_DEFINITION_ID,
-                "subject_ref": profile_operation_subject(str(profile_id)),
-                "payload": {"kind": "status"},
-            },
-        )
-        assert result == {"outcome": "refused", "code": "operation_denied"}
+        async with connected_server_and_client_session(build_server(adapter)) as sdk:
+            refused = await sdk.call_tool(
+                "execute",
+                {
+                    "definition_id": AUTH_READ_OPERATION_DEFINITION_ID,
+                    "subject_ref": profile_operation_subject(str(profile_id)),
+                    "payload": {"kind": "status"},
+                },
+            )
+        # A refusal is known, so it stays an error and says nothing about an unknown outcome.
+        assert refused.is_error is True
+        assert refused.structured_content == {"outcome": "refused", "code": "operation_denied"}
         assert client.submissions == []
     finally:
         await adapter.close()

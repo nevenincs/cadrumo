@@ -13,7 +13,13 @@ import anyio
 from cadrumo.application.operations.mcp_surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface
 from cadrumo.domain.calculations.registry.authority import release_bundled_indexed_authority
 
-from .protocol_contract import MCP_TOOL_CATALOGUE, has_refusal
+from .protocol_contract import (
+    MCP_TOOL_HINTS,
+    UNKNOWN_OUTCOME_MEMBER,
+    has_refusal,
+    tool_catalogue,
+    unknown_outcome_instruction,
+)
 
 if TYPE_CHECKING:
     from mcp.server import Server
@@ -24,19 +30,50 @@ if TYPE_CHECKING:
 def build_server(adapter: RuntimeMcpAdapter) -> Server:
     """Register the tools of the adapter's surface around one connection-owned adapter."""
     from mcp.server import Server
-    from mcp.types import CallToolRequestParams, CallToolResult, ListToolsResult, TextContent, Tool
+    from mcp.types import (
+        CallToolRequestParams,
+        CallToolResult,
+        ListToolsResult,
+        TextContent,
+        Tool,
+        ToolAnnotations,
+    )
+
+    from .installation_acts import installation_acts_on
+
+    # The installation tool offers only the acts the surface allows; the adapter refuses the others.
+    catalogue = tool_catalogue(installation_acts_on(adapter.surface))
+
+    def annotations(name: str) -> ToolAnnotations:
+        hints = MCP_TOOL_HINTS[name]
+        return ToolAnnotations(
+            title=hints.title,
+            read_only_hint=hints.read_only,
+            destructive_hint=hints.destructive,
+            idempotent_hint=hints.idempotent,
+            open_world_hint=hints.open_world,
+        )
 
     async def list_tools(_context: object, _params: object) -> ListToolsResult:
         return ListToolsResult(
             tools=[
-                Tool(name=name, description=description, input_schema=cast(dict[str, Any], schema))
-                for name, description, schema in MCP_TOOL_CATALOGUE
+                Tool(
+                    name=name,
+                    description=description,
+                    input_schema=cast(dict[str, Any], schema),
+                    annotations=annotations(name),
+                )
+                for name, description, schema in catalogue
                 if name in adapter.surface.tools
             ]
         )
 
     async def call_tool(_context: object, params: CallToolRequestParams) -> CallToolResult:
         result = await adapter.call(params.name, params.arguments or {})
+        instruction = unknown_outcome_instruction(result)
+        if instruction is not None:
+            result = {**result, UNKNOWN_OUTCOME_MEMBER: instruction}
+        # The text block repeats the document for a client that reads no structured content.
         return CallToolResult(
             content=[TextContent(type="text", text=json.dumps(result, ensure_ascii=False, separators=(",", ":")))],
             structured_content=result,

@@ -27,7 +27,7 @@ import yaml
 from cadrumo.core.hashing import sha256_hex
 
 from .._workspace import _PluginPythonCohort, materialise_plugin
-from ..resources import harness_root, iter_personas
+from ..resources import harness_root, iter_personas, iter_reference_documents
 from ._plugin_cohort import PluginTestCohort
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -91,12 +91,25 @@ def test_plugin_emits_the_skills_tree_from_the_authored_source(
     assert (output / "skills" / "cadrumo-preparar-modelo-130" / "reference" / "casillas.md").is_file()
 
 
-def test_plugin_skill_document_matches_the_shipped_bytes(tmp_path: Path, plugin_cohort: _PluginPythonCohort) -> None:
+def test_plugin_skill_document_keeps_the_shipped_frontmatter_and_body(
+    tmp_path: Path, plugin_cohort: _PluginPythonCohort
+) -> None:
     output = tmp_path / "plugin"
     materialise_plugin(output, cohort=plugin_cohort)
-    shipped = harness_root().joinpath("skills", "cadrumo-preparar-modelo-130", "SKILL.md").read_text(encoding=_UTF_8)
-    written = (output / "skills" / "cadrumo-preparar-modelo-130" / "SKILL.md").read_text(encoding=_UTF_8)
-    assert written == shipped
+    for name in _shipped_skill_names():
+        shipped = harness_root().joinpath("skills", name, "SKILL.md").read_text(encoding=_UTF_8)
+        written = (output / "skills" / name / "SKILL.md").read_text(encoding=_UTF_8)
+        _, frontmatter, body = shipped.split("---\n", 2)
+        opening, authored_body = f"---\n{frontmatter}---\n", body.lstrip("\n")
+        # Only the pointer to the plugin's reference documents is added, between the two authored parts.
+        assert written.startswith(opening) and written.endswith(authored_body), name
+        added = written.removeprefix(opening).removesuffix(authored_body)
+        assert "`${CLAUDE_PLUGIN_ROOT}/reference/command-operations.md`" in added, name
+        assert yaml.safe_load(frontmatter)["name"] == name
+    # The material a skill cites beside itself is copied as authored.
+    cited = ("skills", "cadrumo-preparar-modelo-130", "reference", "casillas.md")
+    shipped_material = harness_root().joinpath(*cited).read_text(encoding=_UTF_8)
+    assert output.joinpath(*cited).read_text(encoding=_UTF_8) == shipped_material
 
 
 def test_plugin_agents_carry_claude_frontmatter_never_mode(tmp_path: Path, plugin_cohort: _PluginPythonCohort) -> None:
@@ -137,6 +150,33 @@ def test_plugin_agent_body_preserves_the_shipped_persona_prose(
     shipped = harness_root().joinpath("personas", "cadrumo-coordinator.md").read_text(encoding=_UTF_8)
     # The persona prose rides verbatim as the agent system prompt after the frontmatter.
     assert written.endswith(shipped)
+
+
+def test_plugin_ships_every_reference_document_and_points_each_agent_at_it(
+    tmp_path: Path, plugin_cohort: _PluginPythonCohort
+) -> None:
+    output = tmp_path / "plugin"
+    manifest = materialise_plugin(output, cohort=plugin_cohort)
+    shipped = list(iter_reference_documents())
+    assert shipped and manifest.references_written == len(shipped)
+
+    assert {path.name for path in (output / "reference").iterdir()} == {document.name for document in shipped}
+    for document in shipped:
+        written = (output / "reference" / document.name).read_text(encoding=_UTF_8)
+        assert written == document.read_text(encoding=_UTF_8)
+    # A plugin carries no operating rules, so each agent is told where the documents are: under the
+    # plugin root Claude resolves when it loads the agent, each named by its own title.
+    remap = harness_root().joinpath("reference", "command-operations.md").read_text(encoding=_UTF_8)
+    title = remap.splitlines()[0].removeprefix("# ")
+    for slug in _persona_slugs():
+        agent = (output / "agents" / f"{slug}.md").read_text(encoding=_UTF_8)
+        _, _frontmatter, body = agent.split("---\n", 2)
+        shipped_prose = harness_root().joinpath("personas", f"{slug}.md").read_text(encoding=_UTF_8)
+        pointer = body.removesuffix(shipped_prose)
+        assert pointer != body
+        for document in shipped:
+            assert f"`${{CLAUDE_PLUGIN_ROOT}}/reference/{document.name}`" in pointer, slug
+        assert f"`${{CLAUDE_PLUGIN_ROOT}}/reference/command-operations.md`: {title}" in pointer, slug
 
 
 def test_exact_closed_world_cohort_interpolates_into_manifest_and_mcp_launch(

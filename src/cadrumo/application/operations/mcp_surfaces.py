@@ -3,9 +3,17 @@
 A surface is what one MCP connection is served. Its name fixes what a client
 pins: the tools the server advertises, and two declared properties, whether
 anything on the surface can change the profile's records and whether anything
-on it reaches the network. A surface whose tools or properties change takes a
-new name. Its operation list may grow between releases, and only within those
-properties.
+on it reaches the network. Its operation list may grow between releases, and
+only within those properties.
+
+No release has yet been pinned by a consumer, so the default surface gained the
+``session`` and ``installation`` tools in this release under the name ``full``.
+From the first release a consumer pins, a name moves with its tool list: a
+surface whose tools or properties change takes a new name, the name it had
+keeps what it stood for while it is served, and the default follows the newest
+surface that keeps everything. Each name is held to its exact tool list and
+its two properties by a test, so a change under a name fails there until the
+surface is renamed.
 
 Every registered operation is open to every frontend, and the surface served
 when none is named keeps all of them. A narrower surface is the choice of the
@@ -109,6 +117,7 @@ _EVERY_TOOL: Final = frozenset(
         "respond",
         "control",
         "session",
+        "installation",
     }
 )
 

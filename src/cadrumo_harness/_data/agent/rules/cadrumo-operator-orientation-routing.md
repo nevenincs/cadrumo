@@ -126,6 +126,44 @@ official source rather than treating a product command as legal authority.
   category with `aeat config storage view <area>` first; `reclaim` is not a
   general "clean up" verb.
 
+## Storage, repair and profile-list work through MCP
+
+Work that needs no profile and no sign-in is not a registered operation, so
+`search` does not list it. Through MCP it is the `installation` tool, one
+`action` per act, served by the running runtime:
+
+- Storage: `storage_inventory` (what `storage list` and `storage view` show),
+  `storage_check`, `storage_init`, `storage_reclaim`.
+- Repair: `repair_report` (bare `aeat config repair`), `repair_logs`,
+  `repair_profile`.
+- Profiles: `profile_list`, `archive_inspect`, `archive_import_prepare` then
+  `archive_import` with the digest the first returned, and `recovery_enroll`
+  (also `session` with `enable_recovery`, which resolves the profile by name).
+- The reset of all profiles: `reset_start`, `reset_status`, `reset_resume`.
+- Verification of a file the person holds: `review_package_verify`,
+  `review_package_verify_signature`, `review_package_verify_receipt`,
+  `report_verify_document`.
+
+Read the tool's own description for each action's arguments; name every file by
+its absolute path. An action that takes `confirm` only reports until `confirm`
+is true, exactly as the command does without its confirmation flag: tell the
+person what it would destroy and wait for their go-ahead before you confirm. A
+password goes by reference in `secret_reference`, after the person has entered it
+with `cadrumo-mcp --hold-secret` in their own terminal; one the person typed into
+the conversation anyway goes in `secret` and nowhere else. `recovery_enroll` never returns the
+recovery code. The runtime does not store it; the MCP server holds one copy in
+this machine's protected credential store, and the reply carries
+`secret_reference` and, in `secret_retrieval`, the command the person runs in
+their own terminal to read it (`cadrumo-mcp --show-held-secret REFERENCE`). The
+copy stays held until the person has read it and confirmed they kept it, and is
+then deleted; `cadrumo-mcp --list-held-secrets` lists what is still held without
+showing it, and `cadrumo-mcp --delete-held-secret REFERENCE` deletes one unread.
+Pass the sentence on to the person and do not run these commands yourself: they
+work only at a person's terminal. The same `secret_reference` is accepted wherever
+a secret is taken by reference, so `session` with `reset_password` can use the
+held code before the person has read it. That sends the code to the runtime and
+shows it to nobody; it stays held until the person reads it or deletes it.
+
 ## Discovering registered operations through MCP
 
 The MCP server exposes a fixed protocol surface. Use `status` to inspect whether
@@ -147,3 +185,18 @@ submitted.
 The MCP server takes the profile ID at launch and uses a protected credential
 reference when one is configured. It does not translate shell verbs to tool
 names or activate per-domain tool sets.
+
+The workflow skills, and the tables above, name command-line commands. Through
+MCP you run the operations a command submits, and the reference
+`command-operations.md`, kept under `reference/` beside these rules, lists them
+for every command. It is generated from the record the command line publishes
+of itself, so read it there and never from memory. Find the command as the skill
+spells it, `describe` each operation its row lists, and `execute` the one whose
+contract fits the step: a row lists every operation any mode of the command can
+submit, so one command can be a read that resolves an identifier and then the
+write that takes it. A command whose row says `none` submits no operation: a
+read of published reference data is answered by `authority` or `corpus_search`,
+an act on a profile's sessions by `session`, and work that needs no profile by
+`installation`. The command's options are not
+the operation's fields. Fill the described input schema from the same facts the
+options carry.

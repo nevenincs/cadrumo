@@ -224,15 +224,15 @@ async def test_a_submission_asked_not_to_start_still_delivers_its_secret() -> No
 
 @pytest.mark.anyio
 @pytest.mark.parametrize(
-    ("answer", "delivery"),
+    ("answer", "delivery", "known"),
     [
-        (RuntimeFrontendRefusedError("operation_denied"), {"outcome": "refused", "code": "operation_denied"}),
-        (TimeoutError("synthetic lost reply"), {"outcome": "unresolved", "code": "runtime_unavailable"}),
+        (RuntimeFrontendRefusedError("operation_denied"), {"outcome": "refused", "code": "operation_denied"}, True),
+        (TimeoutError("synthetic lost reply"), {"outcome": "unresolved", "code": "runtime_unavailable"}, False),
     ],
     ids=["runtime-refused", "reply-lost"],
 )
 async def test_a_secret_the_runtime_did_not_acknowledge_keeps_the_receipt_and_starts_nothing(
-    answer: Exception, delivery: dict[str, str]
+    answer: Exception, delivery: dict[str, str], known: bool
 ) -> None:
     client = _AnsweringClient(uuid4(), secret_answer=answer)
     adapter = RuntimeMcpAdapter(profile_id=client.profile_id, client=cast(RuntimeFrontendClient, client))
@@ -242,11 +242,18 @@ async def test_a_secret_the_runtime_did_not_acknowledge_keeps_the_receipt_and_st
     finally:
         await adapter.close()
 
-    assert called.is_error is True
     result = called.structured_content
     assert result is not None
     assert result["outcome"] == "submitted" and result["receipt"]["operation_id"]
     assert result["secret_delivery"] == delivery
+    # A refused delivery is an error; a lost one is not, and says how the recorded operation is read.
+    assert called.is_error is known
+    if known:
+        assert "unknown_outcome" not in result
+    else:
+        told = result["unknown_outcome"]
+        assert "secret_delivery" in told and "receipt.operation_id" in told
+        assert "Do not repeat this call" in told and "observe" in told
     assert "start" not in result
     assert not any(isinstance(item, RuntimeOperationControl) for item in client.exchanges)
     assert _TYPED not in json.dumps(result)
