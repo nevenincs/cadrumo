@@ -272,6 +272,16 @@ def test_guarded_invoice_owner_recheck_refuses_changed_snapshot_before_atomic_wr
     assert subject.repository.attempts == 0 and not subject.events.load().events
 
 
+@pytest.mark.parametrize("output_path", ["ledger.csv", "exports/ledger.csv", "/mnt/c/Users/x/ledger.csv"])
+def test_export_request_refuses_a_path_the_runtime_would_place_itself(output_path: str) -> None:
+    # A rooted path with no drive is absolute on POSIX, where the runtime writes it as given.
+    if Path(output_path).is_absolute():
+        assert LedgerExportRequest(profile_id=PROFILE_ID, output_path=output_path).output_path == output_path
+        return
+    with pytest.raises(ValueError, match="ledger export output path must be absolute"):
+        LedgerExportRequest(profile_id=PROFILE_ID, output_path=output_path)
+
+
 @pytest.mark.parametrize("kind", ["export", "link"])
 def test_foreign_worker_subject_refuses_before_private_ports(subject: Subject, tmp_path: Path, kind: str) -> None:
     definition = _definition(subject, kind)

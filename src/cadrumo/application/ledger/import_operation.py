@@ -131,6 +131,14 @@ class LedgerImportRequest(BaseModel):
             raise ValueError("ledger import expects exactly one source digest per file")
         return self
 
+    @model_validator(mode="after")
+    def _absolute_paths(self) -> LedgerImportRequest:
+        # A relative path would resolve against the runtime's working directory, not the caller's.
+        named = self.files if self.verify_source is None else (*self.files, self.verify_source)
+        if not all(path.is_absolute() for path in named):
+            raise ValueError("ledger import paths must be absolute")
+        return self
+
 
 class LedgerImportFileRefusal(BaseModel):
     """Safe file-level refusal identity without parser context or file contents."""

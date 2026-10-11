@@ -42,6 +42,21 @@ from .unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedBucke
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
+# The ports are doubles keyed on file name; the request still names each file as the runtime requires.
+_SOURCES = Path(__file__).resolve().parent / "statements"
+
+
+@pytest.mark.parametrize(
+    ("statement", "verify_source"),
+    [(Path("one.csv"), None), (_SOURCES / "one.csv", Path("ledger.csv"))],
+)
+def test_import_request_refuses_a_path_the_runtime_would_place_itself(
+    statement: Path, verify_source: Path | None
+) -> None:
+    with pytest.raises(ValueError, match="ledger import paths must be absolute"):
+        LedgerImportRequest(
+            profile_id=_PROFILE, files=(statement,), provider=LedgerProviderID.CSV, verify_source=verify_source
+        )
 
 
 class _Events:
@@ -136,7 +151,7 @@ def test_import_request_rejects_more_than_the_registered_file_limit() -> None:
     with pytest.raises(ValidationError):
         LedgerImportRequest(
             profile_id=_PROFILE,
-            files=tuple(Path(f"{index}.csv") for index in range(MAX_LEDGER_IMPORT_FILES + 1)),
+            files=tuple(_SOURCES / f"{index}.csv" for index in range(MAX_LEDGER_IMPORT_FILES + 1)),
             provider=LedgerProviderID.CSV,
         )
 
@@ -196,7 +211,7 @@ def test_over_budget_file_is_refused_before_persist_and_later_small_file_fits(
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=LedgerImportRequest(
             profile_id=_PROFILE,
-            files=tuple(Path(name) for name in counts),
+            files=tuple(_SOURCES / name for name in counts),
             provider=LedgerProviderID.CSV,
         ),
     )
@@ -264,7 +279,7 @@ def test_a_file_whose_parsed_bytes_differ_from_the_preview_digest_is_refused_bef
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=LedgerImportRequest(
             profile_id=_PROFILE,
-            files=(Path("kept.csv"), Path("changed.csv")),
+            files=(_SOURCES / "kept.csv", _SOURCES / "changed.csv"),
             provider=LedgerProviderID.CSV,
             # The preview saw "changed.csv" with other bytes than it holds now.
             expected_source_sha256=("b" * 64, "d" * 64),
@@ -287,7 +302,7 @@ def test_import_request_requires_one_expected_digest_per_file() -> None:
     with pytest.raises(ValidationError):
         LedgerImportRequest(
             profile_id=_PROFILE,
-            files=(Path("one.csv"), Path("two.csv")),
+            files=(_SOURCES / "one.csv", _SOURCES / "two.csv"),
             provider=LedgerProviderID.CSV,
             expected_source_sha256=("a" * 64,),
         )
@@ -353,7 +368,7 @@ def test_each_source_is_staged_under_the_session_label_for_an_agent_and_the_prof
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=LedgerImportRequest(
-            profile_id=_PROFILE, files=(Path("first.csv"), Path("second.csv")), provider=LedgerProviderID.CSV
+            profile_id=_PROFILE, files=(_SOURCES / "first.csv", _SOURCES / "second.csv"), provider=LedgerProviderID.CSV
         ),
     )
     executor = LedgerImportExecutor(

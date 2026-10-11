@@ -60,6 +60,13 @@ class LedgerExportRequest(BaseModel):
     period: PublicPeriod | None = None
     actor: Annotated[str, Field(min_length=1, max_length=64)] | None = None
 
+    @model_validator(mode="after")
+    def _absolute_output_path(self) -> Self:
+        # A relative path would resolve against the runtime's working directory, not the caller's.
+        if not Path(self.output_path).is_absolute():
+            raise ValueError("ledger export output path must be absolute")
+        return self
+
 
 class LedgerExportRowProjection(BaseModel):
     """Lossless string cells already produced by the canonical export row builder."""
