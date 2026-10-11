@@ -1,4 +1,9 @@
-"""List and rank the registered operations one admitted session may use, a page at a time."""
+"""List and rank the registered operations a connection may use, a page at a time.
+
+An admitted session is shown the operations its scope and its surface keep,
+read from the runtime. A connection with no session is shown every registered
+operation its surface keeps, from the public contracts already in hand.
+"""
 
 from __future__ import annotations
 
@@ -16,7 +21,7 @@ from cadrumo.application.user_profile.access_contracts import AccessDenialCode
 
 from .operation_contract_cache import OperationContractCache
 from .operation_search import rank_operations
-from .protocol_contract import SEARCH_PAGE_DEFAULT, public_value, refusal_code
+from .protocol_contract import SEARCH_PAGE_DEFAULT, refusal_code
 from .runtime_admission import McpAdmission, require_exact_admitted_status
 
 # An operation outside the connection's surface or the session's scope is simply not offered.
@@ -66,6 +71,44 @@ def search_operations(
     if args.get("query", "").strip():
         return _ranked_page(client, contracts, scope, args["query"], cursor, limit, deadline)
     return _listed_page(client, contracts, scope, cursor, limit, deadline)
+
+
+def search_public_operations(
+    descriptions: Sequence[OperationPublicDefinitionDescriptionV1], args: dict[str, Any], surface: McpSurface
+) -> dict[str, Any]:
+    """Return one page of every registered operation the surface keeps, for a connection with no session.
+
+    The pages, their cursors and their order are those of a session's own
+    search. Nothing is read here: the descriptions are the public set already
+    in hand, so no operation is reported unavailable.
+    """
+    family = args.get("family", "").strip()
+    scope = sorted(
+        (
+            description
+            for description in descriptions
+            if surface.admits(description.contract.definition_id)
+            and _in_family(description.contract.definition_id, family)
+        ),
+        key=lambda description: description.contract.definition_id,
+    )
+    limit = args.get("limit", SEARCH_PAGE_DEFAULT)
+    cursor = args.get("cursor")
+    if args.get("query", "").strip():
+        offset = _offset(cursor)
+        ranked = rank_operations(args["query"], scope)
+        page = _found(ranked[offset : offset + limit], [])
+        if offset + limit < len(ranked):
+            page["next_cursor"] = str(offset + limit)
+        return page
+    if cursor is not None and cursor.isdecimal():
+        raise ValueError("cursor does not belong to an unranked listing")
+    pending = [description for description in scope if cursor is None or description.contract.definition_id > cursor]
+    rows = pending[:limit]
+    page = _found(rows, [])
+    if len(rows) < len(pending):
+        page["next_cursor"] = rows[-1].contract.definition_id
+    return page
 
 
 def _in_family(definition_id: str, family: str) -> bool:
@@ -153,12 +196,38 @@ def _described(
         raise
 
 
+def operation_summary(description: OperationPublicDefinitionDescriptionV1) -> dict[str, Any]:
+    """Summarize one operation as a search row: what it is, and the facts that tell it from its neighbours.
+
+    A row is small so that a page of them is cheap to read. The members that
+    carry a contract's own value keep the contract's name for it. The whole
+    contract and the request schema are what ``describe`` returns.
+    """
+    contract = description.contract
+    row: dict[str, Any] = {"definition_id": contract.definition_id}
+    purpose = _first_paragraph(description.request_json_schema.get("description"))
+    if purpose:
+        row["description"] = purpose
+    row["subject_kind"] = contract.subject_reference.kind.value
+    row["permitted_effects"] = sorted(effect.value for effect in contract.permitted_effects)
+    row["interaction_kinds"] = sorted(kind.value for kind in contract.interaction_kinds)
+    row["ephemeral_secret_required"] = contract.ephemeral_secret_required
+    return row
+
+
+def _first_paragraph(text: object) -> str:
+    """Return the opening paragraph of a request's own description as one line, or nothing where it has none."""
+    if not isinstance(text, str):
+        return ""
+    return " ".join(text.strip().split("\n\n", 1)[0].split())
+
+
 def _found(
     descriptions: Sequence[OperationPublicDefinitionDescriptionV1], unavailable: list[dict[str, str]]
 ) -> dict[str, Any]:
     page: dict[str, Any] = {
         "outcome": "found",
-        "operations": [public_value(description.contract) for description in descriptions],
+        "operations": [operation_summary(description) for description in descriptions],
     }
     if unavailable:
         page["unavailable"] = unavailable

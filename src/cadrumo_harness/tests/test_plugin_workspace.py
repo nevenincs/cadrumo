@@ -26,7 +26,9 @@ import yaml
 
 from cadrumo.core.hashing import sha256_hex
 
+from .._resources import packaged_data
 from .._workspace import _PluginPythonCohort, materialise_plugin
+from ..mcp.public_operation_discovery import CONTRACT_DOCUMENT_DIRECTORY
 from ..resources import harness_root, iter_personas, iter_reference_documents
 from ._plugin_cohort import PluginTestCohort
 
@@ -177,6 +179,21 @@ def test_plugin_ships_every_reference_document_and_points_each_agent_at_it(
         for document in shipped:
             assert f"`${{CLAUDE_PLUGIN_ROOT}}/reference/{document.name}`" in pointer, slug
         assert f"`${{CLAUDE_PLUGIN_ROOT}}/reference/command-operations.md`: {title}" in pointer, slug
+
+
+def test_the_server_s_contract_document_travels_in_the_product_wheel_and_not_as_a_plugin_file(
+    tmp_path: Path, plugin_cohort: _PluginPythonCohort
+) -> None:
+    """The plugin's files are what the agent reads. Its MCP server reads its contracts from the wheel it runs from."""
+    shipped = {part.name for part in packaged_data(CONTRACT_DOCUMENT_DIRECTORY).iterdir() if part.is_file()}
+    assert shipped, "the operation contract document does not ship; nothing was judged"
+    output = tmp_path / "plugin"
+
+    materialise_plugin(output, cohort=plugin_cohort)
+
+    written = {path.name for path in output.rglob("*")}
+    assert CONTRACT_DOCUMENT_DIRECTORY not in written
+    assert not shipped & written
 
 
 def test_exact_closed_world_cohort_interpolates_into_manifest_and_mcp_launch(

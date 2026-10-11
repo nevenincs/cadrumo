@@ -109,9 +109,15 @@ async def test_installed_missing_reference_keeps_public_stdio_and_fences_private
                 assert recovery.is_error is True
                 assert recovery.structured_content == {"outcome": "refused", "code": denial}
 
+                # Which operations exist is no profile's data, so both still answer, under no session.
                 for name, args in (
-                    ("search", {"query": "auth.local-read"}),
+                    ("search", {"query": "auth.local-read", "limit": 1}),
                     ("describe", {"definition_id": "auth.local-read"}),
+                ):
+                    discovered = await client.call_tool(name, args)
+                    assert discovered.is_error is False, name
+                    assert _object(discovered.structured_content)["session"] == "none", name
+                for name, args in (
                     (
                         "execute",
                         {

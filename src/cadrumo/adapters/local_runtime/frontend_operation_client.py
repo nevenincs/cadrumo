@@ -90,7 +90,7 @@ class RuntimeOperationFrontend:
         """Keep runtime failure provenance distinct from an authoritative access denial."""
         if isinstance(reply.code, RuntimeRefusalCode):
             raise RuntimeRefusalError(reply.code)
-        raise RuntimeFrontendRefusedError(reply.code.value, sign_in=reply.sign_in)
+        raise RuntimeFrontendRefusedError(reply.code.value, sign_in=reply.sign_in, request_faults=reply.request_faults)
 
     @staticmethod
     def _reply[ReplyT](reply: object, expected: type[ReplyT]) -> ReplyT:

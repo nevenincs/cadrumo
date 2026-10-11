@@ -12,6 +12,7 @@ from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalE
 from ...application.user_profile.sign_in_refusals import SignInRefusal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.digest import ContentDigest
+from ...core.request_faults import RequestFault, request_faults_text
 from ...domain.user_profile.values import ProfileSetupState
 
 if TYPE_CHECKING:
@@ -26,12 +27,24 @@ class RuntimeFrontendRefusedError(CadrumoError):
     """A safe, typed application refusal from the installed runtime."""
 
     def __init__(
-        self, code: str, *, sign_in: SignInRefusal | None = None, custody_transaction_id: UUID | None = None
+        self,
+        code: str,
+        *,
+        sign_in: SignInRefusal | None = None,
+        custody_transaction_id: UUID | None = None,
+        request_faults: tuple[RequestFault, ...] = (),
     ) -> None:
-        """Retain an allowlisted refusal code without private diagnostic text."""
+        """Retain an allowlisted refusal code without private diagnostic text.
+
+        ``request_faults`` are the value-free reasons an operation's request
+        model gave for refusing a payload, when the runtime returned them.
+        """
         self.reason = code
         self.sign_in = sign_in
+        self.request_faults = request_faults
         context: dict[str, object] = {"reason": code}
+        if request_faults:
+            context["request_faults"] = request_faults_text(request_faults)
         if custody_transaction_id is not None:
             context["transaction_id"] = str(custody_transaction_id)
         if sign_in is not None:

@@ -20,7 +20,7 @@ from datetime import date
 from ..core.errors.hierarchy import CadrumoError
 from ..core.i18n.render import tr
 from ..core.modelo import Modelo
-from ..core.period import Period, PeriodError
+from ..core.period import Period, PeriodError, is_filing_period_token
 from ..core.tax_domain import TaxDomain
 from ..domain.auth.apoderamientos.catalogue import load_default_catalogue
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -168,19 +168,27 @@ def _declared_tokens(modelo: str, operation: PinnedAuthorityOperation) -> tuple[
 def _registry_scope(
     modelo: str, *, filing_year: int | None, period: str | None, operation: PinnedAuthorityOperation
 ) -> _RegistryScope | None:
-    """Compose a filing year and a period token, or report that neither scopes the read."""
+    """Compose a filing year and a period token, or report that neither scopes the read.
+
+    A token that is no filing period, such as a census event, scopes the read
+    as the registry declares it when the modelo declares it.
+    """
     if filing_year is None:
         return None
     if period is None or not period.strip():
         raise DiscoveryScopeIncompleteError
+    token = period.strip()
     try:
-        composed = Period.from_year_and_code(filing_year, period.strip())
+        composed = Period.from_year_and_code(filing_year, token)
     except PeriodError as error:
+        declared_tokens = _declared_tokens(modelo, operation)
+        if not is_filing_period_token(token) and token in declared_tokens:
+            return _RegistryScope(filing_year=filing_year, period=token)
         raise DiscoveryPeriodTokenError(
             filing_year=filing_year,
             period_code=period,
             modelo=modelo,
-            declared_tokens=_declared_tokens(modelo, operation),
+            declared_tokens=declared_tokens,
             detail=str(error),
         ) from error
     return _RegistryScope(filing_year=composed.filing_year, period=composed.registry_token)

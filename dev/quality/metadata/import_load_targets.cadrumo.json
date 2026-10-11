@@ -2024,6 +2024,7 @@
         "cadrumo.core.remote_authority",
         "cadrumo.core.renta_declaracion_type",
         "cadrumo.core.repository_id",
+        "cadrumo.core.request_faults",
         "cadrumo.core.requirement",
         "cadrumo.core.rescate_type",
         "cadrumo.core.resources",

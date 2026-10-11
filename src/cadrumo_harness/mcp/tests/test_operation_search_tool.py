@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from types import SimpleNamespace
-from typing import NoReturn, cast
+from typing import NoReturn, cast, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -24,6 +24,7 @@ from cadrumo.application.ledger.attachment_mutation_operation import (
     build_ledger_detach_definition,
     build_ledger_detach_registration,
 )
+from cadrumo.application.operations.mcp_surfaces import MCP_SURFACES, McpSurfaceName
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionDescriptionV1,
@@ -38,6 +39,7 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.core.time.clock import now
 from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
 from cadrumo_harness.mcp.operation_contract_cache import OperationContractCache
+from cadrumo_harness.mcp.public_operation_discovery import discover_public_operations, shipped_public_descriptions
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
@@ -172,9 +174,13 @@ async def test_search_ranks_admitted_contracts_with_the_command_ranker(query: st
         assert result is not None
         assert _definition_ids(result) == expected
         operations = cast("list[dict[str, object]]", result["operations"])
-        for contract in operations:
-            definition_id = str(contract["definition_id"])
-            assert contract == registry.lookup_public_contract(definition_id).model_dump(mode="json")
+        for row in operations:
+            contract = registry.lookup_public_contract(str(row["definition_id"]))
+            # A row repeats the contract's own values under the contract's own names.
+            assert row["permitted_effects"] == sorted(effect.value for effect in contract.permitted_effects)
+            assert row["interaction_kinds"] == sorted(kind.value for kind in contract.interaction_kinds)
+            assert row["ephemeral_secret_required"] is contract.ephemeral_secret_required
+            assert row["subject_kind"] == contract.subject_reference.kind.value
         assert sorted(client.described) == sorted(
             {definition.definition_id for definition in registry.definitions} | {_DENIED_DEFINITION_ID}
         )
@@ -355,11 +361,59 @@ async def test_search_rows_carry_what_selects_an_operation_without_the_request_s
         await adapter.close()
     operations = cast("list[dict[str, object]]", result["operations"])
     assert len(operations) == len(_PERMITTED_IDS)
+    summary = {"definition_id", "description", "subject_kind", "permitted_effects", "interaction_kinds"}
     for row in operations:
-        assert {"definition_id", "permitted_effects", "interaction_kinds", "review_projection_schema"} <= set(row)
+        # A row is a summary and nothing else: the contract and the request schema are left to describe.
+        assert set(row) == summary | {"ephemeral_secret_required"}
+        assert isinstance(row["description"], str) and row["description"] and "\n" not in row["description"]
         # Each of these three addresses the admitted profile, and the row says so.
-        assert row["subject_reference"] == {"kind": "profile", "payload_path": [], "literal": None}
-        assert "request_json_schema" not in row
+        assert row["subject_kind"] == "profile"
+    read = next(row for row in operations if row["definition_id"] == AUTH_READ_OPERATION_DEFINITION_ID)
+    assert read["permitted_effects"] == ["none", "unknown", "updated"] and read["interaction_kinds"] == []
+    assert read["ephemeral_secret_required"] is False
+
+
+class _WideScopeClient(_AdmittedClient):
+    """An admitted lease whose scope is many registered operations, each described from the shipped contracts."""
+
+    def __init__(self, profile_id: UUID, scope: list[str]) -> None:
+        super().__init__(profile_id, _registry())
+        wide = self._status.effective_scope.model_copy(update={"operations": frozenset(scope)})
+        self._status = self._status.model_copy(update={"effective_scope": wide})
+
+    @override
+    def describe(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionDescriptionV1:
+        assert deadline > 0
+        self.described.append(definition_id)
+        return shipped_public_descriptions()[definition_id]
+
+
+@pytest.mark.anyio
+async def test_a_search_that_names_no_limit_returns_a_page_of_ten_and_the_rest_by_cursor() -> None:
+    """Under a session as without one, the page is small by default and no operation is out of reach."""
+    profile_id = uuid4()
+    in_scope = sorted(shipped_public_descriptions())[:25]
+    client = _WideScopeClient(profile_id, in_scope)
+    adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(RuntimeFrontendClient, client))
+    listed: list[str] = []
+    try:
+        first = await adapter.call("search", {})
+        page = first
+        while True:
+            listed.extend(row["definition_id"] for row in page["operations"])
+            if "next_cursor" not in page:
+                break
+            page = await adapter.call("search", {"cursor": page["next_cursor"]})
+        widest = await adapter.call("search", {"limit": 200})
+    finally:
+        await adapter.close()
+
+    assert [row["definition_id"] for row in first["operations"]] == in_scope[:10]
+    assert first["next_cursor"] == in_scope[9]
+    assert listed == in_scope
+    assert [row["definition_id"] for row in widest["operations"]] == in_scope and "next_cursor" not in widest
+    without_a_session = discover_public_operations("search", {}, MCP_SURFACES[McpSurfaceName.FULL])
+    assert len(without_a_session["operations"]) == 10 and "next_cursor" in without_a_session
 
 
 @pytest.mark.anyio

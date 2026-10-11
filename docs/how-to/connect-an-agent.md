@@ -2,10 +2,11 @@
 
 The installed `cadrumo-mcp` command connects an MCP client to Cadrumo's local
 runtime. A connection works in one of two ways: it follows your own Cadrumo
-sign-in, or it uses an enrolled key. The client can discover and run only
-operations allowed by its current session and, for a key, its grant. A connection
-started with a profile ID is not retargeted by a later switch of the human active
-profile.
+sign-in, or it uses an enrolled key. The client can run only operations allowed
+by its current session and, for a key, its grant. It can read which operations
+exist, and what each one needs, before anyone signs in and while Cadrumo is not
+running. A connection started with a profile ID is not retargeted by a later
+switch of the human active profile.
 
 Before connecting an agent or managing its access, set up the intended profile
 using [Set up a profile](profile-setup.md) and sign in to it. Checking
@@ -56,8 +57,9 @@ start the server with `--credential-reference` decides how it connects.
 
 **Following your sign-in.** Start the server without `--credential-reference`.
 It follows your own Cadrumo sign-in for the selected profile. It answers
-initialization, its tool list and the public tools (`authority` and
-`corpus_search`) while nobody is signed in. A tool that needs the profile makes
+initialization, its tool list, the public tools (`authority` and
+`corpus_search`) and operation discovery (`search` and `describe`) while nobody
+is signed in. A tool that needs the profile makes
 one attempt to resume your stored sign-in. With a live sign-in the call works.
 With none it is refused with `authentication_required`: sign in to Cadrumo, then
 call again. `--profile-id` is optional. Given alone, it is honoured only while
@@ -115,10 +117,13 @@ session. The `session` tool can instead sign the connection in with your profile
 password, typed or by reference. That session is your own sign-in, with its
 deadline, and not an independently tracked key session.
 
-After admission, `search` ranks permitted operations by the query, using their
-current contracts and request vocabulary; omit the query to list them.
-`describe` shows a
-registered operation's input contract, `execute` submits it, and `observe`
+`search` ranks operations by the query, using their current contracts and
+request vocabulary; omit the query to list them. `describe` shows a registered
+operation's input contract. Both answer before admission too, and while Cadrumo
+is not running: they then cover every registered operation on the connection's
+surface and say `session` `none`, and after admission they cover the operations
+the session may use.
+After admission, `execute` submits an operation and `observe`
 tracks its result. The separate `authority` tool reads published tax authority
 data. Operation grants, session locks, profile suspension, provider checks and
 human review still apply. Retain operation IDs and reconcile uncertain effects

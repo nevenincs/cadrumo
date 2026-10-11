@@ -7,10 +7,11 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 from uuid import UUID
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field, RootModel, model_validator
 
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.request_faults import MAX_REQUEST_FAULTS, RequestFault
 from ..operations.registry import OperationFrontendProjection
 from ..user_profile.access_contracts import AccessDenialCode, AccessScope, AuthorityState, ProfileAccessStatus
 from ..user_profile.automation_custody_port import AutomationCustodyCode
@@ -215,7 +216,12 @@ class RuntimeSessionsLocked(BaseModel):
 
 
 class RuntimeAccessRefusal(BaseModel):
-    """Allowlisted application or native refusal, with no input or diagnostic text."""
+    """Allowlisted application or native refusal, with no input or diagnostic text.
+
+    ``request_faults`` says why an operation's request model refused a
+    payload: where, what kind and which rule, and never the value. Only a
+    refusal whose code is ``invalid`` has any.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["access_refusal"] = "access_refusal"
@@ -224,6 +230,13 @@ class RuntimeAccessRefusal(BaseModel):
     connection_id: UUID
     code: AccessDenialCode | AutomationCustodyCode | RuntimeRefusalCode
     sign_in: SignInRefusal | None = None
+    request_faults: Annotated[tuple[RequestFault, ...], Field(max_length=MAX_REQUEST_FAULTS)] = ()
+
+    @model_validator(mode="after")
+    def _only_an_invalid_request_has_faults(self) -> RuntimeAccessRefusal:
+        if self.request_faults and self.code is not AutomationCustodyCode.INVALID:
+            raise ValueError("only an invalid request carries request faults")
+        return self
 
 
 class RuntimeReply(

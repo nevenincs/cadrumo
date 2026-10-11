@@ -8,6 +8,7 @@ reports they project and against independent properties of the data.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
+from datetime import date
 
 import pytest
 from pydantic import BaseModel
@@ -105,6 +106,34 @@ def test_an_invalid_period_token_for_an_unknown_modelo_carries_the_period_refusa
 def test_a_year_that_is_a_period_token_is_not_a_period(operation: PinnedAuthorityOperation) -> None:
     with pytest.raises(catalogue.DiscoveryPeriodTokenError):
         catalogue.describe_casilla("130", "03", year=2025, period="2025", operation=operation)
+
+
+@pytest.mark.parametrize("token", ["alta", "modificacion", "baja"])
+def test_a_census_event_the_modelo_declares_scopes_a_read_together_with_its_filing_year(
+    operation: PinnedAuthorityOperation, token: str
+) -> None:
+    as_of = date(2024, 12, 31)
+    scoped = catalogue.describe_modelo("036", year=2024, period=token, as_of=as_of, operation=operation)
+    registry = registry_describe_modelo_for_registry_scope(
+        "036", filing_year=2024, period=token, as_of=as_of, operation=operation
+    )
+
+    assert (scoped.filing_year, scoped.period) == (2024, token)
+    assert (scoped.revision, scoped.authority_grade) == (registry.revision, registry.authority_grade)
+
+
+def test_a_census_event_is_refused_for_a_modelo_that_does_not_declare_it(operation: PinnedAuthorityOperation) -> None:
+    with pytest.raises(catalogue.DiscoveryPeriodTokenError) as refused:
+        catalogue.describe_modelo("130", year=2025, period="alta", operation=operation)
+
+    assert "alta" not in refused.value.declared_tokens
+
+
+def test_a_filing_period_the_modelo_declares_is_still_refused_with_an_unsupported_year(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    with pytest.raises(catalogue.DiscoveryPeriodTokenError):
+        catalogue.describe_modelo("130", year=1, period="1T", operation=operation)
 
 
 @pytest.mark.parametrize("modelo", _CEDED)

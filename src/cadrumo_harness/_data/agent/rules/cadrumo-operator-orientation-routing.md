@@ -1,16 +1,20 @@
 # Orientation — where to look for each kind of question
 
 This table identifies CLI command families. In MCP, use `status` to check the
-connection's exact profile and current authorization, `search` to discover granted
+connection's exact profile and current authorization, `search` to discover
 registered operations, and `describe` to obtain an operation's current input schema.
 Every operation the command line can run is a registered operation you can find
-and submit this way.
+and submit this way. `search` and `describe` need neither a sign-in nor a running
+Cadrumo, so you can learn what a piece of work needs first.
 
 ## Capability and shape questions
 
 - "Which operations can this agent use?" → MCP `search`, then `describe`.
-  Read the registered contract and schema before calling `execute`; never infer
-  permission from a persona name or the human's active profile.
+  Under a session `search` lists the operations that session may use; a reply
+  that says `session` `none` lists every registered operation, and which of
+  them you may run is settled when a session is held. Read the registered
+  contract and schema before calling `execute`; never infer permission from a
+  persona name or the human's active profile.
 - "How do I read the result of any command?" → the envelope-reading rule; every
   `--format json` response shares one spine.
 
@@ -167,11 +171,17 @@ shows it to nobody; it stays held until the person reads it or deletes it.
 ## Discovering registered operations through MCP
 
 The MCP server exposes a fixed protocol surface. Use `status` to inspect whether
-this connection is admitted for its bound profile. Once admitted, use
-`search` to find operations permitted by that profile, then `describe` with the
-returned `definition_id` to inspect an operation's contract and input schema.
-Review that contract before submitting work with `execute`, which requires the
-`definition_id` and a payload matching the described schema.
+this connection is admitted for its bound profile. Use `search` to find
+operations, then `describe` with the returned `definition_id` to inspect an
+operation's contract and input schema. Both answer with or without a session,
+and whether or not Cadrumo is running. With no session they cover every
+registered operation on the connection's surface and their reply says
+`session` `none`; with one, they cover the operations that session may use. So
+find the operations a piece of work needs
+and read their contracts before you ask the person to sign in, and ask only
+when the first operation has to run. Review a contract before submitting work
+with `execute`, which requires a session, the `definition_id` and a payload
+matching the described schema.
 
 The contract's `subject_reference` says what the operation's subject is, and
 the server derives it: the admitted profile (`profile`), the payload field its

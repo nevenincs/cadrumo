@@ -57,7 +57,7 @@ async def test_fresh_adapter_orients_without_claiming_profile_access() -> None:
             "denial": "authentication_required",
         }
 
-        private = await client.call_tool("search", {})
+        private = await client.call_tool("observe", {"observation": {}})
         assert private.is_error is True
         assert private.structured_content == {"outcome": "refused", "code": "authentication_required"}
 

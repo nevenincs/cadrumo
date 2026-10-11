@@ -147,11 +147,20 @@ def _describe(
     if not binding.surface.admits(definition_id):
         # The runtime refuses the operation itself; this only answers as it would.
         raise RuntimeFrontendRefusedError(AccessDenialCode.FRONTEND_DENIED.value)
-    description = binding.contracts.description(client, definition_id, deadline=deadline, fresh=True)
+    return described_reply(binding.contracts.description(client, definition_id, deadline=deadline, fresh=True))
+
+
+def described_reply(description: OperationPublicDefinitionDescriptionV1) -> dict[str, Any]:
+    """Build the ``describe`` reply for one public description, wherever it was read from.
+
+    The typed operator input of a financial operand and the vocabulary a
+    payload names come from the published authority and the installed
+    package, so they are the same with a session and without one.
+    """
     reply: dict[str, Any] = {"outcome": "described", "description": public_value(description)}
     if description.contract.transient_financial_operand is not None:
         reply["operator_input_json_schema"] = _operator_input_json_schema()
-    vocabulary = payload_vocabulary(definition_id)
+    vocabulary = payload_vocabulary(description.contract.definition_id)
     if vocabulary is not None:
         reply[PAYLOAD_VOCABULARY_MEMBER] = vocabulary
     return reply
@@ -190,6 +199,13 @@ def _execute(client: RuntimeFrontendClient, binding: _Binding, args: dict[str, A
             if not isinstance(reply, RuntimeOperationSubmitted):
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         except RuntimeFrontendRefusedError as refused:
+            if refused.request_faults:
+                # The request model's own reasons, as the runtime returned them without the values.
+                return {
+                    "outcome": "refused",
+                    "code": refusal_code(refused),
+                    "faults": [public_value(fault) for fault in refused.request_faults],
+                }
             faults = _named_field_faults(refused, description, args["payload"])
             if not faults:
                 raise
@@ -234,11 +250,12 @@ def _named_field_faults(
 ) -> list[dict[str, Any]]:
     """Name the fields that explain why the runtime's request model refused a payload, where names do.
 
-    The runtime answers a payload its model refuses with a code and nothing
-    else. Which fields the model requires and which it knows are in the schema
-    already described, so a missing or unknown field is named from there. Only
-    a refusal the runtime gave is explained: nothing is refused here, and no
-    fault carries a value.
+    A runtime that returns its model's faults is answered with those. This
+    explains a refusal that came with a code and nothing else. Which fields
+    the model requires and which it knows are in the schema already described,
+    so a missing or unknown field is named from there. Only a refusal the
+    runtime gave is explained: nothing is refused here, and no fault carries a
+    value.
     """
     schema = description.request_json_schema
     properties = schema.get("properties")

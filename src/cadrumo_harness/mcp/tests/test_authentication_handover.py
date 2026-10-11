@@ -11,7 +11,7 @@ import pytest
 
 from cadrumo.adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
 from cadrumo.application.user_profile.access_contracts import (
     AccessDenialCode,
     AccessScope,
@@ -22,11 +22,15 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.core.time.clock import now
 from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
 from cadrumo_harness.mcp import runtime_admission as mcp_admission
+from cadrumo_harness.mcp.operation_discovery import operation_summary
+from cadrumo_harness.mcp.public_operation_discovery import shipped_public_descriptions
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _AT = datetime(2026, 10, 3, 12, tzinfo=UTC)
+_READ = "auth.local-read"
+_FOUND = {"outcome": "found", "operations": [operation_summary(shipped_public_descriptions()[_READ])]}
 _STATUS_REFUSALS = (
     ("denial", "grant_expired"),
     ("profile", "profile_mismatch"),
@@ -132,11 +136,11 @@ class _Client:
             self.frontend = OperationFrontendProjection.TUI
         return SimpleNamespace(status=status)
 
-    def describe(self, definition_id: str, *, deadline: float) -> SimpleNamespace:
+    def describe(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionDescriptionV1:
         assert not self.closed
         assert deadline > 0
         self.describe_calls.append(definition_id)
-        return SimpleNamespace(contract={"definition_id": definition_id})
+        return shipped_public_descriptions()[definition_id]
 
     def subscribe_session_retirement(self, receive: object) -> None:
         """The runtime retires no lease of this double."""
@@ -197,10 +201,7 @@ async def test_reauthentication_retires_existing_session_only_after_candidate_st
             assert original.session_id == original_session
             assert candidate.close_count == (0 if failure == "admission" else 1)
             assert (await adapter.call("status", {}))["outcome"] == "status"
-            assert await adapter.call("search", {}) == {
-                "outcome": "found",
-                "operations": [{"definition_id": "auth.local-read"}],
-            }
+            assert await adapter.call("search", {}) == _FOUND
             assert original.describe_calls == ["auth.local-read"]
             assert candidate.describe_calls == []
     finally:
@@ -219,7 +220,8 @@ async def test_search_requires_exact_live_admission_before_listing_private_opera
     samples: list[datetime] = []
 
     def sample_after_status() -> datetime:
-        assert client.status_calls == 1
+        # Each check of the lease reads its status first and the clock after it.
+        assert client.status_calls == len(samples) + 1
         samples.append(_AT)
         return _AT
 
@@ -228,12 +230,17 @@ async def test_search_requires_exact_live_admission_before_listing_private_opera
     try:
         result = await adapter.call("search", {})
         if expected_code is None:
-            assert result == {"outcome": "found", "operations": [{"definition_id": "auth.local-read"}]}
+            assert result == _FOUND
             assert client.describe_calls == ["auth.local-read"]
+            assert samples == [_AT]
         else:
-            assert result == {"outcome": "refused", "code": expected_code}
+            # A lease that is not a live admission is no session: nothing is read under it, and the
+            # answer is the registered operations' public contracts, as for a connection with none.
+            assert (result["outcome"], result["session"]) == ("found", "none")
             assert client.describe_calls == []
-        assert samples == [_AT]
+            # The refusal was checked against the lease once more before it was read as no session,
+            # and a lease whose binding had already moved is refused before its status is read again.
+            assert samples in ([_AT], [_AT, _AT])
         assert client.close_count == 0
     finally:
         await adapter.close()

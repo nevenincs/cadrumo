@@ -32,6 +32,7 @@
         "cadrumo_harness.mcp.operation_search",
         "cadrumo_harness.mcp.payload_vocabulary",
         "cadrumo_harness.mcp.protocol_contract",
+        "cadrumo_harness.mcp.public_operation_discovery",
         "cadrumo_harness.mcp.result_request",
         "cadrumo_harness.mcp.runtime_adapter",
         "cadrumo_harness.mcp.runtime_admission",

@@ -157,7 +157,7 @@ async def test_a_key_session_the_runtime_ended_is_authenticated_anew_and_the_run
         first.retire()
 
         status = await adapter.call("status", {})
-        refused = await adapter.call("search", {"query": "auth"})
+        refused = await adapter.call("observe", {"observation": {}})
     finally:
         await adapter.close()
 

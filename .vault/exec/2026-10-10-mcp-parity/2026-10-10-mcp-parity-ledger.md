@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-11'
+modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:7b03d15f2bdeb421debfea1312bb88b08ff14bdd4332053549f1dc9f45485672'
+body_hash: 'sha256:bb01dafbbdd5959fe6116b61fb55d919e6d0c83fceb239085568b0ba983e4723'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -1919,6 +1919,91 @@ related:
 - `S61` `verify:` `lint-imports (15 contracts)` -> `pass`
 - `S61` `verify:` `just check-style` -> `pass`
 - `S61` `by:` `vaultspec-high-executor`
+- `S63` `M` `dev/agent_eval/tests/test_authenticated_mcp_runtime.py`
+- `S63` `M` `dev/agent_eval/tests/test_installed_failed_reference_stdio.py`
+- `S63` `M` `dev/agent_eval/tests/test_installed_mcp_autonomous_reconnect.py`
+- `S63` `M` `dev/agent_eval/tests/test_installed_mcp_tui_grant_parity.py`
+- `S63` `M` `dev/agent_eval/tests/test_mcp_revocation_runtime.py`
+- `S63` `M` `dev/agent_eval/tests/test_mcp_runtime_authority.py`
+- `S63` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S63` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
+- `S63` `M` `docs/how-to/connect-an-agent.md`
+- `S63` `M` `docs/locales/ca/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S63` `M` `docs/locales/es/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S63` `M` `docs/locales/hu/LC_MESSAGES/how-to/connect-an-agent.po`
+- `S63` `M` `src/cadrumo/adapters/local_runtime/frontend_client_contracts.py`
+- `S63` `M` `src/cadrumo/adapters/local_runtime/frontend_operation_client.py`
+- `S63` `M` `src/cadrumo/adapters/local_runtime/profile_worker_transport.py`
+- `S63` `M` `src/cadrumo/application/reference_catalogue.py`
+- `S63` `M` `src/cadrumo/application/runtime/profile_access.py`
+- `S63` `M` `src/cadrumo/application/runtime/profile_worker.py`
+- `S63` `M` `src/cadrumo/application/tests/test_reference_catalogue.py`
+- `S63` `M` `src/cadrumo/application/user_profile/automation_custody_port.py`
+- `S63` `M` `src/cadrumo/entrypoints/cli/registered_operation_errors.py`
+- `S63` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
+- `S63` `M` `src/cadrumo/entrypoints/runtime/profile_connection_operations.py`
+- `S63` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_adapter.py`
+- `S63` `M` `src/cadrumo/entrypoints/runtime/worker_operation_requests.py`
+- `S63` `M` `src/cadrumo/entrypoints/tui/operations/run_screen.py`
+- `S63` `M` `src/cadrumo_harness/_data/agent/README.md`
+- `S63` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
+- `S63` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
+- `S63` `M` `src/cadrumo_harness/mcp/admitted_operations.py`
+- `S63` `M` `src/cadrumo_harness/mcp/operation_discovery.py`
+- `S63` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S63` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S63` `M` `src/cadrumo_harness/mcp/tests/test_authentication_handover.py`
+- `S63` `M` `src/cadrumo_harness/mcp/tests/test_bootstrap_reference_recovery.py`
+- `S63` `M` `src/cadrumo_harness/mcp/tests/test_execute_request_faults.py`
+- `S63` `M` `src/cadrumo_harness/mcp/tests/test_execute_subject_tool.py`
+- `S63` `M` `src/cadrumo_harness/mcp/tests/test_handshake_free_revision.py`
+- `S63` `M` `src/cadrumo_harness/mcp/tests/test_installed_secret_by_reference.py`
+- `S63` `M` `src/cadrumo_harness/mcp/tests/test_installed_sign_in_resume.py`
+- `S63` `M` `src/cadrumo_harness/mcp/tests/test_installed_stdio.py`
+- `S63` `M` `src/cadrumo_harness/mcp/tests/test_lifecycle_notice_tool.py`
+- `S63` `M` `src/cadrumo_harness/mcp/tests/test_operation_search_tool.py`
+- `S63` `M` `src/cadrumo_harness/mcp/tests/test_runtime_manager_remedy.py`
+- `S63` `M` `src/cadrumo_harness/mcp/tests/test_runtime_protocol.py`
+- `S63` `M` `src/cadrumo_harness/mcp/tests/test_sign_in_resume.py`
+- `S63` `M` `src/cadrumo_harness/tests/test_harness_data_ships.py`
+- `S63` `M` `src/cadrumo_harness/tests/test_plugin_workspace.py`
+- `S63` `M` `src/cadrumo_harness/tests/test_workspace.py`
+- `S63` `A` `src/cadrumo/application/runtime/tests/test_request_fault_refusals.py`
+- `S63` `A` `src/cadrumo/core/request_faults.py`
+- `S63` `A` `src/cadrumo/core/tests/test_request_faults.py`
+- `S63` `A` `src/cadrumo/entrypoints/cli/tests/test_request_fault_rendering.py`
+- `S63` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_operation_discovery.py`
+- `S63` `A` `src/cadrumo/entrypoints/runtime/tests/test_mcp_request_faults.py`
+- `S63` `A` `src/cadrumo/entrypoints/tests/operation_contract_document.py`
+- `S63` `A` `src/cadrumo/entrypoints/tests/test_operation_contract_document.py`
+- `S63` `A` `src/cadrumo/entrypoints/tui/tests/test_operation_run_request_faults.py`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/app.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/auth.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/browser-runtime.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/config.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/diagnostics.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/export.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/ledger.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/live.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/local-reader.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/modelo.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/overview.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/profile.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/user-profile.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/workbench.jsonl`
+- `S63` `A` `src/cadrumo_harness/_data/operation_contracts/workflow.jsonl`
+- `S63` `A` `src/cadrumo_harness/mcp/public_operation_discovery.py`
+- `S63` `A` `src/cadrumo_harness/mcp/tests/test_public_operation_discovery.py`
+- `S63` `M` `dev/quality/metadata/import_load_targets.json`
+- `S63` `verify:` `pytest harness tool and package suites (467, 3 skipped for the credential store)` -> `pass`
+- `S63` `verify:` `pytest the seven runtime MCP test files against the real runtime (40)` -> `pass`
+- `S63` `verify:` `pytest gate and parity set (826 of 827; the one hit a socket buffer limit and passes alone)` -> `pass`
+- `S63` `verify:` `pytest declaration through MCP equals command line, alone (2)` -> `pass`
+- `S63` `verify:` `pytest runtime installation tests (107) and terminal-interface installation tests (35)` -> `pass`
+- `S63` `verify:` `pytest request fault units and reference catalogue (59)` -> `pass`
+- `S63` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S63` `verify:` `ruff, format and ty on the 51 files` -> `pass`
+- `S63` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1982,3 +2067,4 @@ related:
 - `S62` A secret can be named by reference beside the typed argument, an unknown outcome is a result and not a tool error, each tool declares the protocol hints, and the handshake-free revision is tested beside the legacy one. Logged here too: the result tool returning a refused operation's recorded detail, the fault names on an invalid request, the profile patch vocabulary on describe, the plugin shipping the generated reference, and the absolute path rule of the audit bundle export. Not run on this machine: the two cases against the real Windows credential store, skipped with error 1312 in this logon session and marked for just test-os-keychain. Results carry no source-kind tag; that earlier ruling is not built here.
 - `S39` One quarterly (Modelo 130, 2025 1T) and one annual (Modelo 100, 2025 0A) declaration prepared through MCP tools only equal the command line's on real runtimes with password-protected profiles: ledger rows, every casilla value with its provenance, the verification verdict, a refused verification's code and facts, and the exported bytes. Run alone it passed 2 of 2 here and 2 of 2 in an independent run by another session; beside other native-runtime suites it lost the worker connection at arbitrary steps, never on a comparison. The agent text and the plugin pointer describe the three-column reference.
 - `S61` The registry composes the nine new operations and the installed runtime serves all nineteen acts. The gate over 335 executable commands: 274 submit an operation, 13 send a runtime request or an act, 44 work in process with a declared counterpart, 4 have nothing to share, none is left over; it proves a counterpart exists, and sameness rests on each family's parity test. Each surface name is pinned to its tool list. The entrypoint module inventory was long stale, so its regeneration carries unrelated lines. `profile_host.py` is committed for its two lines only, and the aggregate import inventory without another session's dev lines. Open from this work: five tests of `dev/agent_eval/tests/test_mcp_runtime_authority.py` fail since the authority query was rewritten in S57; they are being repaired next.
+- `S63` Discovery with no session answers from a generated contract document of 279 operations in fifteen parts, split because the repository bounds an added file at 500 KB. A sessionless reply carries session none; a call on a dead or denied lease now answers from the document, while execute, observe and result stay fenced. A fault's location carries payload member names, so for a mapping-typed field it carries its keys; the financial-input path still answers a bare invalid. Not rerun: the strict type lane. A full wheel build was not run; inclusion of the document is shown by the build backend's own file listing. Failing in `dev/agent_eval` and not from this step: two session-lock parity tests, three golden files where the command line reports no runtime, and the suggestion command conformance count.

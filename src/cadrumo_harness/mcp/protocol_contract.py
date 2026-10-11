@@ -74,7 +74,8 @@ _SECRET: _FieldSchema = {"type": "string", "format": "password", "writeOnly": Tr
 _SECRET_REFERENCE: _FieldSchema = {"type": "string", "format": "uuid"}
 _TEXTS: _FieldSchema = {"type": "array", "items": {"type": "string"}}
 _FLAG: _FieldSchema = {"type": "boolean"}
-SEARCH_PAGE_DEFAULT = 50
+SEARCH_PAGE_DEFAULT = 10
+"""How many operations a search page holds when the call names no limit: few, so a page is cheap to read."""
 SEARCH_PAGE_MAX = 200
 
 BY_REFERENCE_SUFFIX: Final = "_reference"
@@ -259,7 +260,9 @@ def _installation_hints() -> ToolHints:
 _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
     (
         "status",
-        "Current exact-profile authorization and availability. A notice member carries the runtime's lifecycle "
+        "Current exact-profile authorization and availability. Finding and describing operations needs neither "
+        "a sign-in nor a running Cadrumo: search and describe answer either way, as authority and corpus_search "
+        "do, so what can be run is readable first. A notice member carries the runtime's lifecycle "
         "notice: upgrade_pending says an update is ready and the runtime restarts for it once idle, after which "
         "the next call re-establishes the session",
         _schema({}),
@@ -349,9 +352,14 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
     (
         "search",
         "Rank currently permitted registered operations by relevance to a query; without one, list them. "
-        "Results come in pages: pass a returned next_cursor as cursor for the next page, and family to narrow "
-        "to one definition family. Each row is the operation's contract; its subject_reference says what the "
-        "operation's subject is",
+        "Each row is a summary: the operation's definition_id, a one-line description, the kind of subject it "
+        "acts on, the effects it may have, the interactions it may ask for and whether it takes a secret. "
+        "The contract and the request schema are not in a row: pass a small limit, then describe the operation "
+        f"you pick. A page holds {SEARCH_PAGE_DEFAULT} rows when limit is omitted and at most {SEARCH_PAGE_MAX}: "
+        "pass a returned next_cursor as cursor for the next page, and family to narrow to one definition "
+        "family. It needs neither a sign-in nor a running Cadrumo: with no session the reply "
+        "says session none and covers every registered operation on this connection's surface, where a session "
+        "covers those in its scope",
         _schema(
             {},
             {
@@ -371,7 +379,9 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "a transient_financial_operand is described with operator_input_json_schema, the typed input execute "
         "submits for it. A contract whose payload names values its schema cannot enumerate is described with "
         "payload_vocabulary: for user-profile.patch, every question_id it may set, with its meaning and, where "
-        "the answer is a choice, the values it takes, as the command line lists them in its help",
+        "the answer is a choice, the values it takes, as the command line lists them in its help. It needs "
+        "neither a sign-in nor a running Cadrumo: with no session it answers with the same contract, schema and "
+        "vocabulary, and the reply says session none",
         _schema({"definition_id": _TEXT}),
         _reads("Describe an operation"),
     ),
@@ -385,9 +395,9 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "protected secret frame, apart from the payload, and no reply repeats it. An operation whose contract "
         "declares a transient_financial_operand takes its typed operator input as payload, with subject_ref and "
         "without idempotency_key. A payload the operation's request model refuses is answered refused with "
-        "code invalid; where a required field is missing or a field is not one the request has, faults names "
-        "each by location, and never repeats a value. Every call submits a new operation, so two identical "
-        "calls run twice. "
+        "code invalid, and faults names each reason the model gave by location, type and message: a missing "
+        "field, a field the request does not have, or the rule a value broke. It never repeats a value. "
+        "Every call submits a new operation, so two identical calls run twice. "
         "idempotency_key is optional, and giving one makes a repeat safe: a repeat with the same key, operation "
         f"and payload answers with the operation already recorded and submits nothing. {_UNKNOWN_OUTCOME} "
         f"unless it carried an idempotency_key, and then repeat it only with that same key. {_SECRET_FORMS}",

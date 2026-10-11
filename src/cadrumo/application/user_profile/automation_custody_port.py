@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field, SecretBytes
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.request_faults import RequestFault
 from ...core.time.utc import UtcInstant
 from .access_contracts import ApiKeyRecord, AutomationGrant, ProfileAccessBinding
 
@@ -89,9 +90,16 @@ class AutomationCustodyCode(StrEnum):
 class AutomationCustodyError(CadrumoError):
     """Safe failure code with no native error or secret-bearing input."""
 
-    def __init__(self, code: AutomationCustodyCode) -> None:
-        """Retain only a safe code."""
+    def __init__(self, code: AutomationCustodyCode, *, request_faults: tuple[RequestFault, ...] = ()) -> None:
+        """Retain only a safe code and, for a request its model refused, the model's value-free faults.
+
+        Raises:
+            ValueError: Faults are given for a code other than ``INVALID``.
+        """
+        if request_faults and code is not AutomationCustodyCode.INVALID:
+            raise ValueError("only an invalid request carries request faults")
         self.reason = code
+        self.request_faults = request_faults
         super().__init__(code.value)
 
 

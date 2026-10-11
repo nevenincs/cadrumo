@@ -24,7 +24,7 @@ from cadrumo.adapters.local_runtime.frontend_client_contracts import RuntimeFron
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.ledger.attachment_mutation_operation import LEDGER_ATTACH_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.mcp_surfaces import MCP_SURFACES, McpSurface, McpSurfaceName
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
@@ -42,7 +42,9 @@ from cadrumo.core.time.clock import now
 from cadrumo_harness.mcp import main as mcp_main
 from cadrumo_harness.mcp import runtime_adapter as mcp_runtime
 from cadrumo_harness.mcp import server as mcp_server
+from cadrumo_harness.mcp.operation_discovery import operation_summary
 from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_CATALOGUE
+from cadrumo_harness.mcp.public_operation_discovery import shipped_public_descriptions
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.runtime_admission import (
     McpAdmission,
@@ -59,8 +61,10 @@ _FULL = MCP_SURFACES[McpSurfaceName.FULL]
 _READ_ONLY_LOCAL = MCP_SURFACES[McpSurfaceName.READ_ONLY_LOCAL]
 _READ = AUTH_READ_OPERATION_DEFINITION_ID
 _WRITE = LEDGER_ATTACH_OPERATION_DEFINITION_ID
-_FOUND = {"outcome": "found", "operations": [{"definition_id": _READ}]}
+_FOUND = {"outcome": "found", "operations": [operation_summary(shipped_public_descriptions()[_READ])]}
 _MCP = OperationFrontendProjection.MCP
+_PROFILE_CALL: tuple[str, dict[str, object]] = ("observe", {"observation": {}})
+"""A tool that reads the profile's own operations, so it is answered only under a session."""
 
 
 class _ServingStoppedError(Exception):
@@ -72,12 +76,6 @@ def _runtime_refusal(reason: ProfileSessionRefusalReason, code: str) -> ProfileR
     refused = ProfileReceiptRefusedError(reason)
     refused.__cause__ = RuntimeFrontendRefusedError(code)
     return refused
-
-
-class _ListedContract(dict[str, str]):
-    """The one member a listing shows of a contract that declares no typed operator input."""
-
-    transient_financial_operand = None
 
 
 class _SignInConnection:
@@ -149,10 +147,10 @@ class _SignInConnection:
             )
         )
 
-    def describe(self, definition_id: str, *, deadline: float) -> SimpleNamespace:
+    def describe(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionDescriptionV1:
         assert self.close_count == 0 and deadline > 0
         self.described.append(definition_id)
-        return SimpleNamespace(contract=_ListedContract(definition_id=definition_id))
+        return shipped_public_descriptions()[definition_id]
 
     def subscribe_lifecycle_notices(self, receive: object) -> None:
         """The runtime sends this double no lifecycle notice."""
@@ -242,7 +240,9 @@ async def test_the_tool_list_and_public_queries_answer_with_no_profile_and_nobod
                 names = [tool.name for tool in (await client.list_tools()).tools]
                 published = await client.call_tool("authority", {"query": "modelos"})
                 status = await client.call_tool("status", {})
-                private = await client.call_tool("search", {})
+                private = await client.call_tool(*_PROFILE_CALL)
+                found = await client.call_tool("search", {"query": _READ, "limit": 1})
+                described = await client.call_tool("describe", {"definition_id": _READ})
         finally:
             await adapter.close()
 
@@ -253,6 +253,11 @@ async def test_the_tool_list_and_public_queries_answer_with_no_profile_and_nobod
     assert status.structured_content == _no_session(None, "authentication_required")
     assert private.is_error is True
     assert private.structured_content == _refused("authentication_required")
+    # Which operations exist is no profile's data: both answer from the contracts this package ships.
+    assert found.is_error is False and described.is_error is False
+    assert found.structured_content["session"] == "none" and described.structured_content["session"] == "none"
+    assert [row["definition_id"] for row in found.structured_content["operations"]] == [_READ]
+    assert described.structured_content["description"]["contract"]["definition_id"] == _READ
     # With no profile selected there is no runtime connection to open, and none was opened.
     assert runtime.attempts == (0, 0)
 
@@ -303,14 +308,16 @@ async def test_a_profile_call_with_nobody_signed_in_returns_the_refusal_after_on
     adapter = _adapter()
     try:
         with _selection(tmp_path, profile_id):
-            assert await adapter.call("search", {}) == _refused(code)
+            assert await adapter.call(*_PROFILE_CALL) == _refused(code)
             assert runtime.attempts == (1, 1)
             assert runtime.opened[0].close_count == 1
             assert adapter.client is None and adapter.admission is None
             assert await adapter.call("status", {}) == _no_session(profile_id, code)
             # The status call needed the profile too, so it asked once more and no more than once.
             assert runtime.attempts == (2, 2)
-            assert await adapter.call("describe", {"definition_id": _READ}) == _refused(code)
+            # Discovery asks the runtime for the session once as well, and answers without one.
+            described = await adapter.call("describe", {"definition_id": _READ})
+            assert (described["outcome"], described["session"]) == ("described", "none")
             assert runtime.attempts == (3, 3)
     finally:
         await adapter.close()
@@ -390,7 +397,7 @@ async def test_a_retired_session_is_dropped_and_the_next_call_asks_the_runtime_o
             assert first.close_count == 0
             if not admitted_again:
                 runtime.refusal = _runtime_refusal(ProfileSessionRefusalReason.ABSENT, "authentication_required")
-            after = await adapter.call("search", {})
+            after = await adapter.call("search", {}) if admitted_again else await adapter.call(*_PROFILE_CALL)
             assert first.close_count == 1
             assert runtime.attempts == (2, 2)
             second = runtime.opened[1]
@@ -420,10 +427,10 @@ async def test_a_named_profile_is_served_by_the_sign_in_only_while_it_is_the_sel
     adapter = _adapter(named)
     try:
         with _selection(tmp_path, other):
-            assert await adapter.call("search", {}) == _refused("profile_mismatch")
+            assert await adapter.call(*_PROFILE_CALL) == _refused("profile_mismatch")
             assert await adapter.call("status", {}) == _no_session(named, "profile_mismatch")
         with _selection(tmp_path, None):
-            assert await adapter.call("search", {}) == _refused("authentication_required")
+            assert await adapter.call(*_PROFILE_CALL) == _refused("authentication_required")
         # Neither the other profile's sign-in nor the named one's was asked for.
         assert runtime.attempts == (0, 0)
         with _selection(tmp_path, named):
@@ -432,7 +439,7 @@ async def test_a_named_profile_is_served_by_the_sign_in_only_while_it_is_the_sel
         assert held.profile_id == named and adapter.client is held
         with _selection(tmp_path, other):
             # The person moved to another profile: the session resumed for this one is given up.
-            assert await adapter.call("search", {}) == _refused("profile_mismatch")
+            assert await adapter.call(*_PROFILE_CALL) == _refused("profile_mismatch")
         assert held.close_count == 1 and adapter.client is None
         assert runtime.attempts == (1, 1)
     finally:
@@ -473,7 +480,7 @@ async def test_a_connection_started_for_an_enrolled_key_never_resumes_the_sign_i
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
     try:
         with _selection(tmp_path, profile_id):
-            assert await adapter.call("search", {}) == _refused("authentication_required")
+            assert await adapter.call(*_PROFILE_CALL) == _refused("authentication_required")
             assert await adapter.call("status", {}) == _no_session(profile_id, "authentication_required")
     finally:
         await adapter.close()

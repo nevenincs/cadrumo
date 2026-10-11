@@ -98,7 +98,7 @@ async def test_the_server_tells_a_discovering_client_that_it_serves_tools() -> N
 async def _read_calls(
     profile_id: UUID, *, handshake_free: _Negotiation | None
 ) -> dict[str, tuple[bool, Any, list[str]]]:
-    """Make the same calls with no session held: a read, a refusal, and an argument the wire contract refuses."""
+    """Make the same calls with no session held: two reads, a refusal, and an argument the contract refuses."""
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=None)
     try:
         server = build_server(adapter)
@@ -106,13 +106,15 @@ async def _read_calls(
             async with connected_server_and_client_session(server) as legacy:
                 return {
                     "status": _answered(await legacy.call_tool("status", {})),
-                    "search": _answered(await legacy.call_tool("search", {})),
+                    "search": _answered(await legacy.call_tool("search", {"family": "auth", "limit": 2})),
+                    "observe": _answered(await legacy.call_tool("observe", {"observation": {}})),
                     "mistyped": _answered(await legacy.call_tool("search", {"limit": "many"})),
                 }
         async with connected_handshake_free_client(server, negotiation=handshake_free) as modern:
             return {
                 "status": _answered(await modern.call_tool("status", {})),
-                "search": _answered(await modern.call_tool("search", {})),
+                "search": _answered(await modern.call_tool("search", {"family": "auth", "limit": 2})),
+                "observe": _answered(await modern.call_tool("observe", {"observation": {}})),
                 "mistyped": _answered(await modern.call_tool("search", {"limit": "many"})),
             }
     finally:
@@ -134,7 +136,10 @@ async def test_a_read_tool_and_a_refusal_answer_a_handshake_free_client_as_they_
     assert is_error is False and status["outcome"] == "status" and status["profile_id"] == str(profile_id)
     assert status["session"] == "none" and len(text) == 1
     # A refusal is an error result on this revision too, and so is an argument the wire contract refuses.
-    assert modern["search"][:2] == (True, {"outcome": "refused", "code": "authentication_required"})
+    found_is_error, found, _found_text = modern["search"]
+    assert found_is_error is False and (found["outcome"], found["session"]) == ("found", "none")
+    assert len(found["operations"]) == 2
+    assert modern["observe"][:2] == (True, {"outcome": "refused", "code": "authentication_required"})
     assert modern["mistyped"][:2] == (True, {"outcome": "refused", "code": "invalid_request"})
 
 

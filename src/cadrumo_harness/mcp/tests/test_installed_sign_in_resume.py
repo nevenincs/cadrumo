@@ -58,7 +58,7 @@ async def _call_status_and_a_profile_tool(
             ):
                 await client.initialize()
                 status = await client.call_tool("status", {})
-                private = await client.call_tool("search", {})
+                private = await client.call_tool("observe", {"observation": {}})
     assert isinstance(status.structured_content, dict)
     assert isinstance(private.structured_content, dict)
     return (status.is_error, status.structured_content), (private.is_error, private.structured_content)

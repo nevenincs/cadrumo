@@ -15,7 +15,7 @@ related:
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
 modified: '2026-10-11'
 body_schema: body-v2
-body_hash: 'sha256:5262db074737245e99d96160e628df191c809e4112666bdce486266f9073be73'
+body_hash: 'sha256:4b86e0139d25f67505b835233cfe035476321e1ecfd6f14ca7ff613f3c68cc9f'
 ---
 
 <!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
@@ -146,7 +146,7 @@ Delivers the rest of parity: about forty-five command-line commands do their wor
 - [x] `P09.S60` - Give the terminal interface a destination that runs every registered operation, with typed secrets and the input and choice interactions it refused, and destinations for the installation acts, reachable before sign-in, and the reference reads; `src/cadrumo/entrypoints/tui`.
 - [x] `P09.S61` - Wire the new operations and acts into composition and the surface facts, regenerate the command table to record runtime-request rows, and prove with one suite that every command-line leaf has an operation or a runtime request and that the three frontends agree on each result; `src/cadrumo/entrypoints/operation_composition.py`.
 - [x] `P09.S62` - Let a tool call name a secret the person stored at a terminal by reference beside the typed argument, report an unresolved outcome as an outcome and not a tool error, mark the pure reads read-only, and test the handshake-free protocol revision; `src/cadrumo_harness/mcp/protocol_contract.py`.
-- [ ] `P09.S63` - Carry the request model's faults, without values, on the runtime's invalid refusal so MCP names the field and the rule, and answer search and describe from the public contracts with no session, as the command line's help does; `src/cadrumo/entrypoints/runtime/operation_host.py`.
+- [x] `P09.S63` - Carry the request model's faults, without values, on the runtime's invalid refusal so MCP names the field and the rule, and answer search and describe from the public contracts with no session, as the command line's help does; `src/cadrumo/entrypoints/runtime/operation_host.py`.
 
 ## Parallelization
 

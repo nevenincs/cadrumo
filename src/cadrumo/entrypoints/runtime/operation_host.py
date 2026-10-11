@@ -13,7 +13,7 @@ from math import isfinite
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, JsonValue, TypeAdapter
+from pydantic import BaseModel, JsonValue, TypeAdapter, ValidationError
 
 from ...adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient
 from ...adapters.persistence.storage.errors import RepositoryError
@@ -70,6 +70,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.config import override_settings
 from ...core.logging import get_logger
 from ...core.operations import OperationLifecycle
+from ...core.request_faults import request_faults
 from ...core.startup_phase_log import startup_phase
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import (
@@ -646,6 +647,10 @@ class ProfileWorkerOperationHost:
         try:
             with validating_governed_facts(self._pinned()):
                 payload = self._execution.registry.decode_request_payload(definition_id, payload_json)
+        except ValidationError as refused:
+            # The model's reasons reach the caller; the values it refused do not.
+            faults = request_faults(refused)
+            raise AutomationCustodyError(AutomationCustodyCode.INVALID, request_faults=faults) from None
         except (ValueError, TypeError, RecursionError):
             raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
         return await self.submit(

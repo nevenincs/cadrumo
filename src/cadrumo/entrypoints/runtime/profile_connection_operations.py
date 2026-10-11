@@ -178,6 +178,7 @@ class ProfileConnectionOperationMixin:
                     connection_id=context.connection_id,
                     code=error.reason,
                     sign_in=error.sign_in if isinstance(error, ProfileAccessRefusedError) else None,
+                    request_faults=error.request_faults if isinstance(error, AutomationCustodyError) else (),
                 )
                 deadline = time.monotonic() + 5
             # Write errors propagate: a partially written frame is never retried

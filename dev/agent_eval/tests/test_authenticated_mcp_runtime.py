@@ -150,7 +150,7 @@ async def test_authenticated_mcp_discovers_executes_observes_and_reads_native_re
                     "surface": "full",
                     "denial": "authentication_required",
                 }
-                private_before_auth = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+                private_before_auth = await sdk.call_tool("observe", {"observation": {}})
                 assert private_before_auth.is_error is True
                 assert _structured(private_before_auth) == {
                     "outcome": "refused",

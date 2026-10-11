@@ -97,6 +97,7 @@ async def operate(
                         reason=AutomationCustodyCode.INVALID
                         if isinstance(refusal, ValidationError)
                         else refusal.reason,
+                        request_faults=refusal.request_faults if isinstance(refusal, AutomationCustodyError) else (),
                     ),
                     deadline=time.monotonic() + 5,
                 )

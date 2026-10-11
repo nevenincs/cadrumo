@@ -108,7 +108,10 @@ async def test_describe_and_search_state_the_subject_form_of_every_operation() -
         await adapter.close()
 
     rows = cast("list[dict[str, object]]", found["operations"])
-    assert {str(row["definition_id"]): row["subject_reference"] for row in rows} == _FORMS
+    # A search row says what kind of thing the operation acts on; where it is read from is in the contract.
+    assert {str(row["definition_id"]): row["subject_kind"] for row in rows} == {
+        definition_id: form["kind"] for definition_id, form in _FORMS.items()
+    }
     for definition_id, form in _FORMS.items():
         description = cast("dict[str, dict[str, object]]", described[definition_id]["description"])
         assert description["contract"]["subject_reference"] == form, definition_id

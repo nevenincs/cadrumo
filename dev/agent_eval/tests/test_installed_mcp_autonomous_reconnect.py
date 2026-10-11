@@ -318,16 +318,16 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                     ]
                     assert len(selected) == 1 and selected[0]["state"] == "revoked"
 
-                    fenced = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
-                    assert fenced.is_error is True
-                    refusal = _object(fenced.structured_content)
-                    assert refusal["outcome"] == "refused" and refusal["code"] in _LIVE_RETIREMENT_CODES
+                    # Which operations exist is public and still answered, under no session.
+                    public = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+                    assert public.is_error is False
+                    assert _object(public.structured_content)["session"] == "none"
+                    assert str(reference) not in repr(public.structured_content)
                     cached_result = await client.call_tool("result", result_args)
                     assert cached_result.is_error is True
                     cached_refusal = _object(cached_result.structured_content)
                     assert cached_refusal["outcome"] == "refused"
                     assert cached_refusal["code"] in _LIVE_RETIREMENT_CODES
-                    assert str(reference) not in repr(refusal)
                     assert str(reference) not in repr(cached_refusal)
 
             with (tmp_path / "installed-reconnect-revoked.stderr").open("w", encoding="utf-8") as error_log:
@@ -343,9 +343,12 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                     assert revoked["profile_id"] == str(profile.profile_id)
                     assert revoked["authenticated"] is False
                     assert revoked["denial"] in _REVOKED_KEY_CODES
-                    denied_search = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
-                    assert denied_search.is_error is True
-                    assert _object(denied_search.structured_content) == {
+                    public = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+                    assert public.is_error is False
+                    assert _object(public.structured_content)["session"] == "none"
+                    denied = await client.call_tool("observe", {"observation": {}})
+                    assert denied.is_error is True
+                    assert _object(denied.structured_content) == {
                         "outcome": "refused",
                         "code": revoked["denial"],
                     }

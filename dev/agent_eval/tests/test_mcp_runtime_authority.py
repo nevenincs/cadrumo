@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import shutil
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from dataclasses import replace
-from datetime import date
 from pathlib import Path
+from typing import override
 from uuid import uuid4
 
 import pytest
@@ -21,7 +22,6 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
-    AuthorityGenerationPin,
     SnapshotGlobalsComponentQuery,
 )
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
@@ -33,7 +33,7 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_revision,
     synthetic_legal_identity,
 )
-from cadrumo_harness.mcp import authority_query as authority_tool
+from cadrumo.domain.portals.registry import PORTAL_REGISTRY
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
@@ -41,17 +41,30 @@ from cadrumo_harness.mcp.tests.session import connected_server_and_client_sessio
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _DESCRIPTOR_NAME = "authority.current.json"
+_SYNTHETIC_MODELO = "130"
+"""The modelo whose titles the synthetic publications borrow, and the only one they hold."""
+
+
+def _a_portal_id() -> str:
+    return str(next(iter(PORTAL_REGISTRY)))
 
 
 async def _assert_all_advertised_authority_queries_refuse(adapter: RuntimeMcpAdapter, code: str) -> None:
-    requests = {
+    """Ask every query the tool advertises, each with coordinates it accepts, and hold each to one refusal."""
+    scoped = {"modelo": "100", "filing_year": 2024, "period": "0A"}
+    requests: dict[str, dict[str, object]] = {
         "modelos": {},
         "support": {},
         "bindings": {"modelo": "100", "filing_year": 2024},
-        "describe": {"modelo": "100", "filing_year": 2024, "period": "0A"},
-        "casillas": {"modelo": "100", "filing_year": 2024, "period": "0A"},
-        "casilla": {"modelo": "100", "filing_year": 2024, "period": "0A", "casilla": "0505"},
-        "formulas": {"modelo": "100", "filing_year": 2024, "period": "0A"},
+        "describe": scoped,
+        "casillas": scoped,
+        "casilla": {**scoped, "casilla": "0505"},
+        "formulas": scoped,
+        "categories": {},
+        "portals": {},
+        "portal": {"portal": _a_portal_id()},
+        "auth_providers": {},
+        "apoderado_scopes": {},
     }
     async with connected_server_and_client_session(build_server(adapter)) as client:
         tools = (await client.list_tools()).tools
@@ -60,9 +73,51 @@ async def _assert_all_advertised_authority_queries_refuse(adapter: RuntimeMcpAda
         assert set(queries) == set(requests)
         for query in queries:
             refused = await client.call_tool("authority", {"query": query, **requests[query]})
-            assert refused.is_error is True
-            assert refused.structured_content == {"outcome": "refused", "code": code}
+            assert refused.is_error is True, query
+            assert refused.structured_content == {"outcome": "refused", "code": code}, query
     assert adapter.client is None
+
+
+def _synthetic_artifact(identity: str) -> AuthorityArtifact:
+    """Build one publishable authority that holds a single modelo and its own legal identity."""
+    with bundled_indexed_authority().operation() as packaged:
+        profile_schema = packaged.profile_schema()
+        directory = packaged.modelo_directory(_SYNTHETIC_MODELO)
+    modelo = minimal_modelo(minimal_revision()).model_copy(
+        update={
+            "title_localization_key": directory.modelo.title_localization_key,
+            "official_name_localization_key": directory.modelo.official_name_localization_key,
+        }
+    )
+    return AuthorityArtifact(
+        modelos=(modelo,),
+        catalogues=minimal_catalogues(),
+        identity_digest=synthetic_legal_identity(identity),
+        profile_schema=profile_schema,
+    )
+
+
+class _SucceededWhileHeld(IndexedRegistryAuthority):
+    """A real authority whose publisher installs a successor just after an operation is pinned.
+
+    Everything the authority does is its own. Only the moment of the cutover
+    is arranged: once armed, the next operation is handed to ``succeed`` after
+    its pin is taken and before its holder reads anything.
+    """
+
+    def __init__(self, descriptor_path: Path, *, succeed: Callable[[PinnedAuthorityOperation], None]) -> None:
+        super().__init__(descriptor_path)
+        self._succeed = succeed
+        self.armed = False
+
+    @override
+    @contextmanager
+    def operation(self) -> Generator[PinnedAuthorityOperation]:
+        with super().operation() as pinned:
+            if self.armed:
+                self.armed = False
+                self._succeed(pinned)
+            yield pinned
 
 
 @pytest.mark.anyio
@@ -100,56 +155,54 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
         )
         assert low_grade["outcome"] == "published"
         assert low_grade["report"]["authority_grade"] == "applicability"
+        assert (low_grade["report"]["filing_year"], low_grade["report"]["period"]) == (2024, "alta")
 
         with bundled_indexed_authority().operation() as operation:
             canonical_support = registry_support_matrix(operation=operation).model_dump(mode="json")
         support = await adapter.call("authority", {"query": "support"})
 
         assert support["outcome"] == "published"
-        assert support["report"] == canonical_support
+        assert canonical_support["entries"], "the published authority supports no modelo; the comparison is empty"
+        assert support["report"]["entries"] == canonical_support["entries"]
+        assert support["report"]["modelo_count"] == len(canonical_support["entries"])
         assert adapter.client is None
     finally:
         await adapter.close()
 
 
 @pytest.mark.anyio
-async def test_authority_response_provenance_matches_the_pin_passed_to_the_real_query(
+async def test_authority_response_provenance_is_the_publication_the_report_was_read_from(
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    publish_authority_artifact: Callable[[AuthorityArtifact], AuthorityDescriptor],
 ) -> None:
-    canonical_query = authority_tool.registry_describe_modelo_for_registry_scope
-    observed_pins: list[AuthorityGenerationPin] = []
+    artifact = _synthetic_artifact("mcp-provenance-publication")
+    published = publish_authority_artifact(artifact)
+    authority = IndexedRegistryAuthority(tmp_path / _DESCRIPTOR_NAME)
+    with authority.operation() as held:
+        pin = held.pin()
+    with bundled_indexed_authority().operation() as packaged:
+        packaged_pin = packaged.pin()
+    assert pin.logical_generation == published.logical_generation == artifact.identity_digest
+    assert pin.logical_generation != packaged_pin.logical_generation
 
-    def record_pin_and_run_query(
-        modelo: str,
-        *,
-        filing_year: int,
-        period: str,
-        as_of: date | None,
-        operation: PinnedAuthorityOperation,
-    ) -> object:
-        observed_pins.append(operation.pin())
-        return canonical_query(
-            modelo,
-            filing_year=filing_year,
-            period=period,
-            as_of=as_of,
-            operation=operation,
-        )
-
-    monkeypatch.setattr(authority_tool, "registry_describe_modelo_for_registry_scope", record_pin_and_run_query)
+    monkeypatch.setattr(authority_module, "_bundled_indexed_authority", authority)
     adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
     try:
-        result = await adapter.call(
-            "authority",
-            {"query": "describe", "modelo": "100", "filing_year": 2024, "period": "0A"},
-        )
+        listed = await adapter.call("authority", {"query": "modelos"})
+        support = await adapter.call("authority", {"query": "support"})
     finally:
         await adapter.close()
+        authority.close()
 
-    assert result["outcome"] == "published"
-    assert len(observed_pins) == 1
-    assert result["logical_generation"] == observed_pins[0].logical_generation
-    assert result["reader_incarnation"] == observed_pins[0].reader_incarnation
+    # Each reply names the publication it was read under, and its report holds that publication's
+    # one modelo and none of the packaged authority's.
+    for result in (listed, support):
+        assert result["outcome"] == "published"
+        assert result["logical_generation"] == pin.logical_generation
+        assert result["reader_incarnation"] == pin.reader_incarnation
+    assert [row["code"] for row in listed["report"]["modelos"]] == [_SYNTHETIC_MODELO]
+    assert [entry["modelo_id"] for entry in support["report"]["entries"]] == [_SYNTHETIC_MODELO]
 
 
 @pytest.mark.anyio
@@ -206,50 +259,37 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
     monkeypatch: pytest.MonkeyPatch,
     publish_authority_artifact: Callable[[AuthorityArtifact], AuthorityDescriptor],
 ) -> None:
-    with bundled_indexed_authority().operation() as packaged:
-        profile_schema = packaged.profile_schema()
-        directory = packaged.modelo_directory("130")
-    modelo = minimal_modelo(minimal_revision()).model_copy(
-        update={
-            "title_localization_key": directory.modelo.title_localization_key,
-            "official_name_localization_key": directory.modelo.official_name_localization_key,
-        }
-    )
-    first_artifact = AuthorityArtifact(
-        modelos=(modelo,),
-        catalogues=minimal_catalogues(),
-        identity_digest=synthetic_legal_identity("mcp-first-publication"),
-        profile_schema=profile_schema,
-    )
+    first_artifact = _synthetic_artifact("mcp-first-publication")
     second_artifact = replace(first_artifact, identity_digest=synthetic_legal_identity("mcp-second-publication"))
     first = publish_authority_artifact(first_artifact)
-    authority = IndexedRegistryAuthority(tmp_path / _DESCRIPTOR_NAME)
-    canonical_query = authority_tool.registry_support_matrix
-    with authority.operation() as initial:
-        first_pin = initial.pin()
-        expected = canonical_query(operation=initial).model_dump(mode="json")
+    held_through_cutover: list[PinnedAuthorityOperation] = []
 
-    def cut_over_and_query(*, operation: PinnedAuthorityOperation) -> object:
-        assert operation.pin() == first_pin
+    def succeed(pinned: PinnedAuthorityOperation) -> None:
+        assert pinned.pin() == first_pin
         second = publish_authority_artifact(second_artifact)
         assert second.logical_generation != first.logical_generation
-        assert operation.profile_decode_context().generation == first_pin
-        return canonical_query(operation=operation)
+        assert pinned.profile_decode_context().generation == first_pin
+        held_through_cutover.append(pinned)
+
+    authority = _SucceededWhileHeld(tmp_path / _DESCRIPTOR_NAME, succeed=succeed)
+    with authority.operation() as initial:
+        first_pin = initial.pin()
+        expected_entries = registry_support_matrix(operation=initial).model_dump(mode="json")["entries"]
+    assert expected_entries
 
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", authority)
-    monkeypatch.setattr(authority_tool, "registry_support_matrix", cut_over_and_query)
     adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
     try:
         async with connected_server_and_client_session(build_server(adapter)) as client:
+            authority.armed = True
             result = await client.call_tool("authority", {"query": "support"})
             assert result.is_error is False
-            assert result.structured_content == {
-                "outcome": "published",
-                "logical_generation": first_pin.logical_generation,
-                "reader_incarnation": first_pin.reader_incarnation,
-                "report": expected,
-            }
-            monkeypatch.setattr(authority_tool, "registry_support_matrix", canonical_query)
+            assert len(held_through_cutover) == 1, "the successor was published while the query held its pin"
+            assert isinstance(result.structured_content, dict)
+            assert result.structured_content["outcome"] == "published"
+            assert result.structured_content["logical_generation"] == first_pin.logical_generation
+            assert result.structured_content["reader_incarnation"] == first_pin.reader_incarnation
+            assert result.structured_content["report"]["entries"] == expected_entries
             current = await client.call_tool("authority", {"query": "support"})
             assert current.is_error is False
             assert isinstance(current.structured_content, dict)

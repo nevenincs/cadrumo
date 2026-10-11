@@ -35,7 +35,10 @@ regulated work.
 ## Use the current interface's authority
 
 MCP exposes every registered operation the command line can run, through `search`
-and `describe`, with the same results. `search` returns one page at a time: when a
+and `describe`, with the same results. A `search` row is a summary of one
+operation: pass `search` a query and a small `limit`, then `describe` the one you
+pick for its contract and input schema. `search` returns one page at a time, ten
+rows unless `limit` says otherwise: when a
 page carries `next_cursor`, pass it back as `cursor` until none is returned before
 concluding an operation is absent, or narrow the search with `family`. Read the
 current contract and input schema before using `execute`. CLI procedures in the
@@ -50,7 +53,9 @@ reports whether the session is `sign_in`, `typed_sign_in`, `key` or `none`. Unde
 the sign-in, a refusal with `authentication_required` means nobody is signed in to
 Cadrumo. The person can sign in to Cadrumo themselves, after which you call again,
 or you can sign the connection in with the `session` tool's `sign_in` action, which
-takes the profile password.
+takes the profile password. `search`, `describe`, `authority` and `corpus_search`
+need neither a session nor a running Cadrumo, and `installation` needs no
+session, so read what the work needs before you ask.
 
 Take a password, a recovery code or any other secret by reference. Do not ask the
 person to type it into the conversation: whatever is typed there has passed through

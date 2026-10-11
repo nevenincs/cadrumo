@@ -1,12 +1,14 @@
-"""A payload the runtime's request model refuses is answered with the fields that explain it, where names do.
+"""A payload refused with a code alone is answered with the fields that explain it, where names do.
 
 The runtime decodes a submitted payload with the operation's registered
-request model and answers a refusal with a code alone. The lease here refuses
-exactly as the runtime does: it decodes each submission with the real
-registry's own request model and answers ``invalid`` when that model raises.
-What is under test is the server's part, that it names a missing or unknown
-field from the schema it described, repeats no value, refuses nothing itself,
-and leaves a refusal about a value as the runtime gave it.
+request model and returns the model's faults with its refusal, which the
+server passes on. A refusal can still arrive as a code alone, and the lease
+here gives exactly that: it decodes each submission with the real registry's
+own request model and answers ``invalid``, with no faults, when that model
+raises. What is under test is the server's part for such a refusal, that it
+names a missing or unknown field from the schema it described, repeats no
+value, refuses nothing itself, and leaves a refusal about a value as it was
+given. The faults the runtime itself returns are tested through a real one.
 """
 
 from __future__ import annotations

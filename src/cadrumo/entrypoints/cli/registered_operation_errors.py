@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from pydantic import BaseModel
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
-from ...adapters.local_runtime.frontend_client_contracts import frontend_failure_code
+from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError, frontend_failure_code
 from ...adapters.local_runtime.runtime_transport_cleanup import RuntimeTransportCleanup
 from ...application.operations.error_detail import (
     OperationErrorDetailKind,
@@ -19,6 +19,7 @@ from ...core.async_cleanup import AsyncResourceCleanupError
 from ...core.errors.error_codes import get_registered_error_code, get_registered_error_code_by_code
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationTerminalCondition
+from ...core.request_faults import request_faults_text
 from .errors import (
     CliOperationStillRunningError,
     CliOutboundPayloadBoundaryError,
@@ -40,6 +41,9 @@ def map_registered_transport_failure(
         effect=progress.effect,
         refusal_code=progress.refusal_code,
     )
+    if isinstance(error, RuntimeFrontendRefusedError) and error.request_faults and mapped.context is not None:
+        # The reasons the runtime's request model gave, which carry no value of the request.
+        mapped.context["request_faults"] = request_faults_text(error.request_faults)
     for field in ("async_cleanup_error", "cleanup_error"):
         cleanup = error.__dict__.get(field)
         if isinstance(cleanup, AsyncResourceCleanupError):

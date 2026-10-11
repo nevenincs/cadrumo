@@ -52,6 +52,8 @@ _CLI = OperationFrontendProjection.CLI
 _MCP = OperationFrontendProjection.MCP
 _ONE_MCP_RESUME = [("receipt", _MCP, None)]
 _READ = {"family": AUTH_READ_OPERATION_DEFINITION_ID}
+_PROFILE_CALL: tuple[str, dict[str, object]] = ("observe", {"observation": {}})
+"""A tool that reads the profile's own operations, so it is answered only under a session."""
 
 
 def _adapter() -> RuntimeMcpAdapter:
@@ -101,7 +103,7 @@ async def test_with_nobody_signed_in_the_adapter_serves_its_tools_and_refuses_th
             async with connected_server_and_client_session(build_server(adapter)) as sdk:
                 names = [tool.name for tool in (await sdk.list_tools()).tools]
                 status = await sdk.call_tool("status", {})
-                private = await sdk.call_tool("search", _READ)
+                private = await sdk.call_tool(*_PROFILE_CALL)
         finally:
             await adapter.close()
 
@@ -167,7 +169,7 @@ async def test_the_adapter_resumes_a_live_sign_in_once_and_loses_it_when_the_run
             # The sign-in times out: the runtime passes its deadlines and retires every session under it.
             runtime.clock.ahead = timedelta(days=2)
             assert await asyncio.to_thread(adapter._retired.wait, 10)
-            assert await adapter.call("search", _READ) == {"outcome": "refused", "code": "session_expired"}
+            assert await adapter.call(*_PROFILE_CALL) == {"outcome": "refused", "code": "session_expired"}
             assert adapter.client is None and adapter.admission is None
             assert _logins(runtime)[3:] == _ONE_MCP_RESUME
             # Each later call asks once more and is refused again; nothing is retried in between.
@@ -224,7 +226,7 @@ async def test_after_the_person_signs_out_the_adapter_is_refused_until_a_new_sig
             assert await asyncio.to_thread(adapter._retired.wait, 10)
 
             # The sign-in and its proof are gone, so the adapter has nothing to present and submits nothing.
-            assert await adapter.call("search", _READ) == {"outcome": "refused", "code": "authentication_required"}
+            assert await adapter.call(*_PROFILE_CALL) == {"outcome": "refused", "code": "authentication_required"}
             assert await adapter.call("execute", _read_status_submission(runtime)) == {
                 "outcome": "refused",
                 "code": "authentication_required",
@@ -260,7 +262,7 @@ async def test_when_the_runtime_passes_the_idle_deadline_it_ends_the_adapter_ses
             runtime.clock.ahead = idle - now() + timedelta(minutes=1)
             assert await asyncio.to_thread(adapter._retired.wait, 10)
 
-            assert await adapter.call("search", _READ) == {"outcome": "refused", "code": "session_expired"}
+            assert await adapter.call(*_PROFILE_CALL) == {"outcome": "refused", "code": "session_expired"}
             assert adapter.client is None and adapter.admission is None and runtime.leases() == ()
             # Each later call asks once more and is refused again: nothing the person left behind revives the session.
             assert await adapter.call("execute", _read_status_submission(runtime)) == {
@@ -286,10 +288,10 @@ async def test_a_sign_in_past_its_idle_deadline_is_retired_and_only_a_new_one_le
         assert idle < now() < absolute
         adapter = _adapter()
         try:
-            assert await adapter.call("search", _READ) == {"outcome": "refused", "code": "session_expired"}
+            assert await adapter.call(*_PROFILE_CALL) == {"outcome": "refused", "code": "session_expired"}
             # The custody that holds the sign-in found it timed out and removed it, so it is not offered again.
             assert runtime.stored_sign_in() is None
-            assert await adapter.call("search", _READ) == {"outcome": "refused", "code": "authentication_required"}
+            assert await adapter.call(*_PROFILE_CALL) == {"outcome": "refused", "code": "authentication_required"}
             assert _mcp_logins(runtime) == 1
             assert runtime.leases() == ()
 
@@ -359,7 +361,7 @@ async def test_a_proof_the_runtime_finds_no_sign_in_for_is_refused_and_nothing_i
                 "outcome": "refused",
                 "code": "authentication_required",
             }
-            assert await adapter.call("search", _READ) == {"outcome": "refused", "code": "authentication_required"}
+            assert await adapter.call(*_PROFILE_CALL) == {"outcome": "refused", "code": "authentication_required"}
             assert await adapter.call("status", {}) == _no_session(runtime, "authentication_required")
             # The runtime was asked once and removed the record it refused, so the later calls had nothing to present.
             assert _logins(runtime) == [("receipt", _MCP, None)]
@@ -387,7 +389,7 @@ async def test_with_no_profile_selected_the_tool_list_and_public_queries_answer_
                 names = [tool.name for tool in (await sdk.list_tools()).tools]
                 support = await sdk.call_tool("authority", {"query": "support"})
                 status = await sdk.call_tool("status", {})
-                private = await sdk.call_tool("search", _READ)
+                private = await sdk.call_tool(*_PROFILE_CALL)
         finally:
             await adapter.close()
 

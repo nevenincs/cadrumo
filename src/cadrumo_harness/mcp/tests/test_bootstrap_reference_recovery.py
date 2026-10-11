@@ -114,9 +114,15 @@ async def test_failed_configured_reference_preserves_public_tools_and_fences_eve
             recovery = await sdk.call_tool("authorization_prepare", {"credential_reference": str(reference)})
             assert recovery.is_error is True
             assert recovery.structured_content == {"outcome": "refused", "code": failure.value}
+            # Which operations exist is no profile's data, so both still answer, from the shipped contracts.
             for name, args in (
-                ("search", {"query": "auth.local-read"}),
+                ("search", {"query": "auth.local-read", "limit": 1}),
                 ("describe", {"definition_id": "auth.local-read"}),
+            ):
+                discovered = await sdk.call_tool(name, args)
+                assert discovered.is_error is False, name
+                assert discovered.structured_content["session"] == "none", name
+            for name, args in (
                 (
                     "execute",
                     {"definition_id": "auth.local-read", "subject_ref": f"profile:{profile_id}", "payload": {}},

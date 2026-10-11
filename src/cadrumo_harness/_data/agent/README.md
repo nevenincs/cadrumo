@@ -27,8 +27,11 @@ Subtrees:
   `authority` or an action for `session`. Only the four commands that print help or
   start the terminal interface have none.
 
-Start with MCP `status`, then `search` and `describe` for the operations of this
-session. Every operation the command line can run is among them, with the same
+Start with MCP `status`, then `search` and `describe` for the registered
+operations. Both answer before anyone has signed in and with Cadrumo not
+running, from every operation on the connection's surface, and with a session
+from the operations it may use. Every
+operation the command line can run is among them, with the same
 results. Public tax queries use `authority`. A connection is either under
 the person's own Cadrumo sign-in or under an enrolled key, and `status` says which:
 its session is `sign_in`, `typed_sign_in`, `key` or `none`, and it names the

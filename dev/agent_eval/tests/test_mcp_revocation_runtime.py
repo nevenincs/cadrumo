@@ -111,7 +111,7 @@ def _assert_access_fenced(response: CallToolResult) -> None:
 
 
 @pytest.mark.anyio
-async def test_native_mcp_automation_revocation_fences_live_discovery_execution_and_result_release(
+async def test_native_mcp_automation_revocation_fences_live_execution_and_result_release(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Human all-automation denial takes effect for all routes and fresh admission."""
@@ -225,10 +225,15 @@ async def test_native_mcp_automation_revocation_fences_live_discovery_execution_
                 assert receipt_document["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
                 assert receipt_document["access_denied"] is True
 
-                _assert_access_fenced(await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID}))
-                _assert_access_fenced(
-                    await sdk.call_tool("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID})
-                )
+                # Which operations exist is no profile's data. It is still answered, from the public
+                # contracts and not from the revoked session's scope, and the answer says no session holds.
+                for tool, arguments in (
+                    ("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID}),
+                    ("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID}),
+                ):
+                    discovered = await sdk.call_tool(tool, arguments)
+                    assert discovered.is_error is False, _structured(discovered)
+                    assert _structured(discovered)["session"] == "none", tool
                 _assert_access_fenced(await sdk.call_tool("execute", execute_args))
                 _assert_access_fenced(
                     await sdk.call_tool("observe", {"observation": observation.model_dump(mode="json")})

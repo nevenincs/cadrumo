@@ -22,12 +22,14 @@ from textual.screen import Screen
 from textual.widgets import Button, Input, Select, Static, TextArea
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
+from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
 from ....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ....core.async_cleanup import await_cancellation_complete
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.operations import OperationTerminalCondition
+from ....core.request_faults import request_fault_line
 from ..components.theme import BASE_CSS, tokenised
 from .catalogue import OperationCatalogueEntryV1
 from .modal import (
@@ -423,6 +425,9 @@ class OperationRunScreen(Screen[None]):
         message = resolve_error_message(error)
         if isinstance(error, RuntimeRefusalError) and error.reason in _UNKNOWN_OUTCOME_CODES:
             return f"{tr('tui.operations.run.unknown')}\n{message}"
+        if isinstance(error, RuntimeFrontendRefusedError) and error.request_faults:
+            # The runtime's request model refused a payload the form's own check let through.
+            return "\n".join((message, *(request_fault_line(fault) for fault in error.request_faults)))
         return message
 
     def _show_receipt(self, text: str) -> None:

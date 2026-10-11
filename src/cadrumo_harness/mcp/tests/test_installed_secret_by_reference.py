@@ -239,7 +239,7 @@ def _assert_a_live_session_ran_both_operations(replies: dict[str, Any], served: 
     assert replies["read_settled"]["terminal_condition"] == "succeeded", replies["read_settled"]
     unfit_is_error, unfit = replies["unfit_read"]
     assert unfit_is_error is True and (unfit["outcome"], unfit["code"]) == ("refused", "invalid")
-    assert unfit["faults"] == [{"location": ["profile_id"], "type": "missing", "message": "this field is required"}]
+    assert unfit["faults"] == [{"location": ["profile_id"], "type": "missing", "message": "Field required"}]
     assert replies["exported"]["secret_delivery"] == {"outcome": "delivered"}
     assert replies["export_settled"]["terminal_condition"] == "succeeded", replies["export_settled"]
     assert replies["bundle_written"] is True

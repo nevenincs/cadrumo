@@ -766,17 +766,16 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                     denial = _record(document["result"])
                     assert denial["kind"] == "grant" and denial["target_id"] == str(initial.grant_id)
                     assert _record(denial["receipt"])["access_denied"] is True
-                    for tool, arguments in (
-                        ("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID}),
-                        ("result", {"result": result_request.model_dump(mode="json")}),
-                    ):
-                        refused = await sdk.call_tool(tool, arguments)
-                        assert refused.is_error
-                        refusal = _record(refused.structured_content)
-                        assert refusal["outcome"] == "refused" and refusal["code"] in _FENCED
-                        assert str(reference) not in repr(refusal) and str(rotated.credential_reference) not in repr(
-                            refusal
-                        )
+                    # Which operations exist is public and still answered, under no session.
+                    public = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+                    assert not public.is_error and _record(public.structured_content)["session"] == "none"
+                    refused = await sdk.call_tool("result", {"result": result_request.model_dump(mode="json")})
+                    assert refused.is_error
+                    refusal = _record(refused.structured_content)
+                    assert refusal["outcome"] == "refused" and refusal["code"] in _FENCED
+                    for answer in (refusal, _record(public.structured_content)):
+                        assert str(reference) not in repr(answer)
+                        assert str(rotated.credential_reference) not in repr(answer)
 
             with (tmp_path / "tui-grant-revoked.stderr").open("w", encoding="utf-8") as error_log:
                 async with (
@@ -791,7 +790,9 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                     revoked = _record(status.structured_content)
                     assert revoked["outcome"] == "status" and revoked["profile_id"] == str(profile.profile_id)
                     assert revoked["authenticated"] is False and revoked["denial"] in _REVOKED
-                    refused = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+                    public = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+                    assert not public.is_error and _record(public.structured_content)["session"] == "none"
+                    refused = await sdk.call_tool("observe", {"observation": {}})
                     assert refused.is_error and _record(refused.structured_content) == {
                         "outcome": "refused",
                         "code": revoked["denial"],

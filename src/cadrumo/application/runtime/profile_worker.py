@@ -11,6 +11,7 @@ from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.request_faults import MAX_REQUEST_FAULTS, RequestFault
 from ..operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationResultV1,
@@ -387,7 +388,11 @@ class ProfileWorkerHumanBound(BaseModel):
 
 
 class ProfileWorkerRefusal(BaseModel):
-    """An allowlisted application refusal that does not expose rejected input."""
+    """An allowlisted application refusal that does not expose rejected input.
+
+    ``request_faults`` says why the operation's request model refused a
+    payload, without the values it refused. Only an ``INVALID`` refusal has any.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["refusal"] = "refusal"
@@ -395,6 +400,13 @@ class ProfileWorkerRefusal(BaseModel):
     request_id: UUID
     reason: AutomationCustodyCode | AccessDenialCode
     sign_in: SignInRefusal | None = None
+    request_faults: Annotated[tuple[RequestFault, ...], Field(max_length=MAX_REQUEST_FAULTS)] = ()
+
+    @model_validator(mode="after")
+    def _only_an_invalid_request_has_faults(self) -> ProfileWorkerRefusal:
+        if self.request_faults and self.reason is not AutomationCustodyCode.INVALID:
+            raise ValueError("only an invalid request carries request faults")
+        return self
 
 
 class ProfileWorkerOperationContract(BaseModel):

@@ -60,6 +60,7 @@ from .protocol_contract import (
     refusal_code,
     validate_tool_arguments,
 )
+from .public_operation_discovery import SESSIONLESS_DISCOVERY_TOOLS, discover_public_operations
 from .runtime_admission import (
     McpAdmission,
     require_exact_admitted_status,
@@ -448,6 +449,8 @@ class RuntimeMcpAdapter:
             if name == "installation":
                 return await self._call_installation_tool(args)
             await self._hold_or_restore_session()
+            if name in SESSIONLESS_DISCOVERY_TOOLS:
+                return await self._wire(lambda: self._discover(name, args))
             return await self._wire(lambda: call_admitted_operation(self, name, args))
         except AutomationRequesterUncertainError as error:
             return {"outcome": "unresolved", "request_id": str(error.request_id), "code": error.reason}
@@ -459,6 +462,35 @@ class RuntimeMcpAdapter:
             if remedy := runtime_unavailable_remedy(code):
                 reply["remedy"] = remedy
             return reply
+
+    def _discover(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
+        """Answer ``search`` or ``describe`` from the runtime under a live session, and without one all the same.
+
+        With no session the answer is read from the contracts this package
+        ships, so it needs neither a sign-in nor a running runtime. A lease the
+        runtime no longer admits is no session, as ``status`` reports it, and a
+        lease whose runtime is gone cannot be asked: both are answered from the
+        shipped contracts too. A refusal under a live session stands, because it
+        is that session's own: an operation outside its scope, say.
+        """
+        if self.client is not None:
+            try:
+                return call_admitted_operation(self, name, args)
+            except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+                if self._session_is_live():
+                    raise
+        return discover_public_operations(name, args, self.surface)
+
+    def _session_is_live(self) -> bool:
+        """Say whether the runtime still admits the lease held, by the witness every admission is held to."""
+        client, profile_id, admission = self.client, self.profile_id, self.admission
+        if client is None or profile_id is None or admission is None:
+            return False
+        try:
+            require_exact_admitted_status(client, profile_id=profile_id, admission=admission)
+        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+            return False
+        return True
 
     async def _hold_or_restore_session(self) -> None:
         if self._resumes_sign_in:
