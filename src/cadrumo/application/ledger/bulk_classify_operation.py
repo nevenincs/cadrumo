@@ -18,7 +18,11 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
-from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
+from ..operations.execution_actor import (
+    OperationExecutionCallerReader,
+    execution_actor_label,
+    execution_admitted_on_mcp,
+)
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -44,6 +48,7 @@ from .read_access import resolve_ledger_commit_access
 
 LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID = "ledger.classify.bulk"
 LEDGER_BULK_CLASSIFY_VALIDATION_REFUSAL_CODE = "REFUSED_CLI_VALIDATION_BOUNDARY"
+_CLI_SOURCE_COMMAND = "aeat app ledger classify --file"
 _VALIDATION_ERRORS = (TransactionValidationError, RegistryValidationError, ValidationError, ValueError)
 
 
@@ -146,6 +151,13 @@ class LedgerBulkClassifyExecutor:
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID)
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor or bucket_id)
+        # The command line is the person's route to a file; an agent sends the table itself,
+        # so its rows name the operation instead of a command it never ran.
+        source_command = (
+            LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID
+            if execution_admitted_on_mcp(self._execution_caller_reader, context)
+            else _CLI_SOURCE_COMMAND
+        )
         operation = context.authority_operation
         ports = await asyncio.to_thread(self._ports_factory, bucket_id=bucket_id, operation=operation)
         repository = _require_revision_guarded_ports(ports, bucket_id=bucket_id, operation=operation)
@@ -160,7 +172,7 @@ class LedgerBulkClassifyExecutor:
                     bucket_id=bucket_id,
                     csv_text=payload.csv_text,
                     actor=actor,
-                    source_command="aeat app ledger classify --file",
+                    source_command=source_command,
                     ports=tracked_ports,
                 ),
                 tracker=tracker,

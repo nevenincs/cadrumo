@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:1f5c60e84cab9f45db6b719fa2db1996e1ea2326d26ee71478e42ab396f72da9'
+body_hash: 'sha256:4370b12ec21ab8cc7d04cbbe98b5bf50c8f9372bbc9d3516ceaca868ede69f4e'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -775,6 +775,99 @@ related:
 - `S42` `verify:` `basedpyright on the changed production files` -> `pass`
 - `S42` `verify:` `lint-imports (15 contracts)` -> `pass`
 - `S42` `by:` `vaultspec-high-executor`
+- `S44` `M` `src/cadrumo/application/modelo/local_observation_operation.py`
+- `S44` `M` `src/cadrumo/application/modelo/local_observation_contracts.py`
+- `S44` `M` `src/cadrumo/application/modelo/m145_communication_operation.py`
+- `S44` `M` `src/cadrumo/application/modelo/m145_communication_execution.py`
+- `S44` `M` `src/cadrumo/application/modelo/m145_communication_contracts.py`
+- `S44` `M` `src/cadrumo/application/modelo/tests/test_local_observation_operation.py`
+- `S44` `M` `src/cadrumo/application/modelo/tests/test_m145_communication_operation.py`
+- `S44` `A` `src/cadrumo/entrypoints/tests/test_modelo_local_records_mcp_admission.py`
+- `S44` `M` `.vault/adr/2026-10-10-mcp-parity-admission-rulings-adr.md`
+- `S44` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S44` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S44` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
+- `S44` `verify:` `pytest ledger, invoices, operations, auth, workflow and touched modelo suites (3112 tests)` -> `pass`
+- `S44` `verify:` `pytest profile persistence lifecycle, merge, restore and split tests (131 tests)` -> `pass`
+- `S44` `verify:` `pytest entrypoint suite including executor conformance and the surface policies (2172 of 2179 tests)` -> `pass`
+- `S44` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S44` `verify:` `pytest touched command tests (51 tests)` -> `pass`
+- `S44` `verify:` `ruff check (37 files)` -> `pass`
+- `S44` `verify:` `ruff format --check (37 files)` -> `pass`
+- `S44` `verify:` `ty check --python-platform linux (37 files)` -> `pass`
+- `S44` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S44` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S44` `by:` `vaultspec-high-executor`
+- `S01` `M` `src/cadrumo/application/workflow/run_projection.py`
+- `S01` `A` `src/cadrumo/application/workflow/tests/test_run_projection_released_fields.py`
+- `S01` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_surfaces.py`
+- `S01` `A` `src/cadrumo/entrypoints/tests/test_operation_mcp_surface_policies.py`
+- `S01` `M` `.vault/audit/2026-10-11-mcp-parity-audit.md`
+- `S01` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S01` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
+- `S01` `verify:` `pytest ledger, invoices, operations, auth, workflow and touched modelo suites (3112 tests)` -> `pass`
+- `S01` `verify:` `pytest profile persistence lifecycle, merge, restore and split tests (131 tests)` -> `pass`
+- `S01` `verify:` `pytest entrypoint suite including executor conformance and the surface policies (2172 of 2179 tests)` -> `pass`
+- `S01` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S01` `verify:` `pytest touched command tests (51 tests)` -> `pass`
+- `S01` `verify:` `ruff check (37 files)` -> `pass`
+- `S01` `verify:` `ruff format --check (37 files)` -> `pass`
+- `S01` `verify:` `ty check --python-platform linux (37 files)` -> `pass`
+- `S01` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S01` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S42` `A` `src/cadrumo/application/ledger/agent_reader_locality.py`
+- `S42` `A` `src/cadrumo/application/operations/host_path_name.py`
+- `S42` `A` `src/cadrumo/application/modelo/reconciliation_source_reference.py`
+- `S42` `M` `src/cadrumo/application/ledger/llm_review_execution.py`
+- `S42` `M` `src/cadrumo/application/ledger/evidence_read_operation.py`
+- `S42` `M` `src/cadrumo/application/modelo/reconciliation_import_operation.py`
+- `S42` `M` `src/cadrumo/application/modelo/reconciliation_list_operation.py`
+- `S42` `M` `src/cadrumo/application/modelo/reconciliation_pull_operation.py`
+- `S42` `M` `src/cadrumo/application/auth/auth_read_contracts.py`
+- `S42` `M` `src/cadrumo/application/auth/read_operation.py`
+- `S42` `M` `src/cadrumo/application/ledger/tests/test_llm_review_operation.py`
+- `S42` `A` `src/cadrumo/application/auth/tests/test_auth_read_agent_result.py`
+- `S42` `M` `src/cadrumo/application/modelo/tests/test_reconciliation_list_operation.py`
+- `S42` `A` `src/cadrumo/entrypoints/tests/test_modelo_reconciliation_agent_results.py`
+- `S42` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S42` `M` `dev/quality/metadata/import_load_targets.json`
+- `S42` `verify:` `pytest ledger, invoices, operations, auth, workflow and touched modelo suites (3112 tests)` -> `pass`
+- `S42` `verify:` `pytest profile persistence lifecycle, merge, restore and split tests (131 tests)` -> `pass`
+- `S42` `verify:` `pytest entrypoint suite including executor conformance and the surface policies (2172 of 2179 tests)` -> `pass`
+- `S42` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S42` `verify:` `pytest touched command tests (51 tests)` -> `pass`
+- `S42` `verify:` `ruff check (37 files)` -> `pass`
+- `S42` `verify:` `ruff format --check (37 files)` -> `pass`
+- `S42` `verify:` `ty check --python-platform linux (37 files)` -> `pass`
+- `S42` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S42` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S35` `A` `src/cadrumo/adapters/persistence/profile/tests/test_actions_lifecycle_restore_merge.py`
+- `S35` `verify:` `pytest ledger, invoices, operations, auth, workflow and touched modelo suites (3112 tests)` -> `pass`
+- `S35` `verify:` `pytest profile persistence lifecycle, merge, restore and split tests (131 tests)` -> `pass`
+- `S35` `verify:` `pytest entrypoint suite including executor conformance and the surface policies (2172 of 2179 tests)` -> `pass`
+- `S35` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S35` `verify:` `pytest touched command tests (51 tests)` -> `pass`
+- `S35` `verify:` `ruff check (37 files)` -> `pass`
+- `S35` `verify:` `ruff format --check (37 files)` -> `pass`
+- `S35` `verify:` `ty check --python-platform linux (37 files)` -> `pass`
+- `S35` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S37` `M` `src/cadrumo/application/invoices/catalogue_add_operation.py`
+- `S37` `M` `src/cadrumo/application/invoices/catalogue_update_operation.py`
+- `S37` `M` `src/cadrumo/application/ledger/bulk_classify_operation.py`
+- `S37` `M` `src/cadrumo/entrypoints/tests/test_operation_actor_label_by_frontend.py`
+- `S37` `M` `src/cadrumo/entrypoints/tests/test_ledger_classification_actor_by_frontend.py`
+- `S37` `verify:` `pytest ledger, invoices, operations, auth, workflow and touched modelo suites (3112 tests)` -> `pass`
+- `S37` `verify:` `pytest profile persistence lifecycle, merge, restore and split tests (131 tests)` -> `pass`
+- `S37` `verify:` `pytest entrypoint suite including executor conformance and the surface policies (2172 of 2179 tests)` -> `pass`
+- `S37` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S37` `verify:` `pytest touched command tests (51 tests)` -> `pass`
+- `S37` `verify:` `ruff check (37 files)` -> `pass`
+- `S37` `verify:` `ruff format --check (37 files)` -> `pass`
+- `S37` `verify:` `ty check --python-platform linux (37 files)` -> `pass`
+- `S37` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S37` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S37` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -804,3 +897,8 @@ related:
 - `S34` Attach takes identifiers of stored evidence only and detach removes only the link, keeping bytes and manifest. A purchase-evidence link cannot be cleared by detach.
 - `S35` No confirmation moved: the only safeguard was the command-line yes flag, kept there. Archive, stash and restore are events over rows that stay stored, and their results now say what they replaced and which operation reverses it. Exclude cleared the business share without recording it; its event now stores the previous value. A manual split keeps the parent stored but only the approval-bound merge recombines it; admitted, with the result naming that. Found and not fixed here: restore has no guard for rows a merge archived and can reactivate them beside the merged row.
 - `S42` Evidence update changes descriptive and amount fields only and is no route to confirmation; an agent result carries the file name and not the directory. The invoice intake is typed, not interactive and not a draft promotion; its creation event carries the session label for an agent, which is the only mark on amounts an agent states. The participation rebuild regenerates a derived index. Extraction is admitted for a reader on this machine: the off-machine variant is refused on MCP at the resolver, and because a reader counted as local by provider name alone while its endpoint is a setting, the executor refuses an agent read unless the endpoint is loopback. An agent result carries the review-summary projection and no draft text. Outside these Steps and failing as before: the seven entrypoint tests named under S45, fourteen command-line tests reporting `runtime_unavailable` from the stale base-Python install, and one bulk-classify command test that expects an English message and receives the Spanish one.
+- `S44` Local observations and Modelo 145 create and validate are open to MCP. Refused for an agent until the approval step exists: clearing an observation, which keeps no copy of the figure; recording over the observation of a pending local filing, which replaces it; and a Modelo 145 draft that fills the worker signature block or the payer acknowledgement. Not admitted and re-ruled behind approval: `modelo.filing_record.import,` because every writing outcome leaves a record marked as confirmed by the tax agency and in force, it can confirm or retire a pending local filing, and with the register source typed values and a typed reference suffice with no stored receipt. Found and left: recording over a pending filing observation destroys it on every frontend although the module says nothing is destroyed.
+- `S01` Follow-up to the first phase review. Every operation the read-only local surface lists is now resolved through its real resolver and required to hold no commit action and to be admitted at submission. A tested table names each request and result field of an MCP-open operation that carries a host path, so an unrecorded one fails and the file-exchange Step removes what it settles; the capture operations were read and only record and echo their root. The two model reviews are recorded as reaching the network. Workflow run reads release an allow-listed set of detail fields, and the projection of details carrying an enumeration member, which failed validation, is repaired.
+- `S42` Follow-up found while closing the review. The two model reviews send the person transaction and evidence text to the reader endpoint, which a setting can point at another host; an agent review is now refused unless the endpoint is on this machine, by the one check the extraction uses. The reconciliation import, list and pull results and the local authentication read gave an agent a host path; an agent now receives the file name and a flag that the directory was withheld. Stored records and other frontends are unchanged.
+- `S35` Follow-up: restore refused nothing for rows a merge had replaced, so an original could be reactivated beside the merged row and counted twice. Restore now refuses while the row that replaced it is active, in both directions, and stays allowed once that row is archived.
+- `S37` Follow-up: invoice add and update recorded a fixed actor for every frontend and now record the session label for an agent; bulk classification recorded a file command as its source for an agent, who sends the table and no file, and now records the operation.

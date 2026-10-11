@@ -1160,7 +1160,9 @@ def build_production_operation_registry(
     inventory_closing_authority_record_definition = build_inventory_closing_authority_record_definition(
         build_inventory_service_ports, execution_caller_reader=execution_caller_reader
     )
-    auth_read_definition = build_auth_read_definition(compose_auth_read_ports)
+    auth_read_definition = build_auth_read_definition(
+        compose_auth_read_ports, execution_caller_reader=execution_caller_reader
+    )
     apoderado_definitions = build_apoderado_operation_definitions(build_apoderado_operation_ports)
     auth_diagnostic_report_definition = build_auth_diagnostic_report_definition(build_auth_diagnostic_report_ports)
     diagnostics_read_definition = build_diagnostics_read_definition(build_diagnostics_read_ports)
@@ -1191,6 +1193,7 @@ def build_production_operation_registry(
     m145_communication_definitions = build_m145_communication_operation_definitions(
         records_ports_factory=build_m145_communication_records_ports,
         renderer_factory=RegistryFixedWidthRecordRenderer,
+        execution_caller_reader=execution_caller_reader,
     )
     modelo_definitions = build_modelo_lifecycle_operation_definitions(
         profile_resolver=modelo_profile_resolver,
@@ -1394,7 +1397,9 @@ def build_production_operation_registry(
         load_reconciliation_filed_observation,
         execution_caller_reader=execution_caller_reader,
     )
-    reconciliation_list_definition = build_modelo_reconciliation_list_definition()
+    reconciliation_list_definition = build_modelo_reconciliation_list_definition(
+        execution_caller_reader=execution_caller_reader
+    )
     work_list_definition = build_modelo_work_list_definition(work_lifecycle_ports_factory)
     work_create_definition = build_modelo_work_create_definition(
         work_lifecycle_ports_factory, execution_caller_reader=execution_caller_reader
@@ -1407,7 +1412,9 @@ def build_production_operation_registry(
     overview_definitions = tuple(
         build_overview_read_definition(kind, overview_read_ports_factory) for kind in OverviewReadKind
     )
-    invoice_add_definition = build_invoice_add_definition(invoice_creation_ports_factory)
+    invoice_add_definition = build_invoice_add_definition(
+        invoice_creation_ports_factory, execution_caller_reader=execution_caller_reader
+    )
     invoice_import_definition = build_invoice_import_definition(build_invoice_intake_ports)
     invoice_wizard_definition = build_invoice_wizard_definition(
         build_invoice_intake_ports, execution_caller_reader=execution_caller_reader
@@ -1419,7 +1426,9 @@ def build_production_operation_registry(
     invoice_list_definition = build_invoice_list_definition(invoice_inspection_read_ports_factory)
     invoice_view_definition = build_invoice_view_definition(invoice_inspection_read_ports_factory)
     invoice_remove_definition = build_invoice_remove_definition(invoice_lifecycle_ports_factory)
-    invoice_update_definition = build_invoice_update_definition(invoice_lifecycle_ports_factory)
+    invoice_update_definition = build_invoice_update_definition(
+        invoice_lifecycle_ports_factory, execution_caller_reader=execution_caller_reader
+    )
     workflow_resume_definition = build_workflow_resume_definition(
         workflow_run_read_ports_factory, calculation_action_ports_factory
     )
@@ -1582,7 +1591,9 @@ def build_production_operation_registry(
     filing_record_import_definition = build_modelo_filing_record_import_definition(calculation_action_ports_factory)
     filing_record_view_definition = build_modelo_filing_record_view_definition(verification_repository_bundle_factory)
     taxation_comparison_definition = build_modelo_taxation_comparison_definition(build_taxation_comparison_ports)
-    local_observation_definition = build_modelo_local_observation_definition(calculation_action_ports_factory)
+    local_observation_definition = build_modelo_local_observation_definition(
+        calculation_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
     verification_report_list_definition = build_modelo_verification_report_list_definition(
         verification_repository_bundle_factory
     )

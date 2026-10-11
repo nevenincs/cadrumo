@@ -27,7 +27,11 @@ from ...domain.modelos.codes import ModeloCode
 from ..ledger.read_access import resolve_ledger_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
-from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
+from ..operations.execution_actor import (
+    OperationExecutionCallerReader,
+    execution_actor_label,
+    execution_admitted_on_mcp,
+)
 from ..operations.models import (
     CredentialFreeOperationRequest,
     OperationRequest,
@@ -68,6 +72,7 @@ from .reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
+from .reconciliation_source_reference import agent_source_reference
 from .verification_report_public_facts import ModeloVerificationRegistrySnapshotProjection
 from .work_addressing import ModeloWorkAddressNotFoundError
 from .work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
@@ -166,7 +171,12 @@ class ModeloReconciliationImportAdvisoryProjection(BaseModel):
 
 
 class ModeloReconciliationImportProjection(BaseModel):
-    """Public report with every canonical diff and advisory field."""
+    """Public report with every canonical diff and advisory field.
+
+    ``source_path`` is the path the person typed for the evidence file. An
+    agent's execution seals the file name alone in that member and sets
+    ``source_directory_withheld``.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -181,6 +191,19 @@ class ModeloReconciliationImportProjection(BaseModel):
     advisories: tuple[ModeloReconciliationImportAdvisoryProjection, ...] = ()
     reconciled_at: datetime
     narrative: str = ""
+    source_directory_withheld: bool = False
+
+    @model_validator(mode="after")
+    def _withheld_directory_leaves_a_name(self) -> ModeloReconciliationImportProjection:
+        """Refuse a sealed path that still holds a directory."""
+        if self.source_directory_withheld and ("/" in self.source_path or "\\" in self.source_path):
+            raise ValueError("a withheld source directory leaves a file name alone")
+        return self
+
+    def sealed_for_agent(self) -> ModeloReconciliationImportProjection:
+        """Return this report with the directory of its evidence file withheld, as an agent receives it."""
+        source_path, withheld = agent_source_reference(self.source_path)
+        return self.model_copy(update={"source_path": source_path, "source_directory_withheld": withheld})
 
     @classmethod
     def from_report(cls, report: ModeloReconciliationReport) -> ModeloReconciliationImportProjection:
@@ -402,6 +425,7 @@ class ModeloReconciliationImportExecutor:
 
         await context.events.phase(_PHASES[0])
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
+        for_agent = execution_admitted_on_mcp(self._execution_caller_reader, context)
 
         def prepare() -> tuple[ModeloReconciliationCommand, PreparedModeloReconciliation]:
             if require_active_bucket_id() != profile_id:
@@ -465,8 +489,10 @@ class ModeloReconciliationImportExecutor:
             raise ValueError("prepared modelo reconciliation changed while being persisted")
         await context.events.effect(OperationEffect.UPDATED)
 
+        # Sealed only now: the checks above compare the report with the command
+        # that was run, and the stored record keeps the path as it was typed.
         private_report = ModeloReconciliationImportOperationReport(
-            projection=report,
+            projection=report.sealed_for_agent() if for_agent else report,
             local_write_performed=True,
         )
         await context.events.phase(_PHASES[2])

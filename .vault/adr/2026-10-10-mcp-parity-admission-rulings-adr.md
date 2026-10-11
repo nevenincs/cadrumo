@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-10'
+modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:1d2169b88fb01cb68094d8d776ba50377fb5caaa0df14008060a4ed2c1f419d4'
+body_hash: 'sha256:a9a34cc5c9b3225608420e0d140fc19a79e78a644bac02faa443b767e445bf13'
 related:
   - "[[2026-10-10-mcp-parity-exclusion-intent-evidence-research]]"
   - "[[2026-10-10-mcp-parity-closed-operations-reference]]"
@@ -201,8 +201,8 @@ Rulings for operations closed today:
 | Wizards | `modelo.work.wizard_context`, `.wizard_attempt`, `.amendment_context` | Excluded: terminal-only |
 | Files | `modelo.review_package.build`, `modelo.work.report_verify`, `modelo.spreadsheet.export`, `modelo.reconcile.export-xlsx`, `export.calculation-review-xlsx`, `modelo.m145.export`, `modelo.audit.export`, `live.borrador.100.import`, `user-profile.censo-file-import` | Admit, pending file exchange |
 | Signing and sharing | `modelo.review_package.sign`, `.counter_sign`, `.encrypt_for_recipient`, `.decrypt`, `.encrypt_feedback`, `.import_feedback`, `config.collab.recipient.add`, `.remove` | Admit behind the person's approval, pending file exchange where a file is read or written: they sign in the person's name or decide who can read an exported package |
-| Evidence-grade records | `modelo.filing_record.import` | Admit, as the owner ruled for the reconciliation import: the agent originates the record and the person reviews its findings. Its file source waits on file exchange |
-| Local records | `modelo.observation.local`, `modelo.m145.create`, `.validate` | Admit |
+| Evidence-grade records | `modelo.filing_record.import` | Admit behind the person's approval. Reading the executor on 2026-10-11 showed that every writing outcome leaves a record marked as confirmed by the tax agency and in force, that it can confirm or retire a pending local filing, and that with the register source the caller's typed values and a typed reference suffice with no stored receipt. That is the person's approval of findings the owner required for reconciliation records, taken before the record exists because nothing unconfirmed is written first. Moved here from outright admission under the owner's rule that sensitive acts wait for the person. Its file source also waits on file exchange |
+| Local records | `modelo.observation.local`, `modelo.m145.create`, `.validate` | Admit. An observation is never official and the clean-state gate blocks on it. Waiting for the person's approval: clearing an observation, which keeps no copy of the figure; recording over the observation of a pending local filing, which replaces it; and a Modelo 145 draft that fills the worker's signature block or the payer's acknowledgement |
 | Attestations and markers | `modelo.work.m303_attestation`, `modelo.036.record`, `modelo.m145.mark_delivered_to_payer`, `.mark_locally_completed` | Admit behind the person's approval: each records the person's statement that something is true or happened outside Cadrumo |
 | Publication and archive | `export.google-review`, `profile.archive.export`, `.push`, `.reconcile`, `config.google.folder.organize`, `config.google.logout` | Admit behind the person's approval: each sends or moves the person's data outside the machine, or ends access to it |
 | | `config.google.status`, `.probe`, `.folder.view` | Admit |

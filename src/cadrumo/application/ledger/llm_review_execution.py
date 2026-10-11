@@ -20,7 +20,11 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
 from ...domain.transactions.models import Transaction
-from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
+from ..operations.execution_actor import (
+    OperationExecutionCallerReader,
+    execution_actor_label,
+    execution_admitted_on_mcp,
+)
 from ..operations.interactions import OperationResponseIntentValue
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
@@ -29,6 +33,7 @@ from ..operations.registry import OperationSchemaBindingV1, operation_public_sch
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts
+from .agent_reader_locality import require_reader_on_this_machine
 from .id_resolution import resolve_transaction_id
 from .llm_classification import saturate_llm_classification, suggest_evidence_split, suggest_llm_classification
 from .llm_classification_ports import (
@@ -281,6 +286,10 @@ class LedgerLlmReviewExecutor:
         """Capture once, then settle a preview or publish the secure REVIEW checkpoint."""
         ports = self._ports(request, context)
         payload = request.payload
+        if execution_admitted_on_mcp(self._execution_caller_reader, context):
+            # Acquisition is the only phase that hands the person's text or
+            # images to the reader; resume commits an already reviewed decision.
+            require_reader_on_this_machine(ports.settings)
         await context.events.phase("ledger.llm.acquire")
 
         def acquire() -> LedgerLlmReviewedOperand:

@@ -22,6 +22,7 @@ import pytest
 
 from cadrumo_harness.mcp.protocol_contract import MCP_TOOL_NAMES
 
+from ...application.operations.access_resolution import ResolvedOperationAccess
 from ...application.operations.mcp_admission import McpRuling, mcp_admission_decision
 from ...application.operations.mcp_surfaces import MCP_SURFACES, McpSurfaceName
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
@@ -36,6 +37,7 @@ from ...application.user_profile.access_contracts import (
     AuthorityState,
     AutomationGrant,
     Availability,
+    DisclosurePermission,
     LoginEligibility,
     OperationAccessPolicy,
     OperationAccessRequest,
@@ -97,12 +99,16 @@ def _mcp_listed() -> frozenset[str]:
 
 
 @cache
-def _whole_scope() -> AccessScope:
-    """Every registered operation and every action, so no scope ceiling refuses anything."""
+def _whole_scope(disclosures: frozenset[DisclosurePermission] = frozenset()) -> AccessScope:
+    """Every registered operation and every action, so no scope ceiling refuses anything.
+
+    ``disclosures`` is what a policy under test discloses, so that a real
+    policy is not refused for a permission the synthetic scope never held.
+    """
     return AccessScope(
         operations=frozenset(_definition_ids()),
         actions=_COMMITTING,
-        disclosures=frozenset(),
+        disclosures=disclosures,
         periods=None,
         allow_period_independent=True,
         allow_delegation=True,
@@ -110,7 +116,7 @@ def _whole_scope() -> AccessScope:
 
 
 @cache
-def _grant() -> AutomationGrant:
+def _grant(disclosures: frozenset[DisclosurePermission] = frozenset()) -> AutomationGrant:
     return AutomationGrant(
         grant_id=_GRANT,
         binding=_BINDING,
@@ -118,7 +124,7 @@ def _grant() -> AutomationGrant:
         generation=1,
         profile_lock_generation=0,
         state=AuthorityState.ACTIVE,
-        scope=_whole_scope(),
+        scope=_whole_scope(disclosures),
         valid_from=_NOW - timedelta(days=1),
         expires_at=_NOW + timedelta(days=364),
         unattended=True,
@@ -127,8 +133,8 @@ def _grant() -> AutomationGrant:
 
 
 @cache
-def _key() -> ApiKeyRecord:
-    grant = _grant()
+def _key(disclosures: frozenset[DisclosurePermission] = frozenset()) -> ApiKeyRecord:
+    grant = _grant(disclosures)
     return ApiKeyRecord(
         key_id=_KEY,
         grant_id=grant.grant_id,
@@ -146,6 +152,7 @@ def _lease(
     session_id: UUID = _SESSION,
     connection_id: UUID = _CONNECTION,
     parent_session_id: UUID | None = None,
+    disclosures: frozenset[DisclosurePermission] = frozenset(),
 ) -> AccessSession:
     return AccessSession(
         session_id=session_id,
@@ -156,7 +163,7 @@ def _lease(
         client_id=_CLIENT,
         kind=SessionKind.API_KEY,
         state=SessionState.ACTIVE,
-        scope=_whole_scope(),
+        scope=_whole_scope(disclosures),
         parent_session_id=parent_session_id,
         grant_id=_GRANT,
         grant_generation=1,
@@ -170,13 +177,13 @@ def _lease(
 
 
 @cache
-def _profile() -> ProfileAccessState:
+def _profile(disclosures: frozenset[DisclosurePermission] = frozenset()) -> ProfileAccessState:
     return ProfileAccessState(
         binding=_BINDING,
         lock_generation=0,
         globally_locked=False,
         automation_enabled=True,
-        scope=_whole_scope(),
+        scope=_whole_scope(disclosures),
         storage=Availability.AVAILABLE,
         automation_custody=Availability.AVAILABLE,
     )
@@ -226,8 +233,8 @@ def _answer(
     ancestors: tuple[AccessSession, ...] = ()
     if delegated:
         ancestors = (_lease(parent_surface, session_id=_PARENT_SESSION, connection_id=_PARENT_CONNECTION),)
-    decision = evaluate_operation_access(
-        request=OperationAccessRequest(
+    return _evaluate(
+        OperationAccessRequest(
             profile_id=_BINDING.profile_id,
             definition_id=definition_id,
             action=action,
@@ -236,7 +243,7 @@ def _answer(
             period_independent=True,
             destination_id=_CLIENT,
         ),
-        policy=OperationAccessPolicy(
+        OperationAccessPolicy(
             definition_id=definition_id,
             definition_contract_digest=contract.definition_contract_digest,
             actions=resolved,
@@ -248,15 +255,50 @@ def _answer(
             provider=Availability.NOT_REQUIRED,
             transaction_authority_required=False,
         ),
-        registry=_registry(),
         session=session,
         ancestors=ancestors,
-        grant=_grant(),
-        key=_key(),
-        profile=_profile(),
+        registry=_registry(),
+    )
+
+
+def _evaluate(
+    request: OperationAccessRequest,
+    policy: OperationAccessPolicy,
+    *,
+    session: AccessSession,
+    ancestors: tuple[AccessSession, ...],
+    registry: OperationRegistry,
+) -> str:
+    """Evaluate one access under the synthetic key session and name the answer."""
+    disclosures = policy.disclosures
+    decision = evaluate_operation_access(
+        request=request,
+        policy=policy,
+        registry=registry,
+        session=session,
+        ancestors=ancestors,
+        grant=_grant(disclosures),
+        key=_key(disclosures),
+        profile=_profile(disclosures),
         context=_context(),
     )
     return decision.code.value if isinstance(decision, AccessDenied) else _ALLOWED
+
+
+def answer_for_resolved_access(
+    resolved: ResolvedOperationAccess, surface: McpSurfaceName | None, *, registry: OperationRegistry
+) -> str:
+    """Name what the key session is answered for an access its operation's own resolver produced.
+
+    The request is the resolver's, with the profile replaced by the one this
+    file's synthetic session is bound to; the policy is used as resolved, and
+    the session's ceilings hold every action and exactly the disclosures the
+    policy makes. A refusal is therefore the frontend list's, the surface's or
+    the policy's own.
+    """
+    request = resolved.request.model_copy(update={"profile_id": _BINDING.profile_id})
+    session = _lease(surface, disclosures=resolved.policy.disclosures)
+    return _evaluate(request, resolved.policy, session=session, ancestors=(), registry=registry)
 
 
 def _answers(definition_id: str, surface: McpSurfaceName | None) -> set[str]:

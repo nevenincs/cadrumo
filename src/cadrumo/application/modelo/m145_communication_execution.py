@@ -21,6 +21,11 @@ from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventHistoryCatalogue
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ..operations.execution_actor import (
+    OperationExecutionCallerReader,
+    execution_actor_label,
+    execution_admitted_on_mcp,
+)
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
@@ -206,10 +211,12 @@ class M145CommunicationExecutor:
         *,
         records_ports_factory: M145CommunicationRecordsPortsFactory,
         renderer_factory: Callable[[], FicheroBoeRecordRenderer],
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
-        """Bind the canonical repository and renderer capabilities."""
+        """Bind the canonical repository and renderer capabilities and the session host's caller reader."""
         self._records_ports_factory = records_ports_factory
         self._renderer_factory = renderer_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -223,6 +230,19 @@ class M145CommunicationExecutor:
         bucket_id = str(payload.profile_id)
         if await asyncio.to_thread(require_active_bucket_id) != bucket_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        if (
+            isinstance(payload, M145CommunicationCreateRequest)
+            and payload.fills_a_signed_block()
+            and execution_admitted_on_mcp(self._execution_caller_reader, context)
+        ):
+            # The access resolver refuses this first; the record itself must
+            # not depend on that having happened.
+            raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+        actor = (
+            None
+            if isinstance(payload, M145CommunicationValidateRequest)
+            else execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
+        )
         operation = context.authority_operation
         await context.events.phase(operation_id)
         ports = await asyncio.to_thread(self._records_ports_factory, bucket_id=bucket_id)
@@ -233,6 +253,7 @@ class M145CommunicationExecutor:
                 bucket_id=bucket_id,
                 ports=ports,
                 authority=operation,
+                actor=actor,
                 context=context,
             ),
             task_name=operation_id,
@@ -272,6 +293,7 @@ class M145CommunicationExecutor:
         bucket_id: str,
         ports: M145CommunicationRecordsPorts,
         authority: PinnedAuthorityOperation,
+        actor: str | None,
         context: OperationExecutorContext,
     ) -> str | OperationRefusalEvidence:
         gate = _WriteGate(asyncio.get_running_loop())
@@ -284,6 +306,7 @@ class M145CommunicationExecutor:
                 bucket_id=bucket_id,
                 ports=tracked_ports,
                 authority=authority,
+                actor=actor,
             ),
             name=f"{operation_id}-canonical-service",
         )
@@ -406,25 +429,28 @@ class M145CommunicationExecutor:
         bucket_id: str,
         ports: M145CommunicationRecordsPorts,
         authority: PinnedAuthorityOperation,
+        actor: str | None,
     ) -> M145CommunicationRecord | M145CommunicationValidationResult | M145CommunicationExportResult:
+        if operation_id == M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID:
+            return self._invoke_validate(payload, bucket_id, ports, authority)
         handlers = {
             M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID: self._invoke_create,
-            M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID: self._invoke_validate,
             M145_COMMUNICATION_EXPORT_OPERATION_DEFINITION_ID: self._invoke_export,
             M145_COMMUNICATION_MARK_DELIVERED_OPERATION_DEFINITION_ID: self._invoke_mark_delivered,
             M145_COMMUNICATION_MARK_COMPLETED_OPERATION_DEFINITION_ID: self._invoke_mark_completed,
         }
         handler = handlers.get(operation_id)
-        if handler is None:
+        if handler is None or actor is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        return handler(payload, bucket_id, ports, authority)
+        return handler(payload, bucket_id, ports, authority, actor)
 
+    @staticmethod
     def _invoke_create(
-        self,
         payload: BaseModel,
         bucket_id: str,
         ports: M145CommunicationRecordsPorts,
         authority: PinnedAuthorityOperation,
+        actor: str,
     ) -> M145CommunicationRecord:
         if not isinstance(payload, M145CommunicationCreateRequest):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
@@ -433,7 +459,7 @@ class M145CommunicationExecutor:
             bucket_id=bucket_id,
             ports=ports,
             operation=authority,
-            actor=payload.actor,
+            actor=actor,
         )
 
     @staticmethod
@@ -458,6 +484,7 @@ class M145CommunicationExecutor:
         bucket_id: str,
         ports: M145CommunicationRecordsPorts,
         authority: PinnedAuthorityOperation,
+        actor: str,
     ) -> M145CommunicationExportResult:
         if not isinstance(payload, M145CommunicationExportRequest):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
@@ -467,7 +494,7 @@ class M145CommunicationExecutor:
             renderer=self._renderer_factory(),
             ports=ports,
             operation=authority,
-            actor=payload.actor,
+            actor=actor,
         )
 
     @staticmethod
@@ -476,6 +503,7 @@ class M145CommunicationExecutor:
         bucket_id: str,
         ports: M145CommunicationRecordsPorts,
         authority: PinnedAuthorityOperation,
+        actor: str,
     ) -> M145CommunicationRecord:
         if not isinstance(payload, M145CommunicationMarkDeliveredRequest):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
@@ -484,7 +512,7 @@ class M145CommunicationExecutor:
             bucket_id=bucket_id,
             ports=ports,
             operation=authority,
-            actor=payload.actor,
+            actor=actor,
         )
 
     @staticmethod
@@ -493,6 +521,7 @@ class M145CommunicationExecutor:
         bucket_id: str,
         ports: M145CommunicationRecordsPorts,
         authority: PinnedAuthorityOperation,
+        actor: str,
     ) -> M145CommunicationRecord:
         if not isinstance(payload, M145CommunicationMarkCompletedRequest):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
@@ -501,7 +530,7 @@ class M145CommunicationExecutor:
             bucket_id=bucket_id,
             ports=ports,
             operation=authority,
-            actor=payload.actor,
+            actor=actor,
         )
 
     async def _publish_success(

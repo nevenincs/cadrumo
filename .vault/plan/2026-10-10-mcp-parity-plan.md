@@ -15,7 +15,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
 modified: '2026-10-11'
 body_schema: body-v2
-body_hash: 'sha256:d859a73aa65a2134032ae287744bee85c884bd5eeff9114b75af407f4b376316'
+body_hash: 'sha256:45b3fb17f9f2c2e0e41a59437c1fb35a74d50e56a12a7a936ee21db4aa2cdd9a'
 ---
 
 # `mcp-parity` plan
@@ -93,7 +93,7 @@ Delivers accepted decision records for the approval step taken in Cadrumo, file 
 Delivers local export, the local filed record and every destructive, election, attestation, consent and publication operation on the MCP frontend, each runnable only after the person approves that exact act in Cadrumo.
 
 - [ ] `P07.S40` - Attach the approval step to operations submitted through MCP and admit modelo.export, modelo.work.file and modelo.quickfile behind it, with the elections and the bank account as inputs only the person supplies; all three end at local artefacts and submit nothing; also quickfile_operation.py; `src/cadrumo/application/modelo/operation_definitions.py`.
-- [ ] `P07.S41` - Admit behind the approval step the other sensitive operations of the rulings: the four destructive ledger operations, ledger.invoice.remove, ledger.evidence.confirm, the off-machine read of ledger.evidence.extract, the writes of ledger.own_account and modelo.m360_solicitud, the three prorrata elections, modelo.work.discard, modelo.work.amend, a calculation that states its own inputs or an election, the three IVA wallet writes, the attestation and marker operations, review-package signing and sharing with the recipient add and remove, Google publication, the profile archive operations, auth.session.reset and the capability opt-ins; `src/cadrumo/application`.
+- [ ] `P07.S41` - Admit behind the approval step the other sensitive operations of the rulings: the four destructive ledger operations, ledger.invoice.remove, ledger.evidence.confirm, the off-machine read of ledger.evidence.extract, a rule run that reaffirms, the writes of ledger.own_account and modelo.m360_solicitud, the three prorrata elections, modelo.work.discard, modelo.work.amend, a calculation that states its own inputs or an election, modelo.filing_record.import, clearing a local observation and recording over a pending filing's observation, a signed Modelo 145 draft, the three IVA wallet writes, the attestation and marker operations, review-package signing and sharing with the recipient add and remove, Google publication, the profile archive operations, auth.session.reset and the capability opt-ins; `src/cadrumo/application`.
 
 ### Phase `P02` - open the shared sign-in door to the MCP server
 
@@ -138,7 +138,7 @@ Delivers statement, invoice-book and evidence intake and the file exports under 
 - [x] `P06.S38` - Read the modelo.work.verify executor end to end, record what it reads and what it exchanges while checking provider readiness, and admit it only if it changes nothing and sends nothing that alters remote state; `src/cadrumo/application/modelo/operation_definitions.py`.
 - [ ] `P06.S39` - Remap the packaged skills from command-line verbs to operations through the generated join, and prove one quarterly and one annual declaration prepared through MCP alone equal to the command-line result for the same inputs; `src/cadrumo_harness/_data/agent/skills`.
 - [ ] `P06.S43` - Admit over file exchange the operations that read or write a file: ledger.export, modelo.spreadsheet.export, modelo.reconcile.export-xlsx, export.calculation-review-xlsx, modelo.m145.export, modelo.audit.export, modelo.review_package.build, modelo.work.report_verify, live.borrador.100.import and user-profile.censo-file-import; `src/cadrumo/application/ledger/export_operation.py`.
-- [ ] `P06.S44` - Admit modelo.filing_record.import for values the caller states, with its findings presented for the person to review, and modelo.observation.local, modelo.m145.create and modelo.m145.validate; also local_observation_operation.py and m145_communication_operation.py; `src/cadrumo/application/modelo/filing_record_import_operation.py`.
+- [x] `P06.S44` - Admit modelo.observation.local, modelo.m145.create and modelo.m145.validate, refusing on MCP the variants that discard a figure or stand for a signature; modelo.filing_record.import moves behind the approval step because it writes a record marked as confirmed by the tax agency from values the caller states; also local_observation_operation.py and m145_communication_operation.py; `src/cadrumo/application/modelo/filing_record_import_operation.py`.
 
 ## Parallelization
 

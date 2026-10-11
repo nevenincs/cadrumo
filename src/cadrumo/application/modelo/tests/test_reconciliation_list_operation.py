@@ -171,6 +171,7 @@ def test_public_projection_preserves_stored_differences_and_advisories() -> None
         "registry_snapshot_ref",
         "source_kind",
         "source_path",
+        "source_directory_withheld",
         "verdict",
         "diff_count",
         "advisory_count",
@@ -180,6 +181,7 @@ def test_public_projection_preserves_stored_differences_and_advisories() -> None
         "reconciled_at",
     }
     assert dumped["reconciliations"][0]["source_path"] == first.source_path
+    assert dumped["reconciliations"][0]["source_directory_withheld"] is False
     assert dumped["reconciliations"][0]["calculation_revision_id"] == "c" * 64
     assert dumped["reconciliations"][0]["registry_snapshot_ref"] == {
         "modelo": "303",

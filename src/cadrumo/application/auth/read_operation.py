@@ -21,6 +21,7 @@ from ..operations.access_resolution import (
     require_declared_frontend_and_action,
 )
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_STORED_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_admitted_on_mcp
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
@@ -78,9 +79,15 @@ class AuthReadPorts:
 class AuthReadExecutor:
     """Run one existing read service in immutable profile-worker custody."""
 
-    def __init__(self, ports_factory: Callable[[UUID], AuthReadPorts]) -> None:
-        """Retain the factory until execution in the exact profile worker."""
+    def __init__(
+        self,
+        ports_factory: Callable[[UUID], AuthReadPorts],
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
+        """Retain the factory until execution in the exact profile worker, and the session host's caller reader."""
         self._ports_factory = ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(self, request: OperationRequest[AuthReadRequest], context: OperationExecutorContext) -> str:
         """Read canonical auth state and persist its encrypted result."""
@@ -90,6 +97,7 @@ class AuthReadExecutor:
         if require_active_bucket_id() != str(payload.profile_id):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         await context.events.phase("auth.local-read.execute")
+        for_agent = execution_admitted_on_mcp(self._execution_caller_reader, context)
 
         def read() -> AuthReadResult:
             if require_active_bucket_id() != str(payload.profile_id):
@@ -138,7 +146,7 @@ class AuthReadExecutor:
                     diagnostics_view=detail,
                     diagnostic_found=detail is not None,
                 )
-            return result
+            return result.sealed_for_agent() if for_agent else result
 
         result = await await_cancellation_complete(asyncio.to_thread(read), task_name="auth-local-read")
         reference = await await_cancellation_complete(
@@ -199,6 +207,7 @@ def project_auth_read_result(result: BaseModel, receipt: OperationTerminalReceip
             AuthDiagnosticDetailSnapshot.from_detail(validated.diagnostics_view) if validated.diagnostics_view else None
         ),
         diagnostic_found=validated.diagnostic_found,
+        certificate_directory_withheld=validated.certificate_directory_withheld,
     )
 
 
@@ -219,8 +228,16 @@ def _validated_auth_read_result(
     return AuthReadResult.model_validate_json(result.model_dump_json(), strict=True)
 
 
-def build_auth_read_definition(ports_factory: Callable[[UUID], AuthReadPorts]) -> OperationDefinition:
-    """Build the real read executor for production enrollment."""
+def build_auth_read_definition(
+    ports_factory: Callable[[UUID], AuthReadPorts],
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
+    """Build the real read executor for production enrollment.
+
+    ``execution_caller_reader`` names the frontend that admitted an execution,
+    so an agent's read carries the certificate file's name and not its directory.
+    """
     return OperationDefinition(
         definition_id=AUTH_READ_OPERATION_DEFINITION_ID,
         request_type=AuthReadRequest,
@@ -229,7 +246,7 @@ def build_auth_read_definition(ports_factory: Callable[[UUID], AuthReadPorts]) -
         executor_factory=OperationExecutorFactory(
             request_type=AuthReadRequest,
             executor_type=AuthReadExecutor,
-            build=lambda: AuthReadExecutor(ports_factory),
+            build=lambda: AuthReadExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
         ),
         phase_codes=("auth.local-read.execute",),
         interaction_kinds=frozenset(),

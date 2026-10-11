@@ -9,7 +9,6 @@ from uuid import UUID
 from pydantic import BaseModel, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.config import Settings
 from ...core.config_support import LLMProvider
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -30,11 +29,11 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..provisioning_host import runtime_endpoint_is_local
 from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .agent_reader_locality import require_reader_on_this_machine
 from .evidence import PurchaseInvoiceEvidenceService
 from .evidence_followup_contracts import LedgerEvidenceReviewSummaryProjection
 from .evidence_followup_operation import review_extraction_draft
@@ -213,7 +212,7 @@ def _extract_invoice_evidence_projection(
     )
     require_bound_invoice_evidence_ports(ports, bucket_id=bucket_id)
     if for_agent:
-        _require_reader_on_this_machine(ports.settings)
+        require_reader_on_this_machine(ports.settings)
     source_sha256 = _require_invoice_evidence_source(payload, ports=ports, bucket_id=bucket_id)
     consent_token = _mint_extract_consent(payload, ports=ports, source_sha256=source_sha256)
     draft = extract_invoice_draft_from_evidence(
@@ -245,22 +244,6 @@ def _extract_invoice_evidence_projection(
     )
     check_invoice_evidence_result_size(result)
     return result
-
-
-def _require_reader_on_this_machine(settings: Settings) -> None:
-    """Refuse an agent's read unless the on-host reader answers on this machine's loopback.
-
-    A read is called on-host by the provider it names, and that provider's
-    endpoint is a setting that can name another host. A person who points it
-    elsewhere chose where their documents go. An agent's read stays on this
-    machine or does not run, whichever reader the document's shape would pick.
-    """
-    try:
-        on_this_machine = runtime_endpoint_is_local(settings.cadrumo_llm_ollama_chat_url)
-    except ValueError:
-        on_this_machine = False
-    if not on_this_machine:
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
 
 
 def _agent_draft_summary(

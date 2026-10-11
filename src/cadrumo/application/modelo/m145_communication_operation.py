@@ -6,6 +6,10 @@ result custody, exact-profile admission, and a gate at the service's actual
 repository mutation calls. Exported bytes stay in the encrypted operation
 result until the local CLI reads them; only their receipt is written to bucket
 history.
+
+Creating a draft and validating a stored record are open to an MCP client.
+The export writes a file, and the two delivery marks record what the person
+says happened with the payer; those three stay with the person's frontend.
 """
 
 from __future__ import annotations
@@ -39,6 +43,7 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.execution_actor import OperationExecutionCallerReader
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.profile_guard import require_access_request_profile_payload
@@ -49,7 +54,8 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_contracts import AccessAction, Availability, DisclosureCategory
+from ..user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, DisclosureCategory
+from ..user_profile.access_errors import ProfileAccessRefusedError
 from ._ports import FicheroBoeRecordRenderer
 from .m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,
@@ -60,6 +66,7 @@ from .m145_communication_contracts import (
     M145_COMMUNICATION_REFUSAL_CODES_BY_OPERATION,
     M145_COMMUNICATION_REQUEST_TYPES,
     M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID,
+    M145CommunicationCreateRequest,
     M145CommunicationExecutionResult,
     M145CommunicationOperationId,
     M145CommunicationOperationResult,
@@ -73,6 +80,10 @@ from .m145_communication_projection import (
 )
 from .m145_communication_records_ports import M145CommunicationRecordsPortsFactory
 
+_MCP_OPERATION_IDS: frozenset[M145CommunicationOperationId] = frozenset(
+    {M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID, M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID}
+)
+
 
 def _resolve_access(
     request: OperationRequest[BaseModel],
@@ -82,9 +93,21 @@ def _resolve_access(
     request_type: type[M145CommunicationRequest],
     permission: AccessAction,
 ) -> ResolvedOperationAccess:
-    require_access_request_profile_payload(
+    """Require the exact profile and whole-profile scope for one command.
+
+    A draft that fills a signed block of the form states a signature, the
+    worker's or the payer's. An MCP client is refused that draft and keeps
+    every other one.
+    """
+    payload = require_access_request_profile_payload(
         request, definition_id=operation_id, payload_type=request_type, access_profile_id=context.profile_id
     )
+    if (
+        context.frontend is OperationFrontendProjection.MCP
+        and isinstance(payload, M145CommunicationCreateRequest)
+        and payload.fills_a_signed_block()
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
     admitted = context.admitted_request
     if admitted is not None and context.action in ADMISSION_REPLAY_ACTIONS:
         require_period_independent_admission(admitted, profile_id=context.profile_id, definition_id=operation_id)
@@ -125,8 +148,12 @@ def _build_definition(
     request_type: type[M145CommunicationRequest],
     records_ports_factory: M145CommunicationRecordsPortsFactory,
     renderer_factory: Callable[[], FicheroBoeRecordRenderer],
+    execution_caller_reader: OperationExecutionCallerReader | None,
 ) -> OperationDefinition:
     mutating = operation_id != M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID
+    frontends = {OperationFrontendProjection.CLI}
+    if operation_id in _MCP_OPERATION_IDS:
+        frontends.add(OperationFrontendProjection.MCP)
     return OperationDefinition(
         definition_id=operation_id,
         request_type=request_type,
@@ -138,6 +165,7 @@ def _build_definition(
             build=lambda: M145CommunicationExecutor(
                 records_ports_factory=records_ports_factory,
                 renderer_factory=renderer_factory,
+                execution_caller_reader=execution_caller_reader,
             ),
         ),
         phase_codes=(operation_id,),
@@ -160,7 +188,7 @@ def _build_definition(
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        permitted_frontends=frozenset(frontends),
         refusal_detail_codes=M145_COMMUNICATION_REFUSAL_CODES_BY_OPERATION[operation_id],
     )
 
@@ -169,8 +197,13 @@ def build_m145_communication_operation_definitions(
     *,
     records_ports_factory: M145CommunicationRecordsPortsFactory,
     renderer_factory: Callable[[], FicheroBoeRecordRenderer],
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> tuple[OperationDefinition, ...]:
-    """Build all five existing CLI identities over the canonical record service."""
+    """Build all five command identities over the canonical record service.
+
+    ``execution_caller_reader`` names the frontend that admitted an execution,
+    so an agent's draft is recorded under its session's label.
+    """
     return tuple(
         sorted(
             (
@@ -179,6 +212,7 @@ def build_m145_communication_operation_definitions(
                     request_type=request_type,
                     records_ports_factory=records_ports_factory,
                     renderer_factory=renderer_factory,
+                    execution_caller_reader=execution_caller_reader,
                 )
                 for operation_id, request_type in M145_COMMUNICATION_REQUEST_TYPES.items()
             ),

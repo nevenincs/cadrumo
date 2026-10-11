@@ -27,10 +27,11 @@ from __future__ import annotations
 import ast
 import json
 import re
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, replace
 from functools import cache
-from typing import Any
+from pathlib import PurePath
+from typing import Annotated, Any, TypeAliasType, get_args, get_origin
 from uuid import UUID
 
 import pytest
@@ -42,10 +43,12 @@ from ...application.operations.access_resolution import OperationAccessContext, 
 from ...application.operations.capabilities import OperationOwnedResource
 from ...application.operations.mcp_admission import (
     MCP_ADMISSION_DECISIONS,
+    MCP_HOST_PATH_FIELDS,
     MCP_OVER_DECLARED_EFFECTS,
     McpAdmissionDecision,
     McpAdmissionPrerequisite,
     McpExclusionReason,
+    McpHostPathFields,
     McpRuling,
     mcp_admission_decision,
 )
@@ -524,11 +527,22 @@ def _extraction_read_place(document: Mapping[str, Any]) -> str:
     return _OFF_HOST_READ if document.get("off_host_provider") is not None else ""
 
 
+_SIGNED_BLOCK = "signed_block"
+
+
+def _m145_signed_block(document: Mapping[str, Any]) -> str:
+    """What a Modelo 145 draft states for the person: the worker's signature or the payer's acknowledgement."""
+    filled = (str(item["casilla_id"]) for item in document.get("field_values", ()))
+    return _SIGNED_BLOCK if any(key.startswith(("comunicacion.firma-", "acuse-recibo.")) for key in filled) else ""
+
+
 _SENSITIVE_ACT_READERS: Mapping[str, Callable[[Mapping[str, Any]], str]] = {
     "ledger.evidence.extract": _extraction_read_place,
     "ledger.own_account": _action_value,
     "ledger.rule.apply": _reaffirming_run,
+    "modelo.m145.create": _m145_signed_block,
     "modelo.m360_solicitud": _action_value,
+    "modelo.observation.local": _action_value,
     "modelo.work.calculate": _calculation_act,
     "user-profile.field-mutation": _fact_section,
     "user-profile.patch": _patch_answer_section,
@@ -575,6 +589,7 @@ _MCP_RESOLUTION_NOT_PROVEN: frozenset[str] = frozenset(
         "ledger.invoice.update",
         "ledger.split.review",
         "modelo.aggregate.capture_received_invoice_retencion",
+        "modelo.observation.local",
         "modelo.reconcile.pull",
         "modelo.work.calculate",
         "modelo.work.compare_taxation",
@@ -699,6 +714,13 @@ on the other frontends, is judged beside the operation, where the record
 exists."""
 
 _SAMPLE_EVIDENCE = "e" * 16
+_M145_DRAFT: Mapping[str, Any] = {"communication_year": 2026, "period_token": "comunicacion", "actor": "synthetic"}
+_M145_WORKER = {"casilla_id": "perceptor.nif", "value": "12345678Z"}
+_LOCAL_OBSERVATION: Mapping[str, Any] = {
+    "modelo": "130",
+    "period": {"filing_year": _PROBE_PERIOD.filing_year, "code": _PROBE_PERIOD.registry_token},
+    "reason": "synthetic",
+}
 
 _SENSITIVE_ACT_SAMPLES: Mapping[str, tuple[Mapping[str, Any], ...]] = {
     "ledger.evidence.extract": tuple(
@@ -715,10 +737,15 @@ _SENSITIVE_ACT_SAMPLES: Mapping[str, tuple[Mapping[str, Any], ...]] = {
         {"action": "undesignate", "role": "charge"},
     ),
     "ledger.rule.apply": ({"reaffirm": True}, {"reaffirm": True, "dry_run": False}),
+    "modelo.m145.create": (
+        {**_M145_DRAFT, "field_values": [{"casilla_id": "comunicacion.firma-lugar", "value": "Madrid"}]},
+        {**_M145_DRAFT, "field_values": [{"casilla_id": "acuse-recibo.tipo-firma", "value": "1"}, _M145_WORKER]},
+    ),
     "modelo.m360_solicitud": (
         {"action": "declare", "filing_year": 2025, "own_account_id": _SAMPLE_ACCOUNT, "facts": _SOLICITUD_FACTS},
         {"action": "remove", "filing_year": 2025},
     ),
+    "modelo.observation.local": ({**_LOCAL_OBSERVATION, "action": "clear"},),
     "modelo.work.calculate": (
         {**_SAMPLE_CALCULATION, "caller_context": _EXPLICIT_CALCULATION},
         {
@@ -756,7 +783,11 @@ _OPEN_ACT_SAMPLES: Mapping[str, tuple[Mapping[str, Any], ...]] = {
     "ledger.evidence.extract": ({"evidence_id": _SAMPLE_EVIDENCE}, {"attachment_id": "0" * 64}),
     "ledger.own_account": ({"action": "list"}, {"action": "show", "own_account_id": _SAMPLE_ACCOUNT}),
     "ledger.rule.apply": ({}, {"reaffirm": False}, {"dry_run": True}, {"dry_run": True, "reaffirm": True}),
+    "modelo.m145.create": ({**_M145_DRAFT, "field_values": [_M145_WORKER]},),
     "modelo.m360_solicitud": ({"action": "list"},),
+    "modelo.observation.local": (
+        {**_LOCAL_OBSERVATION, "action": "record", "casilla_values": [{"casilla_id": "01", "value": "100.00"}]},
+    ),
     "user-profile.field-mutation": ({**_FIELD_BASELINE, "path": "preferences.output_language", "value": "es"},),
     "user-profile.patch": (
         {**_FIELD_BASELINE, "values": [{"question_id": "notes", "value": "synthetic"}]},
@@ -1170,3 +1201,165 @@ def test_the_write_verb_reading_matches_whole_words_only() -> None:
     assert _write_verbs(("ledger.design.assignment", "overview.savepoint")) == frozenset()
     enumerated = _tool_vocabulary({"properties": {"action": {"type": "string", "enum": ["inspect", "submit"]}}})
     assert enumerated == ("inspect", "submit")
+
+
+# ---------------------------------------------------------------------------
+# Host filesystem paths on operations that list MCP
+# ---------------------------------------------------------------------------
+
+_HOST_PATH_FIELD_NAMES: frozenset[str] = frozenset({"certificate_path", "output_path", "output_root", "source_path"})
+"""Field names read as carrying a host path where the declared type does not say so.
+
+A ``pathlib`` annotation identifies a path by its type and needs no name. These
+fields are plain text whose models check, or only describe, a local file or
+directory, so the name is all that identifies them."""
+
+_NOT_A_HOST_PATH: Mapping[str, str] = {
+    "cli_path": "the command path of an operator action",
+    "observation_path": "a logical reference into the encrypted object store, never a file",
+    "observation_paths": "logical references into the encrypted object store, never files",
+    "path": "a dotted profile-fact path or a record's own key path",
+}
+"""Field names that end like a path and are not one, each with the reason."""
+
+_PATH_LIKE_NAME = re.compile(r"(?:^|_)(?:path|paths|root|dir|directory)$")
+
+
+def _unwrapped(annotation: object) -> object:
+    """Strip a type alias or an ``Annotated`` wrapper to the type beneath it."""
+    while True:
+        if isinstance(annotation, TypeAliasType):
+            annotation = annotation.__value__
+        elif get_origin(annotation) is Annotated:
+            annotation = get_args(annotation)[0]
+        else:
+            return annotation
+
+
+def _visit(annotation: object, path: str, name: str, chain: frozenset[type]) -> Iterator[tuple[str, str, object]]:
+    annotation = _unwrapped(annotation)
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        if annotation not in chain:
+            for member, field in annotation.model_fields.items():
+                nested = f"{path}.{member}" if path else member
+                yield from _visit(field.annotation, nested, member, chain | {annotation})
+        return
+    arguments = get_args(annotation)
+    if not arguments:
+        yield path, name, annotation
+        return
+    container = get_origin(annotation) in {tuple, list, set, frozenset, dict}
+    for argument in arguments:
+        yield from _visit(argument, f"{path}[]" if container else path, name, chain)
+
+
+def _leaves(model: type[BaseModel]) -> Iterator[tuple[str, str, object]]:
+    """Yield ``(dotted path, field name, scalar annotation)`` for every scalar member at any depth.
+
+    A member of a sequence or mapping value is marked ``[]`` in the dotted
+    path, and a model nested in a union is entered through each of its branches.
+    """
+    for member, field in model.model_fields.items():
+        yield from _visit(field.annotation, member, member, frozenset({model}))
+
+
+def _is_declared_path(annotation: object) -> bool:
+    return isinstance(annotation, type) and issubclass(annotation, PurePath)
+
+
+def _is_host_path(annotation: object, name: str) -> bool:
+    return _is_declared_path(annotation) or (annotation is str and name in _HOST_PATH_FIELD_NAMES)
+
+
+def _host_path_fields(model: type[BaseModel]) -> frozenset[str]:
+    """The members of a model that carry a host path: a path by declared type, else by a listed name."""
+    return frozenset(path for path, name, annotation in _leaves(model) if _is_host_path(annotation, name))
+
+
+def _unclassified_path_like_fields(model: type[BaseModel]) -> frozenset[str]:
+    """Members named like a path that are neither a host path by type or listed name, nor a listed non-path."""
+    return frozenset(
+        path
+        for path, name, annotation in _leaves(model)
+        if _PATH_LIKE_NAME.search(name) and name not in _NOT_A_HOST_PATH and not _is_host_path(annotation, name)
+    )
+
+
+@cache
+def _public_models(definition_id: str) -> tuple[type[BaseModel], type[BaseModel] | None]:
+    """The registered request model and, when one is declared, the registered result model."""
+    registry = _registry()
+    contract = registry.lookup_public_contract(definition_id)
+    request = registry.lookup_public_schema_binding(contract.request_schema).model_type
+    result = (
+        None
+        if contract.result_schema is None
+        else registry.lookup_public_schema_binding(contract.result_schema).model_type
+    )
+    return request, result
+
+
+def _host_paths_of(definition_id: str) -> McpHostPathFields:
+    request, result = _public_models(definition_id)
+    return McpHostPathFields(
+        request=_host_path_fields(request),
+        result=frozenset() if result is None else _host_path_fields(result),
+    )
+
+
+def test_every_host_path_an_operation_open_to_mcp_takes_or_returns_is_recorded() -> None:
+    """A path-carrying field on a listed operation is named, so file exchange cannot leave it behind."""
+    listed = set(_mcp_listed_ids())
+    found = {definition_id: _host_paths_of(definition_id) for definition_id in sorted(listed)}
+    carrying = {definition_id: fields for definition_id, fields in found.items() if fields.request or fields.result}
+    assert carrying, "no listed operation carries a host path, so the detection found nothing to judge"
+
+    unrecorded = {item: fields for item, fields in carrying.items() if item not in MCP_HOST_PATH_FIELDS}
+    assert not unrecorded, f"operations open to MCP that take or return a host path and are not recorded: {unrecorded}"
+
+    registered = {item.contract.definition_id for item in _registrations()}
+    unregistered = sorted(set(MCP_HOST_PATH_FIELDS) - registered)
+    assert not unregistered, f"recorded host paths for operations that are not registered: {unregistered}"
+    closed = sorted((set(MCP_HOST_PATH_FIELDS) & registered) - listed)
+    assert not closed, f"recorded host paths for operations that no longer list MCP; remove the entry: {closed}"
+
+    differing = {
+        item: {"recorded": MCP_HOST_PATH_FIELDS[item], "declared": found[item]}
+        for item in sorted(set(MCP_HOST_PATH_FIELDS) & listed)
+        if MCP_HOST_PATH_FIELDS[item] != found[item]
+    }
+    assert not differing, f"recorded host path fields that no longer match the definition's models: {differing}"
+
+
+def test_no_listed_operation_has_a_path_named_field_the_detection_has_not_classified() -> None:
+    """A member named like a path must be a host path by type or listed name, or a listed non-path."""
+    unclassified: dict[str, dict[str, frozenset[str]]] = {}
+    for definition_id in _mcp_listed_ids():
+        request, result = _public_models(definition_id)
+        found = {
+            "request": _unclassified_path_like_fields(request),
+            "result": frozenset() if result is None else _unclassified_path_like_fields(result),
+        }
+        if found["request"] or found["result"]:
+            unclassified[definition_id] = found
+    assert not unclassified, f"path-named members the host path detection has not classified: {unclassified}"
+    assert all(reason.strip() for reason in _NOT_A_HOST_PATH.values())
+    assert not _NOT_A_HOST_PATH.keys() & _HOST_PATH_FIELD_NAMES
+
+
+class _SyntheticMember(BaseModel):
+    kept: str
+    stored_to: PurePath
+
+
+class _SyntheticRequest(BaseModel):
+    label: str
+    members: tuple[_SyntheticMember, ...]
+    output_root: str
+    observation_path: str
+    scratch_dir: str
+
+
+def test_the_host_path_detection_finds_a_declared_path_at_depth_and_a_listed_name_and_flags_an_unlisted_one() -> None:
+    assert _host_path_fields(_SyntheticRequest) == frozenset({"members[].stored_to", "output_root"})
+    assert _unclassified_path_like_fields(_SyntheticRequest) == frozenset({"scratch_dir"})

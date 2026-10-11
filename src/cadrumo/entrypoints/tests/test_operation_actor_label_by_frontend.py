@@ -26,6 +26,8 @@ from ...application.inventory.tests.registered_operation_conformance_support imp
     prepare_inventory_operation_conformance_case,
     read_inventory_operation_conformance_ledger,
 )
+from ...application.invoices.catalogue_add_operation import InvoiceAddResult
+from ...application.invoices.catalogue_update_operation import InvoiceUpdateResult
 from ...application.ledger.counterparty_operation import LedgerCounterpartyRequest, LedgerCounterpartyResult
 from ...application.ledger.link_operation import LedgerLinkOperationResult, LedgerLinkRequest
 from ...application.ledger.operator_iva_contracts import LedgerOperatorIvaRequest, LedgerOperatorIvaResult
@@ -341,3 +343,83 @@ def test_reconciliation_pull_records_the_session_label_for_an_agent(
         assert observed.projection.effect is OperationEffect.UPDATED
         assert len(records_after) == len(records_before) + 1
         assert records_after[-1].actor == recorded
+
+
+_PERSON_INVOICE_ACTOR = "runtime"
+_INVOICE_FRONTENDS = pytest.mark.parametrize(
+    ("frontend", "recorded"),
+    [(_MCP, _AGENT_LABEL), (_CLI, _PERSON_INVOICE_ACTOR)],
+    ids=["mcp", "cli"],
+)
+
+
+@_INVOICE_FRONTENDS
+def test_invoice_add_records_the_session_label_for_an_agent(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection,
+    recorded: str,
+) -> None:
+    """The creation event of an added invoice names the derived label; a person's frontend keeps its own."""
+    definition_id = "ledger.invoice.add"
+    with conformance._runtime(
+        tmp_path / "runtime",
+        cleanup=conformance._CloseWitness(),
+        execution_caller_reader=_session_host(definition_id, frontend),
+    ) as (driver, registry, profile_id):
+        definition = {item.definition_id: item for item in registry.definitions}[definition_id]
+        submission = conformance._seeded_conformance_submission(
+            definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
+        )
+
+        submitted, observed = asyncio.run(
+            driver.run(definition_id=definition_id, subject_ref=submission.subject_ref, payload=submission.payload)
+        )
+
+        assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        result = conformance._resolve_result_projection(
+            driver,
+            registry,
+            definition_id=definition_id,
+            operation_id=submitted.receipt.operation_id,
+            terminal_revision=observed.projection.revision,
+            projection_type=InvoiceAddResult,
+        )
+        assert isinstance(result, InvoiceAddResult)
+        assert _event_actors(profile_id, result.bucket_event_ids) == {recorded}
+
+
+@_INVOICE_FRONTENDS
+def test_invoice_update_records_the_session_label_for_an_agent(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection,
+    recorded: str,
+) -> None:
+    """The correction event of an updated invoice names the derived label; a person's frontend keeps its own."""
+    definition_id = "ledger.invoice.update"
+    with conformance._runtime(
+        tmp_path / "runtime",
+        cleanup=conformance._CloseWitness(),
+        execution_caller_reader=_session_host(definition_id, frontend),
+    ) as (driver, registry, profile_id):
+        definition = {item.definition_id: item for item in registry.definitions}[definition_id]
+        submission = conformance._seeded_conformance_submission(
+            definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
+        )
+
+        submitted, observed = asyncio.run(
+            driver.run(definition_id=definition_id, subject_ref=submission.subject_ref, payload=submission.payload)
+        )
+
+        assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        result = conformance._resolve_result_projection(
+            driver,
+            registry,
+            definition_id=definition_id,
+            operation_id=submitted.receipt.operation_id,
+            terminal_revision=observed.projection.revision,
+            projection_type=InvoiceUpdateResult,
+        )
+        assert isinstance(result, InvoiceUpdateResult)
+        assert _event_actors(profile_id, result.bucket_event_ids) == {recorded}

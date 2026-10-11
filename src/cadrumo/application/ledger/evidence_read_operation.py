@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from pathlib import PureWindowsPath
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -32,6 +31,7 @@ from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
+from ..operations.host_path_name import host_path_file_name
 from ..operations.models import (
     OperationFailureErrorCode,
     OperationRequest,
@@ -171,13 +171,6 @@ class LedgerEvidenceRecordProjection(BaseModel):
         )
 
 
-def _source_file_name(source_path: str) -> str | None:
-    """Return the last component of the typed path, on either path convention."""
-    # The path was typed on whichever machine added the evidence. The Windows
-    # reading splits on both separators, so it finds the name in either form.
-    return PureWindowsPath(source_path).name or None
-
-
 class LedgerEvidenceAgentRecordProjection(BaseModel):
     """One evidence record as an agent receives it: every field but the directory it was added from."""
 
@@ -211,7 +204,7 @@ class LedgerEvidenceAgentRecordProjection(BaseModel):
         return cls(
             evidence_id=record.evidence_id,
             bucket_id=record.bucket_id,
-            source_file_name=_source_file_name(record.source_path),
+            source_file_name=host_path_file_name(record.source_path),
             source_sha256=record.source_sha256,
             attachment_id=record.attachment_id,
             media_kind=record.media_kind,

@@ -35,6 +35,7 @@ from ...domain.iva.schema import IvaCategory
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -66,13 +67,21 @@ from .simplificada_advisory import SimplificadaTaxIdAdvisory, resolve_simplifica
 
 _DUPLICATE_INVOICE_TRANSLATION = "application.invoices.creation.errors.duplicate_invoice"
 
+_PERSON_FRONTEND_ACTOR = "runtime"
+
 
 class InvoiceAddExecutor:
     """Call the canonical creation functions under the runtime commit fence."""
 
-    def __init__(self, factory: CatalogueCreationPortsFactory) -> None:
-        """Retain the worker's bucket-scoped creation-port composition."""
+    def __init__(
+        self,
+        factory: CatalogueCreationPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
+        """Retain the worker's bucket-scoped creation-port composition and caller reader."""
         self._factory = factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -88,6 +97,7 @@ class InvoiceAddExecutor:
         await context.events.phase(INVOICE_ADD_OPERATION_DEFINITION_ID)
 
         authority_operation = context.authority_operation
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=_PERSON_FRONTEND_ACTOR)
         try:
             ports, invoice, advisory_required = await asyncio.to_thread(
                 _prepare_invoice_add,
@@ -108,6 +118,7 @@ class InvoiceAddExecutor:
                 ports=ports,
                 invoice=invoice,
                 advisory_required=advisory_required,
+                actor=actor,
             ),
             task_name="invoice-add-publication",
         )
@@ -132,9 +143,10 @@ def _persist_invoice_add(
     authority_operation: PinnedAuthorityOperation,
     ports: CatalogueCreationPorts,
     invoice: Invoice,
+    actor: str,
 ) -> CatalogueInvoiceCreateResult:
     with validating_governed_facts(authority_operation):
-        return create_catalogue_invoice(invoice=invoice, ports=ports, actor="runtime")
+        return create_catalogue_invoice(invoice=invoice, ports=ports, actor=actor)
 
 
 async def _commit_invoice_add(
@@ -146,6 +158,7 @@ async def _commit_invoice_add(
     ports: CatalogueCreationPorts,
     invoice: Invoice,
     advisory_required: bool,
+    actor: str,
 ) -> str | OperationRefusalEvidence:
     async with context.cancellation.irreversible_section():
         if require_active_bucket_id() != profile:
@@ -157,6 +170,7 @@ async def _commit_invoice_add(
                 authority_operation=authority_operation,
                 ports=ports,
                 invoice=invoice,
+                actor=actor,
             )
         except InvoiceValidationError as error:
             if error.translated_message != _DUPLICATE_INVOICE_TRANSLATION:
@@ -329,15 +343,24 @@ def _require_prepared_invoice_profile(invoice: Invoice, profile: str) -> None:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
-def build_invoice_add_definition(factory: CatalogueCreationPortsFactory) -> OperationDefinition:
-    """Declare a durable, guarded add with honest uncertain effects."""
+def build_invoice_add_definition(
+    factory: CatalogueCreationPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
+    """Declare a durable, guarded add with honest uncertain effects.
+
+    ``execution_caller_reader`` names the frontend and session that admitted an
+    execution, so an agent's creation event is recorded under its session's
+    label.
+    """
     return build_single_phase_definition(
         definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
         request_type=InvoiceAddRequest,
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=InvoiceAddExecutionResult,
         executor_type=InvoiceAddExecutor,
-        build=lambda: InvoiceAddExecutor(factory),
+        build=lambda: InvoiceAddExecutor(factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         permitted_frontends=ALL_OPERATION_FRONTENDS,
         refusal_detail_codes=frozenset({INVOICE_ADD_VALIDATION_REFUSAL_CODE}),

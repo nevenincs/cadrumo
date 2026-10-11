@@ -239,8 +239,8 @@ _LEDGER_ENTRIES: Final = (
     _admit("ledger.check", _READS),
     _admit("ledger.classify.bulk", _WRITES),
     _admit("ledger.classify.iva-derive", _WRITES),
-    # The model-backed reviews use the reader on this machine.
-    _admit("ledger.classify.review", _WRITES),
+    # The model-backed reviews call the local reader at its endpoint setting, which can name another host.
+    _admit("ledger.classify.review", _WRITES_ONLINE),
     _admit("ledger.classify.single", _WRITES, _SAFEGUARD),
     _admit("ledger.counterparty", _WRITES),
     # Detach removes one row's link and keeps the attachment's stored bytes.
@@ -279,7 +279,7 @@ _LEDGER_ENTRIES: Final = (
     _admit("ledger.rule.list", _READS),
     # A split keeps its parent stored; only the approval-bound merge recombines the cohort.
     _admit("ledger.split.manual", _WRITES),
-    _admit("ledger.split.review", _WRITES),
+    _admit("ledger.split.review", _WRITES_ONLINE),
     _admit("ledger.stash", _WRITES),
     _admit("ledger.status", _READS),
     _admit("ledger.track", _READS),
@@ -397,12 +397,16 @@ _MODELO_WORK: Final = (
     _exclude("modelo.edit.preflight", _READS, _CANNOT_RUN),
     _exclude("modelo.edit.renew", _READS, _CANNOT_RUN),
     _approve("modelo.export", _WRITES, _FILES, _SAFEGUARD),
-    _admit("modelo.filing_record.import", _WRITES, _FILES),
+    # Every import that writes leaves a record that reads as confirmed by the tax agency, from
+    # values the caller states: it confirms or retires a pending local filing in the same act.
+    _approve("modelo.filing_record.import", _WRITES, _FILES),
     _admit("modelo.filing_record.list", _READS),
     _admit("modelo.filing_record.view", _READS),
     _serve_by("modelo.history", "modelo.history.timeline"),
     _admit("modelo.history.timeline", _READS),
-    _admit("modelo.observation.local", _WRITES, _CHECKLIST),
+    # An operator figure is never official evidence and blocks the verification that needs it.
+    # Clearing one keeps no copy. An agent's figure also never replaces a local filing's observation.
+    _admit("modelo.observation.local", _WRITES, sensitive=("clear",)),
     _admit("modelo.project", _WRITES_ONLINE),
     # The chain calculates and verifies before it exports.
     _approve("modelo.quickfile", _WRITES_ONLINE, _FILES, _SAFEGUARD),
@@ -467,11 +471,12 @@ _MODELO_RECORDS: Final = (
     _approve("modelo.iva-wallet.correct", _WRITES, _SAFEGUARD),
     _approve("modelo.iva-wallet.override", _WRITES, _SAFEGUARD),
     _approve("modelo.iva-wallet.seed", _WRITES, _SAFEGUARD),
-    _admit("modelo.m145.create", _WRITES, _CHECKLIST),
+    # A draft that fills the worker's signature block or the payer's acknowledgement states a signature.
+    _admit("modelo.m145.create", _WRITES, sensitive=("signed_block",)),
     _admit("modelo.m145.export", _WRITES, _FILES),
     _approve("modelo.m145.mark_delivered_to_payer", _WRITES),
     _approve("modelo.m145.mark_locally_completed", _WRITES),
-    _admit("modelo.m145.validate", _READS, _CHECKLIST),
+    _admit("modelo.m145.validate", _READS),
     _admit("modelo.m360_solicitud", _WRITES, sensitive=("declare", "remove")),
     _admit("modelo.review_package.build", _WRITES, _FILES),
     _approve("modelo.review_package.counter_sign", _WRITES, _FILES),
@@ -554,6 +559,65 @@ executor.
 """
 
 
+@dataclass(frozen=True, slots=True)
+class McpHostPathFields:
+    """The members of one operation's request and result that carry a host filesystem path.
+
+    A member is named by its dotted path from the model root, and ``[]`` marks
+    a member of a sequence or mapping value.
+    """
+
+    request: frozenset[str] = frozenset()
+    result: frozenset[str] = frozenset()
+
+
+MCP_HOST_PATH_FIELDS: Final[Mapping[str, McpHostPathFields]] = MappingProxyType(
+    {
+        # A capture's output root is checked for its form and echoed. The captured
+        # records go to the profile's encrypted object store, and nothing is
+        # opened or written under the root.
+        "live.filed-capture.bulk": McpHostPathFields(
+            request=frozenset({"output_root"}), result=frozenset({"output_root"})
+        ),
+        "live.filed-capture.single": McpHostPathFields(
+            request=frozenset({"output_root"}), result=frozenset({"output_root"})
+        ),
+        "live.filed-capture.source": McpHostPathFields(
+            request=frozenset({"output_root"}), result=frozenset({"output_root"})
+        ),
+        "live.filed-history.pull": McpHostPathFields(request=frozenset({"output_root"})),
+        "live.iva-wallet.evidence-capture": McpHostPathFields(
+            request=frozenset({"output_root"}), result=frozenset({"output_root"})
+        ),
+        "live.iva-wallet.history-capture": McpHostPathFields(
+            request=frozenset({"output_root"}), result=frozenset({"output_root"})
+        ),
+        # An agent's execution seals the stored file name alone in this member.
+        "ledger.evidence.update": McpHostPathFields(result=frozenset({"record.source_path"})),
+        # The import opens and reads the named file and returns its path; a listing
+        # and a pull return the reference an earlier import recorded. An agent's
+        # execution seals a typed path to its file name in each result member;
+        # a handle on stored evidence names no directory and passes through.
+        "modelo.reconcile.import": McpHostPathFields(
+            request=frozenset({"source_path"}), result=frozenset({"source_path"})
+        ),
+        "modelo.reconcile.list": McpHostPathFields(result=frozenset({"reconciliations[].source_path"})),
+        "modelo.reconcile.pull": McpHostPathFields(result=frozenset({"source_path"})),
+        # The configured certificate file's path appears in the stored authentication
+        # state. An agent's execution seals the file name alone in these members.
+        "auth.local-read": McpHostPathFields(result=frozenset({"status.certificate_path", "test.certificate_path"})),
+    }
+)
+"""Operations open to MCP whose request or result carries a host filesystem path.
+
+No operation open to MCP takes a host path or returns one until how files reach
+an agent is decided, so each entry is a recorded exception, not a permission.
+An entry leaves this mapping when its definition stops carrying the path or
+stops listing MCP; nothing is added without reading the executor. A test holds
+the mapping to the registered models in both directions.
+"""
+
+
 def mcp_admission_decision(definition_id: str) -> McpAdmissionDecision:
     """Return the recorded decision for one operation, or fail closed."""
     try:
@@ -564,10 +628,12 @@ def mcp_admission_decision(definition_id: str) -> McpAdmissionDecision:
 
 __all__ = [
     "MCP_ADMISSION_DECISIONS",
+    "MCP_HOST_PATH_FIELDS",
     "MCP_OVER_DECLARED_EFFECTS",
     "McpAdmissionDecision",
     "McpAdmissionPrerequisite",
     "McpExclusionReason",
+    "McpHostPathFields",
     "McpRuling",
     "mcp_admission_decision",
 ]

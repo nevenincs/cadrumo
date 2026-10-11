@@ -55,7 +55,12 @@ _CasillaValues = Annotated[
 
 
 class ModeloLocalObservationMutationRequest(BaseModel):
-    """One profile-bound record or clear request with securely stored values."""
+    """One profile-bound record or clear request with securely stored values.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries, and it
+    is refused ``clear``, which removes a figure and keeps no copy of it.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 

@@ -18,6 +18,7 @@ from ...domain.invoices.enums import PaymentStatus
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -34,6 +35,8 @@ from .catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
 from .catalogue_read_projection import CatalogueInvoiceSnapshot
 
 INVOICE_UPDATE_OPERATION_DEFINITION_ID = "ledger.invoice.update"
+
+_PERSON_FRONTEND_ACTOR = "runtime"
 
 
 class InvoiceUpdateValues(BaseModel):
@@ -124,9 +127,15 @@ class InvoiceUpdateResult(BaseModel):
 class InvoiceUpdateExecutor:
     """Use the existing lifecycle service under the runtime commit fence."""
 
-    def __init__(self, factory: CatalogueLifecyclePortsFactory) -> None:
-        """Retain the worker's lifecycle port composition."""
+    def __init__(
+        self,
+        factory: CatalogueLifecyclePortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
+        """Retain the worker's lifecycle port composition and caller reader."""
         self._factory = factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(self, request: OperationRequest[InvoiceUpdateRequest], context: OperationExecutorContext) -> str:
         """Keep the commit fence through correction and encrypted receipt publication."""
@@ -136,6 +145,7 @@ class InvoiceUpdateExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(INVOICE_UPDATE_OPERATION_DEFINITION_ID)
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=_PERSON_FRONTEND_ACTOR)
 
         def update() -> InvoiceUpdateResult:
             ports = self._factory(bucket_id=profile)
@@ -144,7 +154,7 @@ class InvoiceUpdateExecutor:
                 invoice_id=payload.invoice_id,
                 patch=payload.patch.to_patch(),
                 ports=ports,
-                actor="runtime",
+                actor=actor,
             )
             return InvoiceUpdateResult(
                 profile_id=payload.profile_id,
@@ -163,15 +173,24 @@ class InvoiceUpdateExecutor:
         return await await_cancellation_complete(commit(), task_name="invoice-update-publication")
 
 
-def build_invoice_update_definition(factory: CatalogueLifecyclePortsFactory) -> OperationDefinition:
-    """Declare one durable, guarded update with honest uncertain effects."""
+def build_invoice_update_definition(
+    factory: CatalogueLifecyclePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
+    """Declare one durable, guarded update with honest uncertain effects.
+
+    ``execution_caller_reader`` names the frontend and session that admitted an
+    execution, so an agent's correction event is recorded under its session's
+    label.
+    """
     return build_single_phase_definition(
         definition_id=INVOICE_UPDATE_OPERATION_DEFINITION_ID,
         request_type=InvoiceUpdateRequest,
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=InvoiceUpdateResult,
         executor_type=InvoiceUpdateExecutor,
-        build=lambda: InvoiceUpdateExecutor(factory),
+        build=lambda: InvoiceUpdateExecutor(factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         permitted_frontends=ALL_OPERATION_FRONTENDS,
     )

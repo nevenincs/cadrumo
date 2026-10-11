@@ -126,6 +126,26 @@ def test_bulk_classification_records_the_session_label_for_an_agent(
 
 
 @_FRONTENDS
+def test_bulk_classification_records_a_command_line_only_for_the_command_line(
+    tmp_path: Path, operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
+) -> None:
+    """An agent sends the table itself, so its events name the operation rather than the file command."""
+    projection, events = _run(
+        tmp_path,
+        operation,
+        definition_id="ledger.classify.bulk",
+        frontend=frontend,
+        projection_type=LedgerBulkClassifyProjection,
+    )
+
+    assert projection.result is not None
+    assert projection.result.bucket_event_ids
+    by_id = {event.event_id: event for event in events}
+    recorded = "ledger.classify.bulk" if frontend is _MCP else "aeat app ledger classify --file"
+    assert {by_id[event_id].payload["source_command"] for event_id in projection.result.bucket_event_ids} == {recorded}
+
+
+@_FRONTENDS
 def test_rule_add_records_the_session_label_for_an_agent(
     tmp_path: Path, operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
 ) -> None:

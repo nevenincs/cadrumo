@@ -22,7 +22,7 @@ from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEv
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
+from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import TransactionLifecycleLineageEntry
 from ...domain.transactions.models import Transaction, TransactionCatalogue
@@ -144,17 +144,26 @@ def restore_manual_transaction(
     :func:`~cadrumo.application.ledger.actions_split_merge.split_transaction` /
     :func:`~cadrumo.application.ledger.actions_split_merge.merge_transactions` move those rows.
 
+    A merge archives the split parent and every child and records one merged
+    row that restates the parent's money. Restoring any of those originals
+    beside an active merged row would count the same money twice, so it is
+    refused and the refusal names the merged row. Once the merged row is
+    archived or removed, the originals can be restored, and the merged row
+    cannot be restored while any original is active.
+
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`
     reflecting the restored, now-active transaction state.
 
     Raises:
         TransactionValidationError: when the row is already active (with an
-            instructive message), when the row is part of split lineage, or
-            when a finalized-modelo reference blocks the restore.
+            instructive message), when the row is part of split lineage, when
+            restoring it would count a merge's money twice, or when a
+            finalized-modelo reference blocks the restore.
         TransactionNotFoundError: when no transaction matches ``transaction_id``.
     """
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
-    current = require_transaction(repository.load(), transaction_id)
+    catalogue = repository.load()
+    current = require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
             "ledger transaction is already active; restore applies only to a stashed or archived row",
@@ -173,6 +182,7 @@ def restore_manual_transaction(
                 "state": current.lifecycle_state.value,
             },
         )
+    _require_no_double_count_with_merge(catalogue, current, bucket_id=bucket_id)
     return _transition_manual_transaction_lifecycle(
         bucket_id=bucket_id,
         transaction_id=transaction_id,
@@ -719,6 +729,75 @@ def reset_ledger_catalogue(
         reset=True,
         event_ids=tuple(event.event_id for event in events),
     )
+
+
+def _require_no_double_count_with_merge(
+    catalogue: TransactionCatalogue,
+    current: Transaction,
+    *,
+    bucket_id: str,
+) -> None:
+    """Refuse a restore that would leave a merge's original and merged rows both active.
+
+    A merge records its cohort on the merged row (split group, role ``MERGED``
+    and the child ids as siblings); the archived children and parent carry the
+    same split group. That lineage, not the archive event, is what ties an
+    archived row to the merge, so an ordinarily archived child of a group that
+    was never merged is not affected.
+    """
+    lineage = current.split_lineage
+    if lineage is None:
+        return
+    if lineage.role is SplitRole.MERGED:
+        active_originals = tuple(
+            sorted(
+                other.transaction_id
+                for other in catalogue.values()
+                if other.lifecycle_state is TransactionLifecycleState.ACTIVE
+                and other.split_lineage is not None
+                and other.split_lineage.split_group_id == lineage.split_group_id
+                and (
+                    other.split_lineage.role is SplitRole.PARENT
+                    or other.transaction_id in lineage.sibling_transaction_ids
+                )
+            ),
+        )
+        if active_originals:
+            raise TransactionValidationError(
+                "this merged ledger transaction replaced rows that are active again; restoring it would count "
+                "the same money twice. Archive the active originals "
+                f"({', '.join(active_originals)}) first",
+                context={
+                    "bucket_id": bucket_id,
+                    "transaction_id": current.transaction_id,
+                    "transaction_ids": ",".join(active_originals),
+                },
+            )
+        return
+    active_merged = tuple(
+        sorted(
+            other.transaction_id
+            for other in catalogue.values()
+            if other.lifecycle_state is TransactionLifecycleState.ACTIVE
+            and other.split_lineage is not None
+            and other.split_lineage.role is SplitRole.MERGED
+            and other.split_lineage.split_group_id == lineage.split_group_id
+            and (
+                lineage.role is SplitRole.PARENT
+                or current.transaction_id in other.split_lineage.sibling_transaction_ids
+            )
+        ),
+    )
+    if active_merged:
+        raise TransactionValidationError(
+            f"ledger transaction was archived by a merge and merged row {active_merged[0]} is still active; "
+            "restoring it would count the same money twice. Archive the merged row first",
+            context={
+                "bucket_id": bucket_id,
+                "transaction_id": current.transaction_id,
+                "transaction_ids": ",".join(active_merged),
+            },
+        )
 
 
 def _transition_manual_transaction_lifecycle(

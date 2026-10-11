@@ -27,13 +27,13 @@ from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
-from ...operations.execution_actor import OperationExecutionCaller
+from ...operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...operations.interactions import OperationInteractionRequest
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ...operations.persistence.journal import serialize_operation_operand
 from ...operations.registry import OperationFrontendProjection, OperationRegistry, operation_public_schema_reference
-from ...user_profile.access_contracts import AccessAction, Availability, SessionKind
+from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability, SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import llm_review_execution as review_runtime
 from .. import llm_review_operation as operation
@@ -856,3 +856,151 @@ async def test_terminal_preview_cannot_be_reopened_as_pending_review_or_resumed_
     with pytest.raises(ValueError, match="terminal preview"):
         await LedgerLlmReviewExecutor(case.factory).resume(case.request, case.checkpoint(operand), case.context)
     assert not case.events.effects and case.operands.published is None
+
+
+_THIS_MACHINE = "http://127.0.0.1:11434/api/chat"
+_ANOTHER_MACHINE = "http://reader.example.invalid:11434/api/chat"
+_FIRST_PHASE = "ledger.llm.acquire"
+
+
+def _reader_endpoint(case: _Case, endpoint: str) -> None:
+    """Point the on-host reader's setting at ``endpoint``; the other ports stay as the case built them."""
+    case.ports = LedgerLlmOperationPorts(
+        ledger=case.ledger,
+        llm=case.ports.llm,
+        settings=Settings.model_construct(cadrumo_llm_ollama_chat_url=endpoint),
+    )
+
+
+def _model_calls(monkeypatch: pytest.MonkeyPatch, case: _Case, mode: _Mode) -> list[dict[str, object]]:
+    """Stand in for the one function that hands the person's text to the reader, and record each call."""
+    calls: list[dict[str, object]] = []
+    suggestion = _suggestion(case.baseline, mode)
+
+    def producer(**kwargs: object) -> LedgerLlmSuggestion:
+        calls.append(kwargs)
+        return suggestion
+
+    terminal = (
+        "suggest_evidence_split"
+        if mode in {"auto_split", "split"}
+        else "saturate_llm_classification"
+        if mode == "saturated"
+        else "suggest_llm_classification"
+    )
+    monkeypatch.setattr(review_runtime, terminal, producer)
+    monkeypatch.setattr(review_runtime, "require_active_bucket_id", lambda: str(_PROFILE))
+    return calls
+
+
+def _session_host_for(frontend: OperationFrontendProjection) -> OperationExecutionCallerReader:
+    def read(identity: OperationIdentity) -> OperationExecutionCaller:
+        return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.HUMAN, client_id=_SESSION_CLIENT)
+
+    return read
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("mode", ["classification", "saturated", "auto_split", "split"])
+@pytest.mark.parametrize("preview", [False, True], ids=["review", "preview"])
+async def test_an_agents_review_is_refused_before_the_model_when_the_reader_is_on_another_host(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    mode: _Mode,
+    preview: bool,
+) -> None:
+    case = _Case(authority_operation, mode)
+    case.payload = LedgerLlmReviewRequest.model_validate({**case.payload.model_dump(), "preview": preview})
+    case.request = case.request.model_copy(update={"payload": case.payload})
+    _reader_endpoint(case, _ANOTHER_MACHINE)
+    calls = _model_calls(monkeypatch, case, mode)
+    executor = LedgerLlmReviewExecutor(
+        case.factory, execution_caller_reader=_session_host_for(OperationFrontendProjection.MCP)
+    )
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        await executor.execute(case.request, case.context)
+
+    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+    assert calls == []
+    assert case.repository.loads == 0
+    assert case.events.phases == [] and case.events.effects == []
+    assert case.operands.published is None and case.interactions.published is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("endpoint", [_THIS_MACHINE, "http://localhost:11434/api/chat", "http://[::1]:11434/api/chat"])
+@pytest.mark.parametrize("mode", ["classification", "auto_split"])
+async def test_an_agents_review_proceeds_when_the_reader_is_on_this_machine(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    endpoint: str,
+    mode: _Mode,
+) -> None:
+    case = _Case(authority_operation, mode)
+    _reader_endpoint(case, endpoint)
+    calls = _model_calls(monkeypatch, case, mode)
+    executor = LedgerLlmReviewExecutor(
+        case.factory, execution_caller_reader=_session_host_for(OperationFrontendProjection.MCP)
+    )
+
+    await executor.execute(case.request, case.context)
+
+    assert len(calls) == 1 and calls[0]["reviewed_transaction"] is case.baseline
+    assert case.events.phases == [_FIRST_PHASE, "ledger.llm.review"]
+    assert case.interactions.published is not None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "frontend", [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, None], ids=["cli", "tui", "unhosted"]
+)
+@pytest.mark.parametrize("endpoint", [_THIS_MACHINE, _ANOTHER_MACHINE], ids=["this-machine", "another-host"])
+async def test_a_persons_review_goes_to_the_configured_reader_wherever_it_is(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection | None,
+    endpoint: str,
+) -> None:
+    case = _Case(authority_operation)
+    _reader_endpoint(case, endpoint)
+    calls = _model_calls(monkeypatch, case, "classification")
+    executor = LedgerLlmReviewExecutor(
+        case.factory, execution_caller_reader=None if frontend is None else _session_host_for(frontend)
+    )
+
+    await executor.execute(case.request, case.context)
+
+    assert len(calls) == 1
+    assert case.events.phases == [_FIRST_PHASE, "ledger.llm.review"]
+    assert case.interactions.published is not None
+
+
+@pytest.mark.asyncio
+async def test_an_agents_resume_commits_without_asking_where_the_reader_is(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Resume holds a reviewed decision and contacts no reader, so the endpoint does not bear on it."""
+    case = _Case(authority_operation, "auto_split")
+    _reader_endpoint(case, _ANOTHER_MACHINE)
+    operand = case.operand("auto_split", children=1)
+    checkpoint = case.checkpoint(operand, "apply")
+    written: list[object] = []
+
+    def writer(_suggestion: object, **kwargs: object) -> BaseModel:
+        written.append(kwargs["actor"])
+        return ManualLedgerTransactionResult(
+            ref=BucketTransactionRef(bucket_id=str(_PROFILE), transaction_id=case.baseline.transaction_id),
+            transaction=case.baseline,
+            bucket_event_ids=("e" * 64,),
+        )
+
+    monkeypatch.setattr(review_runtime, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(review_runtime, "execute_reviewed_decision", writer)
+    executor = LedgerLlmReviewExecutor(
+        case.factory, execution_caller_reader=_session_host_for(OperationFrontendProjection.MCP)
+    )
+
+    assert await executor.resume(case.request, checkpoint, case.context)
+    assert written == [f"agent:mcp.human.{_SESSION_CLIENT}"]
