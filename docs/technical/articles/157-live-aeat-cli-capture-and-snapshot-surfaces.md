@@ -70,5 +70,4 @@ These CLI modules rely on registered exact-profile runtime operations, the live 
 - `src/cadrumo/entrypoints/cli/_app_live_payloads_support.py`
 - `src/cadrumo/entrypoints/cli/_app_live_portals_cli.py`
 - `src/cadrumo/entrypoints/cli/_app_live_portals_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_app_live_portals_payloads.py`
 <!-- /preserved:article -->

@@ -3,7 +3,7 @@
 The workbench screen holds no repository, registry or custody. Every read it
 needs runs here, inside the profile worker under the pinned authority, as a
 recorded read-only operation whose typed result only a password-authenticated
-human CLI or TUI session may receive:
+human session may receive, on any frontend:
 
 - ``modelo.work.form`` reads the editor form, admitting the edit baseline the
   session's parses and applies are judged against;

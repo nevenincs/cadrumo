@@ -38,7 +38,7 @@ class ProfilePassphraseRotationResultProjection(BaseModel):
 def resolve_profile_rotation_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Resolve only exact-profile human CLI/TUI rotation actions and output."""
+    """Resolve only exact-profile human-session rotation actions and output."""
     payload = request.payload
     if type(payload) is not ProfilePassphraseRotationOperationRequest:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
