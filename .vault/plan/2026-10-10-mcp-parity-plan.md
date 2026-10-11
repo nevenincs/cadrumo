@@ -7,16 +7,18 @@ tier: L2
 related:
   - '[[2026-10-10-mcp-parity-parity-mechanism-adr]]'
   - '[[2026-10-10-mcp-parity-shared-sign-in-door-adr]]'
-  - '[[2026-10-10-mcp-parity-admission-rulings-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
   - '[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
+  - '[[2026-10-11-mcp-parity-full-parity-adr]]'
 modified: '2026-10-11'
 body_schema: body-v2
-body_hash: 'sha256:37a75e51f497ae4db77df8cefa8fed4601805822e464455997ce5ef67851d99a'
+body_hash: 'sha256:349eeafbaf4b138e83278668ca86e33c828153c2f9d000814c2b4afb84e9a06c'
 ---
+
+<!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
 
 # `mcp-parity` plan
 
@@ -27,6 +29,8 @@ Make the MCP server a full interface for the tax work the command line and termi
 Approved 2026-10-10
 
 The owner approved this plan first-hand on 2026-10-10, after reading its summary and the open decisions ("1 approved"), and set the execution pipeline: sonnet at high effort for well-defined, unambiguous tasks, opus for problem solving, and haiku for tool calls, testing and summarising code and context.
+
+Amended 2026-10-11 on the owner's first-hand ruling, which is the authorization for phase `P08` and for retiring the Steps it replaces: "MCP should aboslutely NEVER refuse anyhting the cli can do. stop underminig the program", and "I want the cli tui and mcp to be partify. clic can do everythign so should the tui and mcp. no more qesitons". `2026-10-11-mcp-parity-full-parity-adr` records it and supersedes the admission rulings; the four proposed records on the approval step, file exchange, replay identity and agent provenance are rejected. The phases on the approval step and on admitting sensitive acts behind it are removed, with the Steps that waited on those records. Statements below that an operation is refused, held back, admitted behind approval or waits on file exchange describe the plan as first approved and no longer hold: every operation the command line can submit is submittable from the terminal interface and from MCP with the same decision, effect and result. Refusals built in earlier Steps of this plan are removed in `P08`.
 
 The goal is the owner's: the MCP server reaches every tax capability that the command line and terminal interface offer, through the operation registry and the sixteen existing tools, and never through the command line. The end of the work is a calculated and verified declaration and a local export. Fixed boundary, not open to any Step: nothing here designs, builds or supports sending data to the tax agency in a way that changes its state. `modelo.export` writes a local file and `modelo.work.file` writes a local record. The only work that touches that boundary is `P01.S01`, which adds a test that fails if any operation or tool ever declares a submission.
 
@@ -76,25 +80,6 @@ Delivers the recorded MCP decision for every operation, the refusal of the sensi
 - [x] `P01.S11` - Record in the decision table the owner ruling that an agent may originate modelo.reconcile.import, and keep it admitted with its findings presented for the person to review or approve; `src/cadrumo/application/modelo/reconciliation_import_operation.py`.
 - [x] `P01.S45` - Declare a typed subject-reference form on the operation definition and its public contract, filled from the validator of each family, and state it in describe, with one contract cutover for every definition; `src/cadrumo/application/operations/operation_definition.py`.
 
-### Phase `P03` - decide and build the approval step and the other first-release prerequisites
-
-Delivers accepted decision records for the approval step taken in Cadrumo, file exchange and the replay identity, and builds the approval step, the hosted assistant's process identity, the runtime refusal of reserved operations from it, and the stored sign-in for a command run without a console.
-
-- [ ] `P03.S20` - Record and have accepted the decision on the approval step taken in Cadrumo: where it is shown, how it binds the exact act, how it attaches to an operation submitted through MCP and to a command run in the assistant terminal, and the reserved set Cadrumo publishes for the command line; `.vault/adr`.
-- [ ] `P03.S21` - Record and have accepted the file-exchange decision: the per-profile folder, the standing consent, the lifetime of plaintext, and which documents an agent may originate; `.vault/adr`.
-- [ ] `P03.S22` - Record and have accepted the decision on the caller-supplied replay identity for effectful submissions on the MCP frontend, extending the accepted ledger-add idempotency ruling without a content-derived key; `.vault/adr`.
-- [ ] `P03.S23` - Record and have accepted, for both doors, the provenance rule for amounts an agent states: marked from the session as entered by an agent, with the registry still deriving the regulated figure wherever it can; `.vault/adr`.
-- [ ] `P03.S24` - Build the hosted assistant process identity and the runtime refusal of reserved operations from it unless the person approved, including the fact carried forward by the Cadrumo process that serves a relayed surface; `src/cadrumo/entrypoints/runtime`.
-- [ ] `P03.S25` - Build the approval step in Cadrumo as the accepted decision defines it, shown with the exact act and enforced by the runtime; `src/cadrumo/entrypoints/runtime`.
-- [ ] `P03.S26` - Admit the stored sign-in for a command the hosted assistant runs without a console, and amend the automatic-reuse rule of the sign-in record to match; `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`.
-
-### Phase `P07` - admit the sensitive acts behind the approval of the person
-
-Delivers local export, the local filed record and every destructive, election, attestation, consent and publication operation on the MCP frontend, each runnable only after the person approves that exact act in Cadrumo.
-
-- [ ] `P07.S40` - Attach the approval step to operations submitted through MCP and admit modelo.export, modelo.work.file and modelo.quickfile behind it, with the elections and the bank account as inputs only the person supplies; all three end at local artefacts and submit nothing; also quickfile_operation.py; `src/cadrumo/application/modelo/operation_definitions.py`.
-- [ ] `P07.S41` - Admit behind the approval step the other sensitive operations of the rulings: the four destructive ledger operations, ledger.invoice.remove, ledger.evidence.confirm, the off-machine read of ledger.evidence.extract, a rule run that reaffirms, the writes of ledger.own_account and modelo.m360_solicitud, the three prorrata elections, modelo.work.discard, modelo.work.amend, a calculation that states its own inputs or an election, modelo.filing_record.import, clearing a local observation and recording over a pending filing's observation, a signed Modelo 145 draft, the three IVA wallet writes, the attestation and marker operations, review-package signing and sharing with the recipient add and remove, Google publication, the profile archive operations, auth.session.reset and the capability opt-ins; `src/cadrumo/application`.
-
 ### Phase `P02` - open the shared sign-in door to the MCP server
 
 Delivers an MCP server that resumes the person's sign-in for the exact profile, answers its tool list with no session, and stops when the sign-in ends.
@@ -122,8 +107,6 @@ Delivers the ratio, work, workflow and evidence reads on the MCP frontend, each 
 Delivers the ledger entry, ratio, rule, attachment, evidence and reversible lifecycle writes on the MCP frontend with their command-line safeguards moved into the operations, so that an agent can operate the whole ledger.
 
 - [x] `P05.S30` - Move the validations the command line performs before submitting ledger add, update and single classification into those operations, with the same refusals; `src/cadrumo/entrypoints/cli/_ledger.py`.
-- [ ] `P05.S31` - Admit ledger.add, ledger.update, ledger.classify.single and ledger.allocate with attribution and provenance taken from the session and the replay identity required; also update_operation.py, classify_operation.py and allocate_operation.py; `src/cadrumo/application/ledger/add_operation.py`.
-- [ ] `P05.S32` - Admit ledger.classify.bulk together with ledger.classify.single, once the replay-identity and provenance decisions are accepted: it is the same write for many rows, replaces a classification made by hand and lets a row state tax figures; its resolver no longer refuses other frontends and it applies the entry rules to every row on every frontend; `src/cadrumo/application/ledger/bulk_classify_operation.py`.
 - [x] `P05.S33` - Admit ledger.ratios.set, its inverse ledger.ratios.unset, ledger.rule.add and ledger.rule.apply; also rule_operation.py; `src/cadrumo/application/ledger/ratios_operation.py`.
 - [x] `P05.S34` - Admit ledger.attach and ledger.detach, which act on stored evidence by identifier, after the evidence reads; `src/cadrumo/application/ledger/attachment_mutation_operation.py`.
 - [x] `P05.S35` - Move the confirmations of the manual split and of archive, stash, restore and exclude into their operations and admit all five; also lifecycle_mutation_operation.py; `src/cadrumo/application/ledger/split_operation.py`.
@@ -133,12 +116,20 @@ Delivers the ledger entry, ratio, rule, attachment, evidence and reversible life
 
 Delivers statement, invoice-book and evidence intake and the file exports under the file-exchange decision, and declaration create, calculate, amend, rename and verify, ending at a calculated and verified revision.
 
-- [ ] `P06.S36` - Build file exchange as the accepted decision defines it and admit ledger.import, ledger.invoice.import, ledger.evidence.add and ledger.evidence.batch over it, with the digest hand-off enforced in the operation; confine the reconciliation import to the inbound folder, replace its path reference by name and digest, and give the declaracion parser a bytes entry so it too is parsed from one verified read; also invoices/catalogue_intake_operation.py, ledger/evidence_add_operation.py, ledger/evidence_ingestion_operation.py and modelo/reconciliation_parsing.py; `src/cadrumo/application/ledger/import_operation.py`.
 - [x] `P06.S37` - Admit modelo.work.create, modelo.work.calculate and modelo.work.rename with the actor taken from the session and not from the caller; the applicability gate already lives in the create operation, a recalculation deletes nothing and its result names the revision it replaced, and a calculation that states its own inputs, the joint-return election or the Modelo 390 attestation is refused on MCP until the approval step exists; modelo.work.amend moves behind the approval step because it records a local filing; also work_create_operation.py and metadata_operation_access.py; `src/cadrumo/application/modelo/operation_definitions.py`.
 - [x] `P06.S38` - Read the modelo.work.verify executor end to end, record what it reads and what it exchanges while checking provider readiness, and admit it only if it changes nothing and sends nothing that alters remote state; `src/cadrumo/application/modelo/operation_definitions.py`.
 - [ ] `P06.S39` - Remap the packaged skills from command-line verbs to operations through the generated join, and prove one quarterly and one annual declaration prepared through MCP alone equal to the command-line result for the same inputs; `src/cadrumo_harness/_data/agent/skills`.
-- [ ] `P06.S43` - Admit over file exchange the operations that read or write a file: ledger.export, modelo.spreadsheet.export, modelo.reconcile.export-xlsx, export.calculation-review-xlsx, modelo.m145.export, modelo.audit.export, modelo.review_package.build, modelo.work.report_verify, live.borrador.100.import and user-profile.censo-file-import; `src/cadrumo/application/ledger/export_operation.py`.
 - [x] `P06.S44` - Admit modelo.observation.local, modelo.m145.create and modelo.m145.validate, refusing on MCP the variants that discard a figure or stand for a signature; modelo.filing_record.import moves behind the approval step because it writes a record marked as confirmed by the tax agency from values the caller states; also local_observation_operation.py and m145_communication_operation.py; `src/cadrumo/application/modelo/filing_record_import_operation.py`.
+
+### Phase `P08` - parity with no frontend-specific refusal
+
+Delivers the owner's rule of 2026-10-11: the command line, the terminal interface and MCP are at parity. Every operation is submittable from every frontend with the same decision, effect and result; every refusal, narrowing and reduced result built for one frontend is removed; and MCP is given the means to carry what the command line carries. Replaces the approval, file-exchange and held-back admission work, which that rule rejects.
+
+- [ ] `P08.S47` - Make every registered operation submittable from the command line, the terminal interface and MCP, reduce the decision table to the two facts the opt-in surface needs, and replace the tests that held rulings with tests that hold parity: every operation on every frontend, the same resolver decision for the same request, and no comparison of a frontend inside an access path outside a short allow-list; `src/cadrumo/application/operations/mcp_admission.py`.
+- [ ] `P08.S48` - Remove every frontend-specific refusal, guard and reduced result from the ledger, invoice, inventory and prorrata operations, keeping attribution and the recorded origin of a classification as facts; `src/cadrumo/application/ledger`.
+- [ ] `P08.S49` - Remove every frontend-specific refusal and reduced result from the modelo, workflow, live and export operations, and give a resolver to any operation that had none so it can be submitted; `src/cadrumo/application/modelo`.
+- [ ] `P08.S50` - Remove every frontend-specific refusal from the profile, authentication and Google operations and from the runtime's release of results and session acts, and give the MCP harness the means to carry a typed secret and to answer every interaction kind; `src/cadrumo_harness/mcp`.
+- [ ] `P08.S51` - Rewrite the user documentation, its translations and the packaged agent text to say that an agent runs every operation the command line can, keeping the agent's own conduct before a destructive act as guidance and not as a product gate; `src/cadrumo_harness/_data/agent`.
 
 ## Parallelization
 

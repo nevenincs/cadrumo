@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-10'
+modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:146ab0aca651b9afdaf710694e4549d9dad75842eb62583cb6cf046bc6fd120a'
+body_hash: 'sha256:966b65d984dce16c453361795d04d472c314ac357be25003374a87cc22351d58'
 related:
   - "[[2026-10-10-mcp-parity-file-exchange-reference]]"
   - "[[2026-10-10-mcp-parity-admission-rulings-adr]]"
@@ -20,7 +20,9 @@ related:
   - "[[2026-08-03-canonical-storage-management-adr]]"
 ---
 
-# `mcp-parity` adr: `Files pass between an agent and Cadrumo only through a per-profile exchange folder, by name and digest, under one standing consent` | (**status:** `proposed`)
+# `mcp-parity` adr: `Files pass between an agent and Cadrumo only through a per-profile exchange folder, by name and digest, under one standing consent` | (**status:** `rejected`)
+
+Rejected on 2026-10-11. The owner ruled first-hand that the command line, the terminal interface and MCP are at parity and that MCP never refuses anything the command line can do: "MCP should aboslutely NEVER refuse anyhting the cli can do" and "I want the cli tui and mcp to be partify. clic can do everythign so should the tui and mcp. no more qesitons". This record made the admission of operations wait on a mechanism, which `2026-10-11-mcp-parity-full-parity-adr` rules out. It is kept as history.
 
 ## Problem Statement
 

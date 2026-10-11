@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-10'
+modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:882f627961a29526d068836381829ce523f2022c86d36e79663500eb0aa91fbc'
+body_hash: 'sha256:daf4ac0c2b4d849e35cd2bdf54d25deb8eaab7963a0bdf19d8a9dbc13a86f536'
 related:
   - "[[2026-10-10-mcp-parity-agent-provenance-reference]]"
   - "[[2026-10-10-mcp-parity-admission-rulings-adr]]"
@@ -15,7 +15,9 @@ related:
   - "[[2026-06-30-ledger-add-idempotency-adr]]"
 ---
 
-# `mcp-parity` adr: `Amounts an agent states carry an agent mark set from the session, the registry computes the tax figures where it can, and only the person's review makes them filing grade` | (**status:** `proposed`)
+# `mcp-parity` adr: `Amounts an agent states carry an agent mark set from the session, the registry computes the tax figures where it can, and only the person's review makes them filing grade` | (**status:** `rejected`)
+
+Rejected on 2026-10-11. The owner ruled first-hand that the command line, the terminal interface and MCP are at parity and that MCP never refuses anything the command line can do: "MCP should aboslutely NEVER refuse anyhting the cli can do" and "I want the cli tui and mcp to be partify. clic can do everythign so should the tui and mcp. no more qesitons". This record made the admission of operations wait on a mechanism, which `2026-10-11-mcp-parity-full-parity-adr` rules out. It is kept as history.
 
 ## Problem Statement
 

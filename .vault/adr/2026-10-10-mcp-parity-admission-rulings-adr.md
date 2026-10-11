@@ -1,11 +1,8 @@
 ---
 tags:
-  - '#adr'
-  - '#mcp-parity'
+  - "#adr"
+  - "#mcp-parity"
 date: '2026-10-10'
-modified: '2026-10-11'
-body_schema: 'body-v2'
-body_hash: 'sha256:0315025d18b9670d4bc21650b756805ce89e690dab49905f4405e1bb24b0f7cf'
 related:
   - "[[2026-10-10-mcp-parity-exclusion-intent-evidence-research]]"
   - "[[2026-10-10-mcp-parity-closed-operations-reference]]"
@@ -16,8 +13,12 @@ related:
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
   - "[[2026-06-30-ledger-add-idempotency-adr]]"
   - "[[2026-06-10-llm-evidence-classification-adr]]"
+superseded_by: '2026-10-11-mcp-parity-full-parity-adr'
+modified: '2026-10-11'
+body_schema: 'body-v2'
+body_hash: 'sha256:9a37bec84cb7b841507fa95bb8b872aed89b7f773789b5aa0a778514c65f67a9'
 ---
-# `mcp-parity` adr: `Which MCP exclusions are omissions to correct and which are deliberate, family by family` | (**status:** `accepted`)
+# `mcp-parity` adr: `Which MCP exclusions are omissions to correct and which are deliberate, family by family` | (**status:** `superseded`)
 
 ## Problem Statement
 

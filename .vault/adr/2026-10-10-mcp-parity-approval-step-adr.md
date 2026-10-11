@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-10'
+modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:fdf906c36f93d52b96e9c71c205533b91d406f7daff2f0b115a6ac49bac44f10'
+body_hash: 'sha256:c8259241f1787b5213d4f7be7d3f2f4cccbee056fb7e59789528183e624ac038'
 related:
   - "[[2026-10-10-mcp-parity-approval-step-reference]]"
   - "[[2026-10-10-mcp-parity-admission-rulings-adr]]"
@@ -21,7 +21,9 @@ related:
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
 ---
 
-# `mcp-parity` adr: `The person approves a reserved act in Cadrumo before it is admitted, through a single-use runtime approval bound to the exact request` | (**status:** `proposed`)
+# `mcp-parity` adr: `The person approves a reserved act in Cadrumo before it is admitted, through a single-use runtime approval bound to the exact request` | (**status:** `rejected`)
+
+Rejected on 2026-10-11. The owner ruled first-hand that the command line, the terminal interface and MCP are at parity and that MCP never refuses anything the command line can do: "MCP should aboslutely NEVER refuse anyhting the cli can do" and "I want the cli tui and mcp to be partify. clic can do everythign so should the tui and mcp. no more qesitons". This record made the admission of operations wait on a mechanism, which `2026-10-11-mcp-parity-full-parity-adr` rules out. It is kept as history.
 
 ## Problem Statement
 

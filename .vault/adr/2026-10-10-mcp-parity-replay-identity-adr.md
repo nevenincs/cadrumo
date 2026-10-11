@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-10'
+modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:a1ed26211dc7b11c297222ce67355734898e8acc219de7a12fe4c1b2b31439e5'
+body_hash: 'sha256:28cbd7deca935b4452f99dcc8735139a8a1877354cb8717ee56e3b312aa91e9b'
 related:
   - "[[2026-10-10-mcp-parity-replay-identity-reference]]"
   - "[[2026-10-10-mcp-parity-admission-rulings-adr]]"
@@ -16,7 +16,9 @@ related:
   - "[[2026-08-11-tui-architecture-adr]]"
 ---
 
-# `mcp-parity` adr: `An agent's effectful submission carries the caller's own replay identity, and a key answers only while its operation could have changed something` | (**status:** `proposed`)
+# `mcp-parity` adr: `An agent's effectful submission carries the caller's own replay identity, and a key answers only while its operation could have changed something` | (**status:** `rejected`)
+
+Rejected on 2026-10-11. The owner ruled first-hand that the command line, the terminal interface and MCP are at parity and that MCP never refuses anything the command line can do: "MCP should aboslutely NEVER refuse anyhting the cli can do" and "I want the cli tui and mcp to be partify. clic can do everythign so should the tui and mcp. no more qesitons". This record made the admission of operations wait on a mechanism, which `2026-10-11-mcp-parity-full-parity-adr` rules out. It is kept as history.
 
 ## Problem Statement
 
