@@ -148,4 +148,44 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.entrypoints.tui.installation.acts.ActInputError",
+        ErrorCode(
+            code="REFUSED_TUI_INSTALLATION_ACT_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.entrypoints.tui.reference.filters.ReferenceFilterError",
+        ErrorCode(
+            code="REFUSED_TUI_REFERENCE_FILTER",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.entrypoints.tui.reference.reads.ReferenceReadRefusedError",
+        ErrorCode(
+            code="REFUSED_TUI_REFERENCE_READ_REFUSED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.entrypoints.tui.reference.reads.ReferenceCoordinateMissingError",
+        ErrorCode(
+            code="REFUSED_TUI_REFERENCE_COORDINATE_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

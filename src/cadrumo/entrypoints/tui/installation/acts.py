@@ -30,6 +30,7 @@ from ....application.runtime.installation_requests import (
     RuntimeInstallationCompleted,
     installation_request_facts,
 )
+from ....core.errors.hierarchy import CadrumoError
 
 #: Members every request carries that the interface fills in itself.
 _COORDINATE_FIELDS: Final[frozenset[str]] = frozenset({"request_id", "frontend", "action"})
@@ -116,7 +117,7 @@ _PREREQUISITES: Final[Mapping[InstallationAct, ActPrerequisite]] = {
 }
 
 
-class ActInputError(ValueError):
+class ActInputError(CadrumoError):
     """The form's values do not make a request; ``fields`` names the members at fault, never a value."""
 
     def __init__(self, fields: tuple[str, ...]) -> None:

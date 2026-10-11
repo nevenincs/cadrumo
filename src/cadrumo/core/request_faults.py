@@ -15,7 +15,7 @@ the location and the kind of the fault still say which rule it was.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import Annotated, Final
 
@@ -53,34 +53,29 @@ class RequestFault(BaseModel):
     """The rule that was broken, in words that do not repeat the value."""
 
 
-class _TooManyValuesError(Exception):
-    """A refused value holds more members than are read to check a message against it."""
-
-
-def _texts_of(value: object) -> Iterator[str]:
-    """Yield the text of every value inside a refused input: its strings and its numbers.
+def _texts_of(value: object) -> list[str] | None:
+    """Collect the text of every value inside a refused input: its strings and its numbers.
 
     Member names are not values, so a mapping contributes what it holds and
-    not its keys.
-
-    Raises:
-        _TooManyValuesError: The input holds more values than are read.
+    not its keys. ``None`` means the input holds more values than are read,
+    so no list of them is complete.
     """
+    texts: list[str] = []
     pending: list[object] = [value]
     read = 0
     while pending:
         item = pending.pop()
         read += 1
         if read > _MAX_VALUES_READ:
-            raise _TooManyValuesError
+            return None
         if item is None or isinstance(item, bool):
             continue
         if isinstance(item, str):
-            yield item
+            texts.append(item)
         elif isinstance(item, int | float | Decimal):
-            yield str(item)
+            texts.append(str(item))
         elif isinstance(item, bytes | bytearray | memoryview):
-            yield bytes(item).decode("utf-8", errors="replace")
+            texts.append(bytes(item).decode("utf-8", errors="replace"))
         elif isinstance(item, BaseModel):
             pending.append(item.model_dump(mode="python"))
         elif isinstance(item, Mapping):
@@ -88,7 +83,8 @@ def _texts_of(value: object) -> Iterator[str]:
         elif isinstance(item, Sequence | set | frozenset):
             pending.extend(item)
         else:
-            yield str(item)
+            texts.append(str(item))
+    return texts
 
 
 def _repeats_a_value(message: str, refused: object) -> bool:
@@ -97,16 +93,16 @@ def _repeats_a_value(message: str, refused: object) -> bool:
     An input too large to read through is answered as though it were repeated:
     a message is carried only when it is known to be free of the value.
     """
-    spoken = message.casefold()
-    try:
-        for text in _texts_of(refused):
-            candidate = text.strip().casefold()
-            if len(candidate) < _MIN_REPEATED_CHARACTERS:
-                continue
-            if re.search(rf"(?<!\w){re.escape(candidate)}(?!\w)", spoken) is not None:
-                return True
-    except _TooManyValuesError:
+    texts = _texts_of(refused)
+    if texts is None:
         return True
+    spoken = message.casefold()
+    for text in texts:
+        candidate = text.strip().casefold()
+        if len(candidate) < _MIN_REPEATED_CHARACTERS:
+            continue
+        if re.search(rf"(?<!\w){re.escape(candidate)}(?!\w)", spoken) is not None:
+            return True
     return False
 
 

@@ -54,6 +54,8 @@ from cadrumo.core.redaction.rules import (
     CLI_PROFILE_ID_PLACEHOLDER,
     redact_structured_for_cli_output,
 )
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 from cadrumo.entrypoints.cli.common import resolve_cli_precondition_action
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_output
@@ -320,7 +322,7 @@ def test_the_logs_act_replies_with_the_tail_the_command_prints(tmp_path: Path, k
         commanded_nothing = _command("config", "repair", "logs", "--lines", "0")
         everything = _logs(client, 500)
 
-    assert Path(tail.path) == root / "logs" / "cadrumo.log"
+    assert Path(tail.path) == root / storage_location(StorageCategory.LOG_FILE).relative_path()
     assert (before_any_log.path, before_any_log.lines) == (tail.path, ())
     assert tail.lines == _LOG_LINES[-5:]
     assert nothing.lines == ()

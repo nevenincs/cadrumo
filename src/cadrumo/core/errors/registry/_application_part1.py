@@ -967,4 +967,54 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.application.reference_catalogue.ReferenceQueryError",
+        ErrorCode(
+            code="REFUSED_REFERENCE_QUERY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.reference_catalogue.CededAutonomicModeloError",
+        ErrorCode(
+            code="REFUSED_REFERENCE_CEDED_AUTONOMIC_MODELO",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.reference_catalogue.DiscoveryScopeIncompleteError",
+        ErrorCode(
+            code="REFUSED_REFERENCE_DISCOVERY_SCOPE_INCOMPLETE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.reference_catalogue.DiscoveryPeriodTokenError",
+        ErrorCode(
+            code="REFUSED_REFERENCE_DISCOVERY_PERIOD_TOKEN",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.reference_catalogue.PortalFilterConflictError",
+        ErrorCode(
+            code="REFUSED_REFERENCE_PORTAL_FILTER_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

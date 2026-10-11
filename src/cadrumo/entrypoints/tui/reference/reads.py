@@ -22,7 +22,7 @@ from ....application.modelo.registry_discovery import (
 )
 from ....application.operator_output.result_document import printed_result_document
 from ....core.errors.error_codes import resolve_error_message
-from ....core.errors.hierarchy import CoreValidationError
+from ....core.errors.hierarchy import CadrumoError, CoreValidationError
 from ....core.modelo import Modelo
 from ....core.period import Period, PeriodError
 from ....core.tax_domain import TaxDomain
@@ -69,7 +69,7 @@ class ReferenceQuery:
     portal: str | None = None
 
 
-class ReferenceReadRefusedError(Exception):
+class ReferenceReadRefusedError(CadrumoError):
     """A read whose coordinates the person must correct; the message is the one the command prints."""
 
 

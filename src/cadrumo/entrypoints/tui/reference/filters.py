@@ -12,6 +12,7 @@ from datetime import date
 from enum import StrEnum
 from typing import Final
 
+from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.portals.categories import PortalCategory
 from .reads import ReferenceQuery, ReferenceRead
@@ -37,7 +38,7 @@ class ReferenceFilter:
     choices: tuple[str, ...] = ()
 
 
-class ReferenceFilterError(ValueError):
+class ReferenceFilterError(CadrumoError):
     """The form's values do not make a query; ``fields`` names the coordinates at fault."""
 
     def __init__(self, fields: tuple[str, ...]) -> None:

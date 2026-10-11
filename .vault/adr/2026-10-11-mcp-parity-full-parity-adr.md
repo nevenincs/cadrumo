@@ -12,7 +12,7 @@ supersedes:
   - '2026-10-10-mcp-parity-admission-rulings-adr'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:fbc2af7f68a1ded44c4b717c480d34fcc773793d6e5659f2155af08f8dab6051'
+body_hash: 'sha256:631daf563ae7966f2218f839955f0f97c797951f6c746681311c4aaedbcd51ff'
 ---
 
 # `mcp-parity` adr: `The command line, the terminal interface and MCP are at parity, and no frontend is refused what another can do` | (**status:** `accepted`)
@@ -63,6 +63,15 @@ Affected prior rulings:
 We will make every definition submittable from every frontend, remove every frontend-specific refusal and result difference from resolvers, executors, guards and the runtime's release of results, give the MCP harness the means to carry a typed secret and to answer every interaction kind, and replace the tests that held rulings with tests that hold parity: every operation on every frontend, the same resolver decision for the same request, and no comparison of a frontend inside an access path outside a short allow-list.
 
 Hypotheses, free to change within the constraints: whether the definition keeps a per-operation list of frontends at all; the form of the tool argument that carries a secret; whether session acts get tools of their own.
+
+As built by 2026-10-12, recorded here as implementation and not as commitments of this record. A change to any of them that keeps the constraints needs no new decision; one that others must build on is a decision for a record of its own.
+
+- Work that needs no profile is served to the terminal interface and MCP by a sessionless family of runtime requests, the installation acts, admitted on the verified connection the way profile deletion is. The command line keeps doing that work in its own process and uses the acts only where the runtime must act first, as for the reset of all profiles while the runtime hosts one.
+- A contained profile worker asks the runtime to start the model reader's server, under the commit fence of the provisioning operation and for that operation only. The instruction names no program and no environment.
+- On MCP a secret can be named by reference. The reference names a record of its own kind in this machine's protected credential store: one a person entered at a terminal, or a recovery code held for the person to read. A typed secret argument stays.
+- Operations are discoverable on MCP with no session and no runtime from a generated copy of the public contract set shipped with the tool server and held to the registry by a test.
+- The definition keeps no per-operation list of frontends. Session acts have a tool of their own, and so do the installation acts.
+- The default MCP surface is named `full`. A surface name is pinned to its tool list by a test, so that a consumer that mounts the tool server by name and tool list is told when the list changes.
 
 ## Rationale
 

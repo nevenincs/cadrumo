@@ -13,9 +13,11 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
+  - '[[2026-07-08-mcp-protocol-hardening-adr]]'
+  - '[[2026-07-31-mcp-sdk-major-carry-adr]]'
 modified: '2026-10-11'
 body_schema: body-v2
-body_hash: 'sha256:4b86e0139d25f67505b835233cfe035476321e1ecfd6f14ca7ff613f3c68cc9f'
+body_hash: 'sha256:c594dd00dc29c3fb27206e5051fcd9cca9eb8865420cdc8cc767a4e3ec73c283'
 ---
 
 <!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
@@ -138,7 +140,7 @@ Delivers the rest of parity: about forty-five command-line commands do their wor
 - [x] `P09.S52` - Build the sessionless runtime door for installation acts: the request family, its admission as the bootstrap delete handler admits, secrets in and the recovery code out, the client on the verified connection, and the command line's submitter; `src/cadrumo/application/runtime/installation_requests.py`.
 - [x] `P09.S53` - Make provisioning a registered operation for every verb: widen local-reader.provision, add local-reader.status, local-reader.report and browser-runtime.provision, and have the command line submit them; `src/cadrumo/application/local_reader_operation.py`.
 - [x] `P09.S54` - Register the repair operations that need a profile (secure-object check and quarantine, workflow progress reset, connectivity probe) and build the repair acts that need none (report, logs, profile pointer); `src/cadrumo/application/diagnostics.py`.
-- [x] `P09.S55` - Build the storage acts and the acts of the reset of all profiles, and have the command line send them; `src/cadrumo/application/storage_management/service.py`.
+- [ ] `P09.S55` - Build the storage acts and the acts of the reset of all profiles, and have the command line send them; `src/cadrumo/application/storage_management/service.py`.
 - [x] `P09.S56` - Build the profile acts (list, archive inspect and import, recovery enrolment), register recovery revocation, and move into the operations what the censo import, archive export and profile delete commands did on the caller's side; `src/cadrumo/application/user_profile`.
 - [x] `P09.S57` - Serve the reference reads (modelo catalogue, categories, portals, authentication providers, apoderado scopes) from one application service through the extended authority query, for all three frontends; `src/cadrumo_harness/mcp/authority_query.py`.
 - [x] `P09.S58` - Build the review-package and report verification acts and move into the reconcile pull and report verify operations what their commands did on the caller's side; `src/cadrumo/application/modelo`.
@@ -150,47 +152,37 @@ Delivers the rest of parity: about forty-five command-line commands do their wor
 
 ## Parallelization
 
+The phases that ordered work around an approval step, `P03` and `P07`, were removed on 2026-10-11 with the Steps that depended on them, and nothing waits on an approval, a file-exchange folder, a replay identity or a provenance mark. What follows describes how the remaining work was sequenced and what a later Step must respect.
+
 Hard ordering:
 
-- `P01` lands before `P02`. The moment the shared sign-in opens, every operation that lists MCP runs with the person's full scope, so the refusal of unapproved sensitive operations, the refusal at submission and the decision check come first.
-- Within `P01`, `S01` comes first because every later Step updates the table it creates. `S02`, `S03` and `S04` each change frontend sets and share one contract cutover, so they land together or in sequence, never interleaved with a stored invocation of those definitions. `S06` follows `S05`.
-- `P03` follows `P01` and `P07` follows `P03`, because every sensitive operation waits on the approval step. `P07` needs `P03.S24` and `P03.S25`. Whether an approval can be given for a key session with nobody signed in is settled in `P03.S20`; if it cannot, `P07` also needs `P02`.
-- `P04` needs `P01.S01` and `P01.S06`. `P05.S34` needs the evidence reads of `P04.S29`. `P05.S31` needs `P03.S22` and `P03.S23`. `P06.S36` and `P06.S43` need `P03.S21`. `P06.S39` needs `P01.S09`.
+- `P01` landed before `P02`, and `P08` reverses every refusal `P01` to `P06` built on the frontend. A Step that reopens code from those phases works to the criteria of `P08`, not to the text of the earlier Step.
+- Within `P09`, the runtime door `S52` comes first, because the act families `S54`, `S55`, `S56` and `S58`, the harness tool `S59` and the terminal-interface destinations `S60` are written against it. The four act families share the door's models file and land in one commit. `S61` wires every family into the installed composition and regenerates the derived records, so it follows them; `S63` follows `S61`.
+- A change to the act table, the operation registry or the command tree is followed in the same Step by the regeneration of what derives from it: the command table, the agent's command reference, the shipped contract document and the import inventories.
 
 May run in parallel:
 
-- `P03.S20` to `P03.S23` are decision records and can start at once, beside `P01`.
-- `P01.S07`, `P01.S08`, `P01.S09` and `P01.S10` touch disjoint files and can run beside one another after `P01.S01`.
-- `P02` can run beside `P03` and `P07`. Within it, `P02.S15` and `P02.S16` are independent of the adapter Steps `P02.S13` and `P02.S14`.
-- `P04.S27`, `P04.S28` and `P04.S29` are separate families with separate cutovers, and `P04` can run beside `P03`.
+- `S53` and `S57` are independent of the door. `S54`, `S55`, `S56`, `S58` and `S59` have disjoint files apart from the door's models file, which each changes only for its own acts. The two halves of `S60` split the terminal interface between the operations destination, which solely edits the navigation files, and the installation and reference destinations.
 
-`P02.S17` waits on an owner ruling and `P02.S18` on the sealing-key decision; neither blocks the Steps around it.
+`P02.S18` waits on the sealing-key decision in the application sign-in record another session holds; it blocks nothing around it.
 
 ## Verification
 
-The project forbids test doubles for the behaviour under test, so "proved" means a real runtime with a synthetic encrypted profile, and refusals are tested as well as successes.
+The project forbids test doubles for the behaviour under test, so "proved" means a real runtime with a synthetic encrypted profile, and a refusal that is the same on every frontend is tested as well as a success.
 
-- The catalogue test fails for an operation with no recorded MCP decision, for an admitted operation the real access resolver refuses, for an excluded operation that lists MCP, and for any operation or tool that declares a submission to the tax agency. It passes on the tree at each Step close.
-- Every sensitive operation refused in `P01` is refused on the MCP frontend, still works for a person on the command line and terminal interface, and runs on MCP after `P07` once the person approves it.
-- Every ledger operation is operable on the MCP frontend at plan close: admitted outright, or admitted behind the person's approval.
-- A read-only or local surface refuses, at submission, every operation in the registry that changes records or reaches the network, shown over its whole operation list.
-- With nobody signed in the MCP server answers its tool list and refuses every call that needs the profile. After sign-out or the idle deadline it refuses again. No submission on the MCP frontend advances the deadline. The key route behaves as before.
-- Each admitted operation completes a round trip on the MCP frontend and enforces inside the operation every safeguard the command line applied for it.
-- No result of an admitted operation carries evidence bytes.
-- An effectful submission replays exactly once under its caller-supplied identity, and two legitimate identical entries remain expressible.
-- One quarterly and one annual declaration are prepared through MCP alone and equal the command-line result for the same inputs.
-- No sensitive operation runs on the MCP frontend without the person's approval of that exact act, and an approval given for one act does not carry to another.
+- Every registered operation resolves alike on the command line, the terminal interface and MCP for the same request, and a scan fails on a comparison of a frontend inside an access path outside a short declared list: attribution, and the surface a person chose to narrow.
+- Every executable command of the command line either submits a registered operation, sends a runtime request or an installation act, or does its work in process and is paired with the operation, act or authority query that does the same work for the other two frontends; the few with nothing to share are declared with a reason. No command is left without a counterpart, and the pairing is checked in both directions.
+- For each paired command, the family's own test holds the command's printed result to its counterpart's reply or result, with identifiers revealed and with the command line's redaction applied.
+- Nothing is taken from any frontend. The command line does what it did before this plan, with or without a session and with or without a running runtime; the tests of its commands that existed before the plan pass unchanged.
+- No operation is refused, narrowed or answered with less because the caller is an agent, and no operation waits on a person's approval inside Cadrumo. An agent's conduct before a destructive act is guidance in the packaged agent text.
+- No operation, tool, act or command declares or performs a submission to the tax agency. Export writes a local file and the filed marker writes a local record.
+- A surface a person narrows when starting the MCP server refuses, at submission, every operation and act that changes records or reaches the network, shown over its whole list. The default surface is everything, and each surface name is pinned to its tool list.
+- With nobody signed in and no runtime running, the MCP server answers its tool list, the reference reads and the discovery of operations, and refuses only what needs a session. After sign-out or the idle deadline it refuses those again.
+- A secret reaches the runtime on the protected frame from every frontend and appears in no log, error or result. On MCP it can be named by reference so that it does not pass through the model.
+- An outcome that is not known is reported as unknown on every frontend and is never resent. Two legitimate identical entries remain expressible, and a caller-supplied replay identity makes a repeat safe.
+- One quarterly and one annual declaration are prepared through MCP alone and equal the command-line result for the same inputs, down to the exported bytes; the recorded actor and the recorded origin of a classification are the intended differences.
 - `just check-code`, `just check-import-boundaries`, `just check-types` and the covering tests pass for the files each Step touches.
 
-The admission checklist, applied to every operation a Step admits and recorded in that Step's ledger rows. Its items are the mechanism record's hypothesis made concrete, and they may be refined as Steps learn:
+Input and choice interactions cannot be answered on any frontend: the application projects them as unsupported and the response request carries no value. `S50` and `S60` gave MCP and the terminal interface what the command line has, which is the answer to a review, and show the other two kinds as pending.
 
-- The operation has an access resolver, and the real resolver admits a valid request on the MCP frontend.
-- Every confirmation or validation that the command line or terminal interface applies outside the operation is enforced inside it, or none exists.
-- The request has no field that stands for a person's act: no acknowledgement, consent or free-text actor. The actor is taken from the session.
-- The request and the result carry no host path, unless the operation is admitted over file exchange.
-- The result carries no evidence bytes, no text taken verbatim from a document, no secret, key or raw secure payload, and no open payload whose content is not declared. Notes, reasons and actor labels the person typed are the person's data and may be returned, as the owner's rule that an agent has full control of that data implies; the first run of this checklist withheld them and was corrected.
-- An effectful operation requires the caller's replay identity once that decision is accepted.
-- The executor is read, and the decision row's two facts, whether it changes records and whether it reaches the network, match what it does.
-- The decision row loses its prerequisite, the frontend set changes with one contract cutover for the family, and a round trip and a refusal are tested on the MCP frontend.
-
-Review follows the system cadence: one integrated review at each Phase close and at plan close, against the three decision records. The plan is complete when every Step is closed and the final review passes.
+Review follows the system cadence: one integrated review at each Phase close and at plan close, against the full-parity record and the records it leaves accepted. A reviewer's observation that an agent has a second route to an act describes parity and is not a finding. The plan is complete when every Step is closed and the final review passes.

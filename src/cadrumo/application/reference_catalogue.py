@@ -67,7 +67,7 @@ from .reference_catalogue_contracts import (
 )
 
 
-class ReferenceQueryError(ValueError):
+class ReferenceQueryError(CadrumoError):
     """A reference read whose coordinates the reader must correct."""
 
 
