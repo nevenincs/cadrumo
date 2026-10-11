@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 from ..classification_origin import (
+    CLASSIFICATION_DECISION_FIELDS,
     ClassificationOrigin,
     classification_facts,
     classification_is_the_persons,
@@ -147,15 +148,42 @@ def test_the_recorded_origin_wins_over_the_last_writers_stamp() -> None:
 
 @pytest.mark.parametrize("current_origin", [_PERSON, _AGENT, _AUTOMATIC])
 @pytest.mark.parametrize("written", [_PERSON, _AGENT, _AUTOMATIC])
-def test_a_write_that_changes_no_classification_fact_keeps_the_origin_it_found(
+def test_a_write_that_sets_no_tax_bearing_fact_keeps_the_origin_it_found(
     current_origin: ClassificationOrigin, written: ClassificationOrigin
 ) -> None:
+    """A note or a description edited by anyone decides nothing about how the row is taxed."""
     current = _row(BusinessClassification.BUSINESS, classified_by="rule:vendor-map", origin=current_origin)
     replacement = current.model_copy(update={"classified_by": "manual", "notes": "an unrelated edit"})
 
-    stamped = with_classification_origin(replacement, replaces=current, written=written)
+    stamped = with_classification_origin(replacement, replaces=current, written=written, decided=False)
 
     assert classification_facts(stamped) == classification_facts(current)
+    assert stamped.classification_origin is current_origin
+
+
+@pytest.mark.parametrize("current_origin", [_PERSON, _AGENT, _AUTOMATIC])
+def test_a_person_restating_what_the_row_carries_accepts_it_and_the_row_becomes_theirs(
+    current_origin: ClassificationOrigin,
+) -> None:
+    current = _row(BusinessClassification.BUSINESS, classified_by="rule:vendor-map", origin=current_origin)
+    restated = current.model_copy(update={"classified_by": "manual"})
+
+    stamped = with_classification_origin(restated, replaces=current, written=_PERSON, decided=True)
+
+    assert classification_facts(stamped) == classification_facts(current)
+    assert stamped.classification_origin is _PERSON
+
+
+@pytest.mark.parametrize("current_origin", [_PERSON, _AGENT, _AUTOMATIC])
+@pytest.mark.parametrize("written", [_AGENT, _AUTOMATIC])
+def test_an_agent_or_a_rule_restating_what_the_row_carries_takes_nothing(
+    current_origin: ClassificationOrigin, written: ClassificationOrigin
+) -> None:
+    """Otherwise an agent would take the person's row by submitting the classification it already has."""
+    current = _row(BusinessClassification.BUSINESS, classified_by="manual", origin=current_origin)
+
+    stamped = with_classification_origin(current, replaces=current, written=written, decided=True)
+
     assert stamped.classification_origin is current_origin
 
 
@@ -164,7 +192,7 @@ def test_a_write_that_changes_nothing_records_the_origin_an_older_row_was_read_a
     older = _row(BusinessClassification.BUSINESS, classified_by="rule:vendor-map")
     replacement = older.model_copy(update={"classified_by": "manual"})
 
-    stamped = with_classification_origin(replacement, replaces=older, written=_AGENT)
+    stamped = with_classification_origin(replacement, replaces=older, written=_AGENT, decided=True)
 
     assert stamped.classification_origin is _AUTOMATIC
 
@@ -177,33 +205,84 @@ def test_a_write_that_changes_nothing_records_the_origin_an_older_row_was_read_a
         {"iva_rate": Decimal("0.21"), "taxable_base": Decimal("100.00"), "iva_amount": Decimal("21.00")},
         {"recargo_amount": Decimal("5.20")},
         {"irpf_category": "synthetic-category"},
+        {"counterparty_country": "DE"},
+        {"counterparty_identification_state": "DE"},
+        {"deduction_fact_kind": "synthetic-kind"},
+        {"investment_asset_id": "synthetic-asset"},
+        {"m210_income_classification": "synthetic-m210"},
+        {"source_jurisdiction": "FR"},
+        {"direction": TransactionDirection.INCOMING},
+        {"prorrata_sector_id": "synthetic-sector"},
     ],
-    ids=["classification", "category", "iva-figures", "recargo", "irpf-category"],
+    ids=[
+        "classification",
+        "category",
+        "iva-figures",
+        "recargo",
+        "irpf-category",
+        "counterparty-country",
+        "identification-state",
+        "deduction-kind",
+        "investment-asset",
+        "m210",
+        "source-jurisdiction",
+        "direction",
+        "prorrata-sector",
+    ],
 )
 @pytest.mark.parametrize("written", [_PERSON, _AGENT, _AUTOMATIC])
-def test_a_write_that_changes_a_classification_fact_records_who_wrote_it(
-    change: dict[str, object], written: ClassificationOrigin
+@pytest.mark.parametrize("decided", [False, True])
+def test_a_write_that_changes_a_tax_bearing_fact_records_who_wrote_it(
+    change: dict[str, object], written: ClassificationOrigin, decided: bool
 ) -> None:
     current = _row(BusinessClassification.BUSINESS, classified_by="rule:vendor-map", origin=_AUTOMATIC)
     replacement = current.model_copy(update=change)
 
-    assert with_classification_origin(replacement, replaces=current, written=written).classification_origin is written
+    stamped = with_classification_origin(replacement, replaces=current, written=written, decided=decided)
+
+    assert set(change) <= CLASSIFICATION_DECISION_FIELDS
+    assert stamped.classification_origin is written
+
+
+def test_a_change_to_the_movements_money_or_date_is_a_change_to_a_tax_bearing_fact() -> None:
+    """The amount and the dates live on the raw movement, and decide the base and the period all the same."""
+    current = _row(BusinessClassification.BUSINESS, classified_by="rule:vendor-map", origin=_AUTOMATIC)
+    for change in ({"amount": Decimal("242.00")}, {"booked_date": date(2026, 7, 1)}, {"currency": "USD"}):
+        moved = current.model_copy(update={"raw": current.raw.model_copy(update=change)})
+        stamped = with_classification_origin(moved, replaces=current, written=_PERSON, decided=False)
+        assert set(change) <= CLASSIFICATION_DECISION_FIELDS
+        assert stamped.classification_origin is _PERSON, change
+
+
+def test_every_decision_field_is_read_from_the_row() -> None:
+    """A name the row does not carry would compare nothing and let a change through unseen."""
+    row = _row(BusinessClassification.BUSINESS)
+
+    assert len(classification_facts(row)) == len(CLASSIFICATION_DECISION_FIELDS)
+    for field in CLASSIFICATION_DECISION_FIELDS:
+        assert field in Transaction.model_fields or field in type(row.raw).model_fields, field
 
 
 def test_a_first_classification_records_who_wrote_it_and_a_row_left_unprocessed_records_nobody() -> None:
     unprocessed = _row()
     classified = unprocessed.model_copy(update={"business_classification": BusinessClassification.BUSINESS})
 
-    assert with_classification_origin(classified, replaces=unprocessed, written=_AGENT).classification_origin is _AGENT
-    assert with_classification_origin(classified, replaces=None, written=_PERSON).classification_origin is _PERSON
-    assert with_classification_origin(unprocessed, replaces=None, written=_PERSON).classification_origin is None
+    def origin(
+        replacement: Transaction, replaces: Transaction | None, written: ClassificationOrigin
+    ) -> ClassificationOrigin | None:
+        stamped = with_classification_origin(replacement, replaces=replaces, written=written, decided=True)
+        return stamped.classification_origin
+
+    assert origin(classified, unprocessed, _AGENT) is _AGENT
+    assert origin(classified, None, _PERSON) is _PERSON
+    assert origin(unprocessed, None, _PERSON) is None
     returned = _row(BusinessClassification.BUSINESS, classified_by="manual", origin=_PERSON).model_copy(
         update={"business_classification": BusinessClassification.NOT_YET_PROCESSED}
     )
-    assert with_classification_origin(returned, replaces=classified, written=_AGENT).classification_origin is None
+    assert origin(returned, classified, _AGENT) is None
 
 
-def test_the_domain_classification_write_records_the_origin_it_is_given_and_keeps_it_on_an_identical_rewrite() -> None:
+def test_the_domain_write_records_who_accepted_and_only_a_person_takes_a_row_by_restating_it() -> None:
     """The one caller of this write applies an accepted proposal, and names who accepted it."""
     row = _row()
     catalogue = TransactionCatalogue.from_transactions((row,))
@@ -233,6 +312,16 @@ def test_the_domain_classification_write_records_the_origin_it_is_given_and_keep
         confidence=Decimal("0.9"),
     )
 
+    confirmed = set_classification(
+        changed,
+        row.transaction_id,
+        classification=BusinessClassification.PERSONAL,
+        classified_by="llm:local-text:model",
+        origin=_PERSON,
+        confidence=Decimal("0.9"),
+    )
+
     assert accepted.transactions[row.transaction_id].classification_origin is _PERSON
     assert again.transactions[row.transaction_id].classification_origin is _PERSON
     assert changed.transactions[row.transaction_id].classification_origin is _AGENT
+    assert confirmed.transactions[row.transaction_id].classification_origin is _PERSON

@@ -19,12 +19,14 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from ...domain.transactions.classification_origin import classification_facts, classification_is_the_persons
+from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import Transaction
 from ..operations.execution_actor import actor_label_is_an_agents
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 
 _ATTACHMENT = "attachment"
+_SET_ASIDE_STATES = frozenset({TransactionLifecycleState.ARCHIVED, TransactionLifecycleState.STASHED})
 _PURCHASE_EVIDENCE = "purchase_invoice_evidence"
 
 
@@ -66,15 +68,51 @@ def require_agent_may_reclassify(row: Transaction) -> None:
 
 
 def require_agent_may_set_aside(row: Transaction) -> None:
-    """Refuse an agent splitting or excluding a row that carries the person's work.
+    """Refuse an agent taking a row that carries the person's work out of the calculations.
 
     A split passes the parent's classification and invoice link to no child,
     and only the merge, which waits for the person, recombines the rows. An
     exclusion replaces the classification, and the one operation that puts it
-    back is closed to an agent.
+    back is closed to an agent. An archived or stashed row keeps everything
+    it carries, but it leaves every calculation, and a calculation is open to
+    an agent: setting the person's rows aside would change what a declaration
+    comes to.
     """
     if carries_the_persons_work(row):
         raise _refuse()
+
+
+def _set_aside_by_an_agent(row: Transaction) -> bool:
+    """Return whether the row records an agent as having put it in the state it is in.
+
+    Each archive, stash and restore appends who ran it and the state it left
+    the row in. The last such entry is the act that set the current state, so
+    its label says whose act that was. A row whose last entry names another
+    state, or that has none, does not say, and reads as the person's.
+    """
+    if not row.lifecycle_lineage:
+        return False
+    last = row.lifecycle_lineage[-1]
+    return last.state is row.lifecycle_state and actor_label_is_an_agents(last.actor)
+
+
+def require_agent_may_leave_set_aside_state(row: Transaction) -> None:
+    """Refuse an agent moving a row out of an archived or stashed state the person put it in.
+
+    Bringing such a row back reverses the person's decision and returns the
+    row to the calculations. Archiving a row the person stashed would also
+    make the state an agent's, and so open the way to restoring it. A row in
+    any other state is not held to this.
+    """
+    if row.lifecycle_state in _SET_ASIDE_STATES and not _set_aside_by_an_agent(row):
+        raise _refuse()
+
+
+def require_agent_may_change_lifecycle(row: Transaction, *, restores: bool) -> None:
+    """Refuse an agent an archive, stash or restore that undoes or pre-empts the person's decision."""
+    require_agent_may_leave_set_aside_state(row)
+    if not restores:
+        require_agent_may_set_aside(row)
 
 
 def require_agent_may_detach(row: Transaction, attachment_ids: Iterable[str]) -> None:
@@ -112,6 +150,12 @@ def require_actor_may_set_aside(*, actor: str, row: Transaction) -> None:
         require_agent_may_set_aside(row)
 
 
+def require_actor_may_change_lifecycle(*, actor: str, row: Transaction, restores: bool) -> None:
+    """Refuse an archive, stash or restore recorded under an agent's label that the person's work forbids."""
+    if actor_label_is_an_agents(actor):
+        require_agent_may_change_lifecycle(row, restores=restores)
+
+
 def require_actor_may_detach(*, actor: str, row: Transaction, attachment_ids: Iterable[str]) -> None:
     """Refuse a detachment recorded under an agent's label of an attachment no agent is recorded as linking."""
     if actor_label_is_an_agents(actor):
@@ -126,11 +170,14 @@ def require_actor_may_link_invoice(*, actor: str, row: Transaction, invoice_id: 
 
 __all__ = [
     "carries_the_persons_work",
+    "require_actor_may_change_lifecycle",
     "require_actor_may_detach",
     "require_actor_may_link_invoice",
     "require_actor_may_reclassify",
     "require_actor_may_set_aside",
+    "require_agent_may_change_lifecycle",
     "require_agent_may_detach",
+    "require_agent_may_leave_set_aside_state",
     "require_agent_may_link_invoice",
     "require_agent_may_reclassify",
     "require_agent_may_set_aside",

@@ -8,6 +8,7 @@ evidence is what the product records, not what a test wrote into it.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 from uuid import UUID
@@ -21,8 +22,12 @@ from ...application.ledger.actions_classification import (
     apply_classification_rule_match,
     plan_classification_rules,
 )
-from ...application.ledger.actions_manual import attach_manual_transaction_evidence, create_manual_transaction
-from ...application.ledger.models import ManualLedgerTransactionCommand
+from ...application.ledger.actions_manual import (
+    attach_manual_transaction_evidence,
+    create_manual_transaction,
+    update_manual_transaction_fields,
+)
+from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.frontend_requests import OperationObservationSuccessV1
 from ...application.operations.models import OperationIdentity
@@ -151,6 +156,25 @@ def attach_as_the_person(
     )
 
 
+def classify_as_the_person(
+    profile_id: UUID,
+    operation: PinnedAuthorityOperation,
+    *,
+    transaction_id: str,
+    classification: BusinessClassification,
+) -> None:
+    """Classify a row by hand through the writer the person's own classification reaches."""
+    bucket_id = str(profile_id)
+    update_manual_transaction_fields(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        patch=ManualLedgerTransactionPatch(business_classification=classification),
+        actor=PERSON_LABEL,
+        source_command="aeat app ledger classify",
+        ports=compose_ledger_action_ports(bucket_id=bucket_id, operation=operation),
+    )
+
+
 def seed_invoice(profile_id: UUID, *, number: str) -> str:
     """Store one received invoice for the row's amount beside those already stored."""
     bucket_id = str(profile_id)
@@ -223,15 +247,25 @@ def submit(
 
 
 def review_and_apply(
-    driver: conformance._ExecutionDriver, *, definition_id: str, profile_id: UUID, payload: BaseModel
+    driver: conformance._ExecutionDriver,
+    *,
+    definition_id: str,
+    profile_id: UUID,
+    payload: BaseModel,
+    while_pending: Callable[[], None] = lambda: None,
 ) -> OperationObservationSuccessV1:
-    """Run one review to its pending proposal, answer it with an apply, and return what it settled as."""
+    """Run one review to its pending proposal, answer it with an apply, and return what it settled as.
+
+    ``while_pending`` runs between the proposal and the answer, which is when another
+    party can change the row the proposal was made for.
+    """
 
     async def run() -> OperationObservationSuccessV1:
         submitted, waiting = await driver.run(
             definition_id=definition_id, subject_ref=profile_operation_subject(str(profile_id)), payload=payload
         )
         assert waiting.projection.pending_interaction is not None, waiting.projection
+        while_pending()
         operation_id = await driver.respond_apply(submitted, waiting)
         # The commit runs on a worker thread, so its end is awaited rather than polled for.
         await driver.services.submission.settled(operation_id)

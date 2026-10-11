@@ -314,3 +314,56 @@ async def test_a_persons_response_applies_the_proposal_to_the_row_they_classifie
 
     assert decisions == [decision]
     assert case.events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("mode", "children"),
+    [("classification", 2), ("saturated", 2), ("split", 2)],
+    ids=["classification", "saturated", "split"],
+)
+async def test_an_agents_response_is_refused_when_the_person_classified_the_row_after_the_proposal_was_made(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    mode: _Mode,
+    children: int,
+) -> None:
+    """The stored row is read at the commit: the reviewed row was an agent's, and the row now stored is not."""
+    case = _Case(authority_operation, mode)
+    _classified_by(case, ClassificationOrigin.AGENT)
+    checkpoint = case.checkpoint(case.operand(mode, children=children), "apply")
+    reviewed = case.baseline
+    _classified_by(case, ClassificationOrigin.PERSON)
+    decisions = _writer(monkeypatch, case)
+    loads_before = case.repository.loads
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        await _executor(case, _MCP).resume(case.request, checkpoint, case.context)
+
+    assert reviewed.classification_origin is ClassificationOrigin.AGENT
+    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+    assert case.repository.loads == loads_before + 1
+    assert decisions == []
+    assert case.events.phases == [] and case.events.effects == []
+    assert case.operands.published is None
+
+
+@pytest.mark.asyncio
+@_PERSONS_FRONTENDS
+async def test_a_persons_response_commits_without_the_stored_row_being_read_for_this(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection | None,
+) -> None:
+    """The person's frontends are held to nothing here, so they pay for no further read."""
+    case = _Case(authority_operation)
+    _classified_by(case, ClassificationOrigin.AGENT)
+    checkpoint = case.checkpoint(case.operand(), "apply")
+    _classified_by(case, ClassificationOrigin.PERSON)
+    decisions = _writer(monkeypatch, case)
+    loads_before = case.repository.loads
+
+    assert await _executor(case, frontend).resume(case.request, checkpoint, case.context)
+
+    assert decisions == [LlmReviewDecision.APPLY]
+    assert case.repository.loads == loads_before

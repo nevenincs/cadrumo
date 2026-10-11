@@ -28,6 +28,7 @@ from pydantic import BaseModel
 
 from ...application.ledger import llm_review_execution
 from ...application.ledger.attachment_mutation_operation import LedgerAttachRequest, LedgerDetachRequest
+from ...application.ledger.classify_requests import LedgerClassifyPatch, LedgerClassifyRequest
 from ...application.ledger.lifecycle_contracts import LedgerLifecycleMutationRequest
 from ...application.ledger.link_operation import LedgerLinkRequest
 from ...application.ledger.llm_classification_ports import (
@@ -40,8 +41,13 @@ from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.ledger.operator_iva_contracts import LedgerOperatorIvaRequest
 from ...application.ledger.split_operation import LedgerSplitChildRequest, LedgerSplitRequest
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.transactions.classification_origin import ClassificationOrigin, resolved_classification_origin
+from ...domain.transactions.classification_origin import (
+    ClassificationOrigin,
+    classification_facts,
+    resolved_classification_origin,
+)
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.models import Transaction
 from . import test_registered_executor_conformance as conformance
@@ -50,6 +56,7 @@ from .ledger_persons_work_test_support import (
     PERSON_LABEL,
     SwitchableSessionHost,
     attach_as_the_person,
+    classify_as_the_person,
     refused_for_the_frontend,
     review_and_apply,
     seed_invoice,
@@ -91,6 +98,24 @@ def _exclude(profile_id: UUID, transaction_id: str) -> tuple[str, BaseModel]:
     return "ledger.exclude", LedgerLifecycleMutationRequest(
         profile_id=profile_id, transaction_id=transaction_id, actor=_TYPED, reason="synthetic exclusion"
     )
+
+
+def _lifecycle(definition_id: str, profile_id: UUID, transaction_id: str) -> tuple[str, BaseModel]:
+    return definition_id, LedgerLifecycleMutationRequest(
+        profile_id=profile_id, transaction_id=transaction_id, actor=_TYPED, reason="synthetic lifecycle act"
+    )
+
+
+def _archive(profile_id: UUID, transaction_id: str) -> tuple[str, BaseModel]:
+    return _lifecycle("ledger.archive", profile_id, transaction_id)
+
+
+def _stash(profile_id: UUID, transaction_id: str) -> tuple[str, BaseModel]:
+    return _lifecycle("ledger.stash", profile_id, transaction_id)
+
+
+def _restore(profile_id: UUID, transaction_id: str) -> tuple[str, BaseModel]:
+    return _lifecycle("ledger.restore", profile_id, transaction_id)
 
 
 def _derive(profile_id: UUID, transaction_id: str, category: str = "domestic_general") -> tuple[str, BaseModel]:
@@ -296,7 +321,7 @@ def test_an_agent_derives_on_a_row_a_rule_classified_and_again_on_the_row_it_the
 def test_deriving_then_splitting_does_not_take_a_hand_classified_row_from_the_person(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    """The derivation used to replace the hand stamp, after which the split admitted the row."""
+    """A derivation replaces the stamp a hand classification leaves, and the row stays the person's."""
     with _runtime(tmp_path) as runtime:
         _driver, _registry, profile_id, _host = runtime
         row = seed_row(profile_id, operation, description="synthetic hand row", classification=_BUSINESS)
@@ -535,3 +560,219 @@ def test_an_agent_acts_again_on_a_row_it_classified_through_a_review(
         assert _act(runtime, _MCP, _exclude(profile_id, row))
         assert _review(runtime, _MCP, _split_review(profile_id, row))
         assert stored_row(profile_id, row, operation).lifecycle_state is TransactionLifecycleState.SPLIT
+
+
+_BY_ANOTHER_PARTY = pytest.mark.parametrize("party", ["rule", "agent-review", "agent-derivation"])
+
+
+def _row_another_party_classified(
+    runtime: _Runtime, operation: PinnedAuthorityOperation, party: str
+) -> tuple[str, ClassificationOrigin]:
+    """Store a business row a rule classified, or one an agent then decided through a review or a derivation."""
+    _driver, _registry, profile_id, _host = runtime
+    if party == "agent-review":
+        row = seed_row(profile_id, operation, description="synthetic unprocessed row")
+        assert _review(runtime, _MCP, _classify_review(profile_id, row))
+        return row, _AGENT
+    row = seed_row_a_rule_classified(profile_id, operation, description="synthetic row for a rule")
+    if party == "rule":
+        return row, _AUTOMATIC
+    assert _act(runtime, _MCP, _derive(profile_id, row))
+    return row, _AGENT
+
+
+def _classify(profile_id: UUID, transaction_id: str, **further: str) -> tuple[str, BaseModel]:
+    """The person's single classification as business, with any further fact it states."""
+    values = {"business_classification": _BUSINESS.value, **further}
+    return "ledger.classify.single", LedgerClassifyRequest.model_validate(
+        {
+            "profile_id": profile_id,
+            "transaction_id": transaction_id,
+            "patch": LedgerClassifyPatch.model_validate(values),
+            "patch_fields": tuple(sorted(values)),
+            "actor": _TYPED,
+        }
+    )
+
+
+@_BY_ANOTHER_PARTY
+def test_a_person_confirming_a_classification_with_the_same_value_owns_it_and_an_agent_no_longer_replaces_it(
+    tmp_path: Path, operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch, party: str
+) -> None:
+    """Submitting what the row already says is the person accepting it, and the store records that it was."""
+    asked = _the_model(monkeypatch)
+    with _runtime(tmp_path) as runtime:
+        _driver, _registry, profile_id, _host = runtime
+        row, decided_by = _row_another_party_classified(runtime, operation, party)
+        given = stored_row(profile_id, row, operation)
+        assert given.classification_origin is decided_by
+        events_before = stored_events(profile_id)
+        asked.clear()
+
+        assert _act(runtime, _CLI, _classify(profile_id, row))
+
+        confirmed = stored_row(profile_id, row, operation)
+        assert classification_facts(confirmed) == classification_facts(given)
+        assert confirmed.classification_origin is _PERSON
+        recorded = [event for event_id, event in stored_events(profile_id).items() if event_id not in events_before]
+        assert {event.actor for event in recorded} == {_TYPED}
+        assert BucketEventType.LEDGER_TRANSACTION_CLASSIFIED in {event.event_type for event in recorded}
+        for act in (
+            _derive(profile_id, row, "domestic_reduced"),
+            _exclude(profile_id, row),
+            _split(profile_id, row),
+            _archive(profile_id, row),
+            _classify_review(profile_id, row),
+            _split_review(profile_id, row),
+        ):
+            assert _refused_and_nothing_changed(runtime, operation, act), act[0]
+        assert asked == []
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("counterparty_country", "DE"),
+        ("counterparty_identification_state", "DE"),
+        ("deduction_fact_kind", "domestic_current"),
+        ("investment_asset_id", "bi-0001"),
+    ],
+)
+def test_a_person_completing_an_agents_classification_with_one_further_fact_owns_it(
+    tmp_path: Path, operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch, field: str, value: str
+) -> None:
+    """The class is restated and one fact that bears on the tax is added: the row is the person's."""
+    _the_model(monkeypatch)
+    with _runtime(tmp_path) as runtime:
+        _driver, _registry, profile_id, _host = runtime
+        row, _decided_by = _row_another_party_classified(runtime, operation, "agent-review")
+
+        assert _act(runtime, _CLI, _classify(profile_id, row, **{field: value}))
+
+        completed = stored_row(profile_id, row, operation)
+        assert getattr(completed, field) is not None
+        assert completed.classification_origin is _PERSON
+        for act in (_exclude(profile_id, row), _split(profile_id, row), _derive(profile_id, row)):
+            assert _refused_and_nothing_changed(runtime, operation, act), act[0]
+
+
+def test_a_review_an_agent_started_does_not_commit_over_a_classification_the_person_made_meanwhile(
+    tmp_path: Path, operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The stored row is read at the commit, before any effect is declared, so the answer settles as a refusal."""
+    _the_model(monkeypatch)
+    with _runtime(tmp_path) as runtime:
+        driver, _registry, profile_id, host = runtime
+        row = seed_row_a_rule_classified(profile_id, operation, description="synthetic row for a rule")
+        after_the_person: list[tuple[dict[str, Transaction], dict[str, BucketEvent]]] = []
+
+        def the_person_classifies() -> None:
+            classify_as_the_person(
+                profile_id, operation, transaction_id=row, classification=BusinessClassification.PERSONAL
+            )
+            after_the_person.append(stored_state(profile_id, operation))
+
+        host.frontend = _MCP
+        definition_id, payload = _classify_review(profile_id, row)
+        settled = review_and_apply(
+            driver,
+            definition_id=definition_id,
+            profile_id=profile_id,
+            payload=payload,
+            while_pending=the_person_classifies,
+        )
+
+        assert refused_for_the_frontend(settled), settled.projection
+        assert [stored_state(profile_id, operation)] == after_the_person
+        kept = stored_row(profile_id, row, operation)
+        assert kept.business_classification is BusinessClassification.PERSONAL
+        assert kept.classification_origin is _PERSON
+
+
+_SET_ASIDE = pytest.mark.parametrize(
+    ("set_aside", "state"),
+    [(_archive, TransactionLifecycleState.ARCHIVED), (_stash, TransactionLifecycleState.STASHED)],
+    ids=["archive", "stash"],
+)
+
+
+@_SET_ASIDE
+@pytest.mark.parametrize("work", ["classification", "attachment", "invoice"])
+def test_an_agent_does_not_archive_or_stash_a_row_carrying_the_persons_work_and_the_command_line_does(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    set_aside: Callable[[UUID, str], tuple[str, BaseModel]],
+    state: TransactionLifecycleState,
+    work: str,
+) -> None:
+    """A row set aside leaves every calculation, and an agent may run a calculation."""
+    with _runtime(tmp_path) as runtime:
+        _driver, _registry, profile_id, _host = runtime
+        if work == "classification":
+            row = seed_row(profile_id, operation, description="synthetic hand row", classification=_BUSINESS)
+        else:
+            row = seed_row(profile_id, operation, description="synthetic row with the person's work")
+            if work == "attachment":
+                attachment = seed_stored_attachment(profile_id, operation, reference="set-aside")
+                attach_as_the_person(profile_id, operation, transaction_id=row, attachment_id=attachment)
+            else:
+                assert _act(runtime, _CLI, _link(profile_id, row, seed_invoice(profile_id, number="SYNTHETIC-1")))
+
+        assert _refused_and_nothing_changed(runtime, operation, set_aside(profile_id, row))
+
+        assert _act(runtime, _CLI, set_aside(profile_id, row))
+        assert stored_row(profile_id, row, operation).lifecycle_state is state
+        # The person set it aside, so bringing it back is the person's to do.
+        assert _refused_and_nothing_changed(runtime, operation, _restore(profile_id, row))
+        assert _act(runtime, _CLI, _restore(profile_id, row))
+        assert stored_row(profile_id, row, operation).lifecycle_state is TransactionLifecycleState.ACTIVE
+
+
+@_SET_ASIDE
+def test_an_agent_archives_stashes_and_restores_a_row_that_is_unprocessed_or_its_own(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+    set_aside: Callable[[UUID, str], tuple[str, BaseModel]],
+    state: TransactionLifecycleState,
+) -> None:
+    _the_model(monkeypatch)
+    with _runtime(tmp_path) as runtime:
+        _driver, _registry, profile_id, _host = runtime
+        unprocessed = seed_row(profile_id, operation, description="synthetic unprocessed row")
+        by_rule = seed_row_a_rule_classified(profile_id, operation, description="synthetic row for a rule")
+        its_own, _decided_by = _row_another_party_classified(runtime, operation, "agent-review")
+
+        for row in (unprocessed, by_rule, its_own):
+            assert _act(runtime, _MCP, set_aside(profile_id, row))
+            aside = stored_row(profile_id, row, operation)
+            assert aside.lifecycle_state is state
+            assert aside.lifecycle_lineage[-1].actor == AGENT_LABEL
+
+            assert _act(runtime, _MCP, _restore(profile_id, row))
+            assert stored_row(profile_id, row, operation).lifecycle_state is TransactionLifecycleState.ACTIVE
+
+
+def test_an_agent_restores_what_an_agent_set_aside_and_not_what_the_person_did(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """The row records who ran each archive, stash and restore; the last one set the state the row is in."""
+    with _runtime(tmp_path) as runtime:
+        _driver, _registry, profile_id, _host = runtime
+        by_the_person = seed_row_a_rule_classified(profile_id, operation, description="synthetic row for a rule")
+        by_the_agent = seed_row(profile_id, operation, description="synthetic unprocessed row")
+        assert _act(runtime, _CLI, _stash(profile_id, by_the_person))
+        assert _act(runtime, _MCP, _stash(profile_id, by_the_agent))
+
+        assert _refused_and_nothing_changed(runtime, operation, _restore(profile_id, by_the_person))
+        # Archiving it would make an agent the last to set it aside, and so let an agent restore it.
+        assert _refused_and_nothing_changed(runtime, operation, _archive(profile_id, by_the_person))
+
+        assert _act(runtime, _MCP, _archive(profile_id, by_the_agent))
+        assert _act(runtime, _MCP, _restore(profile_id, by_the_agent))
+        assert _act(runtime, _CLI, _restore(profile_id, by_the_person))
+        # Active again, the rule's row is an agent's to archive as it was before the person stashed it.
+        assert _act(runtime, _MCP, _archive(profile_id, by_the_person))
+        assert _act(runtime, _CLI, _restore(profile_id, by_the_person))
+        for row in (by_the_person, by_the_agent):
+            assert stored_row(profile_id, row, operation).lifecycle_state is TransactionLifecycleState.ACTIVE

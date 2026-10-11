@@ -243,6 +243,9 @@ _LEDGER_ENTRIES: Final = (
     # decision on a caller-supplied replay identity and on marking amounts an agent states.
     _admit("ledger.add", _WRITES_ONLINE, _DECISION),
     _admit("ledger.allocate", _WRITES, _CHECKLIST),
+    # An archived or stashed row leaves every calculation, so the executor refuses an agent the
+    # archive or stash of a row that carries the person's work, and the restore of a row the
+    # person archived or stashed.
     _admit("ledger.archive", _WRITES),
     # Attach links evidence already stored, by identifier, and takes no file.
     _admit("ledger.attach", _WRITES),

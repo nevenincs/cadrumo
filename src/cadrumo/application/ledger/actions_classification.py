@@ -285,6 +285,8 @@ def _apply_one_bulk_classify_row(
             previous_transaction_id=resolved_transaction_id,
             now=now,
             ports=ports,
+            # Every row of the table states a classification, changed or not.
+            decides_classification=True,
         )
         if prepared is None:
             # field-for-field identical â€” classification already applied.

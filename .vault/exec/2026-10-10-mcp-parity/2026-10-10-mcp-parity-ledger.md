@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:cb59de7204452bf080292da0e72bac2f452791ca636c284db4bcb1b7351f17b1'
+body_hash: 'sha256:060ca15e1c88a2d9b6c27a655c46939fb96db7fb31ff8cb5146299e1f8d1a7d3'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -992,6 +992,31 @@ related:
 - `S35` `verify:` `ty check --python-platform linux (43 files)` -> `pass`
 - `S35` `verify:` `basedpyright on the changed production files` -> `pass`
 - `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S35` `M` `src/cadrumo/application/ledger/actions_classification.py`
+- `S35` `M` `src/cadrumo/application/ledger/actions_common.py`
+- `S35` `M` `src/cadrumo/application/ledger/agent_row_guard.py`
+- `S35` `M` `src/cadrumo/application/ledger/tests/test_llm_review_persons_row.py`
+- `S35` `M` `src/cadrumo/domain/transactions/classification_origin.py`
+- `S35` `M` `src/cadrumo/domain/transactions/tests/test_classification_origin.py`
+- `S35` `M` `src/cadrumo/entrypoints/tests/ledger_persons_work_test_support.py`
+- `S35` `M` `src/cadrumo/entrypoints/tests/test_ledger_persons_work_mcp_guard.py`
+- `S35` `M` `src/cadrumo/locales/ca/common.yml`
+- `S35` `M` `src/cadrumo/locales/en/common.yml`
+- `S35` `M` `src/cadrumo/locales/es/common.yml`
+- `S35` `M` `src/cadrumo/locales/hu/common.yml`
+- `S35` `A` `src/cadrumo/adapters/persistence/profile/tests/test_person_takes_a_classification_at_the_ledger_writers.py`
+- `S35` `A` `src/cadrumo/application/ledger/tests/test_classification_decision_fields_are_complete.py`
+- `S35` `verify:` `pytest ledger, invoices, operations, inventory, modelo, aggregation and transaction-domain suites (7054 of 7058 tests)` -> `pass`
+- `S35` `verify:` `pytest profile persistence suite (2350 tests)` -> `pass`
+- `S35` `verify:` `pytest entrypoint suite including executor conformance (2224 of 2231 tests, two re-run alone)` -> `pass`
+- `S35` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S35` `verify:` `pytest touched command-line and terminal-interface tests (245 of 246 tests)` -> `pass`
+- `S35` `verify:` `ruff check (17 files)` -> `pass`
+- `S35` `verify:` `ruff format --check (17 files)` -> `pass`
+- `S35` `verify:` `ty check --python-platform linux (17 files)` -> `pass`
+- `S35` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S35` `M` `.vault/audit/2026-10-11-mcp-parity-audit.md`
 
 ## Notes
 
@@ -1033,3 +1058,5 @@ related:
 - `S37` Second review. Inventory create, movement and valuation record the session label for an agent. A census over the registry fails when a definition open to MCP has an attribution field that no named test proves is session-derived, and when an entry goes stale.
 - `S30` Third review. The command line capped every decimal at two digits, share and rate included, and moving its rules into the operations carried that cap with them. A share and a rate are fractions between 0 and 1 with no scale bound, as the domain and the registry rates require; money keeps two digits. Fixed in the operations for classify, add and update, on the command line including allocate and the model command, and in the terminal interface. The classification guide states it, with its three catalogues.
 - `S35` Third review. The protection of a hand classification keyed on a last-writer stamp that IVA derivation rewrites and that the model reviews, exclude and detach went round. The row now records the origin of its classification, changed only by a write that changes the classification or its tax figures; older rows read as the person when classified and not rule-stamped. An execution admitted on MCP is refused, before any effect, IVA derivation, both model reviews at the request and at the commit, the manual split and exclude on a row whose classification is the person, replacing an existing invoice link, and detaching evidence an agent did not link. The two census entries for the reviews now point at a test that reads the stored actor. Left for the owner: an agent archiving or stashing the person row, and an agent replacing a usage ratio the person set.
+- `S35` Fourth review. A person who confirmed an agent, rule or model classification with the same value, or only completed a field such as the counterparty country, did not become its owner. A person write that names any field of one declared set now takes the row whether or not a value changes, the no-change paths record it as a classification event, and a test holds the set equal to what the classification, update and bulk patches can set. An agent is refused archiving or stashing a row whose classification is the person, and restoring a row whose archived or stashed state the person set. The review commit reads the stored row before any effect. Two entrypoint cases failed under load in the 45-minute parallel run and pass alone.
+- `S35` Correction: the four rows for src/cadrumo/locales/{ca,en,es,hu}/common.yml under this Step were logged in error. Those catalogue changes belong to another session and are not part of this Step or its commit.

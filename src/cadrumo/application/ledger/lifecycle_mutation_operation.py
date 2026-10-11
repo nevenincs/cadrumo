@@ -54,7 +54,7 @@ from .actions_lifecycle import (
     restore_manual_transaction,
     stash_manual_transaction,
 )
-from .agent_row_guard import require_agent_may_set_aside
+from .agent_row_guard import require_agent_may_change_lifecycle, require_agent_may_set_aside
 from .id_resolution import resolve_transaction_id
 from .lifecycle_contracts import (
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID,
@@ -234,13 +234,16 @@ class _LedgerLifecycleExecutor:
                 project_lifecycle_validation_from_error(error, transaction_id=None),
             )
             return await _publish_refusal(context, refused)
-        if self._operation_id == LEDGER_EXCLUDE_OPERATION_DEFINITION_ID and execution_admitted_on_mcp(
-            self._execution_caller_reader, context
-        ):
-            # An exclusion replaces the row's classification, and the one operation that puts
-            # it back is closed to an agent. Archive and stash keep the row as it is and the
-            # restore that returns it is open, so they are not held to this.
-            require_agent_may_set_aside(catalogue.transactions[transaction_id])
+        if execution_admitted_on_mcp(self._execution_caller_reader, context):
+            # Each of these moves a row into or out of the calculations, which an agent
+            # may run. Refused here, before any effect is declared.
+            stored = catalogue.transactions[transaction_id]
+            if self._operation_id == LEDGER_EXCLUDE_OPERATION_DEFINITION_ID:
+                require_agent_may_set_aside(stored)
+            else:
+                require_agent_may_change_lifecycle(
+                    stored, restores=self._operation_id == LEDGER_RESTORE_OPERATION_DEFINITION_ID
+                )
 
         prepared = _PreparedLifecycleMutation(
             profile_id=payload.profile_id,

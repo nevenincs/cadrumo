@@ -5,7 +5,7 @@ tags:
 date: '2026-10-11'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:e20b1245af06e843feb4f7db6a41f618ad8b1178beae200e5aaa4827710dcd34'
+body_hash: 'sha256:f342b3bbafc7d34e4b668ebb16891dfc718ac19677ab076d186b73373a57c4bb'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -25,6 +25,8 @@ Review 2, 2026-10-11: before handoff, the sign-in door (`458418a63d`, `f45bf1eb4
 Checked and found sound in review 2: an MCP connection cannot send a password or have a sign-in stored; nothing it does moves either deadline; the lease is re-evaluated at each operation and effect, so sign-out, lock and expiry stop the session; sign-out and locking another session are refused to it; the profile and the surface are fixed by the session. Where the human kind of session gates an act, the MCP frontend is separately refused: session inventory, automation deny, profile resume and recovery, typed secrets (which covers key approval, password rotation and certificate secrets) and workbench generation admit only the command line and the terminal interface; review responses are bound to the submitting session; no definition that requires a person lists MCP. The receipt fix leaves no deletion a caller without the proof can trigger and wipes the unwrapped key. The actor is read from the worker's own binding and fails closed when the session is retired. The calculation variants, observation clear, the signed block, the off-machine read and the reaffirming run are refused whatever the action. Not checked: a running runtime end to end, POSIX, the Windows system proxy, translations.
 
 Review 3, 2026-10-11: re-review of the fixes in `ece30ed551`, base `0cbfe6a994`. Verdict: revision required for `S32`, `S35` and `S42`. The proxy fix holds against hostile addresses and no operation open to MCP writes the endpoint setting; the bulk classification fix holds on its own route; the release of results by admitting frontend holds on every path that returns content; the census is truthful for five of seven entries checked.
+
+Review 4, 2026-10-11: re-review of `3e8f9e3725` and `7e6226e084`, base `ece30ed551`. Verdict: revision required for `S35`. The agent side of the classification-origin rule holds: every classifying write goes through one stamper, each executor refuses before any effect, and deriving, detaching, linking or archiving and restoring before a split all end refused; stored rows load safely and the filing snapshot fingerprint is unchanged. The decimal fix holds and the census proofs for the reviews now read a stored actor.
 
 ## Findings
 
@@ -111,6 +113,26 @@ The model reviews of classification and split are open to MCP and a review respo
 ### resumed-label | low | A person resuming an agent's operation is recorded under an agent label that carries the person's client
 
 `src/cadrumo/entrypoints/runtime/operation_authority.py:140`. The operation was admitted for an agent and stays sealed and attributed as an agent's; the label's client part is the resuming session's. Documented in the code. Review 3. Recorded, no action.
+
+### origin-not-taken | high | A person who confirms or completes a classification did not become its owner
+
+`src/cadrumo/application/ledger/actions_manual.py:1146` returns without a write when the person classifies a row with the value an agent gave it, so the origin stays the agent's and an agent can still replace or exclude it; on a row stamped by a rule or a model the same act is refused as changing nothing. `src/cadrumo/domain/transactions/classification_origin.py:23` omits five fields the classification patch sets, so a person setting only the counterparty country leaves the origin unchanged, and `src/cadrumo/application/ledger/agent_row_guard.py:103` compares only the same fields. Review 4. Resolved 2026-10-11: a person's write that names any field of one declared set takes the row whether or not a value changes, and is recorded as a classification; a test holds the set equal to what the classification, update and bulk patches can set; the second guard compares the same set. A write that moves no value leaves the row's fingerprint unchanged.
+
+### archive-stash-open | medium | An agent could archive or stash a row carrying the person's classification
+
+`src/cadrumo/application/ledger/lifecycle_mutation_operation.py:237` guards exclude only. An archived or stashed row leaves every calculation until someone restores it, and calculation is open to MCP. Review 4. Resolved 2026-10-11: an execution admitted on MCP is refused archiving or stashing a row whose classification is the person's, and restoring a row whose archived or stashed state the person set, read from the row's lifecycle record; a row without that record reads as the person's.
+
+### review-commit-baseline | low | The review's commit-time check read the captured baseline, not the current row
+
+`src/cadrumo/application/ledger/llm_review_execution.py:413`. The writers still protect the current row, but in plain classification mode that refusal comes after the effect is declared unknown. Review 4. Resolved 2026-10-11: the commit reads the stored row before any effect.
+
+### decimals-range-placement | low | The entry request models enforce range and canonical text in different places
+
+Classification refuses a rate above 1 at the request; update accepts it there and relies on the domain's refusal (`src/cadrumo/application/ledger/update_contracts.py:116`); add accepts a trailing zero that classification refuses (`src/cadrumo/application/ledger/ledger_add_contracts.py:110`). None is new and nothing wrong is stored. Review 4. Open.
+
+### review-in-flight-upgrade | low | A model review captured before the origin field existed is refused as a conflict
+
+`src/cadrumo/application/ledger/llm_review_operand.py:128` re-serialises the baseline row, which now carries the origin. Only test profiles hold data. Review 4. Recorded, no action.
 
 ## Recommendations
 

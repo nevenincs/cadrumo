@@ -456,6 +456,7 @@ def split_transaction_with_classified_children(
             previous_transaction_id=bare_child.transaction_id,
             now=now,
             ports=ports,
+            decides_classification=True,
         )
         if prepared is None:
             classified_children.append(bare_child)

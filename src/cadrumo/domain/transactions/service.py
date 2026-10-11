@@ -85,8 +85,10 @@ def set_classification(
         classified_by: Classifier source string: ``auto``, ``manual``, or
             ``rule:<rule-id>``.
         origin: Whose decision this classification is. It is recorded when the
-            write changes the classification, its share or the category, and
-            the origin already on the row stands when it changes none of them.
+            write changes the classification, its share or the category. A
+            person who restates what the row carries has accepted it and
+            becomes its origin; any other restatement leaves the origin on
+            the row standing.
         reason: Free-text override justification; embedded in the
             history entry, not on the top-level transaction.
         confidence: Caller-supplied decision confidence in the inclusive
@@ -166,6 +168,7 @@ def set_classification(
         ),
         replaces=transaction,
         written=origin,
+        decided=True,
     )
     return _replace_transaction(catalogue, updated_transaction)
 

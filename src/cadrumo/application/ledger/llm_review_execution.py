@@ -192,16 +192,15 @@ def _require_agent_may_ask_for_a_proposal(baseline: Transaction, request: Ledger
         require_agent_may_reclassify(baseline)
 
 
-def _require_agent_may_commit(baseline: Transaction, decision: LlmReviewDecision) -> None:
+def _require_agent_may_commit(row: Transaction, decision: LlmReviewDecision) -> None:
     """Refuse an agent's response that applies a proposal to a row carrying the person's work.
 
-    The writer replaces exactly the reviewed row or refuses, so the reviewed
-    row is the row the decision would change. A rejection changes no row.
+    A rejection changes no row.
     """
     if decision is LlmReviewDecision.SPLIT:
-        require_agent_may_set_aside(baseline)
+        require_agent_may_set_aside(row)
     elif decision is LlmReviewDecision.APPLY:
-        require_agent_may_reclassify(baseline)
+        require_agent_may_reclassify(row)
 
 
 def _review_decision(response_action: OperationResponseIntentValue, suggestion: object) -> LlmReviewDecision:
@@ -409,8 +408,18 @@ class LedgerLlmReviewExecutor:
         decision = _review_decision(response_action, suggestion)
         if execution_admitted_on_mcp(self._execution_caller_reader, context):
             # The response is the submitting session's, so an agent's review is answered by
-            # the agent. Refused before the commit phase, with no effect declared.
+            # the agent. The person may have classified the row since the proposal was made,
+            # so the stored row is read and held to the rule as well as the reviewed one,
+            # here, before the commit phase declares an effect.
             _require_agent_may_commit(baseline, decision)
+
+            def stored_row() -> Transaction | None:
+                with validating_governed_facts(context.authority_operation):
+                    return ports.ledger.transaction_repository.load().get(baseline.transaction_id)
+
+            stored = await asyncio.to_thread(stored_row)
+            if stored is not None:
+                _require_agent_may_commit(stored, decision)
         actor = execution_actor_label(
             self._execution_caller_reader,
             context,

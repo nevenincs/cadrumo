@@ -404,6 +404,17 @@ def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: T
     return bool(differing) and differing <= _EVIDENCE_MUTATION_FIELDS
 
 
+def command_changes_no_ledger_value(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
+    """Return whether ``command`` would leave every value of the stored row as it is.
+
+    The stamp naming the last writer's mechanism is not a value: a write that
+    differs from the row in nothing else moves no figure a calculation reads.
+    """
+    command_fields = _command_idempotency_fields(command)
+    current_fields = _transaction_idempotency_fields(current)
+    return all(value == current_fields[name] for name, value in command_fields.items() if name != "classified_by")
+
+
 def raise_finalized_modelo_blocked(
     *,
     operation: str,
