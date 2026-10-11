@@ -15,7 +15,7 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
 modified: '2026-10-11'
 body_schema: body-v2
-body_hash: 'sha256:45b3fb17f9f2c2e0e41a59437c1fb35a74d50e56a12a7a936ee21db4aa2cdd9a'
+body_hash: 'sha256:37a75e51f497ae4db77df8cefa8fed4601805822e464455997ce5ef67851d99a'
 ---
 
 # `mcp-parity` plan
@@ -106,7 +106,7 @@ Delivers an MCP server that resumes the person's sign-in for the exact profile, 
 - [x] `P02.S16` - Settle with the owner of the sign-in work whether a login or generation mismatch may delete the stored sign-in before the presented proof is verified, and verify the proof first if not; `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`.
 - [x] `P02.S17` - Refuse the global sign-out and the lock of a session other than its own to a session on the MCP frontend, which may end only itself, as the owner ruled, with a refusal test for each; `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py`.
 - [ ] `P02.S18` - Record as an amendment to the application sign-in record the owner ruling that a message the person sends to the assistant counts as their activity and the assistant own calls, commands and scripts do not, together with the decision on where the receipt-sealing key lives during extension, so the idle extension can be built; the key decision is still open; `.vault/adr/2026-10-04-application-sign-in-adr.md`.
-- [ ] `P02.S19` - Prove the door against a running runtime with a synthetic encrypted profile: resume, refusal with nobody signed in, the tool list with no session, sign-out and idle expiry ending the MCP session, no MCP submission advancing the deadline, the password refused, and the key route unchanged; `src/cadrumo_harness/mcp/tests`.
+- [x] `P02.S19` - Prove the door against a running runtime with a synthetic encrypted profile: resume, refusal with nobody signed in, the tool list with no session, sign-out and idle expiry ending the MCP session, no MCP submission advancing the deadline, the password refused, and the key route unchanged; `src/cadrumo_harness/mcp/tests`.
 
 ### Phase `P04` - admit the reads
 
@@ -123,7 +123,7 @@ Delivers the ledger entry, ratio, rule, attachment, evidence and reversible life
 
 - [x] `P05.S30` - Move the validations the command line performs before submitting ledger add, update and single classification into those operations, with the same refusals; `src/cadrumo/entrypoints/cli/_ledger.py`.
 - [ ] `P05.S31` - Admit ledger.add, ledger.update, ledger.classify.single and ledger.allocate with attribution and provenance taken from the session and the replay identity required; also update_operation.py, classify_operation.py and allocate_operation.py; `src/cadrumo/application/ledger/add_operation.py`.
-- [x] `P05.S32` - Admit ledger.classify.bulk by changing its access resolver, which refuses every frontend but the command line, together with its frontend list; `src/cadrumo/application/ledger/bulk_classify_operation.py`.
+- [ ] `P05.S32` - Admit ledger.classify.bulk together with ledger.classify.single, once the replay-identity and provenance decisions are accepted: it is the same write for many rows, replaces a classification made by hand and lets a row state tax figures; its resolver no longer refuses other frontends and it applies the entry rules to every row on every frontend; `src/cadrumo/application/ledger/bulk_classify_operation.py`.
 - [x] `P05.S33` - Admit ledger.ratios.set, its inverse ledger.ratios.unset, ledger.rule.add and ledger.rule.apply; also rule_operation.py; `src/cadrumo/application/ledger/ratios_operation.py`.
 - [x] `P05.S34` - Admit ledger.attach and ledger.detach, which act on stored evidence by identifier, after the evidence reads; `src/cadrumo/application/ledger/attachment_mutation_operation.py`.
 - [x] `P05.S35` - Move the confirmations of the manual split and of archive, stash, restore and exclude into their operations and admit all five; also lifecycle_mutation_operation.py; `src/cadrumo/application/ledger/split_operation.py`.

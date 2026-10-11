@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:4370b12ec21ab8cc7d04cbbe98b5bf50c8f9372bbc9d3516ceaca868ede69f4e'
+body_hash: 'sha256:00ffb6893d9fd8ea43d86a0108bc5ba92cf7326b0182cc78e6b1b31c12041074'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -868,6 +868,13 @@ related:
 - `S37` `verify:` `basedpyright on the changed production files` -> `pass`
 - `S37` `verify:` `lint-imports (15 contracts)` -> `pass`
 - `S37` `by:` `vaultspec-high-executor`
+- `S19` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_sign_in_adapter.py`
+- `S19` `M` `src/cadrumo/entrypoints/runtime/tests/stored_sign_in_runtime.py`
+- `S19` `verify:` `pytest sign-in door, adapter, login-method, resume and fresh-process tests (92 tests)` -> `pass`
+- `S19` `verify:` `ruff check` -> `pass`
+- `S19` `verify:` `ruff format --check` -> `pass`
+- `S19` `verify:` `ty check --python-platform linux` -> `pass`
+- `S19` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -902,3 +909,4 @@ related:
 - `S42` Follow-up found while closing the review. The two model reviews send the person transaction and evidence text to the reader endpoint, which a setting can point at another host; an agent review is now refused unless the endpoint is on this machine, by the one check the extraction uses. The reconciliation import, list and pull results and the local authentication read gave an agent a host path; an agent now receives the file name and a flag that the directory was withheld. Stored records and other frontends are unchanged.
 - `S35` Follow-up: restore refused nothing for rows a merge had replaced, so an original could be reactivated beside the merged row and counted twice. Restore now refuses while the row that replaced it is active, in both directions, and stays allowed once that row is archived.
 - `S37` Follow-up: invoice add and update recorded a fixed actor for every frontend and now record the session label for an agent; bulk classification recorded a file command as its source for an agent, who sends the table and no file, and now records the operation.
+- `S19` Each clause is proven with a real runtime, session authority, encrypted profile, IPC and MCP adapter, with the profile worker as a separate process; only the native login, the keychain and the runtime clock are ports. Idle expiry is shown in two halves because the clock seam moves the runtime and not the worker: a live session is retired when the runtime clock passes the idle deadline, and a stored sign-in sixteen minutes old is refused, removed and replaced only by a new sign-in. No test shows one live session crossing the deadline and its stored record then expiring by itself. The fresh-process test that starts a child runtime and the installed server also passes on this machine.

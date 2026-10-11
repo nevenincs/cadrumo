@@ -5,7 +5,7 @@ tags:
 date: '2026-10-11'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:b75e79c94db2ce43e24053804e18296f8b8bfda6bb5404933cf1e8e5c57e482c'
+body_hash: 'sha256:33ae0220437b8537582f6dd74ca0e52cb6a8e04e7e4fde230db97a64772a84a7'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -19,6 +19,10 @@ Rolling log of the formal reviews of `2026-10-10-mcp-parity-plan`. Each review r
 Review 1, 2026-10-11: phase close of `P01` (Steps `S01` to `S11` and `S45`) and `P04` (Steps `S27` to `S29` and `S46`), commits `f72cc2f19e` to `a2aea88f1f`. Verdict: `P04` passes. `P01` required a revision to the packaged agent text of `S10`, applied the same day; it passes once the two medium findings are closed or assigned. Both were closed the same day, with the low findings, as recorded under each.
 
 Checked and found sound in review 1: a definition cannot list MCP against its recorded decision, and each named sensitive act is refused by the real resolver on MCP only; no second route (batch, review response, resume, result read) reaches own-account writes, the Modelo 360 solicitud, the capability opt-ins, the prorrata elections, invoice removal, session reset or the census review; the surface is carried on both logins, inherited by child leases and fixed at first login; fourteen rows of change and network facts agree with their executors; the agent-facing results (evidence query, review summary, both timelines, filing record view, reader readiness) carry no bytes, host path or open payload; every subject declaration is held to its family's check; paged search and the generated command join behave as described; no suppressions, record citations or change-narrating comments in the reviewed commits. Not checked: 28 resolvers that need stored records to probe, the POSIX branch of the path guard, an end-to-end run on a real runtime, translations.
+
+Review 2, 2026-10-11: before handoff, the sign-in door (`458418a63d`, `f45bf1eb42`, `f7decadcc6`), the declaration work (`808e4ccbf7`, `a2aea88f1f`, `0bc6e88234`) and the ledger writes (`6ab3941b45`, `915b264606`), base `fde91b1ebb`. Verdict: revision required, reopening the reader-locality work of `S42` and `S44` and the bulk classification of `S32`; the one-way split of `S35` awaits the owner. No critical finding.
+
+Checked and found sound in review 2: an MCP connection cannot send a password or have a sign-in stored; nothing it does moves either deadline; the lease is re-evaluated at each operation and effect, so sign-out, lock and expiry stop the session; sign-out and locking another session are refused to it; the profile and the surface are fixed by the session. Where the human kind of session gates an act, the MCP frontend is separately refused: session inventory, automation deny, profile resume and recovery, typed secrets (which covers key approval, password rotation and certificate secrets) and workbench generation admit only the command line and the terminal interface; review responses are bound to the submitting session; no definition that requires a person lists MCP. The receipt fix leaves no deletion a caller without the proof can trigger and wipes the unwrapped key. The actor is read from the worker's own binding and fails closed when the session is retired. The calculation variants, observation clear, the signed block, the off-machine read and the reaffirming run are refused whatever the action. Not checked: a running runtime end to end, POSIX, the Windows system proxy, translations.
 
 ## Findings
 
@@ -54,6 +58,38 @@ Checked and found sound in review 1: a definition cannot list MCP against its re
 
 `src/cadrumo/adapters/outbound/llm/consent.py:60` decides that a read is local from the provider name, while the endpoint the local reader calls is a setting (`src/cadrumo/adapters/outbound/llm/providers/local.py:202`). With the endpoint pointed at another host, extraction and the two model reviews send the person's document and transaction text off the machine without the consent an off-machine read requires. Found 2026-10-11 while admitting extraction. An execution admitted on MCP is now refused unless the endpoint is loopback. The command line and the terminal interface are unchanged, so a person who points the setting elsewhere is still not asked. Open for those two frontends; outside this plan's scope.
 
+### reader-proxy | high | The reader counted as on this machine by its address while its client honoured proxy settings
+
+`src/cadrumo/application/ledger/agent_reader_locality.py:21` passes when the endpoint host is loopback, and `src/cadrumo/adapters/outbound/llm/providers/local.py:198` then posts with a client that reads proxy settings from the environment. With a proxy variable set, requests to `127.0.0.1`, `localhost` and `[::1]` are sent through the proxy, so an agent's extraction or model review sends document text and images off the machine. The adapter also re-reads settings instead of using those the guard checked. Review 2. Open, fix in progress.
+
+### bulk-classify-second-route | high | Bulk classification did on MCP what the same work refuses or holds elsewhere
+
+`src/cadrumo/application/ledger/bulk_classify_operation.py:267` reaches the write of single classification for any active row: it replaces a classification made by hand while its event stores only the new one, stamps the row as manually classified, and lets a row state taxable base, rate and cuota. Single classification is held back for the replay-identity and provenance decisions, and a reaffirming rule run is refused on MCP for the same loss. The entry rules moved into single classification also do not reach it: the real parser accepted an undeclared IRPF category and six-decimal amounts. Review 2. Open, fix in progress: bulk classification leaves MCP until those decisions, and applies the entry rules on every frontend.
+
+### split-one-way | medium | A manual split was admitted as reversible and is not
+
+`src/cadrumo/application/ledger/split_operation.py:132`: the parent keeps classification, evidence and attachments, none pass to the children, restore refuses the parent, and only the approval-bound merge recombines, with the classification entered again. Review 2. Open, fix in progress: an agent's split of a parent that carries the person's classification, evidence or attachments is refused.
+
+### result-sealing-by-executor | medium | Withholding was applied when a result was sealed, not when it was read
+
+`src/cadrumo/entrypoints/runtime/operation_host.py:451` releases a stored result to any live session under the reader's frontend. A result sealed by a person's execution keeps the full draft text, the evidence directory, the reconciliation paths and the certificate path, and an MCP reader that names the operation receives it; the only barrier is that operation identifiers are random and no MCP read was found that lists another session's. Review 2. Open, fix in progress: an MCP reader is released only what was admitted on MCP.
+
+### actor-coverage | low | Fixed labels remained and no census held the rule
+
+`src/cadrumo/application/inventory/registered_executor.py:206` records a fixed label for an agent's inventory create, movement and valuation, and no test fails when an MCP-open request gains an attribution field. A person resuming an agent's interrupted operation records the label the agent typed. Review 2. Open, fix in progress for the first two.
+
+### refusal-site | low | Three refusals sit in the executor, after the submission is stored
+
+Recording over a pending filing's observation (`src/cadrumo/application/modelo/local_observation_operation.py:157`) and both reader-locality refusals are decided in the executor because they depend on stored state or settings the resolver does not read. Nothing is written before they refuse. Review 2. Recorded, no action.
+
+### certificate-path-text | low | Removing the certificate path from summaries is a literal replacement
+
+`src/cadrumo/application/auth/auth_read_contracts.py:61` replaces two spellings of the full path in the health and probe summaries; a summary that quoted only the directory would pass. Not reproduced. Review 2. Open.
+
+### agent-answers-own-review | medium | An agent can answer the review of an operation it submitted
+
+The model reviews of classification and split are open to MCP and a review response is bound to the submitting session, so on the MCP frontend the agent that asked for the proposal is also the one that applies it. The governing records rule that a model's proposal stays a proposal until accepted and do not say by whom on this frontend. Noted by the orchestrator while reading review 2. Open: a decision for the admission rulings record.
+
 ## Recommendations
 
 - For `surface-real-policy`: resolve each listed operation's real access policy in the surface test and keep a named, justified set for those that cannot be probed generically, as the admission test does.
@@ -61,3 +97,6 @@ Checked and found sound in review 1: a definition cannot list MCP against its re
 - For `reader-network-fact`: read which endpoint the two reviews use and record the wider answer if it is the configurable one.
 - For `workflow-run-detail`: give the step detail a declared model, or pin its field names in a test so an addition is a visible contract change.
 - For `reader-called-local`: decide whether an endpoint that is not on this machine makes a read off-machine for the purposes of consent on every frontend. That is a decision for the record that governs off-machine extraction consent, not for this plan.
+- For `bulk-classify-second-route` and `split-one-way`: the admission rulings record should say whether replacing a classification the person made, or a figure the person stated, is sensitive on every route, so that single classification, bulk classification, a reaffirming rule run and a split are ruled alike.
+- For `reader-proxy` and `reader-called-local`: one decision, in the record that governs off-machine consent, on what makes a read stay on this machine.
+- For `agent-answers-own-review`: the admission rulings record should say which review responses an agent may give on the MCP frontend and which wait for the person.

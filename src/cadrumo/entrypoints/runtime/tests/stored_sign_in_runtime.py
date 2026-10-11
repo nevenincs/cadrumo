@@ -31,7 +31,11 @@ from cadrumo.adapters.local_runtime.windows import WindowsRuntimeEndpoint
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_custody
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
-from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
+from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
+    PROFILE_INPUT,
+    AdministrationSubject,
+    administration_subject,
+)
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.mcp_surfaces import McpSurfaceName
@@ -51,6 +55,7 @@ from cadrumo.application.runtime.sign_in import (
     SignInStatus,
 )
 from cadrumo.application.runtime.transport import RuntimeConnectionContext
+from cadrumo.application.user_profile import login_session
 from cadrumo.application.user_profile.access_contracts import AccessSession, ProfileAccessBinding
 from cadrumo.application.user_profile.login_session import authenticate_profile_candidate, borrow_profile_receipt_key
 from cadrumo.core.time.clock import now
@@ -65,7 +70,11 @@ type SessionReply = RuntimeProfileStatus | RuntimeSessionsLocked | RuntimeHumanS
 
 @dataclass
 class RuntimeWallClock:
-    """The runtime's wall clock port; moving it ahead takes the runtime past a deadline."""
+    """The runtime's wall clock port; moving it ahead takes the runtime past a deadline.
+
+    Only the runtime process reads it. The profile worker, which checks a
+    presented sign-in against its own record, keeps real time.
+    """
 
     ahead: timedelta = field(default_factory=timedelta)
 
@@ -106,6 +115,7 @@ class StoredSignInRuntime:
     binding: ProfileAccessBinding
     native_login: LoginObservation
     clock: RuntimeWallClock
+    enrollment: AdministrationSubject
     connections: list[VerifiedRuntimeConnection] = field(default_factory=list)
 
     @property
@@ -187,6 +197,27 @@ class StoredSignInRuntime:
         assert isinstance(reply, RuntimeSignInStatusReply), reply
         return reply.status
 
+    def store_sign_in(self, *, age: timedelta = timedelta()) -> None:
+        """Store a new sign-in for the person, as the worker's publication step does after a password login.
+
+        It runs in this process so that the proof lands in this process's
+        keychain, and it binds the sign-in to the native login the runtime
+        observes. With an ``age`` the person signed in that long ago: the
+        sign-in carries the deadlines it would have had then.
+        """
+        _, decode = profile_authority_contexts()
+        with pytest.MonkeyPatch.context() as patched:
+            # The login session module stamps the sign-in with its clock.
+            patched.setattr(login_session, "_now", lambda: self.clock() - age)
+            with authenticate_profile_candidate(
+                bucket_id=self.profile_id, passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
+            ) as candidate:
+                assert candidate.persist_acceleration_receipt(
+                    login_id=self.native_login.login_id,
+                    binding=self.binding,
+                    sign_in=SignInGenerationCustody(root=self.root, binding=self.binding).establish().current,
+                )
+
     def stored_sign_in(self) -> bytes | None:
         """Return the stored sign-in's bytes, deadlines included, or ``None`` when none is stored."""
         path = profile_session_path(storage_root=self.root, profile_id=self.profile_id)
@@ -228,21 +259,6 @@ def stored_sign_in_runtime(
             binding = enrollment.store.binding
             close_active_bucket_session()
             native_login = LoginObservation(owner_id())
-            if signed_in:
-                # The worker's own publication step, run in this process so the
-                # proof lands in this process's keychain: it binds the sign-in
-                # to the native login the runtime observes.
-                _, decode = profile_authority_contexts()
-                with authenticate_profile_candidate(
-                    bucket_id=binding.profile_id,
-                    passphrase_callback=lambda: PROFILE_INPUT,
-                    profile_decode_context=decode,
-                ) as candidate:
-                    assert candidate.persist_acceleration_receipt(
-                        login_id=native_login.login_id,
-                        binding=binding,
-                        sign_in=SignInGenerationCustody(root=root, binding=binding).establish().current,
-                    )
             stop, boot, clock = Event(), uuid4(), RuntimeWallClock()
             profiles = RecordingProfileConnections(
                 storage_root=root,
@@ -258,7 +274,9 @@ def stored_sign_in_runtime(
             server = RetainedRuntimeTransportServer(
                 endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
             )
-            runtime = StoredSignInRuntime(root, endpoint, profiles, binding, native_login, clock)
+            runtime = StoredSignInRuntime(root, endpoint, profiles, binding, native_login, clock, enrollment)
+            if signed_in:
+                runtime.store_sign_in()
             with ThreadPoolExecutor(max_workers=1) as pool:
                 running = pool.submit(server.serve)
                 try:
