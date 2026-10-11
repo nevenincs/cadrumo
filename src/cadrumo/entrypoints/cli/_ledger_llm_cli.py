@@ -31,10 +31,8 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...core.provenance_stamp import provenance_stamp_transport
 from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BusinessClassification
-from ._ledger_support import (
-    ledger_validation_bad,
-    parse_decimal_option,
-)
+from ._decimal_parsing import parse_optional_fraction
+from ._ledger_support import ledger_validation_bad
 from .common import bad, emit_envelope
 from .registered_operation_contracts import (
     RegisteredOperationCompletion,
@@ -76,7 +74,7 @@ def _run_review(
 ) -> LedgerLlmReviewProjection | LedgerLlmOperationResult:
     """Use the canonical reviewed-operation driver and correlate the settled proposal."""
     client = bound_profile_client(ctx)
-    percentage = parse_decimal_option(business_pct, label="business-pct") if apply else None
+    percentage = parse_optional_fraction(business_pct, label="business-pct") if apply else None
     try:
         request = LedgerLlmReviewRequest(
             profile_id=client.profile_id,

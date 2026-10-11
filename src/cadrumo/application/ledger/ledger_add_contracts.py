@@ -104,8 +104,11 @@ class LedgerAddRequest(BaseModel):
     def _canonical_decimal_inputs(cls, value: str | None, info: object) -> str | None:
         if value is None:
             return None
-        is_amount = getattr(info, "field_name", None) == "amount"
-        if try_parse_canonical_decimal(value, signed=not is_amount, max_fraction_digits=2) is None:
+        field_name = getattr(info, "field_name", None)
+        is_amount = field_name == "amount"
+        # Only euro amounts are held to cents; a share or a rate keeps the fraction digits it has (0.052).
+        cents = None if field_name in {"business_pct", "iva_rate"} else 2
+        if try_parse_canonical_decimal(value, signed=not is_amount, max_fraction_digits=cents) is None:
             if is_amount and try_parse_canonical_decimal(value, max_fraction_digits=2) is not None:
                 raise ValueError(
                     "ledger add amount must be a non-negative magnitude; "

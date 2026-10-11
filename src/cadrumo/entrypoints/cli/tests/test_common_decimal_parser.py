@@ -19,7 +19,12 @@ from decimal import Decimal
 import pytest
 import typer
 
-from .._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
+from .._decimal_parsing import (
+    parse_decimal_amount,
+    parse_fraction,
+    parse_optional_decimal_amount,
+    parse_optional_fraction,
+)
 from ._english_locale_fixture import english_locale_fixture
 
 __all__ = ["english_locale_fixture"]
@@ -86,3 +91,23 @@ def test_refusal_message_names_field_raw_and_expected_format() -> None:
     assert "1.000" in message
     # The hint must name the accepted form, not just declare the input invalid.
     assert "1234.56" in message
+
+
+def test_a_share_or_rate_keeps_the_fraction_digits_it_has() -> None:
+    for raw in ("0.333", "0.052", "0.075", "0.014", "0.005", "0.0175"):
+        assert parse_optional_fraction(raw, label="iva-rate") == Decimal(raw), raw
+    assert parse_optional_fraction(None, label="iva-rate") is None
+
+
+def test_a_share_or_rate_still_refuses_what_is_not_canonical_or_is_thousands_shaped() -> None:
+    for raw in ("1.000", "1,5", "1e-2", "NaN", "", "half"):
+        with pytest.raises(typer.BadParameter):
+            parse_optional_fraction(raw, label="iva-rate")
+
+
+def test_a_required_share_keeps_the_fraction_digits_it_has_and_refuses_the_rest() -> None:
+    for raw in ("0.333", "0.0175", "1"):
+        assert parse_fraction(raw, label="business-pct") == Decimal(raw), raw
+    for raw in ("1.000", "NaN", "half"):
+        with pytest.raises(typer.BadParameter):
+            parse_fraction(raw, label="business-pct")

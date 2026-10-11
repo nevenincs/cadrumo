@@ -45,6 +45,9 @@ CLASSIFICATION_FIELD_NAMES: Final[tuple[str, ...]] = (
 )
 
 
+_FRACTION_FIELDS: Final[frozenset[str]] = frozenset({"business_pct", "iva_rate"})
+
+
 def _input_id(field_name: str) -> str:
     return f"ledger-classification-{field_name.replace('_', '-')}"
 
@@ -54,7 +57,8 @@ def _optional_decimal(field_name: str, raw: str) -> Decimal | None:
     value = raw.strip()
     if not value:
         return None
-    parsed = try_parse_canonical_decimal(value, max_fraction_digits=2)
+    # Only euro amounts are held to cents; a share or a rate keeps the fraction digits it has (0.052).
+    parsed = try_parse_canonical_decimal(value, max_fraction_digits=None if field_name in _FRACTION_FIELDS else 2)
     if parsed is None:
         raise TransactionValidationError(f"{field_name} must be a decimal")
     if field_name != "business_pct":

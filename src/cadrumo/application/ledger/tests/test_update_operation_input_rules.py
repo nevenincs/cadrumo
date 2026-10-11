@@ -40,7 +40,7 @@ def _request(**patch: str | None) -> contracts.LedgerUpdateRequest:
     )
 
 
-@pytest.mark.parametrize("field", ["amount", "taxable_base", "iva_rate", "iva_amount"])
+@pytest.mark.parametrize("field", ["amount", "taxable_base", "iva_amount"])
 def test_amounts_carry_at_most_euro_cent_precision(field: str) -> None:
     """A fourth fractional digit is refused where two are accepted."""
     with pytest.raises(ValidationError, match="canonical decimal text"):
@@ -48,6 +48,11 @@ def test_amounts_carry_at_most_euro_cent_precision(field: str) -> None:
 
     assert getattr(contracts.LedgerUpdatePatch.model_validate({field: "10.12"}), field) == "10.12"
     assert getattr(contracts.LedgerUpdatePatch.model_validate({field: "10.5"}), field) == "10.5"
+
+
+@pytest.mark.parametrize("rate", ["0.052", "0.075", "0.014", "0.005", "0.0175"])
+def test_a_rate_keeps_the_fraction_digits_it_has(rate: str) -> None:
+    assert contracts.LedgerUpdatePatch.model_validate({"iva_rate": rate}).iva_rate == rate
 
 
 def test_a_negative_amount_names_the_magnitude_rule_and_a_signed_base_is_still_admitted() -> None:

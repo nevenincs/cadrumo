@@ -40,6 +40,7 @@ from ...domain.transactions.enums import (
 )
 from ...domain.transactions.errors import TransactionValidationError
 from ._date_parsing import _parse_iso_date
+from ._decimal_parsing import parse_fraction, parse_optional_fraction
 from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
 from ._ledger_llm_cli import (
     LedgerLlmRouteArguments,
@@ -55,7 +56,6 @@ from ._ledger_support import (
     ledger_validation_bad,
     parse_amount_magnitude,
     parse_decimal_option,
-    parse_required_decimal,
     validate_business_pct_range,
     validate_category_id,
 )
@@ -294,7 +294,7 @@ def ledger_update(
             counterparty=counterparty,
             description=description,
             taxable_base=parse_decimal_option(taxable_base, label="taxable-base"),
-            iva_rate=parse_decimal_option(iva_rate, label="iva-rate"),
+            iva_rate=parse_optional_fraction(iva_rate, label="iva-rate"),
             iva_amount=parse_decimal_option(iva_amount, label="iva-amount"),
             irpf_category=irpf_category,
             notes=notes,
@@ -560,13 +560,13 @@ def ledger_classify(
     # bad CLI argument. Catch it here and surface the real validator
     # cause, matching the `ledger add` / `ledger review` treatment.
     try:
-        parsed_business_pct = validate_business_pct_range(parse_decimal_option(business_pct, label="business-pct"))
+        parsed_business_pct = validate_business_pct_range(parse_optional_fraction(business_pct, label="business-pct"))
         patch = _patch_from_options(
             business_classification=classification,
             business_pct=parsed_business_pct,
             category_id=validated_category_id,
             taxable_base=parse_decimal_option(taxable_base, label="taxable-base"),
-            iva_rate=parse_decimal_option(iva_rate, label="iva-rate"),
+            iva_rate=parse_optional_fraction(iva_rate, label="iva-rate"),
             iva_amount=parse_decimal_option(iva_amount, label="iva-amount"),
             irpf_category=irpf_category,
             iva_category=iva_category,
@@ -580,7 +580,7 @@ def ledger_classify(
             m210_options.gross_income_amount,
             label="m210-gross-income-amount",
         )
-        parsed_m210_applicable_rate = parse_decimal_option(
+        parsed_m210_applicable_rate = parse_optional_fraction(
             m210_options.applicable_rate,
             label="m210-applicable-rate",
         )
@@ -621,7 +621,7 @@ def ledger_allocate(
     actor: str | None = None,
 ) -> None:
     """Record business/private proportionality through the exact-profile worker."""
-    parsed_business_pct = parse_required_decimal(business_pct, label="business-pct")
+    parsed_business_pct = parse_fraction(business_pct, label="business-pct")
     validate_business_pct_range(parsed_business_pct)
     validated_category_id = validate_category_id(category_id)
     from .runtime_ledger_allocate import run_ledger_allocate

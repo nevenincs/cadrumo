@@ -333,6 +333,60 @@ def test_a_row_within_the_rules_of_single_classification_still_applies(
     assert stored[second.transaction_id].business_pct == Decimal("0.25")
 
 
+@pytest.mark.parametrize("rate", ["0.052", "0.075", "0.014", "0.005", "0.0175"])
+def test_a_share_and_a_rate_keep_the_fraction_digits_they_have(
+    subject: BulkClassifySubject,
+    transactions: tuple[Transaction, Transaction],
+    rate: str,
+) -> None:
+    first, second = transactions
+    source = (
+        "transaction_id,classification,iva_rate,business_pct\n"
+        f"{first.transaction_id},BUSINESS,{rate},\n"
+        f"{second.transaction_id},MIXED,,0.333\n"
+    )
+    asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(source), subject.context))
+
+    execution = cast(operation.LedgerBulkClassifyExecutionResult, subject.operands.values[-1])
+    result = execution.projection.result
+    assert result is not None and not result.failures, result
+    assert result.applied == 2
+    stored = subject.repository.current.transactions
+    assert stored[first.transaction_id].iva_rate == Decimal(rate)
+    assert stored[second.transaction_id].business_pct == Decimal("0.333")
+
+
+@pytest.mark.parametrize(
+    ("cells", "rule"),
+    [
+        ("BUSINESS,0.123,,", "a taxable base with three fraction digits"),
+        ("BUSINESS,,1.01,", "an IVA rate above one"),
+        ("BUSINESS,,21,", "an IVA rate written as a percentage"),
+        ("MIXED,,,1.001", "a share above one"),
+    ],
+)
+def test_money_keeps_its_cent_limit_and_a_share_or_rate_its_range_in_a_bulk_row(
+    subject: BulkClassifySubject,
+    transactions: tuple[Transaction, Transaction],
+    cells: str,
+    rule: str,
+) -> None:
+    first, second = transactions
+    source = (
+        "transaction_id,classification,taxable_base,iva_rate,business_pct\n"
+        f"{first.transaction_id},{cells}\n"
+        f"{second.transaction_id},PERSONAL,,,\n"
+    )
+    asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(source), subject.context))
+
+    execution = cast(operation.LedgerBulkClassifyExecutionResult, subject.operands.values[-1])
+    result = execution.projection.result
+    assert result is not None, rule
+    assert (result.total, result.applied) == (2, 1), rule
+    assert [failure.transaction_id for failure in result.failures] == [first.transaction_id], rule
+    assert subject.repository.current.transactions[first.transaction_id] == first, rule
+
+
 _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 
 

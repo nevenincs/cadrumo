@@ -293,3 +293,10 @@ async def test_executor_loads_and_resolves_the_current_catalogue_inside_commit(
     assert mutation["catalogue"] is current_catalogue
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
     assert operands.value == projection
+
+
+@pytest.mark.parametrize("share", ["0.333", "0.0175", "0.5"])
+def test_an_allocation_share_keeps_the_fraction_digits_it_has(share: str) -> None:
+    request = operation.LedgerAllocateRequest(profile_id=_PROFILE, transaction_id="a" * 12, business_pct=share)
+
+    assert request.business_pct == share

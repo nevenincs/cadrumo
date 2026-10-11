@@ -111,7 +111,10 @@ class LedgerUpdatePatch(BaseModel):
             return None
         field_name = info.field_name or ""
         is_amount = field_name == "amount"
-        parsed = try_parse_canonical_decimal(value, signed=not is_amount, max_fraction_digits=2)
+        # Only euro amounts are held to cents; a rate keeps the fraction digits it has (0.052).
+        parsed = try_parse_canonical_decimal(
+            value, signed=not is_amount, max_fraction_digits=None if field_name == "iva_rate" else 2
+        )
         if parsed is None:
             if is_amount and try_parse_canonical_decimal(value, max_fraction_digits=2) is not None:
                 raise ValueError(

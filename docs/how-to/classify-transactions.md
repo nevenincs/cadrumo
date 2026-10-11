@@ -184,6 +184,11 @@ transaction_id,classification,category_id,business_pct,usage_ratio_id
 <private-row-id>,PERSONAL,,,
 ```
 
+In the file, amounts such as the taxable base and the VAT amount take at most
+two decimals. A business share and a VAT rate are fractions from `0` to `1`, so
+write `0.5` for half and `0.21` for 21 percent, and keep the decimals the rate
+has, as in `0.052` or `0.0175`. Single `classify` applies the same limits.
+
 The following sequence starts from the imported quarter. It lists the rows still
 needing a decision, exports a review snapshot to work from, applies a prepared
 CSV, and confirms the result:

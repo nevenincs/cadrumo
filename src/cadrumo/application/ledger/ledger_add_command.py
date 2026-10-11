@@ -85,7 +85,7 @@ def prepare_ledger_add_command(
         business_pct=business_pct,
         category_id=category_id,
         taxable_base=parse_ledger_add_decimal(payload.taxable_base, label="taxable-base"),
-        iva_rate=parse_ledger_add_decimal(payload.iva_rate, label="iva-rate"),
+        iva_rate=parse_ledger_add_decimal(payload.iva_rate, label="iva-rate", max_fraction_digits=None),
         iva_amount=parse_ledger_add_decimal(payload.iva_amount, label="iva-amount"),
         iva_category=registry_facts.iva_category,
         deduction_fact_kind=registry_facts.deduction_kind,
@@ -142,7 +142,9 @@ def _resolve_ledger_add_business_share(
         if category_id is not None
         else None
     )
-    operator_share = parse_ledger_add_decimal(payload.business_pct, label="business-pct", signed=True)
+    operator_share = parse_ledger_add_decimal(
+        payload.business_pct, label="business-pct", signed=True, max_fraction_digits=None
+    )
     if operator_share is not None and not is_unit_proportion(operator_share):
         raise TransactionValidationError("business_pct must be within the inclusive 0..1 range")
     censo_ratio = (
@@ -293,18 +295,27 @@ def resolve_ledger_add_prorrata_advisory_facts(
 
 
 @overload
-def parse_ledger_add_decimal(raw: str, *, label: str, signed: bool = True) -> Decimal: ...
+def parse_ledger_add_decimal(
+    raw: str, *, label: str, signed: bool = True, max_fraction_digits: int | None = 2
+) -> Decimal: ...
 
 
 @overload
-def parse_ledger_add_decimal(raw: None, *, label: str, signed: bool = True) -> None: ...
+def parse_ledger_add_decimal(
+    raw: None, *, label: str, signed: bool = True, max_fraction_digits: int | None = 2
+) -> None: ...
 
 
-def parse_ledger_add_decimal(raw: str | None, *, label: str, signed: bool = True) -> Decimal | None:
-    """Parse an optional canonical decimal and preserve its labeled refusal."""
+def parse_ledger_add_decimal(
+    raw: str | None, *, label: str, signed: bool = True, max_fraction_digits: int | None = 2
+) -> Decimal | None:
+    """Parse an optional canonical decimal and preserve its labeled refusal.
+
+    Euro amounts keep the cent cap; a share or a rate passes ``None`` to keep its own fraction digits.
+    """
     if raw is None:
         return None
-    parsed = try_parse_canonical_decimal(raw, signed=signed, max_fraction_digits=2)
+    parsed = try_parse_canonical_decimal(raw, signed=signed, max_fraction_digits=max_fraction_digits)
     if parsed is None:
         raise TransactionValidationError(f"{label} must use canonical decimal text")
     return parsed

@@ -36,14 +36,18 @@ def test_a_negative_amount_names_the_magnitude_rule() -> None:
     assert _request(amount="0.01").amount == "0.01"
 
 
-@pytest.mark.parametrize(
-    "field", ["amount", "taxable_base", "iva_rate", "iva_amount", "recargo_amount", "business_pct"]
-)
+@pytest.mark.parametrize("field", ["amount", "taxable_base", "iva_amount", "recargo_amount"])
 def test_amounts_carry_at_most_euro_cent_precision(field: str) -> None:
     with pytest.raises(ValidationError, match="canonical decimal text"):
         _request(**{field: "10.1234"})
 
     assert getattr(_request(**{field: "10.12"}), field) == "10.12"
+
+
+@pytest.mark.parametrize("field", ["iva_rate", "business_pct"])
+@pytest.mark.parametrize("fraction", ["0.333", "0.052", "0.075", "0.0175", "0.005"])
+def test_a_share_or_a_rate_keeps_the_fraction_digits_it_has(field: str, fraction: str) -> None:
+    assert getattr(_request(**{field: fraction}), field) == fraction
 
 
 @pytest.mark.parametrize("state", ["SKIPPED_BY_RULE", "FAILED_VALIDATION", "PROCESSED_UNCLASSIFIED"])
