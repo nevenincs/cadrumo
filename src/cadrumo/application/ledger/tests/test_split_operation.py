@@ -82,14 +82,28 @@ def _access_context(
     registration: OperationPublicDefinitionRegistrationV1,
     *,
     profile_id: UUID = _PROFILE,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=uuid4(),
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
+    )
+
+
+def _result(*, child_transaction_ids: tuple[str, ...] = ("c" * 64, "d" * 64)) -> operation.LedgerSplitOperationResult:
+    return operation.LedgerSplitOperationResult(
+        profile_id=_PROFILE,
+        parent_transaction_id="a" * 64,
+        split_group_id="b" * 64,
+        child_transaction_ids=child_transaction_ids,
+        bucket_event_id="e" * 64,
+        parent_business_classification=BusinessClassification.PERSONAL,
+        child_business_classification=BusinessClassification.NOT_YET_PROCESSED,
+        remerged_by=("ledger.merge",),
     )
 
 
@@ -176,22 +190,25 @@ def test_request_wire_round_trip_and_bounded_child_list() -> None:
 def test_registration_is_secure_and_requires_exact_profile_commit() -> None:
     registry, registration = _registry()
     request = operation.LedgerSplitRequest.model_validate(_request().model_dump(mode="python"))
-
-    resolved = resolve_operation_access(
-        registry=registry,
-        request=OperationRequest[BaseModel](
-            definition_id=operation.LEDGER_SPLIT_OPERATION_DEFINITION_ID,
-            subject_ref=profile_operation_subject(str(_PROFILE)),
-            payload=request,
-        ),
-        context=_access_context(registration),
-    )
+    listed = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
 
     definition = registry.lookup(operation.LEDGER_SPLIT_OPERATION_DEFINITION_ID)
     assert definition.capabilities.request_storage.value == "secure_reference"
     assert definition.capabilities.sensitive_input.value == "secure_reference"
-    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
-    assert AccessAction.COMMIT in resolved.policy.actions
+    assert definition.permitted_frontends == listed
+    for frontend in sorted(listed):
+        resolved = resolve_operation_access(
+            registry=registry,
+            request=OperationRequest[BaseModel](
+                definition_id=operation.LEDGER_SPLIT_OPERATION_DEFINITION_ID,
+                subject_ref=profile_operation_subject(str(_PROFILE)),
+                payload=request,
+            ),
+            context=_access_context(registration, frontend=frontend),
+        )
+        assert resolved.request.frontend is frontend
+        assert AccessAction.COMMIT in resolved.policy.actions
+        assert not resolved.policy.requires_human
     with pytest.raises(ProfileAccessRefusedError):
         resolve_operation_access(
             registry=registry,
@@ -207,38 +224,22 @@ def test_registration_is_secure_and_requires_exact_profile_commit() -> None:
 
 
 def test_split_result_round_trip_and_bounded_child_ids() -> None:
-    result = operation.LedgerSplitOperationResult(
-        profile_id=_PROFILE,
-        parent_transaction_id="a" * 64,
-        split_group_id="b" * 64,
-        child_transaction_ids=("c" * 64, "d" * 64),
-        bucket_event_id="e" * 64,
-        parent_business_classification=BusinessClassification.PERSONAL,
-    )
+    result = _result()
 
     assert operation.LedgerSplitOperationResult.model_validate_json(result.model_dump_json()) == result
     with pytest.raises(ValidationError):
-        operation.LedgerSplitOperationResult(
-            profile_id=_PROFILE,
-            parent_transaction_id="a" * 64,
-            split_group_id="b" * 64,
-            child_transaction_ids=("c" * 64, "c" * 64),
-            bucket_event_id="e" * 64,
-            parent_business_classification=BusinessClassification.PERSONAL,
+        _result(child_transaction_ids=("c" * 64, "c" * 64))
+    # The one operation that recombines a split is named, and no other can stand in for it.
+    with pytest.raises(ValidationError):
+        operation.LedgerSplitOperationResult.model_validate_json(
+            result.model_dump_json().replace('"ledger.merge"', '"ledger.restore"')
         )
 
 
 def test_result_over_its_byte_bound_fails_as_validation_not_profile_mismatch(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    result = operation.LedgerSplitOperationResult(
-        profile_id=_PROFILE,
-        parent_transaction_id="a" * 64,
-        split_group_id="b" * 64,
-        child_transaction_ids=("c" * 64, "d" * 64),
-        bucket_event_id="e" * 64,
-        parent_business_classification=BusinessClassification.PERSONAL,
-    )
+    result = _result()
     operation._require_result_bound(result)
 
     monkeypatch.setattr(operation, "_MAX_SPLIT_RESULT_JSON_BYTES", len(result.model_dump_json()) - 1)
@@ -462,20 +463,14 @@ async def test_executor_resolves_and_writes_against_the_same_fresh_revision(
     assert operands.value.result.child_transaction_ids == action_results[0].child_transaction_ids
     assert operands.value.result.split_group_id == action_results[0].split_group_id
     assert operands.value.result.bucket_event_id == action_results[0].bucket_event_id
+    # The parent keeps its classification and the children start without one.
+    assert operands.value.result.parent_business_classification is BusinessClassification.PERSONAL
+    assert operands.value.result.child_business_classification is BusinessClassification.NOT_YET_PROCESSED
+    assert operands.value.result.remerged_by == ("ledger.merge",)
 
 
 def test_result_projector_requires_matching_success_receipt() -> None:
-    result = operation.LedgerSplitExecutionResult(
-        profile_id=_PROFILE,
-        result=operation.LedgerSplitOperationResult(
-            profile_id=_PROFILE,
-            parent_transaction_id="a" * 64,
-            split_group_id="b" * 64,
-            child_transaction_ids=("c" * 64, "d" * 64),
-            bucket_event_id="e" * 64,
-            parent_business_classification=BusinessClassification.PERSONAL,
-        ),
-    )
+    result = operation.LedgerSplitExecutionResult(profile_id=_PROFILE, result=_result())
     receipt = OperationTerminalReceipt(
         identity=OperationIdentity(
             operation_id="f" * 64,

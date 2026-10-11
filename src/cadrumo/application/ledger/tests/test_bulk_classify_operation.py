@@ -7,7 +7,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -18,11 +18,12 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.models import Transaction
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...operations.execution_actor import OperationExecutionCaller
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...operations.registry_schema_validation import strict_model_json_schema
-from ...user_profile.access_contracts import AccessAction, Availability
+from ...user_profile.access_contracts import AccessAction, Availability, SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import bulk_classify_operation as operation
 from ..action_ports import LedgerActionPorts
@@ -92,7 +93,7 @@ def test_request_is_strict_hides_csv_and_round_trips_through_public_schema() -> 
         operation.LedgerBulkClassifyRequest.model_validate({**request.model_dump(), "file": "private.csv"})
 
 
-def test_registration_requires_all_periods_commit_and_refuses_mcp() -> None:
+def test_registration_requires_all_periods_commit_and_admits_the_cli_and_mcp_alike() -> None:
     def unused(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerActionPorts:
         raise AssertionError("access resolution must not compose profile storage")
 
@@ -111,16 +112,16 @@ def test_registration_requires_all_periods_commit_and_refuses_mcp() -> None:
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
     )
-    access = resolve_operation_access(registry=registry, request=public_request, context=context)
-    assert AccessAction.COMMIT in access.policy.actions
-    assert access.policy.requires_all_periods and access.request.period_independent
-    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
-    with pytest.raises(ProfileAccessRefusedError):
-        resolve_operation_access(
-            registry=registry,
-            request=public_request,
-            context=replace(context, frontend=OperationFrontendProjection.MCP),
+    assert definition.permitted_frontends == frozenset(
+        {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}
+    )
+    for frontend in definition.permitted_frontends:
+        access = resolve_operation_access(
+            registry=registry, request=public_request, context=replace(context, frontend=frontend)
         )
+        assert AccessAction.COMMIT in access.policy.actions
+        assert access.policy.requires_all_periods and access.request.period_independent
+        assert access.request.frontend is frontend
     with pytest.raises(ProfileAccessRefusedError):
         resolve_operation_access(
             registry=registry, request=public_request, context=replace(context, profile_id=uuid4())
@@ -265,3 +266,46 @@ def test_nonrevision_catalogue_port_refuses_before_mutation(subject: BulkClassif
     with pytest.raises(InternalInvariantError, match="revision-guarded"):
         asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(""), subject.context))
     assert subject.repository.loads == 0 and subject.repository.write_attempts == 0
+
+
+_SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
+
+
+@pytest.mark.parametrize(
+    ("frontend", "recorded"),
+    [
+        (OperationFrontendProjection.MCP, f"agent:mcp.attended.{_SESSION_CLIENT}"),
+        (OperationFrontendProjection.CLI, "typed by the caller"),
+    ],
+    ids=["mcp", "cli"],
+)
+def test_the_recorded_actor_is_the_session_label_for_an_agent_and_the_typed_one_otherwise(
+    subject: BulkClassifySubject,
+    transactions: tuple[Transaction, Transaction],
+    frontend: OperationFrontendProjection,
+    recorded: str,
+) -> None:
+    def session_host(identity: OperationIdentity) -> OperationExecutionCaller:
+        assert identity.definition_id == operation.LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID
+        return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.ATTENDED, client_id=_SESSION_CLIENT)
+
+    first = transactions[0]
+    request = OperationRequest[operation.LedgerBulkClassifyRequest](
+        definition_id=operation.LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(PROFILE_ID)),
+        payload=operation.LedgerBulkClassifyRequest(
+            profile_id=PROFILE_ID,
+            csv_text="transaction_id,classification\n" + first.transaction_id + ",BUSINESS\n",
+            actor="typed by the caller",
+        ),
+    )
+
+    asyncio.run(
+        operation.LedgerBulkClassifyExecutor(subject.compose, execution_caller_reader=session_host).execute(
+            request, subject.context
+        )
+    )
+
+    stored = subject.repository.current.transactions[first.transaction_id]
+    assert stored.business_classification is BusinessClassification.BUSINESS
+    assert {entry.actor for entry in stored.edit_lineage} == {recorded}

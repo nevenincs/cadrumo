@@ -9,6 +9,8 @@ from pydantic import BaseModel
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...domain.transactions.enums import TransactionLifecycleState
+from ...domain.transactions.models import Transaction
 from ..operations.models import (
     OperationTerminalReceipt,
     refused_receipt_references_hold,
@@ -16,35 +18,62 @@ from ..operations.models import (
 )
 from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .actions_common import display_decimal
 from .actions_manual import ledger_transaction_result_payload
 from .lifecycle_contracts import (
+    LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
     LEDGER_LIFECYCLE_MAX_RECOVERY_TRANSACTION_IDS,
     LEDGER_LIFECYCLE_MAX_RESULT_BYTES,
     LEDGER_LIFECYCLE_MAX_VALIDATION_MESSAGE_LENGTH,
     LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE,
+    LEDGER_RESTORE_OPERATION_DEFINITION_ID,
     LedgerLifecycleBlockerProjection,
     LedgerLifecycleExecutionResult,
     LedgerLifecycleMutationProjection,
     LedgerLifecycleOperationId,
     LedgerLifecycleOperationResult,
+    LedgerLifecycleReplacedStateProjection,
+    LedgerLifecycleReversalOperationId,
     LedgerLifecycleValidationProjection,
 )
 from .models import LedgerTransactionResultPayload, ManualLedgerTransactionResult
 from .transaction_projection import LedgerTransactionProjection
 
 
+def _reversal_operations(
+    operation_id: LedgerLifecycleOperationId,
+    replaced: Transaction,
+) -> tuple[LedgerLifecycleReversalOperationId, ...]:
+    """Name, in order, the registered operations that return the row to its replaced state."""
+    if operation_id == LEDGER_EXCLUDE_OPERATION_DEFINITION_ID:
+        return ("ledger.classify.single",)
+    from_stash = replaced.lifecycle_state is TransactionLifecycleState.STASHED
+    if operation_id == LEDGER_RESTORE_OPERATION_DEFINITION_ID:
+        return ("ledger.stash",) if from_stash else ("ledger.archive",)
+    # A restore always lands on active, so a row archived out of the stash is stashed again after it.
+    return ("ledger.restore", "ledger.stash") if from_stash else ("ledger.restore",)
+
+
 def project_lifecycle_mutation_from_action(
     profile_id: UUID,
     operation_id: LedgerLifecycleOperationId,
     result: ManualLedgerTransactionResult,
+    replaced: Transaction | None,
 ) -> LedgerLifecycleMutationProjection:
-    """Project the canonical action result after checking profile and row identity."""
+    """Project the canonical action result after checking profile and row identity.
+
+    ``replaced`` is the stored row the action read before it wrote. The result
+    states what that row carried, so a caller can tell the person what the
+    mutation set aside and how to put it back.
+    """
     canonical: LedgerTransactionResultPayload = ledger_transaction_result_payload(result)
     if (
         canonical.bucket_id != str(profile_id)
         or result.ref.bucket_id != canonical.bucket_id
         or result.ref.transaction_id != canonical.transaction_id
         or result.transaction.transaction_id != canonical.transaction_id
+        or replaced is None
+        or replaced.transaction_id != canonical.transaction_id
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     return LedgerLifecycleMutationProjection(
@@ -53,6 +82,13 @@ def project_lifecycle_mutation_from_action(
         transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,
+        replaced=LedgerLifecycleReplacedStateProjection(
+            lifecycle_state=replaced.lifecycle_state,
+            business_classification=replaced.business_classification,
+            business_pct=None if replaced.business_pct is None else display_decimal(replaced.business_pct),
+            classified_by=replaced.classified_by,
+            reversed_by=_reversal_operations(operation_id, replaced),
+        ),
     )
 
 

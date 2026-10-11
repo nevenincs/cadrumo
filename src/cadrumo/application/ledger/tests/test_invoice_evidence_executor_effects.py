@@ -146,7 +146,7 @@ async def test_on_host_executor_captures_full_draft_with_no_consent_write(monkey
     ]
     assert isinstance(recorder.result, extract_operation.LedgerEvidenceExtractExecutionResult)
     assert recorder.result.result.consent_audit_effect is OperationEffect.NONE
-    assert recorder.result.result.draft.invoice_number == "A-1"
+    assert recorder.result.result.person_draft().invoice_number == "A-1"
 
 
 @pytest.mark.asyncio
@@ -215,4 +215,4 @@ async def test_off_host_executor_reports_the_actual_append_effect(
     else:
         assert isinstance(recorder.result, extract_operation.LedgerEvidenceExtractExecutionResult)
         assert recorder.result.result.consent_audit_effect is OperationEffect.UPDATED
-        assert recorder.result.result.draft.invoice_number == "A-2"
+        assert recorder.result.result.person_draft().invoice_number == "A-2"

@@ -233,17 +233,19 @@ _GOOGLE_AND_SHARING: Final = (
 _LEDGER_ENTRIES: Final = (
     _admit("ledger.add", _WRITES_ONLINE, _SAFEGUARD),
     _admit("ledger.allocate", _WRITES, _CHECKLIST),
-    _admit("ledger.archive", _WRITES, _SAFEGUARD),
-    _admit("ledger.attach", _WRITES, _CHECKLIST),
+    _admit("ledger.archive", _WRITES),
+    # Attach links evidence already stored, by identifier, and takes no file.
+    _admit("ledger.attach", _WRITES),
     _admit("ledger.check", _READS),
-    _admit("ledger.classify.bulk", _WRITES, _CHECKLIST),
+    _admit("ledger.classify.bulk", _WRITES),
     _admit("ledger.classify.iva-derive", _WRITES),
     # The model-backed reviews use the reader on this machine.
     _admit("ledger.classify.review", _WRITES),
     _admit("ledger.classify.single", _WRITES, _SAFEGUARD),
     _admit("ledger.counterparty", _WRITES),
-    _admit("ledger.detach", _WRITES, _CHECKLIST),
-    _admit("ledger.exclude", _WRITES, _SAFEGUARD),
+    # Detach removes one row's link and keeps the attachment's stored bytes.
+    _admit("ledger.detach", _WRITES),
+    _admit("ledger.exclude", _WRITES),
     _admit("ledger.export", _WRITES, _FILES),
     _serve_by("ledger.history", "ledger.history.typed"),
     _admit("ledger.history.typed", _READS),
@@ -258,23 +260,27 @@ _LEDGER_ENTRIES: Final = (
         sensitive=("add", "update", "close", "remove", "designate", "undesignate"),
     ),
     _admit("ledger.participation", _READS),
-    _admit("ledger.participation.rebuild", _WRITES, _CHECKLIST),
+    # The index is derived from stored revisions and filing records; a rebuild regenerates it.
+    _admit("ledger.participation.rebuild", _WRITES),
     _admit("ledger.preflight", _READS),
     _admit("ledger.ratios.eligible", _READS),
     _admit("ledger.ratios.list", _READS),
-    _admit("ledger.ratios.set", _WRITES, _CHECKLIST),
-    _admit("ledger.ratios.unset", _WRITES, _CHECKLIST),
+    _admit("ledger.ratios.set", _WRITES),
+    _admit("ledger.ratios.unset", _WRITES),
     _admit("ledger.ratios.validate", _READS),
     _approve("ledger.remove", _WRITES),
     _approve("ledger.reset", _WRITES),
-    _admit("ledger.restore", _WRITES, _SAFEGUARD),
+    _admit("ledger.restore", _WRITES),
     _admit("ledger.review", _READS),
-    _admit("ledger.rule.add", _WRITES, _CHECKLIST),
-    _admit("ledger.rule.apply", _WRITES, _CHECKLIST),
+    _admit("ledger.rule.add", _WRITES),
+    # A run that reaffirms replaces classifications set by hand and keeps no
+    # earlier value, so an agent may preview it but not run it.
+    _admit("ledger.rule.apply", _WRITES, sensitive=("reaffirm",)),
     _admit("ledger.rule.list", _READS),
-    _admit("ledger.split.manual", _WRITES, _SAFEGUARD),
+    # A split keeps its parent stored; only the approval-bound merge recombines the cohort.
+    _admit("ledger.split.manual", _WRITES),
     _admit("ledger.split.review", _WRITES),
-    _admit("ledger.stash", _WRITES, _SAFEGUARD),
+    _admit("ledger.stash", _WRITES),
     _admit("ledger.status", _READS),
     _admit("ledger.track", _READS),
     _admit("ledger.update", _WRITES, _CHECKLIST),
@@ -290,7 +296,8 @@ _LEDGER_EVIDENCE_AND_INVOICES: Final = (
     _approve("ledger.evidence.confirm", _WRITES_ONLINE),
     _admit("ledger.evidence.consent.list", _READS),
     # Reading a document off the machine is a consent, never a field the caller sets.
-    _admit("ledger.evidence.extract", _WRITES_ONLINE, _CHECKLIST, sensitive=("off_host",)),
+    # An agent's read also runs only while the on-host reader answers on this machine.
+    _admit("ledger.evidence.extract", _WRITES_ONLINE, sensitive=("off_host",)),
     _serve_by("ledger.evidence.list", "ledger.evidence.query"),
     _admit("ledger.evidence.query", _READS),
     _admit("ledger.evidence.reader-readiness", _READS_ONLINE),
@@ -298,7 +305,9 @@ _LEDGER_EVIDENCE_AND_INVOICES: Final = (
     _admit("ledger.evidence.review.list", _READS),
     _admit("ledger.evidence.review.summary", _READS),
     _serve_by("ledger.evidence.review.view", "ledger.evidence.review.summary"),
-    _admit("ledger.evidence.update", _WRITES, _CHECKLIST),
+    # An update edits the record's descriptive fields; the stored bytes, a pending
+    # draft and the invoice catalogue are out of its reach.
+    _admit("ledger.evidence.update", _WRITES),
     _serve_by("ledger.evidence.view", "ledger.evidence.query"),
     _admit("ledger.invoice.add", _WRITES_ONLINE),
     _admit("ledger.invoice.import", _WRITES_ONLINE, _FILES),
@@ -306,7 +315,9 @@ _LEDGER_EVIDENCE_AND_INVOICES: Final = (
     _approve("ledger.invoice.remove", _WRITES),
     _admit("ledger.invoice.update", _WRITES),
     _admit("ledger.invoice.view", _READS),
-    _admit("ledger.invoice.wizard", _WRITES_ONLINE, _CHECKLIST),
+    # The wizard is a typed entry with every field stated up front, never a
+    # prompt; an invoice in another currency looks its rate up.
+    _admit("ledger.invoice.wizard", _WRITES_ONLINE),
 )
 
 _LEDGER_REGISTERS: Final = (

@@ -34,6 +34,7 @@ from .actions_common import (
     catalogue_modelo_source_ids,
     draft_revision_advisories,
     normalise_timestamp,
+    optional_decimal,
     raise_finalized_modelo_blocked,
     remove_transaction,
     replace_transaction,
@@ -265,6 +266,9 @@ def mark_transaction_reviewed_excluded(
         payload={
             "source_command": trimmed_source_command,
             "previous_classification": current.business_classification.value,
+            # The exclusion clears the proportion on the row, so this event is
+            # the one place a mixed row's replaced share stays stored.
+            "previous_business_pct": optional_decimal(current.business_pct),
             "business_classification": BusinessClassification.REVIEWED_EXCLUDED.value,
             "reason": reason.strip(),
         },

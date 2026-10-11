@@ -514,6 +514,7 @@ def _emit_ratio_event(
     event_type: BucketEventType,
     object_id: str,
     payload: dict[str, str],
+    actor: str,
 ) -> None:
     """Append one ratios audit event to the bucket-event history.
 
@@ -530,7 +531,7 @@ def _emit_ratio_event(
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=now(),
-        actor="operator",
+        actor=actor,
         object_type=BucketEventObjectType.PROFILE,
         object_id=object_id,
         payload=payload,
@@ -555,6 +556,7 @@ def apply_usage_ratio_override(
     year: int,
     profile_id: str | None = None,
     raw_afectacion_ratio: Decimal | None = None,
+    actor: str = "operator",
     operation: PinnedAuthorityOperation,
 ) -> UsageRatioMutationOutcomeV1:
     """Persist one override, record it, and check it against the Censo.
@@ -577,6 +579,7 @@ def apply_usage_ratio_override(
         year: The filing year the Censo comparison is made for.
         profile_id: The active profile, when one is bound.
         raw_afectacion_ratio: The Censo-declared afectación ratio, when known.
+        actor: The label recorded on the audit events.
         operation: The caller-owned authority generation used to decode the
             stored profile.
 
@@ -589,6 +592,7 @@ def apply_usage_ratio_override(
         event_type=BucketEventType.LEDGER_RATIOS_SET,
         object_id=category.value,
         payload=_ratio_change_payload(category=category, prior=prior, new=ratio),
+        actor=actor,
     )
     warning = (
         censo_override_warning(
@@ -612,6 +616,7 @@ def apply_usage_ratio_override(
                 "censo_derived_ratio": str(warning.censo_derived_ratio),
                 "raw_afectacion_ratio": str(warning.raw_afectacion_ratio),
             },
+            actor=actor,
         )
     return UsageRatioMutationOutcomeV1(
         category=category,
@@ -622,7 +627,7 @@ def apply_usage_ratio_override(
 
 
 def clear_usage_ratio_override(
-    *, bucket_id: str, category: SpendingCategory, operation: PinnedAuthorityOperation
+    *, bucket_id: str, category: SpendingCategory, actor: str = "operator", operation: PinnedAuthorityOperation
 ) -> UsageRatioMutationOutcomeV1:
     """Clear one override and record the clearance.
 
@@ -631,6 +636,7 @@ def clear_usage_ratio_override(
     Args:
         bucket_id: The owning profile bucket.
         category: The category whose override is cleared.
+        actor: The label recorded on the audit event.
         operation: The caller-owned authority generation used to decode the
             stored profile.
 
@@ -646,5 +652,6 @@ def clear_usage_ratio_override(
         event_type=BucketEventType.LEDGER_RATIOS_UNSET,
         object_id=category.value,
         payload=_ratio_change_payload(category=category, prior=prior, new=None),
+        actor=actor,
     )
     return UsageRatioMutationOutcomeV1(category=category, prior_ratio=prior, new_ratio=None)

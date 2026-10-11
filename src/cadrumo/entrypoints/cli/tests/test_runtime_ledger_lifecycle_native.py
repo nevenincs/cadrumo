@@ -316,6 +316,8 @@ def test_native_lifecycle_commands_preserve_full_results_history_and_blocker_ref
                 payload=(
                     {
                         "business_classification": BusinessClassification.REVIEWED_EXCLUDED.value,
+                        # The added row carries no proportion, which the event records as empty text.
+                        "previous_business_pct": "",
                         "previous_classification": before_transaction.business_classification.value,
                         "reason": reason,
                         "source_command": "aeat app ledger exclude",

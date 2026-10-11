@@ -41,7 +41,7 @@ _OPERATION_ID = cast(OperationId, "f" * 64)
 #: Extraction and confirmation results carry the label-reading fallback beside
 #: the draft, so both read the second result schema.
 _RESULT_VERSIONS = {
-    LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID: 2,
+    LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID: 3,
     LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID: 2,
 }
 

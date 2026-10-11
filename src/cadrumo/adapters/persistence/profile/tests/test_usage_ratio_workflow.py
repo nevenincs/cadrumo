@@ -24,12 +24,14 @@ from tempfile import TemporaryDirectory
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.bucket_event_repository import bucket_event_history_repository
 from cadrumo.application.ledger.ratios import (
     apply_usage_ratio_override,
     clear_usage_ratio_override,
     eligible_ratio_categories,
 )
 from cadrumo.application.ledger.usage_ratio_repository import load_usage_ratio_profile
+from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.usage_ratios.errors import UsageRatioValidationError
@@ -173,3 +175,30 @@ def test_clearing_an_absent_override_refuses() -> None:
     category = _eligible_category()
     with _profile() as operation, pytest.raises(UsageRatioValidationError):
         clear_usage_ratio_override(bucket_id=_BUCKET, category=category, operation=operation)
+
+
+def test_the_audit_events_name_the_actor_that_set_and_cleared_an_override() -> None:
+    """A person's session records the default label; any other actor is recorded as given."""
+    category = _eligible_category()
+    with _profile() as operation:
+        apply_usage_ratio_override(
+            bucket_id=_BUCKET, category=category, ratio=Decimal("0.40"), year=_YEAR, operation=operation
+        )
+        apply_usage_ratio_override(
+            bucket_id=_BUCKET,
+            category=category,
+            ratio=Decimal("0.60"),
+            year=_YEAR,
+            actor="agent:mcp.attended.synthetic",
+            operation=operation,
+        )
+        clear_usage_ratio_override(
+            bucket_id=_BUCKET, category=category, actor="agent:mcp.attended.synthetic", operation=operation
+        )
+        events = tuple(bucket_event_history_repository(bucket_id=_BUCKET).load().events.values())
+
+    def actors(event_type: BucketEventType) -> list[str]:
+        return sorted(event.actor for event in events if event.event_type is event_type)
+
+    assert actors(BucketEventType.LEDGER_RATIOS_SET) == ["agent:mcp.attended.synthetic", "operator"]
+    assert actors(BucketEventType.LEDGER_RATIOS_UNSET) == ["agent:mcp.attended.synthetic"]

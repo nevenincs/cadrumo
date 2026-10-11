@@ -72,11 +72,12 @@ def submit_invoice_evidence_extract(
         request,
         definition_id=LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
         result_type=LedgerEvidenceExtractProjection,
-        result_version=2,
+        result_version=3,
     )
     projection = completed.projection
     if (
-        projection.profile_id != request.profile_id
+        projection.draft is None
+        or projection.profile_id != request.profile_id
         or projection.evidence_id != request.evidence_id
         or projection.attachment_id != request.attachment_id
         or projection.off_host_provider is not request.off_host_provider

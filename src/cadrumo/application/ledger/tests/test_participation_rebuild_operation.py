@@ -153,13 +153,14 @@ def _access_context(
     *,
     action: AccessAction,
     profile_id: UUID = _PROFILE,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     """Build trusted host facts for one registered access action."""
     return OperationAccessContext(
         profile_id=profile_id,
         destination_id=UUID("7cc00000-0000-4000-8000-0000000000cc"),
         action=action,
-        frontend=OperationFrontendProjection.CLI,
+        frontend=frontend,
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
     )
@@ -224,6 +225,29 @@ def test_rebuild_access_preserves_full_profile_commit_and_typed_disclosures(
                     "actions": resolved.policy.actions | {AccessAction.COMMIT},
                 }
             )
+
+
+@pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))
+@pytest.mark.parametrize("action", [AccessAction.SUBMIT, AccessAction.COMMIT, AccessAction.RESULT])
+def test_rebuild_is_open_to_every_frontend_under_the_same_policy(
+    frontend: OperationFrontendProjection, action: AccessAction
+) -> None:
+    """The index is derived from stored revisions, so an agent may regenerate it as a person may."""
+    registry, registration = _registry()
+    request = _access_request()
+
+    assert registration.contract.permitted_frontends == frozenset(OperationFrontendProjection)
+    resolved = resolve_operation_access(
+        registry=registry, request=request, context=_access_context(registration, action=action, frontend=frontend)
+    )
+    person = resolve_operation_access(
+        registry=registry, request=request, context=_access_context(registration, action=action)
+    )
+
+    assert resolved.request.frontend is frontend
+    assert resolved.policy == person.policy
+    assert resolved.policy.requires_human is False
+    assert AccessAction.COMMIT in resolved.policy.actions
 
 
 @pytest.mark.parametrize(

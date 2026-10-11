@@ -1127,8 +1127,10 @@ def build_production_operation_registry(
     certificate_source_remove_definition = build_certificate_source_remove_definition(certificate_source_ports)
     certificate_source_check_definition = build_certificate_source_check_definition(certificate_source_ports)
     ledger_ratios_list_definition = build_ledger_ratios_list_definition()
-    ledger_ratios_set_definition = build_ledger_ratios_set_definition()
-    ledger_ratios_unset_definition = build_ledger_ratios_unset_definition()
+    ledger_ratios_set_definition = build_ledger_ratios_set_definition(execution_caller_reader=execution_caller_reader)
+    ledger_ratios_unset_definition = build_ledger_ratios_unset_definition(
+        execution_caller_reader=execution_caller_reader
+    )
     ledger_ratios_eligible_definition = build_ledger_ratios_eligible_definition()
     ledger_ratios_validate_definition = build_ledger_ratios_validate_definition()
     activity_asset_create_definition = build_activity_asset_create_definition(build_activity_asset_operation_ports)
@@ -1407,7 +1409,9 @@ def build_production_operation_registry(
     )
     invoice_add_definition = build_invoice_add_definition(invoice_creation_ports_factory)
     invoice_import_definition = build_invoice_import_definition(build_invoice_intake_ports)
-    invoice_wizard_definition = build_invoice_wizard_definition(build_invoice_intake_ports)
+    invoice_wizard_definition = build_invoice_wizard_definition(
+        build_invoice_intake_ports, execution_caller_reader=execution_caller_reader
+    )
     modelo_aggregate_definition = build_modelo_aggregate_operation_definition(modelo_aggregate_operation_ports_factory)
     modelo_invoice_withholding_capture_definition = build_modelo_invoice_withholding_capture_definition(
         modelo_invoice_withholding_capture_ports_factory
@@ -1487,38 +1491,58 @@ def build_production_operation_registry(
         ledger_llm_operation_ports_factory,
         execution_caller_reader=execution_caller_reader,
     )
-    ledger_bulk_classify_definition = build_ledger_bulk_classify_definition(ledger_action_ports_factory)
-    ledger_rule_add_definition = build_ledger_rule_add_definition(ledger_rule_repository_factory)
+    ledger_bulk_classify_definition = build_ledger_bulk_classify_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
+    ledger_rule_add_definition = build_ledger_rule_add_definition(
+        ledger_rule_repository_factory, execution_caller_reader=execution_caller_reader
+    )
     ledger_rule_list_definition = build_ledger_rule_list_definition(ledger_rule_repository_factory)
     ledger_rule_apply_definition = build_ledger_rule_apply_definition(
-        ledger_action_ports_factory, ledger_rule_repository_factory
+        ledger_action_ports_factory, ledger_rule_repository_factory, execution_caller_reader=execution_caller_reader
     )
     ledger_evidence_add_definition = build_ledger_evidence_add_definition(build_ledger_evidence_ports)
     ledger_evidence_list_definition = build_ledger_evidence_list_definition(build_ledger_evidence_ports)
     ledger_evidence_view_definition = build_ledger_evidence_view_definition(build_ledger_evidence_ports)
     ledger_evidence_query_definition = build_ledger_evidence_query_definition(build_ledger_evidence_ports)
-    ledger_evidence_update_definition = build_ledger_evidence_update_definition(build_ledger_evidence_ports)
+    ledger_evidence_update_definition = build_ledger_evidence_update_definition(
+        build_ledger_evidence_ports, execution_caller_reader=execution_caller_reader
+    )
     ledger_evidence_remove_definition = build_ledger_evidence_remove_definition(build_ledger_evidence_ports)
     ledger_evidence_reader_readiness_definition = build_ledger_evidence_reader_readiness_definition(
         read_local_reader_status
     )
     ledger_evidence_extract_definition = build_ledger_evidence_extract_definition(
-        build_invoice_evidence_operation_ports
+        build_invoice_evidence_operation_ports, execution_caller_reader=execution_caller_reader
     )
     ledger_evidence_confirm_definition = build_ledger_evidence_confirm_definition(
         build_invoice_evidence_operation_ports
     )
-    ledger_split_definition = build_ledger_split_definition(ledger_action_ports_factory)
+    ledger_split_definition = build_ledger_split_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
     ledger_merge_definition = build_ledger_merge_definition(ledger_action_ports_factory)
     ledger_update_definition = build_ledger_update_definition(
         ledger_action_ports_factory, own_account_repository_factory
     )
-    ledger_attach_definition = build_ledger_attach_definition(ledger_action_ports_factory)
-    ledger_detach_definition = build_ledger_detach_definition(ledger_action_ports_factory)
-    ledger_archive_definition = build_ledger_archive_definition(ledger_action_ports_factory)
-    ledger_stash_definition = build_ledger_stash_definition(ledger_action_ports_factory)
-    ledger_restore_definition = build_ledger_restore_definition(ledger_action_ports_factory)
-    ledger_exclude_definition = build_ledger_exclude_definition(ledger_action_ports_factory)
+    ledger_attach_definition = build_ledger_attach_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
+    ledger_detach_definition = build_ledger_detach_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
+    ledger_archive_definition = build_ledger_archive_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
+    ledger_stash_definition = build_ledger_stash_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
+    ledger_restore_definition = build_ledger_restore_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
+    ledger_exclude_definition = build_ledger_exclude_definition(
+        ledger_action_ports_factory, execution_caller_reader=execution_caller_reader
+    )
     ledger_remove_definition = build_ledger_remove_definition(ledger_action_ports_factory)
     ledger_reset_definition = build_ledger_reset_definition(ledger_action_ports_factory)
     if counterparty_repository_factory is None:

@@ -41,6 +41,7 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
@@ -100,7 +101,12 @@ class LedgerAttachmentValidationRefusedError(CadrumoError):
 
 
 class LedgerAttachRequest(BaseModel):
-    """Private exact-profile request matching ``ledger attach``."""
+    """Private exact-profile request matching ``ledger attach``.
+
+    Every evidence member is the identifier of evidence already stored in the
+    profile. ``actor`` is recorded as sent for a person's session. An agent's
+    session is recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -112,7 +118,11 @@ class LedgerAttachRequest(BaseModel):
 
 
 class LedgerDetachRequest(BaseModel):
-    """Private exact-profile request matching ``ledger detach``."""
+    """Private exact-profile request matching ``ledger detach``.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -218,10 +228,12 @@ class _LedgerAttachmentExecutor:
         ports_factory: LedgerActionPortsFactory,
         *,
         operation_id: LedgerAttachmentOperationId,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
         """Bind one action identity and the existing profile-bound ledger ports."""
         self._ports_factory = ports_factory
         self._operation_id: LedgerAttachmentOperationId = operation_id
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -231,6 +243,9 @@ class _LedgerAttachmentExecutor:
         """Resolve exact-profile inputs, call one canonical action, and record its effect."""
         bucket_id, payload = _require_attachment_executor_identity(request, context, self._operation_id)
         await context.events.phase(self._operation_id)
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
+        )
 
         operation: PinnedAuthorityOperation = context.authority_operation
         ports = await asyncio.to_thread(self._ports_factory, bucket_id=bucket_id, operation=operation)
@@ -261,6 +276,7 @@ class _LedgerAttachmentExecutor:
                         ports=ports,
                         bucket_id=bucket_id,
                         transaction_id=prepared.transaction_id,
+                        actor=actor,
                     )
                 except (TransactionValidationError, TransactionNotFoundError) as error:
                     await context.events.effect(OperationEffect.NONE)
@@ -312,8 +328,8 @@ class _LedgerAttachmentExecutor:
         ports: LedgerActionPorts,
         bucket_id: str,
         transaction_id: str,
+        actor: str,
     ) -> ManualLedgerTransactionResult:
-        actor = payload.actor or bucket_id or "operator"
         if self._operation_id == LEDGER_ATTACH_OPERATION_DEFINITION_ID:
             if not isinstance(payload, LedgerAttachRequest):
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
@@ -356,17 +372,35 @@ async def _publish_refusal(
 class LedgerAttachExecutor(_LedgerAttachmentExecutor):
     """Execute the existing canonical evidence attach action."""
 
-    def __init__(self, ports_factory: LedgerActionPortsFactory) -> None:
+    def __init__(
+        self,
+        ports_factory: LedgerActionPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Bind this executor to the profile-specific ledger ports factory."""
-        super().__init__(ports_factory, operation_id=LEDGER_ATTACH_OPERATION_DEFINITION_ID)
+        super().__init__(
+            ports_factory,
+            operation_id=LEDGER_ATTACH_OPERATION_DEFINITION_ID,
+            execution_caller_reader=execution_caller_reader,
+        )
 
 
 class LedgerDetachExecutor(_LedgerAttachmentExecutor):
     """Execute the existing canonical attachment detach action."""
 
-    def __init__(self, ports_factory: LedgerActionPortsFactory) -> None:
+    def __init__(
+        self,
+        ports_factory: LedgerActionPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Bind this executor to the profile-specific ledger ports factory."""
-        super().__init__(ports_factory, operation_id=LEDGER_DETACH_OPERATION_DEFINITION_ID)
+        super().__init__(
+            ports_factory,
+            operation_id=LEDGER_DETACH_OPERATION_DEFINITION_ID,
+            execution_caller_reader=execution_caller_reader,
+        )
 
 
 def _require_attachment_executor_identity(
@@ -495,6 +529,7 @@ def _build_definition(
     request_type: type[BaseModel],
     executor_type: type[LedgerAttachExecutor] | type[LedgerDetachExecutor],
     ports_factory: LedgerActionPortsFactory,
+    execution_caller_reader: OperationExecutionCallerReader | None,
 ) -> OperationDefinition:
     """Declare one receipt-backed exact-profile attachment action."""
     permitted_effects = {
@@ -510,7 +545,7 @@ def _build_definition(
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerAttachmentExecutionResult,
         executor_type=executor_type,
-        build=lambda: executor_type(ports_factory),
+        build=lambda: executor_type(ports_factory, execution_caller_reader=execution_caller_reader),
         capabilities=OperationCapabilities(
             durability=OperationDurability.RECORDED,
             cancellation=OperationCancellation.UNSUPPORTED,
@@ -524,28 +559,38 @@ def _build_definition(
             permitted_effects=frozenset(permitted_effects),
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}),
         refusal_detail_codes=frozenset({LEDGER_ATTACHMENT_VALIDATION_REFUSAL_CODE}),
     )
 
 
-def build_ledger_attach_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
-    """Declare canonical ``ledger.attach`` for CLI execution."""
+def build_ledger_attach_definition(
+    ports_factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
+    """Declare canonical ``ledger.attach``, which links evidence already stored in the profile."""
     return _build_definition(
         operation_id=LEDGER_ATTACH_OPERATION_DEFINITION_ID,
         request_type=LedgerAttachRequest,
         executor_type=LedgerAttachExecutor,
         ports_factory=ports_factory,
+        execution_caller_reader=execution_caller_reader,
     )
 
 
-def build_ledger_detach_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
-    """Declare canonical ``ledger.detach`` for CLI execution."""
+def build_ledger_detach_definition(
+    ports_factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
+    """Declare canonical ``ledger.detach``, which unlinks an attachment and keeps its stored bytes."""
     return _build_definition(
         operation_id=LEDGER_DETACH_OPERATION_DEFINITION_ID,
         request_type=LedgerDetachRequest,
         executor_type=LedgerDetachExecutor,
         ports_factory=ports_factory,
+        execution_caller_reader=execution_caller_reader,
     )
 
 

@@ -189,12 +189,32 @@ def test_every_ratio_read_is_admitted_on_the_mcp_frontend_without_a_commit_door(
         contracts.LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
     ],
 )
-def test_ratio_writes_stay_off_the_mcp_frontend(definition_id: str) -> None:
+@pytest.mark.parametrize("frontend", [OperationFrontendProjection.MCP, OperationFrontendProjection.CLI])
+def test_ratio_writes_are_admitted_on_the_mcp_and_cli_frontends_with_a_commit_door(
+    definition_id: str, frontend: OperationFrontendProjection
+) -> None:
     registry, registrations = _registry()
+    registration = registrations[definition_id]
 
-    expected = frozenset({OperationFrontendProjection.CLI})
+    resolved = resolve_operation_access(
+        registry=registry,
+        request=_request(definition_id),
+        context=OperationAccessContext(
+            profile_id=_PROFILE,
+            destination_id=uuid4(),
+            action=AccessAction.SUBMIT,
+            frontend=frontend,
+            contract=registration.contract,
+            published_authority=Availability.AVAILABLE,
+        ),
+    )
+
+    expected = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
     assert registry.lookup(definition_id).permitted_frontends == expected
-    assert registrations[definition_id].contract.permitted_frontends == expected
+    assert registration.contract.permitted_frontends == expected
+    assert resolved.request.frontend is frontend
+    assert resolved.request.period_independent is True
+    assert AccessAction.COMMIT in resolved.policy.actions
 
 
 def test_read_access_refuses_a_foreign_profile_subject() -> None:

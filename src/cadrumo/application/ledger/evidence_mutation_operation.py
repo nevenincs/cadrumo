@@ -21,11 +21,18 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from ...core.parsing.dates import require_iso8601_date
+from ...core.percentage import PERCENTAGE_MAX
 from ...core.time.clock import now
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES,
     RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+)
+from ..operations.execution_actor import (
+    OperationExecutionCallerReader,
+    execution_actor_label,
+    execution_admitted_on_mcp,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
@@ -46,7 +53,7 @@ from .evidence import (
     prepare_purchase_invoice_evidence_update,
 )
 from .evidence_ports import LedgerEvidencePorts, LedgerEvidencePortsFactory
-from .evidence_read_operation import LedgerEvidenceRecordProjection
+from .evidence_read_operation import LedgerEvidenceAgentRecordProjection, LedgerEvidenceRecordProjection
 from .read_access import resolve_ledger_commit_access
 
 LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID = "ledger.evidence.update"
@@ -77,6 +84,8 @@ _UPDATE_FIELDS = frozenset(
     {"supplier", "invoice_number", "invoice_date", "taxable_base", "iva_rate", "iva_amount", "notes"}
 )
 _DECIMAL_FIELDS = frozenset({"taxable_base", "iva_rate", "iva_amount"})
+_PERSON_FRONTEND_ACTOR = "cli"
+"""The audit label of an update a person's frontend submits; an agent's is derived from its session."""
 
 
 class LedgerEvidenceUpdatePatch(BaseModel):
@@ -100,6 +109,15 @@ class LedgerEvidenceUpdatePatch(BaseModel):
         parsed = try_parse_canonical_decimal(value, signed=False)
         if parsed is None or display_decimal(parsed) != value:
             raise ValueError(f"{info.field_name} must use canonical non-negative decimal text")
+        if info.field_name == "iva_rate" and parsed > PERCENTAGE_MAX:
+            raise ValueError("iva_rate must not exceed one hundred per cent")
+        return value
+
+    @field_validator("invoice_date")
+    @classmethod
+    def _canonical_calendar_date(cls, value: str | None) -> str | None:
+        if value is not None and require_iso8601_date(value).isoformat() != value:
+            raise ValueError("invoice_date must be a canonical ISO-8601 calendar date")
         return value
 
 
@@ -145,13 +163,19 @@ class LedgerEvidenceRemoveRequest(BaseModel):
 
 
 class LedgerEvidenceUpdateProjection(BaseModel):
-    """Bounded successful update result for one exact profile."""
+    """Bounded successful update result for one exact profile.
+
+    The record's ``source_path`` is the path the person typed when the evidence
+    was added. An agent's execution seals the file name alone in that member
+    and sets ``source_directory_withheld``.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     record: LedgerEvidenceRecordProjection
     bucket_event_ids: _OptionalEvidenceEventIds
+    source_directory_withheld: bool = False
 
     @model_validator(mode="after")
     def _correlate_record(self) -> LedgerEvidenceUpdateProjection:
@@ -227,9 +251,15 @@ class _PreparedRemove:
 class LedgerEvidenceUpdateExecutor:
     """Apply one canonical evidence update in the exact active profile."""
 
-    def __init__(self, ports_factory: LedgerEvidencePortsFactory) -> None:
-        """Bind the profile-scoped evidence capability factory."""
+    def __init__(
+        self,
+        ports_factory: LedgerEvidencePortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
+        """Bind the profile-scoped evidence capability factory and the session host's caller reader."""
         self._ports_factory = ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -246,6 +276,8 @@ class LedgerEvidenceUpdateExecutor:
             definition_id=LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID,
             bucket_id=bucket_id,
         )
+        for_agent = execution_admitted_on_mcp(self._execution_caller_reader, context)
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=_PERSON_FRONTEND_ACTOR)
         await context.events.phase(LEDGER_EVIDENCE_UPDATE_PHASE)
 
         def preflight() -> _PreparedUpdate:
@@ -256,11 +288,7 @@ class LedgerEvidenceUpdateExecutor:
             _require_record_identity(current, bucket_id=bucket_id, evidence_id=payload.evidence_id)
             patch = _canonical_patch(payload.patch, payload.patch_fields)
             if not payload.patch_fields:
-                projection = LedgerEvidenceUpdateProjection(
-                    profile_id=payload.profile_id,
-                    record=LedgerEvidenceRecordProjection.from_record(current),
-                    bucket_event_ids=(),
-                )
+                projection = _update_projection(payload.profile_id, current, bucket_event_ids=(), for_agent=for_agent)
                 execution_result = LedgerEvidenceUpdateExecutionResult(
                     profile_id=payload.profile_id,
                     result=projection,
@@ -277,10 +305,8 @@ class LedgerEvidenceUpdateExecutor:
                 )
             occurred_at = now()
             candidate = prepare_purchase_invoice_evidence_update(current, patch, updated_at=occurred_at)
-            projection = LedgerEvidenceUpdateProjection(
-                profile_id=payload.profile_id,
-                record=LedgerEvidenceRecordProjection.from_record(candidate),
-                bucket_event_ids=("f" * 64,),
+            projection = _update_projection(
+                payload.profile_id, candidate, bucket_event_ids=("f" * 64,), for_agent=for_agent
             )
             execution_result = LedgerEvidenceUpdateExecutionResult(
                 profile_id=payload.profile_id,
@@ -310,7 +336,7 @@ class LedgerEvidenceUpdateExecutor:
                         bucket_id=bucket_id,
                         evidence_id=payload.evidence_id,
                         patch=prepared.patch,
-                        actor="cli",
+                        actor=actor,
                         expected_current=prepared.current,
                         occurred_at=prepared.occurred_at,
                     )
@@ -402,6 +428,30 @@ class LedgerEvidenceRemoveExecutor:
                 return await context.operands.put(execution_result, written_at=now())
 
         return await await_cancellation_complete(capture(), task_name="ledger-evidence-remove")
+
+
+def _update_projection(
+    profile_id: UUID,
+    record: PurchaseInvoiceEvidence,
+    *,
+    bucket_event_ids: tuple[str, ...],
+    for_agent: bool,
+) -> LedgerEvidenceUpdateProjection:
+    """Project the updated record, keeping the directory it was added from out of an agent's result."""
+    projected = LedgerEvidenceRecordProjection.from_record(record)
+    if not for_agent:
+        return LedgerEvidenceUpdateProjection(
+            profile_id=profile_id, record=projected, bucket_event_ids=bucket_event_ids
+        )
+    file_name = LedgerEvidenceAgentRecordProjection.from_person_projection(projected).source_file_name
+    if file_name is None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    return LedgerEvidenceUpdateProjection(
+        profile_id=profile_id,
+        record=projected.model_copy(update={"source_path": file_name}),
+        bucket_event_ids=bucket_event_ids,
+        source_directory_withheld=True,
+    )
 
 
 def _canonical_patch(
@@ -544,49 +594,40 @@ def _project_remove_result(result: BaseModel, receipt: OperationTerminalReceipt,
     )
 
 
-def _build_definition(
-    *,
-    definition_id: str,
-    request_type: type[BaseModel],
-    result_type: type[BaseModel],
-    executor_type: type[LedgerEvidenceUpdateExecutor] | type[LedgerEvidenceRemoveExecutor],
+def build_ledger_evidence_update_definition(
     ports_factory: LedgerEvidencePortsFactory,
-    allow_no_effect: bool = False,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
+    """Declare exact-profile evidence update with bounded result projection.
+
+    ``execution_caller_reader`` names the frontend and session that admitted an
+    execution, so an agent's update is recorded under its session's label and
+    seals a result without the directory the evidence was added from.
+    """
     return build_single_phase_definition(
-        definition_id=definition_id,
-        request_type=request_type,
-        subject_reference=OperationSubjectReferenceV1.profile(),
-        result_type=result_type,
-        executor_type=executor_type,
-        build=lambda: executor_type(ports_factory),
-        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
-        if allow_no_effect
-        else RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
-    )
-
-
-def build_ledger_evidence_update_definition(ports_factory: LedgerEvidencePortsFactory) -> OperationDefinition:
-    """Declare exact-profile evidence update with bounded result projection."""
-    return _build_definition(
         definition_id=LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID,
         request_type=LedgerEvidenceUpdateRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerEvidenceUpdateExecutionResult,
         executor_type=LedgerEvidenceUpdateExecutor,
-        ports_factory=ports_factory,
-        allow_no_effect=True,
+        build=lambda: LedgerEvidenceUpdateExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}),
     )
 
 
 def build_ledger_evidence_remove_definition(ports_factory: LedgerEvidencePortsFactory) -> OperationDefinition:
     """Declare exact-profile evidence removal with bounded result projection."""
-    return _build_definition(
+    return build_single_phase_definition(
         definition_id=LEDGER_EVIDENCE_REMOVE_OPERATION_DEFINITION_ID,
         request_type=LedgerEvidenceRemoveRequest,
+        subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerEvidenceRemoveExecutionResult,
         executor_type=LedgerEvidenceRemoveExecutor,
-        ports_factory=ports_factory,
+        build=lambda: LedgerEvidenceRemoveExecutor(ports_factory),
+        capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_REQUIRED_UPDATE_CAPABILITIES,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
     )
 
 

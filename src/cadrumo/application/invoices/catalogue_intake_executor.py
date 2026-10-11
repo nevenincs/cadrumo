@@ -18,6 +18,7 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.schema import IvaCategory
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_payload, require_operation_profile
@@ -50,6 +51,9 @@ from .catalogue_read_projection import CatalogueInvoiceSnapshot
 from .creation_wizard import create_invoice_via_wizard
 from .source_resolver import iva_category_for_operation_type
 
+_PERSON_FRONTEND_ACTOR = "cli"
+"""The audit label of an invoice a person's frontend enters; an agent's is derived from its session."""
+
 
 def _require_profile(
     request: OperationRequest[BaseModel], context: OperationExecutorContext
@@ -65,15 +69,25 @@ def _require_profile(
 class InvoiceIntakeExecutor:
     """Keep canonical validation/FX outside the actual invoice-and-event fence."""
 
-    def __init__(self, factory: InvoiceIntakePortsFactory) -> None:
-        """Bind canonical capabilities for the worker's exact profile and pin."""
+    def __init__(
+        self,
+        factory: InvoiceIntakePortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
+        """Bind canonical capabilities for the worker's exact profile and pin, and the caller reader."""
         self._factory = factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self, request: OperationRequest[BaseModel], context: OperationExecutorContext
     ) -> OperationExecutorResult:
         """Run canonical intake and retain a receipt-correlated private outcome."""
         payload = _require_profile(request, context)
+        # An invoice entered through the wizard carries no mark of who typed its
+        # amounts, so the creation event's actor is what tells an agent's entry
+        # from the person's.
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=_PERSON_FRONTEND_ACTOR)
         await context.events.phase(request.definition_id)
         await context.events.effect(OperationEffect.NONE)
         run = _InvoiceIntakeRun(
@@ -81,6 +95,7 @@ class InvoiceIntakeExecutor:
             request=request,
             payload=payload,
             context=context,
+            wizard_actor=actor,
         )
         return await await_cancellation_complete(_run_invoice_intake(run), task_name=request.definition_id)
 
@@ -93,11 +108,13 @@ class _InvoiceIntakeRun:
         request: OperationRequest[BaseModel],
         payload: InvoiceImportRequest | InvoiceWizardRequest,
         context: OperationExecutorContext,
+        wizard_actor: str,
     ) -> None:
         self.factory = factory
         self.request = request
         self.payload = payload
         self.context = context
+        self.wizard_actor = wizard_actor
         self.loop = asyncio.get_running_loop()
         self.committed = 0
         self.uncertain = False
@@ -208,6 +225,7 @@ class _InvoiceIntakeRun:
             recargo_amount=self.payload.recargo_amount,
             ports=ports.creation(),
             operation=operation,
+            actor=self.wizard_actor,
         )
         return InvoiceWizardProjection(
             profile_id=self.payload.profile_id,

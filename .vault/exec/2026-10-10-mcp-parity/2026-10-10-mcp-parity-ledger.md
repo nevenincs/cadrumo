@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:bfcb161d54233b6baf92b327fb65f091fbedf61408437f89a6a9816bcdf8e964'
+body_hash: 'sha256:1f5c60e84cab9f45db6b719fa2db1996e1ea2326d26ee71478e42ab396f72da9'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -642,6 +642,139 @@ related:
 - `S37` `verify:` `ruff format --check` -> `pass`
 - `S37` `verify:` `ty check --python-platform linux` -> `pass`
 - `S37` `by:` `vaultspec-standard-executor`
+- `S30` `M` `src/cadrumo/application/ledger/classify_patch.py`
+- `S30` `M` `src/cadrumo/application/ledger/classify_requests.py`
+- `S30` `M` `src/cadrumo/application/ledger/ledger_add_command.py`
+- `S30` `M` `src/cadrumo/application/ledger/ledger_add_contracts.py`
+- `S30` `M` `src/cadrumo/application/ledger/update_contracts.py`
+- `S30` `M` `src/cadrumo/application/ledger/update_operation.py`
+- `S30` `M` `src/cadrumo/domain/transactions/irpf_categories.py`
+- `S30` `M` `src/cadrumo/entrypoints/cli/_ledger.py`
+- `S30` `M` `src/cadrumo/entrypoints/cli/common.py`
+- `S30` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_validation_paths.py`
+- `S30` `A` `src/cadrumo/application/ledger/tests/ledger_input_rule_support.py`
+- `S30` `A` `src/cadrumo/application/ledger/tests/test_add_operation_input_rules.py`
+- `S30` `A` `src/cadrumo/application/ledger/tests/test_classify_operation_input_rules.py`
+- `S30` `A` `src/cadrumo/application/ledger/tests/test_update_operation_input_rules.py`
+- `S30` `verify:` `pytest ledger, invoices, operations, inventory and transaction-domain suites (3007 tests)` -> `pass`
+- `S30` `verify:` `pytest profile persistence suite (2252 tests)` -> `pass`
+- `S30` `verify:` `pytest entrypoint suite including executor conformance (2055 of 2062 tests)` -> `pass`
+- `S30` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S30` `verify:` `ruff check (61 files)` -> `pass`
+- `S30` `verify:` `ruff format --check (61 files)` -> `pass`
+- `S30` `verify:` `ty check --python-platform linux (61 files)` -> `pass`
+- `S30` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S30` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S30` `by:` `vaultspec-high-executor`
+- `S32` `M` `src/cadrumo/application/ledger/bulk_classify_operation.py`
+- `S32` `M` `src/cadrumo/application/ledger/tests/test_bulk_classify_operation.py`
+- `S32` `A` `src/cadrumo/entrypoints/tests/test_ledger_classification_actor_by_frontend.py`
+- `S32` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S32` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
+- `S32` `verify:` `pytest ledger, invoices, operations, inventory and transaction-domain suites (3007 tests)` -> `pass`
+- `S32` `verify:` `pytest profile persistence suite (2252 tests)` -> `pass`
+- `S32` `verify:` `pytest entrypoint suite including executor conformance (2055 of 2062 tests)` -> `pass`
+- `S32` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S32` `verify:` `ruff check (61 files)` -> `pass`
+- `S32` `verify:` `ruff format --check (61 files)` -> `pass`
+- `S32` `verify:` `ty check --python-platform linux (61 files)` -> `pass`
+- `S32` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S32` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S32` `by:` `vaultspec-high-executor`
+- `S33` `M` `src/cadrumo/application/ledger/ratios_operation.py`
+- `S33` `M` `src/cadrumo/application/ledger/ratios.py`
+- `S33` `M` `src/cadrumo/application/ledger/rule_operation.py`
+- `S33` `M` `src/cadrumo/application/ledger/rule_contracts.py`
+- `S33` `M` `src/cadrumo/application/ledger/tests/test_ratios_operation.py`
+- `S33` `M` `src/cadrumo/application/ledger/tests/test_rule_operation.py`
+- `S33` `M` `src/cadrumo/adapters/persistence/profile/tests/test_usage_ratio_workflow.py`
+- `S33` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S33` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S33` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
+- `S33` `verify:` `pytest ledger, invoices, operations, inventory and transaction-domain suites (3007 tests)` -> `pass`
+- `S33` `verify:` `pytest profile persistence suite (2252 tests)` -> `pass`
+- `S33` `verify:` `pytest entrypoint suite including executor conformance (2055 of 2062 tests)` -> `pass`
+- `S33` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S33` `verify:` `ruff check (61 files)` -> `pass`
+- `S33` `verify:` `ruff format --check (61 files)` -> `pass`
+- `S33` `verify:` `ty check --python-platform linux (61 files)` -> `pass`
+- `S33` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S33` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S33` `by:` `vaultspec-high-executor`
+- `S34` `M` `src/cadrumo/application/ledger/attachment_mutation_operation.py`
+- `S34` `A` `src/cadrumo/entrypoints/tests/test_ledger_row_mutation_mcp_admission.py`
+- `S34` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S34` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S34` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
+- `S34` `verify:` `pytest ledger, invoices, operations, inventory and transaction-domain suites (3007 tests)` -> `pass`
+- `S34` `verify:` `pytest profile persistence suite (2252 tests)` -> `pass`
+- `S34` `verify:` `pytest entrypoint suite including executor conformance (2055 of 2062 tests)` -> `pass`
+- `S34` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S34` `verify:` `ruff check (61 files)` -> `pass`
+- `S34` `verify:` `ruff format --check (61 files)` -> `pass`
+- `S34` `verify:` `ty check --python-platform linux (61 files)` -> `pass`
+- `S34` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S34` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S34` `by:` `vaultspec-high-executor`
+- `S35` `M` `src/cadrumo/application/ledger/split_operation.py`
+- `S35` `M` `src/cadrumo/application/ledger/lifecycle_contracts.py`
+- `S35` `M` `src/cadrumo/application/ledger/lifecycle_mutation_operation.py`
+- `S35` `M` `src/cadrumo/application/ledger/lifecycle_projections.py`
+- `S35` `M` `src/cadrumo/application/ledger/actions_lifecycle.py`
+- `S35` `M` `src/cadrumo/application/ledger/tests/test_lifecycle_mutation_operation.py`
+- `S35` `M` `src/cadrumo/application/ledger/tests/test_split_operation.py`
+- `S35` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_split.py`
+- `S35` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_lifecycle_native.py`
+- `S35` `M` `src/cadrumo/entrypoints/tests/ledger_lifecycle_operation_test_support.py`
+- `S35` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S35` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S35` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
+- `S35` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S35` `verify:` `pytest ledger, invoices, operations, inventory and transaction-domain suites (3007 tests)` -> `pass`
+- `S35` `verify:` `pytest profile persistence suite (2252 tests)` -> `pass`
+- `S35` `verify:` `pytest entrypoint suite including executor conformance (2055 of 2062 tests)` -> `pass`
+- `S35` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S35` `verify:` `ruff check (61 files)` -> `pass`
+- `S35` `verify:` `ruff format --check (61 files)` -> `pass`
+- `S35` `verify:` `ty check --python-platform linux (61 files)` -> `pass`
+- `S35` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S35` `by:` `vaultspec-high-executor`
+- `S42` `M` `src/cadrumo/application/ledger/evidence_mutation_operation.py`
+- `S42` `M` `src/cadrumo/application/ledger/evidence_followup_operation.py`
+- `S42` `M` `src/cadrumo/application/ledger/invoice_evidence_extract_operation.py`
+- `S42` `M` `src/cadrumo/application/ledger/participation_rebuild_operation.py`
+- `S42` `M` `src/cadrumo/application/invoices/catalogue_intake_operation.py`
+- `S42` `M` `src/cadrumo/application/invoices/catalogue_intake_executor.py`
+- `S42` `M` `src/cadrumo/application/invoices/creation_wizard.py`
+- `S42` `M` `src/cadrumo/application/operations/execution_actor.py`
+- `S42` `M` `src/cadrumo/application/operations/tests/test_execution_actor.py`
+- `S42` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`
+- `S42` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_invoice_evidence.py`
+- `S42` `M` `src/cadrumo/entrypoints/tui/runtime_evidence.py`
+- `S42` `M` `src/cadrumo/application/invoices/tests/test_catalogue_intake_operation.py`
+- `S42` `M` `src/cadrumo/application/ledger/tests/test_evidence_mutation_operation.py`
+- `S42` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_executor_effects.py`
+- `S42` `M` `src/cadrumo/application/ledger/tests/test_participation_rebuild_operation.py`
+- `S42` `A` `src/cadrumo/application/ledger/tests/test_invoice_evidence_extract_agent_access.py`
+- `S42` `M` `src/cadrumo/entrypoints/tests/test_ledger_evidence_mcp_frontends.py`
+- `S42` `A` `src/cadrumo/entrypoints/tests/test_ledger_evidence_invoice_mcp_admission.py`
+- `S42` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_invoice_evidence.py`
+- `S42` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_evidence.py`
+- `S42` `M` `src/cadrumo/application/operations/mcp_admission.py`
+- `S42` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S42` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_admission.py`
+- `S42` `verify:` `pytest ledger, invoices, operations, inventory and transaction-domain suites (3007 tests)` -> `pass`
+- `S42` `verify:` `pytest profile persistence suite (2252 tests)` -> `pass`
+- `S42` `verify:` `pytest entrypoint suite including executor conformance (2055 of 2062 tests)` -> `pass`
+- `S42` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S42` `verify:` `ruff check (61 files)` -> `pass`
+- `S42` `verify:` `ruff format --check (61 files)` -> `pass`
+- `S42` `verify:` `ty check --python-platform linux (61 files)` -> `pass`
+- `S42` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S42` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S42` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -665,3 +798,9 @@ related:
 - `S38` Read end to end: verification reads and writes the local profile store only. Its provider step constructs local objects with no browser or session, the readiness probes are skipped, and no network or subprocess call is reachable. Admitted with the actor taken from the session.
 - `S45` Every definition now declares where its subject comes from: 247 the admitted profile, 15 a request field, 6 the work unit that owns a stored record the request names, 1 a field or the profile, 1 a fixed literal. The declaration is in the public contract and its digest, the manifest version is 3, describe and search state it, and the MCP execute tool derives the subject so a client need not supply it. Each family keeps its own check; the declaration is held to it by running every real resolver and executor on the derived subject and on an altered one. Not done here and left as a follow-on: one central guard reading the declaration, and replacing the subject builders of the command line and terminal interface. Outside this Step and failing at HEAD: two failure-log tests assert a traceback another commit stopped logging; four form-layout tests; four IVA wallet tests reporting no usable authority; an M184 error-context key; an M100 export version; and a bulk-classify save count.
 - `S37` Follow-up to this Step: seven more operations already open to MCP recorded a caller-typed actor and now take it from the session for an agent: operator IVA, the classification and split reviews, ledger.link, the inventory closing-authority record, the reconciliation import and pull, and the counterparty confirmation. A closing-authority record retried from a different agent session has a different fingerprint and is refused as a conflict.
+- `S30` Moved into the operations: the IRPF category must be in the published taxonomy (add, update, classify); the two-decimal limit on update and classify; a blank reason on classify; blank or null description, notes, date, amount, currency and direction on update. Update now answers a refused edit as a validation refusal with no effect, as classify did. Everything else the command line checked was already in the request models or the domain. No frontend list or decision row changed: admission waits on the replay-identity and provenance decisions. Still a failure and not a refusal: state-dependent errors of add, which deliberately keeps its effect unknown, and an unknown own account on update.
+- `S32` The resolver refused every frontend but the command line for no reason the code holds; the request carries the classification table as text, not a path. The stored actor is taken from the session for an agent.
+- `S33` Set and unset are each recorded as an event and undo one another; their events hard-coded the actor operator and now carry the session label for an agent. Rule add is admitted. Rule apply is admitted except with reaffirm outside a dry run, which overwrites classifications made by hand with no earlier value stored and is refused on MCP until the approval step exists. Reported, not changed: an unset that fails after its write leaves the override cleared with no event, and a retry is refused as having no override.
+- `S34` Attach takes identifiers of stored evidence only and detach removes only the link, keeping bytes and manifest. A purchase-evidence link cannot be cleared by detach.
+- `S35` No confirmation moved: the only safeguard was the command-line yes flag, kept there. Archive, stash and restore are events over rows that stay stored, and their results now say what they replaced and which operation reverses it. Exclude cleared the business share without recording it; its event now stores the previous value. A manual split keeps the parent stored but only the approval-bound merge recombines it; admitted, with the result naming that. Found and not fixed here: restore has no guard for rows a merge archived and can reactivate them beside the merged row.
+- `S42` Evidence update changes descriptive and amount fields only and is no route to confirmation; an agent result carries the file name and not the directory. The invoice intake is typed, not interactive and not a draft promotion; its creation event carries the session label for an agent, which is the only mark on amounts an agent states. The participation rebuild regenerates a derived index. Extraction is admitted for a reader on this machine: the off-machine variant is refused on MCP at the resolver, and because a reader counted as local by provider name alone while its endpoint is a setting, the executor refuses an agent read unless the endpoint is loopback. An agent result carries the review-summary projection and no draft text. Outside these Steps and failing as before: the seven entrypoint tests named under S45, fourteen command-line tests reporting `runtime_unavailable` from the stale base-Python install, and one bulk-classify command test that expects an English message and receives the Spanish one.

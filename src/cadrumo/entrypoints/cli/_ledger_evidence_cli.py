@@ -383,7 +383,7 @@ def _evidence_extract_payload(
         "source_sha256": projection.source_sha256,
         "draft_review_sha256": projection.draft_review_sha256,
         "consent_audit_effect": projection.consent_audit_effect,
-        **_draft_payload(projection.draft),
+        **_draft_payload(projection.person_draft()),
         "label_reading_fallback": (
             None
             if projection.label_reading_fallback is None
@@ -403,7 +403,7 @@ def _evidence_extract_lines(
     projection: LedgerEvidenceExtractProjection,
 ) -> list[str]:
     """Render the stable tabular projection of one extracted draft."""
-    draft = projection.draft
+    draft = projection.person_draft()
     return [
         f"bucket_id\t{bucket_id}",
         f"evidence_id\t{_display_text(projection.evidence_id)}",
@@ -454,7 +454,7 @@ def _evidence_extract_notices(reference: str, projection: LedgerEvidenceExtractP
             context={"reference": reference},
         ),
     ]
-    notices.extend(field_degradation_notices(_domain_provenance(projection.draft)))
+    notices.extend(field_degradation_notices(_domain_provenance(projection.person_draft())))
     notices.extend(label_reading_fallback_notices(_domain_fallback(projection.label_reading_fallback)))
     return notices
 

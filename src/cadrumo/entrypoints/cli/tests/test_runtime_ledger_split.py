@@ -44,6 +44,8 @@ def _projection(
             "child_transaction_ids": child_transaction_ids,
             "bucket_event_id": "e" * 64,
             "parent_business_classification": BusinessClassification.PERSONAL,
+            "child_business_classification": BusinessClassification.NOT_YET_PROCESSED,
+            "remerged_by": ("ledger.merge",),
         },
     )
 

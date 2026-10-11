@@ -32,6 +32,7 @@ from ...domain.transactions.models import LedgerDatePartition, Transaction, Tran
 from ..operations.access_port import OperationAccessResolver
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -115,11 +116,12 @@ class _PreparedLifecycleMutation(BaseModel):
 
 
 class _TrackedTransactionRepository:
-    """Observe entry to the canonical co-commit writer without replacing it."""
+    """Observe the canonical action's read and its entry to the co-commit writer without replacing either."""
 
     def __init__(self, repository: TransactionCatalogueCoCommitWriterProtocol) -> None:
         self._repository = repository
         self.write_started = threading.Event()
+        self._read_before_write: TransactionCatalogue | None = None
 
     @property
     def bucket_id(self) -> str:
@@ -129,7 +131,18 @@ class _TrackedTransactionRepository:
         return self._repository.exists()
 
     def load(self) -> TransactionCatalogue:
-        return self._repository.load()
+        catalogue = self._repository.load()
+        # The action derives its replacement from its last full read, so that read is
+        # the state the write replaced. A read after the write would show the new row.
+        if not self.write_started.is_set():
+            self._read_before_write = catalogue
+        return catalogue
+
+    def replaced(self, transaction_id: str) -> Transaction | None:
+        """Return the stored row the action read before it wrote, if it read one."""
+        if self._read_before_write is None:
+            return None
+        return self._read_before_write.get(transaction_id)
 
     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
         return self._repository.load_for_date_range(start, end)
@@ -167,8 +180,14 @@ class _LedgerLifecycleExecutor:
 
     _operation_id: LedgerLifecycleOperationId
 
-    def __init__(self, ports_factory: LedgerActionPortsFactory) -> None:
+    def __init__(
+        self,
+        ports_factory: LedgerActionPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         self._ports_factory = ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -189,6 +208,9 @@ class _LedgerLifecycleExecutor:
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         await context.events.phase(self._operation_id)
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
+        )
 
         operation: PinnedAuthorityOperation = context.authority_operation
         ports = await asyncio.to_thread(self._ports_factory, bucket_id=bucket_id, operation=operation)
@@ -226,6 +248,7 @@ class _LedgerLifecycleExecutor:
                         ports=commit_ports,
                         bucket_id=bucket_id,
                         transaction_id=prepared.transaction_id,
+                        actor=actor,
                     )
                 except (TransactionIdPrefixError, TransactionNotFoundError, TransactionValidationError) as error:
                     if tracked.write_started.is_set():
@@ -253,7 +276,12 @@ class _LedgerLifecycleExecutor:
                 detail_ref=detail_ref,
             )
 
-        projection = project_lifecycle_mutation_from_action(payload.profile_id, self._operation_id, settled)
+        projection = project_lifecycle_mutation_from_action(
+            payload.profile_id,
+            self._operation_id,
+            settled,
+            tracked.replaced(prepared.transaction_id),
+        )
         result = LedgerLifecycleOperationResult(
             outcome="updated",
             profile_id=payload.profile_id,
@@ -271,8 +299,8 @@ class _LedgerLifecycleExecutor:
         ports: LedgerActionPorts,
         bucket_id: str,
         transaction_id: str,
+        actor: str,
     ) -> ManualLedgerTransactionResult:
-        actor = payload.actor or bucket_id or "operator"
         source_command = f"aeat app {self._operation_id.replace('.', ' ')}"
         if self._operation_id == LEDGER_ARCHIVE_OPERATION_DEFINITION_ID:
             return archive_manual_transaction(
@@ -370,6 +398,7 @@ def _build_definition(
     operation_id: LedgerLifecycleOperationId,
     executor_type: type[_LedgerLifecycleExecutor],
     ports_factory: LedgerActionPortsFactory,
+    execution_caller_reader: OperationExecutionCallerReader | None,
 ) -> OperationDefinition:
     return build_single_phase_definition(
         definition_id=operation_id,
@@ -377,46 +406,66 @@ def _build_definition(
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerLifecycleExecutionResult,
         executor_type=executor_type,
-        build=lambda: executor_type(ports_factory),
+        build=lambda: executor_type(ports_factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}),
         refusal_detail_codes=frozenset({LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE}),
     )
 
 
-def build_ledger_archive_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_archive_definition(
+    ports_factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Declare the receipt-backed canonical archive mutation."""
     return _build_definition(
         operation_id=LEDGER_ARCHIVE_OPERATION_DEFINITION_ID,
         executor_type=LedgerArchiveExecutor,
         ports_factory=ports_factory,
+        execution_caller_reader=execution_caller_reader,
     )
 
 
-def build_ledger_stash_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_stash_definition(
+    ports_factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Declare the receipt-backed canonical stash mutation."""
     return _build_definition(
         operation_id=LEDGER_STASH_OPERATION_DEFINITION_ID,
         executor_type=LedgerStashExecutor,
         ports_factory=ports_factory,
+        execution_caller_reader=execution_caller_reader,
     )
 
 
-def build_ledger_restore_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_restore_definition(
+    ports_factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Declare the receipt-backed canonical restore mutation."""
     return _build_definition(
         operation_id=LEDGER_RESTORE_OPERATION_DEFINITION_ID,
         executor_type=LedgerRestoreExecutor,
         ports_factory=ports_factory,
+        execution_caller_reader=execution_caller_reader,
     )
 
 
-def build_ledger_exclude_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_exclude_definition(
+    ports_factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Declare the receipt-backed canonical review-exclusion mutation."""
     return _build_definition(
         operation_id=LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
         executor_type=LedgerExcludeExecutor,
         ports_factory=ports_factory,
+        execution_caller_reader=execution_caller_reader,
     )
 
 

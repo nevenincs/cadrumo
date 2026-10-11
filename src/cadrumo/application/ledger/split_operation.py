@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import replace
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -24,6 +24,7 @@ from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt, terminal_receipt_matches
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -44,6 +45,8 @@ from .read_access import resolve_ledger_commit_access
 
 LEDGER_SPLIT_OPERATION_DEFINITION_ID = "ledger.split.manual"
 LEDGER_SPLIT_PHASE = "ledger.split.manual"
+LedgerSplitRemergeOperationId = Literal["ledger.merge"]
+_SPLIT_REMERGED_BY: tuple[LedgerSplitRemergeOperationId, ...] = ("ledger.merge",)
 _MAX_SPLIT_CHILDREN = 128
 _MAX_SPLIT_RESULT_JSON_BYTES = 16_384
 _TransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
@@ -84,7 +87,11 @@ _Children = Annotated[tuple[LedgerSplitChildRequest, ...], Field(min_length=2, m
 
 
 class LedgerSplitRequest(BaseModel):
-    """Exact-profile manual split input with canonical JSON wire values."""
+    """Exact-profile manual split input with canonical JSON wire values.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -119,7 +126,16 @@ class LedgerSplitRequest(BaseModel):
 
 
 class LedgerSplitOperationResult(BaseModel):
-    """Bounded successful split projection retained by the CLI bridge."""
+    """Bounded successful split projection, with what the split set aside on the parent.
+
+    A split deletes nothing. The parent stays stored in the split state with its
+    own classification, evidence and attachments, and none of them pass to the
+    children: ``parent_business_classification`` is what the parent keeps and
+    ``child_business_classification`` is what every child was stored with.
+    ``remerged_by`` names the registered operation that recombines the whole
+    cohort. It archives the parent and the children and stores one new row for
+    the parent's amount, so the parent's classification is entered again there.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -132,6 +148,8 @@ class LedgerSplitOperationResult(BaseModel):
     ]
     bucket_event_id: Hex64Str
     parent_business_classification: BusinessClassification
+    child_business_classification: BusinessClassification
+    remerged_by: Annotated[tuple[LedgerSplitRemergeOperationId, ...], Field(min_length=1, max_length=1)]
 
     @model_validator(mode="after")
     def _unique_child_ids(self) -> LedgerSplitOperationResult:
@@ -158,9 +176,15 @@ class LedgerSplitExecutionResult(BaseModel):
 class LedgerSplitExecutor:
     """Resolve the prefix and commit its split under one pinned full-catalogue revision."""
 
-    def __init__(self, ports_factory: LedgerActionPortsFactory) -> None:
+    def __init__(
+        self,
+        ports_factory: LedgerActionPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Retain the exact-profile port factory supplied by composition."""
         self._ports_factory = ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -174,6 +198,9 @@ class LedgerSplitExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_SPLIT_PHASE)
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
+        )
 
         def split() -> LedgerSplitOperationResult:
             operation: PinnedAuthorityOperation = context.authority_operation
@@ -210,7 +237,7 @@ class LedgerSplitExecutor:
                 bucket_id=bucket_id,
                 transaction_id=transaction_id,
                 children=children,
-                actor=payload.actor or bucket_id or "operator",
+                actor=actor,
                 source_command="aeat app ledger split",
                 reason=payload.reason,
                 ports=pinned_ports,
@@ -256,6 +283,8 @@ def _preflight_result(
         child_transaction_ids=placeholder_ids,
         bucket_event_id="b" * 64,
         parent_business_classification=parent_business_classification,
+        child_business_classification=BusinessClassification.NOT_YET_PROCESSED,
+        remerged_by=_SPLIT_REMERGED_BY,
     )
     _require_result_bound(projection)
 
@@ -376,6 +405,9 @@ def _operation_result(
             expected_parent_id=expected_parent_id,
             split_group_id=result.split_group_id,
         )
+    child_classifications = {child.business_classification for child in child_transactions}
+    if len(child_classifications) != 1:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     projection = LedgerSplitOperationResult(
         profile_id=profile_id,
         parent_transaction_id=result.parent_transaction_id,
@@ -383,6 +415,8 @@ def _operation_result(
         child_transaction_ids=child_ids,
         bucket_event_id=result.bucket_event_id,
         parent_business_classification=parent.business_classification,
+        child_business_classification=next(iter(child_classifications)),
+        remerged_by=_SPLIT_REMERGED_BY,
     )
     _require_result_bound(projection)
     return projection
@@ -400,7 +434,11 @@ def _project_operation_result(result: BaseModel, receipt: OperationTerminalRecei
     return result.result
 
 
-def build_ledger_split_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
+def build_ledger_split_definition(
+    ports_factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Declare the secure exact-profile manual split mutation."""
     return build_single_phase_definition(
         definition_id=LEDGER_SPLIT_OPERATION_DEFINITION_ID,
@@ -408,9 +446,9 @@ def build_ledger_split_definition(ports_factory: LedgerActionPortsFactory) -> Op
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerSplitExecutionResult,
         executor_type=LedgerSplitExecutor,
-        build=lambda: LedgerSplitExecutor(ports_factory),
+        build=lambda: LedgerSplitExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}),
     )
 
 
@@ -444,6 +482,7 @@ __all__ = [
     "LedgerSplitChildRequest",
     "LedgerSplitExecutor",
     "LedgerSplitOperationResult",
+    "LedgerSplitRemergeOperationId",
     "LedgerSplitRequest",
     "build_ledger_split_definition",
     "build_ledger_split_registration",

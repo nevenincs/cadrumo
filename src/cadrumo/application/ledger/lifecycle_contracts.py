@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ..review.filter import LedgerReviewStatus
 from .models import LedgerRemovalBlocker
 from .transaction_projection import LedgerTransactionProjection
@@ -25,6 +26,10 @@ LEDGER_EXCLUDE_OPERATION_DEFINITION_ID = "ledger.exclude"
 LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE = "REFUSED_LEDGER_LIFECYCLE_VALIDATION"
 
 LedgerLifecycleOperationId = Literal["ledger.archive", "ledger.stash", "ledger.restore", "ledger.exclude"]
+
+LedgerLifecycleReversalOperationId = Literal[
+    "ledger.archive", "ledger.stash", "ledger.restore", "ledger.classify.single"
+]
 
 LEDGER_LIFECYCLE_MAX_RESULT_BYTES = 256 * 1024
 
@@ -52,7 +57,11 @@ _RecoveryTransactionIds = Annotated[
 
 
 class LedgerLifecycleMutationRequest(BaseModel):
-    """Private exact-profile request shared by the four lifecycle operations."""
+    """Private exact-profile request shared by the four lifecycle operations.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -108,8 +117,26 @@ class LedgerLifecycleValidationProjection(BaseModel):
         return self
 
 
+class LedgerLifecycleReplacedStateProjection(BaseModel):
+    """What the mutation replaced on its one row, and the operations that put it back.
+
+    A lifecycle mutation deletes nothing: the row stays stored, and these are the
+    values it carried immediately before. ``reversed_by`` names, in the order to
+    run them, the registered operations that return the row to that state. A
+    reclassification takes the replaced classification and proportion as its input.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    lifecycle_state: TransactionLifecycleState
+    business_classification: BusinessClassification
+    business_pct: str | None
+    classified_by: str
+    reversed_by: Annotated[tuple[LedgerLifecycleReversalOperationId, ...], Field(min_length=1, max_length=2)]
+
+
 class LedgerLifecycleMutationProjection(BaseModel):
-    """Full canonical transaction, review classification, and appended event."""
+    """Full canonical transaction, review classification, appended event, and replaced state."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -118,6 +145,7 @@ class LedgerLifecycleMutationProjection(BaseModel):
     transaction: LedgerTransactionProjection
     review_status: LedgerReviewStatus
     bucket_event_ids: _EventIds
+    replaced: LedgerLifecycleReplacedStateProjection
 
 
 class LedgerLifecycleOperationResult(BaseModel):
@@ -169,5 +197,7 @@ __all__ = [
     "LedgerLifecycleMutationRequest",
     "LedgerLifecycleOperationId",
     "LedgerLifecycleOperationResult",
+    "LedgerLifecycleReplacedStateProjection",
+    "LedgerLifecycleReversalOperationId",
     "LedgerLifecycleValidationProjection",
 ]

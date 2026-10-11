@@ -33,6 +33,7 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -89,8 +90,7 @@ LEDGER_RULE_ADD_OPERATION_DEFINITION_ID = "ledger.rule.add"
 LEDGER_RULE_LIST_OPERATION_DEFINITION_ID = "ledger.rule.list"
 LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID = "ledger.rule.apply"
 
-_WRITE_FRONTENDS = frozenset({OperationFrontendProjection.CLI})
-_READ_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
+_FRONTENDS = frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP})
 
 
 class _TrackedRuleRepository:
@@ -115,9 +115,10 @@ async def _prepare_rule_add(
     payload: LedgerRuleAddRequest,
     *,
     bucket_id: str,
+    actor: str,
     operation: PinnedAuthorityOperation,
     context: OperationExecutorContext,
-) -> tuple[LedgerClassificationRule, str | None, str] | OperationRefusalEvidence:
+) -> tuple[LedgerClassificationRule, str | None] | OperationRefusalEvidence:
     if not payload.description_pattern.strip():
         projection = _add_validation_projection(
             payload.profile_id,
@@ -139,7 +140,6 @@ async def _prepare_rule_add(
         )
         return await _publish_add_refusal(context, projection)
 
-    actor = payload.actor or bucket_id or "operator"
     try:
         candidate = LedgerClassificationRule.create(
             description_pattern=payload.description_pattern,
@@ -152,7 +152,7 @@ async def _prepare_rule_add(
     except (ClassificationRuleError, ValidationError, ValueError) as error:
         projection = _add_validation_projection(payload.profile_id, code="invalid_pattern", error=error)
         return await _publish_add_refusal(context, projection)
-    return candidate, category_id, actor
+    return candidate, category_id
 
 
 async def _persist_rule_add(
@@ -209,9 +209,15 @@ def _require_candidate_match(candidate: LedgerClassificationRule, saved: LedgerC
 class LedgerRuleAddExecutor:
     """Create one encrypted profile rule through the canonical action service."""
 
-    def __init__(self, repository_factory: LedgerClassificationRuleRepositoryFactory) -> None:
+    def __init__(
+        self,
+        repository_factory: LedgerClassificationRuleRepositoryFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Bind the canonical encrypted rule repository factory."""
         self._repository_factory = repository_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -224,10 +230,15 @@ class LedgerRuleAddExecutor:
         _require_operation_identity(request, context, LEDGER_RULE_ADD_OPERATION_DEFINITION_ID, payload.profile_id)
         await context.events.phase(LEDGER_RULE_ADD_OPERATION_DEFINITION_ID)
         operation: PinnedAuthorityOperation = context.authority_operation
-        prepared = await _prepare_rule_add(payload, bucket_id=bucket_id, operation=operation, context=context)
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
+        )
+        prepared = await _prepare_rule_add(
+            payload, bucket_id=bucket_id, actor=actor, operation=operation, context=context
+        )
         if isinstance(prepared, OperationRefusalEvidence):
             return prepared
-        candidate, category_id, actor = prepared
+        candidate, category_id = prepared
 
         saved = await _persist_rule_add(
             payload,
@@ -285,10 +296,13 @@ class LedgerRuleApplyExecutor:
         self,
         ports_factory: LedgerActionPortsFactory,
         repository_factory: LedgerClassificationRuleRepositoryFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
     ) -> None:
         """Bind exact-profile canonical action ports and encrypted rule storage."""
         self._ports_factory = ports_factory
         self._repository_factory = repository_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -321,7 +335,9 @@ class LedgerRuleApplyExecutor:
 
         # Validate every promised live row/count before any transaction write.
         build_rule_apply_plan_projection(payload.profile_id, plan, bucket_event_count=0)
-        actor = payload.actor or bucket_id or "operator"
+        actor = execution_actor_label(
+            self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
+        )
         prepared_result = await _apply_rule_matches(
             plan,
             payload,
@@ -531,6 +547,8 @@ def _definition[RequestT: BaseModel, ResultT: BaseModel, ExecutorT](
 
 def build_ledger_rule_add_definition(
     repository_factory: LedgerClassificationRuleRepositoryFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Declare one secure rule add under an exact-profile all-period commit grant."""
     return _definition(
@@ -538,9 +556,9 @@ def build_ledger_rule_add_definition(
         request_type=LedgerRuleAddRequest,
         result_type=LedgerRuleAddExecutionResult,
         executor_type=LedgerRuleAddExecutor,
-        build=lambda: LedgerRuleAddExecutor(repository_factory),
+        build=lambda: LedgerRuleAddExecutor(repository_factory, execution_caller_reader=execution_caller_reader),
         effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-        permitted_frontends=_WRITE_FRONTENDS,
+        permitted_frontends=_FRONTENDS,
     )
 
 
@@ -555,7 +573,7 @@ def build_ledger_rule_list_definition(
         executor_type=LedgerRuleListExecutor,
         build=lambda: LedgerRuleListExecutor(repository_factory),
         effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-        permitted_frontends=_READ_FRONTENDS,
+        permitted_frontends=_FRONTENDS,
         refusal_detail_codes=frozenset(),
     )
 
@@ -563,6 +581,8 @@ def build_ledger_rule_list_definition(
 def build_ledger_rule_apply_definition(
     ports_factory: LedgerActionPortsFactory,
     repository_factory: LedgerClassificationRuleRepositoryFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
 ) -> OperationDefinition:
     """Declare canonical preview and per-transaction rule application."""
     return _definition(
@@ -570,11 +590,13 @@ def build_ledger_rule_apply_definition(
         request_type=LedgerRuleApplyRequest,
         result_type=LedgerRuleApplyExecutionResult,
         executor_type=LedgerRuleApplyExecutor,
-        build=lambda: LedgerRuleApplyExecutor(ports_factory, repository_factory),
+        build=lambda: LedgerRuleApplyExecutor(
+            ports_factory, repository_factory, execution_caller_reader=execution_caller_reader
+        ),
         effects=frozenset(
             {OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.PARTIAL, OperationEffect.UNKNOWN}
         ),
-        permitted_frontends=_WRITE_FRONTENDS,
+        permitted_frontends=_FRONTENDS,
     )
 
 
@@ -625,9 +647,17 @@ def resolve_ledger_rule_list_access(
 def resolve_ledger_rule_apply_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Resolve whole-profile rule apply, requiring commit except for dry-run."""
+    """Resolve whole-profile rule apply, requiring commit except for dry-run.
+
+    A run that reaffirms replaces classifications someone already set by
+    hand, and the earlier value is not kept. An MCP client is refused that run
+    before any record is read; its preview, and a run that only classifies
+    unprocessed rows, stay open to it.
+    """
     if not isinstance(request.payload, LedgerRuleApplyRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if request.payload.reaffirm and not request.payload.dry_run and context.frontend is OperationFrontendProjection.MCP:
+        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
     return _resolve_rule_access(
         request,
         context,

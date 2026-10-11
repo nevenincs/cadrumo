@@ -5468,6 +5468,12 @@ def _run_registered_executor_conformance_case(
             assert len(split.child_transaction_ids) == 2
             persisted_split = TransactionCatalogueRepository(bucket_id=str(profile_id)).load()
             assert all(child_id in persisted_split.transactions for child_id in split.child_transaction_ids)
+            # The parent stays stored and split; the result names what recombines the cohort.
+            split_parent = persisted_split.transactions[split.parent_transaction_id]
+            assert split_parent.lifecycle_state.value == "SPLIT"
+            assert split.parent_business_classification is split_parent.business_classification
+            assert split.child_business_classification is BusinessClassification.NOT_YET_PROCESSED
+            assert split.remerged_by == ("ledger.merge",)
         if case.definition_id == "ledger.merge":
             assert isinstance(payload, LedgerMergeRequest)
             merged = _resolve_result_projection(

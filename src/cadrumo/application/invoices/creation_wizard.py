@@ -607,6 +607,7 @@ def _persist_or_resolve_wizard_invoice(
     candidate: Invoice,
     *,
     ports: CatalogueCreationPorts,
+    actor: str,
 ) -> InvoiceWizardResult:
     catalogue = ports.invoice_repository.load()
     existing = catalogue.get(candidate.invoice_id)
@@ -620,6 +621,7 @@ def _persist_or_resolve_wizard_invoice(
     result = create_catalogue_invoice(
         invoice=candidate,
         ports=ports,
+        actor=actor,
     )
     return InvoiceWizardResult(invoice=result.invoice, already_existed=False)
 
@@ -655,6 +657,7 @@ def create_invoice_via_wizard(
     rectifies_invoice_number: str | None = None,
     recargo_amount: str | None = None,
     operation: PinnedAuthorityOperation | None = None,
+    actor: str = "cli",
 ) -> InvoiceWizardResult:
     """Validate every field, then create (or resolve) one catalogue invoice.
 
@@ -696,6 +699,8 @@ def create_invoice_via_wizard(
         recargo_amount: Optional canonical euro amount added to grand total.
         operation: Exact retained authority pin, or the ordinary bundled default.
         ports: Required catalogue-creation capabilities for the active bucket.
+        actor: Identifier stamped on the creation audit event. It is what tells
+            an invoice an agent entered from one the person entered.
 
     Returns:
         :class:`InvoiceWizardResult` naming the resolved invoice and whether
@@ -737,4 +742,4 @@ def create_invoice_via_wizard(
         ports=ports,
         operation=operation,
     )
-    return _persist_or_resolve_wizard_invoice(candidate, ports=ports)
+    return _persist_or_resolve_wizard_invoice(candidate, ports=ports, actor=actor)

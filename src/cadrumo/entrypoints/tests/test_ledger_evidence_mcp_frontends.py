@@ -20,13 +20,18 @@ _READS_OPEN_TO_EVERY_FRONTEND = (
     "ledger.evidence.review.list",
     "ledger.evidence.reader-readiness",
 )
-_EVIDENCE_WRITES = (
+_EVIDENCE_WRITES_CLOSED_TO_MCP = (
+    # Adding takes a file on the host, removal and confirmation wait for the person.
     "ledger.evidence.add",
     "ledger.evidence.batch",
-    "ledger.evidence.update",
     "ledger.evidence.remove",
-    "ledger.evidence.extract",
     "ledger.evidence.confirm",
+)
+_EVIDENCE_WRITES_OPEN_TO_MCP = (
+    # An update edits the record's descriptive fields; the person's command line is its other frontend.
+    ("ledger.evidence.update", frozenset({OperationFrontendProjection.CLI, _MCP})),
+    # A read on this machine; its resolver refuses an MCP session the read that leaves it.
+    ("ledger.evidence.extract", frozenset(OperationFrontendProjection)),
 )
 _PERSON_PROJECTION_AND_ITS_AGENT_FACING_SIBLING = (
     # The list and the view return the path the operator typed.
@@ -45,12 +50,23 @@ def test_each_evidence_metadata_read_lists_mcp_in_the_live_registry(definition_i
     assert registry.lookup_public_contract(definition_id).permitted_frontends == frozenset(OperationFrontendProjection)
 
 
-@pytest.mark.parametrize("definition_id", _EVIDENCE_WRITES)
-def test_no_evidence_write_lists_mcp(definition_id: str) -> None:
+@pytest.mark.parametrize("definition_id", _EVIDENCE_WRITES_CLOSED_TO_MCP)
+def test_an_evidence_write_that_takes_a_file_or_waits_for_the_person_does_not_list_mcp(definition_id: str) -> None:
     registry = _registry()
 
     assert _MCP not in registry.lookup(definition_id).permitted_frontends
     assert _MCP not in registry.lookup_public_contract(definition_id).permitted_frontends
+
+
+@pytest.mark.parametrize(("definition_id", "frontends"), _EVIDENCE_WRITES_OPEN_TO_MCP)
+def test_an_evidence_write_an_agent_may_make_lists_mcp_beside_the_persons_frontends(
+    definition_id: str, frontends: frozenset[OperationFrontendProjection]
+) -> None:
+    registry = _registry()
+
+    assert registry.lookup(definition_id).permitted_frontends == frontends
+    assert registry.lookup_public_contract(definition_id).permitted_frontends == frontends
+    assert not mcp_admission_decision(definition_id).prerequisites
 
 
 @pytest.mark.parametrize(("person_id", "sibling_id"), _PERSON_PROJECTION_AND_ITS_AGENT_FACING_SIBLING)

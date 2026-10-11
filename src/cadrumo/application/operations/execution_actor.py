@@ -55,4 +55,20 @@ def execution_actor_label(
     return f"agent:mcp.{caller.session_kind.value}.{caller.client_id}"
 
 
-__all__ = ["OperationExecutionCaller", "OperationExecutionCallerReader", "execution_actor_label"]
+def execution_admitted_on_mcp(reader: OperationExecutionCallerReader | None, context: OperationExecutorContext) -> bool:
+    """Return whether the execution ``context`` belongs to was admitted on the MCP frontend.
+
+    An executor asks this where an agent's execution must do less than a
+    person's: read on this machine only, or seal a result without what only
+    the person may read. ``reader`` is ``None`` where no session host composed
+    the operation; no frontend exists there, so no execution is an agent's.
+    """
+    return reader is not None and reader(context.identity).frontend is OperationFrontendProjection.MCP
+
+
+__all__ = [
+    "OperationExecutionCaller",
+    "OperationExecutionCallerReader",
+    "execution_actor_label",
+    "execution_admitted_on_mcp",
+]

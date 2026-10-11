@@ -13,9 +13,9 @@ related:
   - '[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
-modified: '2026-10-10'
+modified: '2026-10-11'
 body_schema: body-v2
-body_hash: 'sha256:6e4ffc2150911c93063ced2e7d7acd6adc856482fcdfdc882a158166da6beabd'
+body_hash: 'sha256:d859a73aa65a2134032ae287744bee85c884bd5eeff9114b75af407f4b376316'
 ---
 
 # `mcp-parity` plan
@@ -121,13 +121,13 @@ Delivers the ratio, work, workflow and evidence reads on the MCP frontend, each 
 
 Delivers the ledger entry, ratio, rule, attachment, evidence and reversible lifecycle writes on the MCP frontend with their command-line safeguards moved into the operations, so that an agent can operate the whole ledger.
 
-- [ ] `P05.S30` - Move the validations the command line performs before submitting ledger add, update and single classification into those operations, with the same refusals; `src/cadrumo/entrypoints/cli/_ledger.py`.
+- [x] `P05.S30` - Move the validations the command line performs before submitting ledger add, update and single classification into those operations, with the same refusals; `src/cadrumo/entrypoints/cli/_ledger.py`.
 - [ ] `P05.S31` - Admit ledger.add, ledger.update, ledger.classify.single and ledger.allocate with attribution and provenance taken from the session and the replay identity required; also update_operation.py, classify_operation.py and allocate_operation.py; `src/cadrumo/application/ledger/add_operation.py`.
-- [ ] `P05.S32` - Admit ledger.classify.bulk by changing its access resolver, which refuses every frontend but the command line, together with its frontend list; `src/cadrumo/application/ledger/bulk_classify_operation.py`.
-- [ ] `P05.S33` - Admit ledger.ratios.set, its inverse ledger.ratios.unset, ledger.rule.add and ledger.rule.apply; also rule_operation.py; `src/cadrumo/application/ledger/ratios_operation.py`.
-- [ ] `P05.S34` - Admit ledger.attach and ledger.detach, which act on stored evidence by identifier, after the evidence reads; `src/cadrumo/application/ledger/attachment_mutation_operation.py`.
-- [ ] `P05.S35` - Move the confirmations of the manual split and of archive, stash, restore and exclude into their operations and admit all five; also lifecycle_mutation_operation.py; `src/cadrumo/application/ledger/split_operation.py`.
-- [ ] `P05.S42` - Admit ledger.evidence.update, ledger.invoice.wizard and ledger.participation.rebuild, and ledger.evidence.extract for the reader on the machine with the off-machine read refused until the approval step carries that consent; also invoices/catalogue_intake_operation.py, participation_rebuild_operation.py and invoice_evidence_extract_operation.py; `src/cadrumo/application/ledger/evidence_mutation_operation.py`.
+- [x] `P05.S32` - Admit ledger.classify.bulk by changing its access resolver, which refuses every frontend but the command line, together with its frontend list; `src/cadrumo/application/ledger/bulk_classify_operation.py`.
+- [x] `P05.S33` - Admit ledger.ratios.set, its inverse ledger.ratios.unset, ledger.rule.add and ledger.rule.apply; also rule_operation.py; `src/cadrumo/application/ledger/ratios_operation.py`.
+- [x] `P05.S34` - Admit ledger.attach and ledger.detach, which act on stored evidence by identifier, after the evidence reads; `src/cadrumo/application/ledger/attachment_mutation_operation.py`.
+- [x] `P05.S35` - Move the confirmations of the manual split and of archive, stash, restore and exclude into their operations and admit all five; also lifecycle_mutation_operation.py; `src/cadrumo/application/ledger/split_operation.py`.
+- [x] `P05.S42` - Admit ledger.evidence.update, ledger.invoice.wizard and ledger.participation.rebuild, and ledger.evidence.extract for the reader on the machine with the off-machine read refused until the approval step carries that consent; also invoices/catalogue_intake_operation.py, participation_rebuild_operation.py and invoice_evidence_extract_operation.py; `src/cadrumo/application/ledger/evidence_mutation_operation.py`.
 
 ### Phase `P06` - admit document intake and declaration preparation
 

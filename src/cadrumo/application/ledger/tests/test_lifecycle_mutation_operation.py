@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
@@ -14,6 +17,7 @@ from pydantic import BaseModel, ValidationError
 from ....application.ledger import lifecycle_mutation_operation as operation_module
 from ....application.ledger import lifecycle_projections
 from ....application.ledger.action_ports import LedgerActionPorts, LedgerActionPortsFactory
+from ....application.ledger.actions_common import build_manual_ledger_result
 from ....application.ledger.lifecycle_contracts import (
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID,
     LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
@@ -25,6 +29,8 @@ from ....application.ledger.lifecycle_contracts import (
     LedgerLifecycleMutationRequest,
     LedgerLifecycleOperationId,
     LedgerLifecycleOperationResult,
+    LedgerLifecycleReplacedStateProjection,
+    LedgerLifecycleReversalOperationId,
     LedgerLifecycleValidationProjection,
 )
 from ....application.ledger.protocols import (
@@ -38,13 +44,16 @@ from ....application.operations.models import OperationIdentity, OperationReques
 from ....application.operations.owner import OperationExecutorContext
 from ....application.operations.refusal_evidence import OperationRefusalEvidence
 from ....application.review.filter import LedgerReviewStatus
+from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.attachments.protocols import AttachmentStoreProtocol
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.errors import TransactionIdPrefixError, TransactionValidationError
-from ....domain.transactions.models import TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -59,6 +68,12 @@ _OPERATIONS: tuple[LedgerLifecycleOperationId, ...] = (
     LEDGER_RESTORE_OPERATION_DEFINITION_ID,
     LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
 )
+_REVERSED_BY: dict[LedgerLifecycleOperationId, tuple[LedgerLifecycleReversalOperationId, ...]] = {
+    LEDGER_ARCHIVE_OPERATION_DEFINITION_ID: ("ledger.restore",),
+    LEDGER_STASH_OPERATION_DEFINITION_ID: ("ledger.restore",),
+    LEDGER_RESTORE_OPERATION_DEFINITION_ID: ("ledger.archive",),
+    LEDGER_EXCLUDE_OPERATION_DEFINITION_ID: ("ledger.classify.single",),
+}
 
 
 def _projection(operation_id: LedgerLifecycleOperationId) -> LedgerLifecycleMutationProjection:
@@ -117,6 +132,17 @@ def _projection(operation_id: LedgerLifecycleOperationId) -> LedgerLifecycleMuta
             else LedgerReviewStatus.REVIEWED
         ),
         bucket_event_ids=(_EVENT_ID,),
+        replaced=LedgerLifecycleReplacedStateProjection(
+            lifecycle_state=(
+                TransactionLifecycleState.ARCHIVED
+                if operation_id == LEDGER_RESTORE_OPERATION_DEFINITION_ID
+                else TransactionLifecycleState.ACTIVE
+            ),
+            business_classification=BusinessClassification.BUSINESS,
+            business_pct=None,
+            classified_by="manual",
+            reversed_by=_REVERSED_BY[operation_id],
+        ),
     )
 
 
@@ -462,3 +488,136 @@ def test_terminal_projector_binds_exact_success_and_refusal_receipts() -> None:
             success,
             receipt(OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE),
         )
+
+
+@pytest.fixture
+def pinned_authority() -> Iterator[None]:
+    """Build domain transactions under the same governed-fact lease as production."""
+    with bundled_indexed_authority().operation():
+        yield
+
+
+def _stored_row(
+    state: TransactionLifecycleState,
+    classification: BusinessClassification,
+    business_pct: Decimal | None,
+    *,
+    provider_transaction_id: str = "lifecycle-projection-row",
+) -> Transaction:
+    raw = RawTransaction(
+        provider_transaction_id=provider_transaction_id,
+        booked_date=date(2026, 5, 2),
+        value_date=None,
+        amount=Decimal("100.00"),
+        currency="EUR",
+        counterparty="Vendor SL",
+        description="materials",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="c" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=_AT,
+            provider_name="test",
+        ),
+        raw_fields={"source": "test"},
+    )
+    return Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+            "business_classification": classification,
+            "business_pct": business_pct,
+            "classified_by": "rule:synthetic-rule",
+            "lifecycle_state": state,
+            "source_jurisdiction": "ES",
+            "group_label": None,
+        },
+    )
+
+
+_ACTIVE = TransactionLifecycleState.ACTIVE
+_STASHED = TransactionLifecycleState.STASHED
+_ARCHIVED = TransactionLifecycleState.ARCHIVED
+
+
+@pytest.mark.usefixtures("pinned_authority")
+@pytest.mark.parametrize(
+    ("operation_id", "before", "after", "reversed_by"),
+    [
+        (LEDGER_ARCHIVE_OPERATION_DEFINITION_ID, _ACTIVE, _ARCHIVED, ("ledger.restore",)),
+        # A restore lands on active, so a row archived out of the stash needs stashing again.
+        (LEDGER_ARCHIVE_OPERATION_DEFINITION_ID, _STASHED, _ARCHIVED, ("ledger.restore", "ledger.stash")),
+        (LEDGER_STASH_OPERATION_DEFINITION_ID, _ACTIVE, _STASHED, ("ledger.restore",)),
+        (LEDGER_RESTORE_OPERATION_DEFINITION_ID, _ARCHIVED, _ACTIVE, ("ledger.archive",)),
+        (LEDGER_RESTORE_OPERATION_DEFINITION_ID, _STASHED, _ACTIVE, ("ledger.stash",)),
+    ],
+)
+def test_a_lifecycle_result_states_the_replaced_state_and_the_operations_that_return_it(
+    operation_id: LedgerLifecycleOperationId,
+    before: TransactionLifecycleState,
+    after: TransactionLifecycleState,
+    reversed_by: tuple[str, ...],
+) -> None:
+    replaced = _stored_row(before, BusinessClassification.MIXED, Decimal("0.40"))
+    written = replaced.model_copy(update={"lifecycle_state": after})
+
+    projection = lifecycle_projections.project_lifecycle_mutation_from_action(
+        _PROFILE,
+        operation_id,
+        build_manual_ledger_result(str(_PROFILE), written, (_EVENT_ID,)),
+        replaced,
+    )
+
+    assert projection.transaction.lifecycle_state == after.value
+    assert projection.replaced.lifecycle_state is before
+    assert projection.replaced.business_classification is BusinessClassification.MIXED
+    assert projection.replaced.business_pct == "0.4"
+    assert projection.replaced.classified_by == "rule:synthetic-rule"
+    assert projection.replaced.reversed_by == reversed_by
+    assert LedgerLifecycleMutationProjection.model_validate_json(projection.model_dump_json()) == projection
+
+
+@pytest.mark.usefixtures("pinned_authority")
+def test_an_exclusion_result_states_the_classification_and_share_it_overwrote() -> None:
+    replaced = _stored_row(_ACTIVE, BusinessClassification.MIXED, Decimal("0.40"))
+    written = replaced.model_copy(
+        update={
+            "business_classification": BusinessClassification.REVIEWED_EXCLUDED,
+            "business_pct": None,
+            "classified_by": "manual",
+        },
+    )
+
+    projection = lifecycle_projections.project_lifecycle_mutation_from_action(
+        _PROFILE,
+        LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
+        build_manual_ledger_result(str(_PROFILE), written, (_EVENT_ID,)),
+        replaced,
+    )
+
+    assert projection.transaction.business_classification == "REVIEWED_EXCLUDED"
+    assert projection.transaction.business_pct is None
+    assert projection.replaced.lifecycle_state is _ACTIVE
+    assert projection.replaced.business_classification is BusinessClassification.MIXED
+    assert projection.replaced.business_pct == "0.4"
+    assert projection.replaced.classified_by == "rule:synthetic-rule"
+    assert projection.replaced.reversed_by == ("ledger.classify.single",)
+
+
+@pytest.mark.usefixtures("pinned_authority")
+def test_a_lifecycle_result_is_refused_without_the_row_the_action_replaced() -> None:
+    """A result that could not say what it replaced is not released as a success."""
+    replaced = _stored_row(_ACTIVE, BusinessClassification.BUSINESS, None)
+    written = replaced.model_copy(update={"lifecycle_state": _ARCHIVED})
+    result = build_manual_ledger_result(str(_PROFILE), written, (_EVENT_ID,))
+    another_row = _stored_row(
+        _ACTIVE, BusinessClassification.BUSINESS, None, provider_transaction_id="lifecycle-projection-other-row"
+    )
+
+    assert another_row.transaction_id != replaced.transaction_id
+    for missing in (None, another_row):
+        with pytest.raises(ProfileAccessRefusedError):
+            lifecycle_projections.project_lifecycle_mutation_from_action(
+                _PROFILE, LEDGER_ARCHIVE_OPERATION_DEFINITION_ID, result, missing
+            )

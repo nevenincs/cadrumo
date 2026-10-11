@@ -60,6 +60,7 @@ from ...application.user_profile.access_contracts import (
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.wizard.catalogue import build_setup_flow
 from ...core.capabilities import ServiceCapability
+from ...core.config_support import LLMProvider
 from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period
@@ -507,8 +508,26 @@ def _calculation_act(document: Mapping[str, Any]) -> str:
     return _EXPLICIT_CALCULATION if document.get("caller_context") == _EXPLICIT_CALCULATION else ""
 
 
+_REAFFIRM = "reaffirm"
+
+
+def _reaffirming_run(document: Mapping[str, Any]) -> str:
+    """What a rule run states for the person: replacing classifications set by hand, which a preview does not do."""
+    return _REAFFIRM if document.get("reaffirm") and not document.get("dry_run") else ""
+
+
+_OFF_HOST_READ = "off_host"
+
+
+def _extraction_read_place(document: Mapping[str, Any]) -> str:
+    """Where an extraction sends the document: to a hosted model the person must consent to, or nowhere."""
+    return _OFF_HOST_READ if document.get("off_host_provider") is not None else ""
+
+
 _SENSITIVE_ACT_READERS: Mapping[str, Callable[[Mapping[str, Any]], str]] = {
+    "ledger.evidence.extract": _extraction_read_place,
     "ledger.own_account": _action_value,
+    "ledger.rule.apply": _reaffirming_run,
     "modelo.m360_solicitud": _action_value,
     "modelo.work.calculate": _calculation_act,
     "user-profile.field-mutation": _fact_section,
@@ -551,6 +570,7 @@ _MCP_RESOLUTION_NOT_PROVEN: frozenset[str] = frozenset(
         "ledger.actividad-asset.claim",
         "ledger.actividad-asset.correct",
         "ledger.actividad-asset.create",
+        "ledger.evidence.extract",
         "ledger.invoice.add",
         "ledger.invoice.update",
         "ledger.split.review",
@@ -678,7 +698,14 @@ to MCP. What the definition keeps open, and the admission of its sensitive act
 on the other frontends, is judged beside the operation, where the record
 exists."""
 
+_SAMPLE_EVIDENCE = "e" * 16
+
 _SENSITIVE_ACT_SAMPLES: Mapping[str, tuple[Mapping[str, Any], ...]] = {
+    "ledger.evidence.extract": tuple(
+        {"evidence_id": _SAMPLE_EVIDENCE, "off_host_provider": provider.value, "acknowledge_off_host": True}
+        for provider in LLMProvider
+        if provider is not LLMProvider.LOCAL
+    ),
     "ledger.own_account": (
         {"action": "add", "label": "synthetic", "holding": "titular", "iban": _SAMPLE_IBAN},
         {"action": "update", "own_account_id": _SAMPLE_ACCOUNT, "label": "synthetic"},
@@ -687,6 +714,7 @@ _SENSITIVE_ACT_SAMPLES: Mapping[str, tuple[Mapping[str, Any], ...]] = {
         {"action": "designate", "own_account_id": _SAMPLE_ACCOUNT, "role": "charge"},
         {"action": "undesignate", "role": "charge"},
     ),
+    "ledger.rule.apply": ({"reaffirm": True}, {"reaffirm": True, "dry_run": False}),
     "modelo.m360_solicitud": (
         {"action": "declare", "filing_year": 2025, "own_account_id": _SAMPLE_ACCOUNT, "facts": _SOLICITUD_FACTS},
         {"action": "remove", "filing_year": 2025},
@@ -725,7 +753,9 @@ A sensitive act needs a request no schema sample reaches, so these are written
 out. Each is admitted through the registry's own decoder before it is used."""
 
 _OPEN_ACT_SAMPLES: Mapping[str, tuple[Mapping[str, Any], ...]] = {
+    "ledger.evidence.extract": ({"evidence_id": _SAMPLE_EVIDENCE}, {"attachment_id": "0" * 64}),
     "ledger.own_account": ({"action": "list"}, {"action": "show", "own_account_id": _SAMPLE_ACCOUNT}),
+    "ledger.rule.apply": ({}, {"reaffirm": False}, {"dry_run": True}, {"dry_run": True, "reaffirm": True}),
     "modelo.m360_solicitud": ({"action": "list"},),
     "user-profile.field-mutation": ({**_FIELD_BASELINE, "path": "preferences.output_language", "value": "es"},),
     "user-profile.patch": (

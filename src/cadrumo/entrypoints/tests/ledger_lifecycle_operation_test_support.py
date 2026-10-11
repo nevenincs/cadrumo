@@ -21,6 +21,8 @@ from ...application.ledger.lifecycle_contracts import (
     LedgerLifecycleMutationProjection,
     LedgerLifecycleMutationRequest,
     LedgerLifecycleOperationId,
+    LedgerLifecycleReplacedStateProjection,
+    LedgerLifecycleReversalOperationId,
 )
 from ...application.ledger.models import ManualLedgerTransactionCommand
 from ...application.ledger.transaction_projection import LedgerTransactionProjection
@@ -52,6 +54,13 @@ _TARGET_STATE: dict[LedgerLifecycleOperationId, TransactionLifecycleState] = {
     LEDGER_STASH_OPERATION_DEFINITION_ID: TransactionLifecycleState.STASHED,
     LEDGER_RESTORE_OPERATION_DEFINITION_ID: TransactionLifecycleState.ACTIVE,
     LEDGER_EXCLUDE_OPERATION_DEFINITION_ID: TransactionLifecycleState.ACTIVE,
+}
+# Each case starts from the seed's own state: active, or archived for the restore.
+_REVERSED_BY: dict[LedgerLifecycleOperationId, tuple[LedgerLifecycleReversalOperationId, ...]] = {
+    LEDGER_ARCHIVE_OPERATION_DEFINITION_ID: ("ledger.restore",),
+    LEDGER_STASH_OPERATION_DEFINITION_ID: ("ledger.restore",),
+    LEDGER_RESTORE_OPERATION_DEFINITION_ID: ("ledger.archive",),
+    LEDGER_EXCLUDE_OPERATION_DEFINITION_ID: ("ledger.classify.single",),
 }
 
 
@@ -147,6 +156,8 @@ def assert_ledger_lifecycle_operation_conformance_result(
     assert projection.profile_id == case.profile_id
     assert projection.operation_id == case.definition_id
     assert projection.bucket_event_ids and len(projection.bucket_event_ids) == 1
+    # The seeded row carries no proportion: the event records that as empty text and the result as absent.
+    assert case.transaction_before.business_pct is None
 
     bucket_id = str(case.profile_id)
     ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=case.operation)
@@ -177,6 +188,7 @@ def assert_ledger_lifecycle_operation_conformance_result(
     if case.action == "exclude":
         expected_payload = {
             "business_classification": "REVIEWED_EXCLUDED",
+            "previous_business_pct": "",
             "previous_classification": case.transaction_before.business_classification.value,
             "reason": _REASON,
             "source_command": f"aeat app ledger {case.action}",
@@ -200,6 +212,13 @@ def assert_ledger_lifecycle_operation_conformance_result(
         transaction=LedgerTransactionProjection.from_payload(canonical.transaction),
         review_status=canonical.review_status,
         bucket_event_ids=(event.event_id,),
+        replaced=LedgerLifecycleReplacedStateProjection(
+            lifecycle_state=case.transaction_before.lifecycle_state,
+            business_classification=case.transaction_before.business_classification,
+            business_pct=None,
+            classified_by=case.transaction_before.classified_by,
+            reversed_by=_REVERSED_BY[case.definition_id],
+        ),
     )
     assert projection == expected_projection
 

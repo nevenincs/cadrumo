@@ -18,6 +18,7 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -62,7 +63,11 @@ class LedgerBulkClassifyRequest(BaseModel):
     """Transient CSV operand retained only through encrypted request custody.
 
     The shared submission protocol bounds the complete encoded UTF-8 request.
-    CSV rows remain governed by the canonical classification service.
+    CSV rows remain governed by the canonical classification service. The
+    operand is the classification table itself, never a path to one.
+
+    ``actor`` is recorded as sent for a person's session. An agent's session is
+    recorded under its own session label, whatever the request carries.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -118,9 +123,15 @@ def _require_revision_guarded_ports(
 class LedgerBulkClassifyExecutor:
     """Run one canonical CSV batch with authority only at concrete writer entry."""
 
-    def __init__(self, ports_factory: LedgerActionPortsFactory) -> None:
+    def __init__(
+        self,
+        ports_factory: LedgerActionPortsFactory,
+        *,
+        execution_caller_reader: OperationExecutionCallerReader | None = None,
+    ) -> None:
         """Retain the trusted exact-profile ledger composition."""
         self._ports_factory = ports_factory
+        self._execution_caller_reader = execution_caller_reader
 
     async def execute(
         self,
@@ -134,6 +145,7 @@ class LedgerBulkClassifyExecutor:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         require_operation_profile(request, context, payload.profile_id)
         await context.events.phase(LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID)
+        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor or bucket_id)
         operation = context.authority_operation
         ports = await asyncio.to_thread(self._ports_factory, bucket_id=bucket_id, operation=operation)
         repository = _require_revision_guarded_ports(ports, bucket_id=bucket_id, operation=operation)
@@ -147,7 +159,7 @@ class LedgerBulkClassifyExecutor:
                 lambda: bulk_classify_from_csv(
                     bucket_id=bucket_id,
                     csv_text=payload.csv_text,
-                    actor=payload.actor or bucket_id,
+                    actor=actor,
                     source_command="aeat app ledger classify --file",
                     ports=tracked_ports,
                 ),
@@ -226,17 +238,21 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     return projection
 
 
-def build_ledger_bulk_classify_definition(ports_factory: LedgerActionPortsFactory) -> OperationDefinition:
-    """Declare exact-profile CLI classification with protected request and result."""
+def build_ledger_bulk_classify_definition(
+    ports_factory: LedgerActionPortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
+    """Declare exact-profile CSV classification with protected request and result."""
     return build_single_phase_definition(
         definition_id=LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,
         request_type=LedgerBulkClassifyRequest,
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=LedgerBulkClassifyExecutionResult,
         executor_type=LedgerBulkClassifyExecutor,
-        build=lambda: LedgerBulkClassifyExecutor(ports_factory),
+        build=lambda: LedgerBulkClassifyExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}),
         refusal_detail_codes=frozenset({LEDGER_BULK_CLASSIFY_VALIDATION_REFUSAL_CODE}),
     )
 
@@ -245,17 +261,15 @@ def resolve_ledger_bulk_classify_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require the exact profile, all-period disclosure and mutation authority."""
-    if (
-        request.definition_id != LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID
-        or context.frontend is not OperationFrontendProjection.CLI
-        or not isinstance(request.payload, LedgerBulkClassifyRequest)
+    if request.definition_id != LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID or not isinstance(
+        request.payload, LedgerBulkClassifyRequest
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
 
 
 def build_ledger_bulk_classify_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
-    """Enroll complete CSV row outcomes through the protected CLI projection."""
+    """Enroll complete CSV row outcomes through the protected projection."""
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerBulkClassifyProjection,
