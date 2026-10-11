@@ -52,17 +52,24 @@ plain language; never guess the kind silently.
    sustitutiva/rectificativa family)? Put the distinction to the taxpayer
    as a question of what actually happened; the legal kind follows from
    the facts.
-3. Build the amendment:
+3. Record the amendment only after the person approves that exact act in
+   Cadrumo:
    `aeat app modelo work amend --from-filing-record <RECORD-ID> --kind <KIND> --reason <REASON> --set <CASILLA=VALUE>`.
-   The command batch-validates its required inputs and refuses with the
-   full missing list — read the refusal, complete the inputs, and re-run
-   rather than improvising. Each `--set` override is a casilla-level
-   correction; state the reason honestly, it is part of the audit trail.
-4. The amendment is a new internal filing envelope — it submits nothing to
-   AEAT. Drive it through the standard verification and export: the
-   verifier persona verifies, `cadrumo-exportar-declaracion` exports once the person
-   approves that exact act, and the
-   taxpayer files the corrección in the AEAT portal themselves.
+   Amending is not a draft. In one act it verifies the correction, records
+   it as filed locally and retires the record it corrects, so it is the
+   same kind of act as recording the filed marker. Put the record, the
+   kind, the reason and every corrected value in front of the person first
+   and run the command once they approve exactly that. It is not available
+   to you through MCP. The command batch-validates its required inputs and
+   refuses with the full missing list: read the refusal, complete the
+   inputs, and ask again rather than improvising. Each `--set` override is
+   a casilla-level correction; state the reason honestly, it is part of the
+   audit trail.
+4. The amendment is a new internal filing record and submits nothing to
+   AEAT. `cadrumo-exportar-declaracion` exports it once the person approves
+   that exact act, which is a separate approval from the one for the
+   amendment, and the taxpayer files the corrección in the AEAT portal
+   themselves.
 5. Surface any recargo or interest consequence the CLI derives for the
    amendment verbatim; where a complementaria lands out of period, the
    past-due framing of `cadrumo-regularizar-atrasos` applies to the narration —

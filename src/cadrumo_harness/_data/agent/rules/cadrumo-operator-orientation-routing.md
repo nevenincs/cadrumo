@@ -113,7 +113,7 @@ official source rather than treating a product command as legal authority.
 - "Materialise the declared tree on a machine that has none" → `aeat config
   storage init` — idempotent; creates what is missing, never removes or
   recreates existing content.
-- "Free disk space" → `aeat config storage reclaim <category> --yes`.
+- "Free disk space" → `aeat config storage reclaim <category>`.
   **Destructive: deletes the category's contents; run it only after the person
   approves that exact act.** It refuses rather than
   deletes in two cases: every bucket- or keystore-scoped category (those
@@ -121,7 +121,8 @@ official source rather than treating a product command as legal authority.
   bucket itself), and any root category whose declared lifecycle is not
   retention/rotation/TTL — the encrypted substrate, key material, audit
   trail, and durable filing outputs are never reclaimable. Inspect the
-  category with `show` first; `reclaim` is not a general "clean up" verb.
+  category with `aeat config storage view <area>` first; `reclaim` is not a
+  general "clean up" verb.
 
 ## Discovering registered operations through MCP
 
