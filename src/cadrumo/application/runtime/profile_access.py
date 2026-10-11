@@ -44,6 +44,11 @@ from .enrollment_access import (
     RuntimeEnrollmentReply,
     RuntimeEnrollmentRequest,
 )
+from .installation_requests import (
+    RuntimeInstallationActRequest,
+    RuntimeInstallationReply,
+    RuntimeInstallationReplyTransfer,
+)
 from .operation_access import RuntimeOperationReply, RuntimeOperationRequest
 from .session_events import RuntimeConnectionEvent
 from .sign_in import RuntimeHumanSignedOut, RuntimeSignInStatusReply, RuntimeSignInStatusRequest
@@ -112,7 +117,8 @@ class RuntimeRequest(
             | RuntimeSessionRequest
             | RuntimeOperationRequest
             | RuntimeEnrollmentRequest
-            | RuntimeAccessManagementRequest,
+            | RuntimeAccessManagementRequest
+            | RuntimeInstallationActRequest,
             Field(discriminator="action"),
         ]
     ]
@@ -239,6 +245,8 @@ class RuntimeReply(
             | RuntimeOperationReply
             | RuntimeEnrollmentReply
             | RuntimeAccessManagementReply
+            | RuntimeInstallationReply
+            | RuntimeInstallationReplyTransfer
             | RuntimeAccessRefusal,
             Field(discriminator="kind"),
         ]
@@ -337,6 +345,15 @@ class RuntimeProfileHandler(Protocol):
         request: RuntimePasswordResetPrepare | RuntimePasswordReset,
     ) -> None:
         """Run an exact bootstrap custody transaction with separate proof."""
+        ...
+
+    def installation(
+        self,
+        context: RuntimeConnectionContext,
+        channel: RuntimeByteChannel,
+        request: RuntimeInstallationActRequest,
+    ) -> None:
+        """Serve one sessionless installation act on the verified native channel."""
         ...
 
     def poll(self) -> None:

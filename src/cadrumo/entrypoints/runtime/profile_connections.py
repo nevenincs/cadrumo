@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from threading import BoundedSemaphore, Event, RLock
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
@@ -47,6 +48,7 @@ from .access_management import RuntimeAccessManagement
 from .bootstrap_delete import RuntimeBootstrapDeleteMixin
 from .bootstrap_reset import RuntimeBootstrapMixin
 from .enrollment_connections import RuntimeEnrollmentConnections
+from .installation_door import RuntimeInstallationDoorMixin
 from .lifecycle_guard import RuntimeLifecycleGuard
 from .notice_observation import NoticeObservation, start_notice_observation
 from .profile_connection_access import ProfileConnectionAccessMixin
@@ -59,12 +61,16 @@ from .session_events import RuntimeSessionEvents
 from .shutdown import request_runtime_stop
 from .sign_in_sweep import sweep_saved_sign_ins
 
+if TYPE_CHECKING:
+    from .installation_composition import InstallationActRegistry
+
 _LOGGER = get_logger(__name__)
 
 
 class RuntimeProfileConnections(
     RuntimeBootstrapMixin,
     RuntimeBootstrapDeleteMixin,
+    RuntimeInstallationDoorMixin,
     ProfileConnectionAdmissionMixin,
     ProfileConnectionAccessMixin,
     ProfileConnectionSessionMixin,
@@ -86,8 +92,13 @@ class RuntimeProfileConnections(
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = now,
         os_owner_id: str | None = None,
+        installation_acts: InstallationActRegistry | None = None,
     ) -> None:
-        """Defer installation/profile/store access until an eligible peer requests login."""
+        """Defer installation/profile/store access until an eligible peer requests login.
+
+        ``installation_acts`` names the handlers of the sessionless installation
+        door; the installed composition is used when none is given.
+        """
         self.root, self.storage_identity, self.boot, self.stop = storage_root, storage_identity, runtime_boot_id, stop
         self._capture, self._secret_store = capture_login, secret_store
         self._login_inventory = login_inventory
@@ -101,6 +112,7 @@ class RuntimeProfileConnections(
         self._drain_result: RuntimeProfileDrainResult | None = None
         self._installation: RuntimeInstallation | None = None
         self._registry: OperationRegistry | None = None
+        self._installation_acts = installation_acts
         self._profiles: dict[UUID, RuntimeProfileHost] = {}
         self._custody_mutations: set[UUID] = set()
         self._submission_slots = BoundedSemaphore(4)

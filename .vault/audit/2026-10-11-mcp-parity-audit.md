@@ -5,7 +5,7 @@ tags:
 date: '2026-10-11'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:663b0606e643e1bd1f34b7a0b1325cb7f75c1bc9f50a36b0ca216f1512a87feb'
+body_hash: 'sha256:5714284b514be9f6d2c135386c6394037214e8d0afb7bfb2d27e1a0aaaf7b9e7'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -182,7 +182,13 @@ Ledger rows give counts such as 7054 of 7058 without naming the tests outside th
 
 `src/cadrumo/application/ledger/tests/test_classification_decision_fields_are_complete.py:94` and `src/cadrumo/adapters/persistence/profile/tests/test_confirmation_keeps_a_sealed_row_at_the_ledger_writers.py:58`. Review 6. Resolved 2026-10-11: the assertion checks production code and the shared helpers live in a support module under public names.
 
+### refusals-withdrawn | high | Findings resolved by refusing an agent what the command line can do no longer apply
+
+The owner ruled on 2026-10-11 that MCP never refuses anything the command line can do and that the three frontends are at parity; `2026-10-11-mcp-parity-full-parity-adr` records it and supersedes the admission rulings. Six reviews recorded here had been read as asking for the opposite, and several resolutions above added a refusal, a withheld part of a result or a held-back variant on the MCP frontend. Those resolutions are reversed in the tree: an operation carries no list of frontends, and no resolver, executor, guard or runtime check decides by frontend. Closed as not applicable, in the part that depended on the frontend: `bulk-classify-second-route`, `split-one-way`, `split-guard-stamp`, `archive-stash-open`, `agent-answers-own-review`, `result-sealing-by-executor`, `refusal-site`, `reader-called-local`, the refusal half of `reader-proxy`, and `capture-output-root`, whose recommendation named a file-exchange record that is rejected. What stands on every frontend alike: the loopback client that ignores proxy settings, the decimal rule, the recorded origin of a classification as a fact that refuses nothing, a confirmation that writes a sealed row back as stored, the session-derived actor, and the typed subject reference. A reviewer's observation that an agent has a second route to an act is a description of parity, not a defect.
+
 ## Recommendations
+
+- The recommendations below that ask the admission rulings record, the file-exchange record or the approval record for a decision are withdrawn with `refusals-withdrawn`: the first is superseded and the others are rejected, and the owner's ruling leaves no such decision open. `reader-network-fact`, `workflow-run-detail`, `surface-real-policy` and `purchase-link-outside-fingerprint` are unaffected.
 
 - For `surface-real-policy`: resolve each listed operation's real access policy in the surface test and keep a named, justified set for those that cannot be probed generically, as the admission test does.
 - For `capture-output-root`: record, in a form a test enforces, every operation open to MCP whose request still carries a host path, so that a new one fails and the file-exchange Step removes the entries it settles. Whether a capture on the MCP frontend takes an output root at all is a decision for the file-exchange record, which is proposed and not yet accepted.

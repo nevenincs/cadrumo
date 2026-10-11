@@ -8,20 +8,32 @@ of the runtime client it calls, read for the submissions each handler can
 reach; and the operation registry, whose request types settle a submission
 whose operation the source selects by the type of its request.
 
+A command can also reach the runtime without an operation, by sending a record
+of the runtime's own request door: a login, a profile deletion, an installation
+act. A second reading names those for each command by the record's action, so
+a command that sends one is not read as a command that sends nothing.
+
 The derivation is the authority and the recorded table is its copy. Run this
 module to write the table again after a command, or the operations a command
 submits, change::
 
     python -m cadrumo.entrypoints.cli.tests.command_operation_derivation
+
+Pass ``--runtime-requests`` to record the runtime requests each command sends
+beside its operations.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+import sys
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
-from typing import Final
+from types import UnionType
+from typing import Annotated, Final, TypeAliasType, Union, get_args, get_origin
+
+from pydantic import BaseModel
 
 from ....tests.inventory import SRC_CADRUMO, production_python_files
 from ...operation_composition import build_production_operation_registry
@@ -39,6 +51,20 @@ COMMAND_LINE_PACKAGE: Final[str] = "cadrumo/entrypoints/cli/"
 
 SUBMISSION_RECORD: Final[Symbol] = ("cadrumo/application/runtime/operation_access.py", "RuntimeOperationSubmit")
 """The record whose construction is a submission."""
+
+RUNTIME_REQUEST_PACKAGE: Final[str] = "cadrumo/application/runtime/"
+"""The package that defines every record of the runtime's request door."""
+
+OPERATION_EXCHANGE_MODULE: Final[str] = "cadrumo.application.runtime.operation_access"
+"""The records a command sends around a registered operation; the operation rows already speak for them."""
+
+PROFILE_ADMISSION_ACTION: Final[str] = "profile_login"
+"""The request that admits a command to a profile session.
+
+Every command that works on a profile sends it before anything else, so it
+says where a command is admitted and nothing about what the command then does.
+A reader asking whether a command's work reaches the runtime looks past it.
+"""
 
 TABLE_PATH: Final[Path] = SRC_CADRUMO / "entrypoints" / "cli" / "command_operation_table.py"
 
@@ -324,6 +350,75 @@ def derive_live_command_operations() -> CommandOperationDerivation:
     )
 
 
+def derive_command_runtime_requests(
+    *,
+    handlers: Mapping[CliPath, Symbol | None],
+    flow: SubmissionFlow,
+    request_actions: Mapping[Symbol, frozenset[str]],
+) -> dict[CliPath, frozenset[str]]:
+    """Name, for each executable command, the runtime requests its handler can send.
+
+    A handler is read as sending every request record its reachable code names
+    outside an annotation, because a record is constructed where it is named.
+    Like the operation rows, that is an upper bound on what the source names: a
+    record with several actions contributes all of them, since the source names
+    the record and not which action it was given. A request sent through a
+    method whose receiver the source gives no class for is not followed, so a
+    command that only sends requests that way is read as naming none of them.
+
+    Args:
+        handlers: Each executable command's handler, or ``None`` for a command
+            declared without an implementation, which sends nothing.
+        flow: A reading whose scanned packages include the one that defines
+            the request records, so a reference to a record is followed to it.
+        request_actions: The actions of each request record, by its symbol.
+    """
+    sent: dict[CliPath, frozenset[str]] = {}
+    for cli_path in sorted(handlers):
+        handler = handlers[cli_path]
+        reached = () if handler is None else flow.reach((handler,))
+        sent[cli_path] = frozenset(action for symbol in reached for action in request_actions.get(symbol, ()))
+    return sent
+
+
+def live_runtime_request_actions() -> dict[Symbol, frozenset[str]]:
+    """Name the actions of every record of the runtime's request door, operation exchanges aside."""
+    from ....application.runtime.profile_access import RuntimeRequest
+
+    return {
+        (_module_file(record.__module__), record.__qualname__): frozenset(
+            get_args(record.model_fields["action"].annotation)
+        )
+        for record in _union_records(RuntimeRequest.model_fields["root"].annotation)
+        if record.__module__ != OPERATION_EXCHANGE_MODULE
+    }
+
+
+def _union_records(annotation: object) -> Iterator[type[BaseModel]]:
+    """Yield every record of a request union, through the named and annotated unions it is built from."""
+    if isinstance(annotation, TypeAliasType):
+        yield from _union_records(annotation.__value__)
+    elif get_origin(annotation) is Annotated:
+        yield from _union_records(get_args(annotation)[0])
+    elif get_origin(annotation) in (Union, UnionType):
+        for member in get_args(annotation):
+            yield from _union_records(member)
+    elif isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        yield annotation
+    else:
+        raise TypeError(f"the request door carries a member that is not a record: {annotation!r}")
+
+
+@cache
+def derive_live_command_runtime_requests() -> Mapping[CliPath, frozenset[str]]:
+    """Derive the runtime requests each live command sends from the live graph and source tree."""
+    tree = SourceTree(SRC_CADRUMO.parent, packages=frozenset({SRC_CADRUMO.name}))
+    flow = SubmissionFlow(tree, scanned=(*SCANNED_PACKAGES, RUNTIME_REQUEST_PACKAGE), submission=SUBMISSION_RECORD)
+    return derive_command_runtime_requests(
+        handlers=live_command_handlers(), flow=flow, request_actions=live_runtime_request_actions()
+    )
+
+
 _TABLE_HEADER: Final[str] = '''"""The registered operations each executable command can submit.
 
 Generated from the command graph, the source of the command handlers and the
@@ -350,8 +445,17 @@ from typing import Final
 '''
 
 
-def render_command_operation_table(derivation: CommandOperationDerivation) -> str:
-    """Render the derived join as the source of the recorded table module."""
+def render_command_operation_table(
+    derivation: CommandOperationDerivation, runtime_requests: Mapping[CliPath, frozenset[str]] | None = None
+) -> str:
+    """Render the derived join as the source of the recorded table module.
+
+    Args:
+        derivation: The derived command-to-operation join.
+        runtime_requests: The runtime requests each command sends. When given,
+            the table also records one row for each command and each request,
+            and a command that sends none has no such row.
+    """
     lines = [_TABLE_HEADER, "COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = (\n"]
     for cli_path in sorted(derivation.operations):
         operation_ids = sorted(derivation.operations[cli_path])
@@ -362,6 +466,14 @@ def render_command_operation_table(derivation: CommandOperationDerivation) -> st
     lines.extend(f'    "{operation_id}",\n' for operation_id in sorted(derivation.operations_without_command))
     lines.append(")\n")
     lines.append('"""Every registered operation no command submits."""\n')
+    if runtime_requests is not None:
+        lines.append("\nCOMMAND_RUNTIME_REQUEST_ROWS: Final[tuple[tuple[tuple[str, ...], str], ...]] = (\n")
+        for cli_path in sorted(runtime_requests):
+            lines.extend(_row(cli_path, action) for action in sorted(runtime_requests[cli_path]))
+        lines.append(")\n")
+        lines.append(
+            '"""One row for each executable command and each runtime request or installation act it can send."""\n'
+        )
     return "".join(lines)
 
 
@@ -375,19 +487,27 @@ def _row(cli_path: CliPath, operation_id: str | None) -> str:
     return f"    (\n        {spelled_path},\n        {spelled_operation},\n    ),\n"
 
 
-def main() -> int:
-    """Write the recorded table from the live derivation, refusing while the derivation has findings."""
+def main(arguments: Sequence[str] = ()) -> int:
+    """Write the recorded table from the live derivation, refusing while the derivation has findings.
+
+    ``--runtime-requests`` also records the runtime requests each command sends.
+    """
+    unknown = sorted(set(arguments) - {"--runtime-requests"})
+    if unknown:
+        print(f"unknown argument: {' '.join(unknown)}")
+        return 2
     derivation = derive_live_command_operations()
     if derivation.findings:
         print("the command-operation join is not exact; the table was not written:")
         for finding in derivation.findings:
             print(f"  - {finding}")
         return 1
-    rendered = render_command_operation_table(derivation)
+    runtime_requests = derive_live_command_runtime_requests() if "--runtime-requests" in arguments else None
+    rendered = render_command_operation_table(derivation, runtime_requests)
     TABLE_PATH.write_text(rendered, encoding="utf-8", newline="\n")
     print(f"wrote {TABLE_PATH} ({len(derivation.operations)} commands)")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))

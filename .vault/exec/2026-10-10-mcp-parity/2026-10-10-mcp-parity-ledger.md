@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a97f00cd5480ca572b4faab5af5c488d22844a81c09aa5ac82113b86ccaceda'
+body_hash: 'sha256:1a3947ce44c210fa863a1bda75e8f281ec06305912abb0f900f89ea364643592'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -1555,6 +1555,28 @@ related:
 - `S51` `verify:` `just check-types (no finding in this work)` -> `pass`
 - `S51` `by:` `vaultspec-high-executor`
 - `S47` `M` `.vault/plan/2026-10-10-mcp-parity-plan.md`
+- `S52` `A` `src/cadrumo/application/runtime/installation_requests.py`
+- `S52` `A` `src/cadrumo/application/runtime/tests/test_installation_requests.py`
+- `S52` `A` `src/cadrumo/entrypoints/runtime/installation_door.py`
+- `S52` `A` `src/cadrumo/entrypoints/runtime/installation_composition.py`
+- `S52` `A` `src/cadrumo/entrypoints/runtime/tests/installation_runtime.py`
+- `S52` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_door.py`
+- `S52` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_runtime.py`
+- `S52` `A` `src/cadrumo/adapters/local_runtime/installation_client.py`
+- `S52` `A` `src/cadrumo/adapters/local_runtime/installation_frame_io.py`
+- `S52` `A` `src/cadrumo/entrypoints/cli/runtime_installation.py`
+- `S52` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_installation.py`
+- `S52` `A` `src/cadrumo/entrypoints/cli/tests/test_command_runtime_requests.py`
+- `S52` `M` `src/cadrumo/application/runtime/profile_access.py`
+- `S52` `M` `src/cadrumo/adapters/local_runtime/server_connection_handling.py`
+- `S52` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S52` `M` `src/cadrumo/application/operator_surface/command_operations.py`
+- `S52` `M` `src/cadrumo/application/operator_surface/tests/test_command_operations.py`
+- `S52` `M` `src/cadrumo/entrypoints/cli/tests/command_operation_derivation.py`
+- `S52` `verify:` `pytest installation requests, door, runtime, command-line submitter and command join (112 tests)` -> `pass`
+- `S52` `verify:` `ty check on the six new modules` -> `pass`
+- `S52` `verify:` `ruff check on the six new modules` -> `pass`
+- `S52` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1606,3 +1628,4 @@ related:
 - `S50` Removed: the capability refusals, the reduced authentication read, the rule that an MCP reader gets only results admitted on MCP, and the frontend conditions on typed secrets, the workbench result, session inventory, automation decisions, sign-out, locking and login methods, in the runtime and in the local runtime client. The execute tool carries a typed secret on the protected frame and typed operator input; a session tool lists, locks, denies automation, signs out, signs in with a password, resumes, resets and changes the password and deletes a profile; lifecycle notices reach an MCP connection. A retired or lost key session authenticates anew once and the runtime answer stands, which restored the revocation reason on MCP. Session-kind checks are unchanged.
 - `S51` The connection guide, one technical article and the packaged agent rules, personas and skills no longer say that MCP refuses or withholds anything or that an approval screen exists. They say an agent runs every operation the command line can, and keep as the agent's own conduct that it tells the person and waits for the go-ahead before a destructive act. The statements that nothing is ever filed with the tax agency are unchanged. The connection guide's three catalogues are re-synced.
 - `S47` Correction: rows logged under this Step for paths under `src/cadrumo/_data/manual_corpus_text,` `src/cadrumo/_data/registry,` src/cadrumo/adapters/inbound/declaracion/tests and src/cadrumo/tests/fixtures were logged in error. Those changes belong to another session and are not part of this Step or its commit.
+- `S52` The door only: no act is registered in the installed composition, and the import inventory and the command table are regenerated once, in S61, when every family has landed. The command line keeps its in-process work.

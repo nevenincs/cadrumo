@@ -32,6 +32,7 @@ from ...application.runtime.enrollment_access import (
     RuntimeEnrollmentRequest,
     RuntimeEnrollmentSubmit,
 )
+from ...application.runtime.installation_requests import RuntimeInstallationActRequest
 from ...application.runtime.operation_access import (
     RuntimeOperationContract,
     RuntimeOperationControl,
@@ -75,6 +76,7 @@ type _ProfileConnectionRequest = (
     | RuntimeOperationRequest
     | RuntimeEnrollmentRequest
     | RuntimeAccessManagementRequest
+    | RuntimeInstallationActRequest
 )
 
 
@@ -252,7 +254,10 @@ class RuntimeConnectionHandling:
         ):
             self.profiles.operation(context, channel, request)
             return None
-        return self.profiles.handle(context, channel, request)
+        if isinstance(request, RuntimeProfileLogin | RuntimeSessionRequest | RuntimeSignInStatusRequest):
+            return self.profiles.handle(context, channel, request)
+        self.profiles.installation(context, channel, request)
+        return None
 
     def _finish_connection(
         self,

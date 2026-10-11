@@ -15,7 +15,7 @@ related:
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
 modified: '2026-10-11'
 body_schema: body-v2
-body_hash: 'sha256:5d7ac7132cfe2f8d9bac2fc8f8b88bda71c79e7f3609635ab1d6e6ec76826542'
+body_hash: 'sha256:edc05eba7110fe3204a7ae7df340d6c62f0e45561526f45e16a61f14585fc3c6'
 ---
 
 <!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
@@ -130,6 +130,21 @@ Delivers the owner's rule of 2026-10-11: the command line, the terminal interfac
 - [x] `P08.S49` - Remove every frontend-specific refusal and reduced result from the modelo, workflow, live and export operations, and give a resolver to any operation that had none so it can be submitted; `src/cadrumo/application/modelo`.
 - [x] `P08.S50` - Remove every frontend-specific refusal from the profile, authentication and Google operations and from the runtime's release of results and session acts, and give the MCP harness the means to carry a typed secret and to answer every interaction kind; `src/cadrumo_harness/mcp`.
 - [x] `P08.S51` - Rewrite the user documentation, its translations and the packaged agent text to say that an agent runs every operation the command line can, keeping the agent's own conduct before a destructive act as guidance and not as a product gate; `src/cadrumo_harness/_data/agent`.
+
+### Phase `P09` - give every command-line command a form all three frontends reach
+
+Delivers the rest of parity: about forty-five command-line commands do their work in the command-line process, with no registered operation and no runtime request, so the terminal interface and MCP cannot do what they do. Each becomes a registered operation, a sessionless runtime request with a tool in the harness, or a query of the published authority, and the command line submits the same thing. Authorized by the owner's ruling of 2026-10-11 recorded in the full-parity record.
+
+- [x] `P09.S52` - Build the sessionless runtime door for installation acts: the request family, its admission as the bootstrap delete handler admits, secrets in and the recovery code out, the client on the verified connection, and the command line's submitter; `src/cadrumo/application/runtime/installation_requests.py`.
+- [ ] `P09.S53` - Make provisioning a registered operation for every verb: widen local-reader.provision, add local-reader.status, local-reader.report and browser-runtime.provision, and have the command line submit them; `src/cadrumo/application/local_reader_operation.py`.
+- [ ] `P09.S54` - Register the repair operations that need a profile (secure-object check and quarantine, workflow progress reset, connectivity probe) and build the repair acts that need none (report, logs, profile pointer); `src/cadrumo/application/diagnostics.py`.
+- [ ] `P09.S55` - Build the storage acts and the acts of the reset of all profiles, and have the command line send them; `src/cadrumo/application/storage_management/service.py`.
+- [ ] `P09.S56` - Build the profile acts (list, archive inspect and import, recovery enrolment), register recovery revocation, and move into the operations what the censo import, archive export and profile delete commands did on the caller's side; `src/cadrumo/application/user_profile`.
+- [ ] `P09.S57` - Serve the reference reads (modelo catalogue, categories, portals, authentication providers, apoderado scopes) from one application service through the extended authority query, for all three frontends; `src/cadrumo_harness/mcp/authority_query.py`.
+- [ ] `P09.S58` - Build the review-package and report verification acts and move into the reconcile pull and report verify operations what their commands did on the caller's side; `src/cadrumo/application/modelo`.
+- [ ] `P09.S59` - Give the MCP harness an installation tool for the installation acts, with secrets on the protected frame and recovery enrolment on the session tool; `src/cadrumo_harness/mcp/protocol_contract.py`.
+- [ ] `P09.S60` - Give the terminal interface destinations for the reference reads and the installation acts; `src/cadrumo/entrypoints/tui`.
+- [ ] `P09.S61` - Wire the new operations and acts into composition and the surface facts, regenerate the command table to record runtime-request rows, and prove with one suite that every command-line leaf has an operation or a runtime request and that the three frontends agree on each result; `src/cadrumo/entrypoints/operation_composition.py`.
 
 ## Parallelization
 
