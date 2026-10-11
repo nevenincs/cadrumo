@@ -158,22 +158,14 @@ class _PublishedIrpfCategory(click.ParamType[str]):
     def convert(self, value: object, param: click.Parameter | None, ctx: click.Context | None) -> str:
         """Return the normalized token, naming the accepted ids on a refusal."""
         from ...domain.calculations.registry.authority import bundled_indexed_authority
-        from ...domain.transactions.irpf_categories import (
-            ledger_irpf_category,
-            ledger_irpf_category_catalogue,
-            normalize_irpf_category,
-        )
+        from ...domain.transactions.errors import TransactionValidationError
+        from ...domain.transactions.irpf_categories import require_ledger_irpf_category
 
-        token = normalize_irpf_category(str(value))
         with bundled_indexed_authority().operation() as operation:
-            if token is not None and ledger_irpf_category(token, authority=operation) is not None:
-                return token
-            accepted = tuple(descriptor.id for descriptor in ledger_irpf_category_catalogue(authority=operation))
-        self.fail(
-            tr("cli.ledger.errors.irpf_category_unknown", value=str(value), accepted=", ".join(accepted)),
-            param,
-            ctx,
-        )
+            try:
+                return require_ledger_irpf_category(str(value), authority=operation)
+            except TransactionValidationError as refusal:
+                self.fail(str(refusal), param, ctx)
 
 
 IRPF_CATEGORY_CHOICE: typer_click_types.ParamType = cast(

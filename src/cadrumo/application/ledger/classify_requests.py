@@ -65,6 +65,10 @@ LedgerClassifyLongText = Annotated[str, Field(max_length=4096)]
 
 LedgerClassifyTransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
 
+# Hand-typed amounts and shares carry at most euro-cent precision, so a thousands-grouped
+# amount is refused instead of being read as a fraction.
+_MAX_FRACTION_DIGITS = 2
+
 
 class LedgerClassifyPatch(BaseModel):
     """Bounded JSON-stable values for the manual classification patch."""
@@ -103,11 +107,21 @@ class LedgerClassifyPatch(BaseModel):
     def _canonical_decimal_text(cls, value: str | None, info: ValidationInfo) -> str | None:
         if value is None:
             return None
-        parsed = try_parse_canonical_decimal(value, signed=False)
+        parsed = try_parse_canonical_decimal(value, signed=False, max_fraction_digits=_MAX_FRACTION_DIGITS)
         if parsed is None or display_decimal(parsed) != value:
             raise ValueError(f"ledger classify {info.field_name} must use canonical decimal text")
         if info.field_name == "business_pct" and not Decimal("0") <= parsed <= Decimal("1"):
             raise ValueError("ledger classify business_pct must be within 0..1")
+        return value
+
+    @field_validator("notes")
+    @classmethod
+    def _notes_record_a_reason(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError(
+                "ledger classify notes must record why the transaction is classified; "
+                "omit them to leave the notes unchanged"
+            )
         return value
 
     @field_validator("counterparty_country")
@@ -138,7 +152,7 @@ class LedgerClassifyM210Options(BaseModel):
     def _canonical_m210_decimal(cls, value: str | None, info: ValidationInfo) -> str | None:
         if value is None:
             return None
-        parsed = try_parse_canonical_decimal(value, signed=False)
+        parsed = try_parse_canonical_decimal(value, signed=False, max_fraction_digits=_MAX_FRACTION_DIGITS)
         if parsed is None or display_decimal(parsed) != value:
             raise ValueError(f"M210 {info.field_name} must use canonical decimal text")
         if info.field_name == "applicable_rate" and parsed > Decimal("1"):

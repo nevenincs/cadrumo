@@ -186,43 +186,48 @@ def ledger_add(
 ) -> None:
     """Create one manual ledger transaction through exact-profile operation custody."""
     _require_add_assignable_classification(business_classification)
+    # The operation refuses the same input; this only names the accepted form in the operator's terms.
+    parse_amount_magnitude(amount)
     from .runtime_ledger_add import run_ledger_add
 
-    result = run_ledger_add(
-        ctx,
-        booked_date=booked_date,
-        amount=amount,
-        direction=direction,
-        description=description,
-        value_date=value_date,
-        currency=currency,
-        counterparty=counterparty,
-        business_classification=business_classification,
-        business_pct=business_pct,
-        category_id=category_id,
-        taxable_base=taxable_base,
-        iva_rate=iva_rate,
-        iva_amount=iva_amount,
-        iva_category=iva_category,
-        deduction_fact_kind=deduction_fact_kind,
-        investment_asset_id=investment_asset_id,
-        counterparty_country=counterparty_country,
-        counterparty_identification_state=counterparty_identification_state,
-        recargo_amount=recargo_amount,
-        irpf_category=irpf_category,
-        usage_ratio_id=usage_ratio_id,
-        prorrata_reference=prorrata_reference,
-        art_104_tres_exclusion=art_104_tres_exclusion,
-        input_classification=input_classification,
-        prorrata_sector=prorrata_sector,
-        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-        attachment_ids=attachment_ids,
-        notes=notes,
-        actor=actor,
-        idempotency_key=idempotency_key,
-        source_jurisdiction=source_jurisdiction,
-        own_account_id=account,
-    )
+    try:
+        result = run_ledger_add(
+            ctx,
+            booked_date=booked_date,
+            amount=amount,
+            direction=direction,
+            description=description,
+            value_date=value_date,
+            currency=currency,
+            counterparty=counterparty,
+            business_classification=business_classification,
+            business_pct=business_pct,
+            category_id=category_id,
+            taxable_base=taxable_base,
+            iva_rate=iva_rate,
+            iva_amount=iva_amount,
+            iva_category=iva_category,
+            deduction_fact_kind=deduction_fact_kind,
+            investment_asset_id=investment_asset_id,
+            counterparty_country=counterparty_country,
+            counterparty_identification_state=counterparty_identification_state,
+            recargo_amount=recargo_amount,
+            irpf_category=irpf_category,
+            usage_ratio_id=usage_ratio_id,
+            prorrata_reference=prorrata_reference,
+            art_104_tres_exclusion=art_104_tres_exclusion,
+            input_classification=input_classification,
+            prorrata_sector=prorrata_sector,
+            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+            attachment_ids=attachment_ids,
+            notes=notes,
+            actor=actor,
+            idempotency_key=idempotency_key,
+            source_jurisdiction=source_jurisdiction,
+            own_account_id=account,
+        )
+    except ValidationError as exc:
+        raise ledger_validation_bad(exc) from exc
     if result.transaction is None or result.review_status is None:
         raise InternalInvariantError("ledger add runtime returned no successful transaction projection")
     notices, extra_lines = _manual_add_notices(

@@ -600,6 +600,17 @@ def test_ledger_update_rejects_negative_amount_with_instructive_error(tmp_path: 
     _assert_negative_amount_refusal(result)
 
 
+def test_ledger_update_refuses_to_blank_the_description(tmp_path: Path) -> None:
+    """A required fact can be replaced but not blanked; the worker's rule is what the operator reads."""
+
+    txn_id = import_validation_transaction(tmp_path)
+
+    result = _invoke(["app", "ledger", "update", txn_id, "--description", "   "])
+
+    assert result.exit_code != 0, result.output
+    assert "cannot clear description" in _flatten_box(result.output or ""), result.output
+
+
 # ---------------------------------------------------------------------------
 # contract.3  ledger allocate — business_pct out of range for MIXED
 # ---------------------------------------------------------------------------

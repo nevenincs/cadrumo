@@ -15,6 +15,7 @@ from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_
 from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.irpf_categories import require_ledger_irpf_category
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -71,6 +72,8 @@ def _resolve_manual_field_value(
     if field_name == "category_id":
         normalized = value.strip()
         return require_spending_category(normalized, authority=operation).value if normalized else None
+    if field_name == "irpf_category":
+        return require_ledger_irpf_category(value, authority=operation) if value.strip() else None
     if field_name == "iva_category":
         return require_iva_category(value, effective_date=current.raw.booked_date, authority=operation)
     if field_name == "deduction_fact_kind":

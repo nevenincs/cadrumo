@@ -42,6 +42,8 @@ LEDGER_UPDATE_FIELD_NAMES = frozenset(
         "own_account_id",
     }
 )
+# Facts every transaction carries: an update may replace them but never blank or remove them.
+_REQUIRED_FIELD_NAMES = frozenset({"booked_date", "amount", "currency", "direction", "description", "notes"})
 LedgerUpdatePatchField = Literal[
     "booked_date",
     "value_date",
@@ -108,8 +110,14 @@ class LedgerUpdatePatch(BaseModel):
         if value is None:
             return None
         field_name = info.field_name or ""
-        parsed = try_parse_canonical_decimal(value, signed=field_name != "amount")
+        is_amount = field_name == "amount"
+        parsed = try_parse_canonical_decimal(value, signed=not is_amount, max_fraction_digits=2)
         if parsed is None:
+            if is_amount and try_parse_canonical_decimal(value, max_fraction_digits=2) is not None:
+                raise ValueError(
+                    "ledger update amount must be a non-negative magnitude; "
+                    "set the flow with direction (OUTGOING / INCOMING / INTERNAL_TRANSFER), not a negative amount"
+                )
             raise ValueError("ledger update decimal values must use canonical decimal text")
         if display_decimal(parsed) != value:
             raise ValueError("ledger update decimal values must use canonical decimal text")
@@ -169,6 +177,14 @@ class LedgerUpdateRequest(BaseModel):
         selected = set(self.patch_fields)
         if any(getattr(self.patch, field_name) is not None for field_name in LEDGER_UPDATE_FIELD_NAMES - selected):
             raise ValueError("ledger update request contains an unselected patch value")
+        return self
+
+    @model_validator(mode="after")
+    def _required_facts_are_not_cleared(self) -> LedgerUpdateRequest:
+        for field_name in sorted(_REQUIRED_FIELD_NAMES & set(self.patch_fields)):
+            value = getattr(self.patch, field_name)
+            if value is None or (isinstance(value, str) and not value.strip()):
+                raise ValueError(f"ledger update cannot clear {field_name}; omit it to leave it unchanged")
         return self
 
 

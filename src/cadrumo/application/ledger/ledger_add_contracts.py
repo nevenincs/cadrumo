@@ -104,8 +104,13 @@ class LedgerAddRequest(BaseModel):
     def _canonical_decimal_inputs(cls, value: str | None, info: object) -> str | None:
         if value is None:
             return None
-        signed = getattr(info, "field_name", None) != "amount"
-        if try_parse_canonical_decimal(value, signed=signed, max_fraction_digits=2) is None:
+        is_amount = getattr(info, "field_name", None) == "amount"
+        if try_parse_canonical_decimal(value, signed=not is_amount, max_fraction_digits=2) is None:
+            if is_amount and try_parse_canonical_decimal(value, max_fraction_digits=2) is not None:
+                raise ValueError(
+                    "ledger add amount must be a non-negative magnitude; "
+                    "set the flow with direction (OUTGOING / INCOMING / INTERNAL_TRANSFER), not a negative amount"
+                )
             raise ValueError("ledger add decimal values must use canonical decimal text")
         return value
 

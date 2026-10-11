@@ -26,6 +26,7 @@ from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, is_classified
 from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.irpf_categories import require_ledger_irpf_category
 from ..prorrata_register.ports import ProrrataRegisterRepositoryFactory
 from ..prorrata_register.service import ProrrataRegisterService
 from ..user_profile.access_contracts import AccessDenialCode
@@ -92,7 +93,7 @@ def prepare_ledger_add_command(
         counterparty_country=payload.counterparty_country,
         counterparty_identification_state=registry_facts.identification_state,
         recargo_amount=parse_ledger_add_decimal(payload.recargo_amount, label="recargo-amount"),
-        irpf_category=payload.irpf_category,
+        irpf_category=_resolve_ledger_add_irpf_category(payload, operation=operation),
         usage_ratio_id=payload.usage_ratio_id,
         prorrata_reference=payload.prorrata_reference,
         art_104_tres_exclusion=registry_facts.exclusion,
@@ -203,6 +204,17 @@ def _resolve_ledger_add_flow(payload: LedgerAddRequest) -> tuple[BusinessClassif
     if not is_classified(classification) and classification is not BusinessClassification.NOT_YET_PROCESSED:
         raise TransactionValidationError("this classification is assigned by the ledger pipeline")
     return classification, direction
+
+
+def _resolve_ledger_add_irpf_category(
+    payload: LedgerAddRequest,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> str | None:
+    """Admit only a category the published taxonomy declares; blank text is absence."""
+    if payload.irpf_category is None or not payload.irpf_category.strip():
+        return None
+    return require_ledger_irpf_category(payload.irpf_category, authority=operation)
 
 
 def _resolve_ledger_add_registry_facts(
