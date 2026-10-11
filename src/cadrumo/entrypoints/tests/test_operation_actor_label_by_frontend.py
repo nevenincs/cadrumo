@@ -56,6 +56,7 @@ from ..adapter_composition import build_inventory_service_ports
 from ..justificante_composition import build_justificante_capture_service
 from . import modelo_operation_test_support
 from . import test_registered_executor_conformance as conformance
+from .ledger_persons_work_test_support import seed_row_a_rule_classified
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -97,7 +98,11 @@ def test_operator_iva_derivation_records_the_session_label_for_an_agent(
     frontend: OperationFrontendProjection,
     recorded: str,
 ) -> None:
-    """The audit events of the derivation carry the label the executor derived, not the typed one."""
+    """The audit events of the derivation carry the label the executor derived, not the typed one.
+
+    The row is one a stored rule classified: an agent derives on that, and not
+    on a row whose classification the person decided.
+    """
     definition_id = "ledger.classify.iva-derive"
     with (
         conformance._model_runtime_for(definition_id),
@@ -107,16 +112,15 @@ def test_operator_iva_derivation_records_the_session_label_for_an_agent(
             execution_caller_reader=_session_host(definition_id, frontend),
         ) as (driver, registry, profile_id),
     ):
-        definition = {item.definition_id: item for item in registry.definitions}[definition_id]
-        preparation = conformance._prepare_family_case(
-            definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
+        transaction_id = seed_row_a_rule_classified(profile_id, operation, description="synthetic row for a rule")
+        request = LedgerOperatorIvaRequest(
+            profile_id=profile_id, transaction_id=transaction_id, iva_category="domestic_general", actor=_TYPED_ACTOR
         )
-        assert preparation is not None
-        assert isinstance(preparation.request, LedgerOperatorIvaRequest)
-        request = preparation.request.model_copy(update={"actor": _TYPED_ACTOR})
 
         submitted, observed = asyncio.run(
-            driver.run(definition_id=definition_id, subject_ref=preparation.subject_ref, payload=request)
+            driver.run(
+                definition_id=definition_id, subject_ref=profile_operation_subject(str(profile_id)), payload=request
+            )
         )
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED

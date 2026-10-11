@@ -18,6 +18,7 @@ from ....application.workflow.profile_bucket_scan import read_profile_bucket
 from ....core.config import override_settings
 from ....core.config_support import LLMProvider
 from ....core.i18n.render import clear_output_language_cache, tr
+from ....domain.transactions.classification_origin import ClassificationOrigin
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -140,6 +141,7 @@ def seed_ledger_llm_classified_transactions(bucket_id: str) -> None:
         high.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="llm:claude:test-model",
+        origin=ClassificationOrigin.PERSON,
         confidence=Decimal("0.95"),
     )
     catalogue = set_classification(
@@ -147,6 +149,7 @@ def seed_ledger_llm_classified_transactions(bucket_id: str) -> None:
         low.transaction_id,
         classification=BusinessClassification.BUSINESS,
         classified_by="llm:claude:test-model",
+        origin=ClassificationOrigin.PERSON,
         confidence=Decimal("0.30"),
     )
     TransactionCatalogueRepository(bucket_id=bucket_id).save(catalogue)

@@ -33,7 +33,11 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
+from ..operations.execution_actor import (
+    OperationExecutionCallerReader,
+    execution_actor_label,
+    execution_admitted_on_mcp,
+)
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -48,6 +52,7 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .actions_common import build_manual_ledger_result, resolve_revision_guarded_transaction_repository
 from .actions_manual import ledger_transaction_result_payload, link_manual_transaction_invoice
+from .agent_row_guard import require_agent_may_link_invoice
 from .commit_fence import (
     LedgerCommitAttemptTracker,
     RevisionGuardedTrackedLedgerTransactionRepository,
@@ -169,11 +174,12 @@ class LedgerLinkExecutor:
         actor = execution_actor_label(
             self._execution_caller_reader, context, supplied=_supplied_link_actor(payload.actor)
         )
+        for_agent = execution_admitted_on_mcp(self._execution_caller_reader, context)
         tracker = LedgerCommitAttemptTracker()
 
         try:
             projection = await run_with_ledger_commit_fence(
-                lambda: self._apply_link(payload, context, tracker, actor=actor),
+                lambda: self._apply_link(payload, context, tracker, actor=actor, for_agent=for_agent),
                 tracker=tracker,
                 context=context,
                 task_name=request.definition_id,
@@ -205,8 +211,14 @@ class LedgerLinkExecutor:
         tracker: LedgerCommitAttemptTracker,
         *,
         actor: str,
+        for_agent: bool,
     ) -> LedgerLinkProjection:
-        """Resolve and co-commit the canonical invoice link under registry authority."""
+        """Resolve and co-commit the canonical invoice link under registry authority.
+
+        An agent's link that would replace the invoice a row already links is
+        refused once the row is read, before the writer is reached, so no
+        effect is declared for it.
+        """
         profile_id = str(payload.profile_id)
         ports = self._factory(bucket_id=profile_id, operation=context.authority_operation)
         if ports.operation is not context.authority_operation:
@@ -217,7 +229,10 @@ class LedgerLinkExecutor:
         )
         repository = RevisionGuardedTrackedLedgerTransactionRepository(original, tracker)
         with validating_governed_facts(context.authority_operation):
-            transaction_id = resolve_transaction_id(payload.transaction_id, repository.load().transactions)
+            transactions = repository.load().transactions
+            transaction_id = resolve_transaction_id(payload.transaction_id, transactions)
+            if for_agent:
+                require_agent_may_link_invoice(transactions[transaction_id], payload.invoice_id)
             result = link_manual_transaction_invoice(
                 bucket_id=profile_id,
                 transaction_id=transaction_id,

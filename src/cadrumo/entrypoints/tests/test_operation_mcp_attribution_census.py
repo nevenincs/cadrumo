@@ -74,14 +74,14 @@ _CLASSIFICATION_ACTOR = f"{_ENTRYPOINT_TESTS}.test_ledger_classification_actor_b
 _ROW_MUTATION = f"{_ENTRYPOINT_TESTS}.test_ledger_row_mutation_mcp_admission"
 _LOCAL_RECORDS = f"{_ENTRYPOINT_TESTS}.test_modelo_local_records_mcp_admission"
 _MODELO_WORK = f"{_ENTRYPOINT_TESTS}.test_modelo_work_mcp_admission"
-_LLM_REVIEW = "cadrumo.application.ledger.tests.test_llm_review_operation"
+_PERSONS_WORK = f"{_ENTRYPOINT_TESTS}.test_ledger_persons_work_mcp_guard"
 
 _ACTOR = frozenset({"actor"})
 
 _LIFECYCLE_TEST = "test_each_lifecycle_mutation_records_the_session_and_is_put_back_by_the_operations_its_result_names"
 _ATTACHMENT_TEST = "test_a_detachment_keeps_the_stored_attachment_and_attaching_it_again_puts_the_link_back"
 _SPLIT_TEST = "test_a_split_records_the_session_keeps_its_parent_stored_and_is_not_undone_by_a_restore"
-_REVIEW_TEST = "test_resume_records_the_session_label_for_an_agent_and_the_supplied_label_for_a_person"
+_REVIEW_TEST = "test_a_review_run_to_its_commit_stores_the_session_label_for_an_agent_and_the_typed_label_for_a_person"
 _WORK_STEPS_TEST = (
     "test_creation_calculation_and_rename_record_the_session_label_for_an_agent_and_the_supplied_one_otherwise"
 )
@@ -112,9 +112,10 @@ _RECORDS_THE_SESSION_LABEL: Mapping[str, _Proof] = {
         _ACTOR_LABELS,
         "test_inventory_closing_authority_records_the_session_label_for_an_agent",
     ),
-    # Both reviews run the one executor, and its resume step is what stores the label.
-    "ledger.classify.review": _Proof(_ACTOR, _LLM_REVIEW, _REVIEW_TEST),
-    "ledger.split.review": _Proof(_ACTOR, _LLM_REVIEW, _REVIEW_TEST),
+    # Each review is run to its commit through the real executor and store, and the label is read
+    # from the events and rows the commit stored.
+    "ledger.classify.review": _Proof(_ACTOR, _PERSONS_WORK, _REVIEW_TEST),
+    "ledger.split.review": _Proof(_ACTOR, _PERSONS_WORK, _REVIEW_TEST),
     "modelo.reconcile.import": _Proof(
         _ACTOR, _ACTOR_LABELS, "test_reconciliation_import_records_the_session_label_for_an_agent"
     ),

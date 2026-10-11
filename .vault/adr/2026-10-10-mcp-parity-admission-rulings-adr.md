@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:70b7d333bcfe6ac6aa3ae33bfff220cdc50cf68ce081b817217b5e389b69ee01'
+body_hash: 'sha256:f0c7f93cc223d4b10e27045f1d292fb6e519e4dc9118f3af4a41c20f9ca95f88'
 related:
   - "[[2026-10-10-mcp-parity-exclusion-intent-evidence-research]]"
   - "[[2026-10-10-mcp-parity-closed-operations-reference]]"
@@ -181,6 +181,7 @@ Rulings for operations closed today:
 | | `ledger.attach`, `ledger.detach` | Admit with the evidence reads; they tie stored evidence to a transaction by identifier only |
 | Ratios and rules | `ledger.ratios.set`, `.unset`, `.list`, `.eligible`, `.validate`, `ledger.rule.list`, `ledger.rule.add`, `ledger.rule.apply` | Admit. A rule run that reaffirms waits for the person's approval: it replaces classifications made by hand and no earlier value is kept |
 | Reversible ledger lifecycle | `ledger.split.manual`, `ledger.archive`, `.stash`, `.restore`, `.exclude` | Admit. No confirmation moved: each is an event over rows that stay stored, and the result says what was replaced and which operation reverses it. A manual split of a parent that carries a classification the person made, linked evidence, a linked invoice or attachments waits for the person's approval, because only the approval-bound merge recombines it and the classification is entered again |
+| The person's classification | every operation open to MCP that can replace, clear, split, exclude or re-link a ledger row | An agent acts freely on a row that is unprocessed or whose classification came from a rule, the pipeline or an agent. Replacing or setting aside a classification or tax figure the person made or accepted waits for the person's approval on every route: IVA derivation, both model reviews at the request and at the commit, the manual split, exclude, replacing an invoice link, and detaching evidence an agent did not link. The row records the origin of its classification so the rule does not depend on which operation wrote last. Recorded 2026-10-11 as the conservative reading of the owner's rule that sensitive acts wait for the person, after a review showed the earlier per-operation refusals could be walked around; it is the owner's to confirm or relax |
 | Destructive ledger lifecycle | `ledger.merge`, `ledger.remove`, `ledger.reset`, `ledger.evidence.remove` | Admit behind the person's approval |
 | Statement and invoice-book import | `ledger.import`, `ledger.invoice.import` | Admit, pending file exchange |
 | Evidence | `ledger.evidence.add`, `ledger.evidence.batch` | Admit, pending file exchange |

@@ -645,7 +645,9 @@ async def test_resume_records_the_session_label_for_an_agent_and_the_supplied_la
     assert await executor.resume(case.request, checkpoint, case.context)
 
     assert actors == [recorded]
-    assert asked == ([] if frontend is None else [case.identity])
+    # The session host is asked about this invocation and no other, and not at all where none composed it.
+    assert bool(asked) is (frontend is not None)
+    assert all(identity == case.identity for identity in asked)
 
 
 @pytest.mark.parametrize("outcome", ["classified", "split", "rejected"])
@@ -1004,3 +1006,19 @@ async def test_an_agents_resume_commits_without_asking_where_the_reader_is(
 
     assert await executor.resume(case.request, checkpoint, case.context)
     assert written == [f"agent:mcp.human.{_SESSION_CLIENT}"]
+
+
+@pytest.mark.parametrize(("share", "accepted"), [("0.333", True), ("0.0175", True), ("1.01", False)])
+def test_an_applied_share_keeps_its_fraction_digits_and_stays_within_zero_to_one(share: str, accepted: bool) -> None:
+    values = {
+        "profile_id": _PROFILE,
+        "transaction_id": "a" * 12,
+        "mode": "classification",
+        "origin": _ORIGINS["classification"],
+        "business_pct": share,
+    }
+    if accepted:
+        assert LedgerLlmReviewRequest.model_validate(values).business_pct == share
+    else:
+        with pytest.raises(ValidationError, match=r"within 0\.\.1"):
+            LedgerLlmReviewRequest.model_validate(values)

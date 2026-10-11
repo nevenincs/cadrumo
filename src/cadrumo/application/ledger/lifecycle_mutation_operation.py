@@ -32,7 +32,11 @@ from ...domain.transactions.models import LedgerDatePartition, Transaction, Tran
 from ..operations.access_port import OperationAccessResolver
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
-from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
+from ..operations.execution_actor import (
+    OperationExecutionCallerReader,
+    execution_actor_label,
+    execution_admitted_on_mcp,
+)
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -50,6 +54,7 @@ from .actions_lifecycle import (
     restore_manual_transaction,
     stash_manual_transaction,
 )
+from .agent_row_guard import require_agent_may_set_aside
 from .id_resolution import resolve_transaction_id
 from .lifecycle_contracts import (
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID,
@@ -229,6 +234,13 @@ class _LedgerLifecycleExecutor:
                 project_lifecycle_validation_from_error(error, transaction_id=None),
             )
             return await _publish_refusal(context, refused)
+        if self._operation_id == LEDGER_EXCLUDE_OPERATION_DEFINITION_ID and execution_admitted_on_mcp(
+            self._execution_caller_reader, context
+        ):
+            # An exclusion replaces the row's classification, and the one operation that puts
+            # it back is closed to an agent. Archive and stash keep the row as it is and the
+            # restore that returns it is open, so they are not held to this.
+            require_agent_may_set_aside(catalogue.transactions[transaction_id])
 
         prepared = _PreparedLifecycleMutation(
             profile_id=payload.profile_id,

@@ -37,6 +37,7 @@ from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.invoices.errors import InvoiceLinkError
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
 from ...domain.iva.schema import EUMemberState, IvaCategory
+from ...domain.transactions.classification_origin import with_classification_origin, written_classification_origin
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
@@ -51,6 +52,7 @@ from ...domain.transactions.models import (
 )
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..aggregation.currency_predicates import effective_eur_amount, is_non_eur_without_conversion
+from ..operations.execution_actor import actor_label_is_an_agents
 from ..review.filter import LedgerReviewStatus
 from .action_ports import LedgerActionPorts
 from .actions_common import (
@@ -87,6 +89,7 @@ from .actions_common import (
     verify_usage_ratio_reference,
 )
 from .actions_import import apply_fx_conversion as _apply_fx_conversion
+from .agent_row_guard import require_actor_may_detach, require_actor_may_link_invoice, require_actor_may_reclassify
 from .evidence import PurchaseInvoiceEvidence
 from .models import (
     LedgerRemovalBlocker,
@@ -339,6 +342,7 @@ def detach_manual_transaction_attachments(
             translated_message="application.ledger.errors.evidence_detachment_unknown_attachment",
             context={"attachment_ids": ", ".join(unknown)},
         )
+    require_actor_may_detach(actor=trimmed_actor, row=current, attachment_ids=requested)
     remaining = tuple(identifier for identifier in attached if identifier not in set(requested))
     return update_manual_transaction_fields(
         bucket_id=bucket_id,
@@ -388,6 +392,7 @@ def link_manual_transaction_invoice(
     trimmed_source_command = require_source_command(source_command, operation="ledger invoice linkage")
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     current = require_transaction(repository.load(), transaction_id)
+    require_actor_may_link_invoice(actor=trimmed_actor, row=current, invoice_id=invoice_id)
     invoices_repo = resolve_invoice_repository(bucket_id=bucket_id, repository=ports.invoice_repository)
     invoice_record = invoices_repo.load().get(invoice_id)
     if invoice_record is None:
@@ -1005,10 +1010,12 @@ def _prepare_manual_transaction_update(
         created_at=current.created_at,
         modified_at=now,
         evidence_records=ports.purchase_invoice_evidence_records,
+        classification_predecessor=current,
     )
     replacement = _carry_forward_invoice_link(current, _carry_forward_fx(current, replacement))
     if mutation_signature(current) == mutation_signature(replacement):
         return None
+    require_actor_may_reclassify(actor=command.actor, current=current, replacement=replacement)
     verify_evidence_references(
         command,
         transaction_id=replacement.transaction_id,
@@ -1062,6 +1069,7 @@ def _prepare_manual_transaction_update(
         created_at=current.created_at,
         modified_at=now,
         evidence_records=ports.purchase_invoice_evidence_records,
+        classification_predecessor=current,
     )
     return _carry_forward_invoice_link(current, _carry_forward_fx(current, replacement)), events
 
@@ -1555,6 +1563,7 @@ def _transaction_from_command(
     modified_at: datetime | None = None,
     currency_normalizer: CurrencyNormalizationService | None = None,
     evidence_records: tuple[PurchaseInvoiceEvidence, ...] = (),
+    classification_predecessor: Transaction | None = None,
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_transaction_id or _provider_transaction_id(command, occurred_at=occurred_at),
@@ -1639,7 +1648,16 @@ def _transaction_from_command(
     # reaches the modelo at all.
     payload.update(_fx_conversion_fields(raw, currency_normalizer))
     payload.update(_classification_fields(command, occurred_at=occurred_at))
-    return Transaction.model_validate(payload)
+    # The stamp above is rewritten by every write to a classified row. Whose
+    # decision the classification is changes only when this write changes it.
+    return with_classification_origin(
+        Transaction.model_validate(payload),
+        replaces=classification_predecessor,
+        written=written_classification_origin(
+            by_agent=actor_label_is_an_agents(command.actor),
+            classified_by=command.classified_by_override or CLASSIFIED_BY_MANUAL,
+        ),
+    )
 
 
 def _fx_conversion_fields(

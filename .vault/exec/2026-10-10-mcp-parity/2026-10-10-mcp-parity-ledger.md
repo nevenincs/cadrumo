@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:c221306163686b069c39d0edcddef41ca809178578a7fa94178a0a5423a88e92'
+body_hash: 'sha256:cb59de7204452bf080292da0e72bac2f452791ca636c284db4bcb1b7351f17b1'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -936,6 +936,62 @@ related:
 - `S37` `verify:` `ty check --python-platform linux (30 files)` -> `pass`
 - `S37` `verify:` `basedpyright on the changed production files` -> `pass`
 - `S37` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S30` `M` `src/cadrumo/application/ledger/tests/test_add_operation_input_rules.py`
+- `S30` `M` `src/cadrumo/application/ledger/tests/test_allocate_operation.py`
+- `S30` `M` `src/cadrumo/application/ledger/tests/test_bulk_classify_operation.py`
+- `S30` `M` `src/cadrumo/application/ledger/tests/test_classify_operation_input_rules.py`
+- `S30` `M` `src/cadrumo/application/ledger/tests/test_update_operation_input_rules.py`
+- `S30` `M` `src/cadrumo/entrypoints/cli/_decimal_parsing.py`
+- `S30` `M` `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`
+- `S30` `M` `src/cadrumo/entrypoints/cli/tests/test_common_decimal_parser.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/ledger/classification.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_classification_iva.py`
+- `S30` `M` `docs/how-to/classify-transactions.md`
+- `S30` `M` `docs/locales/ca/LC_MESSAGES/how-to/classify-transactions.po`
+- `S30` `M` `docs/locales/es/LC_MESSAGES/how-to/classify-transactions.po`
+- `S30` `M` `docs/locales/hu/LC_MESSAGES/how-to/classify-transactions.po`
+- `S30` `verify:` `pytest ledger, invoices, operations, inventory, transaction-domain, core and model-adapter suites (5604 of 5606 tests)` -> `pass`
+- `S30` `verify:` `pytest profile persistence and SQL storage suites (2467 tests)` -> `pass`
+- `S30` `verify:` `pytest entrypoint suite including executor conformance (2207 of 2214 tests)` -> `pass`
+- `S30` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S30` `verify:` `pytest touched command-line and terminal-interface tests (294 of 295 tests)` -> `pass`
+- `S30` `verify:` `ruff check (43 files)` -> `pass`
+- `S30` `verify:` `ruff format --check (43 files)` -> `pass`
+- `S30` `verify:` `ty check --python-platform linux (43 files)` -> `pass`
+- `S30` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S30` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S35` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S35` `M` `src/cadrumo/application/ledger/actions_split_merge.py`
+- `S35` `M` `src/cadrumo/application/ledger/attachment_mutation_operation.py`
+- `S35` `M` `src/cadrumo/application/ledger/link_operation.py`
+- `S35` `M` `src/cadrumo/application/ledger/llm_classification.py`
+- `S35` `M` `src/cadrumo/application/ledger/llm_review_execution.py`
+- `S35` `M` `src/cadrumo/application/ledger/operator_iva_operation.py`
+- `S35` `M` `src/cadrumo/application/ledger/tests/test_llm_review_operation.py`
+- `S35` `M` `src/cadrumo/application/operations/execution_actor.py`
+- `S35` `M` `src/cadrumo/domain/transactions/models.py`
+- `S35` `M` `src/cadrumo/domain/transactions/service.py`
+- `S35` `M` `src/cadrumo/domain/transactions/tests/test_catalogue.py`
+- `S35` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_llm_diagnostics.py`
+- `S35` `M` `src/cadrumo/entrypoints/tests/test_operation_actor_label_by_frontend.py`
+- `S35` `M` `src/cadrumo/entrypoints/tests/test_operation_mcp_attribution_census.py`
+- `S35` `A` `src/cadrumo/adapters/persistence/profile/tests/test_classification_origin_at_the_ledger_writers.py`
+- `S35` `A` `src/cadrumo/application/ledger/agent_row_guard.py`
+- `S35` `A` `src/cadrumo/application/ledger/tests/test_llm_review_persons_row.py`
+- `S35` `A` `src/cadrumo/domain/transactions/classification_origin.py`
+- `S35` `A` `src/cadrumo/domain/transactions/tests/test_classification_origin.py`
+- `S35` `A` `src/cadrumo/entrypoints/tests/ledger_persons_work_test_support.py`
+- `S35` `A` `src/cadrumo/entrypoints/tests/test_ledger_persons_work_mcp_guard.py`
+- `S35` `verify:` `pytest ledger, invoices, operations, inventory, transaction-domain, core and model-adapter suites (5604 of 5606 tests)` -> `pass`
+- `S35` `verify:` `pytest profile persistence and SQL storage suites (2467 tests)` -> `pass`
+- `S35` `verify:` `pytest entrypoint suite including executor conformance (2207 of 2214 tests)` -> `pass`
+- `S35` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S35` `verify:` `pytest touched command-line and terminal-interface tests (294 of 295 tests)` -> `pass`
+- `S35` `verify:` `ruff check (43 files)` -> `pass`
+- `S35` `verify:` `ruff format --check (43 files)` -> `pass`
+- `S35` `verify:` `ty check --python-platform linux (43 files)` -> `pass`
+- `S35` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
 
 ## Notes
 
@@ -975,3 +1031,5 @@ related:
 - `S32` Second review, Step reopened. Bulk classification is the write of single classification for many rows, so it no longer lists MCP and waits with single classification, add and update on the replay-identity and provenance decisions; the four rows carry one prerequisite that says so. Each bulk row now passes through the code single classification uses on every frontend: an unknown category, a six-decimal amount, a share on a row that is not mixed and a mixed row without a share each fail that row.
 - `S35` Second review. A manual split is not reversible by an agent: the parent keeps its classification, evidence and attachments and only the approval-bound merge recombines it. An agent split of a parent that carries a classification made by hand, linked evidence, a linked invoice or attachments is refused in the executor before any effect; other parents split as before.
 - `S37` Second review. Inventory create, movement and valuation record the session label for an agent. A census over the registry fails when a definition open to MCP has an attribution field that no named test proves is session-derived, and when an entry goes stale.
+- `S30` Third review. The command line capped every decimal at two digits, share and rate included, and moving its rules into the operations carried that cap with them. A share and a rate are fractions between 0 and 1 with no scale bound, as the domain and the registry rates require; money keeps two digits. Fixed in the operations for classify, add and update, on the command line including allocate and the model command, and in the terminal interface. The classification guide states it, with its three catalogues.
+- `S35` Third review. The protection of a hand classification keyed on a last-writer stamp that IVA derivation rewrites and that the model reviews, exclude and detach went round. The row now records the origin of its classification, changed only by a write that changes the classification or its tax figures; older rows read as the person when classified and not rule-stamped. An execution admitted on MCP is refused, before any effect, IVA derivation, both model reviews at the request and at the commit, the manual split and exclude on a row whose classification is the person, replacing an existing invoice link, and detaching evidence an agent did not link. The two census entries for the reviews now point at a test that reads the stored actor. Left for the owner: an agent archiving or stashing the person row, and an agent replacing a usage ratio the person set.

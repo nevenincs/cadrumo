@@ -39,6 +39,7 @@ from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Ava
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import split_operation as operation
 from ..action_ports import LedgerActionPorts
+from ..agent_row_guard import require_agent_may_set_aside
 from ..models import SplitChildCommand, SplitTransactionResult
 from ..persistence_ports import LedgerPersistenceConflictError
 from ..protocols import RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
@@ -489,7 +490,7 @@ def test_a_parent_carrying_the_persons_work_is_refused_to_an_agent(update: dict[
     parent = _parent_transaction().model_copy(update=update)
 
     with pytest.raises(ProfileAccessRefusedError) as refused:
-        operation._require_parent_without_the_persons_work(parent)
+        require_agent_may_set_aside(parent)
 
     assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
 
@@ -504,7 +505,7 @@ def test_a_parent_carrying_the_persons_work_is_refused_to_an_agent(update: dict[
     ],
 )
 def test_a_parent_without_the_persons_work_is_not_refused_to_an_agent(update: dict[str, object]) -> None:
-    operation._require_parent_without_the_persons_work(_parent_transaction().model_copy(update=update))
+    require_agent_may_set_aside(_parent_transaction().model_copy(update=update))
 
 
 def test_result_projector_requires_matching_success_receipt() -> None:

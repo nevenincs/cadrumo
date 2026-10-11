@@ -239,7 +239,7 @@ _GOOGLE_AND_SHARING: Final = (
 # the central bank, so those rows reach the network.
 _LEDGER_ENTRIES: Final = (
     # Add, update and both classifications state amounts and a classification as the person's
-    # own entry. Their input rules now live in the operations; what is still open is the product
+    # own entry. The operations enforce their input rules; what they wait on is the product
     # decision on a caller-supplied replay identity and on marking amounts an agent states.
     _admit("ledger.add", _WRITES_ONLINE, _DECISION),
     _admit("ledger.allocate", _WRITES, _CHECKLIST),
@@ -249,18 +249,28 @@ _LEDGER_ENTRIES: Final = (
     _admit("ledger.check", _READS),
     # A bulk row replaces a classification made by hand and stores only the new one, the same write as single.
     _admit("ledger.classify.bulk", _WRITES, _DECISION),
+    # A derivation replaces a row's IVA category, rate, base and cuota, so the executor refuses an
+    # agent's derivation on a row whose classification the person decided. Whose it is is read from
+    # the stored row, which the resolver does not see, so no variant is named here or on the rows
+    # below that say the executor refuses.
     _admit("ledger.classify.iva-derive", _WRITES),
     # The model-backed reviews call the local reader at its endpoint setting, which can name another host.
+    # An agent answers the review it submitted, so the executor refuses an agent both the proposal and
+    # its commit on a row whose classification the person decided.
     _admit("ledger.classify.review", _WRITES_ONLINE),
     _admit("ledger.classify.single", _WRITES, _DECISION),
     _admit("ledger.counterparty", _WRITES),
-    # Detach removes one row's link and keeps the attachment's stored bytes.
+    # Detach removes one row's link and keeps the attachment's stored bytes. The executor refuses an
+    # agent the detachment of an attachment the row does not record an agent as having linked.
     _admit("ledger.detach", _WRITES),
+    # An exclusion replaces the row's classification and only single classification puts it back, so
+    # the executor refuses an agent's exclusion of a row that carries the person's work.
     _admit("ledger.exclude", _WRITES),
     _admit("ledger.export", _WRITES, _FILES),
     _serve_by("ledger.history", "ledger.history.typed"),
     _admit("ledger.history.typed", _READS),
     _admit("ledger.import", _WRITES_ONLINE, _FILES, _SAFEGUARD),
+    # A link overwrites the invoice a row already links, so the executor refuses an agent that.
     _admit("ledger.link", _WRITES),
     _admit("ledger.list", _READS),
     _admit("ledger.llm-diagnostics", _READS),
@@ -289,10 +299,11 @@ _LEDGER_ENTRIES: Final = (
     _admit("ledger.rule.apply", _WRITES, sensitive=("reaffirm",)),
     _admit("ledger.rule.list", _READS),
     # A split keeps its parent stored; only the approval-bound merge recombines the cohort. A parent
-    # with a classification made by hand, linked evidence or attachments passes none of them to its
-    # children, so the executor refuses an agent's split of one; the resolver sees no stored row, so
-    # the variant cannot be named below.
+    # whose classification the person decided, or that links an invoice or evidence no agent linked,
+    # passes them to no child, so the executor refuses an agent's split of one; the resolver sees no
+    # stored row, so the variant cannot be named below.
     _admit("ledger.split.manual", _WRITES),
+    # Held to the same rule as the manual split, at the proposal and at its commit.
     _admit("ledger.split.review", _WRITES_ONLINE),
     _admit("ledger.stash", _WRITES),
     _admit("ledger.status", _READS),

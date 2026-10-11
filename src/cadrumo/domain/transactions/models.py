@@ -59,6 +59,7 @@ from ..iva.schema import (
     default_iva_cash_accounting_treatment,
 )
 from .cash_accounting_validation import validate_cash_accounting_axis
+from .classification_origin import ClassificationOrigin
 from .enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .errors import TransactionValidationError
 from .gross_validation import validate_gross_reconstitution
@@ -297,6 +298,7 @@ def _coerce_transaction_enum_field(value: object, info: core_schema.ValidationIn
         "cash_accounting_treatment": IvaCashAccountingTreatment,
         "art_104_tres_exclusion": Art104TresExclusion,
         "tipo_actividad": TipoActividad,
+        "classification_origin": ClassificationOrigin,
     }
     return enum_by_field[field_name or ""](value)
 
@@ -403,6 +405,16 @@ class Transaction(BaseModel):
         classified_at: Timezone-aware timestamp of the active decision
             (``None`` when never classified).
         classified_by: Classifier source string for the active decision.
+        classification_origin: Whose decision the active classification and
+            tax figures are (:class:`~domain.transactions.classification_origin.ClassificationOrigin`).
+            ``classified_by`` is stamped again by every write to a classified
+            row, so it names the last writer's mechanism and not the party who
+            decided; this field changes only when a write sets or changes the
+            classification, its share or a tax figure. ``None`` on an
+            unprocessed row and on a row stored before the origin was
+            recorded, which
+            :func:`~domain.transactions.classification_origin.resolved_classification_origin`
+            reads from the stamp.
         classification_reason: Free-text reason for the active decision.
         classification_confidence: Optional confidence in ``[0, 1]`` for
             the active decision.
@@ -558,6 +570,7 @@ class Transaction(BaseModel):
     import_fingerprint: str | None = None
     classified_at: datetime | None = None
     classified_by: str = Field(default=CLASSIFIED_BY_AUTO, min_length=1)
+    classification_origin: ClassificationOrigin | None = None
     classification_reason: str = ""
     classification_confidence: Decimal | None = None
     classification_history: tuple[ClassificationHistoryEntry, ...] = ()
@@ -629,6 +642,7 @@ class Transaction(BaseModel):
         "input_classification",
         "tipo_actividad",
         "concepto_ingreso",
+        "classification_origin",
         mode="before",
     )
     @classmethod

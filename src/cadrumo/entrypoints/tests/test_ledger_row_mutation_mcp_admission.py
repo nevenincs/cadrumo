@@ -1,9 +1,9 @@
 """The row mutations of the ledger are open to an MCP session, and each says how it is put back.
 
 The production registry, its real access resolvers and the real executors run
-over a stored profile. An agent may archive, stash, restore and exclude a row,
-split a row that carries none of the person's work, and attach or detach
-evidence that is already stored. None of these deletes anything: what the
+over a stored profile. An agent may archive, stash and restore a row, exclude
+or split a row that carries none of the person's work, attach evidence that is
+already stored and detach what an agent attached. None of these deletes anything: what the
 mutation replaced stays stored, the result names the registered operations that
 return it, and what the agent records carries its own session label. A split
 sets a parent's classification, evidence and attachments aside with no

@@ -22,10 +22,12 @@ from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEv
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.transactions.classification_origin import with_classification_origin, written_classification_origin
 from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import TransactionLifecycleLineageEntry
 from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ..operations.execution_actor import actor_label_is_an_agents
 from .action_ports import LedgerActionPorts
 from .actions_common import (
     blocking_modelo_references,
@@ -49,6 +51,7 @@ from .actions_common import (
     transaction_catalogue_object_id,
     transaction_modelo_source_ids,
 )
+from .agent_row_guard import require_actor_may_set_aside
 from .models import (
     LedgerCatalogueResetReport,
     LedgerRemovalBlocker,
@@ -255,6 +258,7 @@ def mark_transaction_reviewed_excluded(
             "ledger transaction is already reviewed-excluded",
             context={"bucket_id": bucket_id, "transaction_id": transaction_id},
         )
+    require_actor_may_set_aside(actor=trimmed_actor, row=current)
     blockers = blocking_modelo_references(
         bucket_id=bucket_id,
         transaction_ids=transaction_modelo_source_ids(current),
@@ -283,15 +287,21 @@ def mark_transaction_reviewed_excluded(
             "reason": reason.strip(),
         },
     )
-    replacement = current.model_copy(
-        update={
-            "business_classification": BusinessClassification.REVIEWED_EXCLUDED,
-            # business_pct is coupled to MIXED; a reviewed-excluded row carries no
-            # proportion, so clear it or the persisted row fails validation on load.
-            "business_pct": None,
-            "classified_by": CLASSIFIED_BY_MANUAL,
-            "modified_at": now,
-        },
+    replacement = with_classification_origin(
+        current.model_copy(
+            update={
+                "business_classification": BusinessClassification.REVIEWED_EXCLUDED,
+                # business_pct is coupled to MIXED; a reviewed-excluded row carries no
+                # proportion, so clear it or the persisted row fails validation on load.
+                "business_pct": None,
+                "classified_by": CLASSIFIED_BY_MANUAL,
+                "modified_at": now,
+            },
+        ),
+        replaces=current,
+        written=written_classification_origin(
+            by_agent=actor_label_is_an_agents(trimmed_actor), classified_by=CLASSIFIED_BY_MANUAL
+        ),
     )
     updated = replace_transaction(catalogue, old_transaction_id=current.transaction_id, replacement=replacement)
     save_transaction_catalogue_and_events(

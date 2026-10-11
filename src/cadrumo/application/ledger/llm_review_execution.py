@@ -34,6 +34,7 @@ from ..user_profile.access_contracts import AccessDenialCode
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts
 from .agent_reader_locality import require_reader_on_this_machine
+from .agent_row_guard import require_agent_may_reclassify, require_agent_may_set_aside
 from .id_resolution import resolve_transaction_id
 from .llm_classification import saturate_llm_classification, suggest_evidence_split, suggest_llm_classification
 from .llm_classification_ports import (
@@ -177,6 +178,32 @@ def _review_response_action(
     return response_action
 
 
+def _require_agent_may_ask_for_a_proposal(baseline: Transaction, request: LedgerLlmReviewRequest) -> None:
+    """Refuse an agent's review of a row whose proposal it could never commit.
+
+    Asked once the row is read and before the reader is: the person's text is
+    not handed to a model for a proposal that only the person may apply. A
+    review that may split is held to the rule for a split, whatever the model
+    would have proposed.
+    """
+    if request.mode in {"split", "auto_split"}:
+        require_agent_may_set_aside(baseline)
+    else:
+        require_agent_may_reclassify(baseline)
+
+
+def _require_agent_may_commit(baseline: Transaction, decision: LlmReviewDecision) -> None:
+    """Refuse an agent's response that applies a proposal to a row carrying the person's work.
+
+    The writer replaces exactly the reviewed row or refuses, so the reviewed
+    row is the row the decision would change. A rejection changes no row.
+    """
+    if decision is LlmReviewDecision.SPLIT:
+        require_agent_may_set_aside(baseline)
+    elif decision is LlmReviewDecision.APPLY:
+        require_agent_may_reclassify(baseline)
+
+
 def _review_decision(response_action: OperationResponseIntentValue, suggestion: object) -> LlmReviewDecision:
     if response_action == "reject":
         return LlmReviewDecision.REJECT
@@ -286,7 +313,8 @@ class LedgerLlmReviewExecutor:
         """Capture once, then settle a preview or publish the secure REVIEW checkpoint."""
         ports = self._ports(request, context)
         payload = request.payload
-        if execution_admitted_on_mcp(self._execution_caller_reader, context):
+        for_agent = execution_admitted_on_mcp(self._execution_caller_reader, context)
+        if for_agent:
             # Acquisition is the only phase that hands the person's text or
             # images to the reader; resume commits an already reviewed decision.
             require_reader_on_this_machine(ports.settings)
@@ -297,6 +325,8 @@ class LedgerLlmReviewExecutor:
                 catalogue = ports.ledger.transaction_repository.load()
                 transaction_id = resolve_transaction_id(payload.transaction_id, catalogue.transactions)
                 baseline = catalogue.transactions[transaction_id]
+                if for_agent:
+                    _require_agent_may_ask_for_a_proposal(baseline, payload)
                 suggest = (
                     suggest_evidence_split
                     if payload.mode in {"split", "auto_split"}
@@ -377,6 +407,10 @@ class LedgerLlmReviewExecutor:
         baseline, suggestion = operand.decode(context.authority_operation)
         ports = self._ports(request, context)
         decision = _review_decision(response_action, suggestion)
+        if execution_admitted_on_mcp(self._execution_caller_reader, context):
+            # The response is the submitting session's, so an agent's review is answered by
+            # the agent. Refused before the commit phase, with no effect declared.
+            _require_agent_may_commit(baseline, decision)
         actor = execution_actor_label(
             self._execution_caller_reader,
             context,

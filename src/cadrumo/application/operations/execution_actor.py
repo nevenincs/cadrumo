@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
 from ..user_profile.access_contracts import SessionKind
@@ -19,6 +19,8 @@ from .registry import OperationFrontendProjection
 
 if TYPE_CHECKING:
     from .owner import OperationExecutorContext
+
+_AGENT_LABEL_PREFIX: Final = "agent:mcp."
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,7 +54,19 @@ def execution_actor_label(
     caller = reader(context.identity)
     if caller.frontend is not OperationFrontendProjection.MCP:
         return supplied
-    return f"agent:mcp.{caller.session_kind.value}.{caller.client_id}"
+    return f"{_AGENT_LABEL_PREFIX}{caller.session_kind.value}.{caller.client_id}"
+
+
+def actor_label_is_an_agents(label: str) -> bool:
+    """Return whether a recorded actor label is the one an agent's execution records.
+
+    A stored record keeps the label and not the frontend, so what a later
+    decision knows of who acted is this label. An agent's execution cannot
+    record another: its label comes from its session. A person's frontend
+    records the label it supplies, so a person who types this form records
+    their own act as an agent's.
+    """
+    return label.startswith(_AGENT_LABEL_PREFIX)
 
 
 def execution_admitted_on_mcp(reader: OperationExecutionCallerReader | None, context: OperationExecutorContext) -> bool:
@@ -69,6 +83,7 @@ def execution_admitted_on_mcp(reader: OperationExecutionCallerReader | None, con
 __all__ = [
     "OperationExecutionCaller",
     "OperationExecutionCallerReader",
+    "actor_label_is_an_agents",
     "execution_actor_label",
     "execution_admitted_on_mcp",
 ]

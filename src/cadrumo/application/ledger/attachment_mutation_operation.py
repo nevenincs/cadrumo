@@ -41,7 +41,11 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
+from ..operations.execution_actor import (
+    OperationExecutionCallerReader,
+    execution_actor_label,
+    execution_admitted_on_mcp,
+)
 from ..operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
@@ -66,6 +70,7 @@ from .actions_manual import (
     detach_manual_transaction_attachments,
     ledger_transaction_result_payload,
 )
+from .agent_row_guard import require_agent_may_detach
 from .id_resolution import resolve_transaction_id
 from .models import LedgerRemovalBlocker, ManualLedgerTransactionResult
 from .read_access import resolve_ledger_commit_access
@@ -256,6 +261,11 @@ class _LedgerAttachmentExecutor:
         except TransactionIdPrefixError as error:
             refused = _validation_result(payload.profile_id, self._operation_id, error)
             return await _publish_refusal(context, refused)
+        if isinstance(payload, LedgerDetachRequest) and execution_admitted_on_mcp(
+            self._execution_caller_reader, context
+        ):
+            # An agent detaches what an agent attached. Refused here, before any effect is declared.
+            require_agent_may_detach(catalogue.transactions[transaction_id], payload.attachment_ids)
 
         prepared = _PreparedAttachmentMutation(
             profile_id=payload.profile_id,

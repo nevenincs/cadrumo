@@ -5,7 +5,7 @@ tags:
 date: '2026-10-11'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:577e57e5d36578532f14ee2c9219056ada44bea77ce174a73434e04e05cc29b0'
+body_hash: 'sha256:e20b1245af06e843feb4f7db6a41f618ad8b1178beae200e5aaa4827710dcd34'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -23,6 +23,8 @@ Checked and found sound in review 1: a definition cannot list MCP against its re
 Review 2, 2026-10-11: before handoff, the sign-in door (`458418a63d`, `f45bf1eb42`, `f7decadcc6`), the declaration work (`808e4ccbf7`, `a2aea88f1f`, `0bc6e88234`) and the ledger writes (`6ab3941b45`, `915b264606`), base `fde91b1ebb`. Verdict: revision required, reopening the reader-locality work of `S42` and `S44` and the bulk classification of `S32`; the one-way split of `S35` awaits the owner. No critical finding.
 
 Checked and found sound in review 2: an MCP connection cannot send a password or have a sign-in stored; nothing it does moves either deadline; the lease is re-evaluated at each operation and effect, so sign-out, lock and expiry stop the session; sign-out and locking another session are refused to it; the profile and the surface are fixed by the session. Where the human kind of session gates an act, the MCP frontend is separately refused: session inventory, automation deny, profile resume and recovery, typed secrets (which covers key approval, password rotation and certificate secrets) and workbench generation admit only the command line and the terminal interface; review responses are bound to the submitting session; no definition that requires a person lists MCP. The receipt fix leaves no deletion a caller without the proof can trigger and wipes the unwrapped key. The actor is read from the worker's own binding and fails closed when the session is retired. The calculation variants, observation clear, the signed block, the off-machine read and the reaffirming run are refused whatever the action. Not checked: a running runtime end to end, POSIX, the Windows system proxy, translations.
+
+Review 3, 2026-10-11: re-review of the fixes in `ece30ed551`, base `0cbfe6a994`. Verdict: revision required for `S32`, `S35` and `S42`. The proxy fix holds against hostile addresses and no operation open to MCP writes the endpoint setting; the bulk classification fix holds on its own route; the release of results by admitting frontend holds on every path that returns content; the census is truthful for five of seven entries checked.
 
 ## Findings
 
@@ -90,6 +92,26 @@ Recording over a pending filing's observation (`src/cadrumo/application/modelo/l
 
 The model reviews of classification and split are open to MCP and a review response is bound to the submitting session, so on the MCP frontend the agent that asked for the proposal is also the one that applies it. The governing records rule that a model's proposal stays a proposal until accepted and do not say by whom on this frontend. Noted by the orchestrator while reading review 2. Open: a decision for the admission rulings record.
 
+### split-guard-stamp | high | The protection of a hand classification keyed on a last-writer stamp that operations open to MCP rewrite
+
+`src/cadrumo/application/ledger/split_operation.py:306` recognises the person's work by `classified_by` being `manual`, and `src/cadrumo/application/ledger/actions_manual.py:1706` re-stamps every write to a classified row. IVA derivation, open to MCP, replaces a hand-classified row's IVA figures and its stamp, after which the split is admitted. The two model reviews never consult the stamp, and the agent that submits a review also answers it, so applying a proposal replaces a hand classification or splits such a parent. Exclude replaces any active row's classification and only an operation closed to MCP puts it back. Detach empties the attachments the split guard reads. A classification the person accepted from a model or a derivation is not recognised as theirs at all. Review 3. Resolved 2026-10-11: the row records the origin of its classification (the person, an agent, or a rule or the pipeline), changed only by a write that changes the classification or its tax figures, and one predicate in `src/cadrumo/domain/transactions/classification_origin.py` decides whether a classification is the person's. A row stored before the change reads as the person's when it is classified and not stamped by a rule. An execution admitted on MCP is refused, before any effect, IVA derivation, both model reviews (before the model is asked and at the commit), the manual split and exclude on such a row, replacing an existing invoice link, and detaching evidence an agent did not link. Deriving then splitting, and detaching then splitting, both end refused. A proposal the person accepted is protected like one they typed.
+
+### bulk-precision | medium | The two-decimal rule was applied to shares and rates as well as amounts
+
+`src/cadrumo/application/ledger/classify_requests.py:63` limits the business share and the IVA rate to two fraction digits, so a share of 0.333 and rates such as 0.052 and 0.075 are refused where the stored models admit them. Review 3. Resolved 2026-10-11: the limit predated this work on the command line, which capped every decimal at two digits, and the move into the operations had carried it faithfully. A share and a rate are now fractions between 0 and 1 with no scale bound, as the domain and the registry's rates require, on the command line, the terminal interface and in the operations; money keeps two digits. The classification guide states it.
+
+### review-census-proof | medium | Two census proofs did not assert a stored actor
+
+`src/cadrumo/entrypoints/tests/test_operation_mcp_attribution_census.py:117` names a unit test that replaces the commit function and asserts its argument for the two model reviews. Review 3. Resolved 2026-10-11: both entries point at a test that runs a review to its commit through the real supervisor, executor and store and reads the actor from the stored event, with only the proposal function stood in.
+
+### provisioning-clients | low | Runtime probes of the same loopback endpoint still honour proxies
+
+`src/cadrumo/application/provisioning_host.py:178` and the probes in `src/cadrumo/application/provisioning_runtime.py` build clients that read proxy settings. They probe the reader's availability and were not read for whether any request body carries document text. Review 3. Open.
+
+### resumed-label | low | A person resuming an agent's operation is recorded under an agent label that carries the person's client
+
+`src/cadrumo/entrypoints/runtime/operation_authority.py:140`. The operation was admitted for an agent and stays sealed and attributed as an agent's; the label's client part is the resuming session's. Documented in the code. Review 3. Recorded, no action.
+
 ## Recommendations
 
 - For `surface-real-policy`: resolve each listed operation's real access policy in the surface test and keep a named, justified set for those that cannot be probed generically, as the admission test does.
@@ -100,3 +122,4 @@ The model reviews of classification and split are open to MCP and a review respo
 - For `bulk-classify-second-route` and `split-one-way`: the admission rulings record should say whether replacing a classification the person made, or a figure the person stated, is sensitive on every route, so that single classification, bulk classification, a reaffirming rule run and a split are ruled alike.
 - For `reader-proxy` and `reader-called-local`: one decision, in the record that governs off-machine consent, on what makes a read stay on this machine.
 - For `agent-answers-own-review`: the admission rulings record should say which review responses an agent may give on the MCP frontend and which wait for the person.
+- For `split-guard-stamp`: the rule now enforced is the conservative reading; the admission rulings record carries it as a row for the owner to confirm or relax, together with two neighbours it does not cover: an agent archiving or stashing the person's row, which restore undoes, and an agent replacing a usage ratio the person set, which the profile does not attribute.

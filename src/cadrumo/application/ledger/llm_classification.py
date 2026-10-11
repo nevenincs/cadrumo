@@ -60,6 +60,7 @@ from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH, Bucke
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.iva.saturation import resolve_category_rate, split_gross_at_rate
 from ...domain.iva.schema import IvaCategory
+from ...domain.transactions.classification_origin import written_classification_origin
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
 from ...domain.transactions.llm import (
@@ -74,6 +75,7 @@ from ...domain.transactions.llm import (
 )
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.service import set_classification
+from ..operations.execution_actor import actor_label_is_an_agents
 from .action_ports import LedgerActionPorts
 from .actions_common import (
     build_ledger_bucket_event,
@@ -84,6 +86,7 @@ from .actions_common import (
 )
 from .actions_manual import update_manual_transaction_fields
 from .actions_split_merge import split_transaction_with_classified_children
+from .agent_row_guard import require_actor_may_reclassify
 from .evidence_advisory import printed_iva_advisory
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .evidence_split import derive_child_amounts
@@ -655,6 +658,10 @@ def apply_llm_classification(
         business_pct=business_pct,
         category_id=category_id,
         classified_by=suggestion.provenance,
+        # Accepting a proposal is the decision of whoever accepted it.
+        origin=written_classification_origin(
+            by_agent=actor_label_is_an_agents(actor), classified_by=suggestion.provenance
+        ),
         reason=suggestion.reason,
         confidence=suggestion.confidence,
     )
@@ -664,6 +671,7 @@ def apply_llm_classification(
             "classification write dropped the transaction it was applied to",
             context={"transaction_id": str(suggestion.transaction_id)},
         )
+    require_actor_may_reclassify(actor=actor, current=current, replacement=updated_transaction)
     event = build_ledger_bucket_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,

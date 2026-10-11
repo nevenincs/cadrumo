@@ -12,7 +12,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.hashing import HEX_ALPHABET
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
@@ -43,6 +42,7 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import display_decimal, resolve_revision_guarded_transaction_repository
 from .actions_split_merge import split_transaction
+from .agent_row_guard import require_agent_may_set_aside
 from .id_resolution import resolve_transaction_id
 from .models import SplitChildCommand, SplitTransactionResult
 from .pinned_transaction_repository import PinnedRevisionedTransactionRepository
@@ -144,8 +144,9 @@ class LedgerSplitOperationResult(BaseModel):
     cohort. It archives the parent and the children and stores one new row for
     the parent's amount, so the parent's classification is entered again there.
     That is why an agent splits only a parent with none of that work to set
-    aside: a parent classified by hand, or linking evidence or an attachment, is
-    refused to it.
+    aside: a parent whose classification the person made or accepted, one that
+    links an invoice, or one carrying evidence an agent did not link, is refused
+    to it.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -231,7 +232,7 @@ class LedgerSplitExecutor:
             catalogue, revision_id = revisioned_repository.load_revisioned()
             transaction_id = resolve_transaction_id(payload.transaction_id, catalogue.transactions)
             if for_agent:
-                _require_parent_without_the_persons_work(catalogue.transactions[transaction_id])
+                require_agent_may_set_aside(catalogue.transactions[transaction_id])
             return _SplitParent(
                 ports=ports,
                 repository=revisioned_repository,
@@ -301,26 +302,6 @@ class _SplitParent:
     catalogue: TransactionCatalogue
     revision_id: str
     transaction_id: str
-
-
-def _require_parent_without_the_persons_work(parent: Transaction) -> None:
-    """Refuse an agent's split of a parent that carries work the split would set aside.
-
-    A split keeps the parent stored, but its classification, evidence and
-    attachments pass to none of the children, and only the merge, which waits
-    for the person, recombines the rows. A parent counts as carrying the
-    person's work when it was classified by hand (the stamp a person's
-    classification leaves, which a rule, the pipeline and a model's suggestion
-    do not use, so an unprocessed row has none), or links purchase-invoice
-    evidence, an invoice or an attachment.
-    """
-    if (
-        parent.classified_by == CLASSIFIED_BY_MANUAL
-        or parent.purchase_invoice_evidence_id is not None
-        or parent.invoice_id is not None
-        or parent.attachment_ids
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
 
 
 def _decode_decimal(value: str) -> Decimal:
