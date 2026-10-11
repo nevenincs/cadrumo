@@ -2,22 +2,21 @@
 
 These strict :class:`OutputSchema` subclasses
 are referenced as deferred public schema targets by production-authored CommandSpec
-and re-exported by :mod:`_modelo_payloads` so audit,
-work-history, workflow-run, list, and describe emitters keep one payload import
-surface. Validated results enter
+and re-exported by :mod:`_modelo_payloads` so audit, work-history and
+workflow-run emitters keep one payload import surface. Validated results enter
 :class:`SchemaEnvelope` through
 :func:`emit_envelope`.
 
 The application/modelo, workflow, and audit services remain authoritative for
-evidence-bundle manifests, work-unit event history, workflow runs, and modelo
-catalogue metadata; this module only pins CLI transport shapes.
+evidence-bundle manifests, work-unit event history and workflow runs; this
+module only pins CLI transport shapes.
 """
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import datetime
 
-from pydantic import Field, NonNegativeInt
+from pydantic import NonNegativeInt
 
 from ...application.evidence.bundle_text import EvidenceBundleNotes
 from ...application.evidence.models import BundleVerificationState
@@ -29,14 +28,11 @@ from ...application.workflow.run_models import (
     WorkflowStepDetails,
 )
 from ...core.aggregation import RetencionClave
-from ...core.authority_grade import RegistryAuthorityGrade
-from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
-from ...core.period import Period
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.unit_proportion import UnitFraction
 from ...domain.buckets.event import (
@@ -46,8 +42,6 @@ from ...domain.buckets.event import (
     BucketEventType,
     BucketObjectId,
 )
-from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
-from ...domain.calculations.registry.query_reports import ModeloDescribeReport
 from ._decimal_wire import NonNegativeDecimalWireText
 
 
@@ -236,102 +230,3 @@ class WorkRunDetailsResult(OutputSchema):
     summary_locale_key: NamespacedId
     summary_detail_kind: str | None = None
     summary_detail_facts: dict[str, str | int | bool | list[str] | None] | None = None
-
-
-class ModeloRowPayload(OutputSchema):
-    """One modelo row in the list modelos output."""
-
-    code: str
-    title: str
-    cadence: str
-    tax_domain: str
-    revision_count: int
-    local_work_supported: bool
-    local_work_status: str
-    local_work_guidance: str | None = None
-
-
-class ModeloListResult(OutputSchema):
-    """List modelos result."""
-
-    operation: str = "modelo.list"
-    year_filter: int | None = None
-    domain_filter: str | None = None
-    modelo_count: int
-    modelos: list[ModeloRowPayload]
-
-
-class ModeloDescribeResult(OutputSchema):
-    """Describe modelo result.
-
-    Complete JSON projection of
-    :class:`ModeloDescribeReport`. The
-    payload carries every field of the canonical report -- including the
-    declared ``authority_grade``, ``jurisdiction``, revision validity bounds,
-    per-input-kind casilla counts, and ``legal_refs`` / ``source_refs``
-    grounding -- because an operator justifying a revision selection needs the
-    same evidence the domain report holds. Build instances through
-    :meth:`from_report` rather than field-by-field, so a field added to the
-    report cannot silently stop at this boundary.
-    """
-
-    operation: str = "modelo.describe"
-    code: str
-    title: str
-    official_name: str
-    tax_domain: str
-    cadence: str
-    jurisdiction: str
-    revision: str
-    authority_grade: RegistryAuthorityGrade | None
-    filing_year: FilingYear | None = None
-    filing_period: Period | None = None
-    period: str | None = None
-    revision_ids: list[str]
-    periods: list[str]
-    valid_from: date
-    valid_to: date | None = None
-    casilla_count: NonNegativeInt
-    manual_casilla_count: NonNegativeInt
-    bound_casilla_count: NonNegativeInt
-    computed_casilla_count: NonNegativeInt
-    binding_count: NonNegativeInt
-    formula_count: NonNegativeInt
-    legal_refs: list[LegalRefId] = Field(default_factory=list)
-    source_refs: list[SourceRefId] = Field(default_factory=list)
-
-    @classmethod
-    def from_report(cls, report: ModeloDescribeReport) -> ModeloDescribeResult:
-        """Project every field of a canonical describe report into the envelope.
-
-        Args:
-            report: The domain-layer describe report to render.
-
-        Returns:
-            The strict CLI payload carrying the report's full field set.
-        """
-        return cls(
-            code=report.code,
-            title=report.title,
-            official_name=report.official_name,
-            tax_domain=report.tax_domain,
-            cadence=report.cadence,
-            jurisdiction=report.jurisdiction,
-            revision=report.revision,
-            authority_grade=report.authority_grade,
-            filing_year=report.filing_year,
-            filing_period=report.filing_period,
-            period=report.period,
-            revision_ids=list(report.revision_ids),
-            periods=list(report.periods),
-            valid_from=report.valid_from,
-            valid_to=report.valid_to,
-            casilla_count=report.casilla_count,
-            manual_casilla_count=report.manual_casilla_count,
-            bound_casilla_count=report.bound_casilla_count,
-            computed_casilla_count=report.computed_casilla_count,
-            binding_count=report.binding_count,
-            formula_count=report.formula_count,
-            legal_refs=list(report.legal_refs),
-            source_refs=list(report.source_refs),
-        )

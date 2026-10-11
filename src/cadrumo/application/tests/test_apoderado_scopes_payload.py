@@ -1,10 +1,10 @@
-"""Strict JSON payload checks for ``aeat config auth apoderado scopes list``.
+"""Strict payload checks for the representative-scope listing.
 
 ``ApoderadoScopesListResult`` used to be an untyped ``extra="allow"`` shell.
 It now projects :class:`~cadrumo.domain.auth.apoderamientos.ApoderamientosCatalogue`
 directly: a non-blank ``catalogue_version`` and typed
 :class:`~cadrumo.domain.auth.apoderamientos.catalogue.ApoderadoScope` rows,
-without duplicating the domain catalogue's validation in the CLI transport.
+without duplicating the domain catalogue's validation in the transport.
 """
 
 from __future__ import annotations
@@ -14,11 +14,11 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
-from .....core.json_contract import strict_round_trip
-from .....domain.auth.apoderamientos.catalogue import ApoderadoScope, load_default_catalogue
-from ...config_payloads import ApoderadoScopesListResult
+from ...core.json_contract import strict_round_trip
+from ...domain.auth.apoderamientos.catalogue import ApoderadoScope, load_default_catalogue
+from ..reference_catalogue_contracts import ApoderadoScopesListResult
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_apoderado_scopes_list_result_projects_real_catalogue() -> None:

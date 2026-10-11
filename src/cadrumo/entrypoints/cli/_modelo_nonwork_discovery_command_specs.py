@@ -92,7 +92,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "list_modelos", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget(".modelo_aux_payloads", "ModeloListResult", __package__),
+            DeferredTarget("...application.reference_catalogue_contracts", "ModeloListResult", __package__),
             identity="modelo.list",
         ),
     ),
@@ -139,7 +139,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "describe_modelo", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget(".modelo_aux_payloads", "ModeloDescribeResult", __package__),
+            DeferredTarget("...application.reference_catalogue_contracts", "ModeloDescribeResult", __package__),
             identity="modelo.describe",
         ),
     ),
@@ -215,7 +215,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "casillas", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "ModeloCasillasResult", __package__),
+            DeferredTarget("...application.reference_catalogue_contracts", "ModeloCasillasResult", __package__),
             identity="modelo.casillas",
         ),
     ),
@@ -241,7 +241,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "casilla", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "ModeloCasillaResult", __package__),
+            DeferredTarget("...application.reference_catalogue_contracts", "ModeloCasillaResult", __package__),
             identity="modelo.casilla",
         ),
     ),

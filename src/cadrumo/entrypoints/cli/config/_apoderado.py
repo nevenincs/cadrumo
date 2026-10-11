@@ -25,17 +25,12 @@ def apoderado_scopes_list(
 ) -> None:
     """List all available representative scopes in the vocabulary."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ..config_payloads import ApoderadoScopesListResult
+    from ....application.reference_catalogue import list_apoderado_scopes
+    from ..state_projection_support import authority_operation
 
-    catalogue = apoderado_catalogue(ctx)
-    lines = [f"{s.code}\t{tr(f'cli.config.auth.apoderado.scope.{s.code.lower()}')}" for s in catalogue.scopes]
-    # Projected field-by-field: a JSON round-trip hands the strict schema lists
-    # where the catalogue holds tuples, and the schema correctly refuses them.
-    scopes_result = ApoderadoScopesListResult(
-        catalogue_version=catalogue.catalogue_version,
-        scopes=list(catalogue.scopes),
-    )
-    emit_envelope(ctx, command="config.auth.apoderado.scopes.list", result=scopes_result, lines=lines)
+    result = list_apoderado_scopes(operation=authority_operation(ctx))
+    lines = [f"{s.code}\t{tr(f'cli.config.auth.apoderado.scope.{s.code.lower()}')}" for s in result.scopes]
+    emit_envelope(ctx, command="config.auth.apoderado.scopes.list", result=result, lines=lines)
 
 
 def apoderado_status(

@@ -71,7 +71,7 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("._app_live_portals_cli", "portals_list", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_portals_payloads", "PortalsListResult", __package__),
+            target=DeferredTarget("...application.reference_catalogue_contracts", "PortalsListResult", __package__),
             identity="app.live.portals.list",
         ),
     ),
@@ -96,7 +96,7 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("._app_live_portals_cli", "portals_show", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._app_live_portals_payloads", "PortalsViewResult", __package__),
+            target=DeferredTarget("...application.reference_catalogue_contracts", "PortalsViewResult", __package__),
             identity="app.live.portals.view",
         ),
     ),

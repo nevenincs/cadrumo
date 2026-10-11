@@ -60,23 +60,10 @@ def auth_providers(
 ) -> None:
     """List supported authentication providers from the backend catalogue."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.operator import list_operator_auth_providers
-    from ....application.auth.output import AuthProviderRow, AuthProvidersResult
+    from ....application.reference_catalogue import list_auth_providers
 
-    report = list_operator_auth_providers()
-    # `label` and `description` are Translatable translation keys, not text.
-    # Render both here so the JSON envelope carries the same words the text
-    # lines below do rather than the raw dotted key paths.
-    providers = [
-        AuthProviderRow(
-            id=provider.id,
-            label=tr(str(provider.label)),
-            description=tr(str(provider.description)),
-        )
-        for provider in report.providers
-    ]
-    result = AuthProvidersResult(providers=providers)
-    rows = [f"{provider.id}\t{provider.label}" for provider in providers]
+    result = list_auth_providers()
+    rows = [f"{provider.id}\t{provider.label}" for provider in result.providers]
     emit_envelope(ctx, command="config.auth.providers", result=result, lines=tuple(rows))
 
 

@@ -22,6 +22,8 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryError,
     RegistryValidationError,
 )
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.portals.categories import PortalCategory
 
 
 class _FieldSchema(TypedDict):
@@ -81,15 +83,49 @@ MCP_TOOL_CATALOGUE = (
     ),
     (
         "authority",
-        "Query one pinned published tax authority generation",
+        "Read bundled public reference data from one pinned published tax authority generation, with the content "
+        "the command line prints as JSON. modelos lists the registry's modelos (filing_year and domain narrow it); "
+        "support is the per-modelo capability matrix; describe, casillas, casilla (named by casilla) and formulas "
+        "read one modelo: give period alone for its latest revision, or filing_year with period to compose an exact "
+        "one (as_of needs the exact form); casillas narrows by input_kind, required, form_number and casilla_number; "
+        "bindings lists a modelo's bindings for a filing_year; categories lists the spending and IRPF category "
+        "vocabularies; portals lists the AEAT portal catalogue (narrow it by category or modelo, not both) and "
+        "portal reads one by id; auth_providers lists the sign-in providers; apoderado_scopes lists the "
+        "representative scopes. A ceded autonomic tax such as 600 or 650 is answered with its regional redirect",
         _schema(
             {
                 "query": {
                     "type": "string",
-                    "enum": ["modelos", "support", "describe", "casillas", "casilla", "formulas", "bindings"],
+                    "enum": [
+                        "modelos",
+                        "support",
+                        "describe",
+                        "casillas",
+                        "casilla",
+                        "formulas",
+                        "bindings",
+                        "categories",
+                        "portals",
+                        "portal",
+                        "auth_providers",
+                        "apoderado_scopes",
+                    ],
                 }
             },
-            {"modelo": _TEXT, "filing_year": {"type": "integer"}, "period": _TEXT, "casilla": _TEXT, "as_of": _TEXT},
+            {
+                "modelo": _TEXT,
+                "filing_year": {"type": "integer"},
+                "period": _TEXT,
+                "casilla": _TEXT,
+                "as_of": _TEXT,
+                "domain": _TEXT,
+                "input_kind": {"type": "string", "enum": [kind.value for kind in InputKind]},
+                "required": _FLAG,
+                "form_number": _TEXT,
+                "casilla_number": _TEXT,
+                "category": {"type": "string", "enum": [category.value for category in PortalCategory]},
+                "portal": _TEXT,
+            },
         ),
     ),
     (
@@ -141,7 +177,10 @@ MCP_TOOL_CATALOGUE = (
     (
         "result",
         "Read a settled registered result with fresh disclosure checks per page; "
-        "the result object needs only operation_id, and the runtime supplies the other identifying values",
+        "the result object needs only operation_id, and the runtime supplies the other identifying values. "
+        "An operation that settled refused or failed has no result: its document says operation_not_successful, "
+        "and error_detail beside it carries what the operation recorded about why, which is the registered "
+        "error code, the message key, the context and any precondition verdict the command line prints",
         _schema({"result": _DOC}),
     ),
     (

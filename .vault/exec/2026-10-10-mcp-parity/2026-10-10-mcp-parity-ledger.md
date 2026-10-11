@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a3947ce44c210fa863a1bda75e8f281ec06305912abb0f900f89ea364643592'
+body_hash: 'sha256:0a94443844a550e434a0027748adc02078321ff28360d285803a2b28d0b47fa2'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -1577,6 +1577,38 @@ related:
 - `S52` `verify:` `ty check on the six new modules` -> `pass`
 - `S52` `verify:` `ruff check on the six new modules` -> `pass`
 - `S52` `by:` `vaultspec-high-executor`
+- `S57` `A` `src/cadrumo/application/reference_catalogue.py`
+- `S57` `A` `src/cadrumo/application/reference_catalogue_contracts.py`
+- `S57` `A` `src/cadrumo/application/tests/test_reference_catalogue.py`
+- `S57` `A` `src/cadrumo/application/tests/test_apoderado_scopes_payload.py`
+- `S57` `D` `src/cadrumo/entrypoints/cli/config/tests/test_apoderado_scopes_payload.py`
+- `S57` `A` `src/cadrumo/entrypoints/tests/test_reference_catalogue_parity.py`
+- `S57` `M` `src/cadrumo_harness/mcp/authority_query.py`
+- `S57` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S57` `M` `src/cadrumo_harness/mcp/tests/test_runtime_authority.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/_modelo_discovery_rendering.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/_ledger_read_cli.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/_app_live_portals_cli.py`
+- `S57` `D` `src/cadrumo/entrypoints/cli/_app_live_portals_payloads.py`
+- `S57` `D` `src/cadrumo/entrypoints/cli/_modelo_support_matrix_payloads.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/_app_ledger_foundation_command_specs.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/_app_live_portals_command_specs.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_calculations_command_specs.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_discovery_command_specs.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/modelo_aux_payloads.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/config_payloads.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/config/_auth.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/config/_auth_command_specs.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/config/_apoderado.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_describe_payload_parity.py`
+- `S57` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_support_matrix_verb.py`
+- `S57` `verify:` `pytest reference catalogue, its parity test, the authority tool and the two command tests (131 tests)` -> `pass`
+- `S57` `verify:` `ty check on the service, its contracts and the authority query` -> `pass`
+- `S57` `verify:` `ruff check on the same three modules` -> `pass`
+- `S57` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1629,3 +1661,4 @@ related:
 - `S51` The connection guide, one technical article and the packaged agent rules, personas and skills no longer say that MCP refuses or withholds anything or that an approval screen exists. They say an agent runs every operation the command line can, and keep as the agent's own conduct that it tells the person and waits for the go-ahead before a destructive act. The statements that nothing is ever filed with the tax agency are unchanged. The connection guide's three catalogues are re-synced.
 - `S47` Correction: rows logged under this Step for paths under `src/cadrumo/_data/manual_corpus_text,` `src/cadrumo/_data/registry,` src/cadrumo/adapters/inbound/declaracion/tests and src/cadrumo/tests/fixtures were logged in error. Those changes belong to another session and are not part of this Step or its commit.
 - `S52` The door only: no act is registered in the installed composition, and the import inventory and the command table are regenerated once, in S61, when every family has landed. The command line keeps its in-process work.
+- `S57` The authority tool keeps every field it returned before and adds the command line's; the metadata inventories are regenerated once, in S61.

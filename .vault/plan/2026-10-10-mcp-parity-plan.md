@@ -15,7 +15,7 @@ related:
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
 modified: '2026-10-11'
 body_schema: body-v2
-body_hash: 'sha256:edc05eba7110fe3204a7ae7df340d6c62f0e45561526f45e16a61f14585fc3c6'
+body_hash: 'sha256:8db8b52bfa5462a6fb47a2b0c890a45305cae202a0c8d63cbaa69c4bf3c76dae'
 ---
 
 <!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
@@ -140,7 +140,7 @@ Delivers the rest of parity: about forty-five command-line commands do their wor
 - [ ] `P09.S54` - Register the repair operations that need a profile (secure-object check and quarantine, workflow progress reset, connectivity probe) and build the repair acts that need none (report, logs, profile pointer); `src/cadrumo/application/diagnostics.py`.
 - [ ] `P09.S55` - Build the storage acts and the acts of the reset of all profiles, and have the command line send them; `src/cadrumo/application/storage_management/service.py`.
 - [ ] `P09.S56` - Build the profile acts (list, archive inspect and import, recovery enrolment), register recovery revocation, and move into the operations what the censo import, archive export and profile delete commands did on the caller's side; `src/cadrumo/application/user_profile`.
-- [ ] `P09.S57` - Serve the reference reads (modelo catalogue, categories, portals, authentication providers, apoderado scopes) from one application service through the extended authority query, for all three frontends; `src/cadrumo_harness/mcp/authority_query.py`.
+- [x] `P09.S57` - Serve the reference reads (modelo catalogue, categories, portals, authentication providers, apoderado scopes) from one application service through the extended authority query, for all three frontends; `src/cadrumo_harness/mcp/authority_query.py`.
 - [ ] `P09.S58` - Build the review-package and report verification acts and move into the reconcile pull and report verify operations what their commands did on the caller's side; `src/cadrumo/application/modelo`.
 - [ ] `P09.S59` - Give the MCP harness an installation tool for the installation acts, with secrets on the protected frame and recovery enrolment on the session tool; `src/cadrumo_harness/mcp/protocol_contract.py`.
 - [ ] `P09.S60` - Give the terminal interface destinations for the reference reads and the installation acts; `src/cadrumo/entrypoints/tui`.

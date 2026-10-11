@@ -84,7 +84,6 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     FormulaId,
     LegalRefId,
-    ParameterId,
     RelationId,
     RevisionId,
     SourceRefId,
@@ -132,9 +131,6 @@ from .modelo_aux_payloads import (
     ModeloAuditCheckResult,
     ModeloAuditExportResult,
     ModeloAuditViewResult,
-    ModeloDescribeResult,
-    ModeloListResult,
-    ModeloRowPayload,
     WithholdingClaveBreakdownPayload,
     WorkflowRunPayload,
     WorkflowRunSummaryPayload,
@@ -480,20 +476,6 @@ class ModeloRecordPayload(OutputSchema):
         elif self.superseded_at < self.filed_at:
             raise ValueError("superseded_at must not precede filed_at")
         return self
-
-
-class FormulaPayload(OutputSchema):
-    """One formula row in the formulas command output."""
-
-    formula_id: FormulaId
-    target_casilla_id: CasillaId
-    input_casilla_ids: tuple[CasillaId, ...]
-    input_bindings: tuple[BindingId, ...]
-    input_parameters: tuple[ParameterId, ...]
-    input_relations: tuple[RelationId, ...]
-    expression: dict[str, object]
-    legal_refs: tuple[LegalRefId, ...]
-    source_refs: tuple[SourceRefId, ...]
 
 
 class WorkCreateResult(OutputSchema):
@@ -1039,16 +1021,6 @@ class VerificationReportShowResult(OutputSchema):
     findings: list[FindingPayload]
 
 
-class FormulasResult(OutputSchema):
-    operation: str = "modelo.formulas"
-    code: str
-    revision: str
-    filing_year: int | None = None
-    period: str | None = None
-    formula_count: int
-    rows: tuple[FormulaPayload, ...]
-
-
 class FilingRecordImportResult(ModeloRecordPayload):
     """Result emitted by ``aeat app modelo filing-record import``.
 
@@ -1159,62 +1131,6 @@ class FilingRecordLocalObservationResult(OutputSchema):
         if self.casilla_count != len(self.casilla_values):
             raise ValueError("casilla_count must equal the number of casilla values")
         return self
-
-
-class ModeloCasillaResult(OutputSchema):
-    """Single-casilla semantic detail returned by ``aeat app modelo casilla``.
-
-    Projects
-    :class:`ModeloCasillaDetailReport`
-    into the JSON envelope: an operator can look up one casilla's official
-    label, legal / source grounding, input kind, and, when the casilla is
-    computed, the resolved formula ``expression`` from the authoritative
-    :class:`CasillaId` definition on the
-    resolved registry snapshot, without running a calculation. ``legal_refs``
-    and ``source_refs`` stay required so the grounding survives the boundary.
-    """
-
-    operation: str = "modelo.casilla"
-    modelo: str
-    revision: str
-    filing_year: int | None = None
-    period: str | None = None
-    casilla_id: CasillaId
-    number: str
-    label: str
-    help_text: str | None = None
-    section: tuple[str, ...] = ()
-    data_type: str
-    input_kind: str
-    required: bool
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-    binding: BindingId | None = None
-    formula_id: FormulaId | None = None
-    formula_expression: dict[str, object] | None = None
-
-
-class CasillaRowPayload(OutputSchema):
-    """One casilla row in the casillas output."""
-
-    casilla_id: CasillaId
-    number: str
-    input_kind: str
-    required: bool
-    label: str
-    help_text: str | None = None
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-
-class ModeloCasillasResult(OutputSchema):
-    """Casillas listing result."""
-
-    operation: str = "modelo.casillas"
-    modelo: str
-    revision: str
-    casilla_count: int
-    rows: list[CasillaRowPayload]
 
 
 class DataInventoryCasillaPayload(OutputSchema):
@@ -1712,7 +1628,6 @@ __all__ = [
     "CalculationRevisionPayload",
     "CalculationRevisionSummaryPayload",
     "CasillaObservationPayload",
-    "CasillaRowPayload",
     "CompareSectionPayload",
     "CrossPeriodCleanStatePayload",
     "CrossPeriodDependencyEvidencePayload",
@@ -1724,8 +1639,6 @@ __all__ = [
     "FilingRecordImportResult",
     "FilingRecordLocalObservationResult",
     "FindingPayload",
-    "FormulaPayload",
-    "FormulasResult",
     "LedgerIssuePayload",
     "M100ProjectionPayload",
     "M130AccumulatedPayload",
@@ -1734,14 +1647,10 @@ __all__ = [
     "ModeloAuditCheckResult",
     "ModeloAuditExportResult",
     "ModeloAuditViewResult",
-    "ModeloCasillaResult",
-    "ModeloCasillasResult",
     "ModeloCompareResult",
-    "ModeloDescribeResult",
     "ModeloExportPayload",
     "ModeloHistoryResult",
     "ModeloLifecycleEventPayload",
-    "ModeloListResult",
     "ModeloProjectResult",
     "ModeloReadinessMissingBindingPayload",
     "ModeloReadinessMissingRequirementPayload",
@@ -1752,7 +1661,6 @@ __all__ = [
     "ModeloRecordPayload",
     "ModeloRecordShowResult",
     "ModeloRequiresResult",
-    "ModeloRowPayload",
     "VerificationReportListResult",
     "VerificationReportPayload",
     "VerificationReportShowResult",

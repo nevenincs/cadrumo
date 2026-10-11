@@ -21,6 +21,7 @@ import typer
 
 from ...application.export.tabular import ExportSerializationFormat
 from ...application.operator_actions.models import ActionReference
+from ...application.reference_catalogue import read_ledger_categories
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.i18n.render import tr
 from ...core.json_contract import (
@@ -51,6 +52,7 @@ if TYPE_CHECKING:
     from ...application.ledger.readiness_query import LedgerReadinessIssueV1
     from ...application.ledger.track_operation import LedgerTrackProjection
     from ...application.ledger.view_operation import LedgerViewProjection
+    from ...application.reference_catalogue_contracts import LedgerCategoriesResult
     from ...domain.invoices.service import LinkInconsistency
     from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
 
@@ -179,52 +181,28 @@ def _irpf_purpose_label(purpose: str) -> str:
     return purpose
 
 
-def _spending_category_projection() -> tuple[list[dict[str, object]], list[str], list[str]]:
-    from ...domain.categories.spending_category import SpendingCategoryFamily, categories_for_family
-    from ...domain.categories.spending_category_catalogue import spending_category_tokens
-
-    families: list[dict[str, object]] = []
-    lines: list[str] = [
+def _category_lines(result: LedgerCategoriesResult) -> list[str]:
+    lines = [
         tr("cli.ledger.categories.header"),
         f"{tr('cli.ledger.categories.id_column')}\t{tr('cli.ledger.categories.family_column')}",
     ]
     first_category_id: str | None = None
-    for family in SpendingCategoryFamily:
-        members = categories_for_family(family)
-        if not members:
-            continue
-        category_ids = tuple(member.value for member in members)
-        families.append({"family": family.value, "category_ids": list(category_ids)})
-        for category_id in category_ids:
+    for family in result.families:
+        for category_id in family.category_ids:
             if first_category_id is None:
                 first_category_id = category_id
-            lines.append(f"{category_id}\t{family.value}")
+            lines.append(f"{category_id}\t{family.family}")
     if first_category_id is not None:
         lines.append(tr("cli.ledger.categories.usage_example", example=first_category_id))
     lines.append(tr("cli.ledger.categories.income_note"))
-    return families, [category.value for category in spending_category_tokens()], lines
-
-
-def _irpf_category_projection() -> tuple[list[dict[str, object]], list[str]]:
-    from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
-
-    irpf_categories: list[dict[str, object]] = [
-        {
-            "id": category.id,
-            "purpose": category.purpose,
-            "directions": [direction.value for direction in category.directions],
-            "net_paid_invoice": category.net_paid,
-            "related_category_ids": list(category.related_ids),
-        }
-        for category in ledger_irpf_category_catalogue()
-    ]
-    lines = [
-        "",
-        tr("cli.ledger.categories.irpf_header"),
-        f"{tr('cli.ledger.categories.irpf_id_column')}\t{tr('cli.ledger.categories.irpf_use_column')}",
-    ]
-    for category in irpf_categories:
-        lines.append(f"{category['id']}\t{_irpf_purpose_label(str(category['purpose']))}")
+    lines.extend(
+        [
+            "",
+            tr("cli.ledger.categories.irpf_header"),
+            f"{tr('cli.ledger.categories.irpf_id_column')}\t{tr('cli.ledger.categories.irpf_use_column')}",
+        ]
+    )
+    lines.extend(f"{category.id}\t{_irpf_purpose_label(category.purpose)}" for category in result.irpf_categories)
     lines.append(
         tr(
             "cli.ledger.categories.irpf_usage_example",
@@ -233,43 +211,15 @@ def _irpf_category_projection() -> tuple[list[dict[str, object]], list[str]]:
             activity_category="actividad_economica",
         )
     )
-    return irpf_categories, lines
-
-
-def _ledger_categories_payload(
-    families: list[dict[str, object]],
-    category_ids: list[str],
-    irpf_categories: list[dict[str, object]],
-) -> dict[str, object]:
-    return {
-        "families": families,
-        "category_ids": category_ids,
-        "irpf_categories": irpf_categories,
-        "irpf_category_ids": [category["id"] for category in irpf_categories],
-        "net_paid_withholding_irpf_category_ids": [
-            category["id"] for category in irpf_categories if category["net_paid_invoice"]
-        ],
-        "income_requires_category": False,
-    }
+    return lines
 
 
 def ledger_categories(ctx: typer.Context) -> None:
     """List the recognised `--category-id` spending-category catalogue."""
     # The category catalogue is registry authority, read under the command's lease.
     authority_operation(ctx)
-    families, category_ids, spending_lines = _spending_category_projection()
-    irpf_categories, irpf_lines = _irpf_category_projection()
-    lines = [*spending_lines, *irpf_lines]
-    from ._ledger_payloads import LedgerCategoriesResult
-
-    emit_envelope(
-        ctx,
-        command="ledger.categories",
-        result=LedgerCategoriesResult.model_validate(
-            _ledger_categories_payload(families, category_ids, irpf_categories),
-        ),
-        lines=lines,
-    )
+    result = read_ledger_categories()
+    emit_envelope(ctx, command="ledger.categories", result=result, lines=_category_lines(result))
 
 
 def _link_inconsistency_notices(rows: tuple[LinkInconsistency, ...]) -> list[Notice]:

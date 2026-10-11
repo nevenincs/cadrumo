@@ -3,9 +3,9 @@
 See Also:
     :func:`~entrypoints.cli._modelo_discovery_cli._register_support_matrix_command`
         Typer registration for the operator-facing command covered here.
-    :func:`~entrypoints.cli._modelo_discovery_cli._support_matrix_entry_payload`
-        Transport mapper from registry rows to CLI payload rows.
-    :class:`~entrypoints.cli._modelo_support_matrix_payloads.ModeloSupportMatrixResult`
+    :func:`~application.reference_catalogue.read_support_matrix`
+        Transport mapper from registry rows to payload rows.
+    :class:`~application.reference_catalogue_contracts.ModeloSupportMatrixResult`
         Registered JSON result schema asserted by the envelope checks.
     :func:`~application.modelo.registry_discovery.registry_support_matrix`
         Application query called by the CLI command.

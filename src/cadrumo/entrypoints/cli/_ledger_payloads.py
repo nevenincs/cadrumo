@@ -199,23 +199,6 @@ class BulkClassifyFailurePayload(OutputSchema):
     reason: str
 
 
-class SpendingCategoryFamilyPayload(OutputSchema):
-    """One spending category family entry in the categories catalogue."""
-
-    family: str
-    category_ids: list[str]
-
-
-class LedgerIrpfCategoryPayload(OutputSchema):
-    """One ``--irpf-category`` value exposed by ``ledger categories``."""
-
-    id: str
-    purpose: str
-    directions: list[str]
-    net_paid_invoice: bool
-    related_category_ids: list[str]
-
-
 class LedgerReviewRowPayload(OutputSchema):
     """One :class:`LedgerReviewRow` transport row.
 
@@ -757,17 +740,6 @@ class LedgerHistoryResult(OutputSchema):
     events: list[LedgerHistoryEventPayload]
 
 
-class LedgerCategoriesResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger categories``."""
-
-    families: list[SpendingCategoryFamilyPayload]
-    category_ids: list[str]
-    irpf_categories: list[LedgerIrpfCategoryPayload]
-    irpf_category_ids: list[str]
-    net_paid_withholding_irpf_category_ids: list[str]
-    income_requires_category: bool
-
-
 # ---------------------------------------------------------------------------
 # Import / export / track / review verb result schemas
 # ---------------------------------------------------------------------------
@@ -1267,7 +1239,6 @@ __all__ = [
     "LedgerAllocateResult",
     "LedgerArchiveResult",
     "LedgerAttachResult",
-    "LedgerCategoriesResult",
     "LedgerCheckResult",
     "LedgerClassifyBulkResult",
     "LedgerClassifyResult",
@@ -1283,7 +1254,6 @@ __all__ = [
     "LedgerImportSourcePayload",
     "LedgerImportTransactionRefPayload",
     "LedgerImportValidationPayload",
-    "LedgerIrpfCategoryPayload",
     "LedgerLinkInconsistencyPayload",
     "LedgerLinkResult",
     "LedgerListResult",
@@ -1318,7 +1288,6 @@ __all__ = [
     "M210IncomeClassificationPayload",
     "RuleApplyAppliedPayload",
     "RuleApplyMatchPayload",
-    "SpendingCategoryFamilyPayload",
     "TransactionPayload",
     "_LedgerMutationResult",
 ]

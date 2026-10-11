@@ -47,7 +47,6 @@ from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.requirement import RequirementValue
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time.utc import validate_utc_aware
-from ...domain.auth.apoderamientos.catalogue import ApoderadoScope
 from ...domain.user_profile.values import PayloadSchemaVersion, ProfileSetupState
 from ._config_quarantine_payloads import QuarantineNamespacePayload
 
@@ -1025,18 +1024,6 @@ class ApoderadoClearResult(OutputSchema):
 
     bucket_id: BucketId
     cleared: bool
-
-
-class ApoderadoScopesListResult(OutputSchema):
-    """JSON envelope for ``aeat config auth apoderado scopes list``.
-
-    Projects the apoderado scope catalogue payload from its authoritative
-    domain :class:`ApoderamientosCatalogue` records without restating their
-    validation rules in the transport layer.
-    """
-
-    catalogue_version: NonEmptyStr
-    scopes: list[ApoderadoScope]
 
 
 # Certificate source registry verb result schemas

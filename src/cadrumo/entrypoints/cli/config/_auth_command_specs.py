@@ -46,6 +46,11 @@ _AUTH_PROVIDERS_SCHEMA = ResultSchemaSpec(
     target=DeferredTarget("....application.auth.output", "AuthProvidersResult", __package__),
     identity="config.auth.providers",
 )
+_APODERADO_SCOPES_SCHEMA = ResultSchemaSpec(
+    SchemaState.TARGET,
+    target=DeferredTarget("....application.reference_catalogue_contracts", "ApoderadoScopesListResult", __package__),
+    identity="config.auth.apoderado.scopes.list",
+)
 
 
 def _option(
@@ -346,7 +351,7 @@ AUTH_COMMAND_SPECS = (
         "cli.config.auth.apoderado.scopes.list_help",
         "_apoderado",
         "apoderado_scopes_list",
-        "ApoderadoScopesListResult",
+        _APODERADO_SCOPES_SCHEMA,
         ENCRYPTED_READ,
     ),
     state_free_group_spec("config_auth_certificate", "config_auth", "certificate", "cli.config.auth.certificate.help"),

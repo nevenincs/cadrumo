@@ -11,7 +11,7 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.modelo.registry_discovery import registry_support_matrix
+from cadrumo.application import reference_catalogue
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry import authority as authority_module
 from cadrumo.domain.calculations.registry.authority import (
@@ -33,7 +33,6 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_revision,
     synthetic_legal_identity,
 )
-from cadrumo_harness.mcp import authority_query as mcp_authority
 from cadrumo_harness.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_harness.mcp.server import build_server
 from cadrumo_harness.mcp.tests.session import connected_server_and_client_session
@@ -52,6 +51,11 @@ async def _assert_all_advertised_authority_queries_refuse(adapter: RuntimeMcpAda
         "casillas": {"modelo": "100", "filing_year": 2024, "period": "0A"},
         "casilla": {"modelo": "100", "filing_year": 2024, "period": "0A", "casilla": "0505"},
         "formulas": {"modelo": "100", "filing_year": 2024, "period": "0A"},
+        "categories": {},
+        "portals": {},
+        "portal": {"portal": "portal_sede_root"},
+        "auth_providers": {},
+        "apoderado_scopes": {},
     }
     async with connected_server_and_client_session(build_server(adapter)) as client:
         tools = (await client.list_tools()).tools
@@ -90,19 +94,13 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
 
         low_grade = await adapter.call(
             "authority",
-            {
-                "query": "describe",
-                "modelo": "036",
-                "filing_year": 2024,
-                "period": "alta",
-                "as_of": "2024-12-31",
-            },
+            {"query": "describe", "modelo": "036", "period": "alta"},
         )
         assert low_grade["outcome"] == "published"
         assert low_grade["report"]["authority_grade"] == "applicability"
 
         with bundled_indexed_authority().operation() as operation:
-            canonical_support = registry_support_matrix(operation=operation).model_dump(mode="json")
+            canonical_support = reference_catalogue.read_support_matrix(operation=operation).model_dump(mode="json")
         support = await adapter.call("authority", {"query": "support"})
 
         assert support["outcome"] == "published"
@@ -137,7 +135,7 @@ async def test_public_authority_answers_a_connection_with_no_key_no_profile_and_
 async def test_authority_response_provenance_matches_the_pin_passed_to_the_real_query(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    canonical_query = mcp_authority.registry_describe_modelo_for_registry_scope
+    canonical_query = reference_catalogue.registry_describe_modelo_for_registry_scope
     observed_pins: list[AuthorityGenerationPin] = []
 
     def record_pin_and_run_query(
@@ -157,7 +155,7 @@ async def test_authority_response_provenance_matches_the_pin_passed_to_the_real_
             operation=operation,
         )
 
-    monkeypatch.setattr(mcp_authority, "registry_describe_modelo_for_registry_scope", record_pin_and_run_query)
+    monkeypatch.setattr(reference_catalogue, "registry_describe_modelo_for_registry_scope", record_pin_and_run_query)
     adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
     try:
         result = await adapter.call(
@@ -245,10 +243,10 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
     second_artifact = replace(first_artifact, identity_digest=synthetic_legal_identity("mcp-second-publication"))
     first = publish_authority_artifact(first_artifact)
     authority = IndexedRegistryAuthority(tmp_path / _DESCRIPTOR_NAME)
-    canonical_query = mcp_authority.registry_support_matrix
+    canonical_query = reference_catalogue.registry_support_matrix
     with authority.operation() as initial:
         first_pin = initial.pin()
-        expected = canonical_query(operation=initial).model_dump(mode="json")
+        expected = reference_catalogue.read_support_matrix(operation=initial).model_dump(mode="json")
 
     def cut_over_and_query(*, operation: PinnedAuthorityOperation) -> object:
         assert operation.pin() == first_pin
@@ -258,7 +256,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
         return canonical_query(operation=operation)
 
     monkeypatch.setattr(authority_module, "_bundled_indexed_authority", authority)
-    monkeypatch.setattr(mcp_authority, "registry_support_matrix", cut_over_and_query)
+    monkeypatch.setattr(reference_catalogue, "registry_support_matrix", cut_over_and_query)
     adapter = RuntimeMcpAdapter(profile_id=uuid4(), client=None)
     try:
         async with connected_server_and_client_session(build_server(adapter)) as client:
@@ -270,7 +268,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
                 "reader_incarnation": first_pin.reader_incarnation,
                 "report": expected,
             }
-            monkeypatch.setattr(mcp_authority, "registry_support_matrix", canonical_query)
+            monkeypatch.setattr(reference_catalogue, "registry_support_matrix", canonical_query)
             current = await client.call_tool("authority", {"query": "support"})
             assert current.is_error is False
             assert isinstance(current.structured_content, dict)

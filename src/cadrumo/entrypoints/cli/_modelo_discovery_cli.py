@@ -9,6 +9,7 @@ from uuid import UUID
 
 import typer
 
+from ...application import reference_catalogue as catalogue
 from ...application.modelo.query_read_contracts import (
     ModeloBindingOverride,
     ModeloBindingRowV1,
@@ -17,22 +18,13 @@ from ...application.modelo.query_read_contracts import (
     ModeloBindingsResolveRequest,
     ModeloRequiresRequest,
 )
-from ...application.modelo.registry_discovery import (
-    registry_casilla,
-    registry_casilla_for_registry_scope,
-    registry_casillas,
-    registry_casillas_for_registry_scope,
-    registry_describe_modelo,
-    registry_describe_modelo_for_registry_scope,
-    registry_formulas,
-    registry_formulas_for_registry_scope,
-    registry_list_modelos,
-    registry_support_matrix,
-)
-from ...application.modelo.work_create_policy import (
-    ceded_autonomic_modelo_locale_key,
-)
 from ...application.operations.public_period import PublicPeriod
+from ...application.reference_catalogue import (
+    CededAutonomicModeloError,
+    DiscoveryScopeIncompleteError,
+    ReferenceQueryError,
+    refuse_ceded_autonomic_modelo,
+)
 from ...application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
 from ...core.aggregation import BindingSourceKind
 from ...core.external_constants import OutputLanguage
@@ -41,7 +33,6 @@ from ...core.period import Period
 from ...core.tax_domain import TaxDomain
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ...domain.calculations.registry.query_reports import ModeloCasillasReport
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from . import _modelo_discovery_rendering as discovery_rendering
 from ._date_parsing import _parse_iso_date
@@ -54,18 +45,10 @@ from ._modelo_bindings_payloads import (
     ModeloBindingsPreviewResult,
 )
 from ._modelo_cli_support import bad_parameter_from_error, parse_binding_override
-from ._modelo_payloads import (
-    FormulaPayload,
-    FormulasResult,
-    ModeloCasillaResult,
-    ModeloCasillasResult,
-    ModeloRequiresResult,
-)
+from ._modelo_payloads import ModeloRequiresResult
 from ._modelo_rendering import binding_encoded_option_lines
-from ._modelo_support_matrix_payloads import ModeloSupportMatrixResult
 from .common import active_bucket_id_or_refuse, emit_envelope
 from .errors import CliRefusedBoundaryError
-from .modelo_aux_payloads import ModeloDescribeResult, ModeloListResult
 from .runtime_modelo_query_read import (
     read_modelo_bindings_list,
     read_modelo_bindings_resolve,
@@ -91,16 +74,19 @@ deps = _DiscoveryDeps(
 )
 
 
-@dataclass(frozen=True, slots=True)
-class _RegistryDiscoveryScope:
-    filing_year: int
-    period: str
-
-
 def _as_of(raw: str | None) -> date | None:
     if raw is None:
         return None
     return _parse_iso_date(raw, label="--as-of")
+
+
+def _command_error(error: ReferenceQueryError) -> Exception:
+    """Render a reference read's coordinate refusal in the command line's own terms."""
+    if isinstance(error, CededAutonomicModeloError):
+        return CliRefusedBoundaryError(translated_message=error.locale_key, context={"modelo": error.modelo})
+    if isinstance(error, DiscoveryScopeIncompleteError):
+        return typer.BadParameter("--year requires --period")
+    return typer.BadParameter(str(error))
 
 
 def guard_ceded_autonomic_modelo(modelo: str) -> None:
@@ -113,13 +99,10 @@ def guard_ceded_autonomic_modelo(modelo: str) -> None:
     refusal instead, naming the ceded tax and its regional filing route, and is
     a no-op for every registry-backed or genuinely unknown code.
     """
-    from .errors import CliRefusedBoundaryError
-
-    modelo_code = modelo.strip()
-    locale_key = ceded_autonomic_modelo_locale_key(modelo_code)
-    if locale_key is None:
-        return
-    raise CliRefusedBoundaryError(translated_message=locale_key, context={"modelo": modelo_code})
+    try:
+        refuse_ceded_autonomic_modelo(modelo)
+    except CededAutonomicModeloError as error:
+        raise _command_error(error) from error
 
 
 def _run_query[QueryResultT](
@@ -129,27 +112,10 @@ def _run_query[QueryResultT](
 ) -> QueryResultT:
     try:
         return call()
+    except ReferenceQueryError as error:
+        raise _command_error(error) from error
     except (ValueError, RegistrySnapshotError) as exc:
         raise bad_parameter_from_error(exc) from exc
-
-
-def _required_period_with_year(*, year: int | None, period: str | None) -> str | None:
-    """Return the period a ``--year`` scope requires, or ``None`` when no year was given."""
-    if year is None:
-        return None
-    if period is None or not period.strip():
-        raise typer.BadParameter("--year requires --period")
-    return period
-
-
-def _resolve_discovery_year_period(
-    *, modelo: str, year: int | None, period: str | None, deps: _DiscoveryDeps
-) -> _RegistryDiscoveryScope | None:
-    required_period = _required_period_with_year(year=year, period=period)
-    if year is None or required_period is None:
-        return None
-    resolved = deps.resolve_year_period(year, required_period, modelo=modelo)
-    return _RegistryDiscoveryScope(filing_year=resolved.filing_year, period=resolved.registry_token)
 
 
 def _required_binding_scope(*, modelo: str | None, year: int | None, period: str | None) -> tuple[str, int, str]:
@@ -178,23 +144,16 @@ __all__ = [
 
 
 def list_modelos(ctx: typer.Context, year: int | None = None, domain: TaxDomain | None = None) -> None:
-    report = _run_query(
-        lambda: registry_list_modelos(year=year, domain=domain, operation=authority_operation(ctx)),
+    result = _run_query(
+        lambda: catalogue.list_modelos(year=year, domain=domain, operation=authority_operation(ctx)),
         bad_parameter_from_error=deps.bad_parameter_from_error,
-    )
-    modelos = [discovery_rendering.modelo_row_payload(row) for row in report.modelos]
-    result = ModeloListResult(
-        year_filter=year,
-        domain_filter=domain.value if domain is not None else None,
-        modelo_count=len(report.modelos),
-        modelos=modelos,
     )
     lines = [
         "code\ttitle\tcadence\tdomain\trevisions\tlocal_work\tlocal_work_guidance",
         *[
             f"{row.code}\t{row.title}\t{row.cadence}\t{row.tax_domain}\t"
             f"{row.revision_count}\t{row.local_work_status}\t{row.local_work_guidance or '-'}"
-            for row in modelos
+            for row in result.modelos
         ],
     ]
     emit_envelope(ctx, command="modelo.list", result=result, lines=lines)
@@ -203,80 +162,32 @@ def list_modelos(ctx: typer.Context, year: int | None = None, domain: TaxDomain 
 def describe_modelo(
     ctx: typer.Context, modelo: str, year: int | None = None, period: str | None = None, as_of: str | None = None
 ) -> None:
-    guard_ceded_autonomic_modelo(modelo)
+    operation = authority_operation(ctx)
     try:
-        resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
-        if resolved_scope is not None:
-            report = registry_describe_modelo_for_registry_scope(
-                modelo,
-                filing_year=resolved_scope.filing_year,
-                period=resolved_scope.period,
-                as_of=_as_of(as_of),
-                operation=authority_operation(ctx),
-            )
-        else:
-            report = registry_describe_modelo(
-                modelo, period=period, as_of=_as_of(as_of), operation=authority_operation(ctx)
-            )
+        result = catalogue.describe_modelo(modelo, year=year, period=period, as_of=_as_of(as_of), operation=operation)
+    except ReferenceQueryError as error:
+        raise _command_error(error) from error
     except (ValueError, RegistrySnapshotError, RegistryValidationError) as exc:
         message = str(exc)
         if period is not None and "period" in message.lower():
             raise typer.BadParameter(
-                deps.bare_period_error(modelo, period, fallback=message, operation=authority_operation(ctx))
+                deps.bare_period_error(modelo, period, fallback=message, operation=operation)
             ) from exc
         raise typer.BadParameter(tr("cli.app.modelo.describe.period_error", message=message)) from exc
-    result = ModeloDescribeResult.from_report(report)
     lines = [
-        f"{tr('cli.app.modelo.describe.label_modelo')}\t{report.code}",
-        f"{tr('cli.app.modelo.describe.label_title')}\t{report.title}",
-        f"{tr('cli.app.modelo.describe.label_official_name')}\t{report.official_name}",
-        f"{tr('cli.app.modelo.describe.label_tax_domain')}\t{report.tax_domain}",
-        f"{tr('cli.app.modelo.describe.label_cadence')}\t{report.cadence}",
-        f"{tr('cli.app.modelo.describe.label_revision')}\t{report.revision}",
-        f"{tr('cli.app.modelo.describe.label_revision_ids')}\t{', '.join(report.revision_ids)}",
-        f"{tr('cli.app.modelo.describe.label_periods')}\t{', '.join(report.periods)}",
-        f"{tr('cli.app.modelo.describe.label_casillas')}\t{report.casilla_count}",
-        f"{tr('cli.app.modelo.describe.label_bindings')}\t{report.binding_count}",
-        f"{tr('cli.app.modelo.describe.label_formulas')}\t{report.formula_count}",
+        f"{tr('cli.app.modelo.describe.label_modelo')}\t{result.code}",
+        f"{tr('cli.app.modelo.describe.label_title')}\t{result.title}",
+        f"{tr('cli.app.modelo.describe.label_official_name')}\t{result.official_name}",
+        f"{tr('cli.app.modelo.describe.label_tax_domain')}\t{result.tax_domain}",
+        f"{tr('cli.app.modelo.describe.label_cadence')}\t{result.cadence}",
+        f"{tr('cli.app.modelo.describe.label_revision')}\t{result.revision}",
+        f"{tr('cli.app.modelo.describe.label_revision_ids')}\t{', '.join(result.revision_ids)}",
+        f"{tr('cli.app.modelo.describe.label_periods')}\t{', '.join(result.periods)}",
+        f"{tr('cli.app.modelo.describe.label_casillas')}\t{result.casilla_count}",
+        f"{tr('cli.app.modelo.describe.label_bindings')}\t{result.binding_count}",
+        f"{tr('cli.app.modelo.describe.label_formulas')}\t{result.formula_count}",
     ]
     emit_envelope(ctx, command="modelo.describe", result=result, lines=lines)
-
-
-def _casillas_report(
-    *,
-    modelo: str,
-    year: int | None,
-    period: str | None,
-    as_of: str | None,
-    input_kind: InputKind | None,
-    required: bool,
-    form_number: str | None,
-    operation: PinnedAuthorityOperation,
-) -> ModeloCasillasReport:
-    def _query() -> ModeloCasillasReport:
-        resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
-        if resolved_scope is not None:
-            return registry_casillas_for_registry_scope(
-                modelo,
-                filing_year=resolved_scope.filing_year,
-                period=resolved_scope.period,
-                as_of=_as_of(as_of),
-                input_kind=input_kind,
-                required=True if required else None,
-                form_number=form_number,
-                operation=operation,
-            )
-        return registry_casillas(
-            modelo,
-            period=period,
-            as_of=_as_of(as_of),
-            input_kind=input_kind,
-            required=True if required else None,
-            form_number=form_number,
-            operation=operation,
-        )
-
-    return _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
 
 
 def casillas(
@@ -291,33 +202,21 @@ def casillas(
     casilla_number: str | None = None,
     explain: bool = False,
 ) -> None:
-    guard_ceded_autonomic_modelo(modelo)
-    report = _casillas_report(
-        modelo=modelo,
-        year=year,
-        period=period,
-        as_of=as_of,
-        input_kind=input_kind,
-        required=required,
-        form_number=form_number,
-        operation=authority_operation(ctx),
+    result = _run_query(
+        lambda: catalogue.list_casillas(
+            modelo,
+            year=year,
+            period=period,
+            as_of=_as_of(as_of),
+            input_kind=input_kind,
+            required=required,
+            form_number=form_number,
+            casilla_number=casilla_number,
+            operation=authority_operation(ctx),
+        ),
+        bad_parameter_from_error=deps.bad_parameter_from_error,
     )
-    number_filter = casilla_number.strip() if casilla_number is not None else None
-    if number_filter:
-        report = report.model_copy(
-            update={
-                "rows": tuple(
-                    row for row in report.rows if row.number == number_filter or row.casilla_id == number_filter
-                )
-            }
-        )
-    result = ModeloCasillasResult(
-        modelo=report.code,
-        revision=report.revision,
-        casilla_count=len(report.rows),
-        rows=discovery_rendering.casilla_row_payloads(report),
-    )
-    lines = discovery_rendering.casillas_lines(report, explain=explain)
+    lines = discovery_rendering.casillas_lines(result, explain=explain)
     emit_envelope(ctx, command="modelo.casillas", result=result, lines=lines)
 
 
@@ -329,64 +228,36 @@ def casilla(
     period: str | None = None,
     as_of: str | None = None,
 ) -> None:
-    guard_ceded_autonomic_modelo(modelo)
-
-    def _query():
-        resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
-        if resolved_scope is not None:
-            return registry_casilla_for_registry_scope(
-                modelo,
-                casilla_id,
-                filing_year=resolved_scope.filing_year,
-                period=resolved_scope.period,
-                as_of=_as_of(as_of),
-                operation=authority_operation(ctx),
-            )
-        return registry_casilla(
-            modelo, casilla_id, period=period, as_of=_as_of(as_of), operation=authority_operation(ctx)
-        )
-
-    report = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
-    label = report.label
-    result = ModeloCasillaResult(
-        modelo=report.code,
-        revision=report.revision,
-        filing_year=report.filing_year,
-        period=report.period,
-        casilla_id=report.casilla_id,
-        number=report.number,
-        label=label,
-        help_text=report.help_text,
-        section=tuple(report.section),
-        data_type=report.data_type,
-        input_kind=str(report.input_kind),
-        required=bool(report.required),
-        legal_refs=tuple(report.legal_refs),
-        source_refs=tuple(report.source_refs),
-        binding=report.binding,
-        formula_id=report.formula_id,
-        formula_expression=dict(report.formula_expression) if report.formula_expression is not None else None,
+    result = _run_query(
+        lambda: catalogue.describe_casilla(
+            modelo,
+            casilla_id,
+            year=year,
+            period=period,
+            as_of=_as_of(as_of),
+            operation=authority_operation(ctx),
+        ),
+        bad_parameter_from_error=deps.bad_parameter_from_error,
     )
     lines = [
-        f"modelo\t{report.code}",
-        f"revision\t{report.revision}",
-        f"casilla_id\t{report.casilla_id}",
-        f"number\t{report.number}",
-        f"input_kind\t{report.input_kind}",
-        f"required\t{str(bool(report.required)).lower()}",
-        f"data_type\t{report.data_type}",
-        f"label\t{label}",
-        f"section\t{' > '.join(report.section)}",
-        f"legal_refs\t{', '.join(report.legal_refs)}",
-        f"source_refs\t{', '.join(report.source_refs)}",
-        f"binding\t{report.binding or '-'}",
-        f"formula_id\t{report.formula_id or '-'}",
+        f"modelo\t{result.modelo}",
+        f"revision\t{result.revision}",
+        f"casilla_id\t{result.casilla_id}",
+        f"number\t{result.number}",
+        f"input_kind\t{result.input_kind}",
+        f"required\t{str(result.required).lower()}",
+        f"data_type\t{result.data_type}",
+        f"label\t{result.label}",
+        f"section\t{' > '.join(result.section)}",
+        f"legal_refs\t{', '.join(result.legal_refs)}",
+        f"source_refs\t{', '.join(result.source_refs)}",
+        f"binding\t{result.binding or '-'}",
+        f"formula_id\t{result.formula_id or '-'}",
     ]
-    help_text = report.help_text
-    if help_text:
-        lines.append(f"help\t{help_text}")
-    if report.formula_expression is not None:
-        lines.append(f"formula_expression\t{report.formula_expression}")
+    if result.help_text:
+        lines.append(f"help\t{result.help_text}")
+    if result.formula_expression is not None:
+        lines.append(f"formula_expression\t{result.formula_expression}")
     emit_envelope(ctx, command="modelo.casilla", result=result, lines=lines)
 
 
@@ -618,55 +489,23 @@ def formulas(
     as_of: str | None = None,
     explain: bool = False,
 ) -> None:
-    guard_ceded_autonomic_modelo(modelo)
-
-    def _query():
-        resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
-        if resolved_scope is not None:
-            return registry_formulas_for_registry_scope(
-                modelo,
-                filing_year=resolved_scope.filing_year,
-                period=resolved_scope.period,
-                as_of=_as_of(as_of),
-                operation=authority_operation(ctx),
-            )
-        return registry_formulas(modelo, period=period, as_of=_as_of(as_of), operation=authority_operation(ctx))
-
-    report = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
-    lines = discovery_rendering.formula_lines(report, explain=explain)
-    result = FormulasResult(
-        code=report.code,
-        revision=report.revision,
-        filing_year=report.filing_year,
-        period=report.period,
-        formula_count=len(report.rows),
-        rows=tuple(
-            FormulaPayload(
-                formula_id=row.formula_id,
-                target_casilla_id=row.target_casilla_id,
-                input_casilla_ids=tuple(row.input_casilla_ids),
-                input_bindings=tuple(row.input_bindings),
-                input_parameters=tuple(row.input_parameters),
-                input_relations=tuple(row.input_relations),
-                expression=dict(row.expression) if hasattr(row, "expression") else {},
-                legal_refs=tuple(row.legal_refs),
-                source_refs=tuple(row.source_refs),
-            )
-            for row in report.rows
+    result = _run_query(
+        lambda: catalogue.list_formulas(
+            modelo, year=year, period=period, as_of=_as_of(as_of), operation=authority_operation(ctx)
         ),
+        bad_parameter_from_error=deps.bad_parameter_from_error,
     )
+    lines = discovery_rendering.formula_lines(result, explain=explain)
     emit_envelope(ctx, command="modelo.formulas", result=result, lines=lines)
 
 
 def support_matrix(ctx: typer.Context) -> None:
-    report = registry_support_matrix(operation=authority_operation(ctx))
-    entries = [discovery_rendering.support_matrix_entry_payload(entry) for entry in report.entries]
-    result = ModeloSupportMatrixResult(modelo_count=len(entries), entries=entries)
+    result = catalogue.read_support_matrix(operation=authority_operation(ctx))
     lines = [
         f"{'modelo':>6}  {'revs':>4}  {'latest':<12}  {'calc':>4}  {'manifest':>8}  "
         f"{'boe':>3}  {'xml':>3}  {'extractor':>9}  {'renames':>7}"
     ]
-    for entry in entries:
+    for entry in result.entries:
         lines.append(
             f"{entry.modelo_id:>6}  {entry.revision_count:>4}  {entry.latest_revision_id:<12}  "
             f"{discovery_rendering.mark(entry.calc_grade):>4}  "

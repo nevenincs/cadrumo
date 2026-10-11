@@ -54,7 +54,7 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "formulas", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_payloads", "FormulasResult", __package__),
+            DeferredTarget("...application.reference_catalogue_contracts", "FormulasResult", __package__),
             identity="modelo.formulas",
         ),
     ),
@@ -71,7 +71,7 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("._modelo_discovery_cli", "support_matrix", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget("._modelo_support_matrix_payloads", "ModeloSupportMatrixResult", __package__),
+            DeferredTarget("...application.reference_catalogue_contracts", "ModeloSupportMatrixResult", __package__),
             identity="modelo.support_matrix",
         ),
     ),

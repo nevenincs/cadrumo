@@ -6,28 +6,13 @@ from typing import TYPE_CHECKING
 
 from ...application.modelo.data_inventory import DataInventoryCasilla, DataInventoryChecklist
 from ...application.modelo.query_read_contracts import ModeloBindingRowV1
-from ...application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
 from ...application.operator_actions.models import ActionReference
+from ...application.reference_catalogue_contracts import FormulasResult, ModeloCasillasResult
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ...domain.calculations.registry.query_reports import (
-    ModeloCasillasReport,
-    ModeloFormulasReport,
-    ModeloListRow,
-)
-from ...domain.calculations.registry.support_matrix import ModeloEntry
-from ._modelo_payloads import (
-    CasillaRowPayload,
-    DataInventoryCasillaPayload,
-)
-from ._modelo_support_matrix_payloads import (
-    ModeloPortalCompatibilityRefPayload,
-    ModeloRenamePayload,
-    ModeloSupportMatrixEntryPayload,
-)
+from ._modelo_payloads import DataInventoryCasillaPayload
 from .common import profile_grounding_index_for_operation, resolve_notice_action
-from .modelo_aux_payloads import ModeloRowPayload
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -241,7 +226,7 @@ def notice_text_lines(notices: tuple[Notice, ...]) -> list[str]:
     return lines
 
 
-def formula_lines(report: ModeloFormulasReport, *, explain: bool) -> list[str]:
+def formula_lines(result: FormulasResult, *, explain: bool) -> list[str]:
     if explain:
         return [
             "formula_id\ttarget_casilla_id\tinputs\tlegal_refs\tsource_refs",
@@ -249,7 +234,7 @@ def formula_lines(report: ModeloFormulasReport, *, explain: bool) -> list[str]:
                 f"{row.formula_id}\t{row.target_casilla_id}\t"
                 f"{', '.join((*row.input_casilla_ids, *row.input_bindings, *row.input_parameters))}\t"
                 f"{', '.join(row.legal_refs)}\t{', '.join(row.source_refs)}"
-                for row in report.rows
+                for row in result.rows
             ],
         ]
     return [
@@ -257,7 +242,7 @@ def formula_lines(report: ModeloFormulasReport, *, explain: bool) -> list[str]:
         *[
             f"{row.formula_id}\t{row.target_casilla_id}\t"
             f"{', '.join((*row.input_casilla_ids, *row.input_bindings, *row.input_parameters))}"
-            for row in report.rows
+            for row in result.rows
         ],
     ]
 
@@ -266,69 +251,7 @@ def mark(value: bool) -> str:
     return "Y" if value else "-"
 
 
-def support_matrix_entry_payload(entry: ModeloEntry) -> ModeloSupportMatrixEntryPayload:
-    return ModeloSupportMatrixEntryPayload(
-        modelo_id=entry.modelo_id,
-        title=entry.title,
-        calculation_class=entry.calculation_class,
-        revision_count=entry.revision_count,
-        latest_revision_id=entry.latest_revision_id,
-        latest_revision_valid_from=entry.latest_revision_valid_from.isoformat(),
-        supported_revision_ids=list(entry.supported_revision_ids),
-        calc_grade=entry.calc_grade,
-        has_completeness_manifest=entry.has_completeness_manifest,
-        has_fixed_width_export=entry.has_fixed_width_export,
-        has_xml_dictionary_export=entry.has_xml_dictionary_export,
-        has_extractor=entry.has_extractor,
-        extraction_profile_count=entry.extraction_profile_count,
-        renames=[
-            ModeloRenamePayload(
-                continuidad_id=rename.continuidad_id,
-                from_revision=rename.from_revision,
-                to_revision=rename.to_revision,
-                evolution_kind=rename.evolution_kind,
-            )
-            for rename in entry.renames
-        ],
-        portal_compatibility_refs=[
-            ModeloPortalCompatibilityRefPayload(id=ref.id, surface=ref.surface, evidence_tier=ref.evidence_tier)
-            for ref in entry.portal_compatibility_refs
-        ],
-    )
-
-
-def modelo_row_payload(row: ModeloListRow) -> ModeloRowPayload:
-    locale_key = modelo_work_create_refusal_locale_key(row.code)
-    local_work_supported = locale_key is None
-    return ModeloRowPayload(
-        code=row.code,
-        title=row.title,
-        cadence=row.cadence,
-        tax_domain=row.tax_domain,
-        revision_count=row.revision_count,
-        local_work_supported=local_work_supported,
-        local_work_status="supported-model-level" if local_work_supported else "unsupported-local-work",
-        local_work_guidance=None if locale_key is None else tr(locale_key, modelo=row.code),
-    )
-
-
-def casilla_row_payloads(report: ModeloCasillasReport) -> list[CasillaRowPayload]:
-    return [
-        CasillaRowPayload(
-            casilla_id=row.casilla_id,
-            number=row.number,
-            input_kind=row.input_kind,
-            required=bool(row.required),
-            label=row.label,
-            help_text=row.help_text,
-            legal_refs=tuple(row.legal_refs),
-            source_refs=tuple(row.source_refs),
-        )
-        for row in report.rows
-    ]
-
-
-def casillas_lines(report: ModeloCasillasReport, *, explain: bool) -> list[str]:
+def casillas_lines(result: ModeloCasillasResult, *, explain: bool) -> list[str]:
     if explain:
         return [
             "casilla_id\tnumber\tinput\trequired\tlabel\thelp\tlegal_refs\tsource_refs",
@@ -336,13 +259,13 @@ def casillas_lines(report: ModeloCasillasReport, *, explain: bool) -> list[str]:
                 f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t"
                 f"{row.label}\t{row.help_text or '-'}\t{', '.join(row.legal_refs)}\t"
                 f"{', '.join(row.source_refs)}"
-                for row in report.rows
+                for row in result.rows
             ],
         ]
     return [
         "casilla_id\tnumber\tinput\trequired\tlabel",
         *[
             f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.label}"
-            for row in report.rows
+            for row in result.rows
         ],
     ]

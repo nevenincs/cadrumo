@@ -306,7 +306,9 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("._ledger_read_cli", "ledger_categories", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("._ledger_payloads", "LedgerCategoriesResult", __package__),
+            target=DeferredTarget(
+                "...application.reference_catalogue_contracts", "LedgerCategoriesResult", __package__
+            ),
             identity="ledger.categories",
         ),
     ),
