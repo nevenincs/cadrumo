@@ -34,7 +34,6 @@ from cadrumo.application.runtime.installation_requests import (
     RuntimeStorageReclaimRequest,
 )
 from cadrumo.application.storage_management.errors import StorageReclaimUnconfirmedError
-from cadrumo.application.storage_management.models import StorageTreeCheckReport
 from cadrumo.application.user_profile.access_contracts import (
     Availability,
     LoginEligibility,
@@ -81,9 +80,10 @@ def serve_check(request: RuntimeStorageCheckRequest, exchange: InstallationActEx
     del request
     return exchange.reply(
         RuntimeStorageCheckReply,
-        report=StorageTreeCheckReport(
-            storage_root=exchange.storage_root, healthy=True, root_mode_enforced=False, checked_locations=4
-        ),
+        storage_root=str(exchange.storage_root),
+        healthy=True,
+        root_mode_enforced=False,
+        checked_areas=4,
     )
 
 
@@ -111,6 +111,8 @@ def serve_enroll(
     request: RuntimeRecoveryEnrollRequest, exchange: InstallationActExchange
 ) -> RuntimeRecoveryEnrollReply:
     """Enrol through the real custody service, taking the passphrase in and handing the code out."""
+    profile_id = request.profile_id
+    assert profile_id is not None
     secrets = exchange.receive_secret(RuntimeInstallationPassphrase)
 
     def handover(enrollment: ProfileRecoveryEnrollment) -> str:
@@ -118,16 +120,18 @@ def serve_enroll(
         return read_back.get_secret_value().decode("utf-8")
 
     with (
-        exchange.reserve_profiles((request.profile_id,)),
+        exchange.reserve_profiles((profile_id,)),
         composed_profile_persistence_ports(automation_secrets_store=exchange.secret_store()),
     ):
         outcome = enroll_profile_recovery(
-            profile_id=request.profile_id,
+            profile_id=profile_id,
             current_passphrase=secrets.passphrase.get_secret_value(),
             root=exchange.storage_root,
             recovery_handover=handover,
         )
-    return exchange.reply(RuntimeRecoveryEnrollReply, outcome=outcome)
+    return exchange.reply(
+        RuntimeRecoveryEnrollReply, profile_id=outcome.profile_id, enrolled=outcome.enrolled, changed=outcome.changed
+    )
 
 
 def installation_test_acts() -> InstallationActRegistry:

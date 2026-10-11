@@ -46,14 +46,8 @@ from cadrumo.application.runtime.installation_requests import (
 from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, RuntimeReply, RuntimeSecretReady
 from cadrumo.application.runtime.transport import RuntimeConnectionContext
 from cadrumo.application.storage_management.errors import StorageReclaimUnconfirmedError
-from cadrumo.application.storage_management.models import (
-    StorageInitReport,
-    StorageReclaimReport,
-    StorageTreeCheckReport,
-)
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode, OsLockState
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
-from cadrumo.application.user_profile.capsule_restore import ProfileRestoreOutcome
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.storage_taxonomy import StorageArea
@@ -161,9 +155,10 @@ def _check(request: RuntimeStorageCheckRequest, exchange: InstallationActExchang
     del request
     return exchange.reply(
         RuntimeStorageCheckReply,
-        report=StorageTreeCheckReport(
-            storage_root=exchange.storage_root, healthy=True, root_mode_enforced=False, checked_locations=4
-        ),
+        storage_root=str(exchange.storage_root),
+        healthy=True,
+        root_mode_enforced=False,
+        checked_areas=4,
     )
 
 
@@ -190,8 +185,8 @@ def test_a_registered_act_settles_with_its_handlers_reply_on_the_requests_coordi
         door.boot,
         context.connection_id,
     )
-    assert reply.report.storage_root == tmp_path
-    assert reply.report.checked_locations == 4
+    assert reply.storage_root == str(tmp_path)
+    assert reply.checked_areas == 4
 
 
 @pytest.mark.parametrize("fault", ["other-peer", "other-boot"])
@@ -268,7 +263,7 @@ def test_an_act_that_changes_records_runs_under_the_lifecycle_exclusion_and_a_re
     def init(request: RuntimeStorageInitRequest, exchange: InstallationActExchange) -> RuntimeStorageInitReply:
         del request
         roles[exchange.act] = door._drain_guard._owner_role
-        return exchange.reply(RuntimeStorageInitReply, report=StorageInitReport(storage_root=exchange.storage_root))
+        return exchange.reply(RuntimeStorageInitReply, storage_root=str(exchange.storage_root))
 
     def check(request: RuntimeStorageCheckRequest, exchange: InstallationActExchange) -> RuntimeStorageCheckReply:
         roles[exchange.act] = door._drain_guard._owner_role
@@ -280,7 +275,9 @@ def test_an_act_that_changes_records_runs_under_the_lifecycle_exclusion_and_a_re
             raise StorageReclaimUnconfirmedError(request.area, entry_count=3)
         return exchange.reply(
             RuntimeStorageReclaimReply,
-            report=StorageReclaimReport(area=request.area, target_count=1, removed_entries=3),
+            area=request.area,
+            target_count=1,
+            removed_entries=3,
         )
 
     registry = InstallationActRegistry()
@@ -413,7 +410,7 @@ def test_an_unexpected_fault_fails_one_act_privately_and_the_door_keeps_serving(
 
 def _init(request: RuntimeStorageInitRequest, exchange: InstallationActExchange) -> RuntimeStorageInitReply:
     del request
-    return exchange.reply(RuntimeStorageInitReply, report=StorageInitReport(storage_root=exchange.storage_root))
+    return exchange.reply(RuntimeStorageInitReply, storage_root=str(exchange.storage_root))
 
 
 def test_a_handler_that_answers_with_another_acts_reply_fails_its_act(tmp_path: Path) -> None:
@@ -421,7 +418,7 @@ def test_a_handler_that_answers_with_another_acts_reply_fails_its_act(tmp_path: 
         request: RuntimeStorageCheckRequest, exchange: InstallationActExchange
     ) -> RuntimeInstallationCompleted:
         del request
-        return exchange.reply(RuntimeStorageInitReply, report=StorageInitReport(storage_root=exchange.storage_root))
+        return exchange.reply(RuntimeStorageInitReply, storage_root=str(exchange.storage_root))
 
     registry = InstallationActRegistry()
     registry.register(RuntimeStorageCheckRequest, confused)
@@ -464,9 +461,10 @@ def test_an_inbound_secret_arrives_in_one_secret_frame_and_nowhere_else(
         received.append(secrets.passphrase.get_secret_value())
         return exchange.reply(
             RuntimeArchiveImportReply,
-            outcome=ProfileRestoreOutcome(
-                profile_id=_PROFILE, label=request.label, authority="password", recovery_enrolled=False
-            ),
+            profile_id=_PROFILE,
+            label=request.label,
+            authority="password",
+            recovery_enrolled=False,
         )
 
     registry = InstallationActRegistry()

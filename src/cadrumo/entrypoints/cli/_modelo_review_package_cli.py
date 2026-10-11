@@ -50,22 +50,17 @@ from ...application.modelo.review_package import (
     ReviewPackageIntegrityError,
     verify_review_package,
 )
-from ...application.modelo.review_package_counter_sign import (
-    CounterSignedReceipt,
-    ReviewPackageCounterSigningError,
-    verify_counter_signed_receipt,
-)
+from ...application.modelo.review_package_counter_sign import ReviewPackageCounterSigningError
 from ...application.modelo.review_package_operation import (
     ModeloReviewPackageBuildPublicResultV1,
     ModeloReviewPackageBuildRequest,
 )
-from ...application.modelo.review_package_signing import (
-    ReviewPackageSigningError,
-    SignedReviewPackage,
-    verify_review_package_signature,
+from ...application.modelo.review_package_signing import ReviewPackageSigningError
+from ...application.modelo.review_package_verification_files import (
+    verify_review_package_receipt_file,
+    verify_review_package_signature_file,
 )
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
-from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
 from ._modelo_cli_support import (
     parse_revision_selector,
@@ -200,13 +195,11 @@ def review_package_verify_signature(ctx: typer.Context, package: Path, signature
             )
         )
     try:
-        signed = SignedReviewPackage.model_validate_json(signature.read_text(encoding=UTF_8_ENCODING))
-    except ValueError as exc:
-        raise bad_parameter_from_error(ReviewPackageSigningError(str(exc))) from exc
-    signer_public_key_hex = public_key.strip().lower()
-    is_valid = verify_review_package_signature(package, signed, public_key_hex=signer_public_key_hex)
+        verdict = verify_review_package_signature_file(package, signature, public_key=public_key)
+    except ReviewPackageSigningError as exc:
+        raise bad_parameter_from_error(exc) from exc
     result, lines = review_package_verify_signature_result(
-        package, signature, signer_public_key_hex=signer_public_key_hex, is_valid=is_valid
+        package, signature, signer_public_key_hex=verdict.signer_public_key_hex, is_valid=verdict.is_valid
     )
     emit_envelope(ctx, command="modelo.review_package.verify_signature", result=result, lines=lines)
 
@@ -248,20 +241,20 @@ def review_package_verify_receipt(
             )
         )
     try:
-        receipt = CounterSignedReceipt.model_validate_json(receipt_path.read_text(encoding=UTF_8_ENCODING))
-    except ValueError as exc:
-        raise bad_parameter_from_error(ReviewPackageCounterSigningError(str(exc))) from exc
-    operator_key = operator_public_key.strip().lower()
-    counter_key = counter_signer_public_key.strip().lower()
-    is_valid = verify_counter_signed_receipt(
-        package, receipt, operator_public_key_hex=operator_key, counter_signer_public_key_hex=counter_key
-    )
+        verdict = verify_review_package_receipt_file(
+            package,
+            receipt_path,
+            operator_public_key=operator_public_key,
+            counter_signer_public_key=counter_signer_public_key,
+        )
+    except ReviewPackageCounterSigningError as exc:
+        raise bad_parameter_from_error(exc) from exc
     result, lines = review_package_verify_receipt_result(
         package,
         receipt_path,
-        operator_public_key_hex=operator_key,
-        counter_signer_public_key_hex=counter_key,
-        is_valid=is_valid,
+        operator_public_key_hex=verdict.operator_public_key_hex,
+        counter_signer_public_key_hex=verdict.counter_signer_public_key_hex,
+        is_valid=verdict.is_valid,
     )
     emit_envelope(ctx, command="modelo.review_package.verify_receipt", result=result, lines=lines)
 

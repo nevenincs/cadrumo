@@ -66,21 +66,13 @@ def _collect_passphrase(*, selection: MachineSecretSelection | None) -> str:
 def _read_capsule_source(source: Path) -> ProfileCapsuleSource:
     """Read restorable capsule material from a directory or a sealed archive.
 
-    The one place the two source shapes diverge. Everything downstream sees a
-    :class:`ProfileCapsuleSource` and cannot tell which shape produced it,
-    which is what keeps the publication authority single.
-
-    Dispatch is on what the path IS, not on what the operator claims it is: an
-    operator recovering from a failure should not have to tell the tool which
-    kind of backup they are holding, and a flag they could set wrongly would
-    turn a recoverable mistake into a confusing refusal.
+    The application reader tells the two shapes apart by what the path is, so
+    everything downstream sees one :class:`ProfileCapsuleSource` and the
+    publication authority stays single.
     """
-    from ....application.user_profile.capsule_archive import read_profile_capsule_archive
-    from ....application.user_profile.capsule_restore import read_profile_capsule_source
+    from ....application.user_profile.capsule_archive import read_restorable_profile_capsule
 
-    if source.is_dir():
-        return read_profile_capsule_source(source)
-    return read_profile_capsule_archive(source)
+    return read_restorable_profile_capsule(source).source
 
 
 def _restore_lines(outcome: ProfileRestoreOutcome) -> tuple[str, ...]:

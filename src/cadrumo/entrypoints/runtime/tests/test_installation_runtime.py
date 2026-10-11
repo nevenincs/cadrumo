@@ -134,7 +134,7 @@ def test_acts_settle_over_the_native_transport_and_a_large_reply_arrives_whole(
         again = client.perform(RuntimeStorageCheckRequest(request_id=uuid4(), frontend=cli), RuntimeStorageCheckReply)
 
     assert isinstance(checked, RuntimeStorageCheckReply)
-    assert checked.report.storage_root == root
+    assert checked.storage_root == str(root)
     assert isinstance(tailed, RuntimeRepairLogsReply)
     assert tailed.lines == LOG_LINES
     assert isinstance(refused, RuntimeInstallationRefused)
@@ -236,7 +236,7 @@ def test_recovery_enrolment_takes_the_passphrase_in_and_hands_the_code_out_and_b
         )
 
     assert isinstance(reply, RuntimeRecoveryEnrollReply)
-    assert (reply.outcome.profile_id, reply.outcome.enrolled, reply.outcome.changed) == (str(profile), True, True)
+    assert (reply.profile_id, reply.enrolled, reply.changed) == (str(profile), True, True)
     assert enrolled
     assert len(held) == 1
     # While the person copies the code down the act lends the lifecycle exclusion back, so

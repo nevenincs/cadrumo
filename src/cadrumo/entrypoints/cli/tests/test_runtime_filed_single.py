@@ -48,6 +48,7 @@ def _projection() -> FiledSingleCapturePublicResultV1:
         captured_count=1,
         reached_count=1,
         observation_paths=("encrypted-observation",),
+        observation_ids=("encrypted-observation",),
         artefact_refs=("sha256:1234",),
         justificante_metadata_count=1,
         justificante_csvs=("csv-1",),

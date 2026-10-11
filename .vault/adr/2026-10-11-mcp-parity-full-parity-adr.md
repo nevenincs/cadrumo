@@ -7,11 +7,12 @@ related:
   - "[[2026-10-10-mcp-parity-closed-operations-reference]]"
   - "[[2026-10-10-mcp-parity-surfaces-and-registry-reference]]"
   - "[[2026-10-10-mcp-parity-parity-mechanism-adr]]"
+  - '[[2026-07-08-mcp-protocol-hardening-adr]]'
 supersedes:
   - '2026-10-10-mcp-parity-admission-rulings-adr'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:523525b094212c30d28fae24362f7ad90a396915f8d699e0e1caafa8e7577115'
+body_hash: 'sha256:fbc2af7f68a1ded44c4b717c480d34fcc773793d6e5659f2155af08f8dab6051'
 ---
 
 # `mcp-parity` adr: `The command line, the terminal interface and MCP are at parity, and no frontend is refused what another can do` | (**status:** `accepted`)
@@ -55,6 +56,7 @@ Affected prior rulings:
 - `2026-10-10-mcp-parity-approval-step-adr`, `2026-10-10-mcp-parity-file-exchange-adr`, `2026-10-10-mcp-parity-replay-identity-adr` and `2026-10-10-mcp-parity-agent-provenance-adr` were proposed and never accepted. They are rejected: each made admission of operations wait on a mechanism, which constraint 5 rules out.
 - `2026-10-10-mcp-parity-shared-sign-in-door-adr` stays accepted for how an MCP connection obtains a session. Two of its lines yield to constraint 2: that a session on the MCP frontend may end only itself, and that the runtime refuses on the MCP frontend what it admits on the command line for a session of the same kind. A session of the human kind does on MCP what it does on the command line.
 - `2026-10-10-mcp-parity-parity-mechanism-adr` stays accepted: parity is reached through the operation registry and the generic tools.
+- `2026-07-08-mcp-protocol-hardening-adr` stays accepted. One sentence of its ruling H8 yields to constraint 2: that no secret ever rides any MCP channel. The command line takes a typed secret from the person, so an MCP connection carries one too, from the tool call to the runtime's protected frame. What H8 decided about the protocol's own credential elicitation is untouched: Cadrumo still does not use it. H8's purpose, that a secret need not pass through a model, is served by adding a form and removing none: a secret the person stores at a terminal of their own and the tool call names by reference, beside the typed argument. Its ruling H9 on the SDK version was already replaced by `2026-07-31-mcp-sdk-major-carry-adr`.
 
 ## Implementation
 

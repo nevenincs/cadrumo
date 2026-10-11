@@ -264,7 +264,7 @@ def work_report_verify(
                 trusted_public_key_hex=trusted_public_key_hex,
             ),
         )
-        verification = completed.projection.verification.to_verification()
+        verification = completed.projection.to_verification()
     emit_envelope(
         ctx,
         command="modelo.work.report_verify",

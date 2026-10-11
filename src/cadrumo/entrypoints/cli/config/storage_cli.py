@@ -25,24 +25,21 @@ from typing import TYPE_CHECKING, Final
 import typer
 
 from ....application.operator_actions.models import ActionReference
-from ....application.storage_management.models import StorageCheckIssueKind, StorageTreeIssueKind
-from ....core.i18n.render import tr
-from ....core.json_contract import Notice, NoticeSeverity
-from ....core.storage_taxonomy import StorageArea
-from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
-from ..common import emit_envelope, resolve_notice_action
-from .storage_payloads import (
+from ....application.storage_management.documents import (
     ConfigStorageCheckResult,
     ConfigStorageInitResult,
     ConfigStorageListResult,
     ConfigStorageReclaimResult,
     ConfigStorageViewResult,
-    StorageAreaIssuePayload,
-    StorageAreaPayload,
 )
+from ....core.i18n.render import tr
+from ....core.json_contract import Notice, NoticeSeverity
+from ....core.storage_taxonomy import StorageArea
+from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ..common import emit_envelope, resolve_notice_action
 
 if TYPE_CHECKING:
-    from ....application.storage_management.models import StorageAreaInventoryReport, StorageAreaInventoryRow
+    from ....application.storage_management.models import StorageAreaInventoryReport
 
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 
@@ -63,10 +60,7 @@ def config_storage_list(
     from ....application.storage_management.service import collect_storage_area_inventory
 
     report = collect_storage_area_inventory()
-    result = ConfigStorageListResult(
-        storage_root=str(report.storage_root),
-        areas=[_area_payload(row) for row in report.rows],
-    )
+    result = ConfigStorageListResult.from_report(report)
     notices = (_relocation_notice(str(report.storage_root)),)
     lines = _inventory_lines(report)
     lines.extend(_notice_lines(notices))
@@ -89,11 +83,8 @@ def config_storage_view(
     from ....application.storage_management.service import collect_storage_area_inventory
 
     report = collect_storage_area_inventory()
-    row = _row_for(report, area)
-    result = ConfigStorageViewResult(
-        storage_root=str(report.storage_root),
-        area=_area_payload(row),
-    )
+    row = report.row_for(area)
+    result = ConfigStorageViewResult.from_report(report, area)
     lines = _field_lines(
         (
             (_label("area", "Area"), _value_label("area", row.area.value)),
@@ -117,21 +108,7 @@ def config_storage_check(
     from ....application.storage_management.service import inspect_storage_tree
 
     report = inspect_storage_tree()
-    result = ConfigStorageCheckResult(
-        storage_root=str(report.storage_root),
-        healthy=report.healthy,
-        root_mode_enforced=report.root_mode_enforced,
-        checked_areas=len(StorageArea),
-        issues=[
-            StorageAreaIssuePayload(
-                kind=_public_issue_kind(issue.kind),
-                path=str(report.storage_root),
-                area=issue.area,
-                detail=_public_issue_detail(issue.kind),
-            )
-            for issue in report.issues
-        ],
-    )
+    result = ConfigStorageCheckResult.from_report(report)
     lines = _field_lines(
         (
             (_label("storage_root", "Storage root"), str(report.storage_root)),
@@ -139,15 +116,15 @@ def config_storage_check(
             (_label("healthy", "Healthy"), _boolean_label(report.healthy)),
         ),
     )
-    if report.issues:
-        lines.extend(("", f"{_label('issues', 'Issues')} ({len(report.issues)}):"))
-        for issue in report.issues:
+    if result.issues:
+        lines.extend(("", f"{_label('issues', 'Issues')} ({len(result.issues)}):"))
+        for issue in result.issues:
             lines.extend(
                 (
-                    f"  - {_public_issue_kind(issue.kind).value}",
+                    f"  - {issue.kind.value}",
                     f"    {_label('area', 'Area')}: {_value_label('area', issue.area.value) if issue.area else '-'}",
-                    f"    {_label('path', 'Path')}: {report.storage_root}",
-                    f"    {_label('detail', 'Detail')}: {_public_issue_detail(issue.kind)}",
+                    f"    {_label('path', 'Path')}: {issue.path}",
+                    f"    {_label('detail', 'Detail')}: {issue.detail}",
                 ),
             )
 
@@ -192,11 +169,7 @@ def config_storage_init(
     from ....application.storage_management.service import materialise_storage_tree
 
     report = materialise_storage_tree()
-    result = ConfigStorageInitResult(
-        storage_root=str(report.storage_root),
-        created_count=len(report.created),
-        already_present=report.already_present,
-    )
+    result = ConfigStorageInitResult.from_report(report)
     lines = _field_lines(
         (
             (_label("storage_root", "Storage root"), str(report.storage_root)),
@@ -237,12 +210,7 @@ def config_storage_reclaim(
     from ....application.storage_management.service import reclaim_storage_area
 
     report = reclaim_storage_area(area, confirmed=confirmed)
-    result = ConfigStorageReclaimResult(
-        area=report.area,
-        target_count=report.target_count,
-        removed_entries=report.removed_entries,
-        retained_entries=report.retained_entries,
-    )
+    result = ConfigStorageReclaimResult.from_report(report)
     lines = _field_lines(
         (
             (_label("area", "Area"), _value_label("area", report.area.value)),
@@ -288,27 +256,6 @@ def _relocation_notice(storage_root: str) -> Notice:
     )
 
 
-def _row_for(report: StorageAreaInventoryReport, area: StorageArea) -> StorageAreaInventoryRow:
-    """Return the single aggregate row for ``area``."""
-    for row in report.rows:
-        if row.area is area:
-            return row
-    raise KeyError(f"storage area {area.value!r} has no aggregate")
-
-
-def _area_payload(row: StorageAreaInventoryRow) -> StorageAreaPayload:
-    """Project one aggregate row onto its topology-neutral wire shape."""
-    return StorageAreaPayload(
-        area=row.area,
-        occupancy=row.occupancy,
-        disposition=row.disposition,
-        resolved_paths=row.resolved_paths,
-        entry_count=row.entry_count,
-        footprint_bytes=row.footprint_bytes,
-        reclaimable=row.reclaimable,
-    )
-
-
 def _inventory_lines(report: StorageAreaInventoryReport) -> list[str]:
     """Render the inventory as a compact table with paths on readable lines."""
     lines = _field_lines(
@@ -337,25 +284,6 @@ def _inventory_lines(report: StorageAreaInventoryReport) -> list[str]:
     )
     lines.extend(table)
     return lines
-
-
-def _public_issue_kind(kind: StorageTreeIssueKind) -> StorageCheckIssueKind:
-    """Collapse internal node diagnoses into a topology-neutral public kind."""
-    if kind is StorageTreeIssueKind.MISSING_DIRECTORY:
-        return StorageCheckIssueKind.MISSING_PATH
-    if kind is StorageTreeIssueKind.ROOT_PERMISSIONS_DRIFTED:
-        return StorageCheckIssueKind.PERMISSIONS_DRIFTED
-    return StorageCheckIssueKind.PATH_TYPE_MISMATCH
-
-
-def _public_issue_detail(kind: StorageTreeIssueKind) -> str:
-    """Describe a check failure without revealing internal node topology."""
-    public = _public_issue_kind(kind)
-    if public is StorageCheckIssueKind.MISSING_PATH:
-        return tr("cli.config.storage.check.issue.missing_path")
-    if public is StorageCheckIssueKind.PERMISSIONS_DRIFTED:
-        return tr("cli.config.storage.check.issue.permissions_drifted")
-    return tr("cli.config.storage.check.issue.path_type_mismatch")
 
 
 def _label(name: str, default: str) -> str:

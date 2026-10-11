@@ -9,6 +9,9 @@ import pytest
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.config_reset import (
     ConfigResetConfirmationRequiredError,
+    ConfigResetRequestProblem,
+    ConfigResetRequestRefusedError,
+    normalise_retention_override,
     resume_config_reset,
     start_config_reset,
 )
@@ -59,3 +62,39 @@ def test_start_and_resume_require_explicit_confirmation() -> None:
             operator_scope_ports=operator_scope_ports,
             bucket_storage=bucket_storage,
         )
+
+
+@pytest.mark.parametrize(
+    ("acknowledged", "reason", "expected"),
+    [
+        (False, None, (False, None)),
+        (False, "   ", (False, None)),
+        (True, "  Court order.  ", (True, "Court order.")),
+    ],
+)
+def test_a_retention_override_is_accepted_only_with_its_reason_and_the_reason_is_trimmed(
+    acknowledged: bool, reason: str | None, expected: tuple[bool, str | None]
+) -> None:
+    assert (
+        tuple(
+            normalise_retention_override(acknowledge_retention_override=acknowledged, retention_override_reason=reason)
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("acknowledged", "reason", "problem"),
+    [
+        (True, None, ConfigResetRequestProblem.OVERRIDE_REASON_REQUIRED),
+        (True, "   ", ConfigResetRequestProblem.OVERRIDE_REASON_REQUIRED),
+        (False, "Court order.", ConfigResetRequestProblem.OVERRIDE_REASON_WITHOUT_OVERRIDE),
+    ],
+)
+def test_an_override_without_a_reason_and_a_reason_without_an_override_are_refused(
+    acknowledged: bool, reason: str | None, problem: ConfigResetRequestProblem
+) -> None:
+    with pytest.raises(ConfigResetRequestRefusedError) as refused:
+        normalise_retention_override(acknowledge_retention_override=acknowledged, retention_override_reason=reason)
+
+    assert refused.value.problem is problem

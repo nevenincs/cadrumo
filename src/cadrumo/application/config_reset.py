@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import NamedTuple
 from uuid import UUID
 
@@ -62,6 +63,33 @@ class ConfigResetOperationNotFoundError(ConfigResetError):
     """Raised when status or resume cannot resolve an operation."""
 
 
+class ConfigResetRequestProblem(StrEnum):
+    """Why a request to start or resume a reset cannot be acted on."""
+
+    OVERRIDE_REASON_REQUIRED = "override_reason_required"
+    OVERRIDE_REASON_WITHOUT_OVERRIDE = "override_reason_without_override"
+    NOTHING_TO_RESUME = "nothing_to_resume"
+
+
+class ConfigResetRequestRefusedError(ConfigResetError):
+    """Raised when a request is refused before any reset work begins."""
+
+    def __init__(self, problem: ConfigResetRequestProblem) -> None:
+        """Name the problem; the refusal carries it as its only context."""
+        super().__init__(
+            translated_message="errors.refused.refused_cli_boundary",
+            context={"problem": problem.value},
+        )
+        self.problem = problem
+
+
+class ConfigResetRetentionOverride(NamedTuple):
+    """The operator's retention-override decision, in the form the reset acts on."""
+
+    acknowledged: bool
+    reason: str | None
+
+
 _PHASE_ORDER = {
     ConfigResetTargetPhase.SNAPSHOTTED: 0,
     ConfigResetTargetPhase.RETENTION_APPROVED: 1,
@@ -91,7 +119,7 @@ def start_config_reset(
     retention_override_reason: str | None = None,
 ) -> ConfigResetOperation:
     """Start and execute one durable all-profile reset operation."""
-    _require_confirmation(confirmed)
+    require_config_reset_confirmation(confirmed)
     settings = load_settings()
     repository = ConfigResetJournalRepository(settings=settings)
     operation_id = new_config_reset_operation_id()
@@ -150,6 +178,28 @@ def start_config_reset(
             )
 
 
+def normalise_retention_override(
+    *,
+    acknowledge_retention_override: bool,
+    retention_override_reason: str | None,
+) -> ConfigResetRetentionOverride:
+    """Check that an override and its reason are given together, and trim the reason."""
+    reason = (retention_override_reason or "").strip() or None
+    if acknowledge_retention_override and not reason:
+        raise ConfigResetRequestRefusedError(ConfigResetRequestProblem.OVERRIDE_REASON_REQUIRED)
+    if not acknowledge_retention_override and reason:
+        raise ConfigResetRequestRefusedError(ConfigResetRequestProblem.OVERRIDE_REASON_WITHOUT_OVERRIDE)
+    return ConfigResetRetentionOverride(acknowledge_retention_override, reason)
+
+
+def latest_incomplete_config_reset_id() -> str:
+    """Name the journal a resume without an id continues: the latest, if it is not complete."""
+    candidate = config_reset_status()
+    if candidate is None or candidate.status is ConfigResetOperationStatus.COMPLETE:
+        raise ConfigResetRequestRefusedError(ConfigResetRequestProblem.NOTHING_TO_RESUME)
+    return candidate.operation_id
+
+
 def config_reset_status(operation_id: str | None = None) -> ConfigResetOperation | None:
     """Return one reset journal without changing its status or phase."""
     repository = ConfigResetJournalRepository()
@@ -175,7 +225,7 @@ def resume_config_reset(
     retention_override_reason: str | None = None,
 ) -> ConfigResetOperation:
     """Resume one incomplete operation from its durable recorded phases."""
-    _require_confirmation(confirmed)
+    require_config_reset_confirmation(confirmed)
     settings = load_settings()
     repository = ConfigResetJournalRepository(settings=settings)
     with repository.operation_lock(operation_id):
@@ -258,7 +308,8 @@ def resume_config_reset(
                 )
 
 
-def _require_confirmation(confirmed: bool) -> None:
+def require_config_reset_confirmation(confirmed: bool) -> None:
+    """Refuse a destructive start or resume the operator did not confirm."""
     if not confirmed:
         raise ConfigResetConfirmationRequiredError(
             translated_message="errors.refused.refused_config_reset_unconfirmed",
@@ -1049,8 +1100,14 @@ __all__ = [
     "ConfigResetOperationNotFoundError",
     "ConfigResetOperationStatus",
     "ConfigResetPauseReason",
+    "ConfigResetRequestProblem",
+    "ConfigResetRequestRefusedError",
+    "ConfigResetRetentionOverride",
     "ConfigResetTargetPhase",
     "config_reset_status",
+    "latest_incomplete_config_reset_id",
+    "normalise_retention_override",
+    "require_config_reset_confirmation",
     "resume_config_reset",
     "start_config_reset",
 ]

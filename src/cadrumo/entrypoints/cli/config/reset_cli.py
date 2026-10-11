@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from uuid import uuid4
+
 import typer
 
+from ....application.config_reset_documents import ConfigResetOperationPayload
 from ..common import emit_envelope
 from ..config_payloads import (
-    ConfigResetOperationPayload,
     ConfigResetResumeResult,
     ConfigResetStartResult,
     ConfigResetStatusResult,
@@ -19,18 +21,28 @@ def _retention_override(
     enabled: bool,
     reason: str | None,
 ) -> tuple[bool, str | None]:
-    normalized_reason = reason.strip() if reason is not None else None
-    if enabled and not normalized_reason:
-        raise CliRefusedBoundaryError(
-            "config reset retention override requires a non-empty --reason",
-            context={"option": "--reason"},
+    from ....application.config_reset import (
+        ConfigResetRequestProblem,
+        ConfigResetRequestRefusedError,
+        normalise_retention_override,
+    )
+
+    try:
+        override = normalise_retention_override(
+            acknowledge_retention_override=enabled,
+            retention_override_reason=reason,
         )
-    if not enabled and normalized_reason:
+    except ConfigResetRequestRefusedError as refusal:
+        if refusal.problem is ConfigResetRequestProblem.OVERRIDE_REASON_REQUIRED:
+            raise CliRefusedBoundaryError(
+                "config reset retention override requires a non-empty --reason",
+                context={"option": "--reason"},
+            ) from refusal
         raise CliRefusedBoundaryError(
             "config reset --reason is valid only with --override-retention",
             context={"option": "--override-retention"},
-        )
-    return enabled, normalized_reason
+        ) from refusal
+    return override.acknowledged, override.reason
 
 
 def _require_yes_and_override(
@@ -80,20 +92,43 @@ def config_reset_start(
     override_retention: bool = False,
     reason: str | None = None,
 ) -> None:
-    """Start and execute one new reset operation."""
-    override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
-    from ....application.config_reset import start_config_reset
-    from ..state_projection_support import bucket_storage, certificate_secret_backend_factory, operator_scope_ports
+    """Start and execute one new reset operation.
 
-    operation = start_config_reset(
-        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-        operator_scope_ports=operator_scope_ports(ctx),
-        bucket_storage=bucket_storage(ctx),
-        confirmed=True,
-        acknowledge_retention_override=override_retention,
-        retention_override_reason=reason,
+    A running runtime hosts profile workers that hold the stores a reset
+    deletes, so when one answers the reset is its act, which drains them first.
+    With no runtime the reset runs in this process.
+    """
+    override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
+    from ....application.operations.registry import OperationFrontendProjection
+    from ....application.runtime.installation_requests import RuntimeResetStartReply, RuntimeResetStartRequest
+    from ..runtime_installation import run_installation_act_if_runtime
+
+    reply = run_installation_act_if_runtime(
+        RuntimeResetStartRequest(
+            request_id=uuid4(),
+            frontend=OperationFrontendProjection.CLI,
+            confirmed=True,
+            acknowledge_retention_override=override_retention,
+            retention_override_reason=reason,
+        ),
+        RuntimeResetStartReply,
     )
-    projection = ConfigResetOperationPayload.from_operation(operation)
+    if reply is not None:
+        projection = reply.operation
+    else:
+        from ....application.config_reset import start_config_reset
+        from ..state_projection_support import bucket_storage, certificate_secret_backend_factory, operator_scope_ports
+
+        projection = ConfigResetOperationPayload.from_operation(
+            start_config_reset(
+                certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+                operator_scope_ports=operator_scope_ports(ctx),
+                bucket_storage=bucket_storage(ctx),
+                confirmed=True,
+                acknowledge_retention_override=override_retention,
+                retention_override_reason=reason,
+            )
+        )
     emit_envelope(
         ctx,
         command="config.reset.start",
@@ -126,32 +161,49 @@ def config_reset_resume(
     override_retention: bool = False,
     reason: str | None = None,
 ) -> None:
-    """Roll one exact incomplete journal forward."""
+    """Roll one exact incomplete journal forward, through the running runtime when there is one."""
     override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
-    from ....application.config_reset import (
-        config_reset_status,
-        resume_config_reset,
-    )
-    from ..state_projection_support import bucket_storage, certificate_secret_backend_factory, operator_scope_ports
+    from ....application.config_reset import ConfigResetRequestRefusedError, latest_incomplete_config_reset_id
+    from ....application.operations.registry import OperationFrontendProjection
+    from ....application.runtime.installation_requests import RuntimeResetResumeReply, RuntimeResetResumeRequest
+    from ..runtime_installation import run_installation_act_if_runtime
 
     resolved_operation_id = operation_id
     if resolved_operation_id is None:
-        candidate = config_reset_status()
-        if candidate is None or candidate.status.value == "complete":
+        try:
+            resolved_operation_id = latest_incomplete_config_reset_id()
+        except ConfigResetRequestRefusedError as refusal:
             raise CliRefusedBoundaryError(
                 "no incomplete configuration reset operation is available to resume",
-            )
-        resolved_operation_id = candidate.operation_id
-    operation = resume_config_reset(
-        resolved_operation_id,
-        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-        operator_scope_ports=operator_scope_ports(ctx),
-        bucket_storage=bucket_storage(ctx),
-        confirmed=True,
-        acknowledge_retention_override=override_retention,
-        retention_override_reason=reason,
+            ) from refusal
+    reply = run_installation_act_if_runtime(
+        RuntimeResetResumeRequest(
+            request_id=uuid4(),
+            frontend=OperationFrontendProjection.CLI,
+            operation_id=resolved_operation_id,
+            confirmed=True,
+            acknowledge_retention_override=override_retention,
+            retention_override_reason=reason,
+        ),
+        RuntimeResetResumeReply,
     )
-    projection = ConfigResetOperationPayload.from_operation(operation)
+    if reply is not None:
+        projection = reply.operation
+    else:
+        from ....application.config_reset import resume_config_reset
+        from ..state_projection_support import bucket_storage, certificate_secret_backend_factory, operator_scope_ports
+
+        projection = ConfigResetOperationPayload.from_operation(
+            resume_config_reset(
+                resolved_operation_id,
+                certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+                operator_scope_ports=operator_scope_ports(ctx),
+                bucket_storage=bucket_storage(ctx),
+                confirmed=True,
+                acknowledge_retention_override=override_retention,
+                retention_override_reason=reason,
+            )
+        )
     emit_envelope(
         ctx,
         command="config.reset.resume",

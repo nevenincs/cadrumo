@@ -37,7 +37,7 @@ def run_modelo_calculation_report_verify(
     projection = completed.projection
     if (
         projection.profile_id != client.profile_id
-        or projection.source_sha256 != request.source_sha256
+        or (request.source_sha256 is not None and projection.source_sha256 != request.source_sha256)
         or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         or completed.refusal_code is not None
         or completed.effect is not OperationEffect.NONE

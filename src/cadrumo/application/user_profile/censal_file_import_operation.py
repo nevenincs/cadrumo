@@ -156,7 +156,7 @@ class CensalFileImportOperationResult(BaseModel):
         return self
 
 
-def _apply_censal_file_facts(
+def apply_censal_file_facts(
     *,
     profile_id: str,
     facts: tuple[CensalFileImportFact, ...],
@@ -207,7 +207,7 @@ class CensalFileImportOperationExecutor:
             async with context.cancellation.irreversible_section():
                 await context.events.effect(OperationEffect.UNKNOWN)
                 result = await asyncio.to_thread(
-                    _apply_censal_file_facts,
+                    apply_censal_file_facts,
                     profile_id=profile_id,
                     facts=payload.facts,
                     profile_decode_context=profile_decode_context,
@@ -280,6 +280,7 @@ __all__ = [
     "CensalFileImportOperationRequest",
     "CensalFileImportOperationResult",
     "CensalFileImportProvenance",
+    "apply_censal_file_facts",
     "build_censal_file_import_operation_definition",
     "build_censal_file_import_operation_registration",
     "resolve_censal_file_import_operation_access",

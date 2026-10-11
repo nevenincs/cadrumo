@@ -151,6 +151,11 @@ _TOOLS_NAMED_LIKE_A_WRITE: Mapping[str, tuple[frozenset[str], str]] = {
         frozenset({"sign"}),
         "its sign_out action ends the person's sign-in to Cadrumo; nothing is signed at the tax agency",
     ),
+    "authority": (
+        frozenset({"payment"}),
+        "its category filter names a category of the bundled portal catalogue, which lists where the tax agency's "
+        "own pages are; the tool reads that list and reaches nothing",
+    ),
 }
 """MCP tools whose name or enumerated actions carry a write verb of the tax agency, and why none is one.
 

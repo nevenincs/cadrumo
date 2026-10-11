@@ -68,26 +68,22 @@ def _inspect_lines(inspection: ProfileCapsuleArchiveInspection) -> tuple[str, ..
 def _refuse_an_archive_target_the_writer_would_reject(target: Path) -> None:
     """Refuse a destination the sealed-archive writer would reject anyway.
 
-    The writer enforces the suffix, but it is an adapter: its refusal arrives
-    untranslated and names an internal write operation rather than the flag the
-    operator has to change. Checking here means the operator learns the exact
-    required suffix in their own language, before any capsule is read.
+    The decision is the application's, and the export operation makes it again
+    where the archive is written. Making it here first means the operator
+    learns the exact required suffix before a profile session is asked for.
     """
-    from ....adapters.persistence.storage.bucket.sealed_archive_writer import CADRUMO_BUCKET_BUNDLE_SUFFIX
+    from ....application.user_profile.capsule_archive import (
+        ProfileCapsuleArchiveError,
+        refuse_unwritable_profile_capsule_archive_target,
+    )
     from ..errors import CliRefusedBoundaryError
 
-    if not target.name.endswith(CADRUMO_BUCKET_BUNDLE_SUFFIX):
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.profile.archive.refusal.export_suffix",
-            context={"suffix": CADRUMO_BUCKET_BUNDLE_SUFFIX},
-        )
-    # The writer refuses to replace an existing archive too, but only after
-    # the capsule has been read and sealed, and as an untranslated storage
-    # failure. An existing backup is the operator's to move, not a fault.
-    if target.exists():
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.profile.archive.refusal.export_target_exists",
-        )
+    try:
+        refuse_unwritable_profile_capsule_archive_target(target)
+    except ProfileCapsuleArchiveError as refused:
+        # The command's own refusal carries the same key and context, with no
+        # cause for the renderer to read a second code from.
+        raise CliRefusedBoundaryError(translated_message=refused.translated_message, context=refused.context) from None
 
 
 def archive_export(

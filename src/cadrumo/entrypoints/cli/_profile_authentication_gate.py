@@ -14,6 +14,7 @@ from ._profile_authentication_contract import (
     ProfileAuthenticationMethod,
     ProfileAuthenticationSecrets,
     command_needs_state_tree,
+    parsed_root_profile_source,
     profile_authentication_posture,
     root_profile_secret_model,
 )
@@ -487,8 +488,6 @@ def _select_preflight_channels(
     arguments: Mapping[str, object],
 ) -> tuple[ProfileSecretSelection | None, MachineSecretSelection | None]:
     """Select both secret scopes and reject any cross-scope channel collision."""
-    from .runtime_profile_admission import parsed_root_profile_source
-
     source = parsed_root_profile_source(ctx)
     if source.credential_reference is not None and (source.stdin or source.descriptor is not None):
         _refuse("profile_credential_ref_conflict")
@@ -661,8 +660,6 @@ def preflight_parsed_leaf(
     root, leaf = _select_preflight_channels(ctx, spec=spec, arguments=arguments)
     if spec.key == "config_profile_automation_create" and leaf is None:
         _refuse("automation_create_proposal_required")
-    from .runtime_profile_admission import parsed_root_profile_source
-
     source = parsed_root_profile_source(ctx)
     method = source.method
     credential_reference = source.credential_reference

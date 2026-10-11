@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING
 from ....core.i18n.render import tr
 
 if TYPE_CHECKING:
-    from ....adapters.outbound.aeat.browser.site_health_records import SiteHealthStatus
+    from ....core.errors.hierarchy import SiteHealthStatusLike
 
 
-def render_browser_connectivity_text(status: SiteHealthStatus) -> str:
+def render_browser_connectivity_text(status: SiteHealthStatusLike) -> str:
     """Render one site-health status as compact config-repair output."""
     markers = ", ".join(status.evidence.detected_markers) or tr("cli.diagnostics.browser.markers_none")
     lines = [

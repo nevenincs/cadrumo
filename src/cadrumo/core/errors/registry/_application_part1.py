@@ -258,6 +258,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.config_reset.ConfigResetRequestRefusedError",
+        ErrorCode(
+            code="REFUSED_CONFIG_RESET_REQUEST",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_boundary",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.config_reset_repository.ConfigResetJournalError",
         ErrorCode(
             code="ERROR_CONFIG_RESET_JOURNAL",

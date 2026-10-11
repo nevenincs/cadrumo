@@ -101,19 +101,19 @@ def censo_import(
 ) -> None:
     """Parse the certificate and preview — or with ``--apply``, enroll — its censal facts."""
     from ....adapters.inbound.censo.parser import parse_certificado_censal_bytes
-    from ....domain.censo.certificado import censo_facts_from_certificado
+    from ....application.user_profile.censal_certificate_operation import read_censal_certificate
 
-    certificado = parse_certificado_censal_bytes(file.read_bytes())
-    facts = censo_facts_from_certificado(certificado)
+    reading = read_censal_certificate(file.read_bytes(), parse=parse_certificado_censal_bytes)
 
     if apply:
         from .runtime_censal_file_import import import_censal_file_facts
 
-        receipt = import_censal_file_facts(ctx, facts)
+        receipt = import_censal_file_facts(ctx, reading.profile_facts)
         apply = receipt.applied
 
-    rows = tuple(CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in facts)
-    result = CensoFileIngestResult(applied=apply, certificate=certificado, facts=rows)
+    ingest = reading.ingest(applied=apply)
+    rows = tuple(CensoFactPayload(path=row.path, value=row.value, source=row.source) for row in ingest.facts)
+    result = CensoFileIngestResult(applied=ingest.applied, certificate=ingest.certificate, facts=rows)
     lines = _file_import_preview_lines(result)
     notices = [
         Notice(

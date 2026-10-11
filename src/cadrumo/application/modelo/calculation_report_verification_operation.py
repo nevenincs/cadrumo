@@ -66,13 +66,18 @@ MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID = "modelo.work.report_v
 
 
 class ModeloCalculationReportVerificationRequest(BaseModel):
-    """Bind the local source bytes and optional trusted key to one profile."""
+    """Bind the local source bytes and optional trusted key to one profile.
+
+    A caller that already holds the document's digest supplies it, and the
+    operation refuses bytes that differ. A caller without one leaves it out and
+    reads the digest of the bytes that were verified from the result.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     source_path: Annotated[str, Field(min_length=1, max_length=4096, pattern=r"\S")]
-    source_sha256: Hex64Str
+    source_sha256: Hex64Str | None = None
     trusted_public_key_hex: Hex64Str | None = None
 
     @model_validator(mode="after")
@@ -91,39 +96,64 @@ class ModeloCalculationReportVerificationCheck(BaseModel):
     layer: CalculationSummaryVerificationLayer
     reason: CalculationSummaryVerificationReason | None = None
     detail: Annotated[str, Field(max_length=PROJECTION_DOCUMENT_MAX_BYTES)] | None = None
+    refuses: bool
+
+    @model_validator(mode="after")
+    def _refuses_as_the_canonical_check_does(self) -> Self:
+        canonical = CalculationSummaryVerificationCheck(
+            check=self.check, layer=self.layer, reason=self.reason, detail=self.detail
+        )
+        if self.refuses != canonical.refuses:
+            raise ValueError("a check refuses the file exactly when the canonical check does")
+        return self
 
 
 class ModeloCalculationReportVerificationResult(BaseModel):
-    """Closed wire form of every canonical verification field."""
+    """The document the ``work report-verify`` command prints as its JSON result.
+
+    Every canonical verification field is present. ``path`` names the document
+    that was verified.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
+    operation: Literal["modelo.work.report_verify"] = "modelo.work.report_verify"
+    path: Annotated[str, Field(min_length=1, max_length=4096)]
     outcome: CalculationSummaryVerificationOutcome
+    store_checked: bool
+    reasons: tuple[CalculationSummaryVerificationReason, ...]
     checks: Annotated[
         tuple[ModeloCalculationReportVerificationCheck, ...], Field(max_length=PROJECTION_DOCUMENT_MAX_BYTES)
     ]
-    store_checked: bool
-    signing_key_fingerprint: Hex64Str | None = None
     calculation_revision_id: Hex64Str | None = None
     report_sha256: Hex64Str | None = None
     statement_sha256: Hex64Str | None = None
+    signing_key_fingerprint: Hex64Str | None = None
+
+    @model_validator(mode="after")
+    def _reasons_are_those_of_the_checks(self) -> Self:
+        if self.reasons != tuple(row.reason for row in self.checks if row.reason is not None):
+            raise ValueError("the reasons are the reasons of the checks, in check order")
+        return self
 
     @classmethod
-    def from_verification(cls, verification: CalculationSummaryVerification) -> Self:
+    def from_verification(cls, verification: CalculationSummaryVerification, *, path: str) -> Self:
         """Preserve the check sequence, absence, and all identifiers."""
         return cls(
+            path=path,
             outcome=verification.outcome,
+            store_checked=verification.store_checked,
+            reasons=verification.reasons,
             checks=tuple(
                 ModeloCalculationReportVerificationCheck(
-                    check=row.check, layer=row.layer, reason=row.reason, detail=row.detail
+                    check=row.check, layer=row.layer, reason=row.reason, detail=row.detail, refuses=row.refuses
                 )
                 for row in verification.checks
             ),
-            store_checked=verification.store_checked,
-            signing_key_fingerprint=verification.signing_key_fingerprint,
             calculation_revision_id=verification.calculation_revision_id,
             report_sha256=verification.report_sha256,
             statement_sha256=verification.statement_sha256,
+            signing_key_fingerprint=verification.signing_key_fingerprint,
         )
 
     def to_verification(self) -> CalculationSummaryVerification:
@@ -144,15 +174,30 @@ class ModeloCalculationReportVerificationResult(BaseModel):
         )
 
 
-class ModeloCalculationReportVerificationProjection(BaseModel):
-    """Encrypted result bound to the requested profile and exact PDF bytes."""
+class ModeloCalculationReportVerificationProjection(ModeloCalculationReportVerificationResult):
+    """The command's document, bound to the requested profile and the exact PDF bytes verified.
 
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    Beyond the command's document it carries ``result_version``, the profile and
+    the digest of the bytes the verdict is about, which a caller without its own
+    digest reads here.
+    """
 
     result_version: Literal[1] = 1
     profile_id: UUID
     source_sha256: Hex64Str
-    verification: ModeloCalculationReportVerificationResult
+
+    @classmethod
+    def bound_to(
+        cls,
+        verification: CalculationSummaryVerification,
+        *,
+        path: str,
+        profile_id: UUID,
+        source_sha256: str,
+    ) -> Self:
+        """Bind a verdict to the profile and the bytes it was reached from."""
+        document = ModeloCalculationReportVerificationResult.from_verification(verification, path=path)
+        return cls(profile_id=profile_id, source_sha256=source_sha256, **dict(document))
 
 
 @dataclass(frozen=True, slots=True)
@@ -205,7 +250,8 @@ class ModeloCalculationReportVerificationExecutor:
                 source = self._source_reader(Path(payload.source_path))
             except OSError as error:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from error
-            if sha256_hex(source) != payload.source_sha256:
+            source_sha256 = sha256_hex(source)
+            if payload.source_sha256 is not None and source_sha256 != payload.source_sha256:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
             with validating_governed_facts(context.authority_operation):
                 ports = self._factory(profile_id=payload.profile_id, operation=context.authority_operation)
@@ -221,10 +267,8 @@ class ModeloCalculationReportVerificationExecutor:
                     trusted_public_key_hex=payload.trusted_public_key_hex,
                     store=ports.store,
                 )
-            return ModeloCalculationReportVerificationProjection(
-                profile_id=payload.profile_id,
-                source_sha256=payload.source_sha256,
-                verification=ModeloCalculationReportVerificationResult.from_verification(verification),
+            return ModeloCalculationReportVerificationProjection.bound_to(
+                verification, path=payload.source_path, profile_id=payload.profile_id, source_sha256=source_sha256
             )
 
         async def capture() -> str:

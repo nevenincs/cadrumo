@@ -11,12 +11,14 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.hex_ids import CalculationRevisionId, SnapshotId, WorkUnitId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.ids import RevisionId
 from ..ledger.read_access import resolve_ledger_commit_access
 from ..live.filed_observation_ports import FiledObservationProtocol
 from ..live.justificante import (
@@ -35,6 +37,7 @@ from ..operations.models import (
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.public_period import PublicPeriod
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -53,7 +56,7 @@ from .reconciliation import (
 )
 from .reconciliation_import_operation import ModeloReconciliationImportProjection
 from .reconciliation_records import ModeloReconciliationEvidenceKind
-from .work_addressing import ModeloWorkAddressNotFoundError
+from .work_addressing import resolve_modelo_work_unit_for_operator_target
 from .work_unit_repository import work_unit_catalogue_repository
 
 MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID = "modelo.reconcile.pull"
@@ -62,16 +65,26 @@ _MAX_RESULT_DOCUMENT_BYTES = 48 * 1024
 
 
 class ModeloReconciliationPullRequest(CredentialFreeOperationRequest):
-    """Address a captured receipt and exact work unit in one bound profile.
+    """Address a captured receipt and one work unit in one bound profile.
 
-    ``actor`` is recorded as sent for a person's session. An agent's session is
-    recorded under its own session label, whatever the request carries.
+    The work unit is named either by its identifier, whole or in the short form
+    the work listings show, or by ``modelo``, ``year`` and ``period`` with an
+    optional registry ``revision``; the operation resolves it as every work
+    command does. The evidence is named by the identifier the capture returned:
+    ``snapshot_id`` from a receipt capture, ``observation_id`` from a filed
+    declaration capture. ``actor`` is recorded as sent for a person's session.
+    An agent's session is recorded under its own session label, whatever the
+    request carries.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    work_unit_id: WorkUnitId
+    work_unit_id: Annotated[str, Field(pattern=r"^(?:[0-9a-f]{12}|[0-9a-f]{64})$")] | None = None
+    modelo: Annotated[str, Field(min_length=1, max_length=16)] | None = None
+    year: FilingYear | None = None
+    period: PublicPeriod | None = None
+    revision: RevisionId | None = None
     calculation_revision_id: CalculationRevisionId | None = None
     snapshot_id: SnapshotId | None = None
     observation_id: SnapshotId | None = None
@@ -79,7 +92,9 @@ class ModeloReconciliationPullRequest(CredentialFreeOperationRequest):
     actor: Annotated[str, Field(min_length=1, max_length=64, pattern=r"\S")] = "operator"
 
     @model_validator(mode="after")
-    def _exact_evidence_selection(self) -> ModeloReconciliationPullRequest:
+    def _exact_selection(self) -> ModeloReconciliationPullRequest:
+        if self.work_unit_id is None and (self.modelo is None or self.year is None or self.period is None):
+            raise ValueError("reconciliation pull requires a work unit id, or modelo, year and period")
         if self.source_kind is ModeloReconciliationEvidenceKind.JUSTIFICANTE:
             valid = self.snapshot_id is not None and self.observation_id is None
         else:
@@ -168,15 +183,20 @@ class ModeloReconciliationPullExecutor:
         await context.events.phase(_PHASES[0])
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
 
-        def prepare() -> PreparedModeloReconciliation:
+        def prepare() -> tuple[WorkUnitId, PreparedModeloReconciliation]:
             if require_active_bucket_id() != profile_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            unit = work_unit_catalogue_repository(bucket_id=profile_id).load().get(payload.work_unit_id)
-            if unit is None:
-                raise ModeloWorkAddressNotFoundError(
-                    translated_message="errors.error.modelo_work_address_not_found",
-                    context={"work_unit_present": False},
-                )
+            unit = resolve_modelo_work_unit_for_operator_target(
+                work_unit_id=payload.work_unit_id,
+                modelo=payload.modelo,
+                year=payload.year,
+                period=payload.period.to_period() if payload.period is not None else None,
+                registry_revision_id=payload.revision,
+                bucket_id=profile_id,
+                catalogue=work_unit_catalogue_repository(bucket_id=profile_id).load(),
+                resolved_bucket_id=profile_id,
+                operation=context.authority_operation,
+            )
             if unit.bucket_id != profile_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             if payload.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
@@ -190,7 +210,7 @@ class ModeloReconciliationPullExecutor:
                 ):
                     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
                 with validating_governed_facts(context.authority_operation):
-                    return prepare_filed_observation_reconciliation(
+                    return unit.work_unit_id, prepare_filed_observation_reconciliation(
                         work_unit=unit,
                         observation=observation,
                         source_ref=reconciliation_pull_source_ref(payload.source_kind, None, payload.observation_id),
@@ -222,10 +242,10 @@ class ModeloReconciliationPullExecutor:
             )
             with validating_governed_facts(context.authority_operation):
                 prepared = prepare_modelo_reconcile_bytes(command, operation=context.authority_operation)
-            return prepared
+            return unit.work_unit_id, prepared
 
         try:
-            prepared = await await_cancellation_complete(
+            work_unit_id, prepared = await await_cancellation_complete(
                 asyncio.to_thread(prepare), task_name="modelo-reconciliation-pull-prepare"
             )
         except CalculationRevisionNotFoundError as exc:
@@ -236,7 +256,7 @@ class ModeloReconciliationPullExecutor:
         )
         if (
             projection.bucket_id != profile_id
-            or projection.work_unit_id != payload.work_unit_id
+            or projection.work_unit_id != work_unit_id
             or (
                 payload.calculation_revision_id is not None
                 and projection.calculation_revision_id != payload.calculation_revision_id

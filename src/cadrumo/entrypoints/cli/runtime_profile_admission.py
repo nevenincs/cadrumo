@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import cast
 from uuid import UUID
 
 import typer
@@ -27,7 +26,7 @@ from ...core.profile_session import ProfileSessionRefusalReason
 from ._profile_authentication_contract import (
     ProfileAuthenticationMethod,
     ProfileAuthenticationSecrets,
-    ProfileSecretSourceOptions,
+    parsed_root_profile_source,
     root_profile_secret_model,
 )
 from ._profile_authentication_notice import stage_profile_session_not_persisted_notice
@@ -41,16 +40,6 @@ from .config.secure_input import (
 )
 from .errors import CliRefusedBoundaryError
 from .runtime_profile_binding import bind_profile_client, subscribe_profile_notices
-
-
-def parsed_root_profile_source(ctx: typer.Context) -> ProfileSecretSourceOptions:
-    """Read the one parsed root authentication selection for this invocation."""
-    value = cast("dict[str, object]", ctx.find_root().ensure_object(dict)).get("profile_secret_source")
-    if value is None:
-        return ProfileSecretSourceOptions()
-    if not isinstance(value, ProfileSecretSourceOptions):
-        raise TypeError("root profile-secret source has an invalid type")
-    return value
 
 
 def require_automation_change_credential_reference(ctx: typer.Context) -> UUID:

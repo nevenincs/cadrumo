@@ -65,7 +65,7 @@ from .archive_operation_ports import (
     ProfileArchivePushReport,
 )
 from .bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportReconcileFailure
-from .capsule_archive import ProfileCapsuleArchiveReceipt
+from .capsule_archive import ProfileCapsuleArchiveReceipt, refuse_unwritable_profile_capsule_archive_target
 
 PROFILE_ARCHIVE_EXPORT_OPERATION_DEFINITION_ID = "profile.archive.export"
 PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID = "profile.archive.push"
@@ -223,6 +223,9 @@ def _execute_archive_work[T: BaseModel](
 ) -> _ProfileArchiveExecutionResult:
     require_operation_profile(request, context, payload.profile_id)
     if isinstance(payload, ProfileArchiveExportRequest):
+        # Refused here for every client alike: a caller that submits this
+        # operation directly gets the refusal a command gives before it submits.
+        refuse_unwritable_profile_capsule_archive_target(payload.target)
         receipt = ports.export(payload.target, write=tracker.call_writer)
         snapshot = ProfileArchiveExportReceiptSnapshot.model_validate(receipt.model_dump())
         return ProfileArchiveExportExecutionResult(
@@ -523,6 +526,9 @@ def build_profile_archive_operation_definitions(
             capabilities=_capabilities(
                 frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN})
             ),
+            # A refused destination names the suffix the path needs, which a
+            # client can only act on if the refusal's detail reaches it.
+            public_error_detail=True,
         ),
         build_single_phase_definition(
             definition_id=PROFILE_ARCHIVE_PUSH_OPERATION_DEFINITION_ID,

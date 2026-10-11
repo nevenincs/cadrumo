@@ -81,7 +81,6 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
         "_modelo_spreadsheet_payloads.py",
         "_modelo_work_wizard_payloads.py",
         "_app_live_iva_wallet_payloads.py",
-        "config/storage_payloads.py",
         "config/_archive_reconcile_payloads.py",
         "config/check_payloads.py",
         "config/provision_payloads.py",

@@ -30,7 +30,7 @@ _AREA = ValueContract(DeferredTarget("....core.storage_taxonomy", "StorageArea",
 def _schema(name: str, identity: str) -> ResultSchemaSpec:
     return ResultSchemaSpec(
         SchemaState.TARGET,
-        target=DeferredTarget(".storage_payloads", name, __package__),
+        target=DeferredTarget("....application.storage_management.documents", name, __package__),
         identity=identity,
     )
 

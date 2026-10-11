@@ -46,73 +46,70 @@ from ..errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     from ....application.bucket_maintenance.contracts import BucketDeletionAssessment
-    from ....application.user_profile.custody_ports import ProfileBucketStoragePort
+    from ....application.bucket_maintenance.deletion_preflight import ProfileDeletionPreflight
     from ..config_payloads import ConfigProfileDeleteResult
 
 
-def _refuse_deleting_the_active_profile(*, bucket_id: str, label: str) -> None:
-    """Preserve the selected-target guard independently of authentication state."""
+def _refused(preflight: ProfileDeletionPreflight) -> Exception | None:
+    """Build this command's refusal for a preflight that offers nothing to delete.
+
+    The decision is the application's; only its rendering is decided here, so
+    the command reports the codes, messages and recovery verdicts it always has.
+    """
+    from ....application.bucket_maintenance.deletion_preflight import ProfileDeletionRefusal
+    from ._profile_support import unknown_profile_refusal
+
+    refusal = preflight.refusal
+    if refusal is None:
+        return None
+    if refusal is ProfileDeletionRefusal.PROFILE_LABEL_AMBIGUOUS:
+        return CliRefusedBoundaryError(translated_message="errors.refused.refused_profile_label_ambiguous")
+    if refusal is ProfileDeletionRefusal.UNKNOWN_PROFILE:
+        # A name that resolved to a capsule no longer on disk is reported by
+        # the identifier that was observed, since the name did resolve.
+        return unknown_profile_refusal(preflight.profile_id or preflight.requested_name)
+    if refusal is ProfileDeletionRefusal.PROFILE_SELECTED:
+        return _selected_profile_refusal(preflight)
+    return _retention_floor_refusal(preflight)
+
+
+def _selected_profile_refusal(preflight: ProfileDeletionPreflight) -> Exception:
+    """Refuse the selected profile: sign-out keeps the selection, so another must be selected first."""
     from ....application.profile_preconditions import profile_deletion_requires_other_selection_verdict
-    from ....core.bucket_pointer import resolve_active_bucket_id
     from ..common import attach_cli_policy_verdict
 
-    if resolve_active_bucket_id() != bucket_id:
-        return
-    raise attach_cli_policy_verdict(
+    label = preflight.label or preflight.requested_name
+    return attach_cli_policy_verdict(
         CliRefusedBoundaryError(
             translated_message="cli.config.profile.delete.refusal.active_profile",
-            context={"name": label, "profile_id": bucket_id},
+            context={"name": label, "profile_id": preflight.profile_id},
         ),
         verdict=profile_deletion_requires_other_selection_verdict(requested_profile=label),
     )
 
 
-def _assess(bucket_id: str, *, bucket_storage: ProfileBucketStoragePort) -> BucketDeletionAssessment:
-    """Observe the target without unlocking it, or refuse when it is gone."""
-    from ....application.bucket_maintenance.contracts import AssessBucketDeletionCommand
-    from ....application.bucket_maintenance.service import BucketMaintenanceService
-
-    assessment = BucketMaintenanceService(bucket_storage=bucket_storage).assess_deletion(
-        AssessBucketDeletionCommand(bucket_id=bucket_id),
-    )
-    if not assessment.exists:
-        from ._profile_support import unknown_profile_refusal
-
-        raise unknown_profile_refusal(bucket_id)
-    return assessment
-
-
-def _refuse_erase_inside_the_retention_floor(assessment: BucketDeletionAssessment) -> None:
+def _retention_floor_refusal(preflight: ProfileDeletionPreflight) -> Exception:
     """Refuse to destroy a target whose filed records are still legally retained.
 
     The Administration's right to review a filed self-assessment prescribes four
     years (Ley 58/2003 LGT art. 66/67) and the supporting documentation must be
     conserved for the same window (art. 70.2). The count and the date are read
     from the assessment the maintenance authority computed from the filing
-    snapshot and are never recomputed here, so the two refusals cannot report
-    different NUMBERS for the same records.
-
-    The DECISION was duplicated here too, and this docstring said so: the
-    all-profile flow tested the blocking flag together with a recorded
-    override, this verb tested the flag alone, and a third condition added to
-    the retention contract would have reached one site and not the other. It
-    now asks :func:`~domain.retention.floor.erase_is_blocked`, so both surfaces
-    reach the same rule. No override is passed because this verb offers none,
-    which is the accurate statement rather than a value withheld.
+    snapshot and are never recomputed here, so this refusal and the all-profile
+    reset's cannot report different numbers for the same records. No override
+    is offered because this verb records no reason for one.
     """
     from ....domain.retention.errors import RetentionFloorError
-    from ....domain.retention.floor import erase_is_blocked
 
-    retention = assessment.retention
-    if retention is None or not erase_is_blocked(blocks_erase=retention.blocks_erase):
-        return
-    safe_from = retention.latest_safe_erase_date
-    raise RetentionFloorError(
+    assessment = preflight.assessment
+    retention = None if assessment is None else assessment.retention
+    safe_from = None if retention is None else retention.latest_safe_erase_date
+    return RetentionFloorError(
         translated_message="errors.refused.refused_retention_floor",
         context={
-            "retained_record_count": len(retention.retained),
+            "retained_record_count": 0 if retention is None else len(retention.retained),
             "earliest_safe_erase_date": (safe_from.date().isoformat() if safe_from is not None else "unknown"),
-            "bucket_id": assessment.bucket_id,
+            "bucket_id": preflight.profile_id,
         },
     )
 
@@ -193,18 +190,21 @@ def config_profile_delete(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Destroy one named profile capsule, after a preflight the operator confirms."""
+    from ....application.bucket_maintenance.deletion_preflight import assess_named_profile_deletion
     from ..state_projection_support import bucket_storage
-    from ._profile_support import resolve_profile_by_label
 
     _activate_subcommand_output_language(ctx, output_language)
-    pointer = resolve_profile_by_label(name)
-    _refuse_deleting_the_active_profile(bucket_id=pointer.bucket_id, label=pointer.label)
-    assessment = _assess(pointer.bucket_id, bucket_storage=bucket_storage(ctx))
-    _refuse_erase_inside_the_retention_floor(assessment)
+    preflight = assess_named_profile_deletion(name, bucket_storage=bucket_storage(ctx))
+    refused = _refused(preflight)
+    if refused is not None:
+        raise refused
+    assessment, label = preflight.assessment, preflight.label
+    if assessment is None or label is None:
+        raise CliRefusedBoundaryError("custody_changed")
     completed_at = _destroy(assessment) if yes else None
     result, lines, notices = _result_and_lines(
         assessment,
-        label=pointer.label,
+        label=label,
         completed_at=completed_at,
     )
     emit_envelope(

@@ -10,17 +10,19 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
+from cadrumo.application.config_reset_documents import ConfigResetOperationPayload
 from cadrumo.application.config_reset_models import ConfigResetOperation, ConfigResetPointerSnapshot
-from cadrumo.application.diagnostic_models import (
-    ConfigRepairReport,
-    DiagnosticCheck,
-    DiagnosticStatus,
-    SecureObjectIntegrityReport,
-    diagnostic_action_verdict,
-    ensure_models_rebuilt,
+from cadrumo.application.diagnostics_repair_documents import (
+    RepairActionDocument,
+    RepairCheckDocument,
+    RepairNamespaceDocument,
+    RepairProfileDocument,
+    RepairProfileHealthDocument,
+    RepairReportDocument,
+    RepairSecureObjectsDocument,
 )
-from cadrumo.application.diagnostics_ports import DiagnosticSecureObjectNamespace
 from cadrumo.application.operations.error_detail import build_operation_error_detail
+from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from cadrumo.application.runtime.installation_requests import (
@@ -40,18 +42,14 @@ from cadrumo.application.runtime.installation_requests import (
     RuntimeInstallationReplyTransfer,
     RuntimeInstallationSecretDelivery,
     RuntimeInstallationSecretReceipt,
-    RuntimeProfileHealth,
     RuntimeProfileListReply,
-    RuntimeProfilePointerRepair,
-    RuntimeProfileRecordStatus,
+    RuntimeProfileListRow,
     RuntimeRecoveryEnrollReply,
     RuntimeRepairLogsReply,
     RuntimeRepairLogsRequest,
     RuntimeRepairProfileReply,
     RuntimeRepairProfileRequest,
-    RuntimeRepairReportProjection,
     RuntimeRepairReportReply,
-    RuntimeReportVerification,
     RuntimeReportVerificationCheck,
     RuntimeReportVerifyDocumentReply,
     RuntimeResetResumeReply,
@@ -59,8 +57,6 @@ from cadrumo.application.runtime.installation_requests import (
     RuntimeResetStartReply,
     RuntimeResetStartRequest,
     RuntimeResetStatusReply,
-    RuntimeReviewPackageManifest,
-    RuntimeReviewPackageVerification,
     RuntimeReviewPackageVerifyReceiptReply,
     RuntimeReviewPackageVerifyReply,
     RuntimeReviewPackageVerifySignatureReply,
@@ -74,6 +70,12 @@ from cadrumo.application.runtime.installation_requests import (
     installation_request_facts,
 )
 from cadrumo.application.runtime.profile_access import RuntimeReply, RuntimeRequest
+from cadrumo.application.storage_management.documents import (
+    ConfigStorageCheckResult,
+    ConfigStorageInitResult,
+    ConfigStorageListResult,
+    ConfigStorageReclaimResult,
+)
 from cadrumo.application.storage_management.models import (
     StorageAreaDisposition,
     StorageAreaInventoryReport,
@@ -86,15 +88,8 @@ from cadrumo.application.storage_management.models import (
     StorageTreeIssueKind,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
-from cadrumo.application.user_profile.capsule_archive import ProfileCapsuleArchiveInspection
-from cadrumo.application.user_profile.capsule_restore import ProfileRestoreOutcome
-from cadrumo.application.user_profile.profile_summary import ProfileSummary, ProfileSummaryInventory
-from cadrumo.application.user_profile.recovery_custody import ProfileRecoveryEnrollmentOutcome
 from cadrumo.core.bucket_pointer import BucketPointer
 from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.core.period import Period
-from cadrumo.core.profile_discovery import ProfileSummaryOutcome
-from cadrumo.core.profile_publication import ProfilePublicationKind
 from cadrumo.core.storage_taxonomy import StorageArea
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -106,6 +101,7 @@ _HOST_FILE = str(Path(__file__).resolve())
 _HOST_DIRECTORY = Path(__file__).resolve().parent
 _PROOF = "synthetic-installation-passphrase"
 _ACT_REQUESTS: TypeAdapter[RuntimeInstallationActRequest] = TypeAdapter(RuntimeInstallationActRequest)
+_DOOR_COORDINATES = {"request_id", "runtime_boot_id", "connection_id", "kind"}
 
 
 def _reply[ReplyT: BaseModel](reply_type: type[ReplyT], **members: object) -> ReplyT:
@@ -115,55 +111,70 @@ def _reply[ReplyT: BaseModel](reply_type: type[ReplyT], **members: object) -> Re
     )
 
 
-def _health(status: str) -> RuntimeProfileHealth:
-    verdict = diagnostic_action_verdict(
-        condition_id="profile.pointer.dangling",
-        evidence_id="profile.pointer",
-        values={"registered_bucket": False},
-        action_id="operator.config.repair.profile",
-    )
-    return RuntimeProfileHealth(
-        active_profile=_PROFILE,
-        active_profile_label="Synthetic profile",
+_PRINTED_ACTION: RepairActionDocument = {
+    "failed_condition_id": "profile.active.pointer_registered",
+    "evidence": [
+        {
+            "condition_id": "profile.active.pointer_registered",
+            "evidence_id": "profile.active.pointer.health",
+            "provenance": "application_state",
+            "values": {"registered_bucket": False},
+        }
+    ],
+    "action": {
+        "action_id": "operator.profile.repair_active_pointer",
+        "target_command_key": "config.repair.profile",
+        "cli_path": ["config", "repair", "profile"],
+    },
+    "argument_bindings": [],
+    "missing_argument_names": [],
+    "conditionality": "immediate",
+    "no_recovery_outcome": None,
+}
+"""One recovery action in the form the command line prints it."""
+
+
+def _health(status: str) -> RepairProfileHealthDocument:
+    return RepairProfileHealthDocument(
+        active_profile="Synthetic profile",
         source="pointer",
         status=status,
         repairable_by_clearing_pointer=True,
-        precondition_verdict_json=verdict.model_dump_json(),
+        precondition_action=_PRINTED_ACTION,
     )
 
 
-def _repair_report() -> RuntimeRepairReportProjection:
-    ensure_models_rebuilt()
-    verdict = diagnostic_action_verdict(
-        condition_id="logging.directory.missing",
-        evidence_id="logging.directory",
-        values={"present": False},
-        action_id="operator.storage.init",
-    )
-    return RuntimeRepairReportProjection.from_report(
-        ConfigRepairReport(
-            overall=DiagnosticStatus.WARN,
-            package_name="cadrumo",
-            package_version="0.0.0",
-            python_version="3.13.0",
-            log_file="synthetic.log",
-            setup=None,
-            secure_objects=SecureObjectIntegrityReport(
-                namespaces=(DiagnosticSecureObjectNamespace(namespace="ledger", readable=3, unreadable=1),),
-                readable_total=3,
-                unreadable_total=1,
+def _repair_report() -> RepairReportDocument:
+    return RepairReportDocument(
+        overall="warn",
+        package_name="cadrumo",
+        package_version="0.0.0",
+        python_version="3.13.0",
+        log_file="synthetic.log",
+        setup=None,
+        secure_objects=RepairSecureObjectsDocument(
+            namespaces=(RepairNamespaceDocument(namespace="ledger", readable=3, unreadable=1),),
+            readable_total=3,
+            unreadable_total=1,
+        ),
+        checks=(
+            RepairCheckDocument(
+                name="environment.python", status="ok", summary="3.13.0", audience="operator", findings=()
             ),
-            checks=(
-                DiagnosticCheck(name="environment.python", status=DiagnosticStatus.OK, summary="3.13.0"),
-                DiagnosticCheck(
-                    name="logging.directory",
-                    status=DiagnosticStatus.WARN,
-                    summary="missing",
-                    precondition_verdict=verdict,
-                ),
+            RepairCheckDocument(
+                name="logging.directory",
+                status="warn",
+                summary="missing",
+                precondition_action=_PRINTED_ACTION,
+                audience="operator",
+                findings=(),
             ),
-        )
+        ),
     )
+
+
+def _members(document: BaseModel) -> dict[str, object]:
+    return {name: getattr(document, name) for name in type(document).model_fields}
 
 
 def _completed_replies() -> dict[InstallationAct, RuntimeInstallationCompleted]:
@@ -177,147 +188,166 @@ def _completed_replies() -> dict[InstallationAct, RuntimeInstallationCompleted]:
         ),
         targets=(),
     )
-    manifest = RuntimeReviewPackageManifest(
-        package_info_version=1,
-        bucket_id=_PROFILE,
-        work_unit_id=_DIGEST,
-        calculation_revision_id=_DIGEST,
-        registry_revision_id="2026-y-siguientes",
-        modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_state="BORRADOR",
-        has_ledger_evidence=True,
-        built_at=_INSTANT,
-        built_by="operator",
-    )
     return {
         InstallationAct.STORAGE_INVENTORY: _reply(
             RuntimeStorageInventoryReply,
-            report=StorageAreaInventoryReport(
-                storage_root=_HOST_DIRECTORY,
-                rows=(
-                    StorageAreaInventoryRow(
-                        area=StorageArea.CACHE,
-                        occupancy=StorageOccupancy.POPULATED,
-                        disposition=StorageAreaDisposition.RECLAIMABLE,
-                        reclaimable=True,
-                        resolved_paths=2,
-                        entry_count=5,
-                        footprint_bytes=4096,
-                    ),
-                ),
+            **_members(
+                ConfigStorageListResult.from_report(
+                    StorageAreaInventoryReport(
+                        storage_root=_HOST_DIRECTORY,
+                        rows=(
+                            StorageAreaInventoryRow(
+                                area=StorageArea.CACHE,
+                                occupancy=StorageOccupancy.POPULATED,
+                                disposition=StorageAreaDisposition.RECLAIMABLE,
+                                reclaimable=True,
+                                resolved_paths=2,
+                                entry_count=5,
+                                footprint_bytes=4096,
+                            ),
+                        ),
+                    )
+                )
             ),
         ),
         InstallationAct.STORAGE_CHECK: _reply(
             RuntimeStorageCheckReply,
-            report=StorageTreeCheckReport(
-                storage_root=_HOST_DIRECTORY,
-                healthy=False,
-                root_mode_enforced=False,
-                checked_locations=7,
-                issues=(
-                    StorageTreeIssue(
-                        kind=StorageTreeIssueKind.MISSING_DIRECTORY,
-                        path=_HOST_DIRECTORY / "logs",
-                        area=StorageArea.LOGS,
-                        detail="declared directory has not been materialised",
-                    ),
-                ),
+            **_members(
+                ConfigStorageCheckResult.from_report(
+                    StorageTreeCheckReport(
+                        storage_root=_HOST_DIRECTORY,
+                        healthy=False,
+                        root_mode_enforced=False,
+                        checked_locations=7,
+                        issues=(
+                            StorageTreeIssue(
+                                kind=StorageTreeIssueKind.MISSING_DIRECTORY,
+                                path=_HOST_DIRECTORY / "logs",
+                                area=StorageArea.LOGS,
+                                detail="declared directory has not been materialised",
+                            ),
+                        ),
+                    )
+                )
             ),
         ),
         InstallationAct.STORAGE_INIT: _reply(
             RuntimeStorageInitReply,
-            report=StorageInitReport(storage_root=_HOST_DIRECTORY, created=(_HOST_DIRECTORY / "cache",)),
+            **_members(
+                ConfigStorageInitResult.from_report(
+                    StorageInitReport(storage_root=_HOST_DIRECTORY, created=(_HOST_DIRECTORY / "cache",))
+                )
+            ),
         ),
         InstallationAct.STORAGE_RECLAIM: _reply(
             RuntimeStorageReclaimReply,
-            report=StorageReclaimReport(
-                area=StorageArea.CACHE,
-                target_count=2,
-                removed_entries=4,
-                retained_entries=1,
-                retained_paths=(Path(_HOST_FILE),),
+            **_members(
+                ConfigStorageReclaimResult.from_report(
+                    StorageReclaimReport(
+                        area=StorageArea.CACHE,
+                        target_count=2,
+                        removed_entries=4,
+                        retained_entries=1,
+                        retained_paths=(Path(_HOST_FILE),),
+                    )
+                )
             ),
         ),
         InstallationAct.PROFILE_LIST: _reply(
             RuntimeProfileListReply,
-            inventory=ProfileSummaryInventory(
-                outcome=ProfileSummaryOutcome.RECOGNIZED,
-                summaries=(
-                    ProfileSummary(
-                        profile_id=_PROFILE,
-                        label="Synthetic profile",
-                        label_revision=1,
-                        published_at=_INSTANT,
-                        publication_kind=ProfilePublicationKind.RESTORE,
-                    ),
-                ),
-            ),
-            active_profile_id=_PROFILE,
+            active_profile="Synthetic profile",
+            profiles=(RuntimeProfileListRow(name="Synthetic profile", bucket_id=_PROFILE, active=True),),
         ),
-        InstallationAct.RESET_START: _reply(RuntimeResetStartReply, operation=reset),
+        InstallationAct.RESET_START: _reply(
+            RuntimeResetStartReply, operation=ConfigResetOperationPayload.from_operation(reset)
+        ),
         InstallationAct.RESET_STATUS: _reply(RuntimeResetStatusReply, operation=None),
-        InstallationAct.RESET_RESUME: _reply(RuntimeResetResumeReply, operation=reset),
+        InstallationAct.RESET_RESUME: _reply(
+            RuntimeResetResumeReply, operation=ConfigResetOperationPayload.from_operation(reset)
+        ),
         InstallationAct.ARCHIVE_INSPECT: _reply(
             RuntimeArchiveInspectReply,
-            inspection=ProfileCapsuleArchiveInspection(
-                product="cadrumo",
-                bucket_id=_PROFILE,
-                archive_schema_version=1,
-                created_at=_INSTANT,
-                manifest_digest=_DIGEST,
-            ),
+            product="cadrumo",
+            bucket_id=_PROFILE,
+            archive_schema_version=1,
+            created_at=_INSTANT,
+            manifest_digest=_DIGEST,
         ),
         InstallationAct.ARCHIVE_IMPORT_PREPARE: _reply(RuntimeArchiveImportPrepareReply, source_digest=_DIGEST),
         InstallationAct.ARCHIVE_IMPORT: _reply(
             RuntimeArchiveImportReply,
-            outcome=ProfileRestoreOutcome(
-                profile_id=_PROFILE, label="Synthetic profile", authority="password", recovery_enrolled=False
-            ),
+            profile_id=_PROFILE,
+            label="Synthetic profile",
+            authority="password",
+            recovery_enrolled=False,
         ),
         InstallationAct.RECOVERY_ENROLL: _reply(
-            RuntimeRecoveryEnrollReply,
-            outcome=ProfileRecoveryEnrollmentOutcome(profile_id=_PROFILE, enrolled=True, changed=True),
+            RuntimeRecoveryEnrollReply, profile_id=_PROFILE, enrolled=True, changed=True
         ),
-        InstallationAct.REPAIR_REPORT: _reply(RuntimeRepairReportReply, report=_repair_report()),
+        InstallationAct.REPAIR_REPORT: _reply(RuntimeRepairReportReply, **_members(_repair_report())),
         InstallationAct.REPAIR_LOGS: _reply(
             RuntimeRepairLogsReply, path=_HOST_FILE, lines=("first synthetic line", "second synthetic line")
         ),
         InstallationAct.REPAIR_PROFILE: _reply(
             RuntimeRepairProfileReply,
-            pointer_repair=RuntimeProfilePointerRepair(
-                dry_run=False,
-                cleared_pointer=True,
-                before=_health("dangling_pointer"),
-                after=RuntimeProfileHealth(active_profile=None, source="none", status="none"),
-            ),
+            dry_run=False,
+            cleared_pointer=True,
+            before=_health("dangling_pointer"),
+            after=RepairProfileHealthDocument(active_profile=None, source="none", status="none"),
         ),
         InstallationAct.REVIEW_PACKAGE_VERIFY: _reply(
             RuntimeReviewPackageVerifyReply,
-            verification=RuntimeReviewPackageVerification(manifest=manifest, mismatched=("fichero.txt",)),
+            operation="modelo.review_package.verify",
+            package_path=_HOST_FILE,
+            is_clean=False,
+            missing=[],
+            unexpected=[],
+            mismatched=["fichero.txt"],
+            bucket_id=_PROFILE,
+            work_unit_id=_DIGEST,
+            calculation_revision_id=_DIGEST,
+            modelo="303",
+            filing_year=2026,
+            period=PublicPeriod(filing_year=2026, code="1T"),
+            revision_state="BORRADOR",
+            has_ledger_evidence=True,
+            built_by="operator",
+            built_at=_INSTANT,
         ),
         InstallationAct.REVIEW_PACKAGE_VERIFY_SIGNATURE: _reply(
-            RuntimeReviewPackageVerifySignatureReply, is_valid=True, signer_public_key_hex=_DIGEST
+            RuntimeReviewPackageVerifySignatureReply,
+            operation="modelo.review_package.verify_signature",
+            package_path=_HOST_FILE,
+            signature_path=_HOST_FILE,
+            signer_public_key_hex=_DIGEST,
+            is_valid=True,
         ),
         InstallationAct.REVIEW_PACKAGE_VERIFY_RECEIPT: _reply(
             RuntimeReviewPackageVerifyReceiptReply,
-            is_valid=False,
+            operation="modelo.review_package.verify_receipt",
+            package_path=_HOST_FILE,
+            receipt_path=_HOST_FILE,
             operator_public_key_hex=_DIGEST,
             counter_signer_public_key_hex=_DIGEST,
+            is_valid=False,
         ),
         InstallationAct.REPORT_VERIFY_DOCUMENT: _reply(
             RuntimeReportVerifyDocumentReply,
-            verification=RuntimeReportVerification(
-                outcome="refused",
-                checks=(
-                    RuntimeReportVerificationCheck(
-                        check="statement_signature", layer="document", reason="signature_invalid", detail="statement"
-                    ),
-                ),
-                store_checked=False,
-                calculation_revision_id=_DIGEST,
-            ),
+            operation="modelo.work.report_verify",
+            path=_HOST_FILE,
+            outcome="refused",
+            store_checked=False,
+            reasons=["signature_invalid"],
+            checks=[
+                RuntimeReportVerificationCheck(
+                    check="statement_signature",
+                    layer="document",
+                    reason="signature_invalid",
+                    detail="statement",
+                    refuses=True,
+                )
+            ],
+            calculation_revision_id=_DIGEST,
         ),
     }
 
@@ -431,19 +461,17 @@ def test_the_shared_outcomes_cross_the_reply_door_whole() -> None:
         assert RuntimeReply.model_validate_json(_over_the_wire(outcome)).root == outcome
 
 
-def test_a_repair_check_restores_the_verdict_its_report_carried() -> None:
-    report = _repair_report()
+def test_a_repair_report_reply_is_the_document_its_command_prints() -> None:
+    document = _repair_report()
+    reply = _reply(RuntimeRepairReportReply, **_members(document))
 
-    restored = RuntimeRepairReportProjection.model_validate_json(_over_the_wire(report))
+    restored = RuntimeRepairReportReply.model_validate_json(_over_the_wire(reply))
 
+    assert restored == reply
+    assert restored.model_dump(mode="json", exclude=_DOOR_COORDINATES) == document.model_dump(mode="json")
     warned = next(check for check in restored.checks if check.name == "logging.directory")
-    verdict = warned.precondition_verdict()
-    assert verdict is not None
-    assert verdict.failed_condition_id == "logging.directory.missing"
-    assert next(check for check in restored.checks if check.name == "environment.python").precondition_verdict() is None
-    assert (restored.secure_objects_readable_total, restored.secure_objects_unreadable_total) == (3, 1)
-    with pytest.raises(ValidationError):
-        type(warned).model_validate({**warned.model_dump(), "precondition_verdict_json": "{}"})
+    assert warned.precondition_action == _PRINTED_ACTION
+    assert next(check for check in restored.checks if check.name == "environment.python").precondition_action is None
 
 
 def test_an_unconfirmed_request_reads_and_a_confirmed_one_changes_records() -> None:
@@ -503,29 +531,28 @@ def test_a_request_refuses_a_member_its_act_does_not_declare() -> None:
         RuntimeRepairLogsRequest(request_id=uuid4(), frontend=OperationFrontendProjection.CLI, lines=-1)
 
 
-def test_a_profile_repair_reply_carries_exactly_one_branch() -> None:
-    record = RuntimeProfileRecordStatus(
+def test_a_profile_repair_reply_is_the_document_its_command_prints_for_either_branch() -> None:
+    repaired = RepairProfileDocument(dry_run=True, cleared_pointer=False, before=_health("dangling_pointer"))
+    inspected = RepairProfileDocument(
         profile_id=_PROFILE,
+        bucket_id=_PROFILE,
         display_name="Synthetic profile",
         registered_bucket=True,
         profile_record_present=False,
         status="missing_profile_record",
+        precondition_action=_PRINTED_ACTION,
     )
-    repair = RuntimeProfilePointerRepair(dry_run=True, cleared_pointer=False, before=_health("dangling_pointer"))
 
-    assert _reply(RuntimeRepairProfileReply, record_status=record).pointer_repair is None
+    for document in (repaired, inspected):
+        reply = _reply(RuntimeRepairProfileReply, **_members(document))
+        restored = RuntimeRepairProfileReply.model_validate_json(_over_the_wire(reply))
+        # The members of the branch not taken are null in the document, as the command prints them.
+        assert restored.model_dump(mode="json", exclude=_DOOR_COORDINATES) == document.model_dump(mode="json")
     with pytest.raises(ValidationError):
-        _reply(RuntimeRepairProfileReply)
+        _reply(RuntimeRepairProfileReply, pointer_repair=repaired)
+    # A reply carries a profile's real identifier, never the placeholder the command line prints for one.
     with pytest.raises(ValidationError):
-        _reply(RuntimeRepairProfileReply, pointer_repair=repair, record_status=record)
-    with pytest.raises(ValidationError):
-        RuntimeProfileRecordStatus(
-            profile_id=_PROFILE,
-            display_name="Synthetic profile",
-            registered_bucket=True,
-            profile_record_present=True,
-            status="missing_profile_record",
-        )
+        _reply(RuntimeRepairProfileReply, **{**_members(inspected), "profile_id": "<profile-id>"})
 
 
 def test_secret_documents_never_show_what_they_carry() -> None:

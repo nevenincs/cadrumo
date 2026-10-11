@@ -37,7 +37,6 @@ from ..calculation_report_verification_operation import (
     ModeloCalculationReportVerificationPorts,
     ModeloCalculationReportVerificationProjection,
     ModeloCalculationReportVerificationRequest,
-    ModeloCalculationReportVerificationResult,
     build_modelo_calculation_report_verify_definition,
     build_modelo_calculation_report_verify_registration,
 )
@@ -53,12 +52,12 @@ _AUTHORITY = cast(PinnedAuthorityOperation, object())
 _SOURCE = b"local summary bytes"
 
 
-def _request(path: Path) -> OperationRequest[BaseModel]:
+def _request(path: Path, *, source_sha256: str | None = sha256_hex(_SOURCE)) -> OperationRequest[BaseModel]:
     return OperationRequest[BaseModel](
         definition_id=MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=ModeloCalculationReportVerificationRequest(
-            profile_id=_PROFILE, source_path=str(path), source_sha256=sha256_hex(_SOURCE)
+            profile_id=_PROFILE, source_path=str(path), source_sha256=source_sha256
         ),
     )
 
@@ -150,14 +149,14 @@ def test_closed_public_projection_preserves_all_verification_checks() -> None:
         report_sha256="c" * 64,
         statement_sha256="d" * 64,
     )
-    projection = ModeloCalculationReportVerificationProjection(
-        profile_id=_PROFILE,
-        source_sha256=sha256_hex(_SOURCE),
-        verification=ModeloCalculationReportVerificationResult.from_verification(verification),
+    projection = ModeloCalculationReportVerificationProjection.bound_to(
+        verification, path="summary.pdf", profile_id=_PROFILE, source_sha256=sha256_hex(_SOURCE)
     )
     restored = ModeloCalculationReportVerificationProjection.model_validate_json(projection.model_dump_json())
-    assert restored.verification.to_verification() == verification
-    assert restored.verification.to_verification().reasons == tuple(CalculationSummaryVerificationReason)
+    assert restored.to_verification() == verification
+    assert restored.to_verification().reasons == tuple(CalculationSummaryVerificationReason)
+    assert restored.reasons == tuple(CalculationSummaryVerificationReason)
+    assert [row.refuses for row in restored.checks] == [row.refuses for row in checks]
     with pytest.raises(ValidationError):
         ModeloCalculationReportVerificationProjection.model_validate_json(
             projection.model_dump_json().replace('"result_version":1', '"result_version":1,"extra":true')
@@ -193,11 +192,11 @@ def test_registration_requires_all_periods_and_excludes_commit_without_reads(tmp
     assert definition.capabilities.sensitive_input is OperationSensitiveInputPolicy.SECURE_REFERENCE
 
 
-def test_executor_uses_canonical_verifier_and_same_source_bytes(tmp_path: Path) -> None:
-    path = tmp_path / "summary.pdf"
-    path.write_bytes(_SOURCE)
+def _run_executor(
+    path: Path, *, source_sha256: str | None
+) -> tuple[ModeloCalculationReportVerificationProjection, list[bytes], list[OperationEffect]]:
+    """Run the real executor over ``path`` with a reader that records the bytes it is given."""
     seen_sources: list[bytes] = []
-    factory_calls: list[tuple[UUID, PinnedAuthorityOperation]] = []
 
     def reader(source: bytes, /) -> CalculationSummaryPdfContents:
         seen_sources.append(source)
@@ -210,7 +209,6 @@ def test_executor_uses_canonical_verifier_and_same_source_bytes(tmp_path: Path) 
         )
 
     def factory(*, profile_id: UUID, operation: PinnedAuthorityOperation) -> ModeloCalculationReportVerificationPorts:
-        factory_calls.append((profile_id, operation))
         return ModeloCalculationReportVerificationPorts(
             profile_id=profile_id,
             reader=reader,
@@ -223,7 +221,7 @@ def test_executor_uses_canonical_verifier_and_same_source_bytes(tmp_path: Path) 
         )
 
     definition = build_modelo_calculation_report_verify_definition(factory)
-    request = _request(path)
+    request = _request(path, source_sha256=source_sha256)
     stored: list[BaseModel] = []
     effects: list[OperationEffect] = []
     with override_settings(cadrumo_active_profile=str(_PROFILE)):
@@ -231,13 +229,22 @@ def test_executor_uses_canonical_verifier_and_same_source_bytes(tmp_path: Path) 
             definition.executor_factory.create().execute(request, _context(request, stored, effects))
         )
     assert reference == "f" * 64
-    assert factory_calls == [(_PROFILE, _AUTHORITY)]
+    return ModeloCalculationReportVerificationProjection.model_validate(stored[0]), seen_sources, effects
+
+
+@pytest.mark.parametrize("supplied", [True, False], ids=["digest-supplied", "digest-left-to-the-operation"])
+def test_executor_uses_canonical_verifier_and_same_source_bytes(tmp_path: Path, supplied: bool) -> None:
+    path = tmp_path / "summary.pdf"
+    path.write_bytes(_SOURCE)
+
+    projection, seen_sources, effects = _run_executor(path, source_sha256=sha256_hex(_SOURCE) if supplied else None)
+
     assert seen_sources == [_SOURCE]
     assert effects == [OperationEffect.NONE]
-    projection = ModeloCalculationReportVerificationProjection.model_validate(stored[0])
     assert projection.profile_id == _PROFILE
     assert projection.source_sha256 == sha256_hex(_SOURCE)
-    verification = projection.verification.to_verification()
+    assert projection.path == str(path)
+    verification = projection.to_verification()
     assert verification.outcome is CalculationSummaryVerificationOutcome.REFUSED
     assert verification.store_checked is False
     assert tuple(row.check for row in verification.checks) == (
@@ -245,3 +252,14 @@ def test_executor_uses_canonical_verifier_and_same_source_bytes(tmp_path: Path) 
         CalculationSummaryCheckName.CADRUMO_REPORT,
     )
     assert verification.reasons == (CalculationSummaryVerificationReason.NOT_A_CADRUMO_REPORT,)
+
+
+def test_a_changed_file_is_verified_as_it_is_when_no_digest_was_supplied(tmp_path: Path) -> None:
+    changed = b"changed summary bytes"
+    path = tmp_path / "summary.pdf"
+    path.write_bytes(changed)
+
+    projection, seen_sources, _effects = _run_executor(path, source_sha256=None)
+
+    assert seen_sources == [changed]
+    assert projection.source_sha256 == sha256_hex(changed)

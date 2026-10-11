@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:e3907950be22c5bacdfddefea7a8ca83754f91e9580560ca58b8210abfbc653c'
+body_hash: 'sha256:9272f605a390ce3c0eee03b97ff304c7555dec884638b7997f82d8e646361eda'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -1640,6 +1640,105 @@ related:
 - `S53` `verify:` `ruff, format and ty on the 25 files` -> `pass`
 - `S53` `verify:` `pytest executor conformance, frontend parity, surface facts, subject binding and the operations package (1554 of 1556; the two are the session-expiry and key-derivation limits the suite hits under load)` -> `pass`
 - `S53` `by:` `vaultspec-high-executor`
+- `S54` `M` `src/cadrumo/entrypoints/cli/common.py`
+- `S54` `D` `src/cadrumo/entrypoints/cli/config/_profile_readiness.py`
+- `S54` `M` `src/cadrumo/entrypoints/cli/config/_repair_cli.py`
+- `S54` `M` `src/cadrumo/entrypoints/cli/config/_repair_profile.py`
+- `S54` `M` `src/cadrumo/entrypoints/cli/config/connectivity_rendering.py`
+- `S54` `M` `src/cadrumo/entrypoints/tests/test_operation_no_tax_agency_write.py`
+- `S54` `A` `src/cadrumo/application/connectivity_probe.py`
+- `S54` `A` `src/cadrumo/application/diagnostics_repair.py`
+- `S54` `A` `src/cadrumo/application/diagnostics_repair_documents.py`
+- `S54` `A` `src/cadrumo/application/diagnostics_repair_operations.py`
+- `S54` `A` `src/cadrumo/application/operator_surface/action_targets.py`
+- `S54` `A` `src/cadrumo/application/operator_surface/precondition_action.py`
+- `S54` `A` `src/cadrumo/application/workflow/profile_repair.py`
+- `S54` `A` `src/cadrumo/entrypoints/cli/tests/test_recorded_action_targets.py`
+- `S54` `A` `src/cadrumo/entrypoints/diagnostics_repair_composition.py`
+- `S54` `A` `src/cadrumo/entrypoints/runtime/installation_repair.py`
+- `S54` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_repair.py`
+- `S54` `A` `src/cadrumo/entrypoints/tests/test_diagnostics_repair_command_parity.py`
+- `S54` `A` `src/cadrumo/entrypoints/tests/test_diagnostics_repair_operations.py`
+- `S54` `verify:` `pytest act families through the real runtime door (164), their operations and application tests (117), and the storage, reset, repair, archive, recovery, censo and profile commands (129 of 131; the two waited 3 s for the native test server under load)` -> `pass`
+- `S54` `by:` `vaultspec-high-executor`
+- `S55` `M` `src/cadrumo/adapters/local_runtime/installation_client.py`
+- `S55` `M` `src/cadrumo/application/config_reset.py`
+- `S55` `M` `src/cadrumo/application/storage_management/models.py`
+- `S55` `M` `src/cadrumo/application/storage_management/tests/test_inventory_and_tree.py`
+- `S55` `M` `src/cadrumo/application/tests/test_config_reset.py`
+- `S55` `M` `src/cadrumo/core/errors/registry/_application_part1.py`
+- `S55` `M` `src/cadrumo/entrypoints/cli/config/_storage_command_specs.py`
+- `S55` `M` `src/cadrumo/entrypoints/cli/config/reset_cli.py`
+- `S55` `M` `src/cadrumo/entrypoints/cli/config/storage_cli.py`
+- `S55` `D` `src/cadrumo/entrypoints/cli/config/storage_payloads.py`
+- `S55` `M` `src/cadrumo/entrypoints/cli/config_payloads.py`
+- `S55` `M` `src/cadrumo/entrypoints/cli/runtime_installation.py`
+- `S55` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`
+- `S55` `M` `src/cadrumo/entrypoints/cli/tests/test_config_reset_payload_contract.py`
+- `S55` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_installation.py`
+- `S55` `A` `src/cadrumo/application/config_reset_documents.py`
+- `S55` `A` `src/cadrumo/application/storage_management/documents.py`
+- `S55` `A` `src/cadrumo/entrypoints/runtime/installation_reset.py`
+- `S55` `A` `src/cadrumo/entrypoints/runtime/installation_storage.py`
+- `S55` `A` `src/cadrumo/entrypoints/runtime/tests/installation_registered_runtime.py`
+- `S55` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_reset.py`
+- `S55` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_storage.py`
+- `S55` `verify:` `pytest act families through the real runtime door (164), their operations and application tests (117), and the storage, reset, repair, archive, recovery, censo and profile commands (129 of 131; the two waited 3 s for the native test server under load)` -> `pass`
+- `S55` `by:` `vaultspec-high-executor`
+- `S56` `M` `src/cadrumo/application/runtime/installation_requests.py`
+- `S56` `M` `src/cadrumo/application/runtime/tests/test_installation_requests.py`
+- `S56` `M` `src/cadrumo/application/user_profile/archive_operation.py`
+- `S56` `M` `src/cadrumo/application/user_profile/capsule_archive.py`
+- `S56` `M` `src/cadrumo/application/user_profile/censal_file_import_operation.py`
+- `S56` `M` `src/cadrumo/application/user_profile/profile_summary.py`
+- `S56` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_contract.py`
+- `S56` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S56` `M` `src/cadrumo/entrypoints/cli/config/_archive_cli.py`
+- `S56` `M` `src/cadrumo/entrypoints/cli/config/_censo_transport.py`
+- `S56` `M` `src/cadrumo/entrypoints/cli/config/_profile_delete.py`
+- `S56` `M` `src/cadrumo/entrypoints/cli/config/profile_list_cli.py`
+- `S56` `M` `src/cadrumo/entrypoints/cli/config/restore_cli.py`
+- `S56` `M` `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`
+- `S56` `M` `src/cadrumo/entrypoints/runtime/tests/installation_runtime.py`
+- `S56` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_door.py`
+- `S56` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_runtime.py`
+- `S56` `A` `src/cadrumo/application/bucket_maintenance/deletion_preflight.py`
+- `S56` `A` `src/cadrumo/application/operator_output/result_document.py`
+- `S56` `A` `src/cadrumo/application/user_profile/censal_certificate_operation.py`
+- `S56` `A` `src/cadrumo/application/user_profile/recovery_revoke_operation.py`
+- `S56` `A` `src/cadrumo/application/user_profile/tests/test_profile_listing.py`
+- `S56` `A` `src/cadrumo/application/user_profile/tests/test_recovery_revoke_operation.py`
+- `S56` `A` `src/cadrumo/entrypoints/cli/config/tests/test_profile_delete_preflight_parity.py`
+- `S56` `A` `src/cadrumo/entrypoints/runtime/installation_profiles.py`
+- `S56` `A` `src/cadrumo/entrypoints/runtime/tests/installation_profile_support.py`
+- `S56` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_profiles.py`
+- `S56` `A` `src/cadrumo/entrypoints/tests/command_line_rendering.py`
+- `S56` `A` `src/cadrumo/entrypoints/tests/profile_operation_supervisor.py`
+- `S56` `A` `src/cadrumo/entrypoints/tests/test_censal_certificate_file_operation.py`
+- `S56` `A` `src/cadrumo/entrypoints/tests/test_profile_archive_export_target_refusals.py`
+- `S56` `A` `src/cadrumo/entrypoints/tests/test_recovery_revoke_operation.py`
+- `S56` `verify:` `pytest act families through the real runtime door (164), their operations and application tests (117), and the storage, reset, repair, archive, recovery, censo and profile commands (129 of 131; the two waited 3 s for the native test server under load)` -> `pass`
+- `S56` `by:` `vaultspec-high-executor`
+- `S58` `M` `src/cadrumo/application/live/filed_data_capture.py`
+- `S58` `M` `src/cadrumo/application/live/filed_observation_ports.py`
+- `S58` `M` `src/cadrumo/application/live/filed_single_capture_operation.py`
+- `S58` `M` `src/cadrumo/application/live/remote_state_models.py`
+- `S58` `M` `src/cadrumo/application/modelo/calculation_report_verification_operation.py`
+- `S58` `M` `src/cadrumo/application/modelo/reconciliation_pull_operation.py`
+- `S58` `M` `src/cadrumo/application/modelo/tests/test_calculation_report_verification_operation.py`
+- `S58` `M` `src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py`
+- `S58` `M` `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`
+- `S58` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_calculation_report_verify.py`
+- `S58` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_filed_single.py`
+- `S58` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S58` `A` `src/cadrumo/application/modelo/review_package_verification_files.py`
+- `S58` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_pull_parity.py`
+- `S58` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_report_verify_parity.py`
+- `S58` `A` `src/cadrumo/entrypoints/runtime/installation_artefacts.py`
+- `S58` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_artefacts.py`
+- `S58` `A` `src/cadrumo/entrypoints/tests/test_modelo_reconciliation_sequence.py`
+- `S58` `verify:` `pytest act families through the real runtime door (164), their operations and application tests (117), and the storage, reset, repair, archive, recovery, censo and profile commands (129 of 131; the two waited 3 s for the native test server under load)` -> `pass`
+- `S58` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1694,3 +1793,7 @@ related:
 - `S52` The door only: no act is registered in the installed composition, and the import inventory and the command table are regenerated once, in S61, when every family has landed. The command line keeps its in-process work.
 - `S57` The authority tool keeps every field it returned before and adds the command line's; the metadata inventories are regenerated once, in S61.
 - `S53` The command line keeps its in-process work. The worker asks the runtime to start the model server, since a server it started itself ends with it; shown on Windows with the real spawn and scope, by reading only on Linux and macOS. The three new operations and the start instruction go live when S61 wires them into composition.
+- `S54` Four operations for the repair work that needs a profile and three acts for the work that needs none; the command and its operation or act call the same application function. The command path of a remedy is resolved in the application from a record of the catalogue's targets that a test holds to the command graph, so the runtime prints the same remedy without importing the command line. Also here: the gate against tax agency write verbs declares the portal catalogue's payment category, which the authority tool enumerates since S57 and only reads.
+- `S55` Storage and reset acts, each reply the JSON the command prints. Acts carry their own deadline and a timed out reset reports an unknown outcome read by `reset_status.` The command line did the reset in its own process and could delete a profile's files under a hosted worker; with a runtime reachable it now sends the act, which drains the hosted profiles first, and with none it works in process as before.
+- `S56` Profile list, archive inspect and import, and recovery enrolment as acts; recovery revocation and a censo certificate import with preview as operations; the archive export target checks and the delete preflight lifted so a direct client gets them. Replies carry real identifiers and the command line redacts when it prints. The cold profile listing no longer loads the runtime client. Logged here too: the door's models file and its tests, which all four families changed.
+- `S58` Review package and report document verification as acts. The report verification operation hashes the bytes it reads when no digest is given. Reconciliation takes the work by coordinates and the observation by the identifier the capture returns, so any client runs capture then reconcile; captures only read.

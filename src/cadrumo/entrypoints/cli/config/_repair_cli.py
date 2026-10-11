@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import typer
@@ -10,136 +9,41 @@ import typer
 from ....adapters.outbound.aeat.browser.connectivity import (
     probe_browser_connectivity as _probe_browser_connectivity,
 )
+from ....application.connectivity_probe import probe_connectivity as _probe_connectivity
 from ....application.diagnostics import (
     build_config_repair_report as _build_config_repair_report,
 )
 from ....application.diagnostics import (
-    preview_quarantine_unreadable_secure_objects as _preview_quarantine_unreadable_secure_objects,
-)
-from ....application.diagnostics import (
-    quarantine_unreadable_secure_objects as _quarantine_unreadable_secure_objects,
-)
-from ....application.diagnostics import (
     render_config_repair_text as _render_config_repair_text,
+)
+from ....application.diagnostics_repair import (
+    check_secure_object_integrity as _check_secure_object_integrity,
+)
+from ....application.diagnostics_repair import read_log_tail as _read_log_tail
+from ....application.diagnostics_repair import (
+    run_secure_object_quarantine as _run_secure_object_quarantine,
+)
+from ....application.diagnostics_repair import (
+    run_workflow_progress_reset as _run_workflow_progress_reset,
+)
+from ....application.diagnostics_repair_documents import connectivity_document as _connectivity_document
+from ....application.diagnostics_repair_documents import (
+    integrity_objects_document as _integrity_objects_document,
+)
+from ....application.diagnostics_repair_documents import quarantine_document as _quarantine_document
+from ....application.diagnostics_repair_documents import repair_report_document as _repair_report_document
+from ....application.diagnostics_repair_documents import (
+    reset_progress_document as _reset_progress_document,
 )
 from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.json_contract import strict_round_trip
-from ....core.logging import default_log_file_path as _default_log_file_path
 from ..common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .connectivity_rendering import render_browser_connectivity_text as _render_browser_connectivity_text
 
 if TYPE_CHECKING:
-    from ....application.diagnostic_models import (
-        ConfigRepairReport,
-        DiagnosticCheck,
-        SecureObjectIntegrityReport,
-    )
+    from ....application.diagnostic_models import SecureObjectIntegrityReport
     from ....application.workflow.events import WorkflowStateResetFingerprint
-    from ..config_payloads import (
-        ConfigRepairCheckPayload,
-        ConfigRepairResult,
-        RepairQuarantineResult,
-        RepairResetProgressResult,
-        WorkflowFingerprintPayload,
-    )
-
-
-def _workflow_fingerprint_payload(fingerprint: WorkflowStateResetFingerprint) -> WorkflowFingerprintPayload:
-    """Project an encrypted-workflow reset fingerprint into its typed CLI payload."""
-    from ..config_payloads import WorkflowFingerprintPayload
-
-    return WorkflowFingerprintPayload(
-        schema_version=fingerprint.schema_version,
-        written_at=fingerprint.written_at,
-        byte_length=fingerprint.byte_length,
-        reason_class=fingerprint.reason_class,
-        recovered_bucket_id=fingerprint.recovered_bucket_id or None,
-    )
-
-
-def _repair_check_payload(check: DiagnosticCheck) -> ConfigRepairCheckPayload:
-    """Project one application diagnostic check into its typed CLI payload.
-
-    The CLI boundary is where an application-owned precondition verdict
-    becomes a schema-resolved wire action; every repair surface that emits a
-    check row shares this one projection.
-    """
-    from ..config_payloads import ConfigRepairCheckPayload, ConfigRepairFindingPayload
-
-    return ConfigRepairCheckPayload(
-        name=check.name,
-        status=check.status,
-        summary=check.summary,
-        detail=check.detail,
-        precondition_action=(
-            resolve_cli_precondition_action(check.precondition_verdict)
-            if check.precondition_verdict is not None
-            else None
-        ),
-        audience=check.audience,
-        findings=[
-            ConfigRepairFindingPayload(
-                summary=finding.summary,
-                detail=finding.detail,
-                requirement=finding.requirement,
-            )
-            for finding in check.findings
-        ],
-    )
-
-
-def _config_repair_result(report: ConfigRepairReport) -> ConfigRepairResult:
-    """Project diagnostics through the one CLI action resolver before emitting.
-
-    Diagnostics preserve application-owned precondition verdicts.  This is the
-    CLI boundary where those records become schema-resolved wire actions; the
-    application renderer never reconstructs command prose from them.
-    """
-    from ..config_payloads import (
-        ConfigRepairNamespacePayload,
-        ConfigRepairResult,
-        ConfigRepairSecureObjectsPayload,
-        ConfigRepairSetupPayload,
-    )
-
-    checks = [_repair_check_payload(check) for check in report.checks]
-    return ConfigRepairResult(
-        overall=report.overall,
-        package_name=report.package_name,
-        package_version=report.package_version,
-        python_version=report.python_version,
-        log_file=report.log_file,
-        setup=(
-            ConfigRepairSetupPayload(
-                active_profile=report.setup.active_profile,
-                profile_ready=report.setup.profile_ready,
-                identity_ready=report.setup.identity_ready,
-                enrolment_ready=report.setup.enrolment_ready,
-                missing_required=list(report.setup.missing_required),
-                missing_enrolment=list(report.setup.missing_enrolment),
-                profile_present_keys=report.setup.profile_present_keys,
-                profile_total_keys=report.setup.profile_total_keys,
-                auth_provider=report.setup.auth_provider,
-                login_ready=report.setup.login_ready,
-            )
-            if report.setup is not None
-            else None
-        ),
-        secure_objects=ConfigRepairSecureObjectsPayload(
-            namespaces=[
-                ConfigRepairNamespacePayload(
-                    namespace=item.namespace,
-                    readable=item.readable,
-                    unreadable=item.unreadable,
-                )
-                for item in report.secure_objects.namespaces
-            ],
-            readable_total=report.secure_objects.readable_total,
-            unreadable_total=report.secure_objects.unreadable_total,
-        ),
-        checks=checks,
-    )
 
 
 def repair(ctx: typer.Context) -> None:
@@ -150,7 +54,8 @@ def repair(ctx: typer.Context) -> None:
     from ..state_projection_support import diagnostics_ports
 
     report = _build_config_repair_report(ports=diagnostics_ports(ctx))
-    result = strict_round_trip(ConfigRepairResult, _config_repair_result(report))
+    document = _repair_report_document(report, resolve_action=resolve_cli_precondition_action)
+    result = strict_round_trip(ConfigRepairResult, document)
     emit_envelope(
         ctx,
         command="config.repair",
@@ -166,34 +71,13 @@ def repair_logs(
     """Show the configured log file path and recent lines."""
     from ..config_payloads import RepairLogsResult
 
-    path = _default_log_file_path()
-    tail = _tail_lines(path, lines) if path.exists() and lines > 0 else ()
-    result = RepairLogsResult(path=str(path), lines=list(tail))
+    tail = _read_log_tail(lines)
+    result = RepairLogsResult(path=tail.path, lines=list(tail.lines))
     emit_envelope(
         ctx,
         command="config.repair.logs",
         result=result,
-        lines=(f"path\t{path}", *tail),
-    )
-
-
-def _quarantine_result(report: SecureObjectIntegrityReport, *, dry_run: bool) -> RepairQuarantineResult:
-    """Project one application quarantine report into the CLI result model."""
-    from .._config_quarantine_payloads import QuarantineNamespacePayload
-    from ..config_payloads import RepairQuarantineResult
-
-    return RepairQuarantineResult(
-        dry_run=dry_run,
-        unreadable_total=report.unreadable_total,
-        readable_total=report.readable_total,
-        namespaces=[
-            QuarantineNamespacePayload(
-                namespace=item.namespace,
-                readable=item.readable,
-                unreadable=item.unreadable,
-            )
-            for item in report.namespaces
-        ],
+        lines=(f"path\t{tail.path}", *tail.lines),
     )
 
 
@@ -240,31 +124,16 @@ def repair_quarantine(
     if _resolve_active_bucket_id() is None:
         _emit_no_active_quarantine(ctx, dry_run=dry_run)
         return
+    from ..config_payloads import RepairQuarantineResult
     from ..state_projection_support import diagnostics_ports
 
-    ports = diagnostics_ports(ctx)
-    report = (
-        _preview_quarantine_unreadable_secure_objects(ports=ports)
-        if dry_run
-        else _quarantine_unreadable_secure_objects(ports=ports)
-    )
+    report = _run_secure_object_quarantine(ports=diagnostics_ports(ctx), dry_run=dry_run)
     emit_envelope(
         ctx,
         command="config.repair.quarantine",
-        result=_quarantine_result(report, dry_run=dry_run),
+        result=strict_round_trip(RepairQuarantineResult, _quarantine_document(report, dry_run=dry_run)),
         lines=_quarantine_lines(report, dry_run=dry_run),
     )
-
-
-def _reset_progress_result(
-    fingerprint: WorkflowStateResetFingerprint,
-    *,
-    dry_run: bool,
-) -> RepairResetProgressResult:
-    """Project a workflow reset fingerprint into the typed CLI result."""
-    from ..config_payloads import RepairResetProgressResult
-
-    return RepairResetProgressResult(dry_run=dry_run, fingerprint=_workflow_fingerprint_payload(fingerprint))
 
 
 def _reset_progress_lines(fingerprint: WorkflowStateResetFingerprint, *, dry_run: bool) -> tuple[str, ...]:
@@ -314,13 +183,13 @@ def repair_reset_progress(
     if _resolve_active_bucket_id() is None:
         _emit_no_active_reset_progress(ctx)
         return
-    from ....application.workflow.persistence import fingerprint_workflow_state, reset_workflow_state
+    from ..config_payloads import RepairResetProgressResult
 
-    fingerprint = fingerprint_workflow_state() if dry_run else reset_workflow_state()
+    fingerprint = _run_workflow_progress_reset(dry_run=dry_run)
     emit_envelope(
         ctx,
         command="config.repair.reset_progress",
-        result=_reset_progress_result(fingerprint, dry_run=dry_run),
+        result=strict_round_trip(RepairResetProgressResult, _reset_progress_document(fingerprint, dry_run=dry_run)),
         lines=_reset_progress_lines(fingerprint, dry_run=dry_run),
     )
 
@@ -333,25 +202,9 @@ def repair_integrity_objects(
     from ..config_payloads import RepairIntegrityObjectsResult
     from ..state_projection_support import diagnostics_ports
 
-    report = _preview_quarantine_unreadable_secure_objects(ports=diagnostics_ports(ctx))
-    if namespace is not None:
-        namespaces = tuple(item for item in report.namespaces if item.namespace == namespace)
-        report = report.model_copy(
-            update={
-                "namespaces": namespaces,
-                "readable_total": sum(item.readable for item in namespaces),
-                "unreadable_total": sum(item.unreadable for item in namespaces),
-            },
-        )
-    result = RepairIntegrityObjectsResult.model_validate(
-        {
-            **report.model_dump(mode="json"),
-            "check": {
-                "status": "fail" if report.unreadable_total else "ok",
-                "summary": f"{report.unreadable_total} unreadable secure-object rows",
-            },
-        },
-    )
+    check = _check_secure_object_integrity(ports=diagnostics_ports(ctx), namespace=namespace)
+    report = check.report
+    result = strict_round_trip(RepairIntegrityObjectsResult, _integrity_objects_document(check))
     emit_envelope(
         ctx,
         command="config.repair.integrity.objects",
@@ -372,40 +225,14 @@ def repair_connectivity(ctx: typer.Context, headless: bool = True) -> None:
     from ..config_payloads import RepairConnectivityResult
 
     _ = headless
-    report = _probe_browser_connectivity()
-    result = RepairConnectivityResult(target="aeat_sede", status=report.model_dump(mode="json"))
+    report = _probe_connectivity(_probe_browser_connectivity)
+    result = strict_round_trip(RepairConnectivityResult, _connectivity_document(report))
     emit_envelope(
         ctx,
         command="config.repair.connectivity",
         result=result,
-        lines=_render_browser_connectivity_text(report).splitlines(),
+        lines=_render_browser_connectivity_text(report.status).splitlines(),
     )
-
-
-def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
-    """Return the last ``count`` lines from ``path`` without trailing newlines."""
-    if count <= 0:
-        return ()
-    chunk_size = 8192
-    try:
-        with path.open("rb") as handle:
-            handle.seek(0, 2)
-            file_size = handle.tell()
-            blocks: list[bytes] = []
-            newlines_seen = 0
-            position = file_size
-            while position > 0 and newlines_seen <= count:
-                read_size = min(chunk_size, position)
-                position -= read_size
-                handle.seek(position)
-                block = handle.read(read_size)
-                blocks.append(block)
-                newlines_seen += block.count(b"\n")
-    except OSError:
-        return ()
-    data = b"".join(reversed(blocks))
-    text = data.decode("utf-8", errors="replace")
-    return tuple(text.splitlines()[-count:])
 
 
 __all__ = [

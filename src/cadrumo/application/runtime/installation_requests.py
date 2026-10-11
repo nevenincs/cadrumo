@@ -30,10 +30,21 @@ from datetime import datetime
 from enum import StrEnum
 from pathlib import PurePosixPath, PureWindowsPath
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
+from typing import Annotated, Final, Literal, Self
 from uuid import UUID
 
-from pydantic import AfterValidator, BaseModel, Field, NonNegativeInt, SecretStr, StringConstraints, model_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    Field,
+    NonNegativeInt,
+    SecretStr,
+    SerializerFunctionWrapHandler,
+    StringConstraints,
+    field_serializer,
+    model_serializer,
+    model_validator,
+)
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.filing_year import FilingYear
@@ -41,36 +52,34 @@ from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
+from ...core.identity.profile import ProfileId
+from ...core.identity.profile_label import ProfileLabel
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.period import Period
-from ...core.requirement import RequirementValue
 from ...core.storage_taxonomy import StorageArea
-from ..config_reset_models import ConfigResetOperation
-from ..diagnostic_models import DiagnosticAudienceValue, DiagnosticStatusValue
-from ..diagnostics_ports import DiagnosticSecureObjectNamespace
+from ...core.text_bounds import NonEmptyStr
+from ..config_reset_documents import ConfigResetOperationPayload
+from ..diagnostics_repair_documents import RepairProfileDocument, RepairReportDocument
 from ..operations.error_detail import OperationErrorDetailV1
+from ..operations.public_period import PublicPeriod
 from ..operations.registry import OperationFrontendProjection
-from ..operator_actions.models import PreconditionVerdict
-from ..storage_management.models import (
-    StorageAreaInventoryReport,
-    StorageInitReport,
-    StorageReclaimReport,
-    StorageTreeCheckReport,
-)
+from ..storage_management.documents import StorageAreaIssuePayload, StorageAreaPayload
 from ..user_profile.automation_custody_port import AutomationCustodyCode
-from ..user_profile.capsule_archive import ProfileCapsuleArchiveInspection
-from ..user_profile.capsule_restore import ProfileRestoreOutcome
-from ..user_profile.profile_summary import ProfileSummaryInventory
-from ..user_profile.recovery_custody import ProfileRecoveryEnrollmentOutcome
-
-if TYPE_CHECKING:
-    from ..diagnostic_models import ConfigRepairReport, DiagnosticCheck
 
 #: Largest reply one act may return across its bounded transfer.
 INSTALLATION_REPLY_MAX_BYTES: Final[int] = 4_194_304
 
 #: Most log lines one ``repair_logs`` act returns.
 INSTALLATION_LOG_TAIL_MAX_LINES: Final[int] = 5_000
+
+#: Seconds a client waits for an act that has no deadline of its own in the table.
+INSTALLATION_ACT_DEFAULT_DEADLINE_SECONDS: Final[float] = 30.0
+
+#: Seconds a reset may run: each hosted profile is drained within its own bound
+#: before anything is deleted, and each profile is then erased in turn.
+INSTALLATION_RESET_DEADLINE_SECONDS: Final[float] = 900.0
+
+#: Seconds a reclaim or an archive import may run: both walk or copy a tree whose size is the operator's.
+INSTALLATION_BULK_DEADLINE_SECONDS: Final[float] = 600.0
 
 #: How long a client may take to hold a delivered secret before reading it back.
 #: A person copies a recovery code down inside this bound.
@@ -115,6 +124,8 @@ type InstallationHostPath = Annotated[
 
 type _OperatorText = Annotated[str, StringConstraints(min_length=1, max_length=512)]
 type _KeyText = Annotated[str, StringConstraints(min_length=1, max_length=256)]
+type _ResultText = Annotated[str, StringConstraints(max_length=1024)]
+"""One text member of a result whose vocabulary is owned by a module this contract does not import."""
 type _VocabularyToken = Annotated[str, StringConstraints(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")]
 """The stable token of a closed vocabulary whose owning module this contract does not import."""
 
@@ -146,16 +157,41 @@ class RuntimeInstallationCompleted(_InstallationReply):
 
 
 class RuntimeStorageInventoryRequest(_InstallationRequest):
-    """Ask where the declared storage areas are and what they hold."""
+    """Ask where the declared storage areas are and what they hold.
+
+    Without ``area`` the reply lists every area; with one it reports that area
+    alone, as ``config storage view`` does.
+    """
 
     action: Literal["storage_inventory"] = "storage_inventory"
+    area: StorageArea | None = None
 
 
 class RuntimeStorageInventoryReply(RuntimeInstallationCompleted):
-    """One aggregate row for each operator-facing storage area."""
+    """What ``config storage list`` or ``config storage view`` prints.
+
+    Exactly one of ``areas`` and ``area`` is present, and the other is absent
+    from the document rather than null, as it is in the command's result.
+    """
 
     kind: Literal["storage_inventory_reply"] = "storage_inventory_reply"
-    report: StorageAreaInventoryReport
+    storage_root: NonEmptyStr
+    areas: list[StorageAreaPayload] | None = None
+    area: StorageAreaPayload | None = None
+
+    @model_validator(mode="after")
+    def _one_shape(self) -> Self:
+        if (self.areas is None) == (self.area is None):
+            raise ValueError("a storage inventory reply lists every area or reports one")
+        return self
+
+    @model_serializer(mode="wrap")
+    def _omit_the_shape_not_asked_for(self, handler: SerializerFunctionWrapHandler) -> dict[str, object]:
+        document: dict[str, object] = {str(name): value for name, value in handler(self).items()}
+        for name in ("areas", "area"):
+            if document.get(name) is None:
+                document.pop(name, None)
+        return document
 
 
 class RuntimeStorageCheckRequest(_InstallationRequest):
@@ -165,10 +201,14 @@ class RuntimeStorageCheckRequest(_InstallationRequest):
 
 
 class RuntimeStorageCheckReply(RuntimeInstallationCompleted):
-    """The read-only verdict on the materialised tree."""
+    """What ``config storage check`` prints: the read-only verdict on the materialised tree."""
 
     kind: Literal["storage_check_reply"] = "storage_check_reply"
-    report: StorageTreeCheckReport
+    storage_root: NonEmptyStr
+    healthy: bool
+    root_mode_enforced: bool
+    checked_areas: NonNegativeInt
+    issues: list[StorageAreaIssuePayload] = []
 
 
 class RuntimeStorageInitRequest(_InstallationRequest):
@@ -178,10 +218,12 @@ class RuntimeStorageInitRequest(_InstallationRequest):
 
 
 class RuntimeStorageInitReply(RuntimeInstallationCompleted):
-    """The directories this act created and how many were already there."""
+    """What ``config storage init`` prints: the directories this act created and how many were already there."""
 
     kind: Literal["storage_init_reply"] = "storage_init_reply"
-    report: StorageInitReport
+    storage_root: NonEmptyStr
+    created_count: NonNegativeInt = 0
+    already_present: NonNegativeInt = 0
 
 
 class RuntimeStorageReclaimRequest(_InstallationRequest):
@@ -197,10 +239,13 @@ class RuntimeStorageReclaimRequest(_InstallationRequest):
 
 
 class RuntimeStorageReclaimReply(RuntimeInstallationCompleted):
-    """What one confirmed reclaim removed and what it had to leave."""
+    """What ``config storage reclaim`` prints: what one confirmed reclaim removed and what it had to leave."""
 
     kind: Literal["storage_reclaim_reply"] = "storage_reclaim_reply"
-    report: StorageReclaimReport
+    area: StorageArea
+    target_count: NonNegativeInt
+    removed_entries: NonNegativeInt
+    retained_entries: NonNegativeInt = 0
 
 
 # -- profiles --------------------------------------------------------------------
@@ -212,16 +257,30 @@ class RuntimeProfileListRequest(_InstallationRequest):
     action: Literal["profile_list"] = "profile_list"
 
 
-class RuntimeProfileListReply(RuntimeInstallationCompleted):
-    """One listing observation joined to one read of the active-profile pointer.
+class RuntimeProfileListRow(BaseModel):
+    """One listed profile: its label, its identifier, and whether it is the selected one."""
 
-    A degraded or concurrent observation carries no summaries and says so in
-    its outcome: an empty listing never stands for a store with no profiles.
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    name: ProfileLabel
+    bucket_id: ProfileId
+    active: bool
+
+
+class RuntimeProfileListReply(RuntimeInstallationCompleted):
+    """The result of ``config profile list``, from one listing observation and one pointer read.
+
+    Identifiers are the real ones. The command hides them when it prints
+    unless the installation reveals them; a reply hides nothing, because a
+    caller names a profile by the identifier it reads here.
+
+    An observation that could not be trusted is refused, never answered with
+    an empty listing: an empty listing stands only for a store with no profiles.
     """
 
     kind: Literal["profile_list_reply"] = "profile_list_reply"
-    inventory: ProfileSummaryInventory
-    active_profile_id: Annotated[str, StringConstraints(min_length=1, max_length=256)] | None = None
+    active_profile: ProfileLabel | None = None
+    profiles: tuple[RuntimeProfileListRow, ...] = ()
 
 
 class RuntimeArchiveInspectRequest(_InstallationRequest):
@@ -232,10 +291,19 @@ class RuntimeArchiveInspectRequest(_InstallationRequest):
 
 
 class RuntimeArchiveInspectReply(RuntimeInstallationCompleted):
-    """Exactly what the archive discloses to anyone holding the file."""
+    """The result of ``config profile archive inspect``: what the archive discloses to anyone holding it."""
 
     kind: Literal["archive_inspect_reply"] = "archive_inspect_reply"
-    inspection: ProfileCapsuleArchiveInspection
+    product: _ResultText
+    bucket_id: BucketId
+    archive_schema_version: int
+    created_at: datetime
+    manifest_digest: _ResultText
+
+    @field_serializer("created_at", when_used="json")
+    def _instant_as_the_command_writes_it(self, value: datetime) -> str:
+        """Write the instant in the text form the command prints, so both show one document."""
+        return value.isoformat()
 
 
 class RuntimeArchiveImportPrepareRequest(_InstallationRequest):
@@ -267,10 +335,13 @@ class RuntimeArchiveImportRequest(_InstallationRequest):
 
 
 class RuntimeArchiveImportReply(RuntimeInstallationCompleted):
-    """The republished profile; a restore never carries recovery across."""
+    """The result of ``config profile archive import``; a restore never carries recovery across."""
 
     kind: Literal["archive_import_reply"] = "archive_import_reply"
-    outcome: ProfileRestoreOutcome
+    profile_id: ProfileId
+    label: ProfileLabel
+    authority: _ResultText
+    recovery_enrolled: bool
 
 
 class RuntimeRecoveryEnrollRequest(_InstallationRequest):
@@ -278,17 +349,20 @@ class RuntimeRecoveryEnrollRequest(_InstallationRequest):
 
     The current passphrase follows in one secret frame. The code is delivered
     in one secret frame and must be read back before the wrapper is installed.
+    A request that names no profile enrols the selected one, as the command does.
     """
 
     action: Literal["recovery_enroll"] = "recovery_enroll"
-    profile_id: UUID
+    profile_id: UUID | None = None
 
 
 class RuntimeRecoveryEnrollReply(RuntimeInstallationCompleted):
-    """The non-secret result of one completed enrolment."""
+    """The result of ``config profile recovery enable``; the code is never part of it."""
 
     kind: Literal["recovery_enroll_reply"] = "recovery_enroll_reply"
-    outcome: ProfileRecoveryEnrollmentOutcome
+    profile_id: ProfileId
+    enrolled: bool
+    changed: bool
 
 
 # -- reset -----------------------------------------------------------------------
@@ -304,10 +378,10 @@ class RuntimeResetStartRequest(_InstallationRequest):
 
 
 class RuntimeResetStartReply(RuntimeInstallationCompleted):
-    """The reset journal as this act left it."""
+    """What ``config reset start`` prints: the reset journal as this act left it."""
 
     kind: Literal["reset_start_reply"] = "reset_start_reply"
-    operation: ConfigResetOperation
+    operation: ConfigResetOperationPayload
 
 
 class RuntimeResetStatusRequest(_InstallationRequest):
@@ -318,10 +392,10 @@ class RuntimeResetStatusRequest(_InstallationRequest):
 
 
 class RuntimeResetStatusReply(RuntimeInstallationCompleted):
-    """The journal read, or ``None`` when no reset was ever started."""
+    """What ``config reset status`` prints: the journal read, or ``None`` when no reset was ever started."""
 
     kind: Literal["reset_status_reply"] = "reset_status_reply"
-    operation: ConfigResetOperation | None = None
+    operation: ConfigResetOperationPayload | None
 
 
 class RuntimeResetResumeRequest(_InstallationRequest):
@@ -335,136 +409,13 @@ class RuntimeResetResumeRequest(_InstallationRequest):
 
 
 class RuntimeResetResumeReply(RuntimeInstallationCompleted):
-    """The reset journal as this act left it."""
+    """What ``config reset resume`` prints: the reset journal as this act left it."""
 
     kind: Literal["reset_resume_reply"] = "reset_resume_reply"
-    operation: ConfigResetOperation
+    operation: ConfigResetOperationPayload
 
 
 # -- repair ----------------------------------------------------------------------
-
-
-class RuntimeRepairSetup(BaseModel):
-    """The active profile's readiness summary inside a repair report."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    active_profile: str | None
-    profile_ready: bool
-    identity_ready: bool
-    enrolment_ready: bool
-    missing_required: tuple[str, ...]
-    missing_enrolment: tuple[str, ...]
-    profile_present_keys: NonNegativeInt
-    profile_total_keys: NonNegativeInt
-    auth_provider: str
-    login_ready: bool
-
-
-class RuntimeRepairFinding(BaseModel):
-    """One named sub-finding inside a repair check."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    summary: str
-    detail: str | None = None
-    requirement: RequirementValue | None = None
-
-
-class RuntimeRepairCheck(BaseModel):
-    """One repair check with its recovery verdict.
-
-    The verdict travels as its canonical JSON because its evidence serializes
-    differently from how it validates. The text is validated as the verdict on
-    both sides.
-    """
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    name: str
-    status: DiagnosticStatusValue
-    summary: str
-    detail: str | None = None
-    precondition_verdict_json: Annotated[str, StringConstraints(min_length=2)] | None = None
-    audience: DiagnosticAudienceValue
-    findings: tuple[RuntimeRepairFinding, ...] = ()
-
-    @model_validator(mode="after")
-    def _verdict_is_a_verdict(self) -> Self:
-        self.precondition_verdict()
-        return self
-
-    def precondition_verdict(self) -> PreconditionVerdict | None:
-        """Restore the typed verdict the check carried, or ``None``."""
-        if self.precondition_verdict_json is None:
-            return None
-        return PreconditionVerdict.model_validate_json(self.precondition_verdict_json)
-
-    @classmethod
-    def from_check(cls, check: DiagnosticCheck) -> Self:
-        """Project one application diagnostic check, keeping its verdict whole."""
-        verdict = check.precondition_verdict
-        return cls(
-            name=check.name,
-            status=check.status,
-            summary=check.summary,
-            detail=check.detail,
-            precondition_verdict_json=None if verdict is None else verdict.model_dump_json(),
-            audience=check.audience,
-            findings=tuple(
-                RuntimeRepairFinding(summary=finding.summary, detail=finding.detail, requirement=finding.requirement)
-                for finding in check.findings
-            ),
-        )
-
-
-class RuntimeRepairReportProjection(BaseModel):
-    """Every member of the composite repair report, in a form that needs no profile view."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    overall: DiagnosticStatusValue
-    package_name: str
-    package_version: str
-    python_version: str
-    log_file: str
-    setup: RuntimeRepairSetup | None
-    secure_object_namespaces: tuple[DiagnosticSecureObjectNamespace, ...]
-    secure_objects_readable_total: NonNegativeInt
-    secure_objects_unreadable_total: NonNegativeInt
-    checks: tuple[RuntimeRepairCheck, ...]
-
-    @classmethod
-    def from_report(cls, report: ConfigRepairReport) -> Self:
-        """Project the application's repair report without dropping a check or a count."""
-        setup = report.setup
-        return cls(
-            overall=report.overall,
-            package_name=report.package_name,
-            package_version=report.package_version,
-            python_version=report.python_version,
-            log_file=report.log_file,
-            setup=(
-                None
-                if setup is None
-                else RuntimeRepairSetup(
-                    active_profile=setup.active_profile,
-                    profile_ready=setup.profile_ready,
-                    identity_ready=setup.identity_ready,
-                    enrolment_ready=setup.enrolment_ready,
-                    missing_required=setup.missing_required,
-                    missing_enrolment=setup.missing_enrolment,
-                    profile_present_keys=setup.profile_present_keys,
-                    profile_total_keys=setup.profile_total_keys,
-                    auth_provider=setup.auth_provider,
-                    login_ready=setup.login_ready,
-                )
-            ),
-            secure_object_namespaces=report.secure_objects.namespaces,
-            secure_objects_readable_total=report.secure_objects.readable_total,
-            secure_objects_unreadable_total=report.secure_objects.unreadable_total,
-            checks=tuple(RuntimeRepairCheck.from_check(check) for check in report.checks),
-        )
 
 
 class RuntimeRepairReportRequest(_InstallationRequest):
@@ -473,11 +424,10 @@ class RuntimeRepairReportRequest(_InstallationRequest):
     action: Literal["repair_report"] = "repair_report"
 
 
-class RuntimeRepairReportReply(RuntimeInstallationCompleted):
-    """The composite repair report."""
+class RuntimeRepairReportReply(RepairReportDocument, RuntimeInstallationCompleted):
+    """What ``config repair`` prints: the composite diagnosis of the installation."""
 
     kind: Literal["repair_report_reply"] = "repair_report_reply"
-    report: RuntimeRepairReportProjection
 
 
 class RuntimeRepairLogsRequest(_InstallationRequest):
@@ -495,87 +445,14 @@ class RuntimeRepairLogsReply(RuntimeInstallationCompleted):
     lines: Annotated[tuple[str, ...], Field(max_length=INSTALLATION_LOG_TAIL_MAX_LINES)]
 
 
-class RuntimeProfileHealth(BaseModel):
-    """The redacted active-profile health verdict, with the label its assessment resolved."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    active_profile: str | None
-    active_profile_label: str | None = None
-    source: Literal["none", "env_override", "pointer"]
-    status: _VocabularyToken
-    registered_bucket: bool = False
-    profile_record_present: bool = False
-    profile_record_error: str = ""
-    profile_present_keys: NonNegativeInt = 0
-    profile_total_keys: NonNegativeInt = 0
-    missing_required: tuple[str, ...] = ()
-    repairable_by_clearing_pointer: bool = False
-    precondition_verdict_json: Annotated[str, StringConstraints(min_length=2)] | None = None
-
-    @model_validator(mode="after")
-    def _verdict_is_a_verdict(self) -> Self:
-        self.precondition_verdict()
-        return self
-
-    def precondition_verdict(self) -> PreconditionVerdict | None:
-        """Restore the typed verdict the health assessment carried, or ``None``."""
-        if self.precondition_verdict_json is None:
-            return None
-        return PreconditionVerdict.model_validate_json(self.precondition_verdict_json)
-
-
-class RuntimeProfilePointerRepair(BaseModel):
-    """The pointer-repair branch: health before, and after when the pointer was cleared."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    dry_run: bool
-    cleared_pointer: bool
-    before: RuntimeProfileHealth
-    after: RuntimeProfileHealth | None = None
-
-
-class RuntimeProfileRecordStatus(BaseModel):
-    """The inspection branch: whether one named profile's record can be read.
-
-    ``status`` is absent when the record was read. ``setup_state`` is the
-    record's own token and is present only then.
-    """
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    profile_id: BucketId
-    display_name: str
-    registered_bucket: bool
-    profile_record_present: bool
-    setup_state: _VocabularyToken | None = None
-    status: Literal["missing_profile_record", "profile_record_unreadable"] | None = None
-    error: str | None = None
-    precondition_verdict_json: Annotated[str, StringConstraints(min_length=2)] | None = None
-
-    @model_validator(mode="after")
-    def _closed_shape(self) -> Self:
-        if self.profile_record_present != (self.status is None):
-            raise ValueError("a profile record status names a fault exactly when the record was not read")
-        if self.setup_state is not None and not self.profile_record_present:
-            raise ValueError("a setup state belongs to a record that was read")
-        self.precondition_verdict()
-        return self
-
-    def precondition_verdict(self) -> PreconditionVerdict | None:
-        """Restore the typed verdict the inspection carried, or ``None``."""
-        if self.precondition_verdict_json is None:
-            return None
-        return PreconditionVerdict.model_validate_json(self.precondition_verdict_json)
-
-
 class RuntimeRepairProfileRequest(_InstallationRequest):
     """Inspect one profile's record, or repair a degraded active-profile pointer.
 
-    Naming a profile without ``clear_active`` inspects that profile. Otherwise
-    the act assesses the active pointer, and clears it only with both
-    ``clear_active`` and ``confirmed``.
+    Naming a profile without ``clear_active`` inspects that profile. Without
+    ``clear_active`` and without a profile the act assesses the active pointer
+    and changes nothing. With ``clear_active`` it clears a degraded pointer,
+    and without ``confirmed`` that request is refused as the command refuses
+    it without ``--yes``.
     """
 
     action: Literal["repair_profile"] = "repair_profile"
@@ -584,57 +461,18 @@ class RuntimeRepairProfileRequest(_InstallationRequest):
     confirmed: bool = False
 
 
-class RuntimeRepairProfileReply(RuntimeInstallationCompleted):
-    """Exactly one branch: the pointer repair, or the named profile's record status."""
+class RuntimeRepairProfileReply(RepairProfileDocument, RuntimeInstallationCompleted):
+    """What ``config repair profile`` prints: a pointer repair, or one named profile's record status."""
 
     kind: Literal["repair_profile_reply"] = "repair_profile_reply"
-    pointer_repair: RuntimeProfilePointerRepair | None = None
-    record_status: RuntimeProfileRecordStatus | None = None
-
-    @model_validator(mode="after")
-    def _one_branch(self) -> Self:
-        if (self.pointer_repair is None) == (self.record_status is None):
-            raise ValueError("a profile repair reply carries exactly one branch")
-        return self
 
 
 # -- files the operator holds ----------------------------------------------------
-
-
-class RuntimeReviewPackageManifest(BaseModel):
-    """The review-domain identity a package's descriptor carries."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    package_info_version: Annotated[int, Field(ge=1)]
-    bucket_id: BucketId
-    work_unit_id: WorkUnitId
-    calculation_revision_id: CalculationRevisionId
-    registry_revision_id: Annotated[str, StringConstraints(min_length=1, max_length=256)]
-    modelo: Annotated[str, StringConstraints(min_length=1, max_length=8)]
-    filing_year: FilingYear
-    period: Period
-    revision_state: Annotated[str, StringConstraints(min_length=1, max_length=64)]
-    has_ledger_evidence: bool
-    built_at: datetime
-    built_by: Annotated[str, StringConstraints(min_length=1, max_length=128)]
-    notes: Annotated[str, StringConstraints(max_length=2000)] = ""
-
-
-class RuntimeReviewPackageVerification(BaseModel):
-    """An integrity verdict on a package's members; it says nothing about who built it."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    manifest: RuntimeReviewPackageManifest
-    missing: tuple[str, ...] = ()
-    unexpected: tuple[str, ...] = ()
-    mismatched: tuple[str, ...] = ()
-
-    @property
-    def is_clean(self) -> bool:
-        """Whether every archived member matches its checksum record."""
-        return not (self.missing or self.unexpected or self.mismatched)
+#
+# Each reply below carries, besides the transport members, the members of the
+# document the matching command prints as the ``result`` of its JSON envelope,
+# with the real values, as a registered operation's result carries them. The
+# command line applies its output redaction when it prints.
 
 
 class RuntimeReviewPackageVerifyRequest(_InstallationRequest):
@@ -648,7 +486,22 @@ class RuntimeReviewPackageVerifyReply(RuntimeInstallationCompleted):
     """The integrity verdict and the descriptor recovered from the package."""
 
     kind: Literal["review_package_verify_reply"] = "review_package_verify_reply"
-    verification: RuntimeReviewPackageVerification
+    operation: Literal["modelo.review_package.verify"]
+    package_path: str
+    is_clean: bool
+    missing: list[str]
+    unexpected: list[str]
+    mismatched: list[str]
+    bucket_id: BucketId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    modelo: str
+    filing_year: FilingYear
+    period: PublicPeriod
+    revision_state: str
+    has_ledger_evidence: bool
+    built_by: str
+    built_at: datetime
 
 
 class RuntimeReviewPackageVerifySignatureRequest(_InstallationRequest):
@@ -664,8 +517,11 @@ class RuntimeReviewPackageVerifySignatureReply(RuntimeInstallationCompleted):
     """Whether the signature holds for the package's current bytes and the named key."""
 
     kind: Literal["review_package_verify_signature_reply"] = "review_package_verify_signature_reply"
+    operation: Literal["modelo.review_package.verify_signature"]
+    package_path: str
+    signature_path: str
+    signer_public_key_hex: str
     is_valid: bool
-    signer_public_key_hex: _KeyText
 
 
 class RuntimeReviewPackageVerifyReceiptRequest(_InstallationRequest):
@@ -682,9 +538,12 @@ class RuntimeReviewPackageVerifyReceiptReply(RuntimeInstallationCompleted):
     """Whether both layers hold for the package's current bytes and the named keys."""
 
     kind: Literal["review_package_verify_receipt_reply"] = "review_package_verify_receipt_reply"
+    operation: Literal["modelo.review_package.verify_receipt"]
+    package_path: str
+    receipt_path: str
+    operator_public_key_hex: str
+    counter_signer_public_key_hex: str
     is_valid: bool
-    operator_public_key_hex: _KeyText
-    counter_signer_public_key_hex: _KeyText
 
 
 class RuntimeReportVerificationCheck(BaseModel):
@@ -696,20 +555,7 @@ class RuntimeReportVerificationCheck(BaseModel):
     layer: _VocabularyToken
     reason: _VocabularyToken | None = None
     detail: str | None = None
-
-
-class RuntimeReportVerification(BaseModel):
-    """The verdict on one calculation summary and every check behind it."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    outcome: _VocabularyToken
-    checks: tuple[RuntimeReportVerificationCheck, ...]
-    store_checked: bool
-    signing_key_fingerprint: Hex64Str | None = None
-    calculation_revision_id: Hex64Str | None = None
-    report_sha256: Hex64Str | None = None
-    statement_sha256: Hex64Str | None = None
+    refuses: bool
 
 
 class RuntimeReportVerifyDocumentRequest(_InstallationRequest):
@@ -724,7 +570,16 @@ class RuntimeReportVerifyDocumentReply(RuntimeInstallationCompleted):
     """The document-layer verdict; ``store_checked`` is always false for this act."""
 
     kind: Literal["report_verify_document_reply"] = "report_verify_document_reply"
-    verification: RuntimeReportVerification
+    operation: Literal["modelo.work.report_verify"]
+    path: str
+    outcome: _VocabularyToken
+    store_checked: bool
+    reasons: list[_VocabularyToken]
+    checks: list[RuntimeReportVerificationCheck]
+    calculation_revision_id: Hex64Str | None = None
+    report_sha256: Hex64Str | None = None
+    statement_sha256: Hex64Str | None = None
+    signing_key_fingerprint: Hex64Str | None = None
 
 
 # -- outcomes every act shares ---------------------------------------------------
@@ -870,6 +725,10 @@ class InstallationActContract:
     facts: InstallationActFacts
     takes_secret: bool = False
     delivers_secret: bool = False
+    deadline_seconds: float = INSTALLATION_ACT_DEFAULT_DEADLINE_SECONDS
+    """How long a client waits for this act. A secret handover adds its own bound."""
+    outcome_read_by: InstallationAct | None = None
+    """The act that reads this act's outcome when a client stopped waiting before it settled."""
 
 
 _READS = InstallationActFacts(changes_records=False, reaches_network=False)
@@ -898,15 +757,29 @@ INSTALLATION_ACT_CONTRACTS: Final[Mapping[InstallationAct, InstallationActContra
         InstallationAct.STORAGE_INIT, RuntimeStorageInitRequest, RuntimeStorageInitReply, _CHANGES_RECORDS
     ),
     InstallationActContract(
-        InstallationAct.STORAGE_RECLAIM, RuntimeStorageReclaimRequest, RuntimeStorageReclaimReply, _CHANGES_RECORDS
+        InstallationAct.STORAGE_RECLAIM,
+        RuntimeStorageReclaimRequest,
+        RuntimeStorageReclaimReply,
+        _CHANGES_RECORDS,
+        deadline_seconds=INSTALLATION_BULK_DEADLINE_SECONDS,
     ),
     InstallationActContract(InstallationAct.PROFILE_LIST, RuntimeProfileListRequest, RuntimeProfileListReply, _READS),
     InstallationActContract(
-        InstallationAct.RESET_START, RuntimeResetStartRequest, RuntimeResetStartReply, _CHANGES_RECORDS
+        InstallationAct.RESET_START,
+        RuntimeResetStartRequest,
+        RuntimeResetStartReply,
+        _CHANGES_RECORDS,
+        deadline_seconds=INSTALLATION_RESET_DEADLINE_SECONDS,
+        outcome_read_by=InstallationAct.RESET_STATUS,
     ),
     InstallationActContract(InstallationAct.RESET_STATUS, RuntimeResetStatusRequest, RuntimeResetStatusReply, _READS),
     InstallationActContract(
-        InstallationAct.RESET_RESUME, RuntimeResetResumeRequest, RuntimeResetResumeReply, _CHANGES_RECORDS
+        InstallationAct.RESET_RESUME,
+        RuntimeResetResumeRequest,
+        RuntimeResetResumeReply,
+        _CHANGES_RECORDS,
+        deadline_seconds=INSTALLATION_RESET_DEADLINE_SECONDS,
+        outcome_read_by=InstallationAct.RESET_STATUS,
     ),
     InstallationActContract(
         InstallationAct.ARCHIVE_INSPECT, RuntimeArchiveInspectRequest, RuntimeArchiveInspectReply, _READS
@@ -923,6 +796,7 @@ INSTALLATION_ACT_CONTRACTS: Final[Mapping[InstallationAct, InstallationActContra
         RuntimeArchiveImportReply,
         _CHANGES_RECORDS,
         takes_secret=True,
+        deadline_seconds=INSTALLATION_BULK_DEADLINE_SECONDS,
     ),
     InstallationActContract(
         InstallationAct.RECOVERY_ENROLL,

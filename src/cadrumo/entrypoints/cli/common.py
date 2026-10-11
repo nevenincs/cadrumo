@@ -193,10 +193,9 @@ EU_MEMBER_STATE_CHOICE: typer_click_types.ParamType = cast(
 # resolving them.
 if TYPE_CHECKING:
     from ...application.modelo.work_lifecycle import ModeloWorkLifecycleContinuation
-    from ...application.operator_actions.catalogue import ActionArgumentBindingSpecification
-    from ...application.operator_actions.models import ActionArgumentBinding, ActionReference, PreconditionVerdict
+    from ...application.operator_actions.models import ActionReference, PreconditionVerdict
     from ...application.operator_surface.command_ports import VerbInputSchema
-    from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
+    from ...core.json_contract import ResolvedNoticeAction
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
@@ -465,128 +464,17 @@ def project_cli_policy_refusal(
     )
 
 
-def _validate_cli_precondition_action_bindings(
-    *,
-    action_id: str,
-    specifications: tuple[ActionArgumentBindingSpecification, ...],
-    argument_bindings: tuple[ActionArgumentBinding, ...],
-) -> None:
-    """Require verdict bindings to account for the declared action arguments."""
-    specifications_by_name = _catalogue_argument_specifications_by_name(specifications)
-    observed_arguments = {item.argument_name: item for item in argument_bindings}
-    if set(observed_arguments) != set(specifications_by_name):
-        raise ValueError(f"CLI policy action arguments do not match catalogue declaration: {action_id}")
-    _require_cli_precondition_argument_sources(
-        observed_arguments=observed_arguments,
-        specifications_by_name=specifications_by_name,
-    )
-
-
-def _catalogue_argument_specifications_by_name(
-    specifications: tuple[ActionArgumentBindingSpecification, ...],
-) -> dict[str, list[ActionArgumentBindingSpecification]]:
-    """Group the catalogue's declared input sources by their argument identity."""
-    specifications_by_name: dict[str, list[ActionArgumentBindingSpecification]] = {}
-    for specification in specifications:
-        specifications_by_name.setdefault(specification.argument_name, []).append(specification)
-    return specifications_by_name
-
-
-def _require_cli_precondition_argument_sources(
-    *,
-    observed_arguments: dict[str, ActionArgumentBinding],
-    specifications_by_name: dict[str, list[ActionArgumentBindingSpecification]],
-) -> None:
-    """Refuse a resolved verdict binding whose provenance contradicts the catalogue."""
-    from ...core.operator_action_enums import ActionArgumentStatus
-
-    for name, argument in observed_arguments.items():
-        if argument.status is ActionArgumentStatus.MISSING:
-            continue
-        matching_specifications = tuple(
-            specification
-            for specification in specifications_by_name[name]
-            if argument.source is specification.source
-            and argument.source_key == specification.source_key
-            and argument.source_evidence_id == specification.source_evidence_id
-        )
-        if len(matching_specifications) != 1:
-            raise ValueError(f"CLI policy action argument source contradicts catalogue: {name}")
-
-
-def _resolve_cli_precondition_action_reference(
-    verdict: PreconditionVerdict,
-) -> ResolvedActionReference | None:
-    """Resolve the optional verdict recovery action against the live surface."""
-    action = verdict.action
-    if action is None:
-        return None
-    from ...application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
-    from ...application.operator_surface.action_resolution import resolve_catalogue_action
-    from ...core.json_contract import ResolvedActionReference
-
-    resolution = resolve_catalogue_action(
-        action=action,
-        catalogue=OPERATOR_ACTION_CATALOGUE,
-        reconciliation=operator_surface_target_reconciliation(
-            OPERATOR_ACTION_CATALOGUE.lookup(action.action_id).target_command_key,
-        ),
-    )
-    declaration = resolution.declaration
-    if resolution.target_leaf.input_schema is None:
-        raise ValueError(
-            f"CLI policy action target has no live input schema: {declaration.target_command_key}",
-        )
-    _validate_cli_precondition_action_bindings(
-        action_id=action.action_id,
-        specifications=declaration.argument_specifications,
-        argument_bindings=verdict.argument_bindings,
-    )
-    return ResolvedActionReference(
-        action_id=declaration.action_id,
-        target_command_key=declaration.target_command_key,
-        cli_path=resolution.target_leaf.live_leaf.canonical_cli_path,
-    )
-
-
 def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPreconditionAction:
-    """Schema-resolve one application verdict against the live action catalogue.
+    """Schema-resolve one application verdict against the live command graph.
 
-    This is the sole CLI adapter from application-owned verdict facts into the
-    strict wire DTO.  Both immediate refusal envelopes and persisted workflow
-    history use it, so neither path can reconstruct recovery prose or disagree
-    about missing bindings.
+    This is the sole CLI bridge from application-owned verdict facts into the
+    strict wire DTO. It binds the leaf the command graph declares for the
+    action's target to the application-owned projection, which owns the
+    catalogue join, the binding checks and the record itself.
     """
-    from ...core.json_contract import ActionConditionEvidence, ResolvedActionArgument
+    from ...application.operator_surface.precondition_action import resolve_precondition_action
 
-    projected = ResolvedPreconditionAction(
-        failed_condition_id=verdict.failed_condition_id,
-        evidence=tuple(
-            ActionConditionEvidence(
-                condition_id=item.condition_id,
-                evidence_id=item.evidence_id,
-                provenance=item.provenance,
-                values=item.values,
-            )
-            for item in verdict.evidence
-        ),
-        action=_resolve_cli_precondition_action_reference(verdict),
-        argument_bindings=tuple(
-            ResolvedActionArgument(
-                argument_name=item.argument_name,
-                status=item.status,
-                value=item.value,
-                source=item.source,
-                source_key=item.source_key,
-                source_evidence_id=item.source_evidence_id,
-            )
-            for item in verdict.argument_bindings
-        ),
-        missing_argument_names=verdict.missing_argument_names,
-        conditionality=verdict.conditionality,
-        no_recovery_outcome=verdict.no_recovery_outcome,
-    )
-    return projected
+    return resolve_precondition_action(verdict, target_reconciliation=operator_surface_target_reconciliation)
 
 
 def attach_cli_policy_verdict[ExceptionT: Exception](

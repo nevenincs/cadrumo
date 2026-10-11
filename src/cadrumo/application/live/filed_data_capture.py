@@ -365,6 +365,7 @@ class _CaptureReportFields(TypedDict):
     captured_count: int
     reached_count: int
     observation_paths: tuple[str, ...]
+    observation_ids: tuple[str, ...]
     artefact_refs: tuple[str, ...]
     justificante_metadata_count: int
     justificante_csvs: tuple[str, ...]
@@ -391,6 +392,7 @@ class FiledCaptureAccumulator:
 
     operation: PinnedAuthorityOperation | None = None
     observation_paths: list[str] = field(default_factory=list)
+    observation_ids: list[str] = field(default_factory=list)
     artefact_refs: list[str] = field(default_factory=list)
     justificante_csvs: list[str] = field(default_factory=list)
     filing_record_ids: list[str] = field(default_factory=list)
@@ -471,6 +473,7 @@ class FiledCaptureAccumulator:
             return
         manifest_path = ports.observation_persistence.persist_observation(observation)
         self.observation_paths.append(capture_report_path(manifest_path, output_root=output_root))
+        self.observation_ids.append(manifest_path.name)
         self.artefact_refs.extend(
             storage_ref
             for artefact in observation.artefacts
@@ -501,6 +504,7 @@ class FiledCaptureAccumulator:
             "captured_count": len(self.observation_paths),
             "reached_count": self.reached_count,
             "observation_paths": tuple(self.observation_paths),
+            "observation_ids": tuple(self.observation_ids),
             "artefact_refs": tuple(self.artefact_refs),
             "justificante_metadata_count": len(tuple(dict.fromkeys(self.justificante_csvs))),
             "justificante_csvs": tuple(dict.fromkeys(self.justificante_csvs)),

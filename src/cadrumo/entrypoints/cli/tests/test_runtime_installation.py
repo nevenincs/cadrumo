@@ -66,8 +66,8 @@ def test_a_command_gets_the_acts_reply_from_the_running_runtime(tmp_path: Path) 
         )
 
     assert isinstance(reply, RuntimeStorageCheckReply)
-    assert reply.report.storage_root == root
-    assert reply.report.healthy
+    assert reply.storage_root == str(root)
+    assert reply.healthy
 
 
 def test_a_refused_act_raises_the_error_its_handler_raised(tmp_path: Path) -> None:

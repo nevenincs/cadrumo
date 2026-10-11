@@ -52,8 +52,6 @@ The buffer is wiped when the holder returns. ``None`` declines the secret, and
 the act then settles without committing anything that depended on it.
 """
 
-_DEFAULT_SECONDS = 30.0
-
 
 def installation_passphrase_document(passphrase: bytearray) -> bytearray:
     """Build the one secret frame of an act that proves a profile passphrase.
@@ -131,8 +129,12 @@ class RuntimeInstallationClient:
                 it is ready.
             hold_secret: Receives the act's delivered secret, for an act that
                 delivers one, and returns the copy read back.
-            timeout: Seconds for the whole exchange. An act that delivers a
-                secret is given the handover bound by default.
+            timeout: Seconds for the whole exchange. Omitted, the act's own
+                deadline from the contract table applies, plus the handover
+                bound for an act that delivers a secret. A client that stops
+                waiting does not learn how an act that changes records
+                settled: the contract's ``outcome_read_by`` names the act that
+                reads it.
 
         Returns:
             The act's completed reply, or the typed refusal or failure its
@@ -151,7 +153,9 @@ class RuntimeInstallationClient:
             ):
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
             if timeout is None:
-                timeout = _DEFAULT_SECONDS + (INSTALLATION_SECRET_HANDOVER_SECONDS if contract.delivers_secret else 0)
+                timeout = contract.deadline_seconds + (
+                    INSTALLATION_SECRET_HANDOVER_SECONDS if contract.delivers_secret else 0
+                )
             reply = _exchange_act(
                 self._connection, request, secret=secret, hold_secret=hold_secret, deadline=deadline_after(timeout)
             )

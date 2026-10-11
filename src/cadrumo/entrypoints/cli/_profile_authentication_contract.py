@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from pydantic import SecretStr, model_validator
@@ -15,6 +16,9 @@ from ._bootstrap_exempt import is_bootstrap_exempt
 from ._command_secret_contracts import ProfileSecretSpec
 from .command_spec import CommandSpec, CommandSpecNode
 from .config.secure_input import MachineSecretPayload
+
+if TYPE_CHECKING:
+    import typer
 
 
 class ProfileAuthenticationSecrets(MachineSecretPayload):
@@ -53,6 +57,20 @@ class ProfileSecretSourceOptions:
     @property
     def supplied(self) -> bool:
         return self.stdin or self.descriptor is not None or self.credential_reference is not None
+
+
+def parsed_root_profile_source(ctx: typer.Context) -> ProfileSecretSourceOptions:
+    """Read the one parsed root authentication selection for this invocation.
+
+    Every parsed leaf asks this, including the leaves that open no runtime
+    connection, so it lives with the option type and loads nothing else.
+    """
+    value = cast("dict[str, object]", ctx.find_root().ensure_object(dict)).get("profile_secret_source")
+    if value is None:
+        return ProfileSecretSourceOptions()
+    if not isinstance(value, ProfileSecretSourceOptions):
+        raise TypeError("root profile-secret source has an invalid type")
+    return value
 
 
 def resolve_profile_secret_model(spec: ProfileSecretSpec) -> type[MachineSecretPayload]:
@@ -122,6 +140,7 @@ __all__ = [
     "ProfileSecretSourceOptions",
     "command_is_profile_free",
     "command_needs_state_tree",
+    "parsed_root_profile_source",
     "profile_authentication_posture",
     "resolve_profile_secret_model",
     "root_profile_secret_model",

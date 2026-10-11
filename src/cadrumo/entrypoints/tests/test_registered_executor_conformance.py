@@ -4053,7 +4053,7 @@ def _assert_calculation_report_verification_projection(
     assert projection.source_sha256 == payload.source_sha256
     assert projection.source_sha256 == hashlib.sha256(Path(payload.source_path).read_bytes()).hexdigest()
     assert payload.trusted_public_key_hex is None
-    verdict = projection.verification
+    verdict = projection.to_verification()
     assert verdict.outcome is CalculationSummaryVerificationOutcome.REFUSED
     assert verdict.store_checked is False
     assert verdict.signing_key_fingerprint is None

@@ -236,7 +236,11 @@ class FiledObservationPersistencePort(Protocol):
     """Encrypted custody of captured observation manifests and artefacts."""
 
     def persist_observation(self, observation: FiledObservationProtocol) -> Path:
-        """Persist an observation manifest and return its logical path."""
+        """Persist an observation manifest and return its logical path.
+
+        The final element of the path is the identifier the stored observation
+        is addressed by.
+        """
         ...
 
     def persist_artefact(

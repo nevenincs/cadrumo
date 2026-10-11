@@ -149,6 +149,11 @@ recorded nowhere. This ADR decides each so the paired plan can close them.
   (`config auth certificate secret set`) into encrypted storage; NO secret
   ever rides any MCP channel, form or URL. Recorded as the decided
   alternative so the unused spec feature reads as a choice, not a gap.
+- *Amended 2026-10-11:* the sentence that no secret ever rides any MCP
+  channel yields to `2026-10-11-mcp-parity-full-parity-adr`, on the owner's
+  ruling that MCP carries whatever the command line carries. A tool call
+  may carry a typed secret to the runtime's protected frame, or name one
+  the person stored at a terminal by reference. Elicitation stays unused.
 
 ### H9 — Capability and SDK posture
 
