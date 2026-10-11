@@ -44,21 +44,23 @@ from cadrumo.domain.transactions.m210_income_classification import (
     resolve_m210_payer_mode,
 )
 
+from .classification_origin_support import (
+    AGENT,
+    BUCKET_ID,
+    BUSINESS,
+    PERSON,
+    Ledger,
+    add_row,
+    add_row_classified_by_a_rule,
+    classify_row,
+    composed_ledger,
+)
 from .test_classification_origin_at_the_ledger_writers import (
-    _AGENT,
-    _BUCKET_ID,
-    _BUSINESS,
-    _PERSON,
     _PROPOSED_BY,
     _REPLACING_WRITES,
     _accept_proposal,
-    _add,
-    _by_a_rule,
-    _classify,
     _derive,
     _exclude,
-    _Ledger,
-    _ledger,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -69,24 +71,24 @@ _PARTIES = pytest.mark.parametrize("party", ["agent", "rule", "model"])
 
 
 @pytest.fixture
-def ledger(tmp_path: Path) -> Generator[_Ledger]:
-    with _ledger(tmp_path) as composed:
+def ledger(tmp_path: Path) -> Generator[Ledger]:
+    with composed_ledger(tmp_path) as composed:
         yield composed
 
 
-def _row_decided_by(ledger: _Ledger, party: str) -> str:
+def _row_decided_by(ledger: Ledger, party: str) -> str:
     """Store a business row whose classification ``party`` decided, with the stamp that party's write leaves."""
     if party == "agent":
-        return _add(ledger, description="classified by an agent", actor=_AGENT, classification=_BUSINESS)
+        return add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS)
     if party == "rule":
-        return _by_a_rule(ledger, description="classified by a rule")
-    row = _add(ledger, description="classified from a model's proposal")
-    _classify(ledger, row, actor=_AGENT, stamp=_PROPOSED_BY)
+        return add_row_classified_by_a_rule(ledger, description="classified by a rule")
+    row = add_row(ledger, description="classified from a model's proposal")
+    classify_row(ledger, row, actor=AGENT, stamp=_PROPOSED_BY)
     return row
 
 
 def _write(
-    ledger: _Ledger,
+    ledger: Ledger,
     row: str,
     values: dict[str, object],
     *,
@@ -95,7 +97,7 @@ def _write(
     reaffirm: bool = False,
 ) -> ManualLedgerTransactionResult:
     return update_manual_transaction_fields(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         transaction_id=row,
         patch=ManualLedgerTransactionPatch.model_validate(values),
         actor=actor,
@@ -111,11 +113,11 @@ def _refused(act: Callable[[], object]) -> bool:
     return refused.value.reason is AccessDenialCode.FRONTEND_DENIED
 
 
-def _every_agent_write_is_refused(ledger: _Ledger, row: str) -> bool:
+def _every_agent_write_is_refused(ledger: Ledger, row: str) -> bool:
     """Run each replacing write under an agent's label; each must be refused and store nothing."""
     before = ledger.stored()
     for name, write in _REPLACING_WRITES:
-        assert _refused(lambda write=write: write(ledger, row, actor=_AGENT)), name
+        assert _refused(lambda write=write: write(ledger, row, actor=AGENT)), name
         assert ledger.stored() == before, name
     return True
 
@@ -124,7 +126,7 @@ def _every_agent_write_is_refused(ledger: _Ledger, row: str) -> bool:
 @pytest.mark.parametrize("reaffirm", [False, True], ids=["plain", "reaffirm"])
 @pytest.mark.parametrize("source_command", [_CLASSIFY, _ADD], ids=["another-reason", "same-reason"])
 def test_a_person_confirming_the_classification_a_row_already_has_takes_the_row_and_the_history_shows_it(
-    ledger: _Ledger, party: str, reaffirm: bool, source_command: str
+    ledger: Ledger, party: str, reaffirm: bool, source_command: str
 ) -> None:
     """No value moves, and the write is neither skipped nor refused as changing nothing."""
     row = _row_decided_by(ledger, party)
@@ -135,8 +137,8 @@ def test_a_person_confirming_the_classification_a_row_already_has_takes_the_row_
     confirmed = _write(
         ledger,
         row,
-        {"business_classification": _BUSINESS},
-        actor=_PERSON,
+        {"business_classification": BUSINESS},
+        actor=PERSON,
         source_command=source_command,
         reaffirm=reaffirm,
     )
@@ -149,58 +151,58 @@ def test_a_person_confirming_the_classification_a_row_already_has_takes_the_row_
         event_id: event for event_id, event in ledger.events.load().events.items() if event_id not in events_before
     }
     assert set(recorded) == set(confirmed.bucket_event_ids) and recorded
-    assert {event.actor for event in recorded.values()} == {_PERSON}
+    assert {event.actor for event in recorded.values()} == {PERSON}
     assert BucketEventType.LEDGER_TRANSACTION_CLASSIFIED in {event.event_type for event in recorded.values()}
     assert _every_agent_write_is_refused(ledger, row)
 
 
-def test_a_person_restating_their_own_classification_writes_nothing(ledger: _Ledger) -> None:
+def test_a_person_restating_their_own_classification_writes_nothing(ledger: Ledger) -> None:
     """The row is already theirs, so the confirmation stays the no-op it was."""
-    row = _add(ledger, description="the person's row", classification=_BUSINESS)
+    row = add_row(ledger, description="the person's row", classification=BUSINESS)
     before = ledger.stored()
 
-    restated = _write(ledger, row, {"business_classification": _BUSINESS}, actor=_PERSON, source_command=_ADD)
+    restated = _write(ledger, row, {"business_classification": BUSINESS}, actor=PERSON, source_command=_ADD)
 
     assert restated.bucket_event_ids == ()
     assert ledger.stored() == before
 
 
-def test_an_agents_label_restating_the_persons_classification_takes_nothing(ledger: _Ledger) -> None:
+def test_an_agents_label_restating_the_persons_classification_takes_nothing(ledger: Ledger) -> None:
     """Otherwise submitting the value a row already has would be a way to take it."""
-    row = _add(ledger, description="the person's row", classification=_BUSINESS)
+    row = add_row(ledger, description="the person's row", classification=BUSINESS)
     before = ledger.stored()
 
-    restated = _write(ledger, row, {"business_classification": _BUSINESS}, actor=_AGENT, source_command=_ADD)
+    restated = _write(ledger, row, {"business_classification": BUSINESS}, actor=AGENT, source_command=_ADD)
 
     assert restated.bucket_event_ids == ()
     assert ledger.stored() == before
-    personal = _add(ledger, description="the person's personal row", classification=BusinessClassification.PERSONAL)
-    _accept_proposal(ledger, personal, actor=_AGENT)
+    personal = add_row(ledger, description="the person's personal row", classification=BusinessClassification.PERSONAL)
+    _accept_proposal(ledger, personal, actor=AGENT)
     assert ledger.row(personal).classification_origin is ClassificationOrigin.PERSON
     assert _every_agent_write_is_refused(ledger, row)
 
 
 def test_a_person_running_the_derivation_an_agent_ran_or_accepting_the_proposal_an_agent_accepted_takes_the_row(
-    ledger: _Ledger,
+    ledger: Ledger,
 ) -> None:
-    derived = _by_a_rule(ledger, description="classified by a rule")
-    _derive(ledger, derived, actor=_AGENT)
+    derived = add_row_classified_by_a_rule(ledger, description="classified by a rule")
+    _derive(ledger, derived, actor=AGENT)
     figures = classification_facts(ledger.row(derived))
     assert ledger.row(derived).classification_origin is ClassificationOrigin.AGENT
-    accepted = _add(ledger, description="accepted from a model")
-    _accept_proposal(ledger, accepted, actor=_AGENT)
+    accepted = add_row(ledger, description="accepted from a model")
+    _accept_proposal(ledger, accepted, actor=AGENT)
     assert ledger.row(accepted).classification_origin is ClassificationOrigin.AGENT
 
-    _derive(ledger, derived, actor=_PERSON)
-    _accept_proposal(ledger, accepted, actor=_PERSON)
+    _derive(ledger, derived, actor=PERSON)
+    _accept_proposal(ledger, accepted, actor=PERSON)
 
     assert classification_facts(ledger.row(derived)) == figures
     for row in (derived, accepted):
         assert ledger.row(row).classification_origin is ClassificationOrigin.PERSON
-        assert _refused(lambda row=row: _exclude(ledger, row, actor=_AGENT))
+        assert _refused(lambda row=row: _exclude(ledger, row, actor=AGENT))
 
 
-def _m210(_ledger_unused: _Ledger) -> M210IncomeClassification:
+def _m210(_ledger_unused: Ledger) -> M210IncomeClassification:
     devengo = date(2025, 1, 21)
     return M210IncomeClassification(
         official_tipo_renta_code="35",
@@ -213,7 +215,7 @@ def _m210(_ledger_unused: _Ledger) -> M210IncomeClassification:
     )
 
 
-_FIELD_VALUES: dict[str, Callable[[_Ledger], object]] = {
+_FIELD_VALUES: dict[str, Callable[[Ledger], object]] = {
     "counterparty_country": lambda ledger: "DE",
     "counterparty_identification_state": lambda ledger: require_eu_member_state("DE", authority=ledger.ports.operation),
     "deduction_fact_kind": lambda ledger: require_iva_deduction_fact_kind(
@@ -228,25 +230,25 @@ _FIELDS = pytest.mark.parametrize("field", list(_FIELD_VALUES))
 @_FIELDS
 @pytest.mark.parametrize("with_classification", [True, False], ids=["classification", "update"])
 def test_a_person_setting_one_further_tax_bearing_fact_on_an_agents_row_takes_the_row(
-    ledger: _Ledger, field: str, with_classification: bool
+    ledger: Ledger, field: str, with_classification: bool
 ) -> None:
     """Through a classification that restates the class, and through an update that sets the fact alone."""
-    row = _add(ledger, description="classified by an agent", actor=_AGENT, classification=_BUSINESS)
+    row = add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS)
     values: dict[str, object] = {field: _FIELD_VALUES[field](ledger)}
     if with_classification:
-        values["business_classification"] = _BUSINESS
+        values["business_classification"] = BUSINESS
 
-    _write(ledger, row, values, actor=_PERSON)
+    _write(ledger, row, values, actor=PERSON)
 
     assert field in CLASSIFICATION_DECISION_FIELDS
     assert getattr(ledger.row(row), field) is not None
     assert ledger.row(row).classification_origin is ClassificationOrigin.PERSON
     before = ledger.stored()
-    assert _refused(lambda: _exclude(ledger, row, actor=_AGENT))
+    assert _refused(lambda: _exclude(ledger, row, actor=AGENT))
     assert ledger.stored() == before
 
 
-_CHANGES: dict[str, Callable[[_Ledger], object]] = {
+_CHANGES: dict[str, Callable[[Ledger], object]] = {
     **_FIELD_VALUES,
     "source_jurisdiction": lambda ledger: "FR",
     "category_id": lambda ledger: "material_oficina",
@@ -258,30 +260,30 @@ _CHANGES: dict[str, Callable[[_Ledger], object]] = {
 
 @pytest.mark.parametrize("field", list(_CHANGES))
 def test_a_write_under_an_agents_label_that_changes_a_tax_bearing_fact_of_the_persons_row_is_refused(
-    ledger: _Ledger, field: str
+    ledger: Ledger, field: str
 ) -> None:
     """Whichever fact it is: the writer compares the one set the origin is decided from."""
-    row = _add(ledger, description="the person's row", classification=_BUSINESS)
+    row = add_row(ledger, description="the person's row", classification=BUSINESS)
     before = ledger.stored()
 
     assert field in CLASSIFICATION_DECISION_FIELDS
-    assert _refused(lambda: _write(ledger, row, {field: _CHANGES[field](ledger)}, actor=_AGENT))
+    assert _refused(lambda: _write(ledger, row, {field: _CHANGES[field](ledger)}, actor=AGENT))
     assert ledger.stored() == before
 
-    _write(ledger, row, {field: _CHANGES[field](ledger)}, actor=_PERSON)
+    _write(ledger, row, {field: _CHANGES[field](ledger)}, actor=PERSON)
     assert ledger.stored() != before
 
 
 @pytest.mark.parametrize("values", [{"notes": "a note"}, {"group_label": "a label"}], ids=["note", "label"])
 def test_an_edit_that_sets_no_tax_bearing_fact_neither_takes_a_row_nor_is_refused(
-    ledger: _Ledger, values: dict[str, object]
+    ledger: Ledger, values: dict[str, object]
 ) -> None:
     """A note or a label decides nothing about how the row is taxed, whoever writes it."""
-    by_an_agent = _add(ledger, description="classified by an agent", actor=_AGENT, classification=_BUSINESS)
-    by_the_person = _add(ledger, description="the person's row", classification=_BUSINESS)
+    by_an_agent = add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS)
+    by_the_person = add_row(ledger, description="the person's row", classification=BUSINESS)
 
-    _write(ledger, by_an_agent, values, actor=_PERSON, source_command="aeat app ledger update")
-    _write(ledger, by_the_person, values, actor=_AGENT, source_command="aeat app ledger update")
+    _write(ledger, by_an_agent, values, actor=PERSON, source_command="aeat app ledger update")
+    _write(ledger, by_the_person, values, actor=AGENT, source_command="aeat app ledger update")
 
     assert not set(values) & CLASSIFICATION_DECISION_FIELDS
     assert ledger.row(by_an_agent).classification_origin is ClassificationOrigin.AGENT
@@ -299,63 +301,63 @@ _SET_ASIDES = pytest.mark.parametrize(
 )
 
 
-def _lifecycle(act: _SetAside, ledger: _Ledger, row: str, *, actor: str) -> None:
-    act(bucket_id=_BUCKET_ID, transaction_id=row, actor=actor, reason="synthetic", ports=ledger.ports)
+def _lifecycle(act: _SetAside, ledger: Ledger, row: str, *, actor: str) -> None:
+    act(bucket_id=BUCKET_ID, transaction_id=row, actor=actor, reason="synthetic", ports=ledger.ports)
 
 
 @_SET_ASIDES
 def test_an_agents_label_sets_aside_and_restores_a_row_that_carries_none_of_the_persons_work(
-    ledger: _Ledger, set_aside: _SetAside, state: TransactionLifecycleState
+    ledger: Ledger, set_aside: _SetAside, state: TransactionLifecycleState
 ) -> None:
     for row in (
-        _add(ledger, description="unprocessed"),
-        _by_a_rule(ledger, description="classified by a rule"),
-        _add(ledger, description="classified by an agent", actor=_AGENT, classification=_BUSINESS),
+        add_row(ledger, description="unprocessed"),
+        add_row_classified_by_a_rule(ledger, description="classified by a rule"),
+        add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS),
     ):
-        _lifecycle(set_aside, ledger, row, actor=_AGENT)
+        _lifecycle(set_aside, ledger, row, actor=AGENT)
         assert ledger.row(row).lifecycle_state is state
-        assert ledger.row(row).lifecycle_lineage[-1].actor == _AGENT
+        assert ledger.row(row).lifecycle_lineage[-1].actor == AGENT
 
-        _lifecycle(restore_manual_transaction, ledger, row, actor=_AGENT)
+        _lifecycle(restore_manual_transaction, ledger, row, actor=AGENT)
         assert ledger.row(row).lifecycle_state is TransactionLifecycleState.ACTIVE
 
 
 @_SET_ASIDES
 def test_an_agents_label_does_not_set_aside_the_persons_row_nor_restore_what_the_person_set_aside(
-    ledger: _Ledger, set_aside: _SetAside, state: TransactionLifecycleState
+    ledger: Ledger, set_aside: _SetAside, state: TransactionLifecycleState
 ) -> None:
     """The row records who ran each archive, stash and restore, and the last one set the state it is in."""
-    the_persons = _add(ledger, description="the person's row", classification=_BUSINESS)
-    by_rule = _by_a_rule(ledger, description="classified by a rule")
+    the_persons = add_row(ledger, description="the person's row", classification=BUSINESS)
+    by_rule = add_row_classified_by_a_rule(ledger, description="classified by a rule")
     before = ledger.stored()
 
-    assert _refused(lambda: _lifecycle(set_aside, ledger, the_persons, actor=_AGENT))
+    assert _refused(lambda: _lifecycle(set_aside, ledger, the_persons, actor=AGENT))
     assert ledger.stored() == before
 
     for row in (the_persons, by_rule):
-        _lifecycle(set_aside, ledger, row, actor=_PERSON)
+        _lifecycle(set_aside, ledger, row, actor=PERSON)
         assert ledger.row(row).lifecycle_state is state
     set_aside_by_the_person = ledger.stored()
     for row in (the_persons, by_rule):
-        assert _refused(lambda row=row: _lifecycle(restore_manual_transaction, ledger, row, actor=_AGENT))
+        assert _refused(lambda row=row: _lifecycle(restore_manual_transaction, ledger, row, actor=AGENT))
     assert ledger.stored() == set_aside_by_the_person
 
     for row in (the_persons, by_rule):
-        _lifecycle(restore_manual_transaction, ledger, row, actor=_PERSON)
+        _lifecycle(restore_manual_transaction, ledger, row, actor=PERSON)
         assert ledger.row(row).lifecycle_state is TransactionLifecycleState.ACTIVE
 
 
-def test_an_agents_label_does_not_archive_a_row_the_person_stashed_to_make_the_state_its_own(ledger: _Ledger) -> None:
+def test_an_agents_label_does_not_archive_a_row_the_person_stashed_to_make_the_state_its_own(ledger: Ledger) -> None:
     """Archiving it would record an agent as the last to set the row aside, and so let an agent restore it."""
-    row = _by_a_rule(ledger, description="classified by a rule")
-    _lifecycle(stash_manual_transaction, ledger, row, actor=_PERSON)
+    row = add_row_classified_by_a_rule(ledger, description="classified by a rule")
+    _lifecycle(stash_manual_transaction, ledger, row, actor=PERSON)
     before = ledger.stored()
 
-    assert _refused(lambda: _lifecycle(archive_manual_transaction, ledger, row, actor=_AGENT))
+    assert _refused(lambda: _lifecycle(archive_manual_transaction, ledger, row, actor=AGENT))
     assert ledger.stored() == before
 
-    own = _add(ledger, description="unprocessed")
-    _lifecycle(stash_manual_transaction, ledger, own, actor=_AGENT)
-    _lifecycle(archive_manual_transaction, ledger, own, actor=_AGENT)
-    _lifecycle(restore_manual_transaction, ledger, own, actor=_AGENT)
+    own = add_row(ledger, description="unprocessed")
+    _lifecycle(stash_manual_transaction, ledger, own, actor=AGENT)
+    _lifecycle(archive_manual_transaction, ledger, own, actor=AGENT)
+    _lifecycle(restore_manual_transaction, ledger, own, actor=AGENT)
     assert ledger.row(own).lifecycle_state is TransactionLifecycleState.ACTIVE

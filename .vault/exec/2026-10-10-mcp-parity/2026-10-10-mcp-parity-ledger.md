@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:fee2ef0635702c9d8b12808852234f671674cdfd0e937af174494dd9df811dd0'
+body_hash: 'sha256:ceeb76dc1ac90ab825cceda013bc0a77f770e6885ffaf16fba3d5e43bbc47126'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -1029,6 +1029,15 @@ related:
 - `S35` `verify:` `ty check --python-platform linux (11 files)` -> `pass`
 - `S35` `verify:` `basedpyright on the changed production files` -> `pass`
 - `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S35` `M` `src/cadrumo/adapters/persistence/profile/tests/test_confirmation_keeps_a_sealed_row_at_the_ledger_writers.py`
+- `S35` `M` `src/cadrumo/adapters/persistence/profile/tests/test_person_takes_a_classification_at_the_ledger_writers.py`
+- `S35` `A` `src/cadrumo/adapters/persistence/profile/tests/classification_origin_support.py`
+- `S35` `A` `src/cadrumo/adapters/persistence/profile/tests/test_evidence_on_a_sealed_row_at_the_ledger_writers.py`
+- `S35` `verify:` `pytest ledger, aggregation, transaction-domain, profile persistence and the ledger guard and catalogue files (6102 tests)` -> `pass`
+- `S35` `verify:` `ruff check` -> `pass`
+- `S35` `verify:` `ruff format --check` -> `pass`
+- `S35` `verify:` `ty check --python-platform linux` -> `pass`
+- `S35` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -1073,3 +1082,4 @@ related:
 - `S35` Fourth review. A person who confirmed an agent, rule or model classification with the same value, or only completed a field such as the counterparty country, did not become its owner. A person write that names any field of one declared set now takes the row whether or not a value changes, the no-change paths record it as a classification event, and a test holds the set equal to what the classification, update and bulk patches can set. An agent is refused archiving or stashing a row whose classification is the person, and restoring a row whose archived or stashed state the person set. The review commit reads the stored row before any effect. Two entrypoint cases failed under load in the 45-minute parallel run and pass alone.
 - `S35` Correction: the four rows for src/cadrumo/locales/{ca,en,es,hu}/common.yml under this Step were logged in error. Those catalogue changes belong to another session and are not part of this Step or its commit.
 - `S35` Fifth review. A confirmation whose values compare equal now writes the stored row back with only its origin, stamp, reason, lineage and modification time replaced, and passes the finalised-revision guard only when the transaction identifier and the row fingerprint are unchanged; before, restating 500.00 as 500 moved the fingerprint and turned a verified revision stale. Bulk confirmation agrees with single. An agent is refused linking purchase evidence to a row the person classified, since the link changes how the row is calculated. Two command-line cases errored at setup under load and pass alone. Outside this Step, the seven entrypoint failures named under S45 and the command-line test that expects an English message.
+- `S35` Sixth review, which passed the sealed-row fix. Closed after it: a blank purchase evidence identifier is absent and takes nothing; evidence can be attached to a sealed row a rule stamped, because the evidence-only decision no longer compares a stamp the fingerprint does not cover; a refused confirmation that carries a new reason names the differing field; and two test-hygiene points. Left for the owner: whether the filing fingerprint gains the purchase-evidence link in a new field-set version.

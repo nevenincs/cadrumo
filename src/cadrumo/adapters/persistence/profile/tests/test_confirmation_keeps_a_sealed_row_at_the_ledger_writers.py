@@ -53,20 +53,20 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.transactions.models import Transaction
 
-from .ledger_action_persistence_support import persist_verified_revision_citing_transaction
-from .test_classification_origin_at_the_ledger_writers import (
-    _AGENT,
-    _BUCKET_ID,
-    _BUSINESS,
-    _PERSON,
-    _add,
-    _attach,
-    _attachment,
-    _by_a_rule,
-    _invoice,
-    _Ledger,
-    _ledger,
+from .classification_origin_support import (
+    AGENT,
+    BUCKET_ID,
+    BUSINESS,
+    PERSON,
+    Ledger,
+    add_row,
+    add_row_classified_by_a_rule,
+    attach_attachment,
+    composed_ledger,
+    store_attachment,
+    synthetic_invoice,
 )
+from .ledger_action_persistence_support import persist_verified_revision_citing_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -90,8 +90,8 @@ _RECORDED_BY_A_RESTATEMENT = {
 
 
 @pytest.fixture
-def ledger(tmp_path: Path) -> Generator[_Ledger]:
-    with _ledger(tmp_path) as composed:
+def ledger(tmp_path: Path) -> Generator[Ledger]:
+    with composed_ledger(tmp_path) as composed:
         yield composed
 
 
@@ -109,20 +109,20 @@ def _stored_apart_from_the_restatement(row: Transaction) -> object:
     return json.loads(row.model_dump_json(exclude=_RECORDED_BY_A_RESTATEMENT))
 
 
-def _sealed_row_an_agent_classified(ledger: _Ledger) -> tuple[str, LedgerFilingSnapshot]:
+def _sealed_row_an_agent_classified(ledger: Ledger) -> tuple[str, LedgerFilingSnapshot]:
     """Store an agent's business row whose figures carry trailing zeros, and seal a revision over it."""
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             booked_date=date(2025, 1, 21),
             amount=Decimal(_STORED_TEXT["amount"]),
             direction=TransactionDirection.OUTGOING,
             description="classified by an agent and cited by a finalized revision",
-            business_classification=_BUSINESS,
+            business_classification=BUSINESS,
             taxable_base=Decimal(_STORED_TEXT["taxable_base"]),
             iva_rate=Decimal(_STORED_TEXT["iva_rate"]),
             iva_amount=Decimal(_STORED_TEXT["iva_amount"]),
-            actor=_AGENT,
+            actor=AGENT,
         ),
         ports=ledger.ports,
     )
@@ -130,7 +130,7 @@ def _sealed_row_an_agent_classified(ledger: _Ledger) -> tuple[str, LedgerFilingS
     assert _written_forms(ledger.row(row)) == _STORED_TEXT
     assert ledger.row(row).classification_origin is ClassificationOrigin.AGENT
     persist_verified_revision_citing_transaction(
-        ledger.objects, transaction_id=row, bucket_id=_BUCKET_ID, operation=ledger.ports.operation
+        ledger.objects, transaction_id=row, bucket_id=BUCKET_ID, operation=ledger.ports.operation
     )
     snapshot = compute_ledger_filing_snapshot(
         source_transaction_ids=(row,),
@@ -141,11 +141,11 @@ def _sealed_row_an_agent_classified(ledger: _Ledger) -> tuple[str, LedgerFilingS
     return row, snapshot
 
 
-def _confirm(ledger: _Ledger, row: str, values: dict[str, object], *, actor: str = _PERSON) -> None:
+def _confirm(ledger: Ledger, row: str, values: dict[str, object], *, actor: str = PERSON) -> None:
     update_manual_transaction_fields(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         transaction_id=row,
-        patch=ManualLedgerTransactionPatch.model_validate({"business_classification": _BUSINESS, **values}),
+        patch=ManualLedgerTransactionPatch.model_validate({"business_classification": BUSINESS, **values}),
         actor=actor,
         source_command=_CLASSIFY,
         ports=ledger.ports,
@@ -153,12 +153,12 @@ def _confirm(ledger: _Ledger, row: str, values: dict[str, object], *, actor: str
 
 
 def _bulk(
-    ledger: _Ledger, row: str, classification: BusinessClassification, *, columns: str = "", cells: str = ""
+    ledger: Ledger, row: str, classification: BusinessClassification, *, columns: str = "", cells: str = ""
 ) -> BulkClassifyResult:
     return bulk_classify_from_csv(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         csv_text=f"transaction_id,classification{columns}\n{row},{classification.value}{cells}\n",
-        actor=_PERSON,
+        actor=PERSON,
         ports=ledger.ports,
     )
 
@@ -175,7 +175,7 @@ def _bulk(
     ids=["class-alone", "base-500", "amount-605", "rate-0.21", "every-figure"],
 )
 def test_a_person_confirming_a_sealed_row_in_canonical_text_takes_it_and_moves_nothing_the_revision_sealed(
-    ledger: _Ledger, restated: dict[str, object]
+    ledger: Ledger, restated: dict[str, object]
 ) -> None:
     row, snapshot = _sealed_row_an_agent_classified(ledger)
     before = ledger.row(row)
@@ -191,15 +191,15 @@ def test_a_person_confirming_a_sealed_row_in_canonical_text_takes_it_and_moves_n
     assert row_fingerprint(after) == row_fingerprint(before)
     assert evaluate_ledger_filing_staleness(snapshot, ledger.transactions.load()).is_stale is False
     recorded = [event for event_id, event in ledger.events.load().events.items() if event_id not in events_before]
-    assert {event.actor for event in recorded} == {_PERSON}
+    assert {event.actor for event in recorded} == {PERSON}
     assert BucketEventType.LEDGER_TRANSACTION_CLASSIFIED in {event.event_type for event in recorded}
 
 
-def test_a_bulk_confirmation_of_a_sealed_row_is_admitted_as_a_single_one_is(ledger: _Ledger) -> None:
+def test_a_bulk_confirmation_of_a_sealed_row_is_admitted_as_a_single_one_is(ledger: Ledger) -> None:
     row, snapshot = _sealed_row_an_agent_classified(ledger)
     before = ledger.row(row)
 
-    result = _bulk(ledger, row, _BUSINESS, columns=",taxable_base,iva_rate,iva_amount", cells=",500,0.21,105")
+    result = _bulk(ledger, row, BUSINESS, columns=",taxable_base,iva_rate,iva_amount", cells=",500,0.21,105")
 
     assert (result.applied, result.skipped, result.failures) == (1, 0, ())
     after = ledger.row(row)
@@ -220,7 +220,7 @@ def test_a_bulk_confirmation_of_a_sealed_row_is_admitted_as_a_single_one_is(ledg
     ids=["class", "category", "one-fact-among-restated-figures", "figures"],
 )
 def test_a_write_that_changes_a_value_of_a_sealed_row_is_refused_and_stores_nothing(
-    ledger: _Ledger, change: dict[str, object]
+    ledger: Ledger, change: dict[str, object]
 ) -> None:
     row, snapshot = _sealed_row_an_agent_classified(ledger)
     before = ledger.stored()
@@ -234,7 +234,7 @@ def test_a_write_that_changes_a_value_of_a_sealed_row_is_refused_and_stores_noth
     assert evaluate_ledger_filing_staleness(snapshot, ledger.transactions.load()).is_stale is False
 
 
-def test_a_bulk_row_that_changes_a_value_of_a_sealed_row_is_refused_as_a_single_write_is(ledger: _Ledger) -> None:
+def test_a_bulk_row_that_changes_a_value_of_a_sealed_row_is_refused_as_a_single_write_is(ledger: Ledger) -> None:
     row, _snapshot = _sealed_row_an_agent_classified(ledger)
     before = ledger.stored()
 
@@ -245,18 +245,18 @@ def test_a_bulk_row_that_changes_a_value_of_a_sealed_row_is_refused_as_a_single_
     assert ledger.stored() == before
 
 
-def test_a_person_restating_their_own_sealed_row_in_canonical_text_writes_nothing(ledger: _Ledger) -> None:
+def test_a_person_restating_their_own_sealed_row_in_canonical_text_writes_nothing(ledger: Ledger) -> None:
     """Nothing is theirs to take, so the stored forms are not touched and no event is recorded."""
     row, snapshot = _sealed_row_an_agent_classified(ledger)
     _confirm(ledger, row, {})
     before = ledger.stored()
 
-    assert _bulk(ledger, row, _BUSINESS, columns=",taxable_base", cells=",500").skipped == 1
+    assert _bulk(ledger, row, BUSINESS, columns=",taxable_base", cells=",500").skipped == 1
     update_manual_transaction_fields(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         transaction_id=row,
-        patch=ManualLedgerTransactionPatch.model_validate({"business_classification": _BUSINESS, **_RESTATED}),
-        actor=_PERSON,
+        patch=ManualLedgerTransactionPatch.model_validate({"business_classification": BUSINESS, **_RESTATED}),
+        actor=PERSON,
         source_command=_CLASSIFY,
         ports=ledger.ports,
     )
@@ -266,9 +266,9 @@ def test_a_person_restating_their_own_sealed_row_in_canonical_text_writes_nothin
     assert evaluate_ledger_filing_staleness(snapshot, ledger.transactions.load()).is_stale is False
 
 
-def _link_purchase_evidence(ledger: _Ledger, row: str, evidence_id: str, *, actor: str) -> None:
+def _link_purchase_evidence(ledger: Ledger, row: str, evidence_id: str, *, actor: str) -> None:
     attach_manual_transaction_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         transaction_id=row,
         purchase_invoice_evidence_id=evidence_id,
         actor=actor,
@@ -278,20 +278,20 @@ def _link_purchase_evidence(ledger: _Ledger, row: str, evidence_id: str, *, acto
 
 @pytest.mark.parametrize("direction", [TransactionDirection.INCOMING, TransactionDirection.OUTGOING])
 def test_an_agents_label_does_not_link_purchase_evidence_to_a_row_the_person_classified(
-    ledger: _Ledger, direction: TransactionDirection
+    ledger: Ledger, direction: TransactionDirection
 ) -> None:
     """A calculation would then take the row's figures from the invoice, and count an incoming row as a refund."""
-    invoice = _invoice("SYNTHETIC-1")
+    invoice = synthetic_invoice("SYNTHETIC-1")
     ledger.invoices.save(build_invoice_catalogue([invoice]))
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             booked_date=date(2025, 1, 21),
             amount=Decimal("121.00"),
             direction=direction,
             description="the person's row",
-            business_classification=_BUSINESS,
-            actor=_PERSON,
+            business_classification=BUSINESS,
+            actor=PERSON,
         ),
         ports=ledger.ports,
     )
@@ -299,29 +299,33 @@ def test_an_agents_label_does_not_link_purchase_evidence_to_a_row_the_person_cla
     before = ledger.stored()
 
     with pytest.raises(ProfileAccessRefusedError) as refused:
-        _link_purchase_evidence(ledger, row, invoice.invoice_id, actor=_AGENT)
+        _link_purchase_evidence(ledger, row, invoice.invoice_id, actor=AGENT)
 
     assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
     assert ledger.stored() == before
 
-    _attach(ledger, row, _attachment(ledger, b"supplementary"), actor=_AGENT)
+    attach_attachment(ledger, row, store_attachment(ledger, b"supplementary"), actor=AGENT)
     assert ledger.row(row).classification_origin is ClassificationOrigin.PERSON
-    _link_purchase_evidence(ledger, row, invoice.invoice_id, actor=_PERSON)
+    _link_purchase_evidence(ledger, row, invoice.invoice_id, actor=PERSON)
     assert ledger.row(row).purchase_invoice_evidence_id == invoice.invoice_id
     assert ledger.row(row).classification_origin is ClassificationOrigin.PERSON
 
 
-def test_linking_purchase_evidence_decides_the_rows_figures_for_whoever_links_it(ledger: _Ledger) -> None:
+def test_linking_purchase_evidence_decides_the_rows_figures_for_whoever_links_it(ledger: Ledger) -> None:
     """The person's link to an agent's row makes it theirs; an agent's link to a rule's row makes it the agent's."""
-    first, second, third = _invoice("SYNTHETIC-1"), _invoice("SYNTHETIC-2"), _invoice("SYNTHETIC-3")
+    first, second, third = (
+        synthetic_invoice("SYNTHETIC-1"),
+        synthetic_invoice("SYNTHETIC-2"),
+        synthetic_invoice("SYNTHETIC-3"),
+    )
     ledger.invoices.save(build_invoice_catalogue([first, second, third]))
-    by_an_agent = _add(ledger, description="classified by an agent", actor=_AGENT, classification=_BUSINESS)
-    by_rule = _by_a_rule(ledger, description="classified by a rule")
-    unprocessed = _add(ledger, description="unprocessed")
+    by_an_agent = add_row(ledger, description="classified by an agent", actor=AGENT, classification=BUSINESS)
+    by_rule = add_row_classified_by_a_rule(ledger, description="classified by a rule")
+    unprocessed = add_row(ledger, description="unprocessed")
 
-    _link_purchase_evidence(ledger, by_an_agent, first.invoice_id, actor=_PERSON)
-    _link_purchase_evidence(ledger, by_rule, second.invoice_id, actor=_AGENT)
-    _link_purchase_evidence(ledger, unprocessed, third.invoice_id, actor=_AGENT)
+    _link_purchase_evidence(ledger, by_an_agent, first.invoice_id, actor=PERSON)
+    _link_purchase_evidence(ledger, by_rule, second.invoice_id, actor=AGENT)
+    _link_purchase_evidence(ledger, unprocessed, third.invoice_id, actor=AGENT)
 
     assert ledger.row(by_an_agent).classification_origin is ClassificationOrigin.PERSON
     assert ledger.row(by_rule).classification_origin is ClassificationOrigin.AGENT

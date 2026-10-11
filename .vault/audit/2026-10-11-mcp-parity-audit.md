@@ -5,7 +5,7 @@ tags:
 date: '2026-10-11'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:764de7731e369a3947df530271ac6d2b8e1c657ca0abf6963ac4f66f6ea83beb'
+body_hash: 'sha256:663b0606e643e1bd1f34b7a0b1325cb7f75c1bc9f50a36b0ca216f1512a87feb'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -29,6 +29,8 @@ Review 3, 2026-10-11: re-review of the fixes in `ece30ed551`, base `0cbfe6a994`.
 Review 4, 2026-10-11: re-review of `3e8f9e3725` and `7e6226e084`, base `ece30ed551`. Verdict: revision required for `S35`. The agent side of the classification-origin rule holds: every classifying write goes through one stamper, each executor refuses before any effect, and deriving, detaching, linking or archiving and restoring before a split all end refused; stored rows load safely and the filing snapshot fingerprint is unchanged. The decimal fix holds and the census proofs for the reviews now read a stored actor.
 
 Review 5, 2026-10-11: re-review of `d4c6b485a5`, base `3e8f9e3725`. Verdict: revision required for `S35`. Ownership by confirmation holds in every direction probed, archive, stash and restore hold, and the review commit holds. The exemption that lets a confirmation through the finalised-revision guard does not.
+
+Review 6, 2026-10-11: confirmation review of `d632ec6246`, base `d4c6b485a5`. Verdict: pass. Fifty single confirmations on sealed rows, with share, prorrata and locally-filed cases, left the stored row identical apart from its record fields, with identifier, fingerprint and staleness unmoved; every real change was refused with nothing stored; bulk agrees with single row by row; an agent's purchase evidence on the person's row is refused through the real runtime and no attach, detach or relink sequence flips a person's row.
 
 ## Findings
 
@@ -160,6 +162,26 @@ The amount is in the declared set, so a person's update or bulk table that resta
 
 Ledger rows give counts such as 7054 of 7058 without naming the tests outside the count. They are the known failures in other work, listed in the ledger note of `S45` and in later notes: four form-layout tests, four reporting no usable authority, one Modelo 184 context key, one Modelo 100 export version, one bulk-classify save count, and one command-line test expecting an English message; two cases that timed out under load were re-run alone and pass. Review 5. Resolved by this entry.
 
+### evidence-only-compares-stamp | medium | Evidence could not be attached to a sealed row that a rule stamped
+
+`src/cadrumo/application/ledger/actions_common.py:401` compares the classification stamp when deciding that a write only adds evidence, and an attach always re-stamps the row, so a person linking evidence to a sealed row stamped by a rule is refused with the finalised-revision message, which defeats the documented remedy for an export evidence refusal on such rows. Predates the reviewed commit. Review 6. Resolved 2026-10-11: the decision that a write only adds evidence no longer compares the stamp, which the fingerprint does not cover; a person attaches a supplementary document or purchase evidence to a sealed row a rule stamped, and a supplementary attach leaves the row's origin as it was.
+
+### purchase-link-outside-fingerprint | medium | The purchase-evidence link bears on tax but the filing fingerprint does not cover it
+
+`src/cadrumo/domain/transactions/classification_origin.py:48` declares the link a field that decides a classification, while `src/cadrumo/application/aggregation/ledger_filing_snapshot.py:121` leaves it out of the fingerprint, so a person's link to a sealed row is admitted, reports the cited revision once, and the staleness evaluation stays false afterwards. Review 6. Open: covering the link needs a new version of the fingerprint's field set, which is a decision for the record that governs filing snapshots.
+
+### blank-purchase-id-takes-row | low | A whitespace-only purchase evidence identifier linked nothing yet took the row
+
+`src/cadrumo/application/ledger/actions_manual.py:261`. Review 6. Resolved 2026-10-11: a blank identifier is read as absent in the request model and at the writer, and a link set to nothing is not a decision.
+
+### sealed-confirmation-with-reason | low | A confirmation carrying a new reason is refused on a sealed row without naming the field
+
+`src/cadrumo/application/ledger/actions_manual.py:1024`. The reason is stored as a note, which is a change to the row. Review 6. Resolved 2026-10-11: the refusal stays and its context names the fields that differ, by name only.
+
+### test-hygiene | low | One assertion on the test's own data and helpers imported by private name
+
+`src/cadrumo/application/ledger/tests/test_classification_decision_fields_are_complete.py:94` and `src/cadrumo/adapters/persistence/profile/tests/test_confirmation_keeps_a_sealed_row_at_the_ledger_writers.py:58`. Review 6. Resolved 2026-10-11: the assertion checks production code and the shared helpers live in a support module under public names.
+
 ## Recommendations
 
 - For `surface-real-policy`: resolve each listed operation's real access policy in the surface test and keep a named, justified set for those that cannot be probed generically, as the admission test does.
@@ -171,3 +193,4 @@ Ledger rows give counts such as 7054 of 7058 without naming the tests outside th
 - For `reader-proxy` and `reader-called-local`: one decision, in the record that governs off-machine consent, on what makes a read stay on this machine.
 - For `agent-answers-own-review`: the admission rulings record should say which review responses an agent may give on the MCP frontend and which wait for the person.
 - For `split-guard-stamp`: the rule now enforced is the conservative reading; the admission rulings record carries it as a row for the owner to confirm or relax, together with two neighbours it does not cover: an agent archiving or stashing the person's row, which restore undoes, and an agent replacing a usage ratio the person set, which the profile does not attribute.
+- For `purchase-link-outside-fingerprint`: decide, in the record that governs filing snapshots, whether the fingerprint's field set gains the purchase-evidence link in a new version, so that linking evidence to a sealed row keeps the revision reported as stale.

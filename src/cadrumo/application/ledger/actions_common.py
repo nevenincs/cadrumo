@@ -375,37 +375,44 @@ def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: T
     """Return whether ``command`` adds evidence provenance and changes nothing else.
 
     An evidence-only mutation is exempt from the finalized-modelo write guard,
-    because it cannot disturb any finalized revision that cites the row. Three
-    independent project contracts establish that:
+    because it leaves what a finalized revision sealed. Three independent
+    project contracts establish that:
 
     * :func:`~cadrumo.domain.transactions.models.derive_transaction_id` hashes the
       provider identity, effective value date, amount, and narrative only, so an
       evidence-only edit re-derives the SAME id. A finalized revision's
       ``source_transaction_ids`` citation therefore keeps resolving.
     * The ledger filing snapshot's fingerprint field set (the canonical
-      "tax facts" of a row) excludes both evidence fields, so ``row_fingerprint``
+      "tax facts" of a row) reads neither evidence field, so ``row_fingerprint``
       and the revision's ``snapshot_fingerprint`` are unchanged and the revision's
       :class:`LedgerFilingSnapshot` still reconciles against the live catalogue.
     * A finalized revision's casilla values and bundled ledger evidence are frozen
       persisted snapshots; this write touches the transaction catalogue alone.
 
     The exemption is deliberately the narrowest that unblocks the operator: it
-    requires at least one evidence field to differ AND every other persisted
-    field to match, so a value-affecting edit smuggled alongside an attachment
-    still meets the guard. Adding evidence DOES change what a *later*
-    recalculation would compute (an incoming row with purchase evidence becomes a
-    Renta refund, and a resolved invoice's base/IVA override the row's own), which
-    is why the caller reports the cited revisions as stale rather than silently
-    accepting the write.
+    requires at least one evidence field to differ AND every other value of the
+    row to match, so a value-affecting edit smuggled alongside an attachment
+    still meets the guard. The stamp naming the writer's mechanism is not a
+    value (an attach always stamps ``manual``), so it is not compared: a row a
+    rule stamped takes the same attach as one stamped by hand.
+
+    Linked purchase evidence is not inert to a calculation. A recalculation
+    takes the row's base and cuota from the invoice and counts an incoming row
+    as a refund, which is why the link is one of
+    :data:`~cadrumo.domain.transactions.classification_origin.CLASSIFICATION_DECISION_FIELDS`.
+    The fingerprint does not read it, so a sealed revision does not turn stale
+    by itself. The attach is admitted anyway, and the caller reports the cited
+    revisions as stale so the operator recalculates, rather than silently
+    accepting the write. A supplementary attachment feeds no calculation.
     """
-    command_fields = _command_idempotency_fields(command)
-    current_fields = _transaction_idempotency_fields(current)
-    differing = {name for name, value in command_fields.items() if current_fields[name] != value}
+    differing = set(ledger_values_differing_from_stored(command, current))
     return bool(differing) and differing <= _EVIDENCE_MUTATION_FIELDS
 
 
-def command_changes_no_ledger_value(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
-    """Return whether every value ``command`` carries compares equal to the stored row's.
+def ledger_values_differing_from_stored(
+    command: ManualLedgerTransactionCommand, current: Transaction
+) -> tuple[str, ...]:
+    """Return the sorted names of the row values ``command`` carries that differ from the stored row's.
 
     The stamp naming the last writer's mechanism is not a value. Equal here is
     equal in value and says nothing of the written form: ``500`` compares equal
@@ -414,7 +421,16 @@ def command_changes_no_ledger_value(command: ManualLedgerTransactionCommand, cur
     """
     command_fields = _command_idempotency_fields(command)
     current_fields = _transaction_idempotency_fields(current)
-    return all(value == current_fields[name] for name, value in command_fields.items() if name != "classified_by")
+    return tuple(
+        sorted(
+            name for name, value in command_fields.items() if name != "classified_by" and current_fields[name] != value
+        )
+    )
+
+
+def command_changes_no_ledger_value(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
+    """Return whether every value ``command`` carries compares equal to the stored row's."""
+    return not ledger_values_differing_from_stored(command, current)
 
 
 def raise_finalized_modelo_blocked(
@@ -422,19 +438,28 @@ def raise_finalized_modelo_blocked(
     operation: str,
     transaction_ids: tuple[str, ...],
     blockers: tuple[LedgerRemovalBlocker, ...],
+    changed_fields: tuple[str, ...] = (),
 ) -> None:
+    """Refuse a write to rows finalized revisions cite.
+
+    ``changed_fields`` names, never shows, the row values the refused write
+    would have changed, so the operator can tell a note from a figure.
+    """
     first = blockers[0]
+    context = {
+        "transaction_ids": ",".join(transaction_ids),
+        "calculation_revision_id": first.calculation_revision_id,
+        "work_unit_id": first.work_unit_id,
+        "modelo": first.modelo,
+        "filing_year": str(first.filing_year),
+        "period": first.period,
+        "blocking_reference_count": str(len(blockers)),
+    }
+    if changed_fields:
+        context["changed_fields"] = ",".join(changed_fields)
     raise TransactionValidationError(
         f"{operation} refused because finalized modelo revisions cite the transaction",
-        context={
-            "transaction_ids": ",".join(transaction_ids),
-            "calculation_revision_id": first.calculation_revision_id,
-            "work_unit_id": first.work_unit_id,
-            "modelo": first.modelo,
-            "filing_year": str(first.filing_year),
-            "period": first.period,
-            "blocking_reference_count": str(len(blockers)),
-        },
+        context=context,
     )
 
 

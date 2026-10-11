@@ -72,6 +72,7 @@ from .actions_common import (
     derive_evidence_event_ids,
     display_decimal,
     is_evidence_only_command,
+    ledger_values_differing_from_stored,
     merge_identifier_tuple,
     mutation_signature,
     normalise_attachment_patch_ids,
@@ -258,7 +259,7 @@ def attach_manual_transaction_evidence(
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
-    normalized_purchase_evidence_id = purchase_invoice_evidence_id.strip() if purchase_invoice_evidence_id else None
+    normalized_purchase_evidence_id = (purchase_invoice_evidence_id or "").strip() or None
     normalized_attachment_ids = normalise_attachment_patch_ids(attachment_ids)
     if normalized_purchase_evidence_id is None and not normalized_attachment_ids:
         raise TransactionValidationError(
@@ -1025,7 +1026,9 @@ def _prepare_manual_transaction_update(
         # A command that differs from the stored row in a value is a changed write, refused
         # before anything is built from it. One that compares equal is not admitted on that:
         # it is judged below, on the row it would store.
-        _refuse_write_to_a_sealed_row(current, finalized_blockers)
+        _refuse_write_to_a_sealed_row(
+            current, finalized_blockers, changed_fields=ledger_values_differing_from_stored(command, current)
+        )
     _require_declared_iva_category(command, ports=ports)
     replacement = _transaction_from_command(
         command,
@@ -1164,11 +1167,14 @@ def _require_finalized_revisions_undisturbed(
     _refuse_write_to_a_sealed_row(current, blockers)
 
 
-def _refuse_write_to_a_sealed_row(current: Transaction, blockers: tuple[LedgerRemovalBlocker, ...]) -> None:
+def _refuse_write_to_a_sealed_row(
+    current: Transaction, blockers: tuple[LedgerRemovalBlocker, ...], *, changed_fields: tuple[str, ...] = ()
+) -> None:
     raise_finalized_modelo_blocked(
         operation="ledger transaction update",
         transaction_ids=transaction_modelo_source_ids(current),
         blockers=blockers,
+        changed_fields=changed_fields,
     )
 
 
@@ -1243,7 +1249,7 @@ def update_manual_transaction_fields(
     # When ``reaffirm`` is True the operator explicitly requests re-application; skip the guard.
     # A person restating a classification another party decided is not a no-op: it makes the
     # row theirs, so it goes on to be written.
-    decides_classification = bool(patch.model_fields_set & CLASSIFICATION_DECISION_FIELDS)
+    decides_classification = bool(_fields_set_to_a_value(patch) & CLASSIFICATION_DECISION_FIELDS)
     if (
         not reaffirm
         and "business_classification" in patch.model_fields_set
@@ -1261,6 +1267,18 @@ def update_manual_transaction_fields(
         decides_classification=decides_classification,
         _evidence_authority=_evidence_authority,
     )
+
+
+def _fields_set_to_a_value(patch: ManualLedgerTransactionPatch) -> set[str]:
+    """Return the fields ``patch`` sets, less a purchase evidence link set to nothing.
+
+    A link that names no evidence links nothing, so it decides nothing about
+    how the row is taxed.
+    """
+    fields = set(patch.model_fields_set)
+    if patch.purchase_invoice_evidence_id is None:
+        fields.discard("purchase_invoice_evidence_id")
+    return fields
 
 
 def _written_origin(command: ManualLedgerTransactionCommand) -> ClassificationOrigin:

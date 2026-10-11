@@ -6,7 +6,7 @@ import asyncio
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import CadrumoError
@@ -120,6 +120,14 @@ class LedgerAttachRequest(BaseModel):
     purchase_invoice_evidence_id: _EvidenceId | None = None
     attachment_ids: _AttachmentIds = ()
     actor: _Actor | None = None
+
+    @field_validator("purchase_invoice_evidence_id")
+    @classmethod
+    def _blank_identifier_links_nothing(cls, value: str | None) -> str | None:
+        """Read an identifier of only whitespace as no link, so it neither links evidence nor counts as a decision."""
+        if value is None:
+            return None
+        return value.strip() or None
 
 
 class LedgerDetachRequest(BaseModel):
@@ -269,7 +277,7 @@ class _LedgerAttachmentExecutor:
                 require_agent_may_detach(stored, payload.attachment_ids)
             elif payload.purchase_invoice_evidence_id is not None:
                 # A calculation takes the row's figures from linked purchase evidence.
-                require_agent_may_link_purchase_evidence(stored, payload.purchase_invoice_evidence_id.strip())
+                require_agent_may_link_purchase_evidence(stored, payload.purchase_invoice_evidence_id)
 
         prepared = _PreparedAttachmentMutation(
             profile_id=payload.profile_id,

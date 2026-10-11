@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from ....domain.transactions.classification_origin import CLASSIFICATION_DECISION_FIELDS
+from ....domain.transactions.classification_origin import CLASSIFICATION_DECISION_FIELDS, classification_facts
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -91,10 +91,15 @@ def test_what_classification_sets_beyond_a_note_is_a_decision_field() -> None:
     assert set(BulkClassifyRow.model_fields) - set(_REQUEST_ONLY_NAMES) <= CLASSIFICATION_DECISION_FIELDS
 
 
-def test_the_link_to_purchase_invoice_evidence_is_a_decision_field_and_a_supplementary_attachment_is_not() -> None:
-    """A calculation takes a linked row's figures from the invoice; an attachment is a document beside the row."""
+def test_the_link_to_purchase_invoice_evidence_is_a_decision_field_the_fingerprint_leaves_out() -> None:
+    """A link changes the facts the origin is read from; the sealed fingerprint does not read it, and an attachment is no fact."""
+    row = _row()
+    linked = row.model_copy(update={"purchase_invoice_evidence_id": "c" * 64})
+
     assert "purchase_invoice_evidence_id" in CLASSIFICATION_DECISION_FIELDS
-    assert "attachment_ids" in _BEARS_ON_NO_TAX
+    assert "attachment_ids" not in CLASSIFICATION_DECISION_FIELDS
+    assert classification_facts(linked) != classification_facts(row)
+    assert row_fingerprint(linked) == row_fingerprint(row)
 
 
 def _row() -> Transaction:
