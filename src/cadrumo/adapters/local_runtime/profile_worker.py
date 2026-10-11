@@ -65,8 +65,14 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         authorization: WorkerAuthorizationOwner | None = None,
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = now,
+        runtime_server_starter: Callable[[], int | None] | None = None,
     ) -> None:
-        """Launch and authenticate a contained installed worker before key access."""
+        """Launch and authenticate a contained installed worker before key access.
+
+        ``runtime_server_starter`` starts the model runtime's server from this
+        process when the worker asks: the worker is contained, so a server it
+        started itself would end with it.
+        """
         if sys.platform not in {"win32", "linux", "darwin"}:
             raise RuntimeRefusalError(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
         if worker_script is not None:
@@ -143,7 +149,14 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
             # before opening its first pipe. Keep that bounded startup budget
             # separate from the short handshakes after the pipe is connected.
             self._open_worker_channels(
-                endpoint, operation_endpoint, storage_root, identity, authorization, wall_clock, product_version
+                endpoint,
+                operation_endpoint,
+                storage_root,
+                identity,
+                authorization,
+                wall_clock,
+                product_version,
+                runtime_server_starter,
             )
             # Construction transfers the child only after both native listeners
             # have retired. A release failure must not lose the unreturned owner.
@@ -202,6 +215,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         authorization: WorkerAuthorizationOwner | None,
         wall_clock: Callable[[], datetime],
         product_version: str,
+        runtime_server_starter: Callable[[], int | None] | None,
     ) -> None:
         """Authenticate both retained channels before listener ownership is transferred."""
         channel = self._accept_startup_channel(endpoint, timeout=_WORKER_STARTUP_ACCEPT_TIMEOUT_SECONDS)
@@ -229,6 +243,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
             contain=self._contain_native_process,
             owner=authorization,
             wall_clock=wall_clock,
+            runtime_server_starter=runtime_server_starter,
         )
         operation_channel = self._accept_startup_channel(operation_endpoint, timeout=10)
         self._operation_channel = operation_channel

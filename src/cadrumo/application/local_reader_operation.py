@@ -13,6 +13,8 @@ itself; the entrypoint composition binds the outbound adapters.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from pydantic import BaseModel
 
 from ..core.operations import (
@@ -34,13 +36,13 @@ from .local_reader_contracts import (
     LOCAL_READER_SETTLEMENT_PHASE,
     LocalReaderProvisionAction,
     LocalReaderProvisionOutcome,
-    LocalReaderProvisionPublicResultV1,
+    LocalReaderProvisionPublicResultV2,
     LocalReaderProvisionRequest,
     LocalReaderSetupStep,
     local_reader_setup_phase,
     project_local_reader_result,
 )
-from .local_reader_provisioning import LocalReaderProvisionExecutor
+from .local_reader_provisioning import LocalReaderProvisionExecutor, RuntimeServerOwnerStart
 from .operations.access_resolution import (
     LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
     OperationAccessContext,
@@ -73,10 +75,16 @@ from .user_profile.access_contracts import AccessDenialCode
 from .user_profile.access_errors import ProfileAccessRefusedError
 
 __all__ = [
+    "LOCAL_READER_REQUEST_SCHEMA_VERSION",
+    "LOCAL_READER_RESULT_SCHEMA_VERSION",
+    "bind_machine_provisioning_access",
     "build_local_reader_operation_definition",
     "build_local_reader_operation_registration",
     "resolve_local_reader_provision_access",
 ]
+
+LOCAL_READER_REQUEST_SCHEMA_VERSION = 2
+LOCAL_READER_RESULT_SCHEMA_VERSION = 2
 
 _PHASES = (
     LOCAL_READER_PREFLIGHT_PHASE,
@@ -88,11 +96,15 @@ _PHASES = (
 
 def build_local_reader_operation_definition(
     *,
-    spawn: RuntimeSpawner,
+    spawn: RuntimeSpawner | RuntimeServerOwnerStart,
     run_installer: InstallerRunner,
     text_probe: TextExtractionFitnessProbe,
 ) -> OperationDefinition:
-    """Bind the injected process and fitness ports to the canonical provisioning operation."""
+    """Bind the injected process and fitness ports to the canonical provisioning operation.
+
+    ``spawn`` starts the runtime's server from the executing process, or
+    through the process that owns it when the executing one is contained.
+    """
 
     def build() -> LocalReaderProvisionExecutor:
         return LocalReaderProvisionExecutor(spawn=spawn, run_installer=run_installer, text_probe=text_probe)
@@ -136,39 +148,62 @@ def build_local_reader_operation_registration(
         definition=definition,
         request_schema=OperationSchemaBindingV1.bind(
             schema_id=f"{LOCAL_READER_OPERATION_DEFINITION_ID}.request",
-            schema_version=1,
+            schema_version=LOCAL_READER_REQUEST_SCHEMA_VERSION,
             model_type=LocalReaderProvisionRequest,
         ),
         result_schema=OperationSchemaBindingV1.bind(
             schema_id=f"{LOCAL_READER_OPERATION_DEFINITION_ID}.result",
-            schema_version=1,
-            model_type=LocalReaderProvisionPublicResultV1,
+            schema_version=LOCAL_READER_RESULT_SCHEMA_VERSION,
+            model_type=LocalReaderProvisionPublicResultV2,
         ),
         result_projector=project_local_reader_result,
         access_resolver=resolve_local_reader_provision_access,
     )
 
 
-def resolve_local_reader_provision_access(
-    request: OperationRequest[BaseModel], context: OperationAccessContext, /
+def bind_machine_provisioning_access[PayloadT: BaseModel](
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    *,
+    definition_id: str,
+    payload_type: type[PayloadT],
+    subject_ref: str,
+    commits: Callable[[PayloadT], bool],
 ) -> ResolvedOperationAccess:
-    """Bind period-independent access to the machine's reader, with COMMIT for every action but verify.
+    """Bind period-independent access to one thing the machine holds, with COMMIT where ``commits`` says so.
 
-    The reader belongs to the machine, so the request names no profile and its
-    subject is the runtime's fixed one. Verify measures and changes nothing.
-    Every other action can install, start, load or remove something, so a
-    session whose scope holds no COMMIT is refused it at submission.
+    What is provisioned belongs to the machine, so the request names no profile
+    and its subject is the fixed one the operation declares. A request that
+    can install, start, load or remove something carries COMMIT, so a session
+    whose scope holds none is refused it at submission; one that only measures
+    does not.
     """
-    payload = require_access_request_payload(
-        request, definition_id=LOCAL_READER_OPERATION_DEFINITION_ID, payload_type=LocalReaderProvisionRequest
-    )
-    if context.contract.definition_id != LOCAL_READER_OPERATION_DEFINITION_ID:
+    payload = require_access_request_payload(request, definition_id=definition_id, payload_type=payload_type)
+    if context.contract.definition_id != definition_id:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if request.subject_ref != LOCAL_READER_OPERATION_SUBJECT:
+    if request.subject_ref != subject_ref:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     resolved = bind_replayed_period_independent_access(
         context,
         LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
-        definition_id=LOCAL_READER_OPERATION_DEFINITION_ID,
+        definition_id=definition_id,
     )
-    return resolved if payload.action is LocalReaderProvisionAction.VERIFY else with_commit_action(resolved)
+    return with_commit_action(resolved) if commits(payload) else resolved
+
+
+def resolve_local_reader_provision_access(
+    request: OperationRequest[BaseModel], context: OperationAccessContext, /
+) -> ResolvedOperationAccess:
+    """Bind access to the machine's reader, with COMMIT for every action but verify.
+
+    Verify measures and changes nothing; every other action can install,
+    start, load or remove something.
+    """
+    return bind_machine_provisioning_access(
+        request,
+        context,
+        definition_id=LOCAL_READER_OPERATION_DEFINITION_ID,
+        payload_type=LocalReaderProvisionRequest,
+        subject_ref=LOCAL_READER_OPERATION_SUBJECT,
+        commits=lambda payload: payload.action is not LocalReaderProvisionAction.VERIFY,
+    )

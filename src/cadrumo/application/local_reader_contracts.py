@@ -8,6 +8,8 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ..core.errors.hierarchy import pydantic_validation_boundary
+from ..core.external_constants import OutputLanguage
+from ..core.hardware import ContentionCause
 from ..core.model_catalogue import ModelRole
 from ..core.models import STRICT_FROZEN_CONFIG
 from .operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
@@ -18,6 +20,7 @@ from .provisioning_contracts import (
     provisioning_no_recovery_verdict,
 )
 from .provisioning_host import RuntimeInstaller
+from .provisioning_runtime import ContentionSnapshot
 
 __all__ = [
     "LOCAL_READER_EXECUTE_PHASE",
@@ -26,14 +29,15 @@ __all__ = [
     "LOCAL_READER_PREFLIGHT_PHASE",
     "LOCAL_READER_PULL_PROGRESS_UNIT",
     "LOCAL_READER_SETTLEMENT_PHASE",
+    "LocalReaderContentionV1",
     "LocalReaderFactV1",
     "LocalReaderInstallOutcome",
     "LocalReaderInstallOutcomeV1",
     "LocalReaderModelOutcome",
-    "LocalReaderModelOutcomeV1",
+    "LocalReaderModelOutcomeV2",
     "LocalReaderProvisionAction",
     "LocalReaderProvisionOutcome",
-    "LocalReaderProvisionPublicResultV1",
+    "LocalReaderProvisionPublicResultV2",
     "LocalReaderProvisionRequest",
     "LocalReaderSetupStep",
     "LocalReaderSetupStepOutcome",
@@ -41,11 +45,19 @@ __all__ = [
     "LocalReaderSetupStepState",
     "build_local_reader_install_request",
     "build_local_reader_load_request",
+    "build_local_reader_pull_request",
     "build_local_reader_remove_request",
     "build_local_reader_setup_request",
+    "build_local_reader_start_request",
+    "build_local_reader_verify_request",
     "local_reader_fact_mapping",
+    "local_reader_public_facts",
+    "local_reader_public_result",
     "local_reader_public_verdict",
     "local_reader_setup_phase",
+    "local_reader_verdict_condition",
+    "local_reader_verdict_facts",
+    "project_local_reader_contention",
     "project_local_reader_result",
 ]
 
@@ -94,7 +106,14 @@ def local_reader_setup_phase(step: LocalReaderSetupStep) -> str:
 
 
 _CONSENTING_ACTIONS = frozenset({LocalReaderProvisionAction.INSTALL, LocalReaderProvisionAction.SETUP})
-_MODEL_NAMING_ACTIONS = frozenset({LocalReaderProvisionAction.LOAD, LocalReaderProvisionAction.REMOVE})
+_MODEL_NAMING_ACTIONS = frozenset(
+    {
+        LocalReaderProvisionAction.PULL,
+        LocalReaderProvisionAction.LOAD,
+        LocalReaderProvisionAction.VERIFY,
+        LocalReaderProvisionAction.REMOVE,
+    }
+)
 
 
 class LocalReaderProvisionRequest(CredentialFreeOperationRequest):
@@ -102,14 +121,18 @@ class LocalReaderProvisionRequest(CredentialFreeOperationRequest):
 
     ``consent`` is the operator's explicit agreement to run the package-manager
     install and is accepted only by the actions that may install. ``model``
-    names a model outright and is accepted only by load and remove; remove
-    requires a role or a model so it never deletes every model by default.
+    names a model outright and is accepted by pull, load, verify and remove;
+    remove requires a role or a model so it never deletes every model by
+    default. ``output_language`` is the language a licence advisory is written
+    in, so the frontend that asked reads it in its own; the host's language
+    applies when it is absent.
     """
 
     action: LocalReaderProvisionAction
     role: ModelRole | None = None
     model: str | None = Field(default=None, min_length=1, max_length=256)
     consent: bool = False
+    output_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -128,7 +151,7 @@ def _require_consent_action(action: LocalReaderProvisionAction, consent: bool) -
 
 def _require_model_naming_action(action: LocalReaderProvisionAction, model: str | None) -> None:
     if model is not None and action not in _MODEL_NAMING_ACTIONS:
-        raise ValueError("only load and remove accept an explicit model")
+        raise ValueError("only pull, load, verify and remove accept an explicit model")
 
 
 def _require_runtime_action_role(action: LocalReaderProvisionAction, role: ModelRole | None) -> None:
@@ -151,11 +174,14 @@ def _request(
     role: ModelRole | None = None,
     model: str | None = None,
     consent: bool = False,
+    output_language: OutputLanguage | None = None,
 ) -> OperationRequest[LocalReaderProvisionRequest]:
     return OperationRequest(
         definition_id=LOCAL_READER_OPERATION_DEFINITION_ID,
         subject_ref=LOCAL_READER_OPERATION_SUBJECT,
-        payload=LocalReaderProvisionRequest(action=action, role=role, model=model, consent=consent),
+        payload=LocalReaderProvisionRequest(
+            action=action, role=role, model=model, consent=consent, output_language=output_language
+        ),
     )
 
 
@@ -164,11 +190,39 @@ def build_local_reader_install_request(*, consent: bool) -> OperationRequest[Loc
     return _request(LocalReaderProvisionAction.INSTALL, consent=consent)
 
 
+def build_local_reader_start_request() -> OperationRequest[LocalReaderProvisionRequest]:
+    """Build the request that starts the installed runtime when it is not answering."""
+    return _request(LocalReaderProvisionAction.START)
+
+
+def build_local_reader_pull_request(
+    role: ModelRole | None = None,
+    model: str | None = None,
+    *,
+    output_language: OutputLanguage | None = None,
+) -> OperationRequest[LocalReaderProvisionRequest]:
+    """Build the request that fetches ``role``'s model, a named model, or every role's model."""
+    return _request(LocalReaderProvisionAction.PULL, role=role, model=model, output_language=output_language)
+
+
 def build_local_reader_load_request(
-    role: ModelRole | None = None, model: str | None = None
+    role: ModelRole | None = None,
+    model: str | None = None,
+    *,
+    output_language: OutputLanguage | None = None,
 ) -> OperationRequest[LocalReaderProvisionRequest]:
     """Build the request that loads ``role``'s model, a named model, or every role's model."""
-    return _request(LocalReaderProvisionAction.LOAD, role=role, model=model)
+    return _request(LocalReaderProvisionAction.LOAD, role=role, model=model, output_language=output_language)
+
+
+def build_local_reader_verify_request(
+    role: ModelRole | None = None,
+    model: str | None = None,
+    *,
+    output_language: OutputLanguage | None = None,
+) -> OperationRequest[LocalReaderProvisionRequest]:
+    """Build the request that verifies ``role``'s model, a named model, or every role's model."""
+    return _request(LocalReaderProvisionAction.VERIFY, role=role, model=model, output_language=output_language)
 
 
 def build_local_reader_remove_request(
@@ -178,9 +232,11 @@ def build_local_reader_remove_request(
     return _request(LocalReaderProvisionAction.REMOVE, role=role, model=model)
 
 
-def build_local_reader_setup_request(*, consent: bool) -> OperationRequest[LocalReaderProvisionRequest]:
+def build_local_reader_setup_request(
+    *, consent: bool, output_language: OutputLanguage | None = None
+) -> OperationRequest[LocalReaderProvisionRequest]:
     """Build the one-shot setup request: install (with ``consent``), start, pull, load, verify."""
-    return _request(LocalReaderProvisionAction.SETUP, consent=consent)
+    return _request(LocalReaderProvisionAction.SETUP, consent=consent, output_language=output_language)
 
 
 class LocalReaderModelOutcome(BaseModel):
@@ -188,7 +244,8 @@ class LocalReaderModelOutcome(BaseModel):
 
     ``already_satisfied`` marks a model that needed nothing: already pulled for
     a pull, already resident for a load. ``step`` names the setup step that
-    produced the item, and is absent outside setup.
+    produced the item, and is absent outside setup. ``contention`` is the
+    measured admission verdict that refused a fetch before any bytes moved.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -200,6 +257,7 @@ class LocalReaderModelOutcome(BaseModel):
     already_satisfied: bool = False
     step: LocalReaderSetupStep | None = None
     bytes_fetched: int | None = Field(default=None, ge=0)
+    contention: ContentionSnapshot | None = None
     freed_bytes: int | None = Field(default=None, ge=0)
     was_installed: bool = False
     resident: bool = False
@@ -279,8 +337,9 @@ class LocalReaderFactV1(BaseModel):
     value: str | int | bool
 
 
-def _public_facts(facts: Mapping[str, ProvisioningFactValue]) -> tuple[LocalReaderFactV1, ...]:
-    return tuple(LocalReaderFactV1(key=key, value=value) for key, value in sorted(facts.items()))
+def local_reader_public_facts(facts: Mapping[str, ProvisioningFactValue]) -> tuple[LocalReaderFactV1, ...]:
+    """Return provisioning facts as immutable pairs, in the order they were recorded."""
+    return tuple(LocalReaderFactV1(key=key, value=value) for key, value in facts.items())
 
 
 def local_reader_fact_mapping(facts: tuple[LocalReaderFactV1, ...]) -> dict[str, str | int | bool]:
@@ -304,11 +363,17 @@ def local_reader_public_verdict(
     )
 
 
-def _verdict_condition(verdict: PreconditionVerdict | None) -> str | None:
+def local_reader_verdict_condition(verdict: PreconditionVerdict | None) -> str | None:
+    """Return the refused condition a public result names, or ``None`` when nothing was refused."""
     return None if verdict is None else verdict.failed_condition_id
 
 
-def _verdict_facts(verdict: PreconditionVerdict | None) -> tuple[LocalReaderFactV1, ...]:
+def local_reader_verdict_facts(verdict: PreconditionVerdict | None) -> tuple[LocalReaderFactV1, ...]:
+    """Return the evidence facts a public result carries beside its refused condition.
+
+    Raises:
+        ValueError: When the refusal would not rebuild exactly from its condition and facts.
+    """
     if verdict is None:
         return ()
     (evidence,) = verdict.evidence
@@ -317,13 +382,50 @@ def _verdict_facts(verdict: PreconditionVerdict | None) -> tuple[LocalReaderFact
         if not isinstance(value, str | int | bool):
             raise ValueError("provisioning refusal evidence must be locale-neutral scalars")
         published[key] = value
-    facts = _public_facts(published)
+    facts = local_reader_public_facts(published)
     if local_reader_public_verdict(verdict.failed_condition_id, facts) != verdict:
         raise ValueError("provisioning refusal does not rebuild from its public condition and facts")
     return facts
 
 
-class LocalReaderModelOutcomeV1(BaseModel):
+class LocalReaderContentionV1(BaseModel):
+    """Public projection of the measured admission verdict for one model load."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    model: str = Field(min_length=1, max_length=256)
+    admitted: bool
+    causes: tuple[ContentionCause, ...]
+    required_bytes: NonNegativeInt
+    free_vram_bytes: NonNegativeInt | None = None
+    free_system_memory_bytes: NonNegativeInt | None = None
+    shortfall_bytes: NonNegativeInt | None = None
+    unloadable_models: tuple[str, ...]
+    facts: tuple[LocalReaderFactV1, ...]
+    verdict_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
+    verdict_facts: tuple[LocalReaderFactV1, ...]
+
+
+def project_local_reader_contention(snapshot: ContentionSnapshot | None) -> LocalReaderContentionV1 | None:
+    """Project one contention verdict, or ``None`` when no admission check refused."""
+    if snapshot is None:
+        return None
+    return LocalReaderContentionV1(
+        model=snapshot.model,
+        admitted=snapshot.admitted,
+        causes=snapshot.causes,
+        required_bytes=snapshot.required_bytes,
+        free_vram_bytes=snapshot.free_vram_bytes,
+        free_system_memory_bytes=snapshot.free_system_memory_bytes,
+        shortfall_bytes=snapshot.shortfall_bytes,
+        unloadable_models=snapshot.unloadable_models,
+        facts=local_reader_public_facts(snapshot.facts),
+        verdict_condition_id=local_reader_verdict_condition(snapshot.precondition_verdict),
+        verdict_facts=local_reader_verdict_facts(snapshot.precondition_verdict),
+    )
+
+
+class LocalReaderModelOutcomeV2(BaseModel):
     """Public projection of one model outcome."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -335,6 +437,7 @@ class LocalReaderModelOutcomeV1(BaseModel):
     already_satisfied: bool
     step: LocalReaderSetupStep | None = None
     bytes_fetched: NonNegativeInt | None = None
+    contention: LocalReaderContentionV1 | None = None
     freed_bytes: NonNegativeInt | None = None
     was_installed: bool
     resident: bool
@@ -368,7 +471,7 @@ class LocalReaderSetupStepOutcomeV1(BaseModel):
     failed_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
 
 
-class LocalReaderProvisionPublicResultV1(BaseModel):
+class LocalReaderProvisionPublicResultV2(BaseModel):
     """Public projection of a settled provisioning operation."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -380,7 +483,7 @@ class LocalReaderProvisionPublicResultV1(BaseModel):
     started_pid: NonNegativeInt | None = None
     install: LocalReaderInstallOutcomeV1 | None = None
     failed_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
-    models: tuple[LocalReaderModelOutcomeV1, ...]
+    models: tuple[LocalReaderModelOutcomeV2, ...]
     steps: tuple[LocalReaderSetupStepOutcomeV1, ...]
     stopped_step: LocalReaderSetupStep | None = None
     facts: tuple[LocalReaderFactV1, ...]
@@ -388,8 +491,8 @@ class LocalReaderProvisionPublicResultV1(BaseModel):
     verdict_facts: tuple[LocalReaderFactV1, ...]
 
 
-def _project_model(item: LocalReaderModelOutcome) -> LocalReaderModelOutcomeV1:
-    return LocalReaderModelOutcomeV1(
+def _project_model(item: LocalReaderModelOutcome) -> LocalReaderModelOutcomeV2:
+    return LocalReaderModelOutcomeV2(
         model=item.model,
         roles=item.roles,
         licence_advisories=item.licence_advisories,
@@ -397,24 +500,29 @@ def _project_model(item: LocalReaderModelOutcome) -> LocalReaderModelOutcomeV1:
         already_satisfied=item.already_satisfied,
         step=item.step,
         bytes_fetched=item.bytes_fetched,
+        contention=project_local_reader_contention(item.contention),
         freed_bytes=item.freed_bytes,
         was_installed=item.was_installed,
         resident=item.resident,
         answered=item.answered,
         elapsed_ms=item.elapsed_ms,
         failed_condition_id=item.failed_condition_id,
-        facts=_public_facts(item.facts),
-        verdict_condition_id=_verdict_condition(item.precondition_verdict),
-        verdict_facts=_verdict_facts(item.precondition_verdict),
+        facts=local_reader_public_facts(item.facts),
+        verdict_condition_id=local_reader_verdict_condition(item.precondition_verdict),
+        verdict_facts=local_reader_verdict_facts(item.precondition_verdict),
     )
 
 
 def project_local_reader_result(result: BaseModel, terminal_receipt: OperationTerminalReceipt) -> BaseModel:
     """Project a settled operation outcome into its credential-free public result."""
     del terminal_receipt
-    outcome = LocalReaderProvisionOutcome.model_validate(result, strict=True)
+    return local_reader_public_result(LocalReaderProvisionOutcome.model_validate(result, strict=True))
+
+
+def local_reader_public_result(outcome: LocalReaderProvisionOutcome) -> LocalReaderProvisionPublicResultV2:
+    """Return the public result of one provisioning outcome, whichever caller ran it."""
     install = outcome.install
-    return LocalReaderProvisionPublicResultV1(
+    return LocalReaderProvisionPublicResultV2(
         action=outcome.action,
         succeeded=outcome.succeeded,
         runtime_started=outcome.runtime_started,
@@ -440,7 +548,7 @@ def project_local_reader_result(result: BaseModel, terminal_receipt: OperationTe
             for step in outcome.steps
         ),
         stopped_step=outcome.stopped_step,
-        facts=_public_facts(outcome.facts),
-        verdict_condition_id=_verdict_condition(outcome.precondition_verdict),
-        verdict_facts=_verdict_facts(outcome.precondition_verdict),
+        facts=local_reader_public_facts(outcome.facts),
+        verdict_condition_id=local_reader_verdict_condition(outcome.precondition_verdict),
+        verdict_facts=local_reader_verdict_facts(outcome.precondition_verdict),
     )

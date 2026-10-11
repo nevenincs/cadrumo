@@ -14,6 +14,7 @@ from uuid import UUID, uuid4, uuid5
 
 from pydantic import SecretBytes
 
+from ...application.local_reader_contracts import LOCAL_READER_OPERATION_DEFINITION_ID
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError, RuntimeServerHello
 from ...application.runtime.profile_access import RuntimeAccessRefusal
 from ...application.runtime.profile_worker import ProfileWorkerIdentity
@@ -34,6 +35,8 @@ from ...application.runtime.worker_authorization import (
     WorkerAutomationInventoryRequest,
     WorkerResponseScopePermit,
     WorkerResponseScopeRequest,
+    WorkerRuntimeServerStart,
+    WorkerRuntimeServerStarted,
 )
 from ...application.runtime.worker_enrollment import (
     WorkerApprovalPhaseResult,
@@ -42,7 +45,12 @@ from ...application.runtime.worker_enrollment import (
     WorkerApprovalReady,
     WorkerApprovalRequest,
 )
-from ...application.user_profile.access_contracts import AccessAllowed, AccessDenialCode, OperationResponseScopeAllowed
+from ...application.user_profile.access_contracts import (
+    AccessAction,
+    AccessAllowed,
+    AccessDenialCode,
+    OperationResponseScopeAllowed,
+)
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyError
 from ...application.user_profile.automation_enrollment import AutomationInventory
@@ -83,11 +91,19 @@ class WorkerAuthorizationServer:
         contain: Callable[[], None],
         owner: WorkerAuthorizationOwner | None,
         wall_clock: Callable[[], datetime] = now,
+        runtime_server_starter: Callable[[], int | None] | None = None,
     ) -> None:
-        """Claim a private worker namespace before any operation can request authority."""
+        """Claim a private worker namespace before any operation can request authority.
+
+        ``runtime_server_starter`` starts the model runtime's server from this
+        process and returns its process id, or ``None`` when it started
+        nothing. Without one, a worker's start instruction is answered with
+        nothing started.
+        """
         self.identity, self._pid = identity, process_id
         self._owns_process, self._contain, self._owner = owns_process, contain, owner
         self._wall_clock = wall_clock
+        self._runtime_server_starter = runtime_server_starter
         self._stop, self._failed = Event(), Event()
         self._slots = BoundedSemaphore(8)
         self._endpoint = worker_endpoint(
@@ -239,7 +255,7 @@ class WorkerAuthorizationServer:
         permit_id: UUID,
         deadline: float,
     ) -> None:
-        """Execute at most one publication on the native thread retaining the guard."""
+        """Execute at most one command on the native thread retaining the guard."""
         command_seen = False
         while True:
             instruction = read_document(channel, WorkerAuthorizationInstruction, deadline=deadline).root
@@ -250,7 +266,11 @@ class WorkerAuthorizationServer:
             if command_seen or not isinstance(request, WorkerAuthorizationRequest) or self._owner is None:
                 raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
             command_seen = True
-            reply = self._publication_result(self._owner, request, instruction, permit_id)
+            reply: RuntimeAccessRefusal | WorkerApprovalPublished | WorkerRuntimeServerStarted
+            if isinstance(instruction, WorkerRuntimeServerStart):
+                reply = self._runtime_server_start_result(request, instruction, permit_id)
+            else:
+                reply = self._publication_result(self._owner, request, instruction, permit_id)
             write_document(channel, reply, deadline=deadline)
 
     def require_healthy(self) -> None:
@@ -342,6 +362,32 @@ class WorkerAuthorizationServer:
                 expires_at=expires,
             )
         return permit, deadline
+
+    def _runtime_server_start_result(
+        self,
+        request: WorkerAuthorizationRequest,
+        instruction: WorkerRuntimeServerStart,
+        permit_id: UUID,
+    ) -> WorkerRuntimeServerStarted:
+        """Start the model runtime's server from this process for the worker that may not own one.
+
+        Only the held COMMIT fence of the local reader's provisioning
+        operation admits the instruction. The worker sends no program and no
+        environment, so its containment still bounds everything it can run.
+        """
+        if (
+            request.request.action is not AccessAction.COMMIT
+            or request.request.definition_id != LOCAL_READER_OPERATION_DEFINITION_ID
+        ):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        starter = self._runtime_server_starter
+        return WorkerRuntimeServerStarted(
+            request_id=request.request_id,
+            permit_id=permit_id,
+            command_id=instruction.command_id,
+            runtime_boot_id=self.identity.runtime_boot_id,
+            process_id=None if starter is None else starter(),
+        )
 
     def _publication_result(
         self,

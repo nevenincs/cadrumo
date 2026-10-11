@@ -61,6 +61,7 @@ __all__ = [
     "available_runtime_installer",
     "current_runtime_platform",
     "install_runtime",
+    "launch_runtime_server",
     "locate_runtime_executable",
     "probe_runtime_host",
     "read_runtime_version",
@@ -278,6 +279,84 @@ def _start_refusal(
     )
 
 
+def _runtime_server_launch(
+    settings: Settings, *, which: ExecutableLookup
+) -> tuple[Path, dict[str, str]] | RuntimeStartOutcome:
+    """Resolve the executable and environment a server start runs, or the refusal that stops it.
+
+    The server keeps its models, its home and its temporary files under the
+    configured storage root, so the directories are created here and the
+    environment points every location the runtime would default to at them.
+    """
+    endpoint = settings.cadrumo_llm_ollama_chat_url
+    if not endpoint_host_is_loopback(endpoint):
+        return _start_refusal(
+            ProvisioningPreconditionCondition.RUNTIME_ENDPOINT_LOCAL,
+            {"runtime_url": endpoint, "endpoint_local": False},
+        )
+    executable = locate_runtime_executable(which=which)
+    if executable is None:
+        return _start_refusal(
+            ProvisioningPreconditionCondition.RUNTIME_INSTALLED,
+            {"runtime_url": endpoint, "executable_located": False},
+        )
+    parts = urlsplit(endpoint)
+    environment = dict(os.environ)
+    environment["OLLAMA_HOST"] = f"{parts.hostname}:{parts.port or 11434}"
+    models_root = storage_path(StorageCategory.OLLAMA_MODELS, settings=settings)
+    home_root = storage_path(StorageCategory.OLLAMA_HOME, settings=settings)
+    temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=settings)
+    appdata_root = home_root / "AppData" / "Roaming"
+    local_appdata_root = home_root / "AppData" / "Local"
+    try:
+        models_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        home_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        appdata_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        local_appdata_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    except OSError as exc:
+        return _start_refusal(
+            ProvisioningPreconditionCondition.RUNTIME_START_SUCCEEDED,
+            {"runtime_url": endpoint, "spawned": False, "start_error_type": exc.__class__.__name__},
+        )
+    environment["OLLAMA_MODELS"] = str(models_root)
+    environment["HOME"] = str(home_root)
+    environment["USERPROFILE"] = str(home_root)
+    environment["APPDATA"] = str(appdata_root)
+    environment["LOCALAPPDATA"] = str(local_appdata_root)
+    for variable in ("TEMP", "TMP", "TMPDIR"):
+        environment[variable] = str(temporary_root)
+    return executable, environment
+
+
+def launch_runtime_server(
+    settings: Settings | None = None,
+    *,
+    spawn: RuntimeSpawner,
+    which: ExecutableLookup = shutil.which,
+) -> int | None:
+    """Start the configured local runtime's server from this process, without waiting for it to answer.
+
+    For a process asked to start the server on behalf of one that may not own
+    it. The caller sends no program and no environment: both are resolved
+    here, from this process's own settings, exactly as :func:`start_runtime`
+    resolves them.
+
+    Returns:
+        The spawned server's process id, or ``None`` when the endpoint is not
+        this machine, the runtime is not installed, or the launch failed.
+    """
+    resolved = settings if settings is not None else load_settings()
+    launch = _runtime_server_launch(resolved, which=which)
+    if isinstance(launch, RuntimeStartOutcome):
+        return None
+    executable, environment = launch
+    try:
+        return spawn(executable, environment)
+    except OSError:
+        return None
+
+
 def start_runtime(
     settings: Settings | None = None,
     *,
@@ -309,43 +388,10 @@ def start_runtime(
             already_running=True,
             facts={"runtime_url": endpoint, "runtime_reachable": True, "already_running": True},
         )
-    if not endpoint_host_is_loopback(endpoint):
-        return _start_refusal(
-            ProvisioningPreconditionCondition.RUNTIME_ENDPOINT_LOCAL,
-            {"runtime_url": endpoint, "endpoint_local": False},
-        )
-    executable = locate_runtime_executable(which=which)
-    if executable is None:
-        return _start_refusal(
-            ProvisioningPreconditionCondition.RUNTIME_INSTALLED,
-            {"runtime_url": endpoint, "executable_located": False},
-        )
-    parts = urlsplit(endpoint)
-    environment = dict(os.environ)
-    environment["OLLAMA_HOST"] = f"{parts.hostname}:{parts.port or 11434}"
-    models_root = storage_path(StorageCategory.OLLAMA_MODELS, settings=resolved)
-    home_root = storage_path(StorageCategory.OLLAMA_HOME, settings=resolved)
-    temporary_root = storage_path(StorageCategory.TEMPORARY_FILES, settings=resolved)
-    appdata_root = home_root / "AppData" / "Roaming"
-    local_appdata_root = home_root / "AppData" / "Local"
-    try:
-        models_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        home_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        appdata_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        local_appdata_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-    except OSError as exc:
-        return _start_refusal(
-            ProvisioningPreconditionCondition.RUNTIME_START_SUCCEEDED,
-            {"runtime_url": endpoint, "spawned": False, "start_error_type": exc.__class__.__name__},
-        )
-    environment["OLLAMA_MODELS"] = str(models_root)
-    environment["HOME"] = str(home_root)
-    environment["USERPROFILE"] = str(home_root)
-    environment["APPDATA"] = str(appdata_root)
-    environment["LOCALAPPDATA"] = str(local_appdata_root)
-    for variable in ("TEMP", "TMP", "TMPDIR"):
-        environment[variable] = str(temporary_root)
+    launch = _runtime_server_launch(resolved, which=which)
+    if isinstance(launch, RuntimeStartOutcome):
+        return launch
+    executable, environment = launch
     try:
         pid = spawn(executable, environment)
     except OSError as exc:

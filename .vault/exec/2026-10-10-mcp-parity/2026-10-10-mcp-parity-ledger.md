@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:0a94443844a550e434a0027748adc02078321ff28360d285803a2b28d0b47fa2'
+body_hash: 'sha256:e3907950be22c5bacdfddefea7a8ca83754f91e9580560ca58b8210abfbc653c'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -1609,6 +1609,37 @@ related:
 - `S57` `verify:` `ty check on the service, its contracts and the authority query` -> `pass`
 - `S57` `verify:` `ruff check on the same three modules` -> `pass`
 - `S57` `by:` `vaultspec-high-executor`
+- `S53` `M` `src/cadrumo/application/local_reader_contracts.py`
+- `S53` `M` `src/cadrumo/application/local_reader_provisioning.py`
+- `S53` `M` `src/cadrumo/application/local_reader_operation.py`
+- `S53` `A` `src/cadrumo/application/local_reader_status_operation.py`
+- `S53` `A` `src/cadrumo/application/local_reader_report.py`
+- `S53` `A` `src/cadrumo/application/browser_runtime_operation.py`
+- `S53` `M` `src/cadrumo/application/provisioning_host.py`
+- `S53` `M` `src/cadrumo/application/runtime/worker_authorization.py`
+- `S53` `M` `src/cadrumo/application/tests/test_local_reader_operation_access.py`
+- `S53` `M` `src/cadrumo/adapters/local_runtime/worker_authorization.py`
+- `S53` `M` `src/cadrumo/adapters/local_runtime/worker_authorization_lease.py`
+- `S53` `M` `src/cadrumo/adapters/local_runtime/profile_worker.py`
+- `S53` `A` `src/cadrumo/adapters/outbound/model_runtime/tests/__init__.py`
+- `S53` `A` `src/cadrumo/adapters/outbound/model_runtime/tests/runtime_server_owner_start_fixture.py`
+- `S53` `A` `src/cadrumo/adapters/outbound/model_runtime/tests/runtime_server_spawn_fixture.py`
+- `S53` `A` `src/cadrumo/adapters/outbound/model_runtime/tests/test_runtime_server_containment.py`
+- `S53` `M` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_operation.py`
+- `S53` `A` `src/cadrumo/adapters/persistence/operations/tests/local_reader_operation_support.py`
+- `S53` `A` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_read_operations.py`
+- `S53` `A` `src/cadrumo/adapters/persistence/operations/tests/test_browser_runtime_operation.py`
+- `S53` `A` `src/cadrumo/entrypoints/local_reader_operation_composition.py`
+- `S53` `M` `src/cadrumo/entrypoints/runtime/operation_authority.py`
+- `S53` `M` `src/cadrumo/entrypoints/cli/config/provision_cli.py`
+- `S53` `A` `src/cadrumo/entrypoints/cli/tests/provision_rendering_support.py`
+- `S53` `A` `src/cadrumo/entrypoints/cli/tests/test_provision_operation_parity.py`
+- `S53` `verify:` `pytest provisioning operations, access and server containment (131 tests)` -> `pass`
+- `S53` `verify:` `pytest worker authorization and provisioning (96 tests)` -> `pass`
+- `S53` `verify:` `pytest provisioning commands with the 19 parity cases (92 tests)` -> `pass`
+- `S53` `verify:` `ruff, format and ty on the 25 files` -> `pass`
+- `S53` `verify:` `pytest executor conformance, frontend parity, surface facts, subject binding and the operations package (1554 of 1556; the two are the session-expiry and key-derivation limits the suite hits under load)` -> `pass`
+- `S53` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1662,3 +1693,4 @@ related:
 - `S47` Correction: rows logged under this Step for paths under `src/cadrumo/_data/manual_corpus_text,` `src/cadrumo/_data/registry,` src/cadrumo/adapters/inbound/declaracion/tests and src/cadrumo/tests/fixtures were logged in error. Those changes belong to another session and are not part of this Step or its commit.
 - `S52` The door only: no act is registered in the installed composition, and the import inventory and the command table are regenerated once, in S61, when every family has landed. The command line keeps its in-process work.
 - `S57` The authority tool keeps every field it returned before and adds the command line's; the metadata inventories are regenerated once, in S61.
+- `S53` The command line keeps its in-process work. The worker asks the runtime to start the model server, since a server it started itself ends with it; shown on Windows with the real spawn and scope, by reading only on Linux and macOS. The three new operations and the start instruction go live when S61 wires them into composition.

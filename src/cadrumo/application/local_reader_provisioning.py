@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import threading
+from collections.abc import Callable, Coroutine, Mapping
+from contextlib import nullcontext
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Protocol
 
+from ..core.config import override_settings
 from ..core.model_catalogue import ModelRole
 from ..core.operations import OperationEffect
 from ..core.time.clock import now
@@ -27,7 +31,7 @@ from .local_reader_contracts import (
     LocalReaderSetupStepState,
     local_reader_setup_phase,
 )
-from .operations.models import OperationRequest
+from .operations.models import OperationIdentity, OperationRequest
 from .operations.owner import OperationEventEmitter, OperationExecutorContext
 from .provisioning_host import (
     InstallerRunner,
@@ -48,6 +52,7 @@ from .provisioning_runtime import (
 __all__ = [
     "LocalReaderProvisionEvents",
     "LocalReaderProvisionExecutor",
+    "RuntimeServerOwnerStart",
     "local_reader_provision_effect",
     "provision_local_reader",
 ]
@@ -56,6 +61,20 @@ _PREFLIGHT = LOCAL_READER_PREFLIGHT_PHASE
 _EXECUTE = LOCAL_READER_EXECUTE_PHASE
 _SETTLEMENT = LOCAL_READER_SETTLEMENT_PHASE
 _PROGRESS_POLL_S = 0.5
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeServerOwnerStart:
+    """Starts the runtime's server through the process that owns the one executing the operation.
+
+    A process that is itself contained cannot keep a server alive: whatever it
+    starts ends with it. Its owner starts the server instead. ``start`` asks
+    for that on behalf of one invocation and returns the server's process id,
+    or ``None`` when the owner did not start it. The owner locates the runtime
+    and derives its environment itself, so nothing here names a program.
+    """
+
+    start: Callable[[OperationIdentity], Coroutine[None, None, int | None]]
 
 
 def _refused_target(target: RoleModelTarget, step: LocalReaderSetupStep | None) -> LocalReaderModelOutcome:
@@ -231,13 +250,18 @@ class _LocalReaderProvisioner:
             case LocalReaderProvisionAction.START:
                 return await self._start()
             case LocalReaderProvisionAction.PULL:
-                return _settled(LocalReaderProvisionAction.PULL, await self._pull(_targets(payload.role)))
+                return _settled(
+                    LocalReaderProvisionAction.PULL, await self._pull(_targets(payload.role, payload.model))
+                )
             case LocalReaderProvisionAction.LOAD:
                 return _settled(
                     LocalReaderProvisionAction.LOAD, await self._load(_targets(payload.role, payload.model))
                 )
             case LocalReaderProvisionAction.VERIFY:
-                return await self._verify(payload.role)
+                return _settled(
+                    LocalReaderProvisionAction.VERIFY,
+                    await self._verify_targets(_targets(payload.role, payload.model)),
+                )
             case LocalReaderProvisionAction.REMOVE:
                 return _settled(
                     LocalReaderProvisionAction.REMOVE, await self._remove(_targets(payload.role, payload.model))
@@ -315,6 +339,7 @@ class _LocalReaderProvisioner:
                     succeeded=pulled.pulled,
                     step=step,
                     bytes_fetched=pulled.bytes_fetched,
+                    contention=pulled.contention,
                     facts=dict(pulled.facts),
                     precondition_verdict=pulled.precondition_verdict,
                 )
@@ -345,9 +370,6 @@ class _LocalReaderProvisioner:
                 )
             )
         return items
-
-    async def _verify(self, role: ModelRole | None) -> LocalReaderProvisionOutcome:
-        return _settled(LocalReaderProvisionAction.VERIFY, await self._verify_targets(_targets(role)))
 
     async def _verify_targets(
         self, targets: tuple[RoleModelTarget, ...], *, step: LocalReaderSetupStep | None = None
@@ -466,10 +488,9 @@ async def provision_local_reader(
 
     The single implementation of install, start, pull, load, verify, remove
     and setup. The supervised operation wraps it with journaled progress for
-    frontends that hold a profile session; a host-level caller such as the
-    command line runs it directly, because provisioning the machine's runtime
-    needs no profile. Never raises for a refusal: every refusal is a typed
-    verdict on the outcome.
+    frontends that hold a profile session; the command line runs it directly,
+    because provisioning the machine's runtime needs no profile. Never raises
+    for a refusal: every refusal is a typed verdict on the outcome.
     """
     provisioner = _LocalReaderProvisioner(
         spawn=spawn,
@@ -477,7 +498,11 @@ async def provision_local_reader(
         text_probe=text_probe,
         events=_UnobservedEvents() if events is None else events,
     )
-    return await provisioner.run(payload)
+    language = payload.output_language
+    # A licence advisory is prose, written where the model is selected; the
+    # frontend that asked must read it in its own language, not this host's.
+    with nullcontext() if language is None else override_settings(cadrumo_output_language=language.value):
+        return await provisioner.run(payload)
 
 
 class _JournaledEvents:
@@ -499,14 +524,32 @@ class LocalReaderProvisionExecutor:
     def __init__(
         self,
         *,
-        spawn: RuntimeSpawner,
+        spawn: RuntimeSpawner | RuntimeServerOwnerStart,
         run_installer: InstallerRunner,
         text_probe: TextExtractionFitnessProbe,
     ) -> None:
-        """Bind the injected runtime spawner, installer runner and text-reader fitness probe."""
+        """Bind the injected runtime server start, installer runner and text-reader fitness probe."""
         self._spawn = spawn
         self._run_installer = run_installer
         self._text_probe = text_probe
+
+    def _spawner(self, identity: OperationIdentity) -> RuntimeSpawner:
+        """Return the spawner one invocation starts the runtime's server with."""
+        port = self._spawn
+        if not isinstance(port, RuntimeServerOwnerStart):
+            return port
+        loop = asyncio.get_running_loop()
+
+        def spawn(executable: Path, environment: Mapping[str, str]) -> int:
+            # The start runs on a worker thread while the owner is asked over
+            # this loop. What this process located is deliberately not sent.
+            del executable, environment
+            process_id = asyncio.run_coroutine_threadsafe(port.start(identity), loop).result()
+            if process_id is None:
+                raise OSError("the owning process did not start the runtime server")
+            return process_id
+
+        return spawn
 
     async def execute(
         self,
@@ -521,7 +564,7 @@ class LocalReaderProvisionExecutor:
         await context.events.effect(OperationEffect.UNKNOWN)
         outcome = await provision_local_reader(
             request.payload,
-            spawn=self._spawn,
+            spawn=self._spawner(context.identity),
             run_installer=self._run_installer,
             text_probe=self._text_probe,
             events=_JournaledEvents(context.events),

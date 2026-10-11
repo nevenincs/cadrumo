@@ -19,6 +19,7 @@ from ...application.auth.operation_definitions import (
     PROFILE_ROTATION_OPERATION_DEFINITION_ID,
     ProfilePassphraseRotationOperationRequest,
 )
+from ...application.local_reader_contracts import LOCAL_READER_OPERATION_DEFINITION_ID
 from ...application.operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
@@ -501,6 +502,25 @@ class ProfileWorkerOperationAuthority:
         with diagnostic_scope(new=True):
             async with self.guard(identity, AccessAction.COMMIT):
                 yield
+
+    async def start_runtime_server(self, identity: OperationIdentity) -> int | None:
+        """Ask the runtime to start the model runtime's server under this invocation's own COMMIT fence.
+
+        A server this worker started itself would end with it, so the runtime
+        starts it. The fence is taken on the calling task and held only for
+        the exchange; the answer is the server's process id, or ``None`` when
+        the runtime started nothing.
+        """
+        if identity.definition_id != LOCAL_READER_OPERATION_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        async with self.guard(identity, AccessAction.COMMIT):
+            task = asyncio.current_task()
+            lease = None if task is None else self._held_leases.get(task)
+            if lease is None:
+                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+            return await await_cancellation_complete(
+                asyncio.to_thread(lease.start_runtime_server), task_name="worker-runtime-server-start"
+            )
 
     def retire_password_successor(self, identity: OperationIdentity, outcome: ProfilePassphraseRotationOutcome) -> None:
         """Retire a proven replacement only within its original task's COMMIT.

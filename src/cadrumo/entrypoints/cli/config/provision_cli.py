@@ -14,9 +14,11 @@ The boundaries between the actions are the design:
 * **remove** — deletes a Cadrumo-selected model from the runtime's store.
 * **setup** — install (only with ``--confirm``), start, pull, load and verify as one run.
 
-Install, load, remove and setup run :func:`provision_local_reader`, the same
-implementation the TUI's supervised operation wraps, so this module only binds
-the host adapters and projects the outcome. Provisioning the machine's runtime
+Every verb runs, in this process, the application function its registered
+operation runs for the terminal interface and an agent, and renders the public
+result that operation publishes. The work and the result therefore cannot
+differ between the three; this module only binds the host adapters, parses the
+verb's options and projects the result. Provisioning the machine's runtime
 needs no profile session.
 
 **Nothing here is implicit.** No inference path reaches these verbs; an operator
@@ -71,17 +73,33 @@ from .provision_payloads import (
 from .status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
-    from ....application.local_reader import LocalReaderRoleStatus, RoleModelTarget
+    from ....application.browser_runtime_operation import BrowserRuntimeProvisionPublicResultV1
     from ....application.local_reader_contracts import (
-        LocalReaderModelOutcome,
-        LocalReaderProvisionOutcome,
+        LocalReaderContentionV1,
+        LocalReaderFactV1,
+        LocalReaderModelOutcomeV2,
+        LocalReaderProvisionPublicResultV2,
         LocalReaderProvisionRequest,
+    )
+    from ....application.local_reader_report import LocalReaderReportPublicResultV1
+    from ....application.local_reader_status_operation import (
+        LocalReaderRoleStatusV1,
+        LocalReaderStatusPublicResultV1,
     )
     from ....application.operations.models import OperationRequest
     from ....application.operator_actions.models import PreconditionVerdict
-    from ....application.provisioning import HardwareProfile
 
 __all__ = [
+    "emit_provision_browser",
+    "emit_provision_install",
+    "emit_provision_load",
+    "emit_provision_pull",
+    "emit_provision_remove",
+    "emit_provision_report",
+    "emit_provision_setup",
+    "emit_provision_start",
+    "emit_provision_status",
+    "emit_provision_verify",
     "provision_browser",
     "provision_install",
     "provision_load",
@@ -96,87 +114,41 @@ __all__ = [
 ]
 
 
-def _licence_notices(advisories: Iterable[str]) -> tuple[Notice, ...]:
-    return tuple(
-        Notice(severity=NoticeSeverity.WARNING, code="provisioning.model.licence.non_commercial", message=message)
-        for message in dict.fromkeys(advisories)
-    )
-
-
-def _contention_payload(snapshot: object | None) -> ProvisionContentionPayload | None:
-    """Project a contention verdict onto its payload, preserving the cause set."""
-    if snapshot is None:
-        return None
-    from ....application.provisioning_runtime import ContentionSnapshot
-
-    if not isinstance(snapshot, ContentionSnapshot):  # pragma: no cover - defensive
-        return None
-    return ProvisionContentionPayload(
-        model=snapshot.model,
-        admitted=snapshot.admitted,
-        causes=list(snapshot.causes),
-        required_bytes=snapshot.required_bytes,
-        free_vram_bytes=snapshot.free_vram_bytes,
-        free_system_memory_bytes=snapshot.free_system_memory_bytes,
-        shortfall_bytes=snapshot.shortfall_bytes,
-        unloadable_models=list(snapshot.unloadable_models),
-        facts=snapshot.facts,
-        precondition_action=(
-            resolve_cli_precondition_action(snapshot.precondition_verdict)
-            if snapshot.precondition_verdict is not None
-            else None
-        ),
-    )
-
-
-def _action(verdict: PreconditionVerdict | None) -> ResolvedPreconditionAction | None:
-    """Resolve an optional verdict through the shared action resolver."""
-    return resolve_cli_precondition_action(verdict) if verdict is not None else None
-
-
-def _targets(role: ModelRole | None, model: str | None) -> tuple[RoleModelTarget, ...]:
-    """Resolve ``--role``/``--model`` into provisioning targets, every role by default.
-
-    An explicit ``--model`` is honoured as the target for the named role (or
-    every role), with the catalogue's requirement used for the admission check,
-    because the operator naming a model does not tell us how much memory it
-    needs -- the catalogue does.
-    """
-    from ....application.local_reader import role_model_targets
-
-    return role_model_targets(None if role is None else (role,), explicit_model=model)
-
-
-def _selection_refusal(target: RoleModelTarget) -> PreconditionVerdict:
-    """Return the verdict of a target whose selection refused."""
-    if target.selection_verdict is None:  # pragma: no cover - guarded by ModelSelection validation
-        raise AssertionError
-    return target.selection_verdict
-
-
 def provision_status(ctx: typer.Context) -> None:
     """Report the local runtime and each reader role's model from recorded verdicts."""
-    _emit_local_reader_status(ctx, command="config.provision.status", result_type=ProvisionStatusResult, probe=False)
+    emit_provision_status(
+        ctx, _read_status(probe=False), command="config.provision.status", result_type=ProvisionStatusResult
+    )
 
 
 def provision_probe(ctx: typer.Context) -> None:
     """Report the local reader with the text model's fitness checked now, loading that model."""
-    _emit_local_reader_status(ctx, command="config.provision.probe", result_type=ProvisionProbeResult, probe=True)
+    emit_provision_status(
+        ctx, _read_status(probe=True), command="config.provision.probe", result_type=ProvisionProbeResult
+    )
 
 
 def provision_install(ctx: typer.Context, confirm: bool = False) -> None:
     """Install the local runtime through the platform package manager when ``--confirm`` is given."""
-    _emit_provision_install(ctx, confirm=confirm)
+    from ....application.local_reader_contracts import build_local_reader_install_request
+
+    emit_provision_install(ctx, _provision(build_local_reader_install_request(consent=confirm)))
 
 
 def provision_browser(ctx: typer.Context) -> None:
     """Download the Chromium build browser automation launches when it is missing."""
-    _emit_provision_browser(ctx)
+    from ....adapters.outbound.browser_runtime.installer import run_browser_installer
+    from ....application.browser_runtime_operation import browser_runtime_public_result
+    from ....application.provisioning_browser import install_playwright_browser
+
+    emit_provision_browser(ctx, browser_runtime_public_result(install_playwright_browser(run=run_browser_installer)))
 
 
 def provision_start(ctx: typer.Context) -> None:
     """Start the installed local runtime when it is not already answering."""
-    _emit_provision_start(ctx)
+    from ....application.local_reader_contracts import build_local_reader_start_request
+
+    emit_provision_start(ctx, _provision(build_local_reader_start_request()))
 
 
 def provision_remove(
@@ -185,12 +157,18 @@ def provision_remove(
     role: ModelRole | None = None,
 ) -> None:
     """Remove the named model, or the named role's model, from the local runtime's store."""
-    _emit_provision_remove(ctx, model=model, role=role)
+    from ....application.local_reader_contracts import build_local_reader_remove_request
+
+    if model is None and role is None:
+        raise typer.BadParameter("--model or --role is required", param_hint="--model/--role")
+    emit_provision_remove(ctx, _provision(build_local_reader_remove_request(role, model)))
 
 
 def provision_report(ctx: typer.Context) -> None:
     """Report the measured hardware, the per-role model selection, and admission."""
-    _emit_provision_report(ctx)
+    from ....application.local_reader_report import local_reader_report_public_result, read_local_reader_report
+
+    emit_provision_report(ctx, local_reader_report_public_result(read_local_reader_report()))
 
 
 def provision_pull(
@@ -199,7 +177,9 @@ def provision_pull(
     role: ModelRole | None = None,
 ) -> None:
     """Fetch a model, refusing before any bytes move when the load is not admitted."""
-    _emit_provision_pull(ctx, model=model, role=role)
+    from ....application.local_reader_contracts import build_local_reader_pull_request
+
+    emit_provision_pull(ctx, _provision(build_local_reader_pull_request(role, model)))
 
 
 def provision_verify(
@@ -208,7 +188,9 @@ def provision_verify(
     role: ModelRole | None = None,
 ) -> None:
     """Confirm a model is resident and answers a trivial prompt within a bound."""
-    _emit_provision_verify(ctx, model=model, role=role)
+    from ....application.local_reader_contracts import build_local_reader_verify_request
+
+    emit_provision_verify(ctx, _provision(build_local_reader_verify_request(role, model)))
 
 
 def provision_load(
@@ -217,41 +199,113 @@ def provision_load(
     role: ModelRole | None = None,
 ) -> None:
     """Load pulled models into memory, refusing before the load when it is not admitted."""
-    _emit_provision_load(ctx, model=model, role=role)
+    from ....application.local_reader_contracts import build_local_reader_load_request
+
+    emit_provision_load(ctx, _provision(build_local_reader_load_request(role, model)))
 
 
 def provision_setup(ctx: typer.Context, confirm: bool = False) -> None:
     """Install (with ``--confirm``), start, pull, load and verify the local reader in one run."""
-    _emit_provision_setup(ctx, confirm=confirm)
+    from ....application.local_reader_contracts import build_local_reader_setup_request
+
+    emit_provision_setup(ctx, _provision(build_local_reader_setup_request(consent=confirm)), install_consented=confirm)
 
 
-def _provision(request: OperationRequest[LocalReaderProvisionRequest]) -> LocalReaderProvisionOutcome:
-    """Run one provisioning request with the host's process and fitness adapters."""
+def _provision(request: OperationRequest[LocalReaderProvisionRequest]) -> LocalReaderProvisionPublicResultV2:
+    """Run one provisioning request with the host's process and fitness adapters and publish its outcome."""
     from ....adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
     from ....adapters.outbound.model_runtime.process_control import run_runtime_installer, spawn_runtime_server
+    from ....application.local_reader_contracts import local_reader_public_result
     from ....application.local_reader_provisioning import provision_local_reader
 
-    return asyncio.run(
-        provision_local_reader(
-            request.payload,
-            spawn=spawn_runtime_server,
-            run_installer=run_runtime_installer,
-            text_probe=probe_text_extraction_fitness,
+    return local_reader_public_result(
+        asyncio.run(
+            provision_local_reader(
+                request.payload,
+                spawn=spawn_runtime_server,
+                run_installer=run_runtime_installer,
+                text_probe=probe_text_extraction_fitness,
+            )
         )
     )
 
 
-def _roles(item: LocalReaderModelOutcome) -> list[str]:
+def _read_status(*, probe: bool) -> LocalReaderStatusPublicResultV1:
+    """Measure the local reader and publish the measurement. Records nothing.
+
+    Without ``probe`` text-model fitness is the verdict ``verify`` recorded for
+    the model's current weights, so ``status`` never spends a model load.
+    ``probe`` runs the check now and reports it without recording it.
+    """
+    from ....application.local_reader import read_local_reader_status
+    from ....application.local_reader_status_operation import local_reader_status_public_result
+
+    if probe:
+        from ....adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
+
+        return local_reader_status_public_result(read_local_reader_status(text_probe=probe_text_extraction_fitness))
+    return local_reader_status_public_result(read_local_reader_status())
+
+
+def _licence_notices(advisories: Iterable[str]) -> tuple[Notice, ...]:
+    return tuple(
+        Notice(severity=NoticeSeverity.WARNING, code="provisioning.model.licence.non_commercial", message=message)
+        for message in dict.fromkeys(advisories)
+    )
+
+
+def _model_licence_notices(result: LocalReaderProvisionPublicResultV2) -> tuple[Notice, ...]:
+    return _licence_notices(message for item in result.models for message in item.licence_advisories)
+
+
+def _action(verdict: PreconditionVerdict | None) -> ResolvedPreconditionAction | None:
+    """Resolve an optional verdict through the shared action resolver."""
+    return resolve_cli_precondition_action(verdict) if verdict is not None else None
+
+
+def _reader_action(
+    condition_id: str | None, verdict_facts: tuple[LocalReaderFactV1, ...]
+) -> ResolvedPreconditionAction | None:
+    """Resolve the refusal a reader result names by its condition and evidence facts."""
+    from ....application.local_reader_contracts import local_reader_public_verdict
+
+    return _action(local_reader_public_verdict(condition_id, verdict_facts))
+
+
+def _reader_facts(facts: tuple[LocalReaderFactV1, ...]) -> dict[str, str | int | bool]:
+    from ....application.local_reader_contracts import local_reader_fact_mapping
+
+    return local_reader_fact_mapping(facts)
+
+
+def _contention_payload(contention: LocalReaderContentionV1 | None) -> ProvisionContentionPayload | None:
+    """Project a contention verdict onto its payload, preserving the cause set."""
+    if contention is None:
+        return None
+    return ProvisionContentionPayload(
+        model=contention.model,
+        admitted=contention.admitted,
+        causes=list(contention.causes),
+        required_bytes=contention.required_bytes,
+        free_vram_bytes=contention.free_vram_bytes,
+        free_system_memory_bytes=contention.free_system_memory_bytes,
+        shortfall_bytes=contention.shortfall_bytes,
+        unloadable_models=list(contention.unloadable_models),
+        facts=_reader_facts(contention.facts),
+        precondition_action=_reader_action(contention.verdict_condition_id, contention.verdict_facts),
+    )
+
+
+def _roles(item: LocalReaderModelOutcomeV2) -> list[str]:
     return [role.value for role in item.roles]
 
 
-def _emit_provision_load(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
-    """Load every resolved model and emit the envelope, exiting 2 unless all are loaded."""
-    from ....application.local_reader_contracts import (
-        build_local_reader_load_request,
-    )
+def _item_action(item: LocalReaderModelOutcomeV2) -> ResolvedPreconditionAction | None:
+    return _reader_action(item.verdict_condition_id, item.verdict_facts)
 
-    outcome = _provision(build_local_reader_load_request(role, model))
+
+def emit_provision_load(ctx: typer.Context, outcome: LocalReaderProvisionPublicResultV2) -> None:
+    """Emit the load envelope, exiting 2 unless every resolved model is loaded."""
     items = [
         ProvisionLoadItemPayload(
             model=item.model,
@@ -259,8 +313,8 @@ def _emit_provision_load(ctx: typer.Context, *, model: str | None, role: ModelRo
             loaded=item.succeeded,
             already_loaded=item.already_satisfied,
             elapsed_ms=item.elapsed_ms,
-            facts=item.facts,
-            precondition_action=_action(item.precondition_verdict),
+            facts=_reader_facts(item.facts),
+            precondition_action=_item_action(item),
         )
         for item in outcome.models
     ]
@@ -270,19 +324,16 @@ def _emit_provision_load(ctx: typer.Context, *, model: str | None, role: ModelRo
         command="config.provision.load",
         result=result,
         lines=_provision_result_lines(result),
-        notices=_licence_notices(message for item in outcome.models for message in item.licence_advisories),
+        notices=_model_licence_notices(outcome),
     )
     if not result.loaded:
         raise typer.Exit(code=2)
 
 
-def _emit_provision_setup(ctx: typer.Context, *, confirm: bool) -> None:
-    """Run the one-shot setup and emit its per-step envelope, exiting 2 when a step stopped it."""
-    from ....application.local_reader_contracts import (
-        build_local_reader_setup_request,
-    )
-
-    outcome = _provision(build_local_reader_setup_request(consent=confirm))
+def emit_provision_setup(
+    ctx: typer.Context, outcome: LocalReaderProvisionPublicResultV2, *, install_consented: bool
+) -> None:
+    """Emit the one-shot setup's per-step envelope, exiting 2 when a step stopped it."""
     result = ProvisionSetupResult(
         succeeded=outcome.succeeded,
         stopped_step=None if outcome.stopped_step is None else outcome.stopped_step.value,
@@ -295,7 +346,7 @@ def _emit_provision_setup(ctx: typer.Context, *, confirm: bool) -> None:
             for step in outcome.steps
         ],
         runtime_started=outcome.runtime_started,
-        install_consented=confirm,
+        install_consented=install_consented,
         models=[
             ProvisionSetupModelPayload(
                 step=item.step.value,
@@ -305,66 +356,24 @@ def _emit_provision_setup(ctx: typer.Context, *, confirm: bool) -> None:
                 already_satisfied=item.already_satisfied,
                 bytes_fetched=item.bytes_fetched,
                 elapsed_ms=item.elapsed_ms,
-                facts=item.facts,
-                precondition_action=_action(item.precondition_verdict),
+                facts=_reader_facts(item.facts),
+                precondition_action=_item_action(item),
             )
             for item in outcome.models
             if item.step is not None
         ],
-        facts=outcome.facts,
-        precondition_action=_action(outcome.precondition_verdict),
+        facts=_reader_facts(outcome.facts),
+        precondition_action=_reader_action(outcome.verdict_condition_id, outcome.verdict_facts),
     )
     emit_envelope(
         ctx,
         command="config.provision.setup",
         result=result,
         lines=_provision_result_lines(result),
-        notices=_licence_notices(message for item in outcome.models for message in item.licence_advisories),
+        notices=_model_licence_notices(outcome),
     )
     if not result.succeeded:
         raise typer.Exit(code=2)
-
-
-def _selected_provision_models(
-    profile: HardwareProfile,
-    resident_names: list[str],
-) -> tuple[list[ProvisionModelPayload], tuple[str, int] | None]:
-    """Select a model per role, returning the payload rows and the first assessable load.
-
-    Built as payloads rather than as dicts splatted in later. The intermediate
-    mapping had no other use, and an inferred dict widens every value to the union
-    of all of them -- so the splat read as passing a str where a bool was expected,
-    and checked nothing.
-    """
-    from ....application.provisioning import select_model_for_role
-    from ....application.provisioning_runtime import runtime_model_names_match
-    from ....core.model_catalogue import ModelRole
-
-    models: list[ProvisionModelPayload] = []
-    primary = None
-    for role in ModelRole:
-        selection = select_model_for_role(role, profile=profile)
-        runtime_id = selection.runtime_id
-        resident = runtime_id is not None and any(
-            runtime_model_names_match(name, runtime_id) for name in resident_names
-        )
-        models.append(
-            ProvisionModelPayload(
-                role=role.value,
-                model=selection.runtime_id,
-                selected=selection.selected,
-                resident=resident,
-                facts=selection.facts,
-                precondition_action=(
-                    resolve_cli_precondition_action(selection.precondition_verdict)
-                    if selection.precondition_verdict is not None
-                    else None
-                ),
-            ),
-        )
-        if primary is None:
-            primary = selection.assessable_load
-    return models, primary
 
 
 def _provision_result_lines(result: object) -> tuple[str, ...]:
@@ -394,38 +403,28 @@ def _provision_result_lines(result: object) -> tuple[str, ...]:
     return tuple(lines)
 
 
-def _emit_provision_report(ctx: typer.Context) -> None:
-    """Measure hardware, select a model per role, and emit the provisioning report."""
-    from ....application.provisioning import (
-        probe_hardware_profile,
-    )
-    from ....application.provisioning_runtime import assess_model_load_contention, read_runtime_residents
-
-    profile = probe_hardware_profile()
-    residents = read_runtime_residents()
-    resident_names = [entry.name for entry in residents] if residents is not None else []
-    models, primary = _selected_provision_models(profile, resident_names)
-
-    contention = None
-    if primary is not None:
-        contention = assess_model_load_contention(
-            primary[0],
-            primary[1],
-            profile=profile,
-            residents=residents,
-            residents_measured=residents is not None,
-        )
-
+def emit_provision_report(ctx: typer.Context, report: LocalReaderReportPublicResultV1) -> None:
+    """Emit the measured hardware, the per-role model selection and the admission verdict."""
     result = ProvisionReportResult(
-        accelerator=profile.accelerator.kind.value,
-        total_vram_bytes=profile.total_vram_bytes,
-        free_vram_bytes=profile.free_vram_bytes,
-        total_system_memory_bytes=profile.memory.total_bytes,
-        free_system_memory_bytes=profile.memory.free_bytes,
-        runtime_reachable=residents is not None,
-        residents=resident_names,
-        models=models,
-        contention=_contention_payload(contention),
+        accelerator=report.accelerator.value,
+        total_vram_bytes=report.total_vram_bytes,
+        free_vram_bytes=report.free_vram_bytes,
+        total_system_memory_bytes=report.total_system_memory_bytes,
+        free_system_memory_bytes=report.free_system_memory_bytes,
+        runtime_reachable=report.runtime_reachable,
+        residents=list(report.residents),
+        models=[
+            ProvisionModelPayload(
+                role=row.role.value,
+                model=row.model,
+                selected=row.selected,
+                resident=row.resident,
+                facts=_reader_facts(row.facts),
+                precondition_action=_reader_action(row.verdict_condition_id, row.verdict_facts),
+            )
+            for row in report.models
+        ],
+        contention=_contention_payload(report.contention),
     )
     emit_envelope(
         ctx,
@@ -435,118 +434,71 @@ def _emit_provision_report(ctx: typer.Context) -> None:
     )
 
 
-def _emit_provision_pull(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
-    """Fetch every resolved model and emit the pull envelope, exiting 2 unless all pulled."""
-    from ....application.provisioning_runtime import pull_runtime_model
-
-    items: list[ProvisionPullItemPayload] = []
-    targets = _targets(role, model)
-    for target in targets:
-        roles = [served.value for served in target.roles]
-        if target.model is None or target.requirement_bytes is None:
-            items.append(
-                ProvisionPullItemPayload(
-                    model=target.model,
-                    roles=roles,
-                    pulled=False,
-                    facts=target.selection_facts,
-                    precondition_action=resolve_cli_precondition_action(_selection_refusal(target)),
-                )
-            )
-            continue
-        outcome = pull_runtime_model(target.model, target.requirement_bytes)
-        items.append(
-            ProvisionPullItemPayload(
-                model=outcome.model,
-                roles=roles,
-                pulled=outcome.pulled,
-                bytes_fetched=outcome.bytes_fetched,
-                contention=_contention_payload(outcome.contention),
-                facts=outcome.facts,
-                precondition_action=_action(outcome.precondition_verdict),
-            )
+def emit_provision_pull(ctx: typer.Context, outcome: LocalReaderProvisionPublicResultV2) -> None:
+    """Emit the pull envelope, exiting 2 unless every resolved model was fetched."""
+    items = [
+        ProvisionPullItemPayload(
+            model=item.model,
+            roles=_roles(item),
+            pulled=item.succeeded,
+            bytes_fetched=item.bytes_fetched,
+            contention=_contention_payload(item.contention),
+            facts=_reader_facts(item.facts),
+            precondition_action=_item_action(item),
         )
-    result = ProvisionPullResult(pulled=bool(items) and all(item.pulled for item in items), models=items)
+        for item in outcome.models
+    ]
+    result = ProvisionPullResult(pulled=outcome.succeeded, models=items)
     emit_envelope(
         ctx,
         command="config.provision.pull",
         result=result,
         lines=_provision_result_lines(result),
-        notices=_licence_notices(message for target in targets for message in target.licence_advisories),
+        notices=_model_licence_notices(outcome),
     )
     if not result.pulled:
         raise typer.Exit(code=2)
 
 
-def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
-    """Verify every resolved model and emit the envelope, exiting 2 unless all are ready.
+def emit_provision_verify(ctx: typer.Context, outcome: LocalReaderProvisionPublicResultV2) -> None:
+    """Emit the verify envelope, exiting 2 unless every resolved model is ready.
 
     Readiness includes each served role's fitness probe, so a model that loads
     and answers but cannot produce the text reader's answer is refused here.
     """
-    from ....adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
-    from ....application.local_reader import verify_role_target
-
-    items: list[ProvisionVerifyItemPayload] = []
-    targets = _targets(role, model)
-    for target in targets:
-        roles = [served.value for served in target.roles]
-        if target.model is None:
-            items.append(
-                ProvisionVerifyItemPayload(
-                    roles=roles,
-                    ready=False,
-                    facts=target.selection_facts,
-                    precondition_action=resolve_cli_precondition_action(_selection_refusal(target)),
-                )
-            )
-            continue
-        outcome = verify_role_target(target, text_probe=probe_text_extraction_fitness)
-        items.append(
-            ProvisionVerifyItemPayload(
-                model=outcome.model,
-                roles=roles,
-                ready=outcome.ready,
-                resident=outcome.resident,
-                answered=outcome.answered,
-                elapsed_ms=outcome.elapsed_ms,
-                facts=outcome.facts,
-                precondition_action=_action(outcome.precondition_verdict),
-            )
+    items = [
+        ProvisionVerifyItemPayload(
+            model=item.model,
+            roles=_roles(item),
+            ready=item.succeeded,
+            resident=item.resident,
+            answered=item.answered,
+            elapsed_ms=item.elapsed_ms,
+            facts=_reader_facts(item.facts),
+            precondition_action=_item_action(item),
         )
-    result = ProvisionVerifyResult(ready=bool(items) and all(item.ready for item in items), models=items)
+        for item in outcome.models
+    ]
+    result = ProvisionVerifyResult(ready=outcome.succeeded, models=items)
     emit_envelope(
         ctx,
         command="config.provision.verify",
         result=result,
         lines=_provision_result_lines(result),
-        notices=_licence_notices(message for target in targets for message in target.licence_advisories),
+        notices=_model_licence_notices(outcome),
     )
     if not result.ready:
         raise typer.Exit(code=2)
 
 
-def _emit_local_reader_status(
+def emit_provision_status(
     ctx: typer.Context,
+    status: LocalReaderStatusPublicResultV1,
     *,
     command: str,
     result_type: type[ProvisionStatusResult],
-    probe: bool,
 ) -> None:
-    """Measure the local reader and emit its status envelope. Records nothing.
-
-    Without ``probe`` text-model fitness is the verdict ``verify`` recorded for
-    the model's current weights, so ``status`` never spends a model load.
-    ``probe`` runs the check now and reports it without recording it.
-    """
-    from ....application.local_reader import read_local_reader_status
-
-    if probe:
-        from ....adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
-
-        status = read_local_reader_status(text_probe=probe_text_extraction_fitness)
-    else:
-        status = read_local_reader_status()
+    """Emit the local reader's status envelope under ``command``."""
     host = status.host
     last = status.last_pull
     result = result_type(
@@ -558,8 +510,8 @@ def _emit_local_reader_status(
             reachable=host.reachable,
             version=host.version,
             installer=host.installer.value,
-            facts=host.facts,
-            precondition_action=_action(host.precondition_verdict),
+            facts=_reader_facts(host.facts),
+            precondition_action=_reader_action(host.verdict_condition_id, host.verdict_facts),
         ),
         roles=[
             ProvisionRoleStatusPayload(
@@ -608,7 +560,7 @@ _FITNESS_CONDITION_LOCALE_KEYS: dict[str, str] = {
 }
 
 
-def _fitness_condition_lines(rows: tuple[LocalReaderRoleStatus, ...]) -> tuple[str, ...]:
+def _fitness_condition_lines(rows: tuple[LocalReaderRoleStatusV1, ...]) -> tuple[str, ...]:
     """Render each role's failed fitness condition as its localized explanation."""
     from ....core.i18n.render import tr
 
@@ -619,13 +571,8 @@ def _fitness_condition_lines(rows: tuple[LocalReaderRoleStatus, ...]) -> tuple[s
     )
 
 
-def _emit_provision_install(ctx: typer.Context, *, confirm: bool) -> None:
-    """Install the runtime when consented and emit the envelope, exiting 2 unless installed."""
-    from ....application.local_reader_contracts import (
-        build_local_reader_install_request,
-    )
-
-    outcome = _provision(build_local_reader_install_request(consent=confirm))
+def emit_provision_install(ctx: typer.Context, outcome: LocalReaderProvisionPublicResultV2) -> None:
+    """Emit the install envelope, exiting 2 unless the runtime is installed."""
     install = outcome.install
     if install is None:  # pragma: no cover - the install action always records its outcome
         raise AssertionError
@@ -635,41 +582,30 @@ def _emit_provision_install(ctx: typer.Context, *, confirm: bool) -> None:
         installer=install.installer.value,
         consented=install.consented,
         installer_exit_code=install.installer_exit_code,
-        facts=outcome.facts,
-        precondition_action=_action(outcome.precondition_verdict),
+        facts=_reader_facts(outcome.facts),
+        precondition_action=_reader_action(outcome.verdict_condition_id, outcome.verdict_facts),
     )
     emit_envelope(ctx, command="config.provision.install", result=result, lines=_provision_result_lines(result))
     if not install.installed:
         raise typer.Exit(code=2)
 
 
-def _emit_provision_start(ctx: typer.Context) -> None:
-    """Start the runtime when needed and emit the envelope, exiting 2 unless it answers."""
-    from ....adapters.outbound.model_runtime.process_control import spawn_runtime_server
-    from ....application.provisioning_host import start_runtime
-
-    outcome = start_runtime(spawn=spawn_runtime_server)
+def emit_provision_start(ctx: typer.Context, outcome: LocalReaderProvisionPublicResultV2) -> None:
+    """Emit the start envelope, exiting 2 unless the runtime answers."""
     result = ProvisionStartResult(
-        running=outcome.running,
+        running=outcome.succeeded,
         already_running=outcome.already_running,
         started_pid=outcome.started_pid,
-        facts=outcome.facts,
-        precondition_action=_action(outcome.precondition_verdict),
+        facts=_reader_facts(outcome.facts),
+        precondition_action=_reader_action(outcome.verdict_condition_id, outcome.verdict_facts),
     )
     emit_envelope(ctx, command="config.provision.start", result=result, lines=_provision_result_lines(result))
-    if not outcome.running:
+    if not result.running:
         raise typer.Exit(code=2)
 
 
-def _emit_provision_remove(ctx: typer.Context, *, model: str | None, role: ModelRole | None) -> None:
-    """Remove the resolved model and emit the envelope, exiting 2 unless every removal was confirmed."""
-    from ....application.local_reader_contracts import (
-        build_local_reader_remove_request,
-    )
-
-    if model is None and role is None:
-        raise typer.BadParameter("--model or --role is required", param_hint="--model/--role")
-    outcome = _provision(build_local_reader_remove_request(role, model))
+def emit_provision_remove(ctx: typer.Context, outcome: LocalReaderProvisionPublicResultV2) -> None:
+    """Emit the remove envelope, exiting 2 unless every removal was confirmed."""
     items = [
         ProvisionRemoveItemPayload(
             model=item.model,
@@ -677,8 +613,8 @@ def _emit_provision_remove(ctx: typer.Context, *, model: str | None, role: Model
             removed=item.succeeded,
             was_installed=item.was_installed,
             freed_bytes=item.freed_bytes,
-            facts=item.facts,
-            precondition_action=_action(item.precondition_verdict),
+            facts=_reader_facts(item.facts),
+            precondition_action=_item_action(item),
         )
         for item in outcome.models
     ]
@@ -688,18 +624,14 @@ def _emit_provision_remove(ctx: typer.Context, *, model: str | None, role: Model
         raise typer.Exit(code=2)
 
 
-def _emit_provision_browser(ctx: typer.Context) -> None:
-    """Provision the browser build and emit the envelope, exiting 2 unless it is installed."""
-    from ....adapters.outbound.browser_runtime.installer import run_browser_installer
-    from ....application.provisioning_browser import install_playwright_browser
-
-    outcome = install_playwright_browser(run=run_browser_installer)
+def emit_provision_browser(ctx: typer.Context, outcome: BrowserRuntimeProvisionPublicResultV1) -> None:
+    """Emit the browser provisioning envelope, exiting 2 unless the build is installed."""
     result = ProvisionBrowserResult(
         installed=outcome.installed,
         already_installed=outcome.already_installed,
         installer_exit_code=outcome.installer_exit_code,
-        facts=outcome.facts,
-        precondition_action=_action(outcome.precondition_verdict),
+        facts=_reader_facts(outcome.facts),
+        precondition_action=_reader_action(outcome.verdict_condition_id, outcome.verdict_facts),
     )
     emit_envelope(ctx, command="config.provision.browser", result=result, lines=_provision_result_lines(result))
     if not outcome.installed:

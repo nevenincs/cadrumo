@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Annotated, Literal, Protocol
 from uuid import UUID
 
-from pydantic import BaseModel, Field, RootModel, SecretBytes, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, RootModel, SecretBytes, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import UtcInstant
@@ -165,10 +165,42 @@ class WorkerAuthorizationReleased(BaseModel):
     permit_id: UUID
 
 
+class WorkerRuntimeServerStart(BaseModel):
+    """Ask the runtime to start the model runtime's server under one held COMMIT fence.
+
+    The worker is contained, so a server it started itself would end with it.
+    The instruction names no program and no environment: the runtime resolves
+    both from its own settings.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["start_runtime_server"] = "start_runtime_server"
+    request_id: UUID
+    permit_id: UUID
+    command_id: UUID
+
+
+class WorkerRuntimeServerStarted(BaseModel):
+    """Answer one start instruction; ``process_id`` is absent when the runtime started nothing."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["runtime_server_started"] = "runtime_server_started"
+    request_id: UUID
+    permit_id: UUID
+    command_id: UUID
+    runtime_boot_id: UUID
+    process_id: NonNegativeInt | None = None
+
+
 class WorkerAuthorizationInstruction(
-    RootModel[Annotated[WorkerAuthorizationRelease | WorkerApprovalPublication, Field(discriminator="kind")]]
+    RootModel[
+        Annotated[
+            WorkerAuthorizationRelease | WorkerApprovalPublication | WorkerRuntimeServerStart,
+            Field(discriminator="kind"),
+        ]
+    ]
 ):
-    """Only explicit release or an exact approval phase may use a held fence."""
+    """Only explicit release, an exact approval phase or a runtime server start may use a held fence."""
 
 
 class WorkerAuthorizationAcknowledgement(BaseModel):

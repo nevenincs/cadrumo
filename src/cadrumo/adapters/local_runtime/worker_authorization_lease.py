@@ -9,6 +9,7 @@ from importlib.metadata import version
 from pathlib import Path
 from uuid import uuid4
 
+from ...application.local_reader_contracts import LOCAL_READER_OPERATION_DEFINITION_ID
 from ...application.runtime.approval_binding import RuntimeApprovalBinding
 from ...application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.profile_access import RuntimeAccessRefusal
@@ -26,6 +27,8 @@ from ...application.runtime.worker_authorization import (
     WorkerAutomationInventoryRequest,
     WorkerResponseScopePermit,
     WorkerResponseScopeRequest,
+    WorkerRuntimeServerStart,
+    WorkerRuntimeServerStarted,
 )
 from ...application.runtime.worker_enrollment import (
     WorkerApprovalPhaseResult,
@@ -72,6 +75,7 @@ class WorkerAuthorizationLease:
         )
         self._deadline = 0.0
         self._publication_sent = False
+        self._runtime_server_start_sent = False
 
     def _commit_phase(self, stage: str) -> None:
         if isinstance(self.request, WorkerAuthorizationRequest) and self.request.request.action is AccessAction.COMMIT:
@@ -165,6 +169,38 @@ class WorkerAuthorizationLease:
         ):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         return EnrollmentTransition(receipt=reply.receipt, published=reply.published)
+
+    def start_runtime_server(self) -> int | None:
+        """Ask the runtime to start the model runtime's server over this exact held COMMIT channel.
+
+        Returns the server's process id, or ``None`` when the runtime started
+        nothing. Nothing this process located is sent: the runtime resolves the
+        program and its environment itself.
+        """
+        channel, permit, request = self._channel, self._permit, self.request
+        if (
+            channel is None
+            or not isinstance(permit, WorkerAuthorizationPermit)
+            or not isinstance(request, WorkerAuthorizationRequest)
+            or request.request.action is not AccessAction.COMMIT
+            or request.request.definition_id != LOCAL_READER_OPERATION_DEFINITION_ID
+            or self._runtime_server_start_sent
+        ):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        command = WorkerRuntimeServerStart(
+            request_id=request.request_id, permit_id=permit.permit_id, command_id=uuid4()
+        )
+        self._runtime_server_start_sent = True
+        write_document(channel, command, deadline=self._deadline)
+        reply = read_document(channel, WorkerRuntimeServerStarted, deadline=self._deadline)
+        if (
+            reply.request_id != request.request_id
+            or reply.permit_id != permit.permit_id
+            or reply.command_id != command.command_id
+            or reply.runtime_boot_id != self.identity.runtime_boot_id
+        ):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        return reply.process_id
 
     def release(self) -> None:
         """Acknowledge body completion on the exact channel, preserving uncertain failure."""
