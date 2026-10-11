@@ -11,6 +11,9 @@ inside the two. A field added to any of them reddens this until it is placed.
 
 The exclusions are checked against an independent reading: the filing
 snapshot's fingerprint of a row's tax facts does not move when one changes.
+The set is wider than that fingerprint by the link to purchase-invoice
+evidence, which the fingerprint leaves out and a calculation reads: the linked
+invoice supplies the row's figures.
 """
 
 from __future__ import annotations
@@ -48,8 +51,7 @@ _BEARS_ON_NO_TAX: dict[str, str] = {
     "notes": "the person's free text and the reason shown for a classification",
     "group_label": "a personal grouping label",
     "own_account_id": "which of the person's accounts the movement belongs to",
-    "purchase_invoice_evidence_id": "a link to evidence, protected by who linked it",
-    "attachment_ids": "links to attachments, protected by who linked them",
+    "attachment_ids": "supplementary documents no calculation reads, protected by who linked them",
 }
 """Row facts a write can set that decide nothing about how the row is taxed."""
 
@@ -89,6 +91,12 @@ def test_what_classification_sets_beyond_a_note_is_a_decision_field() -> None:
     assert set(BulkClassifyRow.model_fields) - set(_REQUEST_ONLY_NAMES) <= CLASSIFICATION_DECISION_FIELDS
 
 
+def test_the_link_to_purchase_invoice_evidence_is_a_decision_field_and_a_supplementary_attachment_is_not() -> None:
+    """A calculation takes a linked row's figures from the invoice; an attachment is a document beside the row."""
+    assert "purchase_invoice_evidence_id" in CLASSIFICATION_DECISION_FIELDS
+    assert "attachment_ids" in _BEARS_ON_NO_TAX
+
+
 def _row() -> Transaction:
     return Transaction.model_validate(
         {
@@ -123,7 +131,6 @@ _ANOTHER_VALUE: dict[str, object] = {
     "notes": "another note",
     "group_label": "another label",
     "own_account_id": "synthetic-account",
-    "purchase_invoice_evidence_id": "c" * 64,
     "attachment_ids": ("d" * 64,),
 }
 

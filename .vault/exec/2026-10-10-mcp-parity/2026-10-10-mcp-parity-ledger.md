@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:060ca15e1c88a2d9b6c27a655c46939fb96db7fb31ff8cb5146299e1f8d1a7d3'
+body_hash: 'sha256:fee2ef0635702c9d8b12808852234f671674cdfd0e937af174494dd9df811dd0'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -1017,6 +1017,18 @@ related:
 - `S35` `verify:` `basedpyright on the changed production files` -> `pass`
 - `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
 - `S35` `M` `.vault/audit/2026-10-11-mcp-parity-audit.md`
+- `S35` `M` `src/cadrumo/adapters/persistence/profile/tests/test_classification_origin_at_the_ledger_writers.py`
+- `S35` `M` `src/cadrumo/application/ledger/tests/test_classification_decision_fields_are_complete.py`
+- `S35` `A` `src/cadrumo/adapters/persistence/profile/tests/test_confirmation_keeps_a_sealed_row_at_the_ledger_writers.py`
+- `S35` `verify:` `pytest ledger, invoices, operations, aggregation and transaction-domain suites (4548 tests)` -> `pass`
+- `S35` `verify:` `pytest profile persistence suite (2365 tests)` -> `pass`
+- `S35` `verify:` `pytest entrypoint suite including executor conformance (2225 of 2232 tests)` -> `pass`
+- `S35` `verify:` `pytest touched command-line tests (62 of 63 tests, two re-run alone)` -> `pass`
+- `S35` `verify:` `ruff check (11 files)` -> `pass`
+- `S35` `verify:` `ruff format --check (11 files)` -> `pass`
+- `S35` `verify:` `ty check --python-platform linux (11 files)` -> `pass`
+- `S35` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
 
 ## Notes
 
@@ -1060,3 +1072,4 @@ related:
 - `S35` Third review. The protection of a hand classification keyed on a last-writer stamp that IVA derivation rewrites and that the model reviews, exclude and detach went round. The row now records the origin of its classification, changed only by a write that changes the classification or its tax figures; older rows read as the person when classified and not rule-stamped. An execution admitted on MCP is refused, before any effect, IVA derivation, both model reviews at the request and at the commit, the manual split and exclude on a row whose classification is the person, replacing an existing invoice link, and detaching evidence an agent did not link. The two census entries for the reviews now point at a test that reads the stored actor. Left for the owner: an agent archiving or stashing the person row, and an agent replacing a usage ratio the person set.
 - `S35` Fourth review. A person who confirmed an agent, rule or model classification with the same value, or only completed a field such as the counterparty country, did not become its owner. A person write that names any field of one declared set now takes the row whether or not a value changes, the no-change paths record it as a classification event, and a test holds the set equal to what the classification, update and bulk patches can set. An agent is refused archiving or stashing a row whose classification is the person, and restoring a row whose archived or stashed state the person set. The review commit reads the stored row before any effect. Two entrypoint cases failed under load in the 45-minute parallel run and pass alone.
 - `S35` Correction: the four rows for src/cadrumo/locales/{ca,en,es,hu}/common.yml under this Step were logged in error. Those catalogue changes belong to another session and are not part of this Step or its commit.
+- `S35` Fifth review. A confirmation whose values compare equal now writes the stored row back with only its origin, stamp, reason, lineage and modification time replaced, and passes the finalised-revision guard only when the transaction identifier and the row fingerprint are unchanged; before, restating 500.00 as 500 moved the fingerprint and turned a verified revision stale. Bulk confirmation agrees with single. An agent is refused linking purchase evidence to a row the person classified, since the link changes how the row is calculated. Two command-line cases errored at setup under load and pass alone. Outside this Step, the seven entrypoint failures named under S45 and the command-line test that expects an English message.

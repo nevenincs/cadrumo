@@ -776,3 +776,33 @@ def test_an_agent_restores_what_an_agent_set_aside_and_not_what_the_person_did(
         assert _act(runtime, _CLI, _restore(profile_id, by_the_person))
         for row in (by_the_person, by_the_agent):
             assert stored_row(profile_id, row, operation).lifecycle_state is TransactionLifecycleState.ACTIVE
+
+
+def _link_purchase_evidence(profile_id: UUID, transaction_id: str, evidence_id: str) -> tuple[str, BaseModel]:
+    return "ledger.attach", LedgerAttachRequest(
+        profile_id=profile_id, transaction_id=transaction_id, purchase_invoice_evidence_id=evidence_id, actor=_TYPED
+    )
+
+
+def test_an_agent_does_not_link_purchase_evidence_to_a_row_the_person_classified_and_the_command_line_does(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """A calculation takes a linked row's figures from the invoice; a supplementary attachment feeds none."""
+    with _runtime(tmp_path) as runtime:
+        _driver, _registry, profile_id, _host = runtime
+        by_hand = seed_row(profile_id, operation, description="synthetic hand row", classification=_BUSINESS)
+        by_rule = seed_row_a_rule_classified(profile_id, operation, description="synthetic row for a rule")
+        first = seed_invoice(profile_id, number="SYNTHETIC-1")
+        second = seed_invoice(profile_id, number="SYNTHETIC-2")
+
+        assert _refused_and_nothing_changed(runtime, operation, _link_purchase_evidence(profile_id, by_hand, first))
+
+        supplementary = seed_stored_attachment(profile_id, operation, reference="supplementary")
+        assert _act(runtime, _MCP, _attach(profile_id, by_hand, supplementary))
+        assert _act(runtime, _MCP, _link_purchase_evidence(profile_id, by_rule, second))
+        assert stored_row(profile_id, by_rule, operation).classification_origin is _AGENT
+
+        assert _act(runtime, _CLI, _link_purchase_evidence(profile_id, by_hand, first))
+        linked = stored_row(profile_id, by_hand, operation)
+        assert linked.purchase_invoice_evidence_id == first
+        assert linked.classification_origin is _PERSON

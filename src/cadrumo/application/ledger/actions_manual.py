@@ -58,6 +58,7 @@ from ...domain.transactions.models import (
 )
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..aggregation.currency_predicates import effective_eur_amount, is_non_eur_without_conversion
+from ..aggregation.ledger_filing_snapshot import row_fingerprint
 from ..operations.execution_actor import actor_label_is_an_agents
 from ..review.filter import LedgerReviewStatus
 from .action_ports import LedgerActionPorts
@@ -857,6 +858,8 @@ def update_manual_transaction(
         now=now,
         ports=ports,
         decides_classification=decides_classification,
+        finalized_blockers=blockers,
+        evidence_only=evidence_only,
     )
     if prepared is None:
         raise TransactionValidationError(
@@ -928,17 +931,9 @@ def _manual_update_preconditions(
     # export evidence refusal would itself be blocked by the calculation that
     # raised it. The cited revisions are reported back as stale so the operator
     # is told to recalculate; the exemption never widens past evidence fields.
-    evidence_only = is_evidence_only_command(command, current)
-    # A write that moves no value leaves the row's fingerprint as the finalized
-    # revision sealed it. It is either a no-op or the person accepting the
-    # classification the row already carries, and neither is what this guards.
-    if blockers and not evidence_only and not command_changes_no_ledger_value(command, current):
-        raise_finalized_modelo_blocked(
-            operation="ledger transaction update",
-            transaction_ids=transaction_modelo_source_ids(current),
-            blockers=blockers,
-        )
-    return blockers, evidence_only
+    # The guard itself is held where the replacement is built, because what
+    # it protects is read from the replacement.
+    return blockers, is_evidence_only_command(command, current)
 
 
 def _require_expected_current_transaction(
@@ -1000,6 +995,8 @@ def _prepare_manual_transaction_update(
     currency_normalizer: CurrencyNormalizationService | None = None,
     ports: LedgerActionPorts,
     decides_classification: bool = False,
+    finalized_blockers: tuple[LedgerRemovalBlocker, ...] = (),
+    evidence_only: bool = False,
 ) -> tuple[Transaction, tuple[BucketEvent, ...]] | None:
     """Build a replacement transaction and bucket events for one in-memory edit.
 
@@ -1011,9 +1008,24 @@ def _prepare_manual_transaction_update(
     references but performs **no** persistence and **no** catalogue load - the
     caller owns a single load/save so a batch re-encrypts the catalogue once
     rather than per row (the ``bulk_classify_from_csv`` load-once/save-once
-    contract). Lifecycle and blocking-modelo guards remain the caller's
-    responsibility before invoking this builder.
+    contract). The lifecycle guard remains the caller's responsibility before
+    invoking this builder.
+
+    ``finalized_blockers`` are the finalized revisions the caller found citing
+    the row. A write that would disturb one is refused here, for single and
+    bulk writes alike, once the replacement it would store is known.
+
+    A write whose every value compares equal to the stored one stores the
+    stored row itself, with only the origin and the stamp of the
+    restatement replaced. Equal values can be written differently (``500``
+    for ``500.00``), a finalized revision's fingerprint hashes the written
+    form, and a confirmation must not make a sealed revision read as stale.
     """
+    if finalized_blockers and not evidence_only and not command_changes_no_ledger_value(command, current):
+        # A command that differs from the stored row in a value is a changed write, refused
+        # before anything is built from it. One that compares equal is not admitted on that:
+        # it is judged below, on the row it would store.
+        _refuse_write_to_a_sealed_row(current, finalized_blockers)
     _require_declared_iva_category(command, ports=ports)
     replacement = _transaction_from_command(
         command,
@@ -1035,8 +1047,14 @@ def _prepare_manual_transaction_update(
         classification_decided=decides_classification,
     )
     replacement = _carry_forward_invoice_link(current, _carry_forward_fx(current, replacement))
-    if mutation_signature(current) == mutation_signature(replacement) and not _origin_changed(current, replacement):
+    restated = mutation_signature(current) == mutation_signature(replacement)
+    if restated and not _origin_changed(current, replacement):
         return None
+    if restated:
+        replacement = _stored_row_restated(current, replacement)
+    _require_finalized_revisions_undisturbed(
+        current, replacement, blockers=finalized_blockers, evidence_only=evidence_only, restated=restated
+    )
     require_actor_may_reclassify(actor=command.actor, current=current, replacement=replacement)
     verify_evidence_references(
         command,
@@ -1094,7 +1112,64 @@ def _prepare_manual_transaction_update(
         classification_predecessor=current,
         classification_decided=decides_classification,
     )
-    return _carry_forward_invoice_link(current, _carry_forward_fx(current, replacement)), events
+    replacement = _carry_forward_invoice_link(current, _carry_forward_fx(current, replacement))
+    if restated:
+        replacement = _stored_row_restated(current, replacement)
+    return replacement, events
+
+
+_RESTATEMENT_RECORD_FIELDS = (
+    "classification_origin",
+    "classified_by",
+    "classified_at",
+    "classification_reason",
+    "classification_confidence",
+    "edit_lineage",
+    "modified_at",
+)
+"""What a write that moves no value records on the row: who decided, the stamp, and the edit."""
+
+
+def _stored_row_restated(current: Transaction, rebuilt: Transaction) -> Transaction:
+    """Return the stored row carrying what the restatement records and nothing else of ``rebuilt``.
+
+    Every value keeps the object and the written form it was stored with.
+    """
+    return current.model_copy(update={field: getattr(rebuilt, field) for field in _RESTATEMENT_RECORD_FIELDS})
+
+
+def _require_finalized_revisions_undisturbed(
+    current: Transaction,
+    replacement: Transaction,
+    *,
+    blockers: tuple[LedgerRemovalBlocker, ...],
+    evidence_only: bool,
+    restated: bool,
+) -> None:
+    """Refuse a write to a row a finalized revision cites, unless it leaves what the revision sealed.
+
+    A restatement is admitted when the row it would store keeps the identity
+    the revision cites and the fingerprint the revision sealed: that is what
+    this guard protects, so that is what the exemption is read from. Every
+    other write but an evidence-only one is refused.
+    """
+    if not blockers or evidence_only:
+        return
+    if (
+        restated
+        and replacement.transaction_id == current.transaction_id
+        and row_fingerprint(replacement) == row_fingerprint(current)
+    ):
+        return
+    _refuse_write_to_a_sealed_row(current, blockers)
+
+
+def _refuse_write_to_a_sealed_row(current: Transaction, blockers: tuple[LedgerRemovalBlocker, ...]) -> None:
+    raise_finalized_modelo_blocked(
+        operation="ledger transaction update",
+        transaction_ids=transaction_modelo_source_ids(current),
+        blockers=blockers,
+    )
 
 
 def update_manual_transaction_fields(

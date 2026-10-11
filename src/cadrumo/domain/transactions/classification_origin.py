@@ -45,13 +45,17 @@ CLASSIFICATION_DECISION_FIELDS: Final[frozenset[str]] = _MOVEMENT_FIELDS | {
     "art_104_tres_exclusion",
     "input_classification",
     "prorrata_sector_id",
+    "purchase_invoice_evidence_id",
 }
 """Every fact a ledger write can set that bears on how the row is taxed.
 
 The movement's money, dates and direction, the classification and its share,
-and the tax figures and declarations. A write that sets one of them decides
-the row's tax treatment; a write that sets only what is left (a note, a
-description, a label, a link to evidence) does not. One set serves the origin
+the tax figures and declarations, and the link to purchase-invoice evidence:
+a calculation takes a linked row's figures from the invoice, counts an
+incoming row as a refund, and admits its input IVA deduction on that
+evidence. A write that sets one of them decides the row's tax treatment; a
+write that sets only what is left (a note, a description, a label, a
+supplementary attachment) does not. One set serves the origin
 recorded here and the refusal of an agent's change to the person's row, and a
 test holds it equal to what the ledger's command can carry less the members
 that test declares as bearing on no tax, so a field added later is placed in

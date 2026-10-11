@@ -42,7 +42,6 @@ from .action_ports import LedgerActionPorts
 from .actions_common import (
     blockers_by_source_transaction_id,
     normalise_timestamp,
-    raise_finalized_modelo_blocked,
     replace_transaction,
     require_transaction,
     resolve_bucket_event_repository,
@@ -266,12 +265,6 @@ def _apply_one_bulk_classify_row(
         )
         source_ids = transaction_modelo_source_ids(current)
         blockers = tuple(b for txid in source_ids for b in blockers_by_txid.get(txid, ()))
-        if blockers:
-            raise_finalized_modelo_blocked(
-                operation="ledger transaction update",
-                transaction_ids=source_ids,
-                blockers=blockers,
-            )
         command = _command_from_patch(
             bucket_id=bucket_id,
             current=current,
@@ -287,6 +280,7 @@ def _apply_one_bulk_classify_row(
             ports=ports,
             # Every row of the table states a classification, changed or not.
             decides_classification=True,
+            finalized_blockers=blockers,
         )
         if prepared is None:
             # field-for-field identical â€” classification already applied.

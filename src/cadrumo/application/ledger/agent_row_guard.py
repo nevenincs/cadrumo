@@ -128,6 +128,19 @@ def require_agent_may_detach(row: Transaction, attachment_ids: Iterable[str]) ->
         raise _refuse()
 
 
+def require_agent_may_link_purchase_evidence(row: Transaction, purchase_invoice_evidence_id: str) -> None:
+    """Refuse an agent linking purchase-invoice evidence to a row whose classification the person decided.
+
+    The link is not a document beside the row: a calculation then takes the
+    row's base and cuota from the invoice, counts an incoming row as a
+    refund, and admits its input IVA deduction on that evidence. Linking it
+    replaces the figures the person gave the row. A supplementary
+    attachment feeds no calculation and stays open.
+    """
+    if classification_is_the_persons(row) and row.purchase_invoice_evidence_id != purchase_invoice_evidence_id:
+        raise _refuse()
+
+
 def require_agent_may_link_invoice(row: Transaction, invoice_id: str) -> None:
     """Refuse an agent replacing the invoice a row already links.
 
@@ -179,6 +192,7 @@ __all__ = [
     "require_agent_may_detach",
     "require_agent_may_leave_set_aside_state",
     "require_agent_may_link_invoice",
+    "require_agent_may_link_purchase_evidence",
     "require_agent_may_reclassify",
     "require_agent_may_set_aside",
 ]

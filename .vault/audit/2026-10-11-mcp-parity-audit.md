@@ -5,7 +5,7 @@ tags:
 date: '2026-10-11'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:f342b3bbafc7d34e4b668ebb16891dfc718ac19677ab076d186b73373a57c4bb'
+body_hash: 'sha256:764de7731e369a3947df530271ac6d2b8e1c657ca0abf6963ac4f66f6ea83beb'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -27,6 +27,8 @@ Checked and found sound in review 2: an MCP connection cannot send a password or
 Review 3, 2026-10-11: re-review of the fixes in `ece30ed551`, base `0cbfe6a994`. Verdict: revision required for `S32`, `S35` and `S42`. The proxy fix holds against hostile addresses and no operation open to MCP writes the endpoint setting; the bulk classification fix holds on its own route; the release of results by admitting frontend holds on every path that returns content; the census is truthful for five of seven entries checked.
 
 Review 4, 2026-10-11: re-review of `3e8f9e3725` and `7e6226e084`, base `ece30ed551`. Verdict: revision required for `S35`. The agent side of the classification-origin rule holds: every classifying write goes through one stamper, each executor refuses before any effect, and deriving, detaching, linking or archiving and restoring before a split all end refused; stored rows load safely and the filing snapshot fingerprint is unchanged. The decimal fix holds and the census proofs for the reviews now read a stored actor.
+
+Review 5, 2026-10-11: re-review of `d4c6b485a5`, base `3e8f9e3725`. Verdict: revision required for `S35`. Ownership by confirmation holds in every direction probed, archive, stash and restore hold, and the review commit holds. The exemption that lets a confirmation through the finalised-revision guard does not.
 
 ## Findings
 
@@ -133,6 +135,30 @@ Classification refuses a rate above 1 at the request; update accepts it there an
 ### review-in-flight-upgrade | low | A model review captured before the origin field existed is refused as a conflict
 
 `src/cadrumo/application/ledger/llm_review_operand.py:128` re-serialises the baseline row, which now carries the origin. Only test profiles hold data. Review 4. Recorded, no action.
+
+### confirm-moves-sealed-fingerprint | high | A same-value confirmation of a row cited by a finalised revision was written in another decimal representation and turned the revision stale
+
+`src/cadrumo/application/ledger/actions_manual.py:935` exempts a write from the finalised-revision guard when its values compare equal (`src/cadrumo/application/ledger/actions_common.py:407`), while the row fingerprint hashes the decimal text (`src/cadrumo/application/aggregation/ledger_filing_snapshot.py:158`). The request models admit only stripped decimals and stored rows carry trailing zeros, so a confirmation of `500.00` stored `500` and a verified revision became stale. Before `d4c6b485a5` the guard refused the write. Review 5. Resolved 2026-10-11: when every value compares equal and only the origin changes, the stored row is written back with its origin, stamp, reason, lineage and modification time replaced and every other member untouched, and the exemption admits the write only when the built replacement keeps the transaction identifier and the row fingerprint. A write that changes a value on a sealed row is still refused.
+
+### evidence-id-declared-no-tax | medium | Purchase evidence was declared as bearing on no tax although it changes how a row is calculated
+
+`src/cadrumo/application/ledger/tests/test_classification_decision_fields_are_complete.py:51` excludes `purchase_invoice_evidence_id` from the fields that make a classification, while `src/cadrumo/application/ledger/actions_common.py:395` and `src/cadrumo/application/aggregation/renta_ledger.py:929` say purchase evidence turns an incoming row into a refund and lets the invoice's figures override the row's own. An agent's attach of purchase evidence to a row the person classified was stored. The route predates the commit. Review 5. Resolved 2026-10-11: the purchase-evidence link is in the set of fields that make a classification, and an execution admitted on MCP is refused linking purchase evidence to a row the person classified, before any effect and again at the writer; supplementary attachments stay open.
+
+### bulk-single-disagree-on-sealed | low | Bulk confirmation of a sealed row was refused where single confirmation was admitted
+
+`src/cadrumo/application/ledger/actions_classification.py:268`. Review 5. Resolved 2026-10-11: bulk classification passes its blockers to the same builder as single classification.
+
+### confirmation-resets-model-rejection | low | A confirmation counts as the latest model decision
+
+`src/cadrumo/application/ledger/list_query.py:47` and `view_operation.py:93` read the last classified-or-rejected event, so after a confirmation an earlier rejection stops showing. Any classification made by hand already did the same. Review 5. Recorded, no action.
+
+### restated-amount-takes-row | low | Naming an unchanged amount beside a description takes the row
+
+The amount is in the declared set, so a person's update or bulk table that restates it takes every restated row and closes it to agents. Review 5. Recorded for the owner with the rule itself.
+
+### verify-counts | low | Recorded verification counts did not name every failing test
+
+Ledger rows give counts such as 7054 of 7058 without naming the tests outside the count. They are the known failures in other work, listed in the ledger note of `S45` and in later notes: four form-layout tests, four reporting no usable authority, one Modelo 184 context key, one Modelo 100 export version, one bulk-classify save count, and one command-line test expecting an English message; two cases that timed out under load were re-run alone and pass. Review 5. Resolved by this entry.
 
 ## Recommendations
 

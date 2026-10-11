@@ -247,7 +247,9 @@ _LEDGER_ENTRIES: Final = (
     # archive or stash of a row that carries the person's work, and the restore of a row the
     # person archived or stashed.
     _admit("ledger.archive", _WRITES),
-    # Attach links evidence already stored, by identifier, and takes no file.
+    # Attach links evidence already stored, by identifier, and takes no file. A calculation takes a
+    # row's figures from linked purchase-invoice evidence, so the executor refuses an agent that
+    # link on a row whose classification the person decided; a supplementary attachment stays open.
     _admit("ledger.attach", _WRITES),
     _admit("ledger.check", _READS),
     # A bulk row replaces a classification made by hand and stores only the new one, the same write as single.

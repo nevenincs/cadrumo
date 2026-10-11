@@ -405,10 +405,12 @@ def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: T
 
 
 def command_changes_no_ledger_value(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
-    """Return whether ``command`` would leave every value of the stored row as it is.
+    """Return whether every value ``command`` carries compares equal to the stored row's.
 
-    The stamp naming the last writer's mechanism is not a value: a write that
-    differs from the row in nothing else moves no figure a calculation reads.
+    The stamp naming the last writer's mechanism is not a value. Equal here is
+    equal in value and says nothing of the written form: ``500`` compares equal
+    to a stored ``500.00``. So this can show that a command is a changed write,
+    and cannot show that the row it would store is the row that is stored.
     """
     command_fields = _command_idempotency_fields(command)
     current_fields = _transaction_idempotency_fields(current)

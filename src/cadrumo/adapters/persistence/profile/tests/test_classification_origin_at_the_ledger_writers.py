@@ -28,6 +28,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_lifecycle import mark_transaction_reviewed_excluded
@@ -82,6 +83,7 @@ class _Ledger:
     """One isolated profile's real ledger ports and the repositories a test reads back through."""
 
     ports: LedgerActionPorts
+    objects: SecureObjectRepository
     transactions: TransactionCatalogueRepository
     events: BucketEventHistoryRepository
     invoices: InvoiceCatalogueRepository
@@ -120,7 +122,12 @@ def _ledger(tmp_path: Path) -> Generator[_Ledger]:
             attachment_store=attachments,
         ) as ports:
             yield _Ledger(
-                ports=ports, transactions=transactions, events=events, invoices=invoices, attachments=attachments
+                ports=ports,
+                objects=objects,
+                transactions=transactions,
+                events=events,
+                invoices=invoices,
+                attachments=attachments,
             )
 
 
