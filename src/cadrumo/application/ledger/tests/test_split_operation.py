@@ -35,7 +35,7 @@ from ...operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
-from ...user_profile.access_contracts import AccessAction, Availability
+from ...user_profile.access_contracts import AccessAction, AccessDenialCode, Availability
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import split_operation as operation
 from ..action_ports import LedgerActionPorts
@@ -467,6 +467,44 @@ async def test_executor_resolves_and_writes_against_the_same_fresh_revision(
     assert operands.value.result.parent_business_classification is BusinessClassification.PERSONAL
     assert operands.value.result.child_business_classification is BusinessClassification.NOT_YET_PROCESSED
     assert operands.value.result.remerged_by == ("ledger.merge",)
+
+
+_CLASSIFIED_AT = datetime(2026, 5, 5, 8, 0, tzinfo=UTC)
+_BY_HAND = {"classified_by": "manual", "classified_at": _CLASSIFIED_AT}
+
+
+@pytest.mark.parametrize(
+    "update",
+    [
+        pytest.param(_BY_HAND, id="classified-by-hand"),
+        pytest.param(
+            {**_BY_HAND, "business_classification": BusinessClassification.REVIEWED_EXCLUDED}, id="excluded-by-hand"
+        ),
+        pytest.param({"purchase_invoice_evidence_id": "b" * 64}, id="purchase-invoice-evidence"),
+        pytest.param({"invoice_id": "invoice-1"}, id="linked-invoice"),
+        pytest.param({"attachment_ids": ("a" * 64,)}, id="attachment"),
+    ],
+)
+def test_a_parent_carrying_the_persons_work_is_refused_to_an_agent(update: dict[str, object]) -> None:
+    parent = _parent_transaction().model_copy(update=update)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        operation._require_parent_without_the_persons_work(parent)
+
+    assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+
+
+@pytest.mark.parametrize(
+    "update",
+    [
+        pytest.param({"business_classification": BusinessClassification.NOT_YET_PROCESSED}, id="unprocessed"),
+        pytest.param({"classified_by": "rule:synthetic", "classified_at": _CLASSIFIED_AT}, id="classified-by-a-rule"),
+        pytest.param({"classified_by": "auto", "classified_at": _CLASSIFIED_AT}, id="classified-by-the-pipeline"),
+        pytest.param({}, id="no-stamp"),
+    ],
+)
+def test_a_parent_without_the_persons_work_is_not_refused_to_an_agent(update: dict[str, object]) -> None:
+    operation._require_parent_without_the_persons_work(_parent_transaction().model_copy(update=update))
 
 
 def test_result_projector_requires_matching_success_receipt() -> None:

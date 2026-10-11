@@ -2,10 +2,14 @@
 
 The production registry, its real access resolvers and the real executors run
 over a stored profile. An agent may archive, stash, restore and exclude a row,
-split it, and attach or detach evidence that is already stored. None of these
-deletes anything: what the mutation replaced stays stored, the result names the
-registered operations that return it, and what the agent records carries its
-own session label. The operations that do delete stay closed to it.
+split a row that carries none of the person's work, and attach or detach
+evidence that is already stored. None of these deletes anything: what the
+mutation replaced stays stored, the result names the registered operations that
+return it, and what the agent records carries its own session label. A split
+sets a parent's classification, evidence and attachments aside with no
+operation but the approval-bound merge to recombine them, so an agent's split
+of a parent that carries any of them is refused. The operations that do delete
+stay closed to it.
 """
 
 from __future__ import annotations
@@ -20,7 +24,7 @@ import pytest
 from pydantic import BaseModel
 
 from ...application.bucket_event_repository import bucket_event_history_repository
-from ...application.ledger.actions_manual import create_manual_transaction
+from ...application.ledger.actions_manual import attach_manual_transaction_evidence, create_manual_transaction
 from ...application.ledger.attachment_mutation_operation import (
     LedgerAttachmentOperationResult,
     LedgerAttachRequest,
@@ -35,6 +39,7 @@ from ...application.ledger.split_operation import (
 )
 from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
+from ...application.operations.frontend_requests import OperationObservationSuccessV1
 from ...application.operations.mcp_admission import McpRuling, mcp_admission_decision
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
@@ -42,6 +47,8 @@ from ...application.user_profile.access_contracts import AccessAction, AccessDen
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
+from ...domain.attachments.enums import AttachmentKind, AttachmentSource
+from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.enums import (
@@ -484,4 +491,151 @@ def test_a_split_records_the_session_keeps_its_parent_stored_and_is_not_undone_b
 
         assert refused.projection.terminal_condition is OperationTerminalCondition.REFUSED
         assert refused.projection.effect is OperationEffect.NONE
+        assert _stored_row(profile_id, parent_id, operation).lifecycle_state is TransactionLifecycleState.SPLIT
+
+
+class _SwitchableSessionHost:
+    """A session host whose admitting frontend a test changes between invocations."""
+
+    def __init__(self, frontend: OperationFrontendProjection) -> None:
+        self.frontend = frontend
+
+    def __call__(self, identity: OperationIdentity) -> OperationExecutionCaller:
+        assert identity.definition_id in _OPENED
+        return OperationExecutionCaller(
+            frontend=self.frontend, session_kind=SessionKind.ATTENDED, client_id=_SESSION_CLIENT
+        )
+
+
+def _split_request(profile_id: UUID, transaction_id: str) -> LedgerSplitRequest:
+    return LedgerSplitRequest(
+        profile_id=profile_id,
+        transaction_id=transaction_id,
+        children=(
+            LedgerSplitChildRequest(amount="8", description="first part"),
+            LedgerSplitChildRequest(amount="12", description="second part"),
+        ),
+        reason="synthetic split",
+        actor="typed for the split",
+    )
+
+
+def _refused_for_the_frontend(observed: OperationObservationSuccessV1) -> bool:
+    terminal = observed.projection
+    return (
+        terminal.terminal_condition is OperationTerminalCondition.REFUSED
+        and terminal.refusal_ref == "REFUSED_PROFILE_ACCESS"
+        and terminal.effect is OperationEffect.NONE
+        and terminal.result_ref is None
+    )
+
+
+def _stored_state(profile_id: UUID, operation: PinnedAuthorityOperation) -> tuple[dict[str, Transaction], int]:
+    ports = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation)
+    history = bucket_event_history_repository(bucket_id=str(profile_id)).load().events
+    return dict(ports.transaction_repository.load().transactions), len(history)
+
+
+_PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
+
+
+def _seed_with_attachment(profile_id: UUID, operation: PinnedAuthorityOperation) -> tuple[str, str]:
+    """Store an unclassified row and link one stored attachment to it; no revision cites the row."""
+    bucket_id = str(profile_id)
+    ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=operation)
+    created = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=bucket_id,
+            booked_date=date(2025, 1, 21),
+            amount=Decimal("20.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="synthetic row with an attachment",
+            actor="synthetic-seed",
+        ),
+        ports=ports,
+        occurred_at=now(),
+    )
+    attachment = add_attachment(
+        ports.attachment_store,
+        content=AttachmentBytesContent(data=_PDF_BYTES),
+        request=AttachmentIngestionRequest(
+            kind=AttachmentKind.INVOICE_PDF,
+            source=AttachmentSource.INLINE,
+            source_reference="split-refusal-seed",
+            mime_type="application/pdf",
+            captured_at=now(),
+            bucket_id=bucket_id,
+            captured_by="synthetic-seed",
+            source_command="synthetic seed",
+        ),
+    )
+    attach_manual_transaction_evidence(
+        bucket_id=bucket_id,
+        transaction_id=created.ref.transaction_id,
+        attachment_ids=(attachment.attachment_id,),
+        actor="synthetic-seed",
+        source_command="aeat app ledger attach",
+        ports=ports,
+        occurred_at=now(),
+    )
+    return created.ref.transaction_id, attachment.attachment_id
+
+
+def _seed_classified_by_hand(profile_id: UUID, operation: PinnedAuthorityOperation) -> str:
+    created = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=str(profile_id),
+            booked_date=date(2025, 1, 21),
+            amount=Decimal("20.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="synthetic row classified by hand",
+            business_classification=BusinessClassification.PERSONAL,
+            actor="synthetic-seed",
+        ),
+        ports=compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation),
+        occurred_at=now(),
+    )
+    return created.ref.transaction_id
+
+
+@pytest.mark.parametrize("work", ["classification", "attachment"])
+def test_an_agents_split_of_a_parent_carrying_the_persons_work_is_refused_and_the_command_lines_is_not(
+    tmp_path: Path, operation: PinnedAuthorityOperation, work: str
+) -> None:
+    """The refusal comes before any effect, so nothing is stored; the person's frontends split the same row."""
+    host = _SwitchableSessionHost(_CLI)
+    with conformance._runtime(
+        tmp_path / "runtime", cleanup=conformance._CloseWitness(), execution_caller_reader=host
+    ) as (driver, registry, profile_id):
+        if work == "classification":
+            parent_id = _seed_classified_by_hand(profile_id, operation)
+            assert _stored_row(profile_id, parent_id, operation).classified_by == "manual"
+        else:
+            parent_id, attachment_id = _seed_with_attachment(profile_id, operation)
+            assert _stored_row(profile_id, parent_id, operation).attachment_ids == (attachment_id,)
+        rows_before, events_before = _stored_state(profile_id, operation)
+
+        host.frontend = _MCP
+        _submitted, refused = asyncio.run(
+            driver.run(
+                definition_id="ledger.split.manual",
+                subject_ref=profile_operation_subject(str(profile_id)),
+                payload=_split_request(profile_id, parent_id),
+            )
+        )
+
+        assert _refused_for_the_frontend(refused)
+        assert _stored_state(profile_id, operation) == (rows_before, events_before)
+
+        host.frontend = _CLI
+        split = _run(
+            driver,
+            registry,
+            definition_id="ledger.split.manual",
+            profile_id=profile_id,
+            payload=_split_request(profile_id, parent_id),
+            result_type=LedgerSplitOperationResult,
+        )
+
+        assert split.parent_transaction_id == parent_id
         assert _stored_row(profile_id, parent_id, operation).lifecycle_state is TransactionLifecycleState.SPLIT

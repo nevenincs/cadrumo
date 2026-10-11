@@ -1154,9 +1154,15 @@ def build_production_operation_registry(
         build_prorrata_seed_sector_definition(build_prorrata_register_repository),
         build_prorrata_settle_sector_definition(build_prorrata_register_repository),
     )
-    inventory_create_definition = build_inventory_create_definition(build_inventory_service_ports)
-    inventory_movement_add_definition = build_inventory_movement_add_definition(build_inventory_service_ports)
-    inventory_valuation_preview_definition = build_inventory_valuation_preview_definition(build_inventory_service_ports)
+    inventory_create_definition = build_inventory_create_definition(
+        build_inventory_service_ports, execution_caller_reader=execution_caller_reader
+    )
+    inventory_movement_add_definition = build_inventory_movement_add_definition(
+        build_inventory_service_ports, execution_caller_reader=execution_caller_reader
+    )
+    inventory_valuation_preview_definition = build_inventory_valuation_preview_definition(
+        build_inventory_service_ports, execution_caller_reader=execution_caller_reader
+    )
     inventory_closing_authority_record_definition = build_inventory_closing_authority_record_definition(
         build_inventory_service_ports, execution_caller_reader=execution_caller_reader
     )

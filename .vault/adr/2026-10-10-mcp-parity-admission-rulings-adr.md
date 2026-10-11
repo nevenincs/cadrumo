@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:a9a34cc5c9b3225608420e0d140fc19a79e78a644bac02faa443b767e445bf13'
+body_hash: 'sha256:70b7d333bcfe6ac6aa3ae33bfff220cdc50cf68ce081b817217b5e389b69ee01'
 related:
   - "[[2026-10-10-mcp-parity-exclusion-intent-evidence-research]]"
   - "[[2026-10-10-mcp-parity-closed-operations-reference]]"
@@ -177,10 +177,10 @@ Rulings for operations closed today:
 
 | family | operations | ruling |
 |---|---|---|
-| Ledger entries | `ledger.add`, `ledger.update`, `ledger.classify.single`, `ledger.classify.bulk`, `ledger.allocate` | Admit |
+| Ledger entries | `ledger.add`, `ledger.update`, `ledger.classify.single`, `ledger.classify.bulk`, `ledger.allocate` | Admit. The four that accept amounts are listed for MCP once the replay-identity and provenance records are accepted. Bulk classification waits with them: reading on 2026-10-11 showed it is the write of single classification for many rows, replacing a classification made by hand and letting a row state tax figures |
 | | `ledger.attach`, `ledger.detach` | Admit with the evidence reads; they tie stored evidence to a transaction by identifier only |
-| Ratios and rules | `ledger.ratios.set`, `.unset`, `.list`, `.eligible`, `.validate`, `ledger.rule.list`, `ledger.rule.add`, `ledger.rule.apply` | Admit |
-| Reversible ledger lifecycle | `ledger.split.manual`, `ledger.archive`, `.stash`, `.restore`, `.exclude` | Admit, with the confirmation moved into the operation |
+| Ratios and rules | `ledger.ratios.set`, `.unset`, `.list`, `.eligible`, `.validate`, `ledger.rule.list`, `ledger.rule.add`, `ledger.rule.apply` | Admit. A rule run that reaffirms waits for the person's approval: it replaces classifications made by hand and no earlier value is kept |
+| Reversible ledger lifecycle | `ledger.split.manual`, `ledger.archive`, `.stash`, `.restore`, `.exclude` | Admit. No confirmation moved: each is an event over rows that stay stored, and the result says what was replaced and which operation reverses it. A manual split of a parent that carries a classification the person made, linked evidence, a linked invoice or attachments waits for the person's approval, because only the approval-bound merge recombines it and the classification is entered again |
 | Destructive ledger lifecycle | `ledger.merge`, `ledger.remove`, `ledger.reset`, `ledger.evidence.remove` | Admit behind the person's approval |
 | Statement and invoice-book import | `ledger.import`, `ledger.invoice.import` | Admit, pending file exchange |
 | Evidence | `ledger.evidence.add`, `ledger.evidence.batch` | Admit, pending file exchange |

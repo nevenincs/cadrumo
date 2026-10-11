@@ -60,6 +60,7 @@ from .actions_manual import (
 from .actions_manual import (
     update_manual_transaction_fields,
 )
+from .classify_patch import build_bulk_row_classification_patch
 from .id_resolution import resolve_transaction_id
 from .models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
@@ -249,9 +250,6 @@ def _apply_one_bulk_classify_row(
     folds the outcome into the accumulated counters, events, and catalogue.
     """
     idx, row, provided_patch_columns = parsed_row
-    patch_values: dict[str, object] = {"business_classification": row.classification}
-    patch_values.update({column: getattr(row, column) for column in provided_patch_columns})
-    patch = ManualLedgerTransactionPatch.model_validate(patch_values)
     try:
         resolved_transaction_id = resolve_transaction_id(row.transaction_id, working.transactions.keys())
         current = require_transaction(working, resolved_transaction_id)
@@ -263,6 +261,9 @@ def _apply_one_bulk_classify_row(
                     "lifecycle_state": current.lifecycle_state.value,
                 },
             )
+        patch = build_bulk_row_classification_patch(
+            row, provided_patch_columns, current=current, operation=ports.operation
+        )
         source_ids = transaction_modelo_source_ids(current)
         blockers = tuple(b for txid in source_ids for b in blockers_by_txid.get(txid, ()))
         if blockers:

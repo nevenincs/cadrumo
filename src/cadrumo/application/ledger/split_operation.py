@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.hashing import HEX_ALPHABET
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
@@ -21,10 +22,14 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.enums import BusinessClassification, SplitRole
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.models import Transaction
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
-from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
+from ..operations.execution_actor import (
+    OperationExecutionCallerReader,
+    execution_actor_label,
+    execution_admitted_on_mcp,
+)
 from ..operations.models import OperationRequest, OperationTerminalReceipt, terminal_receipt_matches
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -35,12 +40,13 @@ from ..user_profile.access_contracts import (
     AccessDenialCode,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
+from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import display_decimal, resolve_revision_guarded_transaction_repository
 from .actions_split_merge import split_transaction
 from .id_resolution import resolve_transaction_id
 from .models import SplitChildCommand, SplitTransactionResult
 from .pinned_transaction_repository import PinnedRevisionedTransactionRepository
+from .protocols import RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
 from .read_access import resolve_ledger_commit_access
 
 LEDGER_SPLIT_OPERATION_DEFINITION_ID = "ledger.split.manual"
@@ -90,7 +96,9 @@ class LedgerSplitRequest(BaseModel):
     """Exact-profile manual split input with canonical JSON wire values.
 
     ``actor`` is recorded as sent for a person's session. An agent's session is
-    recorded under its own session label, whatever the request carries.
+    recorded under its own session label, whatever the request carries. An
+    agent's split of a parent that carries the person's classification, linked
+    evidence or attachments is refused before anything is written.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -135,6 +143,9 @@ class LedgerSplitOperationResult(BaseModel):
     ``remerged_by`` names the registered operation that recombines the whole
     cohort. It archives the parent and the children and stores one new row for
     the parent's amount, so the parent's classification is entered again there.
+    That is why an agent splits only a parent with none of that work to set
+    aside: a parent classified by hand, or linking evidence or an attachment, is
+    refused to it.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -191,7 +202,13 @@ class LedgerSplitExecutor:
         request: OperationRequest[LedgerSplitRequest],
         context: OperationExecutorContext,
     ) -> str:
-        """Resolve and mutate the exact profile's current split cohort."""
+        """Resolve and mutate the exact profile's current split cohort.
+
+        An execution admitted on the MCP frontend is refused with
+        ``FRONTEND_DENIED`` when the parent carries the person's work, after the
+        parent is read and before any effect is declared. The access resolver
+        sees the request and not the stored row, so the executor decides here.
+        """
         payload = request.payload
         bucket_id = str(payload.profile_id)
         if request.definition_id != LEDGER_SPLIT_OPERATION_DEFINITION_ID:
@@ -201,8 +218,9 @@ class LedgerSplitExecutor:
         actor = execution_actor_label(
             self._execution_caller_reader, context, supplied=payload.actor or bucket_id or "operator"
         )
+        for_agent = execution_admitted_on_mcp(self._execution_caller_reader, context)
 
-        def split() -> LedgerSplitOperationResult:
+        def load() -> _SplitParent:
             operation: PinnedAuthorityOperation = context.authority_operation
             ports = self._ports_factory(bucket_id=bucket_id, operation=operation)
             require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
@@ -212,7 +230,18 @@ class LedgerSplitExecutor:
             )
             catalogue, revision_id = revisioned_repository.load_revisioned()
             transaction_id = resolve_transaction_id(payload.transaction_id, catalogue.transactions)
-            current = catalogue.transactions[transaction_id]
+            if for_agent:
+                _require_parent_without_the_persons_work(catalogue.transactions[transaction_id])
+            return _SplitParent(
+                ports=ports,
+                repository=revisioned_repository,
+                catalogue=catalogue,
+                revision_id=revision_id,
+                transaction_id=transaction_id,
+            )
+
+        def split(parent: _SplitParent) -> LedgerSplitOperationResult:
+            current = parent.catalogue.transactions[parent.transaction_id]
             children = tuple(
                 SplitChildCommand(
                     amount=_decode_decimal(child.amount),
@@ -222,20 +251,20 @@ class LedgerSplitExecutor:
             )
             _preflight_result(
                 profile_id=payload.profile_id,
-                parent_transaction_id=transaction_id,
+                parent_transaction_id=parent.transaction_id,
                 child_count=len(children),
                 parent_business_classification=current.business_classification,
             )
             pinned_repository = PinnedRevisionedTransactionRepository(
-                repository=revisioned_repository,
-                catalogue=catalogue,
-                revision_id=revision_id,
+                repository=parent.repository,
+                catalogue=parent.catalogue,
+                revision_id=parent.revision_id,
                 action="split",
             )
-            pinned_ports = replace(ports, transaction_repository=pinned_repository)
+            pinned_ports = replace(parent.ports, transaction_repository=pinned_repository)
             result = split_transaction(
                 bucket_id=bucket_id,
-                transaction_id=transaction_id,
+                transaction_id=parent.transaction_id,
                 children=children,
                 actor=actor,
                 source_command="aeat app ledger split",
@@ -244,20 +273,54 @@ class LedgerSplitExecutor:
             )
             return _operation_result(
                 profile_id=payload.profile_id,
-                expected_parent_id=transaction_id,
+                expected_parent_id=parent.transaction_id,
                 expected_children=children,
                 result=result,
             )
 
         async def commit() -> str:
             async with context.cancellation.irreversible_section():
+                # The parent is read, and an agent's split of the person's work refused, before
+                # any effect is declared; the split then commits against this same snapshot.
+                parent = await asyncio.to_thread(load)
                 await context.events.effect(OperationEffect.UNKNOWN)
-                projection = await asyncio.to_thread(split)
+                projection = await asyncio.to_thread(split, parent)
                 await context.events.effect(OperationEffect.UPDATED)
                 execution = LedgerSplitExecutionResult(profile_id=payload.profile_id, result=projection)
                 return await context.operands.put(execution, written_at=now())
 
         return await await_cancellation_complete(commit(), task_name="ledger-split-commit")
+
+
+@dataclass(frozen=True, slots=True)
+class _SplitParent:
+    """The ledger snapshot one split reads its parent from and commits against."""
+
+    ports: LedgerActionPorts
+    repository: RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
+    catalogue: TransactionCatalogue
+    revision_id: str
+    transaction_id: str
+
+
+def _require_parent_without_the_persons_work(parent: Transaction) -> None:
+    """Refuse an agent's split of a parent that carries work the split would set aside.
+
+    A split keeps the parent stored, but its classification, evidence and
+    attachments pass to none of the children, and only the merge, which waits
+    for the person, recombines the rows. A parent counts as carrying the
+    person's work when it was classified by hand (the stamp a person's
+    classification leaves, which a rule, the pipeline and a model's suggestion
+    do not use, so an unprocessed row has none), or links purchase-invoice
+    evidence, an invoice or an attachment.
+    """
+    if (
+        parent.classified_by == CLASSIFIED_BY_MANUAL
+        or parent.purchase_invoice_evidence_id is not None
+        or parent.invoice_id is not None
+        or parent.attachment_ids
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
 
 
 def _decode_decimal(value: str) -> Decimal:

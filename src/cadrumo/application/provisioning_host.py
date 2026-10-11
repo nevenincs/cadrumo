@@ -33,6 +33,7 @@ from pydantic import Field, model_validator
 
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import pydantic_validation_boundary
+from ..core.loopback_endpoint import endpoint_host_is_loopback
 from ..core.storage_taxonomy import StorageCategory
 from ..core.storage_taxonomy_locations import storage_path
 from ..core.type_guards import is_object_dict
@@ -63,11 +64,9 @@ __all__ = [
     "locate_runtime_executable",
     "probe_runtime_host",
     "read_runtime_version",
-    "runtime_endpoint_is_local",
     "start_runtime",
 ]
 
-_LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
 _START_POLL_INTERVAL_S = 0.5
 
 
@@ -171,12 +170,6 @@ def available_runtime_installer(
     return _located_installer(resolved, which)[0]
 
 
-def runtime_endpoint_is_local(chat_url: str) -> bool:
-    """Return whether the configured endpoint names this machine's loopback interface."""
-    host = urlsplit(chat_url).hostname or ""
-    return host.lower() in _LOOPBACK_HOSTS
-
-
 def read_runtime_version(settings: Settings | None = None) -> str | None:
     """Return the runtime's reported version, or ``None`` when nothing answers."""
     resolved = settings if settings is not None else load_settings()
@@ -226,7 +219,7 @@ def probe_runtime_host(
     resolved = settings if settings is not None else load_settings()
     host_platform = platform if platform is not None else current_runtime_platform()
     endpoint = resolved.cadrumo_llm_ollama_chat_url
-    local = runtime_endpoint_is_local(endpoint)
+    local = endpoint_host_is_loopback(endpoint)
     executable = locate_runtime_executable(platform=host_platform, which=which)
     version = read_runtime_version(resolved)
     installer = available_runtime_installer(platform=host_platform, which=which)
@@ -316,7 +309,7 @@ def start_runtime(
             already_running=True,
             facts={"runtime_url": endpoint, "runtime_reachable": True, "already_running": True},
         )
-    if not runtime_endpoint_is_local(endpoint):
+    if not endpoint_host_is_loopback(endpoint):
         return _start_refusal(
             ProvisioningPreconditionCondition.RUNTIME_ENDPOINT_LOCAL,
             {"runtime_url": endpoint, "endpoint_local": False},

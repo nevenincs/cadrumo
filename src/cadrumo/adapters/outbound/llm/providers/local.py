@@ -3,8 +3,9 @@
 Speaks the Ollama ``/api/chat`` endpoint (resolved per call from
 ``Settings.cadrumo_llm_ollama_chat_url``) and adapts its response into the
 :class:`~llm.providers.base.ProviderCompletion` shape.
-The adapter assumes the runtime is reachable on localhost; remote Ollama
-deployments are out of scope.
+A request to a loopback endpoint never goes through a proxy and never follows a
+redirect; a request to any other endpoint keeps the HTTP client's ordinary
+environment-proxy behaviour.
 
 For multimodal evidence, :func:`rasterise_pdf_pages_to_base64_png` renders an
 in-memory PDF to base64 PNG pages fully on-host so a local vision model can read
@@ -25,6 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import load_settings
 from .....core.config_support import LLMProvider
+from .....core.loopback_endpoint import endpoint_host_is_loopback
 from .....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ..errors import LLMPdfRasterisationError
 from .base import (
@@ -172,6 +174,21 @@ class LocalAdapter(ProviderAdapter):
         """
         self._timeout_s = timeout_s
 
+    def _http_client(self, chat_url: str) -> httpx.AsyncClient:
+        """Return the HTTP client for ``chat_url``.
+
+        The choice is made on the URL the request is about to use, so no setting
+        read elsewhere can steer a request that was approved as loopback onto a
+        proxy. A loopback endpoint is reached directly: the client ignores proxy
+        environment variables and the system proxy, which would otherwise carry
+        the request, and the document text in it, off this machine, and it does
+        not follow a redirect to another host. Any other endpoint is a remote
+        reader the person chose, and keeps the client's default behaviour.
+        """
+        if endpoint_host_is_loopback(chat_url):
+            return httpx.AsyncClient(timeout=self._timeout_s, trust_env=False, follow_redirects=False)
+        return httpx.AsyncClient(timeout=self._timeout_s)
+
     @override
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:
         """Execute a chat completion request against the local endpoint.
@@ -196,10 +213,11 @@ class LocalAdapter(ProviderAdapter):
             user_message["images"] = [image.base64_data for image in request.images]
         messages.append(user_message)
         settings = load_settings()
-        async with httpx.AsyncClient(timeout=self._timeout_s) as client:
+        chat_url = settings.cadrumo_llm_ollama_chat_url
+        async with self._http_client(chat_url) as client:
             response = await post_provider_request(
                 client,
-                settings.cadrumo_llm_ollama_chat_url,
+                chat_url,
                 provider_name=LLMProvider.LOCAL.value,
                 model=request.model,
                 logger=_LOG,

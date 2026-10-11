@@ -164,8 +164,9 @@ def _bind_exact_profile_access(
 
     A replay must replay this profile's period-independent submission of the
     same operation. It need not come from the submitting destination or
-    frontend: observing and reading an admitted operation are caller-independent,
-    and the runtime still checks the current destination's own disclosure scope.
+    frontend: observing and reading an admitted operation are caller-independent
+    here, and the runtime still checks the current destination's own disclosure
+    scope and withholds from an MCP reader what a person's execution sealed.
     """
     if profile_id != context.profile_id or request.subject_ref != _profile_subject(str(profile_id)):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)

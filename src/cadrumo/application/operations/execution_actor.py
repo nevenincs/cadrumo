@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, slots=True)
 class OperationExecutionCaller:
-    """The frontend and session one executing invocation was admitted through."""
+    """The frontend one executing invocation was admitted on, and the session carrying it."""
 
     frontend: OperationFrontendProjection
     session_kind: SessionKind

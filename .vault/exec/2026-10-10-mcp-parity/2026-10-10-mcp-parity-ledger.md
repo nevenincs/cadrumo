@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:00ffb6893d9fd8ea43d86a0108bc5ba92cf7326b0182cc78e6b1b31c12041074'
+body_hash: 'sha256:c221306163686b069c39d0edcddef41ca809178578a7fa94178a0a5423a88e92'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -875,6 +875,67 @@ related:
 - `S19` `verify:` `ruff format --check` -> `pass`
 - `S19` `verify:` `ty check --python-platform linux` -> `pass`
 - `S19` `by:` `vaultspec-standard-executor`
+- `S42` `M` `src/cadrumo/adapters/outbound/llm/providers/local.py`
+- `S42` `M` `src/cadrumo/application/ledger/agent_reader_locality.py`
+- `S42` `M` `src/cadrumo/application/ledger/history_operation.py`
+- `S42` `M` `src/cadrumo/application/operations/access_resolution.py`
+- `S42` `M` `src/cadrumo/application/operations/provenance.py`
+- `S42` `M` `src/cadrumo/application/provisioning_host.py`
+- `S42` `M` `src/cadrumo/application/tests/test_provisioning_host.py`
+- `S42` `M` `src/cadrumo/application/user_profile/profile_operation_access.py`
+- `S42` `M` `src/cadrumo/entrypoints/runtime/operation_authority.py`
+- `S42` `A` `src/cadrumo/adapters/outbound/llm/tests/test_local_loopback_transport.py`
+- `S42` `A` `src/cadrumo/core/loopback_endpoint.py`
+- `S42` `A` `src/cadrumo/core/tests/test_loopback_endpoint.py`
+- `S42` `A` `src/cadrumo/entrypoints/runtime/tests/test_operation_admitting_frontend_release.py`
+- `S42` `verify:` `pytest model adapter directory (656 tests)` -> `pass`
+- `S42` `verify:` `pytest ledger, invoices, operations, inventory, auth, application and core suites (5838 collected, the failures of this work fixed and re-run)` -> `pass`
+- `S42` `verify:` `pytest runtime tests without the supervised ones (400 of 409 tests)` -> `pass`
+- `S42` `verify:` `pytest entrypoint suite including executor conformance (2188 of 2195 tests)` -> `pass`
+- `S42` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S42` `verify:` `ruff check (30 files)` -> `pass`
+- `S42` `verify:` `ruff format --check (30 files)` -> `pass`
+- `S42` `verify:` `ty check --python-platform linux (30 files)` -> `pass`
+- `S42` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S42` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S32` `M` `src/cadrumo/application/ledger/actions_classification.py`
+- `S32` `M` `src/cadrumo/application/ledger/classify_patch.py`
+- `S32` `M` `src/cadrumo/application/ledger/classify_requests.py`
+- `S32` `M` `src/cadrumo/entrypoints/tests/test_ledger_classification_actor_by_frontend.py`
+- `S32` `verify:` `pytest model adapter directory (656 tests)` -> `pass`
+- `S32` `verify:` `pytest ledger, invoices, operations, inventory, auth, application and core suites (5838 collected, the failures of this work fixed and re-run)` -> `pass`
+- `S32` `verify:` `pytest runtime tests without the supervised ones (400 of 409 tests)` -> `pass`
+- `S32` `verify:` `pytest entrypoint suite including executor conformance (2188 of 2195 tests)` -> `pass`
+- `S32` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S32` `verify:` `ruff check (30 files)` -> `pass`
+- `S32` `verify:` `ruff format --check (30 files)` -> `pass`
+- `S32` `verify:` `ty check --python-platform linux (30 files)` -> `pass`
+- `S32` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S32` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S35` `M` `src/cadrumo/entrypoints/tests/test_ledger_row_mutation_mcp_admission.py`
+- `S35` `verify:` `pytest model adapter directory (656 tests)` -> `pass`
+- `S35` `verify:` `pytest ledger, invoices, operations, inventory, auth, application and core suites (5838 collected, the failures of this work fixed and re-run)` -> `pass`
+- `S35` `verify:` `pytest runtime tests without the supervised ones (400 of 409 tests)` -> `pass`
+- `S35` `verify:` `pytest entrypoint suite including executor conformance (2188 of 2195 tests)` -> `pass`
+- `S35` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S35` `verify:` `ruff check (30 files)` -> `pass`
+- `S35` `verify:` `ruff format --check (30 files)` -> `pass`
+- `S35` `verify:` `ty check --python-platform linux (30 files)` -> `pass`
+- `S35` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S35` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S37` `M` `src/cadrumo/entrypoints/tests/test_ledger_row_mutation_mcp_admission.py`
+- `S37` `M` `src/cadrumo/entrypoints/tests/test_modelo_work_mcp_admission.py`
+- `S37` `A` `src/cadrumo/entrypoints/tests/test_operation_mcp_attribution_census.py`
+- `S37` `verify:` `pytest model adapter directory (656 tests)` -> `pass`
+- `S37` `verify:` `pytest ledger, invoices, operations, inventory, auth, application and core suites (5838 collected, the failures of this work fixed and re-run)` -> `pass`
+- `S37` `verify:` `pytest runtime tests without the supervised ones (400 of 409 tests)` -> `pass`
+- `S37` `verify:` `pytest entrypoint suite including executor conformance (2188 of 2195 tests)` -> `pass`
+- `S37` `verify:` `pytest harness suite (250 tests)` -> `pass`
+- `S37` `verify:` `ruff check (30 files)` -> `pass`
+- `S37` `verify:` `ruff format --check (30 files)` -> `pass`
+- `S37` `verify:` `ty check --python-platform linux (30 files)` -> `pass`
+- `S37` `verify:` `basedpyright on the changed production files` -> `pass`
+- `S37` `verify:` `lint-imports (15 contracts)` -> `pass`
 
 ## Notes
 
@@ -910,3 +971,7 @@ related:
 - `S35` Follow-up: restore refused nothing for rows a merge had replaced, so an original could be reactivated beside the merged row and counted twice. Restore now refuses while the row that replaced it is active, in both directions, and stays allowed once that row is archived.
 - `S37` Follow-up: invoice add and update recorded a fixed actor for every frontend and now record the session label for an agent; bulk classification recorded a file command as its source for an agent, who sends the table and no file, and now records the operation.
 - `S19` Each clause is proven with a real runtime, session authority, encrypted profile, IPC and MCP adapter, with the profile worker as a separate process; only the native login, the keychain and the runtime clock are ports. Idle expiry is shown in two halves because the clock seam moves the runtime and not the worker: a live session is retired when the runtime clock passes the idle deadline, and a stored sign-in sixteen minutes old is refused, removed and replaced only by a new sign-in. No test shows one live session crossing the deadline and its stored record then expiring by itself. The fresh-process test that starts a child runtime and the installed server also passes on this machine.
+- `S42` Second review. A request to a loopback endpoint is now sent by a client that ignores environment and system proxy configuration and follows no redirect, chosen from the address about to be used; the guard and the adapter share one definition of a loopback endpoint, strict about credentials where a read is authorised. The adapter still resolves its endpoint when it sends, as the product always did, so nothing forces it to match the settings the guard read if they change in between. Separately, a reader on the MCP frontend is released a result, a result page, a review projection or error detail only for an operation whose stored admission names MCP; a replay from MCP of an operation admitted elsewhere returns its receipt and no content; and a resumed operation is sealed and attributed by its stored admission. The typed ledger history gives its currency field the canonical annotation.
+- `S32` Second review, Step reopened. Bulk classification is the write of single classification for many rows, so it no longer lists MCP and waits with single classification, add and update on the replay-identity and provenance decisions; the four rows carry one prerequisite that says so. Each bulk row now passes through the code single classification uses on every frontend: an unknown category, a six-decimal amount, a share on a row that is not mixed and a mixed row without a share each fail that row.
+- `S35` Second review. A manual split is not reversible by an agent: the parent keeps its classification, evidence and attachments and only the approval-bound merge recombines it. An agent split of a parent that carries a classification made by hand, linked evidence, a linked invoice or attachments is refused in the executor before any effect; other parents split as before.
+- `S37` Second review. Inventory create, movement and valuation record the session label for an agent. A census over the registry fails when a definition open to MCP has an attribution field that no named test proves is session-derived, and when an entry goes stale.

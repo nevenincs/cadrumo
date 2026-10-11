@@ -2,8 +2,9 @@
 
 The production registry and the real executors run over a stored profile with
 a session host that answers for the frontend that admitted the invocation.
-Each operation below stores who acted from a label the request carries, and
-for an execution admitted on the MCP frontend that label is the session's.
+Each operation below stores who acted from a label the request carries, or
+from a fixed runtime label where the request carries none, and for an
+execution admitted on the MCP frontend that label is the session's.
 """
 
 from __future__ import annotations
@@ -20,6 +21,9 @@ from ...adapters.persistence.profile.modelo_reconciliation import ModeloReconcil
 from ...application.bucket_event_repository import bucket_event_history_repository
 from ...application.inventory.registered_requests import (
     INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID,
+    INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
+    INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
     InventoryClosingAuthorityRecordRequest,
 )
 from ...application.inventory.tests.registered_operation_conformance_support import (
@@ -423,3 +427,48 @@ def test_invoice_update_records_the_session_label_for_an_agent(
         )
         assert isinstance(result, InvoiceUpdateResult)
         assert _event_actors(profile_id, result.bucket_event_ids) == {recorded}
+
+
+@pytest.mark.parametrize(
+    "definition_id",
+    [
+        INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+        INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
+        INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
+    ],
+)
+@pytest.mark.parametrize(
+    ("frontend", "recorded"),
+    [(_MCP, _AGENT_LABEL), (_CLI, "runtime")],
+    ids=["mcp", "cli"],
+)
+def test_inventory_writes_without_a_typed_label_record_the_session_for_an_agent_and_the_runtime_otherwise(
+    tmp_path: Path,
+    definition_id: str,
+    frontend: OperationFrontendProjection,
+    recorded: str,
+) -> None:
+    """These requests carry no label, so the person's frontends keep the fixed runtime label."""
+    with conformance._runtime(
+        tmp_path / "runtime",
+        cleanup=conformance._CloseWitness(),
+        execution_caller_reader=_session_host(definition_id, frontend),
+    ) as (driver, _registry, profile_id):
+        case = prepare_inventory_operation_conformance_case(
+            definition_id, profile_id, ports_factory=build_inventory_service_ports
+        )
+        history = bucket_event_history_repository(bucket_id=str(profile_id))
+        before = set(history.load().events)
+
+        _submitted, observed = asyncio.run(
+            driver.run(
+                definition_id=definition_id,
+                subject_ref=profile_operation_subject(str(profile_id)),
+                payload=case.request,
+            )
+        )
+
+        assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        appended = [event for event_id, event in history.load().events.items() if event_id not in before]
+        assert appended
+        assert {event.actor for event in appended} == {recorded}

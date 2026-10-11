@@ -29,7 +29,6 @@ from ..provisioning_host import (
     locate_runtime_executable,
     probe_runtime_host,
     read_runtime_version,
-    runtime_endpoint_is_local,
     start_runtime,
 )
 
@@ -172,19 +171,6 @@ def test_installer_availability_per_platform(
     expected: RuntimeInstaller,
 ) -> None:
     assert available_runtime_installer(platform=platform, which=_lookup(found)) is expected
-
-
-@pytest.mark.parametrize(
-    ("url", "local"),
-    [
-        ("http://127.0.0.1:11434/api/chat", True),
-        ("http://localhost:11434/api/chat", True),
-        ("http://[::1]:11434/api/chat", True),
-        ("http://gpu-box.lan:11434/api/chat", False),
-    ],
-)
-def test_endpoint_locality(url: str, local: bool) -> None:
-    assert runtime_endpoint_is_local(url) is local
 
 
 def test_version_is_read_from_a_real_endpoint_and_absent_from_a_closed_one() -> None:

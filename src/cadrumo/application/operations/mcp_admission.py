@@ -65,6 +65,12 @@ class McpAdmissionPrerequisite(StrEnum):
     """Nothing specific is outstanding, but the definition has not been taken through admission."""
     RESULT_TEXT_BOUND = "result_text_bound"
     """A result field carries text from outside the application that no contract bounds."""
+    PRODUCT_DECISION = "product_decision"
+    """Admission waits on a product decision not yet accepted.
+
+    Today that is the replay identity of an effectful submission and the marking
+    of amounts an agent states.
+    """
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,6 +125,7 @@ _FILES: Final = McpAdmissionPrerequisite.FILE_EXCHANGE
 _SAFEGUARD: Final = McpAdmissionPrerequisite.SAFEGUARD_MOVE
 _CHECKLIST: Final = McpAdmissionPrerequisite.ADMISSION_CHECKLIST
 _TEXT: Final = McpAdmissionPrerequisite.RESULT_TEXT_BOUND
+_DECISION: Final = McpAdmissionPrerequisite.PRODUCT_DECISION
 
 _ACCESS: Final = McpExclusionReason.ACCESS_ADMINISTRATION
 _CANNOT_RUN: Final = McpExclusionReason.CANNOT_RUN_FROM_MCP
@@ -231,17 +238,21 @@ _GOOGLE_AND_SHARING: Final = (
 # A ledger write that converts a foreign-currency amount looks its rate up at
 # the central bank, so those rows reach the network.
 _LEDGER_ENTRIES: Final = (
-    _admit("ledger.add", _WRITES_ONLINE, _SAFEGUARD),
+    # Add, update and both classifications state amounts and a classification as the person's
+    # own entry. Their input rules now live in the operations; what is still open is the product
+    # decision on a caller-supplied replay identity and on marking amounts an agent states.
+    _admit("ledger.add", _WRITES_ONLINE, _DECISION),
     _admit("ledger.allocate", _WRITES, _CHECKLIST),
     _admit("ledger.archive", _WRITES),
     # Attach links evidence already stored, by identifier, and takes no file.
     _admit("ledger.attach", _WRITES),
     _admit("ledger.check", _READS),
-    _admit("ledger.classify.bulk", _WRITES),
+    # A bulk row replaces a classification made by hand and stores only the new one, the same write as single.
+    _admit("ledger.classify.bulk", _WRITES, _DECISION),
     _admit("ledger.classify.iva-derive", _WRITES),
     # The model-backed reviews call the local reader at its endpoint setting, which can name another host.
     _admit("ledger.classify.review", _WRITES_ONLINE),
-    _admit("ledger.classify.single", _WRITES, _SAFEGUARD),
+    _admit("ledger.classify.single", _WRITES, _DECISION),
     _admit("ledger.counterparty", _WRITES),
     # Detach removes one row's link and keeps the attachment's stored bytes.
     _admit("ledger.detach", _WRITES),
@@ -277,13 +288,16 @@ _LEDGER_ENTRIES: Final = (
     # earlier value, so an agent may preview it but not run it.
     _admit("ledger.rule.apply", _WRITES, sensitive=("reaffirm",)),
     _admit("ledger.rule.list", _READS),
-    # A split keeps its parent stored; only the approval-bound merge recombines the cohort.
+    # A split keeps its parent stored; only the approval-bound merge recombines the cohort. A parent
+    # with a classification made by hand, linked evidence or attachments passes none of them to its
+    # children, so the executor refuses an agent's split of one; the resolver sees no stored row, so
+    # the variant cannot be named below.
     _admit("ledger.split.manual", _WRITES),
     _admit("ledger.split.review", _WRITES_ONLINE),
     _admit("ledger.stash", _WRITES),
     _admit("ledger.status", _READS),
     _admit("ledger.track", _READS),
-    _admit("ledger.update", _WRITES, _CHECKLIST),
+    _admit("ledger.update", _WRITES, _DECISION),
     _admit("ledger.view", _READS),
 )
 

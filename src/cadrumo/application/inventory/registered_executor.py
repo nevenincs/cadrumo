@@ -76,6 +76,9 @@ _SERVICE_INPUT_REASONS: dict[str, str] = {
 }
 
 
+_RUNTIME_ACTOR = "runtime"
+
+
 class InventoryOperationExecutor:
     """Run one inventory service call under the supervisor's profile custody."""
 
@@ -90,6 +93,10 @@ class InventoryOperationExecutor:
         self._ports_factory = ports_factory
         self._definition_id = definition_id
         self._execution_caller_reader = execution_caller_reader
+
+    def _recorded_actor(self, context: OperationExecutorContext) -> str:
+        """Name the session of an agent, and the runtime for the person's frontends."""
+        return execution_actor_label(self._execution_caller_reader, context, supplied=_RUNTIME_ACTOR)
 
     def _service(self, profile_id: UUID) -> InventoryService:
         profile = str(profile_id)
@@ -196,6 +203,8 @@ class InventoryOperationExecutor:
         profile_id: UUID,
         profile: str,
     ) -> str | OperationRefusalEvidence:
+        actor = self._recorded_actor(context)
+
         def create() -> InventoryLedgerResult:
             return self._service(profile_id).create(
                 bucket_id=profile,
@@ -203,7 +212,7 @@ class InventoryOperationExecutor:
                 year=request.year,
                 valuation_method=request.valuation_method,
                 opening_stock=Decimal(request.opening_stock.decimal),
-                actor="runtime",
+                actor=actor,
             )
 
         return await self._mutate(
@@ -240,6 +249,8 @@ class InventoryOperationExecutor:
                 request=request,
             )
 
+        actor = self._recorded_actor(context)
+
         def add_movement() -> InventoryLedgerResult:
             with validating_governed_facts(context.authority_operation):
                 return self._service(profile_id).movement_add(
@@ -247,7 +258,7 @@ class InventoryOperationExecutor:
                     actividad_id=request.actividad_id,
                     year=request.year,
                     movement=movement,
-                    actor="runtime",
+                    actor=actor,
                 )
 
         return await self._mutate(
@@ -266,12 +277,14 @@ class InventoryOperationExecutor:
         profile_id: UUID,
         profile: str,
     ) -> str | OperationRefusalEvidence:
+        actor = self._recorded_actor(context)
+
         def preview() -> InventoryValuationPreviewResult:
             return self._service(profile_id).valuation_preview(
                 bucket_id=profile,
                 actividad_id=request.actividad_id,
                 year=request.year,
-                actor="runtime",
+                actor=actor,
             )
 
         return await self._mutate(

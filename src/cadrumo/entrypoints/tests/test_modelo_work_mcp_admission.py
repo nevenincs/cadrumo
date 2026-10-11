@@ -18,6 +18,7 @@ from pydantic import BaseModel
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.application.bucket_event_repository import bucket_event_history_repository
 from cadrumo.application.modelo.calculation_request_fields import (
     ModeloCalculationInputFieldsV1,
     ModeloCalculationOverride,
@@ -51,6 +52,7 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.tests.modelo_operation_test_support import seeded_modelo_calculation_revision
@@ -290,3 +292,78 @@ def test_verification_stores_the_session_label_for_an_agent_and_the_supplied_lab
         report = VerificationReportCatalogueRepository().load().get(resolved.projection.verification_report_id)
         assert report is not None
         assert report.verified_by == recorded_actor
+
+
+def _work_session_host(frontend: OperationFrontendProjection) -> OperationExecutionCallerReader:
+    """A session host answering for the three preparation steps that record an actor."""
+
+    def read(identity: OperationIdentity) -> OperationExecutionCaller:
+        assert identity.definition_id in {"modelo.work.calculate", "modelo.work.create", "modelo.work.rename"}
+        return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.HUMAN, client_id=_SESSION_CLIENT)
+
+    return read
+
+
+@pytest.mark.parametrize(
+    ("frontend", "recorded_actor"),
+    [
+        (_MCP, f"agent:mcp.human.{_SESSION_CLIENT}"),
+        (_CLI, _SUPPLIED_ACTOR),
+        (_TUI, _SUPPLIED_ACTOR),
+    ],
+    ids=["mcp", "cli", "tui"],
+)
+def test_creation_calculation_and_rename_record_the_session_label_for_an_agent_and_the_supplied_one_otherwise(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    frontend: OperationFrontendProjection,
+    recorded_actor: str,
+) -> None:
+    """Every event the three real executors append names the label of the session that admitted them."""
+    with _runtime(
+        tmp_path / "preparation", cleanup=_CloseWitness(), execution_caller_reader=_work_session_host(frontend)
+    ) as (driver, _registry_in_use, profile_id):
+        unit, _revision_id = _seeded_unit(profile_id, operation=operation)
+        other_period = Period.from_year_and_code(unit.period.filing_year, "2T")
+        steps: tuple[tuple[str, str, BaseModel], ...] = (
+            (
+                "modelo.work.rename",
+                unit.work_unit_id,
+                ModeloWorkRenameRequest(
+                    work_unit_id=unit.work_unit_id,
+                    new_name="Renamed by the test",
+                    observed_name=unit.name,
+                    observed_updated_at=unit.updated_at,
+                    actor=_SUPPLIED_ACTOR,
+                ),
+            ),
+            (
+                "modelo.work.calculate",
+                unit.work_unit_id,
+                ModeloWorkCalculateRequest(work_unit_id=unit.work_unit_id, actor=_SUPPLIED_ACTOR),
+            ),
+            (
+                "modelo.work.create",
+                profile_operation_subject(str(profile_id)),
+                ModeloWorkCreateRequest(
+                    profile_id=profile_id,
+                    modelo=str(unit.modelo),
+                    period=PublicPeriod.from_period(other_period),
+                    actor=_SUPPLIED_ACTOR,
+                    allow_not_applicable=True,
+                ),
+            ),
+        )
+
+        for definition_id, subject_ref, payload in steps:
+            history = bucket_event_history_repository(bucket_id=str(profile_id))
+            before = set(history.load().events)
+
+            _submitted, observed = asyncio.run(
+                driver.run(definition_id=definition_id, subject_ref=subject_ref, payload=payload)
+            )
+
+            assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED, definition_id
+            appended = [event for event_id, event in history.load().events.items() if event_id not in before]
+            assert appended, definition_id
+            assert {event.actor for event in appended} == {recorded_actor}, definition_id

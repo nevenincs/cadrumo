@@ -139,22 +139,45 @@ def build_inventory_list_definition(ports_factory: InventoryServicePortsFactory)
     return _definition(INVENTORY_LIST_OPERATION_DEFINITION_ID, InventoryListRequest, ports_factory)
 
 
-def build_inventory_create_definition(ports_factory: InventoryServicePortsFactory) -> OperationDefinition:
+def build_inventory_create_definition(
+    ports_factory: InventoryServicePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Build the guarded exact-profile ledger-creation definition."""
-    return _definition(INVENTORY_CREATE_OPERATION_DEFINITION_ID, InventoryCreateRequest, ports_factory)
+    return _definition(
+        INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+        InventoryCreateRequest,
+        ports_factory,
+        execution_caller_reader,
+    )
 
 
-def build_inventory_movement_add_definition(ports_factory: InventoryServicePortsFactory) -> OperationDefinition:
+def build_inventory_movement_add_definition(
+    ports_factory: InventoryServicePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Build the guarded exact-profile movement append definition."""
-    return _definition(INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID, InventoryMovementAddRequest, ports_factory)
+    return _definition(
+        INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
+        InventoryMovementAddRequest,
+        ports_factory,
+        execution_caller_reader,
+    )
 
 
-def build_inventory_valuation_preview_definition(ports_factory: InventoryServicePortsFactory) -> OperationDefinition:
+def build_inventory_valuation_preview_definition(
+    ports_factory: InventoryServicePortsFactory,
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+) -> OperationDefinition:
     """Build the audited exact-profile valuation preview definition."""
     return _definition(
         INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
         InventoryValuationPreviewRequest,
         ports_factory,
+        execution_caller_reader,
     )
 
 

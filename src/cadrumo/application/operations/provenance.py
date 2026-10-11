@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal, Self
+from typing import TYPE_CHECKING, Literal, Self
 
 from pydantic import BaseModel, model_validator
 
@@ -11,6 +11,9 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..user_profile.access_contracts import AccessAction, AccessScope, OperationAccessRequest, ProfileAccessBinding
 from .models import OperationIdentity, OperationRequest
+
+if TYPE_CHECKING:
+    from .registry import OperationFrontendProjection
 
 
 class OperationAdmissionProvenance(BaseModel):
@@ -43,6 +46,11 @@ class OperationAdmissionProvenance(BaseModel):
         ):
             raise ValueError("admitted access must describe this invocation's profile and definition")
         return self
+
+    @property
+    def admitting_frontend(self) -> OperationFrontendProjection:
+        """The frontend whose session submitted this invocation, as the worker bound it at admission."""
+        return self.admitted_request.frontend
 
     def require_invocation[Payload: BaseModel](
         self, identity: OperationIdentity, request: OperationRequest[Payload]

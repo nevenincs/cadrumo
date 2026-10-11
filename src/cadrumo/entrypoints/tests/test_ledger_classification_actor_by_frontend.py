@@ -6,6 +6,12 @@ Each operation below records who acted, and for an execution admitted on the
 MCP frontend that label is the session's, whatever the request carries. The
 ratio verbs carry no label of their own, so the person's frontends record the
 operator label there.
+
+Bulk classification lists only the command line today, because it replaces a
+classification the person made by hand and keeps only the new one. Its two
+tests run the executor under a session host that answers for MCP, which the
+executor reads whatever the definition lists, so the actor and source command
+are held ready for the day the definition opens.
 """
 
 from __future__ import annotations
@@ -108,7 +114,10 @@ def _typed(request: BaseModel) -> BaseModel:
 def test_bulk_classification_records_the_session_label_for_an_agent(
     tmp_path: Path, operation: PinnedAuthorityOperation, frontend: OperationFrontendProjection
 ) -> None:
-    """Every classification event of the batch names the derived label, not the typed one."""
+    """Every classification event of the batch names the derived label, not the typed one.
+
+    The definition does not list MCP; the session host answers for it regardless.
+    """
     projection, events = _run(
         tmp_path,
         operation,

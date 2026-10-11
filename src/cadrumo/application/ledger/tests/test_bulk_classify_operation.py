@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import replace
 from datetime import UTC, datetime
+from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
@@ -16,6 +17,7 @@ from ....core.errors.hierarchy import InternalInvariantError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification
+from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ....domain.transactions.models import Transaction
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.execution_actor import OperationExecutionCaller
@@ -93,7 +95,7 @@ def test_request_is_strict_hides_csv_and_round_trips_through_public_schema() -> 
         operation.LedgerBulkClassifyRequest.model_validate({**request.model_dump(), "file": "private.csv"})
 
 
-def test_registration_requires_all_periods_commit_and_admits_the_cli_and_mcp_alike() -> None:
+def test_registration_requires_all_periods_commit_and_lists_only_the_command_line() -> None:
     def unused(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerActionPorts:
         raise AssertionError("access resolution must not compose profile storage")
 
@@ -112,9 +114,9 @@ def test_registration_requires_all_periods_commit_and_admits_the_cli_and_mcp_ali
         contract=registration.contract,
         published_authority=Availability.AVAILABLE,
     )
-    assert definition.permitted_frontends == frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}
-    )
+    # Bulk classification replaces a classification the person made by hand and keeps only the
+    # new one, so an agent may not submit it until the person's approval can stand in front of it.
+    assert definition.permitted_frontends == frozenset({OperationFrontendProjection.CLI})
     for frontend in definition.permitted_frontends:
         access = resolve_operation_access(
             registry=registry, request=public_request, context=replace(context, frontend=frontend)
@@ -266,6 +268,69 @@ def test_nonrevision_catalogue_port_refuses_before_mutation(subject: BulkClassif
     with pytest.raises(InternalInvariantError, match="revision-guarded"):
         asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(""), subject.context))
     assert subject.repository.loads == 0 and subject.repository.write_attempts == 0
+
+
+def _declared_irpf_category(authority: PinnedAuthorityOperation) -> str:
+    return ledger_irpf_category_catalogue(authority=authority)[0].id
+
+
+@pytest.mark.parametrize(
+    ("cells", "rule"),
+    [
+        ("BUSINESS,not-in-the-taxonomy,,", "an irpf_category the published taxonomy does not declare"),
+        ("BUSINESS,,100.123456,", "an amount with six decimals"),
+        ("BUSINESS,,,0.5", "a share on a classification that is not mixed"),
+        ("MIXED,,,", "a mixed classification without its share"),
+        ("MIXED,,,1.5", "a share outside zero to one"),
+    ],
+)
+def test_a_row_that_breaks_a_rule_of_single_classification_fails_alone_and_applies_nothing(
+    subject: BulkClassifySubject,
+    transactions: tuple[Transaction, Transaction],
+    cells: str,
+    rule: str,
+) -> None:
+    first, second = transactions
+    source = (
+        "transaction_id,classification,irpf_category,taxable_base,business_pct\n"
+        f"{first.transaction_id},{cells}\n"
+        f"{second.transaction_id},PERSONAL,,,\n"
+    )
+    asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(source), subject.context))
+
+    execution = cast(operation.LedgerBulkClassifyExecutionResult, subject.operands.values[-1])
+    result = execution.projection.result
+    assert result is not None, rule
+    assert (result.total, result.applied, result.skipped) == (2, 1, 0), rule
+    assert [failure.transaction_id for failure in result.failures] == [first.transaction_id], rule
+    stored = subject.repository.current.transactions
+    assert stored[first.transaction_id] == first, rule
+    assert stored[second.transaction_id].business_classification is BusinessClassification.PERSONAL
+
+
+def test_a_row_within_the_rules_of_single_classification_still_applies(
+    subject: BulkClassifySubject,
+    transactions: tuple[Transaction, Transaction],
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    category = _declared_irpf_category(authority_operation)
+    first, second = transactions
+    source = (
+        "transaction_id,classification,irpf_category,taxable_base,business_pct\n"
+        f"{first.transaction_id},BUSINESS,{category},100.50,\n"
+        f"{second.transaction_id},MIXED,,,0.25\n"
+    )
+    asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(source), subject.context))
+
+    execution = cast(operation.LedgerBulkClassifyExecutionResult, subject.operands.values[-1])
+    result = execution.projection.result
+    assert result is not None and not result.failures, result
+    assert result.applied == 2
+    stored = subject.repository.current.transactions
+    assert stored[first.transaction_id].irpf_category == category
+    assert stored[first.transaction_id].taxable_base == Decimal("100.5")
+    assert stored[second.transaction_id].business_classification is BusinessClassification.MIXED
+    assert stored[second.transaction_id].business_pct == Decimal("0.25")
 
 
 _SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")

@@ -147,8 +147,10 @@ def require_period_independent_replay_or_authority(
     replay this profile's period-independent admission of the operation. The
     replay binds no destination or frontend: a later session always has a new
     destination, its disclosures name that destination, and COMMIT is held to the
-    originally approved scope by the host. Any other action, and any action
-    without an admission, resolves against the host's held authority operation.
+    originally approved scope by the host. The host also decides, from the
+    admitting frontend it stored, whether an MCP reader is released what the
+    execution sealed. Any other action, and any action without an admission,
+    resolves against the host's held authority operation.
     """
     admitted = context.admitted_request
     if admitted is not None and context.action not in ADMISSION_ENTRY_ACTIONS:

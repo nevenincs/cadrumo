@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
@@ -195,20 +196,26 @@ class LedgerClassifyRequest(BaseModel):
 
     @model_validator(mode="after")
     def _selected_values_match_mask(self) -> LedgerClassifyRequest:
-        _require_primary_classification(self)
+        require_primary_classification(self.patch, self.patch_fields)
         _require_selected_patch_values(self)
         _require_m210_selection(self)
         _require_m210_declaration_answers(self)
         return self
 
 
-def _require_primary_classification(request: LedgerClassifyRequest) -> None:
-    selected = set(request.patch_fields)
-    classification_value = request.patch.business_classification
+def require_primary_classification(patch: LedgerClassifyPatch, patch_fields: Collection[str]) -> None:
+    """Require one assignable classification, with a share exactly when it is mixed.
+
+    Single and CSV classification apply this to each classification they write,
+    so a share on a row that is not mixed, or a mixed row without one, is
+    refused the same way on both.
+    """
+    selected = set(patch_fields)
+    classification_value = patch.business_classification
     if "business_classification" not in selected or classification_value is None:
         raise ValueError("ledger classify must select one business classification")
     classification = BusinessClassification(classification_value)
-    business_pct_selected = "business_pct" in selected and request.patch.business_pct is not None
+    business_pct_selected = "business_pct" in selected and patch.business_pct is not None
     if (classification is BusinessClassification.MIXED) != business_pct_selected:
         raise ValueError("mixed classification requires exactly one business percentage")
 

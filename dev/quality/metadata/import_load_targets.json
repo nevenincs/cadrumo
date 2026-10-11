@@ -1947,6 +1947,7 @@
         "cadrumo.core.locks",
         "cadrumo.core.locks_errors",
         "cadrumo.core.logging",
+        "cadrumo.core.loopback_endpoint",
         "cadrumo.core.model_catalogue",
         "cadrumo.core.modelo",
         "cadrumo.core.modelo_232_codigos",

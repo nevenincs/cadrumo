@@ -264,7 +264,7 @@ def build_ledger_bulk_classify_definition(
         executor_type=LedgerBulkClassifyExecutor,
         build=lambda: LedgerBulkClassifyExecutor(ports_factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
-        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.MCP}),
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI}),
         refusal_detail_codes=frozenset({LEDGER_BULK_CLASSIFY_VALIDATION_REFUSAL_CODE}),
     )
 
@@ -272,7 +272,11 @@ def build_ledger_bulk_classify_definition(
 def resolve_ledger_bulk_classify_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    """Require the exact profile, all-period disclosure and mutation authority."""
+    """Require the exact profile, all-period disclosure and mutation authority.
+
+    The resolver does not tell frontends apart; the definition's frontend list
+    decides who may submit.
+    """
     if request.definition_id != LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID or not isinstance(
         request.payload, LedgerBulkClassifyRequest
     ):

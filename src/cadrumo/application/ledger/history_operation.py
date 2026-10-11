@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_va
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.parsing.codes import IsoCurrencyCode
 from ...core.time.utc import validate_utc_aware
 from ...domain.buckets.event import (
     BUCKET_ACTOR_LABEL_MAX_LENGTH,
@@ -107,7 +108,7 @@ class LedgerHistoryEventDetails(BaseModel):
     mutation_kind: _DetailValue | None = None
     direction: _DetailValue | None = None
     amount: _DetailValue | None = None
-    currency: _DetailValue | None = None
+    currency: IsoCurrencyCode | None = None
     business_pct: _DetailValue | None = None
     usage_ratio_id: _DetailValue | None = None
     prorrata_reference: _DetailValue | None = None
