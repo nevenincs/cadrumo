@@ -3,6 +3,11 @@
 Only profile discovery and first-profile registration use the local bootstrap
 adapters. Every existing-profile session proves its credential to the verified
 runtime. The frontend never inherits registration or ambient local custody.
+
+The installation area needs no session, so it is offered before any exists:
+from the sign-in screen, from first registration, and when the profiles cannot
+be listed at all. Whenever one of its acts may have changed the profile set,
+the profiles are read again before anything else is shown.
 """
 
 from __future__ import annotations
@@ -32,10 +37,12 @@ from ...application.user_profile.profile_record_repository import close_active_p
 from ...core.async_cleanup import AsyncResourceCleanupError
 from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.external_constants import OutputLanguage
-from ...core.i18n.render import output_language
+from ...core.i18n.render import output_language, tr
 from ...core.logging import get_logger
 from ..adapter_composition import profile_adapter_composition
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
+from .components.host import ScreenHostApp
+from .installation.destination import InstallationScreen
 from .launcher import run_precomposed_runtime_root_session
 from .runtime_admission import runtime_login_session
 from .runtime_workbench import RuntimeWorkbenchRoot
@@ -44,12 +51,16 @@ from .secret.runtime_login_contracts import RuntimeLoginMethod
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
+    from textual.screen import Screen
 
 SESSION_COMPLETED = 0
 """The operator ended or abandoned the session."""
 
 SESSION_INVENTORY_UNAVAILABLE = 1
 """Profile discovery or runtime admission could not be served truthfully."""
+
+_UNLISTED_STATES = frozenset({ProfileLoginInventoryState.CONCURRENT_CHANGE, ProfileLoginInventoryState.DEGRADED})
+"""Observations that could not say which profiles exist."""
 
 _LOGGER = get_logger(__name__)
 
@@ -62,8 +73,45 @@ def _release_bootstrap_custody() -> None:
         close_active_bucket_session()
 
 
+class _ProfileSetWatch:
+    """Remember whether an installation act may have changed which profiles exist."""
+
+    def __init__(self) -> None:
+        self.changed = False
+
+    def note(self) -> None:
+        """Record that the profiles must be read again."""
+        self.changed = True
+
+    def installation_area(self, report_change: Callable[[], None], /, *, locale: str | None = None) -> Screen[None]:
+        """Build the installation area for a screen that has no session to offer it from."""
+
+        def changed() -> None:
+            self.note()
+            report_change()
+
+        return InstallationScreen(on_records_changed=changed, locale=locale)
+
+
+def _run_installation_area(reason_code: str) -> bool:
+    """Offer the installation area alone when the profiles cannot be listed.
+
+    Repairing an installation is most needed exactly when its profiles cannot
+    be read, and the acts need none of them. Returns whether an act may have
+    changed the profile set.
+    """
+    watch = _ProfileSetWatch()
+    notice = tr("tui.installation.inventory_unavailable", reason=reason_code)
+    ScreenHostApp(InstallationScreen(on_records_changed=watch.note, notice=notice)).run()
+    return watch.changed
+
+
 def _run_registration_screen() -> bool:
-    """Create the first profile, finish recovery, then release bootstrap custody."""
+    """Create the first profile, finish recovery, then release bootstrap custody.
+
+    Returns whether the profiles should be read again: a profile was created
+    here, or an installation act opened from this screen may have changed them.
+    """
     from ...core.credentials import assess_profile_password
     from .secret.credentials import run_credential_screen
     from .secret.registration import (
@@ -72,6 +120,7 @@ def _run_registration_screen() -> bool:
         build_profile_registration_attempt,
     )
 
+    watch = _ProfileSetWatch()
     try:
         diagnostic_event(_LOGGER, "tui_registration_opened", fields={"stage": "bootstrap_registration"})
         outcome = run_credential_screen(
@@ -79,6 +128,7 @@ def _run_registration_screen() -> bool:
                 assess=assess_profile_password,
                 register=build_profile_registration_attempt,
                 enroll_recovery=build_profile_recovery_enrollment_attempt,
+                installation_factory=watch.installation_area,
             )
         )
         diagnostic_event(
@@ -89,7 +139,7 @@ def _run_registration_screen() -> bool:
                 "profile_persisted": outcome is not None,
             },
         )
-        return outcome is not None
+        return outcome is not None or watch.changed
     finally:
         _release_bootstrap_custody()
 
@@ -129,17 +179,21 @@ async def _run_runtime_session(
             open_client=_open_client,
         )
 
+    watch = _ProfileSetWatch()
     async with runtime_login_session(
         choices=inventory.choices,
         open_client=_open_client,
         open_credential_client=_open_credential_client,
         requester_factory=requester_for_login,
+        installation_factory=watch.installation_area,
         preselected=None if choose_profile else inventory.preselected_profile_id,
         headless=headless,
         auto_pilot=auto_pilot,
     ) as handoff:
         if handoff is None:
-            return None
+            # The sign-in screen closed itself because its profile list may be
+            # out of date: the choice is made again from a fresh reading.
+            return AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.CHANGE_USER) if watch.changed else None
         if handoff.method in {RuntimeLoginMethod.API_KEY, RuntimeLoginMethod.API_REFERENCE}:
             from .runtime_session import RuntimeRestrictedSessionApp
 
@@ -199,7 +253,7 @@ async def _run_runtime_session(
 
 
 def _unavailable_inventory(inventory: ProfileLoginInventoryV1) -> int | None:
-    if inventory.state not in {ProfileLoginInventoryState.CONCURRENT_CHANGE, ProfileLoginInventoryState.DEGRADED}:
+    if inventory.state not in _UNLISTED_STATES:
         return None
     diagnostic_event(
         _LOGGER,
@@ -288,6 +342,12 @@ def run_installed_workbench_session(
                 "tui_inventory_observed",
                 fields={"inventory_state": inventory.state.value, "profile_count": len(inventory.choices)},
             )
+            if (
+                not headless
+                and inventory.state in _UNLISTED_STATES
+                and _run_installation_area(inventory.reason_code or inventory.state.value)
+            ):
+                continue
             unavailable = _unavailable_inventory(inventory)
             if unavailable is not None:
                 return unavailable

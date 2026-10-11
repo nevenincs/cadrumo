@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from threading import Lock
 from typing import TYPE_CHECKING
@@ -34,6 +35,7 @@ from .declarations.routes import declarations_screen_factory
 from .google_saved_review import GoogleSavedReviewScreen
 from .historical_export import HistoricalFilingExportScreen
 from .home import HomeScreen
+from .installation.destination import installation_screen_factory
 from .ledger.routes import ledger_screen_factory
 from .modelo.lifecycle import ModeloWorkspaceLifecycleDoor
 from .modelo.runtime_lifecycle import compose_runtime_modelo_lifecycle_door
@@ -41,9 +43,12 @@ from .modelo.runtime_work_create import compose_runtime_calendar_create_handoff,
 from .modelo.runtime_workbench_reads import RuntimeModeloWorkbenchSource
 from .modelo.workbench.installed import compose_installed_modelo_workbench_factory
 from .navigation import TuiScreenContextV1, TuiScreenFactoryV1, build_destination_catalogue
+from .operations.catalogue import OperationCatalogueSourceV1, production_operation_registry
+from .operations.destination import OperationsDestinationV1
 from .profile.runtime_manager import RuntimeProfileManagerComposition
 from .profile.runtime_overview import read_runtime_profile_overview
 from .reconciliation_export import ReconciliationExportScreen
+from .reference.destination import reference_screen_factory
 from .runtime_account import compose_runtime_account_factories
 from .runtime_account_session import read_runtime_account_session, runtime_account_session_reader
 from .runtime_actividad_asset import compose_runtime_activity_asset_actions
@@ -55,6 +60,7 @@ from .runtime_own_accounts import compose_runtime_own_account_door
 if TYPE_CHECKING:
     from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
     from ...application.aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
+    from ...application.operations.registry import OperationRegistry
     from ...application.user_profile.overview import ProfileOverview
     from ...application.workbench_generation_contracts import WorkbenchGenerationV1
     from .navigation import TuiDestinationCatalogueV1
@@ -192,11 +198,17 @@ class RuntimeWorkbenchRoot:
         output_language: OutputLanguage,
         open_recovery_client: RecoveryClientOpener,
         requester_factory: HumanAutomationRequesterFactory | None = None,
+        operation_registry: Callable[[], OperationRegistry] = production_operation_registry,
     ) -> None:
-        """Pin a TUI client and its explicit capture language without performing I/O."""
+        """Pin a TUI client and its explicit capture language without performing I/O.
+
+        ``operation_registry`` is composed on first use and once only, however
+        many generations this root captures.
+        """
         if client.frontend is not OperationFrontendProjection.TUI:
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         self._client = client
+        self._operations = OperationsDestinationV1(client, OperationCatalogueSourceV1(operation_registry))
         self._profile_id, self._session_id = client.profile_id, client.session_id
         self._label, self._language = profile_label, output_language
         self._open_recovery_client = open_recovery_client
@@ -240,6 +252,9 @@ class RuntimeWorkbenchRoot:
         admissions: dict[str, WorkbenchDestinationAdmission] = {
             "workbench.home": _available("workbench.home"),
             "workbench.profile": _available("workbench.profile"),
+            "workbench.operations": _available("workbench.operations"),
+            "workbench.installation": _available("workbench.installation"),
+            "workbench.reference": _available("workbench.reference"),
             "workbench.ledger": generation.ledger_admission,
             "workbench.declarations": generation.declarations_admission,
             "workbench.aeat_sync": generation.aeat_sync_admission,
@@ -251,6 +266,9 @@ class RuntimeWorkbenchRoot:
         }
 
         factories = self._base_factories(generation, profile_factory)
+        factories["workbench.operations"] = self._operations
+        factories["workbench.installation"] = installation_screen_factory
+        factories["workbench.reference"] = reference_screen_factory
         ledger = self._ledger_factory(generation)
         if ledger is not None:
             factories["workbench.ledger"] = ledger

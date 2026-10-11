@@ -19,6 +19,7 @@ from ....core.i18n.render import tr
 from ..components.app_access import TypedAppAccess
 from ..components.status import PinnedStatusBar
 from ..components.theme import BASE_CSS, tokenised
+from ..installation.area_factory import InstallationAreaFactory
 from .automation_requester import RuntimeAutomationRequesterScreen
 from .credentials import CREDENTIAL_PANEL_CSS
 from .runtime_login_attempt import RuntimeLoginAttemptMixin
@@ -62,6 +63,7 @@ class RuntimeLoginScreen(
         open_client: RuntimeClientOpener,
         open_credential_client: RuntimeCredentialClientOpener | None = None,
         requester_factory: RuntimeRequesterFactory | None = None,
+        installation_factory: InstallationAreaFactory | None = None,
         accept_handoff: RuntimeLoginAcceptor,
         preselected: str | None = None,
     ) -> None:
@@ -82,6 +84,8 @@ class RuntimeLoginScreen(
         self._open_client = open_client
         self._open_credential_client = open_credential_client
         self._requester_factory = requester_factory
+        self._installation_factory = installation_factory
+        self._profiles_stale = False
         self._accept_handoff = accept_handoff
         self._busy = False
         self._live = True
@@ -228,6 +232,8 @@ class RuntimeLoginScreen(
             self.action_abandon()
         elif event.button.id == "runtime-login-request-access" and not self._busy:
             self._request_access()
+        elif event.button.id == "runtime-login-installation" and not self._busy:
+            self._open_installation()
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Enter in the masked field submits the chosen proof family."""

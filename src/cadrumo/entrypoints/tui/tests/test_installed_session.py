@@ -26,8 +26,11 @@ from ....core.errors.hierarchy import InternalInvariantError
 from ... import operation_composition
 from .. import installed_session, runtime_session
 from ..account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
+from ..installation.destination import InstallationScreen
+from ..secret import credentials
 from ..secret.automation_requester import RuntimeAutomationRequesterScreen
 from ..secret.automation_requester_contracts import FreshCredentialClientOpener, RequesterClientOpener
+from ..secret.registration import RegistrationScreen
 from ..secret.runtime_login import RuntimeRequesterFactory
 from ..secret.runtime_login_contracts import RuntimeLoginHandoff, RuntimeLoginMethod
 from .test_runtime_admission import _OwnedClient
@@ -259,13 +262,115 @@ def test_unavailable_inventory_preserves_refusal_without_building_requester_cont
 ) -> None:
     reason = "profile.inventory.fixture_refusal"
     _bootstrap(monkeypatch, iter((ProfileLoginInventoryV1(state=state, reason_code=reason),)))
+    offered: list[str] = []
 
     def refuse_build() -> OperationRegistry:
         raise AssertionError("unavailable inventory built requester contracts")
 
+    def offer_installation_area(reason_code: str) -> bool:
+        offered.append(reason_code)
+        return False
+
     monkeypatch.setattr(operation_composition, "build_production_operation_registry", refuse_build)
+    monkeypatch.setattr(installed_session, "_run_installation_area", offer_installation_area)
     assert installed_session.run_installed_workbench_session() == installed_session.SESSION_INVENTORY_UNAVAILABLE
     assert capsys.readouterr().err.strip() == reason
+    # The acts that can repair an installation need no profile, so they are offered before giving up.
+    assert offered == [reason]
+
+
+def test_an_unlistable_inventory_is_read_again_after_the_installation_area_changed_records(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    profile_id = uuid4()
+    degraded = ProfileLoginInventoryV1(
+        state=ProfileLoginInventoryState.DEGRADED, reason_code="profile.inventory.fixture_refusal"
+    )
+    _bootstrap(monkeypatch, iter((degraded, _recognized_inventory(profile_id))))
+    screens = _session_callbacks(monkeypatch, profile_id, "none")
+    monkeypatch.setattr(installed_session, "_run_installation_area", lambda _reason: True)
+
+    assert installed_session.run_installed_workbench_session() == installed_session.SESSION_COMPLETED
+    assert capsys.readouterr().err == "" and screens == []
+
+
+def test_a_headless_run_never_opens_the_installation_area(monkeypatch: pytest.MonkeyPatch) -> None:
+    degraded = ProfileLoginInventoryV1(
+        state=ProfileLoginInventoryState.DEGRADED, reason_code="profile.inventory.fixture_refusal"
+    )
+    _bootstrap(monkeypatch, iter((degraded,)))
+
+    def refuse_area(_reason: str) -> bool:
+        raise AssertionError("a headless run opened an interactive area")
+
+    monkeypatch.setattr(installed_session, "_run_installation_area", refuse_area)
+    assert (
+        installed_session.run_installed_workbench_session(headless=True)
+        == installed_session.SESSION_INVENTORY_UNAVAILABLE
+    )
+
+
+def test_the_profiles_are_read_again_when_the_sign_in_screen_closed_after_an_installation_act(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    profile_id = uuid4()
+    observed: list[ProfileLoginInventoryV1] = []
+    inventories = iter((_recognized_inventory(profile_id), _recognized_inventory(profile_id)))
+
+    def observe() -> ProfileLoginInventoryV1:
+        observed.append(next(inventories))
+        return observed[-1]
+
+    _bootstrap(monkeypatch, iter(()))
+    monkeypatch.setattr(installed_session, "observe_profile_login_inventory", observe)
+    preselections: list[str | None] = []
+
+    @asynccontextmanager
+    async def login(**options: object) -> AsyncIterator[RuntimeLoginHandoff | None]:
+        preselections.append(cast("str | None", options["preselected"]))
+        if len(preselections) == 1:
+            build_area = cast("Callable[[Callable[[], None]], InstallationScreen]", options["installation_factory"])
+            closed: list[bool] = []
+            area = build_area(lambda: closed.append(True))
+            assert isinstance(area, InstallationScreen)
+            # What an act that changed records reports, from wherever it ran.
+            assert area._on_records_changed is not None
+            area._on_records_changed()
+            assert closed == [True]
+        yield None
+
+    monkeypatch.setattr(installed_session, "runtime_login_session", login)
+
+    assert installed_session.run_installed_workbench_session() == installed_session.SESSION_COMPLETED
+    assert len(observed) == 2
+    # The second sign-in starts from a choice, not from the profile remembered before the change.
+    assert preselections == [str(profile_id), None]
+
+
+def test_registration_reads_the_profiles_again_when_the_installation_area_changed_records(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(installed_session, "close_active_profile_record_session", lambda: None)
+    monkeypatch.setattr(installed_session, "close_active_bucket_session", lambda: None)
+    opened: list[InstallationScreen] = []
+
+    def run_registration(screen: RegistrationScreen) -> None:
+        build_area = screen._installation_factory
+        assert build_area is not None
+        area = build_area(lambda: None)
+        assert isinstance(area, InstallationScreen)
+        opened.append(area)
+        if len(opened) == 2:
+            assert area._on_records_changed is not None
+            area._on_records_changed()
+
+    monkeypatch.setattr(credentials, "run_credential_screen", run_registration)
+
+    # Abandoned with nothing changed: there is still no profile to sign in to.
+    assert installed_session._run_registration_screen() is False
+    # Abandoned after an act that may have created or removed profiles: look again.
+    assert installed_session._run_registration_screen() is True
+    assert len(opened) == 2
 
 
 def test_requester_contracts_are_shared_across_recomposition_but_fresh_in_a_separate_session(

@@ -2084,8 +2084,11 @@ tui:
     ledger: Registros
     profile: Perfil
     withholding: Retenciones
+    installation: Instalación
   home:
+    operations: Operaciones
     account_fallback: Cuenta
+    reference: Referencia
     action:
       context_across_records: En todos los registros
       reason: Sugerida por el resumen local
@@ -2172,6 +2175,160 @@ tui:
   ledger:
     area:
       classification: Clasificación
+  installation:
+    act:
+      archive_import:
+        label: Restaurar un perfil desde una copia de seguridad
+        summary: Restaura un perfil desde un archivo o una carpeta de copia de seguridad
+          cuando demuestras su contraseña.
+      archive_import_prepare:
+        label: Leer una copia de seguridad antes de restaurarla
+        summary: Lee un archivo o una carpeta de copia de seguridad y devuelve la
+          huella de lo leído. No restaura nada.
+      archive_inspect:
+        label: Inspeccionar una copia de seguridad de perfil
+        summary: Muestra lo que un archivo de copia de seguridad dice de sí mismo,
+          sin descifrarlo.
+      profile_list:
+        label: Listar los perfiles
+        summary: Lista los perfiles de este equipo sin desbloquear ninguno.
+      recovery_enroll:
+        label: Configurar un código de recuperación
+        summary: Crea un código de recuperación para un perfil cuando demuestras su
+          contraseña. El código se muestra una sola vez.
+      repair_logs:
+        label: Últimas líneas del registro
+        summary: Muestra dónde está el archivo de registro y sus líneas más recientes.
+      repair_profile:
+        label: Reparar el perfil activo
+        summary: Comprueba si se puede leer el registro de un perfil, o borra un ajuste
+          de perfil activo que no apunta a nada utilizable.
+      repair_report:
+        label: Diagnosticar la instalación
+        summary: Comprueba la configuración local, el perfil activo, el inicio de
+          sesión y el registro de actividad.
+      report_verify_document:
+        label: Verificar un resumen de cálculo
+        summary: Comprueba un archivo de resumen de cálculo por su propio contenido,
+          sin vincularlo a ningún perfil.
+      reset_resume:
+        label: Reanudar un reinicio
+        summary: Lleva hasta el final un reinicio que quedó a medias.
+      reset_start:
+        label: Reiniciar todos los perfiles
+        summary: Inicia la eliminación irreversible de todos los perfiles guardados
+          en este equipo.
+      reset_status:
+        label: Estado del reinicio
+        summary: Muestra hasta dónde ha llegado un reinicio, sin continuarlo.
+      review_package_verify:
+        label: Verificar un paquete de revisión
+        summary: Comprueba cada archivo de un paquete de revisión contra su lista
+          de sumas de comprobación.
+      review_package_verify_receipt:
+        label: Verificar un recibo contrafirmado
+        summary: Comprueba las dos firmas de un recibo contrafirmado de un paquete
+          de revisión.
+      review_package_verify_signature:
+        label: Verificar la firma de un paquete
+        summary: Comprueba la firma de un paquete de revisión con una clave pública
+          en la que confías.
+      storage_check:
+        label: Comprobar el almacenamiento
+        summary: Compara las carpetas de almacenamiento del disco con lo que deberían
+          ser, sin reparar nada.
+      storage_init:
+        label: Crear las carpetas de almacenamiento
+        summary: Crea todas las carpetas que falten y conserva todo lo que ya existe.
+      storage_inventory:
+        label: Inventario del almacenamiento
+        summary: Muestra dónde está cada área de almacenamiento y qué contiene.
+      storage_reclaim:
+        label: Liberar un área de almacenamiento
+        summary: Elimina el contenido de un área que se puede volver a generar.
+    action:
+      close: Volver
+      read_outcome: 'Ver cómo terminó: {act}'
+      run: Ejecutar
+    column:
+      act: Tarea
+      effect: Efecto
+      family: Área
+    confirm:
+      accept: Ejecutar
+      cancel: No ejecutar
+      question: ¿Ejecutarlo ahora? Esto modifica datos de este equipo.
+      title: 'Confirmar: {act}'
+    effect:
+      changes: Modifica datos
+      reads: Solo lectura
+    family:
+      other: Otras
+      profiles: Perfiles
+      repair: Reparación
+      reset: Reinicio
+      storage: Almacenamiento
+      verification: Verificación
+    field:
+      acknowledge_retention_override: Eliminar los perfiles aunque no haya terminado
+        su plazo legal de conservación
+      area: Área de almacenamiento
+      clear_active: Borrar el ajuste de perfil activo
+      counter_signer_public_key: Clave pública de quien contrafirma
+      label: Nombre del perfil
+      lines: Número de líneas
+      operation_id: Identificador del reinicio
+      operator_public_key: Tu clave pública
+      package: Archivo del paquete de revisión
+      path: Archivo o carpeta
+      profile: Nombre o identificador del perfil
+      profile_id: Identificador del perfil
+      public_key: Clave pública
+      receipt: Archivo del recibo
+      retention_override_reason: Motivo para eliminarlos antes de tiempo
+      signature: Archivo de firma
+      source_digest: Huella de la copia de seguridad
+      trusted_key: Clave en la que confías
+    hint:
+      json: Un valor JSON.
+      optional: Opcional.
+      path: Una ruta de este equipo.
+      supplied: Déjalo vacío y se leerá antes de la copia de seguridad.
+    intro: Tareas sobre esta instalación que no necesitan ningún perfil con sesión
+      iniciada. El servicio local realiza cada una.
+    inventory_unavailable: No se han podido listar los perfiles de este equipo ({reason}).
+      Aun así puedes revisar y reparar la instalación desde aquí.
+    list_hint: Pulsa Intro en una fila para abrirla.
+    passphrase:
+      label: Contraseña del perfil
+      required: Introduce la contraseña del perfil.
+    profiles:
+      column:
+        active: Activo
+        id: Identificador
+        label: Nombre
+    result:
+      remedy: 'Siguiente paso sugerido: {action}'
+    status:
+      completed: Hecho.
+      effect_unknown: La conexión terminó antes de que llegara una respuesta ({code}).
+        Puede que se haya ejecutado; compruébalo antes de volver a ejecutarlo.
+      failed: El servicio local se ha detenido por un fallo ({act}). El detalle está
+        en su registro.
+      failed_unknown: El servicio local se ha detenido por un fallo ({act}). Puede
+        que algunos datos ya hayan cambiado; compruébalo antes de volver a ejecutarlo.
+      invalid_fields: 'Revisa: {fields}.'
+      preview: Todavía no ha cambiado nada. Esto es lo que ocurriría.
+      progress: Consultando al servicio local…
+      recovery_declined: No has confirmado el código de recuperación, así que no se
+        ha configurado ninguno.
+      refused: Rechazado ({code}).
+      unreachable: El servicio local no ha aceptado la solicitud ({code}).
+    title: Instalación y reparación
+    verdict:
+      invalid: No válido.
+      outcome: 'Resultado de la verificación: {outcome}'
+      valid: Válido.
       entries: Apuntes
       evidence: Justificantes
       import: Importación
@@ -3398,6 +3555,152 @@ tui:
   restricted:
     actions: 'Acciones permitidas: {values}'
     all_periods: Todos los períodos
+  operations:
+    action:
+      close: Cerrar
+      edit_fields: Editar por campos
+      edit_json: Editar como JSON
+      next_page: Página siguiente
+      previous_page: Página anterior
+      run: Ejecutar
+    form:
+      choose: Elige
+      error:
+        choice: Elige uno de los valores ofrecidos.
+        integer: Introduce un número entero.
+        json: Esto no es JSON válido.
+        json_object: La solicitud debe ser un único objeto JSON válido. No se ha enviado
+          nada.
+        json_unknown_fields: El JSON nombra campos que esta solicitud no tiene. Quítalos
+          o sigue editando como JSON.
+        number: Introduce un número.
+      fixed: lo fija esta sesión
+      hint:
+        date: Fecha con el formato AAAA-MM-DD
+        datetime: Fecha y hora con el formato AAAA-MM-DDTHH:MM:SSZ
+        decimal: Importe exacto, por ejemplo 1234.56
+        integer: Número entero
+        number: Número
+        path: Ruta de archivo o carpeta
+        text: Texto
+        uuid: Identificador
+      invalid: La solicitud aún no es válida. No se ha enviado nada.
+      profile: Perfil
+      required: obligatorio
+      secret: Secreto (oculto al escribir, se envía aparte de la solicitud)
+      secret_required: Esta operación necesita su secreto. Introdúcelo y vuelve a
+        ejecutar. No se ha enviado nada.
+      session: Sesión
+      subject: Sujeto
+      subject_entry: Unidad de trabajo sobre la que actúa esta solicitud
+      subject_missing: La solicitud aún no indica sobre qué actúa. Rellena el campo
+        que lo nombra. No se ha enviado nada.
+      subject_pending: la solicitud aún no lo indica
+    interaction:
+      expires: Caduca
+      kind:
+        choice: La operación espera una elección.
+        input: La operación espera un dato.
+      no_answer: 'Este tipo de petición aún no se puede responder, ni aquí ni desde
+        la línea de comandos ni desde MCP: solo se puede aplicar o rechazar una revisión.
+        Puedes cancelar la operación o dejarla en espera.'
+      presentation: Pide
+    palette:
+      help: Abre el formulario de solicitud de esta operación
+    receipt:
+      effect: Efecto
+      operation: Operación
+      outcome: Resultado
+    result:
+      page: Resultado, página {page} de {pages}
+    run:
+      contract_changed: El servicio ofrece ahora otro contrato para esta operación.
+        Vuelve a abrir Operaciones e inténtalo de nuevo. No se ha enviado nada.
+      detached: Has dejado la operación mientras seguía en curso. Aquí no se conoce
+        su resultado.
+      start_unconfirmed: La solicitud quedó registrada, pero no se ha confirmado su
+        inicio. No se ha reintentado nada.
+      unknown: La respuesta se ha perdido, así que no se sabe si la solicitud quedó
+        registrada. No se ha reintentado nada.
+      unobserved: No se ha podido observar la operación, así que aquí no se conoce
+        su estado.
+    search:
+      placeholder: Busca por identificador o descripción
+    status:
+      count: '{shown} de {total} operaciones'
+      loading: Leyendo las operaciones registradas.
+      unavailable: No se han podido leer las operaciones registradas.
+    stopped:
+      code: Código
+      remedy: Qué permitiría continuar
+      remedy_command: 'Comando que lo resuelve: {command}'
+    title: Operaciones
+  reference:
+    action:
+      close: Volver
+      show: Mostrar
+    column:
+      read: Referencia
+    filter:
+      any: Cualquiera
+      as_of: A fecha de (AAAA-MM-DD)
+      casilla: Casilla
+      casilla_number: Número o identificador de casilla
+      category: Categoría
+      domain: Ámbito fiscal
+      form_number: Número oficial de casilla
+      input_kind: Cómo se aporta el valor
+      modelo: Modelo
+      period: Período (0A, 1T a 4T, 01 a 12)
+      portal: Identificador del portal
+      required: Solo obligatorias
+      year: Ejercicio
+    filters: Qué mostrar
+    intro: Datos públicos de referencia incluidos en Cadrumo. Consultarlos no necesita
+      ningún perfil ni contacta con nadie.
+    list_hint: Pulsa Intro en una fila para abrirla.
+    read:
+      apoderado_scopes: Ámbitos de apoderamiento
+      auth_providers: Métodos de identificación ante la AEAT
+      bindings: Orígenes de las casillas de un modelo
+      casilla: Una casilla
+      casillas: Casillas de un modelo
+      categories: Categorías de los registros
+      describe: Descripción de un modelo
+      formulas: Fórmulas de un modelo
+      modelos: Catálogo de modelos
+      portal: Un portal de la AEAT
+      portals: Portales de la AEAT
+      support_matrix: Matriz de capacidades
+    section:
+      irpf_categories: Categorías de IRPF
+      spending_categories: Categorías de gasto
+    status:
+      failed: No se ha podido leer la referencia. El detalle está en el registro de
+        actividad.
+      invalid: 'Revisa: {fields}.'
+      loading: Leyendo…
+      rows: 'Filas: {count}'
+    summary:
+      apoderado_scopes: Lo que se puede autorizar a hacer a un apoderado en nombre
+        de otra persona.
+      auth_providers: Las formas en que Cadrumo puede identificarte ante la AEAT.
+      bindings: De dónde salen los valores de una versión de un modelo.
+      casilla: 'Una casilla: su etiqueta oficial, su base legal y, si se calcula,
+        su fórmula.'
+      casillas: Las casillas de una versión de un modelo, con filtros.
+      categories: Las categorías de gasto y de IRPF que puede llevar un registro.
+      describe: Las versiones, los períodos y los recuentos de un modelo.
+      formulas: Las fórmulas de una versión de un modelo, con lo que lee cada una.
+      modelos: Todos los modelos que conoce Cadrumo, de un ejercicio o un ámbito fiscal
+        si lo eliges.
+      portal: 'Una página web de la AEAT: su dirección, su finalidad y sus métodos
+        de identificación.'
+      portals: Las páginas web de la AEAT que conoce Cadrumo, por categoría o modelo.
+        Listarlas no abre ninguna.
+      support_matrix: 'Lo que Cadrumo puede hacer con cada modelo: calcular, exportar,
+        leer copias presentadas.'
+    title: Referencia
     availability: 'Disponibilidad - almacenamiento: {storage}; autoridad: {authority};
       proveedor: {provider}'
     change_user: Cambiar de usuario
@@ -3526,8 +3829,11 @@ tui:
       ledger: Abrir Registros
       profile: Abrir Perfil
       unknown: Abrir área
+      installation: Abrir Instalación
       withholding: Abrir Retenciones
+      operations: Abrir Operaciones
     destination_help:
+      reference: Abrir Referencia
       aeat_sync: Lo que se ha leído de la AEAT y lo que se puede leer a continuación
       declarations: Declaraciones, cálculos anteriores, historial de presentaciones
         y calendario
@@ -3535,8 +3841,13 @@ tui:
       ledger: Apuntes, revisión, clasificación y justificantes
       profile: Los datos de este perfil y los orígenes que los completan
       withholding: Registrar y consultar retenciones de facturas del ejercicio seleccionado
+      installation: Almacenamiento, reparación, restablecimiento y los perfiles de
+        este equipo
     refusal:
+      operations: Todas las operaciones que Cadrumo puede ejecutar, para buscarlas,
+        rellenarlas y ejecutarlas
       not_composed: Todavía no se han podido leer todas las áreas.
+      reference: Modelos, casillas, categorías, portales y métodos de acceso
       refresh_failed: La última actualización no pudo reconstruir el índice.
       unavailable: La búsqueda no está disponible en esta sesión
       unknown: No se ha podido preparar la búsqueda.

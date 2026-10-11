@@ -11,11 +11,12 @@ from uuid import UUID, uuid4
 
 import pytest
 from textual.pilot import Pilot
-from textual.widgets import Static
+from textual.widgets import Button, DataTable, OptionList, Static
 
 from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ....adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from ....application.operations.registry import OperationFrontendProjection
+from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ....application.runtime.installation_requests import InstallationAct
 from ....application.runtime.profile_access import RuntimeProfileStatus, RuntimeSessionsLocked
 from ....application.runtime.session_events import RuntimeLifecycleNotice
 from ....application.user_profile.access_contracts import (
@@ -29,9 +30,17 @@ from ....application.user_profile.access_contracts import (
 )
 from ....application.user_profile.access_projections import PublicAccessSession
 from ....application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
+from ....application.user_profile.automation_operations import (
+    build_automation_operation_definitions,
+    build_automation_operation_registrations,
+)
 from ....core.i18n.render import tr
 from ....core.period import Period
 from ..account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
+from ..installation.destination import InstallationScreen
+from ..operations.destination import OperationsCatalogueScreen
+from ..reference.destination import ReferenceScreen
+from ..reference.reads import ReferenceRead
 from ..runtime_session import RuntimeRestrictedSessionApp
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -347,3 +356,97 @@ async def test_missing_lock_acknowledgement_or_refusal_requires_fresh_admission(
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
         assert str(app.query_one("#restricted-profile", Static).render()) == ""
     assert client.close_calls == 0
+
+
+def _registry() -> OperationRegistry:
+    definitions = build_automation_operation_definitions()
+    return OperationRegistry(
+        definitions=definitions,
+        public_registrations=tuple(
+            sorted(build_automation_operation_registrations(definitions), key=lambda row: row.contract.definition_id)
+        ),
+    )
+
+
+async def _in_front(
+    app: RuntimeRestrictedSessionApp,
+    pilot: Pilot[AccountRecomposeRequiredV1 | None],
+    condition: Callable[[], bool],
+) -> None:
+    async with asyncio.timeout(10):
+        while not condition():
+            await pilot.pause(0.02)
+
+
+@pytest.mark.asyncio
+async def test_the_shell_opens_operations_installation_and_reference_and_lists_them_whole() -> None:
+    client = _Client()
+    registry = _registry()
+    registered = sorted(contract.definition_id for contract in registry.public_contract_set.definitions)
+    app = RuntimeRestrictedSessionApp(
+        client, profile_label="Synthetic private profile", operation_registry=lambda: registry
+    )
+    async with app.run_test(size=(120, 40)) as pilot:
+        await _shown(app, pilot)
+        shell = app.screen
+
+        app.query_one("#restricted-open-operations", Button).press()
+        await _in_front(
+            app, pilot, lambda: isinstance(app.screen, OperationsCatalogueScreen) and app.screen._catalogue is not None
+        )
+        operations = app.screen
+        listed = sorted(
+            option.id
+            for option in operations.query_one("#operations-list", OptionList).options
+            if option.id is not None and not option.id.startswith("family:")
+        )
+        # The session's scope names none of these, and every one is offered: the runtime decides.
+        assert listed == registered and registered
+        assert not set(registered) & {str(item) for item in client.scope.operations}
+
+        # A status read that arrives while a destination is open finds the shell's own widgets.
+        reads = client.status_calls
+        app._start_status_read()
+        await _in_front(app, pilot, lambda: client.status_calls > reads and not app._reading)
+        assert not app._cleared and app.screen is operations and app.return_value is None
+
+        operations.dismiss(None)
+        await _in_front(app, pilot, lambda: app.screen is shell)
+        app.query_one("#restricted-open-installation", Button).press()
+        await _in_front(
+            app,
+            pilot,
+            lambda: isinstance(app.screen, InstallationScreen) and bool(app.screen.query("#installation-hint")),
+        )
+        installation = app.screen
+        assert isinstance(installation, InstallationScreen)
+        assert set(installation.offered_acts) == set(InstallationAct)
+
+        installation.dismiss(None)
+        await _in_front(app, pilot, lambda: app.screen is shell)
+        app.query_one("#restricted-open-reference", Button).press()
+        await _in_front(
+            app, pilot, lambda: isinstance(app.screen, ReferenceScreen) and bool(app.screen.query("#reference-hint"))
+        )
+        reads_listed = app.screen.query_one("#reference-reads", DataTable)
+        assert [str(row.key.value) for row in reads_listed.ordered_rows] == [read.value for read in ReferenceRead]
+        assert client.human_calls == 0 and client.close_calls == 0
+
+
+@pytest.mark.asyncio
+async def test_a_session_retired_while_a_destination_is_open_still_clears_the_shell_and_leaves() -> None:
+    client = _Client()
+    app = RuntimeRestrictedSessionApp(client, profile_label="Synthetic private profile")
+    async with app.run_test(size=(120, 40)) as pilot:
+        await _shown(app, pilot)
+        shell = app.screen
+        app.query_one("#restricted-open-reference", Button).press()
+        await _in_front(app, pilot, lambda: isinstance(app.screen, ReferenceScreen))
+        assert client.retirement_callback is not None
+        client.retirement_callback()
+        await _in_front(app, pilot, lambda: app._cleared)
+        assert str(shell.query_one("#restricted-profile", Static).render()) == ""
+        async with asyncio.timeout(5):
+            while app.return_value is None:
+                await pilot.pause()
+    assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)

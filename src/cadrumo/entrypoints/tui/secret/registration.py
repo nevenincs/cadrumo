@@ -73,9 +73,13 @@ from .credentials import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from textual.app import App
+
+    from ....application.user_profile.custody_ports import ProfileRecoveryKeyPort
     from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment
     from ....application.user_profile.registration import ProfileRegistrationOutcome
     from ....core.credentials import ProfilePasswordAssessment
+    from ..installation.area_factory import InstallationAreaFactory
 
 __all__ = [
     "RecoveryCodeScreen",
@@ -87,6 +91,7 @@ __all__ = [
     "RegistrationScreen",
     "build_profile_recovery_enrollment_attempt",
     "build_profile_registration_attempt",
+    "confirm_recovery_possession",
 ]
 
 
@@ -212,6 +217,7 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         enroll_recovery: Callable[[str, str, Callable[[ProfileRecoveryEnrollment], str]], RecoveryEnrollmentAttempt]
         | None = None,
         suggested_name: str | None = None,
+        installation_factory: InstallationAreaFactory | None = None,
     ) -> None:
         """Bind the password assessment, registration and optional recovery doors."""
         super().__init__()
@@ -230,6 +236,12 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         """The optional recovery door. ``None`` means the screen never offers
         recovery and leaves as soon as the profile exists, which is what a
         host without a way to enrol wants."""
+        self._installation_factory = installation_factory
+        """Builds the installation area, in the language this page is written in.
+
+        An installation with no profile is exactly where importing an archive
+        or repairing storage is needed, so the area is offered here too."""
+        self._profiles_stale = False
         self._suggested_name = suggested_name or ""
         """Name carried in from the command line, prefilled into the field.
 
@@ -300,6 +312,8 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
                     id="btn-create",
                     classes="-primary",
                 )
+                if self._installation_factory is not None:
+                    yield Button(tr("tui.installation.title", locale=self._active_language), id="btn-installation")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -378,6 +392,8 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
             tr("wizard.setup.profile.output-language.prompt", locale=locale)
         )
         self.query_one("#btn-create", Button).label = tr("flows.registration.create_button", locale=locale)
+        for button in self.query("#btn-installation").results(Button):
+            button.label = tr("tui.installation.title", locale=locale)
         self.describe_appearance_key()
         self._render_strength(
             self.query_one("#field-password", Input).value,
@@ -423,6 +439,26 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         """Route the create-profile button intent."""
         if event.button.id == "btn-create":
             self.action_create()
+        elif event.button.id == "btn-installation":
+            self._open_installation()
+
+    def _open_installation(self) -> None:
+        """Open the installation area over this screen; it needs no profile."""
+        factory = self._installation_factory
+        if factory is None or self.attempt_in_flight or self._created_outcome is not None:
+            return
+
+        def stale() -> None:
+            self._profiles_stale = True
+
+        def closed(_result: None) -> None:
+            # An imported profile, or a reset, changes whether this page is
+            # still the right first surface, so its owner looks again.
+            if self._profiles_stale:
+                self.action_abandon()
+
+        # No profile holds a language yet, so the area takes this page's.
+        self.app.push_screen(factory(stale, locale=self._active_language), closed)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Enter advances to the next field, and submits from the last one."""
@@ -593,59 +629,13 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         self._pending_passphrase = None
 
     def _confirm_recovery_possession(self, enrollment: ProfileRecoveryEnrollment) -> str:
-        """Show the code, block for confirmation, and return exact proof.
-
-        Runs on the enrolment worker thread. The code screen is pushed on the
-        UI task and the worker waits on an event the screen resolves. A
-        decline raises so the application installs nothing.
-        """
-        resolved = Event()
-        self._pending_recovery_handoffs.add(resolved)
-        supplied_proof: str | None = None
-
-        def _accept(proof: str) -> None:
-            nonlocal supplied_proof
-            supplied_proof = proof
-            resolved.set()
-
-        def _refuse() -> None:
-            resolved.set()
-
-        code_screen: RecoveryCodeScreen | None = None
-
-        def _show() -> None:
-            nonlocal code_screen
-            code_screen = RecoveryCodeScreen(
-                enrollment=enrollment,
-                locale=self._active_language,
-                on_confirm=_accept,
-                on_cancel=_refuse,
-            )
-            self.app.push_screen(code_screen)
-
-        try:
-            self.app.call_from_thread(_show)
-            # The operator is copying down a code, so elapsed time is not a
-            # failure condition. The one real failure is a message loop that
-            # stopped without releasing this handoff through ``on_unmount``,
-            # so wait on that condition instead: poll the event, and give up
-            # only once the app is no longer running or the screen left the
-            # stack without answering.
-            unstacked_polls = 0
-            while not resolved.wait(timeout=_RECOVERY_HANDOFF_POLL_SECONDS):
-                if not self.app.is_running:
-                    break
-                if code_screen is not None and code_screen not in self.app.screen_stack:
-                    unstacked_polls += 1
-                    if unstacked_polls > 1:
-                        break
-                else:
-                    unstacked_polls = 0
-            if supplied_proof is None:
-                raise RecoveryHandoverDeclinedError
-            return supplied_proof
-        finally:
-            self._pending_recovery_handoffs.discard(resolved)
+        """Hand the minted code over in this screen's language and return exact proof."""
+        return confirm_recovery_possession(
+            self.app,
+            enrollment.recovery_key,
+            locale=self._active_language,
+            pending=self._pending_recovery_handoffs,
+        )
 
     def on_unmount(self) -> None:
         """Release every pending handoff and wipe the passphrase when the application stops."""
@@ -661,6 +651,8 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
             self.query_one(f"#{field_id}", Input).disabled = busy
         self.query_one("#field-output-language", Select).disabled = busy
         self.query_one("#btn-create", Button).disabled = busy
+        for button in self.query("#btn-installation").results(Button):
+            button.disabled = busy
 
 
 class RecoveryOfferScreen(TypedAppAccess, Screen[None]):
@@ -777,14 +769,14 @@ class RecoveryCodeScreen(TypedAppAccess, Screen[None]):
     def __init__(
         self,
         *,
-        enrollment: ProfileRecoveryEnrollment,
-        locale: str,
+        recovery_key: ProfileRecoveryKeyPort,
+        locale: str | None,
         on_confirm: Callable[[str], None],
         on_cancel: Callable[[], None],
     ) -> None:
-        """Bind one ephemeral recovery enrolment and its terminal callbacks."""
+        """Bind one ephemeral recovery code and its terminal callbacks."""
         super().__init__()
-        self._enrollment = enrollment
+        self._recovery_key = recovery_key
         self._locale = locale
         self._on_confirm = on_confirm
         self._on_cancel = on_cancel
@@ -794,7 +786,7 @@ class RecoveryCodeScreen(TypedAppAccess, Screen[None]):
     def compose(self) -> ComposeResult:
         with Container(id="code-panel"):
             yield Static(tr("cli.config.profile.recovery.code_heading", locale=self._locale), id="code-heading")
-            yield Static(self._enrollment.recovery_key.code, id="code-value")
+            yield Static(self._recovery_key.code, id="code-value")
             yield Static(tr("cli.config.profile.recovery.code_warning", locale=self._locale), id="code-warning")
             # The mismatch notice has its own line: writing it over the warning
             # above would retire the one-time-display caveat for the rest of
@@ -818,7 +810,7 @@ class RecoveryCodeScreen(TypedAppAccess, Screen[None]):
             return
         field = self.query_one("#field-recovery-verification", Input)
         supplied = field.value
-        expected = self._enrollment.recovery_key.code
+        expected = self._recovery_key.code
         try:
             if _bare_code(supplied) != _bare_code(expected):
                 field.value = ""
@@ -833,7 +825,7 @@ class RecoveryCodeScreen(TypedAppAccess, Screen[None]):
         self.query_one("#code-mismatch", Static).update("")
         self._resolved = True
         self.dismiss(None)
-        self._on_confirm(self._enrollment.recovery_key.code)
+        self._on_confirm(self._recovery_key.code)
 
     @on(Input.Submitted, "#field-recovery-verification")
     def _submit(self) -> None:
@@ -861,6 +853,73 @@ class RecoveryCodeScreen(TypedAppAccess, Screen[None]):
             return
         self._resolved = True
         self._on_cancel()
+
+
+def confirm_recovery_possession(
+    app: App[object],
+    recovery_key: ProfileRecoveryKeyPort,
+    *,
+    locale: str | None,
+    pending: set[Event],
+) -> str:
+    """Show the code, block for confirmation, and return exact proof.
+
+    Runs on the thread that is enrolling, never on the UI task. The code screen
+    is pushed on the UI task and this thread waits on an event the screen
+    resolves. ``pending`` holds that event while the wait lasts, so the owning
+    screen can release it when the application stops.
+
+    Raises:
+        RecoveryHandoverDeclinedError: The operator did not confirm the code,
+            so nothing may be installed for it.
+    """
+    resolved = Event()
+    pending.add(resolved)
+    supplied_proof: str | None = None
+
+    def _accept(proof: str) -> None:
+        nonlocal supplied_proof
+        supplied_proof = proof
+        resolved.set()
+
+    def _refuse() -> None:
+        resolved.set()
+
+    code_screen: RecoveryCodeScreen | None = None
+
+    def _show() -> None:
+        nonlocal code_screen
+        code_screen = RecoveryCodeScreen(
+            recovery_key=recovery_key,
+            locale=locale,
+            on_confirm=_accept,
+            on_cancel=_refuse,
+        )
+        app.push_screen(code_screen)
+
+    try:
+        app.call_from_thread(_show)
+        # The operator is copying down a code, so elapsed time is not a
+        # failure condition. The one real failure is a message loop that
+        # stopped without releasing this handoff through ``on_unmount``,
+        # so wait on that condition instead: poll the event, and give up
+        # only once the app is no longer running or the screen left the
+        # stack without answering.
+        unstacked_polls = 0
+        while not resolved.wait(timeout=_RECOVERY_HANDOFF_POLL_SECONDS):
+            if not app.is_running:
+                break
+            if code_screen is not None and code_screen not in app.screen_stack:
+                unstacked_polls += 1
+                if unstacked_polls > 1:
+                    break
+            else:
+                unstacked_polls = 0
+        if supplied_proof is None:
+            raise RecoveryHandoverDeclinedError
+        return supplied_proof
+    finally:
+        pending.discard(resolved)
 
 
 def _bare_code(text: str) -> str:

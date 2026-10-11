@@ -2074,8 +2074,11 @@ tui:
     ledger: Registres
     profile: Perfil
     withholding: Retencions
+    installation: Instal·lació
   home:
+    operations: Operacions
     account_fallback: Compte
+    reference: Referència
     action:
       context_across_records: A tots els registres
       reason: Suggerida pel resum local
@@ -2162,6 +2165,160 @@ tui:
   ledger:
     area:
       classification: Classificació
+  installation:
+    act:
+      archive_import:
+        label: Restaura un perfil des d'una còpia de seguretat
+        summary: Restaura un perfil des d'un fitxer o una carpeta de còpia de seguretat
+          quan en demostres la contrasenya.
+      archive_import_prepare:
+        label: Llegeix una còpia de seguretat abans de restaurar-la
+        summary: Llegeix un fitxer o una carpeta de còpia de seguretat i retorna l'empremta
+          del que s'ha llegit. No restaura res.
+      archive_inspect:
+        label: Inspecciona una còpia de seguretat de perfil
+        summary: Mostra el que un fitxer de còpia de seguretat diu de si mateix, sense
+          desxifrar-lo.
+      profile_list:
+        label: Llista els perfils
+        summary: Llista els perfils d'aquest equip sense desbloquejar-ne cap.
+      recovery_enroll:
+        label: Configura un codi de recuperació
+        summary: Crea un codi de recuperació per a un perfil quan en demostres la
+          contrasenya. El codi es mostra una sola vegada.
+      repair_logs:
+        label: Últimes línies del registre
+        summary: Mostra on és el fitxer de registre i les seves línies més recents.
+      repair_profile:
+        label: Repara el perfil actiu
+        summary: Comprova si es pot llegir el registre d'un perfil, o esborra un ajust
+          de perfil actiu que no apunta a res utilitzable.
+      repair_report:
+        label: Diagnostica la instal·lació
+        summary: Comprova la configuració local, el perfil actiu, l'inici de sessió
+          i el registre d'activitat.
+      report_verify_document:
+        label: Verifica un resum de càlcul
+        summary: Comprova un fitxer de resum de càlcul pel seu propi contingut, sense
+          vincular-lo a cap perfil.
+      reset_resume:
+        label: Reprèn un reinici
+        summary: Porta fins al final un reinici que va quedar a mitges.
+      reset_start:
+        label: Reinicia tots els perfils
+        summary: Inicia l'eliminació irreversible de tots els perfils desats en aquest
+          equip.
+      reset_status:
+        label: Estat del reinici
+        summary: Mostra fins on ha arribat un reinici, sense continuar-lo.
+      review_package_verify:
+        label: Verifica un paquet de revisió
+        summary: Comprova cada fitxer d'un paquet de revisió amb la seva llista de
+          sumes de comprovació.
+      review_package_verify_receipt:
+        label: Verifica un rebut contrasignat
+        summary: Comprova les dues signatures d'un rebut contrasignat d'un paquet
+          de revisió.
+      review_package_verify_signature:
+        label: Verifica la signatura d'un paquet
+        summary: Comprova la signatura d'un paquet de revisió amb una clau pública
+          en què confies.
+      storage_check:
+        label: Comprova l'emmagatzematge
+        summary: Compara les carpetes d'emmagatzematge del disc amb el que haurien
+          de ser, sense reparar res.
+      storage_init:
+        label: Crea les carpetes d'emmagatzematge
+        summary: Crea totes les carpetes que falten i conserva tot el que ja hi ha.
+      storage_inventory:
+        label: Inventari de l'emmagatzematge
+        summary: Mostra on és cada àrea d'emmagatzematge i què conté.
+      storage_reclaim:
+        label: Allibera una àrea d'emmagatzematge
+        summary: Elimina el contingut d'una àrea que es pot tornar a generar.
+    action:
+      close: Torna
+      read_outcome: 'Mira com va acabar: {act}'
+      run: Executa
+    column:
+      act: Tasca
+      effect: Efecte
+      family: Àrea
+    confirm:
+      accept: Executa-ho
+      cancel: No ho executis
+      question: Vols executar-ho ara? Això modifica dades d'aquest equip.
+      title: 'Confirma: {act}'
+    effect:
+      changes: Modifica dades
+      reads: Només lectura
+    family:
+      other: Altres
+      profiles: Perfils
+      repair: Reparació
+      reset: Reinici
+      storage: Emmagatzematge
+      verification: Verificació
+    field:
+      acknowledge_retention_override: Elimina els perfils encara que no n'hagi acabat
+        el termini legal de conservació
+      area: Àrea d'emmagatzematge
+      clear_active: Esborra l'ajust de perfil actiu
+      counter_signer_public_key: Clau pública de qui contrasigna
+      label: Nom del perfil
+      lines: Nombre de línies
+      operation_id: Identificador del reinici
+      operator_public_key: La teva clau pública
+      package: Fitxer del paquet de revisió
+      path: Fitxer o carpeta
+      profile: Nom o identificador del perfil
+      profile_id: Identificador del perfil
+      public_key: Clau pública
+      receipt: Fitxer del rebut
+      retention_override_reason: Motiu per eliminar-los abans d'hora
+      signature: Fitxer de signatura
+      source_digest: Empremta de la còpia de seguretat
+      trusted_key: Clau en què confies
+    hint:
+      json: Un valor JSON.
+      optional: Opcional.
+      path: Un camí d'aquest equip.
+      supplied: Deixa-ho buit i es llegirà abans de la còpia de seguretat.
+    intro: Tasques sobre aquesta instal·lació que no necessiten cap perfil amb la
+      sessió iniciada. El servei local en fa cadascuna.
+    inventory_unavailable: No s'han pogut llistar els perfils d'aquest equip ({reason}).
+      Tot i això, pots revisar i reparar la instal·lació des d'aquí.
+    list_hint: Prem Retorn en una fila per obrir-la.
+    passphrase:
+      label: Contrasenya del perfil
+      required: Introdueix la contrasenya del perfil.
+    profiles:
+      column:
+        active: Actiu
+        id: Identificador
+        label: Nom
+    result:
+      remedy: 'Pas següent suggerit: {action}'
+    status:
+      completed: Fet.
+      effect_unknown: La connexió va acabar abans que arribés una resposta ({code}).
+        Pot ser que s'hagi executat; comprova-ho abans de tornar-ho a executar.
+      failed: El servei local s'ha aturat per una fallada ({act}). El detall és al
+        seu registre.
+      failed_unknown: El servei local s'ha aturat per una fallada ({act}). Pot ser
+        que algunes dades ja hagin canviat; comprova-ho abans de tornar-ho a executar.
+      invalid_fields: 'Revisa: {fields}.'
+      preview: Encara no ha canviat res. Això és el que passaria.
+      progress: S'està consultant el servei local…
+      recovery_declined: No has confirmat el codi de recuperació, així que no se n'ha
+        configurat cap.
+      refused: Rebutjat ({code}).
+      unreachable: El servei local no ha acceptat la sol·licitud ({code}).
+    title: Instal·lació i reparació
+    verdict:
+      invalid: No vàlid.
+      outcome: 'Resultat de la verificació: {outcome}'
+      valid: Vàlid.
       entries: Apunts
       evidence: Justificants
       import: Importació
@@ -3399,6 +3556,150 @@ tui:
   restricted:
     actions: 'Accions permeses: {values}'
     all_periods: Tots els períodes
+  operations:
+    action:
+      close: Tanca
+      edit_fields: Edita per camps
+      edit_json: Edita com a JSON
+      next_page: Pàgina següent
+      previous_page: Pàgina anterior
+      run: Executa
+    form:
+      choose: Tria
+      error:
+        choice: Tria un dels valors oferts.
+        integer: Introdueix un nombre enter.
+        json: Això no és JSON vàlid.
+        json_object: La sol·licitud ha de ser un únic objecte JSON vàlid. No s'ha
+          enviat res.
+        json_unknown_fields: El JSON anomena camps que aquesta sol·licitud no té.
+          Treu-los o continua editant com a JSON.
+        number: Introdueix un nombre.
+      fixed: el fixa aquesta sessió
+      hint:
+        date: Data amb el format AAAA-MM-DD
+        datetime: Data i hora amb el format AAAA-MM-DDTHH:MM:SSZ
+        decimal: Import exacte, per exemple 1234.56
+        integer: Nombre enter
+        number: Nombre
+        path: Camí de fitxer o carpeta
+        text: Text
+        uuid: Identificador
+      invalid: La sol·licitud encara no és vàlida. No s'ha enviat res.
+      profile: Perfil
+      required: obligatori
+      secret: Secret (ocult en escriure, s'envia a part de la sol·licitud)
+      secret_required: Aquesta operació necessita el seu secret. Introdueix-lo i torna
+        a executar. No s'ha enviat res.
+      session: Sessió
+      subject: Subjecte
+      subject_entry: Unitat de treball sobre la qual actua aquesta sol·licitud
+      subject_missing: La sol·licitud encara no indica sobre què actua. Emplena el
+        camp que ho anomena. No s'ha enviat res.
+      subject_pending: la sol·licitud encara no ho indica
+    interaction:
+      expires: Caduca
+      kind:
+        choice: L'operació espera una tria.
+        input: L'operació espera una dada.
+      no_answer: 'Aquest tipus de petició encara no es pot respondre, ni aquí ni des
+        de la línia d''ordres ni des d''MCP: només es pot aplicar o rebutjar una revisió.
+        Pots cancel·lar l''operació o deixar-la en espera.'
+      presentation: Demana
+    palette:
+      help: Obre el formulari de sol·licitud d'aquesta operació
+    receipt:
+      effect: Efecte
+      operation: Operació
+      outcome: Resultat
+    result:
+      page: Resultat, pàgina {page} de {pages}
+    run:
+      contract_changed: El servei ofereix ara un altre contracte per a aquesta operació.
+        Torna a obrir Operacions i prova-ho de nou. No s'ha enviat res.
+      detached: Has deixat l'operació mentre encara estava en curs. Aquí no se'n coneix
+        el resultat.
+      start_unconfirmed: La sol·licitud ha quedat registrada, però no se n'ha confirmat
+        l'inici. No s'ha reintentat res.
+      unknown: La resposta s'ha perdut, així que no se sap si la sol·licitud ha quedat
+        registrada. No s'ha reintentat res.
+      unobserved: No s'ha pogut observar l'operació, així que aquí no se'n coneix
+        l'estat.
+    search:
+      placeholder: Cerca per identificador o descripció
+    status:
+      count: '{shown} de {total} operacions'
+      loading: S'estan llegint les operacions registrades.
+      unavailable: No s'han pogut llegir les operacions registrades.
+    stopped:
+      code: Codi
+      remedy: Què permetria continuar
+      remedy_command: 'Ordre que ho resol: {command}'
+    title: Operacions
+  reference:
+    action:
+      close: Torna
+      show: Mostra
+    column:
+      read: Referència
+    filter:
+      any: Qualsevol
+      as_of: A data de (AAAA-MM-DD)
+      casilla: Casella
+      casilla_number: Número o identificador de casella
+      category: Categoria
+      domain: Àmbit fiscal
+      form_number: Número oficial de casella
+      input_kind: Com s'aporta el valor
+      modelo: Model
+      period: Període (0A, 1T a 4T, 01 a 12)
+      portal: Identificador del portal
+      required: Només obligatòries
+      year: Exercici
+    filters: Què s'ha de mostrar
+    intro: Dades públiques de referència incloses a Cadrumo. Consultar-les no necessita
+      cap perfil ni contacta amb ningú.
+    list_hint: Prem Retorn en una fila per obrir-la.
+    read:
+      apoderado_scopes: Àmbits d'apoderament
+      auth_providers: Mètodes d'identificació davant l'AEAT
+      bindings: Orígens de les caselles d'un model
+      casilla: Una casella
+      casillas: Caselles d'un model
+      categories: Categories dels registres
+      describe: Descripció d'un model
+      formulas: Fórmules d'un model
+      modelos: Catàleg de models
+      portal: Un portal de l'AEAT
+      portals: Portals de l'AEAT
+      support_matrix: Matriu de capacitats
+    section:
+      irpf_categories: Categories d'IRPF
+      spending_categories: Categories de despesa
+    status:
+      failed: No s'ha pogut llegir la referència. El detall és al registre d'activitat.
+      invalid: 'Revisa: {fields}.'
+      loading: S'està llegint…
+      rows: 'Files: {count}'
+    summary:
+      apoderado_scopes: El que es pot autoritzar a fer a un apoderat en nom d'una
+        altra persona.
+      auth_providers: Les maneres en què Cadrumo et pot identificar davant l'AEAT.
+      bindings: D'on surten els valors d'una versió d'un model.
+      casilla: 'Una casella: l''etiqueta oficial, la base legal i, si es calcula,
+        la fórmula.'
+      casillas: Les caselles d'una versió d'un model, amb filtres.
+      categories: Les categories de despesa i d'IRPF que pot portar un registre.
+      describe: Les versions, els períodes i els recomptes d'un model.
+      formulas: Les fórmules d'una versió d'un model, amb el que llegeix cadascuna.
+      modelos: Tots els models que coneix Cadrumo, d'un exercici o un àmbit fiscal
+        si ho tries.
+      portal: 'Una pàgina web de l''AEAT: l''adreça, la finalitat i els mètodes d''identificació.'
+      portals: Les pàgines web de l'AEAT que coneix Cadrumo, per categoria o model.
+        Llistar-les no n'obre cap.
+      support_matrix: 'El que Cadrumo pot fer amb cada model: calcular, exportar,
+        llegir còpies presentades.'
+    title: Referència
     availability: 'Disponibilitat - emmagatzematge: {storage}; autoritat: {authority};
       proveïdor: {provider}'
     change_user: Canvia d’usuari
@@ -3527,8 +3828,11 @@ tui:
       ledger: Obre Registres
       profile: Obre Perfil
       unknown: Obre l'àrea
+      installation: Obre Instal·lació
       withholding: Obre Retencions
+      operations: Obre Operacions
     destination_help:
+      reference: Obre Referència
       aeat_sync: El que s'ha llegit de l'AEAT i el que es pot llegir a continuació
       declarations: Declaracions, càlculs anteriors, historial de presentacions i
         calendari
@@ -3536,8 +3840,13 @@ tui:
       ledger: Apunts, revisió, classificació i justificants
       profile: Les dades d'aquest perfil i els orígens que les completen
       withholding: Registra i consulta les retencions de factures de l'exercici seleccionat
+      installation: Emmagatzematge, reparació, restabliment i els perfils d'aquest
+        equip
     refusal:
+      operations: Totes les operacions que Cadrumo pot executar, per cercar-les, emplenar-les
+        i executar-les
       not_composed: Encara no s'han pogut llegir totes les àrees.
+      reference: Models, caselles, categories, portals i mètodes d'accés
       refresh_failed: La darrera actualització no ha pogut reconstruir l'índex.
       unavailable: La cerca no està disponible en aquesta sessió
       unknown: No s'ha pogut preparar la cerca.

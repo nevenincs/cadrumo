@@ -59,6 +59,7 @@ from .navigation import (
     TuiNavigationTargetV1,
     TuiScreenContextV1,
 )
+from .operations.palette import WorkbenchOperationProviderV1
 from .runtime_access_management import RuntimeAccessManagementScreen
 from .search import WorkbenchCommandProviderV1, WorkbenchSearchDoorV1, WorkbenchSearchProviderV1
 from .secret.passphrase import PassphraseScreen
@@ -143,7 +144,12 @@ class CadrumoTuiApp(RootNavigationMixin, App[AccountRecomposeRequiredV1 | None])
         ),
         Binding("q", "quit", "", show=False),
     ]
-    COMMANDS = App.COMMANDS | {WorkbenchSearchProviderV1, WorkbenchCommandProviderV1, WorkbenchAccountProviderV1}
+    COMMANDS = App.COMMANDS | {
+        WorkbenchSearchProviderV1,
+        WorkbenchCommandProviderV1,
+        WorkbenchOperationProviderV1,
+        WorkbenchAccountProviderV1,
+    }
 
     def __init__(
         self,

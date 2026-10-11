@@ -70,6 +70,8 @@ class RuntimeLoginFormMixin:
             yield Label(tr("tui.runtime_access.resume_grants"))
             yield Input(id="runtime-login-resume-grants")
             yield Button(tr("tui.runtime_access.resume"), id="runtime-login-resume")
+            if self._installation_factory is not None:
+                yield Button(tr("tui.installation.title"), id="runtime-login-installation")
         yield Footer()
 
     def on_mount(self: RuntimeLoginScreen) -> None:
@@ -135,6 +137,7 @@ class RuntimeLoginFormMixin:
             ("#runtime-login-submit", Button),
             ("#runtime-login-cancel", Button),
             *((("#runtime-login-request-access", Button),) if self._requester_factory is not None else ()),
+            *((("#runtime-login-installation", Button),) if self._installation_factory is not None else ()),
         ):
             self.query_one(selector, kind).disabled = self._busy or (
                 (
@@ -159,6 +162,23 @@ class RuntimeLoginFormMixin:
             self.app.push_screen(factory(self._profile_ids[selected]))
         except Exception:
             self._status_refused()
+
+    def _open_installation(self: RuntimeLoginScreen) -> None:
+        """Open the installation area over this screen; it needs no session."""
+        factory = self._installation_factory
+        if factory is None:
+            return
+
+        def stale() -> None:
+            self._profiles_stale = True
+
+        def closed(_result: None) -> None:
+            # The list this screen was built from may no longer be the
+            # installation's, so its owner reads the profiles again.
+            if self._profiles_stale:
+                self.action_abandon()
+
+        self.app.push_screen(factory(stale), closed)
 
     def _selected_login(self: RuntimeLoginScreen) -> tuple[str, RuntimeLoginMethod] | None:
         selected = cast("Select[str]", self.query_one("#runtime-login-profile", Select)).value

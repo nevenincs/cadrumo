@@ -1,4 +1,10 @@
-"""A bounded status shell for an admitted API-key TUI session."""
+"""The shell of an admitted API-key TUI session: its status, and the destinations it reaches.
+
+The shell borrows no human authority. It reaches what the command line reaches
+under the same key: every registered operation, which the runtime admits or
+refuses by the session's scope, and the installation acts and reference reads,
+which need no session at all.
+"""
 
 from __future__ import annotations
 
@@ -11,11 +17,12 @@ from textual import on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, VerticalScroll
+from textual.dom import DOMNode
 from textual.widgets import Button, Footer, Static
 
 from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
 from ...adapters.local_runtime.frontend_client_contracts import RuntimeFrontendRefusedError
-from ...application.operations.registry import OperationFrontendProjection
+from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.runtime.contracts import RuntimeRefusalError
 from ...application.runtime.profile_access import status_admits_session
 from ...application.user_profile.access_contracts import ProfileAccessStatus
@@ -24,6 +31,11 @@ from ...core.i18n.render import tr
 from ...core.time.clock import now
 from .account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1, AccountSessionRetired, RuntimeUpgradePending
 from .components.theme import BASE_CSS, install_cadrumo_themes, tokenised
+from .installation.destination import installation_screen_factory
+from .navigation import TuiDestinationIdV1, TuiScreenContextV1, TuiScreenFactoryV1
+from .operations.catalogue import OperationCatalogueSourceV1, production_operation_registry
+from .operations.destination import OperationsDestinationV1
+from .reference.destination import reference_screen_factory
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
 
 _STATUS_INTERVAL_SECONDS = 10.0
@@ -77,8 +89,8 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
 
     BINDINGS: ClassVar = [Binding("q", "leave", "", show=False)]
     CSS = BASE_CSS + tokenised("""
-    #restricted-actions { height: auto; }
-    #restricted-actions Button { width: 1fr; min-width: $cadrumo-space-0; }
+    #restricted-actions, #restricted-destinations { height: auto; }
+    #restricted-actions Button, #restricted-destinations Button { width: 1fr; min-width: $cadrumo-space-0; }
     """)
 
     def __init__(
@@ -87,12 +99,27 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         *,
         profile_label: str,
         requester_factory: RestrictedRequesterFactory | None = None,
+        operation_registry: Callable[[], OperationRegistry] = production_operation_registry,
     ) -> None:
-        """Pin the caller-owned TUI connection without taking ownership of close."""
+        """Pin the caller-owned TUI connection without taking ownership of close.
+
+        ``operation_registry`` is composed only when the person opens the
+        operations, and once.
+        """
         super().__init__()
         if client.frontend is not OperationFrontendProjection.TUI or not profile_label:
             raise ValueError("restricted session requires an exact TUI client and profile label")
         self._client = client
+        # Every registered operation is listed: the runtime admits or refuses
+        # each by the session's scope, as it does for the command line.
+        self._destinations: dict[str, tuple[TuiDestinationIdV1, TuiScreenFactoryV1]] = {
+            "restricted-open-operations": (
+                "workbench.operations",
+                OperationsDestinationV1(client, OperationCatalogueSourceV1(operation_registry)),
+            ),
+            "restricted-open-installation": ("workbench.installation", installation_screen_factory),
+            "restricted-open-reference": ("workbench.reference", reference_screen_factory),
+        }
         self._profile_id: UUID = client.profile_id
         self._session_id: UUID = client.session_id
         self._profile_label = profile_label
@@ -122,6 +149,10 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
                 yield Button(tr("tui.restricted.lock"), id="restricted-lock")
                 yield Button(tr("tui.restricted.change_user"), id="restricted-change-user")
                 yield Button(tr("tui.restricted.close"), id="restricted-close")
+            with Horizontal(id="restricted-destinations"):
+                yield Button(tr("tui.destination.operations"), id="restricted-open-operations")
+                yield Button(tr("tui.destination.installation"), id="restricted-open-installation")
+                yield Button(tr("tui.destination.reference"), id="restricted-open-reference")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -141,6 +172,10 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         if self._unsubscribe_retirement is not None:
             self._unsubscribe_retirement()
             self._unsubscribe_retirement = None
+
+    def _shell(self) -> DOMNode:
+        """The shell's own screen, whichever destination is open over it."""
+        return self.screen_stack[0]
 
     def _post_retirement(self) -> None:
         self.post_message(AccountSessionRetired())
@@ -206,31 +241,32 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
         if status.session_expires_at is None or status.grant_expires_at is None:
             self._expire()
             return
-        self.query_one("#restricted-profile", Static).update(
+        shell = self._shell()
+        shell.query_one("#restricted-profile", Static).update(
             tr("tui.restricted.profile", label=self._profile_label, profile_id=str(self._profile_id))
         )
-        self.query_one("#restricted-session-expiry", Static).update(
+        shell.query_one("#restricted-session-expiry", Static).update(
             tr("tui.restricted.session_expiry", expires_at=status.session_expires_at.isoformat())
         )
-        self.query_one("#restricted-grant", Static).update(
+        shell.query_one("#restricted-grant", Static).update(
             tr("tui.restricted.grant", valid=tr("tui.restricted.yes"), expires_at=status.grant_expires_at.isoformat())
         )
-        self.query_one("#restricted-operations", Static).update(tr("tui.restricted.operations", values=operations))
-        self.query_one("#restricted-scope-actions", Static).update(tr("tui.restricted.actions", values=actions))
-        self.query_one("#restricted-disclosures", Static).update(
+        shell.query_one("#restricted-operations", Static).update(tr("tui.restricted.operations", values=operations))
+        shell.query_one("#restricted-scope-actions", Static).update(tr("tui.restricted.actions", values=actions))
+        shell.query_one("#restricted-disclosures", Static).update(
             f"{tr('tui.automation_inventory.disclosures')}: {disclosures}"
         )
-        self.query_one("#restricted-delegation", Static).update(
+        shell.query_one("#restricted-delegation", Static).update(
             f"{tr('tui.automation_inventory.delegation')}: {delegation}"
         )
-        self.query_one("#restricted-periods", Static).update(
+        shell.query_one("#restricted-periods", Static).update(
             tr(
                 "tui.restricted.periods",
                 values=periods,
                 independent=_restricted_period_independent(status),
             )
         )
-        self.query_one("#restricted-availability", Static).update(
+        shell.query_one("#restricted-availability", Static).update(
             tr(
                 "tui.restricted.availability",
                 storage=status.storage.value,
@@ -241,6 +277,7 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
 
     def _clear_presentation(self) -> None:
         self._cleared = True
+        shell = self._shell()
         for selector in (
             "#restricted-profile",
             "#restricted-session-expiry",
@@ -252,11 +289,13 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
             "#restricted-periods",
             "#restricted-availability",
         ):
-            self.query_one(selector, Static).update("")
-        self.query_one("#restricted-lock", Button).disabled = True
-        self.query_one("#restricted-change-user", Button).disabled = True
+            shell.query_one(selector, Static).update("")
+        shell.query_one("#restricted-lock", Button).disabled = True
+        shell.query_one("#restricted-change-user", Button).disabled = True
+        # The session is gone, so nothing more can be asked of the runtime under it.
+        shell.query_one("#restricted-open-operations", Button).disabled = True
         if self._requester_factory is not None:
-            self.query_one("#restricted-request-access", Button).disabled = True
+            shell.query_one("#restricted-request-access", Button).disabled = True
 
     def _expire(self) -> None:
         if self._cleared:
@@ -309,7 +348,18 @@ class RuntimeRestrictedSessionApp(App[AccountRecomposeRequiredV1 | None]):
             try:
                 self.push_screen(factory(self._client))
             except Exception:
-                self.query_one("#restricted-availability", Static).update(tr("tui.automation_request.invalid"))
+                self._shell().query_one("#restricted-availability", Static).update(tr("tui.automation_request.invalid"))
+
+    @on(Button.Pressed, "#restricted-destinations Button")
+    def _destination_pressed(self, event: Button.Pressed) -> None:
+        """Open the destination the pressed button names over the shell."""
+        opened = self._destinations.get(event.button.id or "")
+        if opened is None or self._locking:
+            return
+        destination, factory = opened
+        if destination == "workbench.operations" and (self._cleared or not self._binding_is_current()):
+            return
+        self.push_screen(factory(TuiScreenContextV1(destination=destination)))
 
     def action_leave(self) -> None:
         """Leave normally without revoking another authority or closing the client."""

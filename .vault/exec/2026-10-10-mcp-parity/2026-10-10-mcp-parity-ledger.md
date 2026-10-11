@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:9272f605a390ce3c0eee03b97ff304c7555dec884638b7997f82d8e646361eda'
+body_hash: 'sha256:78089d7e1037cf10532ec261b84895b0171b4d0f3a59e166aa069d548e086a4c'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -1739,6 +1739,71 @@ related:
 - `S58` `A` `src/cadrumo/entrypoints/tests/test_modelo_reconciliation_sequence.py`
 - `S58` `verify:` `pytest act families through the real runtime door (164), their operations and application tests (117), and the storage, reset, repair, archive, recovery, censo and profile commands (129 of 131; the two waited 3 s for the native test server under load)` -> `pass`
 - `S58` `by:` `vaultspec-high-executor`
+- `S60` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/navigation.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/operations/interactions.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/operations/modal.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/operations/refusal_explanation.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/operations/runtime_controller.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/runtime_admission.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/runtime_session.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/runtime_workbench.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/search.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/secret/registration.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_form.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/tests/test_installed_session.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/tests/test_navigation.py`
+- `S60` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_session.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/__init__.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/act_screen.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/acts.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/area_factory.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/destination.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/door.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/recovery_handover.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/rendering.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/__init__.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/runtime_support.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/test_acts.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/test_installation_area.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/test_reached_before_sign_in.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/test_recovery_enrolment.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/tests/test_refused_act_remedy.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/installation/texts.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/operations/catalogue.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/operations/destination.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/operations/palette.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/operations/request_form.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/operations/run_result.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/operations/run_screen.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_pending_input_and_choice.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_operation_catalogue.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_operation_label_coverage.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_request_form.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_run_result.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/reference/__init__.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/reference/destination.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/reference/filters.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/reference/read_screen.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/reference/reads.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/reference/tests/__init__.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/reference/tests/test_reference_area.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/reference/tests/test_reference_reads.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/reference/texts.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/reference/views.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/tests/test_installation_reference_wording.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/tests/test_operations_destination_native.py`
+- `S60` `A` `src/cadrumo/entrypoints/tui/tests/test_runtime_restricted_destinations_native.py`
+- `S60` `M` `src/cadrumo/locales/en/common.yml`
+- `S60` `M` `src/cadrumo/locales/es/common.yml`
+- `S60` `M` `src/cadrumo/locales/ca/common.yml`
+- `S60` `M` `src/cadrumo/locales/hu/common.yml`
+- `S60` `verify:` `pytest terminal-interface operations (118), installation (35), reference and wording (56), session, navigation, search and app (95), restricted destinations and secret display on a real runtime (6)` -> `pass`
+- `S60` `verify:` `ruff, format and ty on the touched files` -> `pass`
+- `S60` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S60` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1797,3 +1862,4 @@ related:
 - `S55` Storage and reset acts, each reply the JSON the command prints. Acts carry their own deadline and a timed out reset reports an unknown outcome read by `reset_status.` The command line did the reset in its own process and could delete a profile's files under a hosted worker; with a runtime reachable it now sends the act, which drains the hosted profiles first, and with none it works in process as before.
 - `S56` Profile list, archive inspect and import, and recovery enrolment as acts; recovery revocation and a censo certificate import with preview as operations; the archive export target checks and the delete preflight lifted so a direct client gets them. Replies carry real identifiers and the command line redacts when it prints. The cold profile listing no longer loads the runtime client. Logged here too: the door's models file and its tests, which all four families changed.
 - `S58` Review package and report document verification as acts. The report verification operation hashes the bytes it reads when no digest is given. Reconciliation takes the work by coordinates and the observation by the identifier the capture returns, so any client runs capture then reconcile; captures only read.
+- `S60` Three native launcher tests and eight sign-in and registration tests fail at the sign-in screen as they did at the last commit. Review interactions were not run on a real runtime here, since each needs Google, a model or a census specimen. The catalogue hunks of another session's two desktop keys are left uncommitted.

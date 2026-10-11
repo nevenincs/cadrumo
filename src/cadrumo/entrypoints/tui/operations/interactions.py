@@ -1,9 +1,10 @@
-"""Safe REVIEW rendering and separately authorized APPLY/REJECT controls.
+"""Pending interaction rendering and separately authorized APPLY/REJECT controls.
 
-Only the registered safe REVIEW projection and the response-control
-authorization are ever rendered. Public ``INPUT`` and ``CHOICE`` interaction
-kinds are treated as unsupported: no later contract has enrolled a TUI
-renderer for them yet, so this module never attempts to draw one.
+A pending REVIEW renders its registered safe projection beside the response
+controls that answer it. A pending ``INPUT`` or ``CHOICE`` renders what the
+public observation says about it: its kind, its presentation code and its
+expiry. The public response surface answers a REVIEW only, on every frontend,
+so no answer control is drawn for the other two kinds.
 
 These are runtime render states rather than wire contracts (a bound response
 control cannot cross a process boundary), so they are plain immutable
@@ -31,6 +32,8 @@ from ....application.operations.frontend_requests import (
     OperationReviewProjectionSuccessV1,
 )
 from ....application.operations.interactions import OperationResponseIntentValue
+from ....core.i18n.render import tr
+from ....core.operations import OperationInteractionKind
 from .controller_port import OperationControllerPort, OperationResponseControlPort
 
 
@@ -73,7 +76,7 @@ class OperationModalReviewUnavailableV1:
 
 @dataclass(frozen=True, slots=True)
 class OperationModalUnsupportedInteractionV1:
-    """A pending interaction this modal cannot yet render (INPUT or CHOICE)."""
+    """A pending INPUT or CHOICE, which the public response surface cannot answer."""
 
     interaction: OperationUnsupportedInteractionV1
     disposition: Literal["unsupported"] = field(default="unsupported", init=False)
@@ -153,6 +156,23 @@ async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
     )
 
 
+def unanswerable_interaction_text(interaction: OperationUnsupportedInteractionV1) -> str:
+    """Word a pending INPUT or CHOICE from the public facts its observation carries."""
+    kind = (
+        tr("tui.operations.interaction.kind.input")
+        if interaction.interaction_kind is OperationInteractionKind.INPUT
+        else tr("tui.operations.interaction.kind.choice")
+    )
+    lines = [
+        kind,
+        f"{tr('tui.operations.interaction.presentation')}: {interaction.presentation_code}",
+    ]
+    if interaction.expires_at is not None:
+        lines.append(f"{tr('tui.operations.interaction.expires')}: {interaction.expires_at.isoformat()}")
+    lines.append(tr("tui.operations.interaction.no_answer"))
+    return "\n".join(lines)
+
+
 __all__ = [
     "OperationModalInteractionStateV1",
     "OperationModalNoInteractionV1",
@@ -160,4 +180,5 @@ __all__ = [
     "OperationModalReviewUnavailableV1",
     "OperationModalUnsupportedInteractionV1",
     "resolve_modal_interaction_state",
+    "unanswerable_interaction_text",
 ]

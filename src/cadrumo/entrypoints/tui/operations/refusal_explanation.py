@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from ....application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
+from ....application.operator_surface.action_targets import resolve_recorded_precondition_action
 from ....core.errors.error_codes import declared_error_codes_by_qualname, resolve_error_message
 from ....core.errors.hierarchy import RecordedRegisteredError
 from ....core.i18n.render import tr
+from ....core.product_identity import PRODUCT_IDENTITY
 
 
 def public_refusal_explanation(code: str | None) -> str | None:
@@ -37,4 +39,25 @@ def operation_error_explanation(detail: OperationErrorDetailV1 | None) -> str | 
     return resolve_error_message(error)
 
 
-__all__ = ["operation_error_explanation", "public_refusal_explanation"]
+def recorded_remedy_line(detail: OperationErrorDetailV1 | None) -> str | None:
+    """Name the command the command line gives as the remedy of a stopped operation or act.
+
+    The recorded verdict names a catalogue action. The command line resolves
+    that action to the command it targets and prints the command; this
+    resolves it the same way. A verdict with no action, or one whose action
+    does not resolve to a command, names none.
+    """
+    verdict = None if detail is None else detail.precondition_verdict()
+    if verdict is None or verdict.action is None:
+        return None
+    try:
+        action = resolve_recorded_precondition_action(verdict).action
+    except (LookupError, ValueError):
+        return None
+    if action is None or action.cli_path is None:
+        return None
+    command = " ".join((PRODUCT_IDENTITY.cli_executable, *action.cli_path))
+    return tr("tui.operations.stopped.remedy_command", command=command)
+
+
+__all__ = ["operation_error_explanation", "public_refusal_explanation", "recorded_remedy_line"]

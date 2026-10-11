@@ -10,6 +10,7 @@ from textual.app import App
 
 from ...application.user_profile.login_interaction import ProfileLoginChoice
 from ...core.async_cleanup import close_async_resources
+from .installation.area_factory import InstallationAreaFactory
 from .secret.runtime_login import (
     RuntimeLoginScreen,
     RuntimeRequesterFactory,
@@ -34,6 +35,7 @@ class _RuntimeLoginApp(App[None]):
         open_client: RuntimeClientOpener,
         open_credential_client: RuntimeCredentialClientOpener | None,
         requester_factory: RuntimeRequesterFactory | None,
+        installation_factory: InstallationAreaFactory | None,
         preselected: str | None,
     ) -> None:
         super().__init__()
@@ -44,6 +46,7 @@ class _RuntimeLoginApp(App[None]):
             open_client=open_client,
             open_credential_client=open_credential_client,
             requester_factory=requester_factory,
+            installation_factory=installation_factory,
             accept_handoff=self._accept,
             preselected=preselected,
         )
@@ -76,6 +79,7 @@ async def runtime_login_session(
     open_client: RuntimeClientOpener,
     open_credential_client: RuntimeCredentialClientOpener | None = None,
     requester_factory: RuntimeRequesterFactory | None = None,
+    installation_factory: InstallationAreaFactory | None = None,
     preselected: str | None = None,
     headless: bool = False,
     auto_pilot: AutopilotCallbackType | None = None,
@@ -92,6 +96,7 @@ async def runtime_login_session(
         open_client=open_client,
         open_credential_client=open_credential_client,
         requester_factory=requester_factory,
+        installation_factory=installation_factory,
         preselected=preselected,
     )
     primary: BaseException | None = None

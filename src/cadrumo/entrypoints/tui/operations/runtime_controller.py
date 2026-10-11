@@ -72,6 +72,7 @@ _CANCELLATION = TypeAdapter[OperationCancellationResultV1](OperationCancellation
 _DETACH = TypeAdapter[OperationDetachResultV1](OperationDetachResultV1)
 _RESPONSE_CONTROL = TypeAdapter[OperationResponseControlResultV1](OperationResponseControlResultV1)
 _RESPONSE_MUTATION = TypeAdapter[OperationResponseMutationResultV1](OperationResponseMutationResultV1)
+_SECRET_DELIVERY_SECONDS = 20.0
 
 
 def _settled_result_expected[ResultT: BaseModel](
@@ -174,19 +175,55 @@ async def _admit_submission_contract(
         asyncio.to_thread(client.contract, definition_id, deadline=deadline),
         task_name="tui-runtime-definition",
     )
-    if contract.ephemeral_secret_required:
-        # This door carries credential-free operands only. Refuse before
-        # persisting work whose separate secret handoff is not composed.
-        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
     if client.session_id != session_id:
         raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
     return contract
 
 
 def _submitted_receipt(reply: RuntimeOperationReply) -> RuntimeOperationSubmitted:
-    if not isinstance(reply, RuntimeOperationSubmitted) or reply.receipt.secret_requirement is not None:
+    if not isinstance(reply, RuntimeOperationSubmitted):
         raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
     return reply
+
+
+async def _deliver_submission_secret(
+    client: RuntimeFrontendClient,
+    submitted: RuntimeOperationSubmitted,
+    *,
+    definition_id: str,
+    subject_ref: str,
+    secret: bytearray | None,
+    deadline: float,
+) -> None:
+    """Hand a one-shot secret to the exact wait its submission opened, on the protected frame.
+
+    The wait and the caller must agree: a requirement with no secret, a secret
+    with no requirement, or a requirement naming another operation, definition
+    or subject sends nothing.
+    """
+    requirement = submitted.receipt.secret_requirement
+    if (requirement is None) is not (secret is None):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    if requirement is None or secret is None:
+        return
+    operation_id = submitted.receipt.operation_id
+    if (
+        requirement.identity.operation_id != operation_id
+        or requirement.identity.definition_id != definition_id
+        or requirement.identity.subject_ref != subject_ref
+    ):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    acknowledged = await await_cancellation_complete(
+        asyncio.to_thread(
+            client.submit_secret,
+            requirement,
+            secret,
+            timeout=min(_SECRET_DELIVERY_SECONDS, remaining_budget(deadline)),
+        ),
+        task_name="tui-runtime-secret",
+    )
+    if acknowledged.operation_id != operation_id:
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
 
 
 class RuntimeReviewDocument(RootModel[dict[str, JsonValue]]):
@@ -245,12 +282,51 @@ class RuntimeOperationController:
         deadline: float | None = None,
         expected_session_id: UUID | None = None,
         financial_input: bool = False,
+        secret: bytearray | None = None,
     ) -> RuntimeOperationController:
-        """Submit a registered request without transferring response capabilities."""
+        """Submit a registered request without transferring response capabilities.
+
+        ``secret`` is the one-shot secret of an operation whose contract
+        declares one. It is delivered after the submission is durable and is
+        wiped on every exit, whether or not it was sent.
+        """
+        try:
+            return await cls._submit(
+                client,
+                definition_id=definition_id,
+                subject_ref=subject_ref,
+                payload=payload,
+                idempotency_key=idempotency_key,
+                deadline=deadline,
+                expected_session_id=expected_session_id,
+                financial_input=financial_input,
+                secret=secret,
+            )
+        finally:
+            if secret is not None:
+                secret[:] = bytes(len(secret))
+
+    @classmethod
+    async def _submit(
+        cls,
+        client: RuntimeFrontendClient,
+        *,
+        definition_id: str,
+        subject_ref: str,
+        payload: BaseModel,
+        idempotency_key: str | None,
+        deadline: float | None,
+        expected_session_id: UUID | None,
+        financial_input: bool,
+        secret: bytearray | None,
+    ) -> RuntimeOperationController:
         session_id = _submission_session(client, expected_session_id)
         exchange_deadline = _exchange_deadline(deadline)
         contract = await _admit_submission_contract(client, definition_id, exchange_deadline, session_id)
         if financial_input != (contract.transient_financial_operand is not None):
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        if contract.ephemeral_secret_required is not (secret is not None):
+            # Refused before anything is persisted: the contract and the caller disagree about a secret.
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         if financial_input:
             if idempotency_key is not None:
@@ -278,6 +354,14 @@ class RuntimeOperationController:
             task_name="tui-runtime-submission",
         )
         receipt = _submitted_receipt(reply)
+        await _deliver_submission_secret(
+            client,
+            receipt,
+            definition_id=definition_id,
+            subject_ref=subject_ref,
+            secret=secret,
+            deadline=exchange_deadline,
+        )
         if client.session_id != session_id:
             raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
         return cls(client=client, operation_id=receipt.receipt.operation_id, session_id=session_id, deadline=deadline)
@@ -291,8 +375,38 @@ class RuntimeOperationController:
         allow_refusal_detail: bool = False,
     ) -> ResultT:
         """Read one exact registered terminal result through current disclosure."""
-        contract = projection.definition_contract
         expected = _settled_result_expected(projection, result_type, result_version)
+        return await self._read_settled(projection, result_type, expected, allow_refusal_detail=allow_refusal_detail)
+
+    async def read_registered_result[ResultT: BaseModel](
+        self,
+        projection: OperationPublicProjectionV1,
+        result_type: type[ResultT],
+        *,
+        allow_refusal_detail: bool = False,
+    ) -> ResultT:
+        """Read the terminal result under the result schema the operation's own contract registers.
+
+        ``result_type`` must be the model that schema binds: an identity derived
+        from another model does not reproduce the registered one and is refused.
+        """
+        registered = projection.definition_contract.result_schema
+        if registered is None:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        expected = OperationSchemaIdentityV1.from_model(
+            schema_id=registered.schema_id, schema_version=registered.schema_version, model_type=result_type
+        )
+        return await self._read_settled(projection, result_type, expected, allow_refusal_detail=allow_refusal_detail)
+
+    async def _read_settled[ResultT: BaseModel](
+        self,
+        projection: OperationPublicProjectionV1,
+        result_type: type[ResultT],
+        expected: OperationSchemaIdentityV1,
+        *,
+        allow_refusal_detail: bool,
+    ) -> ResultT:
+        contract = projection.definition_contract
         if not _settled_result_is_readable(self, projection, expected, allow_refusal_detail=allow_refusal_detail):
             raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
         request = OperationResultProjectionRequestV1(

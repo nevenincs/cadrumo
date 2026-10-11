@@ -33,6 +33,9 @@ type TuiDestinationIdV1 = Literal[
     "workbench.withholding",
     "workbench.declarations",
     "workbench.aeat_sync",
+    "workbench.operations",
+    "workbench.installation",
+    "workbench.reference",
     "workbench.profile",
 ]
 """The closed route identities admitted by the TUI shell."""
@@ -43,6 +46,9 @@ type TuiDestinationLabelKeyV1 = Literal[
     "tui.destination.withholding",
     "tui.destination.declarations",
     "tui.destination.aeat_sync",
+    "tui.destination.operations",
+    "tui.destination.installation",
+    "tui.destination.reference",
     "tui.destination.profile",
 ]
 """Stable locale keys, not display strings."""
@@ -238,6 +244,15 @@ TUI_DESTINATION_CATALOGUE: Final[tuple[TuiDestinationDescriptorV1, ...]] = (
     ),
     TuiDestinationDescriptorV1(
         destination="workbench.aeat_sync", label_key="tui.destination.aeat_sync", zone="primary"
+    ),
+    TuiDestinationDescriptorV1(
+        destination="workbench.operations", label_key="tui.destination.operations", zone="primary"
+    ),
+    TuiDestinationDescriptorV1(
+        destination="workbench.installation", label_key="tui.destination.installation", zone="primary"
+    ),
+    TuiDestinationDescriptorV1(
+        destination="workbench.reference", label_key="tui.destination.reference", zone="primary"
     ),
     TuiDestinationDescriptorV1(destination="workbench.profile", label_key="tui.destination.profile", zone="account"),
 )

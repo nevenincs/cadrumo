@@ -2023,8 +2023,11 @@ tui:
     home: Home
     ledger: Records
     profile: Profile
+    installation: Installation
     withholding: Withholding
+    operations: Operations
   home:
+    reference: Reference
     account_fallback: Account
     action:
       context_across_records: Across records
@@ -2110,6 +2113,154 @@ tui:
     title: Home
   ledger:
     area:
+  installation:
+    act:
+      archive_import:
+        label: Restore a profile from a backup
+        summary: Restores a profile from a backup file or folder once you prove its
+          password.
+      archive_import_prepare:
+        label: Read a backup before restoring it
+        summary: Reads a backup file or folder and returns the digest of what was
+          read. It restores nothing.
+      archive_inspect:
+        label: Inspect a profile backup
+        summary: Shows what a backup file says about itself, without decrypting it.
+      profile_list:
+        label: List the profiles
+        summary: Lists the profiles on this computer without unlocking any of them.
+      recovery_enroll:
+        label: Set up a recovery code
+        summary: Creates a recovery code for a profile once you prove its password.
+          The code is shown once.
+      repair_logs:
+        label: Recent log lines
+        summary: Shows where the log file is and its most recent lines.
+      repair_profile:
+        label: Repair the active profile
+        summary: Checks whether one profile's record can be read, or clears an active-profile
+          setting that points at nothing usable.
+      repair_report:
+        label: Diagnose the installation
+        summary: Checks the local configuration, the active profile, sign-in and the
+          log.
+      report_verify_document:
+        label: Verify a calculation summary
+        summary: Checks a calculation summary file by its own contents, without tracing
+          it to any profile.
+      reset_resume:
+        label: Resume a reset
+        summary: Carries an unfinished reset through to its end.
+      reset_start:
+        label: Reset all profiles
+        summary: Starts the irreversible removal of every profile stored on this computer.
+      reset_status:
+        label: Reset status
+        summary: Shows how far a reset has got, without continuing it.
+      review_package_verify:
+        label: Verify a review package
+        summary: Checks every file in a review package against its checksum list.
+      review_package_verify_receipt:
+        label: Verify a countersigned receipt
+        summary: Checks both signatures on a countersigned receipt for a review package.
+      review_package_verify_signature:
+        label: Verify a package signature
+        summary: Checks a review package's signature against a public key you trust.
+      storage_check:
+        label: Check the storage
+        summary: Compares the storage folders on disk with what they should be, without
+          repairing anything.
+      storage_init:
+        label: Create the storage folders
+        summary: Creates every folder that is missing and keeps everything that is
+          already there.
+      storage_inventory:
+        label: Storage inventory
+        summary: Shows where each storage area is and what it holds.
+      storage_reclaim:
+        label: Free up a storage area
+        summary: Deletes the contents of one area that can be created again.
+    action:
+      close: Back
+      read_outcome: 'See how it ended: {act}'
+      run: Run
+    column:
+      act: Task
+      effect: Effect
+      family: Area
+    confirm:
+      accept: Run it
+      cancel: Do not run
+      question: Run it now? This changes records on this computer.
+      title: 'Confirm: {act}'
+    effect:
+      changes: Changes records
+      reads: Reads only
+    family:
+      other: Other
+      profiles: Profiles
+      repair: Repair
+      reset: Reset
+      storage: Storage
+      verification: Verification
+    field:
+      acknowledge_retention_override: Remove profiles even if their legal retention
+        period has not ended
+      area: Storage area
+      clear_active: Clear the active-profile setting
+      counter_signer_public_key: The countersigner's public key
+      label: Profile name
+      lines: Number of lines
+      operation_id: Reset identifier
+      operator_public_key: Your public key
+      package: Review package file
+      path: File or folder
+      profile: Profile name or identifier
+      profile_id: Profile identifier
+      public_key: Public key
+      receipt: Receipt file
+      retention_override_reason: Reason for removing them early
+      signature: Signature file
+      source_digest: Digest of the backup
+      trusted_key: Key you trust
+    hint:
+      json: A JSON value.
+      optional: Optional.
+      path: A path on this computer.
+      supplied: Leave it empty and it is read from the backup first.
+    intro: Work on this installation that needs no signed-in profile. The local service
+      carries out each one.
+    inventory_unavailable: The profiles on this computer could not be listed ({reason}).
+      You can still inspect and repair the installation here.
+    list_hint: Press Enter on a row to open it.
+    passphrase:
+      label: Profile password
+      required: Enter the profile password.
+    profiles:
+      column:
+        active: Active
+        id: Identifier
+        label: Name
+    result:
+      remedy: 'Suggested next step: {action}'
+    status:
+      completed: Done.
+      effect_unknown: The connection ended before an answer arrived ({code}). It may
+        still have run; check before you run it again.
+      failed: The local service stopped on a fault ({act}). Its log has the detail.
+      failed_unknown: The local service stopped on a fault ({act}). Some records may
+        already have changed; check before you run it again.
+      invalid_fields: 'Check: {fields}.'
+      preview: Nothing has changed yet. This is what would happen.
+      progress: Asking the local service…
+      recovery_declined: You did not confirm the recovery code, so none was set up.
+      refused: Refused ({code}).
+      unreachable: The local service did not accept the request ({code}).
+    title: Installation and repair
+    verdict:
+      invalid: Not valid.
+      outcome: 'Verification result: {outcome}'
+      valid: Valid.
       classification: Classification
       entries: Entries
       evidence: Supporting documents
@@ -3320,6 +3471,148 @@ tui:
       was: was {value}
   restricted:
     actions: 'Allowed actions: {values}'
+  operations:
+    action:
+      close: Close
+      edit_fields: Edit as fields
+      edit_json: Edit as JSON
+      next_page: Next page
+      previous_page: Previous page
+      run: Run
+    form:
+      choose: Choose
+      error:
+        choice: Choose one of the offered values.
+        integer: Enter a whole number.
+        json: This is not valid JSON.
+        json_object: The request must be one valid JSON object. Nothing was sent.
+        json_unknown_fields: The JSON names fields this request does not have. Remove
+          them, or keep editing as JSON.
+        number: Enter a number.
+      fixed: set by this session
+      hint:
+        date: Date as YYYY-MM-DD
+        datetime: Date and time as YYYY-MM-DDTHH:MM:SSZ
+        decimal: Exact amount, for example 1234.56
+        integer: Whole number
+        number: Number
+        path: File or folder path
+        text: Text
+        uuid: Identifier
+      invalid: The request is not valid yet. Nothing was sent.
+      profile: Profile
+      required: required
+      secret: Secret (hidden as you type, sent apart from the request)
+      secret_required: This operation needs its secret. Enter it and run again. Nothing
+        was sent.
+      session: Session
+      subject: Subject
+      subject_entry: Work unit this request acts on
+      subject_missing: The request does not say yet what it acts on. Fill in the field
+        that names it. Nothing was sent.
+      subject_pending: the request does not say yet
+    interaction:
+      expires: Expires
+      kind:
+        choice: The operation is waiting for a choice.
+        input: The operation is waiting for an input.
+      no_answer: 'This kind of request cannot be answered yet, here or from the command
+        line or MCP: only a review can be applied or rejected. You can cancel the
+        operation or leave it waiting.'
+      presentation: Asks for
+    palette:
+      help: Open this operation's request form
+    receipt:
+      effect: Effect
+      operation: Operation
+      outcome: Outcome
+    result:
+      page: Result, page {page} of {pages}
+    run:
+      contract_changed: The runtime now serves a different contract for this operation.
+        Reopen Operations and try again. Nothing was sent.
+      detached: You left the operation while it was still running. Its outcome is
+        not known here.
+      start_unconfirmed: The request was recorded, but its start was not confirmed.
+        Nothing was retried.
+      unknown: The reply was lost, so it is not known whether the request was recorded.
+        Nothing was retried.
+      unobserved: The operation could not be observed, so its state is not known here.
+    search:
+      placeholder: Search by identifier or description
+    status:
+      count: '{shown} of {total} operations'
+      loading: Reading the registered operations.
+      unavailable: The registered operations could not be read.
+    stopped:
+      code: Code
+      remedy: What would let it proceed
+      remedy_command: 'Remedy command: {command}'
+    title: Operations
+  reference:
+    action:
+      close: Back
+      show: Show
+    column:
+      read: Reference
+    filter:
+      any: Any
+      as_of: As of date (YYYY-MM-DD)
+      casilla: Casilla
+      casilla_number: Casilla number or identifier
+      category: Category
+      domain: Tax family
+      form_number: Official box number
+      input_kind: How the value is supplied
+      modelo: Modelo
+      period: Period (0A, 1T to 4T, 01 to 12)
+      portal: Portal identifier
+      required: Required only
+      year: Filing year
+    filters: What to show
+    intro: Public reference data that comes with Cadrumo. Reading it needs no profile
+      and contacts nobody.
+    list_hint: Press Enter on a row to open it.
+    read:
+      apoderado_scopes: Representative scopes
+      auth_providers: Sign-in methods for AEAT
+      bindings: Box sources of a modelo
+      casilla: One casilla
+      casillas: Casillas of a modelo
+      categories: Record categories
+      describe: Modelo description
+      formulas: Formulas of a modelo
+      modelos: Modelo catalogue
+      portal: One AEAT portal
+      portals: AEAT portals
+      support_matrix: Capability matrix
+    section:
+      irpf_categories: IRPF categories
+      spending_categories: Spending categories
+    status:
+      failed: The reference could not be read. The log has the detail.
+      invalid: 'Check: {fields}.'
+      loading: Reading…
+      rows: 'Rows: {count}'
+    summary:
+      apoderado_scopes: What a representative can be authorised to do on someone's
+        behalf.
+      auth_providers: The ways Cadrumo can identify you to AEAT.
+      bindings: Where the values of one version of a modelo come from.
+      casilla: 'One casilla: its official label, legal basis and, if it is calculated,
+        its formula.'
+      casillas: The casillas of one version of a modelo, with filters.
+      categories: The spending and IRPF categories a record can carry.
+      describe: One modelo's versions, periods and counts.
+      formulas: The formulas of one version of a modelo, with what each one reads.
+      modelos: Every modelo Cadrumo knows, for one filing year or tax family if you
+        choose.
+      portal: 'One AEAT web page: its address, purpose and sign-in methods.'
+      portals: The AEAT web pages Cadrumo knows, by category or modelo. Listing them
+        opens none.
+      support_matrix: 'What Cadrumo can do with each modelo: calculate, export, read
+        filed copies.'
+    title: Reference
     all_periods: All periods
     availability: 'Availability - storage: {storage}; authority: {authority}; provider:
       {provider}'
@@ -3448,16 +3741,22 @@ tui:
       home: Open Home
       ledger: Open Records
       profile: Open Profile
+      installation: Open Installation
       unknown: Open area
+      operations: Open Operations
       withholding: Open Withholding
+      reference: Open Reference
     destination_help:
       aeat_sync: What has been read from the AEAT and what can be read next
       declarations: Declarations, earlier calculations, filing history and calendar
       home: Next actions, declarations and deadlines at a glance
       ledger: Entries, review, classification and supporting documents
       profile: This profile's details and the sources that fill them in
+      installation: Storage, repair, reset and the profiles on this computer
       withholding: Capture and inspect invoice withholding for a selected filing year
+      operations: Every operation Cadrumo can run, to search, fill in and run
     refusal:
+      reference: Modelos, casillas, categories, portals and sign-in methods
       not_composed: Not every area could be read yet.
       refresh_failed: The last refresh could not rebuild the index.
       unavailable: Search is unavailable in this session

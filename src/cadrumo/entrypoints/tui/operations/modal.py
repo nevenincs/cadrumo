@@ -54,7 +54,9 @@ from .controller_port import OperationControllerPort, OperationErrorDetailPort
 from .interactions import (
     OperationModalInteractionStateV1,
     OperationModalReviewInteractionV1,
+    OperationModalUnsupportedInteractionV1,
     resolve_modal_interaction_state,
+    unanswerable_interaction_text,
 )
 from .logs import OperationModalLogRowV1, OperationModalLogViewV1, build_initial_log_view, fold_event_page
 from .projection import OperationModalViewModelV1, build_operation_modal_view_model
@@ -272,6 +274,8 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         interaction = self._interaction
         if isinstance(interaction, OperationModalReviewInteractionV1):
             review.update(interaction.projection.model_dump_json())
+        elif isinstance(interaction, OperationModalUnsupportedInteractionV1):
+            review.update(unanswerable_interaction_text(interaction.interaction))
         else:
             review.update("")
         log_widget = self.query_one("#operation-modal-log", Static)

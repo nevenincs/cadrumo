@@ -2065,8 +2065,11 @@ tui:
     home: Kezdőlap
     ledger: Nyilvántartás
     profile: Profil
+    installation: Telepítés
     withholding: Levonások
+    operations: Műveletek
   home:
+    reference: Kézikönyv
     account_fallback: Fiók
     action:
       context_across_records: Minden nyilvántartásra
@@ -2153,6 +2156,158 @@ tui:
     title: Kezdőlap
   ledger:
     area:
+  installation:
+    act:
+      archive_import:
+        label: Profil visszaállítása mentésből
+        summary: Visszaállít egy profilt mentésfájlból vagy -mappából, miután igazoltad
+          a jelszavát.
+      archive_import_prepare:
+        label: Mentés beolvasása visszaállítás előtt
+        summary: Beolvas egy mentésfájlt vagy -mappát, és visszaadja a beolvasott
+          tartalom lenyomatát. Semmit sem állít vissza.
+      archive_inspect:
+        label: Profilmentés megvizsgálása
+        summary: Megmutatja, mit árul el magáról egy mentésfájl, visszafejtés nélkül.
+      profile_list:
+        label: Profilok felsorolása
+        summary: Felsorolja a gépen lévő profilokat anélkül, hogy bármelyiket feloldaná.
+      recovery_enroll:
+        label: Helyreállítási kód beállítása
+        summary: Helyreállítási kódot hoz létre egy profilhoz, miután igazoltad a
+          jelszavát. A kód egyszer jelenik meg.
+      repair_logs:
+        label: Legutóbbi naplósorok
+        summary: Megmutatja, hol van a naplófájl, és kiírja a legutóbbi sorait.
+      repair_profile:
+        label: Aktív profil javítása
+        summary: Ellenőrzi, hogy olvasható-e egy profil rekordja, vagy törli az aktívprofil-beállítást,
+          ha az semmi használhatóra nem mutat.
+      repair_report:
+        label: Telepítés diagnosztikája
+        summary: Ellenőrzi a helyi konfigurációt, az aktív profilt, a bejelentkezést
+          és a naplót.
+      report_verify_document:
+        label: Számítási összesítő ellenőrzése
+        summary: A számítási összesítő fájlt a saját tartalma alapján ellenőrzi, és
+          egyetlen profilhoz sem köti.
+      reset_resume:
+        label: Visszaállítás folytatása
+        summary: Végigviszi a félbemaradt visszaállítást.
+      reset_start:
+        label: Minden profil visszaállítása
+        summary: Elindítja a gépen tárolt összes profil visszafordíthatatlan eltávolítását.
+      reset_status:
+        label: Visszaállítás állapota
+        summary: Megmutatja, meddig jutott egy visszaállítás, de nem folytatja.
+      review_package_verify:
+        label: Felülvizsgálati csomag ellenőrzése
+        summary: A felülvizsgálati csomag minden fájlját összeveti az ellenőrzőösszeg-listájával.
+      review_package_verify_receipt:
+        label: Ellenjegyzett átvételi igazolás ellenőrzése
+        summary: Ellenőrzi a felülvizsgálati csomag ellenjegyzett átvételi igazolásának
+          mindkét aláírását.
+      review_package_verify_signature:
+        label: Csomag aláírásának ellenőrzése
+        summary: A felülvizsgálati csomag aláírását egy általad megbízhatónak tartott
+          nyilvános kulccsal ellenőrzi.
+      storage_check:
+        label: Tárolás ellenőrzése
+        summary: Összeveti a lemezen lévő tárolómappákat azzal, aminek lenniük kellene,
+          és semmit sem javít.
+      storage_init:
+        label: Tárolómappák létrehozása
+        summary: Létrehoz minden hiányzó mappát, és megtart mindent, ami már megvan.
+      storage_inventory:
+        label: Tárolási leltár
+        summary: Megmutatja, hol található az egyes tárolási területek, és mi van
+          bennük.
+      storage_reclaim:
+        label: Tárolási terület felszabadítása
+        summary: Törli egy terület újra előállítható tartalmát.
+    action:
+      close: Vissza
+      read_outcome: 'Nézd meg, hogyan végződött: {act}'
+      run: Futtatás
+    column:
+      act: Művelet
+      effect: Hatás
+      family: Terület
+    confirm:
+      accept: Futtatás
+      cancel: Ne futtasd
+      question: Futtatod most? Ez adatokat módosít ezen a gépen.
+      title: 'Megerősítés: {act}'
+    effect:
+      changes: Adatokat módosít
+      reads: Csak olvas
+    family:
+      other: Egyéb
+      profiles: Profilok
+      repair: Javítás
+      reset: Visszaállítás
+      storage: Tárolás
+      verification: Ellenőrzés
+    field:
+      acknowledge_retention_override: Profilok eltávolítása akkor is, ha a törvényes
+        megőrzési idejük még nem járt le
+      area: Tárolási terület
+      clear_active: Az aktívprofil-beállítás törlése
+      counter_signer_public_key: Az ellenjegyző nyilvános kulcsa
+      label: Profil neve
+      lines: Sorok száma
+      operation_id: Visszaállítás azonosítója
+      operator_public_key: A te nyilvános kulcsod
+      package: A felülvizsgálati csomag fájlja
+      path: Fájl vagy mappa
+      profile: Profil neve vagy azonosítója
+      profile_id: Profilazonosító
+      public_key: Nyilvános kulcs
+      receipt: Az átvételi igazolás fájlja
+      retention_override_reason: A korai eltávolítás oka
+      signature: Aláírásfájl
+      source_digest: A mentés lenyomata
+      trusted_key: Általad megbízhatónak tartott kulcs
+    hint:
+      json: Egy JSON-érték.
+      optional: Nem kötelező.
+      path: Egy elérési út ezen a gépen.
+      supplied: Hagyd üresen, és előbb a mentésből lesz kiolvasva.
+    intro: A telepítésen végzett műveletek, amelyekhez nem kell bejelentkezett profil.
+      Mindegyiket a helyi szolgáltatás hajtja végre.
+    inventory_unavailable: Nem sikerült felsorolni a gépen lévő profilokat ({reason}).
+      A telepítést innen így is megvizsgálhatod és megjavíthatod.
+    list_hint: Egy sor megnyitásához nyomd meg rajta az Enter billentyűt.
+    passphrase:
+      label: Profiljelszó
+      required: Add meg a profil jelszavát.
+    profiles:
+      column:
+        active: Aktív
+        id: Azonosító
+        label: Név
+    result:
+      remedy: 'Javasolt következő lépés: {action}'
+    status:
+      completed: Kész.
+      effect_unknown: A kapcsolat megszakadt, mielőtt válasz érkezett volna ({code}).
+        Lehet, hogy mégis lefutott; ellenőrizd, mielőtt újra futtatod.
+      failed: A helyi szolgáltatás hiba miatt leállt ({act}). A részletek a naplójában
+        vannak.
+      failed_unknown: A helyi szolgáltatás hiba miatt leállt ({act}). Lehet, hogy
+        néhány adat már megváltozott; ellenőrizd, mielőtt újra futtatod.
+      invalid_fields: 'Ellenőrizd: {fields}.'
+      preview: Még semmi sem változott. Ez történne.
+      progress: Kérés a helyi szolgáltatáshoz…
+      recovery_declined: Nem erősítetted meg a helyreállítási kódot, ezért egy sem
+        lett beállítva.
+      refused: Elutasítva ({code}).
+      unreachable: A helyi szolgáltatás nem fogadta el a kérést ({code}).
+    title: Telepítés és javítás
+    verdict:
+      invalid: Nem érvényes.
+      outcome: 'Az ellenőrzés eredménye: {outcome}'
+      valid: Érvényes.
       classification: Besorolás
       entries: Tételek
       evidence: Bizonylatok
@@ -3389,6 +3544,149 @@ tui:
       was: 'korábban: {value}'
   restricted:
     actions: 'Engedélyezett tevékenységek: {values}'
+  operations:
+    action:
+      close: Bezárás
+      edit_fields: Szerkesztés mezőnként
+      edit_json: Szerkesztés JSON-ként
+      next_page: Következő oldal
+      previous_page: Előző oldal
+      run: Futtatás
+    form:
+      choose: Válassz
+      error:
+        choice: Válassz a felkínált értékek közül.
+        integer: Adj meg egy egész számot.
+        json: Ez nem érvényes JSON.
+        json_object: A kérésnek egyetlen érvényes JSON-objektumnak kell lennie. Semmi
+          sem lett elküldve.
+        json_unknown_fields: A JSON olyan mezőket nevez meg, amelyek ebben a kérésben
+          nincsenek. Töröld őket, vagy szerkeszd tovább JSON-ként.
+        number: Adj meg egy számot.
+      fixed: a munkamenet határozza meg
+      hint:
+        date: Dátum ÉÉÉÉ-HH-NN formában
+        datetime: Dátum és idő ÉÉÉÉ-HH-NNTÓÓ:PP:MMZ formában
+        decimal: Pontos összeg, például 1234.56
+        integer: Egész szám
+        number: Szám
+        path: Fájl vagy mappa elérési útja
+        text: Szöveg
+        uuid: Azonosító
+      invalid: A kérés még nem érvényes. Semmi sem lett elküldve.
+      profile: Profil
+      required: kötelező
+      secret: Titok (gépelés közben rejtve, a kéréstől külön kerül elküldésre)
+      secret_required: Ehhez a művelethez meg kell adnod a titkot. Írd be, és futtasd
+        újra. Semmi sem lett elküldve.
+      session: Munkamenet
+      subject: Tárgy
+      subject_entry: A munkaegység, amelyre a kérés vonatkozik
+      subject_missing: A kérés még nem adja meg, mire vonatkozik. Töltsd ki az ezt
+        megnevező mezőt. Semmi sem lett elküldve.
+      subject_pending: a kérés még nem adja meg
+    interaction:
+      expires: Lejárat
+      kind:
+        choice: A művelet egy választásra vár.
+        input: A művelet egy adat megadására vár.
+      no_answer: 'Erre a kéréstípusra még nem lehet válaszolni sem itt, sem a parancssorból,
+        sem MCP-ből: csak egy felülvizsgálatot lehet alkalmazni vagy elutasítani.
+        Megszakíthatod a műveletet, vagy várakozni hagyhatod.'
+      presentation: Kérés tárgya
+    palette:
+      help: A művelet kérésűrlapjának megnyitása
+    receipt:
+      effect: Hatás
+      operation: Művelet
+      outcome: Kimenetel
+    result:
+      page: Eredmény, {page}. oldal, összesen {pages}
+    run:
+      contract_changed: A szolgáltatás már más szerződést ad ehhez a művelethez. Nyisd
+        meg újra a Műveleteket, és próbáld meg ismét. Semmi sem lett elküldve.
+      detached: Kiléptél a műveletből, miközben még futott. Az eredménye itt nem ismert.
+      start_unconfirmed: A kérés rögzítésre került, de az indítása nem lett megerősítve.
+        Semmi sem lett megismételve.
+      unknown: A válasz elveszett, ezért nem tudni, hogy a kérés rögzítésre került-e.
+        Semmi sem lett megismételve.
+      unobserved: A műveletet nem sikerült megfigyelni, ezért az állapota itt nem
+        ismert.
+    search:
+      placeholder: Keress azonosító vagy leírás szerint
+    status:
+      count: '{shown} / {total} művelet'
+      loading: A regisztrált műveletek beolvasása folyamatban.
+      unavailable: A regisztrált műveleteket nem sikerült beolvasni.
+    stopped:
+      code: Kód
+      remedy: Mi kell a folytatáshoz
+      remedy_command: 'Megoldó parancs: {command}'
+    title: Műveletek
+  reference:
+    action:
+      close: Vissza
+      show: Megjelenítés
+    column:
+      read: Referencia
+    filter:
+      any: Bármelyik
+      as_of: Ezen a napon érvényes (ÉÉÉÉ-HH-NN)
+      casilla: Mező
+      casilla_number: Mező száma vagy azonosítója
+      category: Kategória
+      domain: Adózási terület
+      form_number: Hivatalos rovatszám
+      input_kind: Honnan kap értéket
+      modelo: Nyomtatvány
+      period: Időszak (0A, 1T–4T, 01–12)
+      portal: Portálazonosító
+      required: Csak a kötelezők
+      year: Adóév
+    filters: Mit mutasson
+    intro: A Cadrumóval együtt érkező nyilvános referenciaadatok. Az olvasásukhoz
+      nem kell profil, és senkivel sem lép kapcsolatba.
+    list_hint: Egy sor megnyitásához nyomd meg rajta az Enter billentyűt.
+    read:
+      apoderado_scopes: Meghatalmazási körök
+      auth_providers: AEAT-azonosítási módok
+      bindings: Nyomtatvány rovatforrásai
+      casilla: Egy mező
+      casillas: Nyomtatvány mezői
+      categories: Nyilvántartási kategóriák
+      describe: Nyomtatvány leírása
+      formulas: Nyomtatvány képletei
+      modelos: Nyomtatványkatalógus
+      portal: Egy AEAT-portál
+      portals: AEAT-portálok
+      support_matrix: Képességmátrix
+    section:
+      irpf_categories: IRPF-kategóriák
+      spending_categories: Kiadási kategóriák
+    status:
+      failed: A referenciát nem sikerült beolvasni. A részletek a naplóban vannak.
+      invalid: 'Ellenőrizd: {fields}.'
+      loading: Olvasás…
+      rows: 'Sorok: {count}'
+    summary:
+      apoderado_scopes: Mire kaphat felhatalmazást egy meghatalmazott valaki más nevében.
+      auth_providers: Azok a módok, ahogyan a Cadrumo azonosítani tud téged az AEAT
+        felé.
+      bindings: Honnan származnak egy nyomtatványváltozat értékei.
+      casilla: 'Egy mező: a hivatalos megnevezése, a jogalapja és, ha számított, a
+        képlete.'
+      casillas: Egy nyomtatványváltozat mezői, szűrőkkel.
+      categories: A nyilvántartási tételekhez rendelhető kiadási és IRPF-kategóriák.
+      describe: Egy nyomtatvány változatai, időszakai és darabszámai.
+      formulas: Egy nyomtatványváltozat képletei, és hogy melyik miből számol.
+      modelos: A Cadrumo által ismert összes nyomtatvány, igény szerint egy adóévre
+        vagy adózási területre szűkítve.
+      portal: 'Egy AEAT-weboldal: a címe, a célja és az azonosítási módjai.'
+      portals: Az AEAT Cadrumo által ismert weboldalai kategória vagy nyomtatvány
+        szerint. A felsorolás egyet sem nyit meg.
+      support_matrix: 'Mire képes a Cadrumo az egyes nyomtatványokkal: számítás, exportálás,
+        benyújtott példányok olvasása.'
+    title: Referencia
     all_periods: Minden időszak
     availability: 'Elérhetőség - tároló: {storage}; jogosultság: {authority}; szolgáltató:
       {provider}'
@@ -3518,16 +3816,23 @@ tui:
       home: Kezdőlap megnyitása
       ledger: Nyilvántartás megnyitása
       profile: Profil megnyitása
+      installation: Telepítés megnyitása
       unknown: Terület megnyitása
+      operations: Műveletek megnyitása
       withholding: Levonások megnyitása
+      reference: Kézikönyv megnyitása
     destination_help:
       aeat_sync: Amit az AEAT-tól már beolvastunk, és amit legközelebb be lehet olvasni
       declarations: Bevallások, korábbi számítások, benyújtási előzmények és naptár
       home: Következő teendők, bevallások és határidők egy pillantással
       ledger: Tételek, ellenőrzés, besorolás és bizonylatok
       profile: A profil adatai és az azokat kitöltő források
+      installation: Tárhely, javítás, visszaállítás és a számítógépen lévő profilok
       withholding: Számla-levonások rögzítése és megtekintése a kiválasztott adóévben
+      operations: 'A Cadrumo minden futtatható művelete: kereshető, kitölthető és
+        futtatható'
     refusal:
+      reference: Modelók, rovatok, kategóriák, portálok és bejelentkezési módok
       not_composed: Még nem sikerült minden területet beolvasni.
       refresh_failed: A legutóbbi frissítés nem tudta újraépíteni az indexet.
       unavailable: A keresés nem érhető el ebben a munkamenetben

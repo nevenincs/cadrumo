@@ -111,6 +111,9 @@ def test_catalogue_is_closed_and_uses_only_locale_keys() -> None:
         "workbench.withholding",
         "workbench.declarations",
         "workbench.aeat_sync",
+        "workbench.operations",
+        "workbench.installation",
+        "workbench.reference",
         "workbench.profile",
     }
     assert {entry.destination for entry in TUI_DESTINATION_CATALOGUE} == declared_destination_ids()
