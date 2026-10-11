@@ -62,5 +62,19 @@ class InstallationActRegistry:
 
 
 def production_installation_acts() -> InstallationActRegistry:
-    """Compose the handlers the installed runtime serves."""
-    return InstallationActRegistry()
+    """Compose the handlers the installed runtime serves: every act of the table, one family at a time."""
+    # Each family registers on the registry this module defines, so a family
+    # loads only once the registry exists.
+    from .installation_artefacts import register_artefact_acts
+    from .installation_profiles import register_profile_acts
+    from .installation_repair import register_repair_acts
+    from .installation_reset import register_reset_acts
+    from .installation_storage import register_storage_acts
+
+    registry = InstallationActRegistry()
+    register_storage_acts(registry)
+    register_reset_acts(registry)
+    register_repair_acts(registry)
+    register_profile_acts(registry)
+    register_artefact_acts(registry)
+    return registry

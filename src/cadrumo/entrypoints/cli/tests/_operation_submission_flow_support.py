@@ -29,7 +29,7 @@ from __future__ import annotations
 import ast
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
-from typing import Final
+from typing import Final, TypeGuard
 
 from ...tests.source_tree_support import NameOrigin, SourceTree, module_level_bindings
 
@@ -310,6 +310,13 @@ class SubmissionFlow:
             pending.extend(call.callee for call in facts.calls)
             pending.extend(sorted(facts.references))
         return tuple(reached)
+
+    def named_by(self, symbol: Symbol) -> frozenset[Symbol]:
+        """Name every scanned symbol one symbol's own code calls or refers to."""
+        if not self.defines(symbol):
+            return frozenset[Symbol]()
+        facts = self._facts_of(symbol)
+        return frozenset({call.callee for call in facts.calls} | facts.references)
 
     # -- the fixed point ----------------------------------------------------
 
@@ -736,6 +743,9 @@ class SubmissionFlow:
     def _classes_of_expression(self, scope: _Scope, expression: ast.expr) -> frozenset[Symbol]:
         if isinstance(expression, ast.Await):
             expression = expression.value
+        elif _runs_a_coroutine(expression):
+            # ``asyncio.run`` returns what the coroutine it is handed returns, as ``await`` does.
+            expression = expression.args[0]
         if isinstance(expression, ast.Name) and scope.binds(expression.id):
             return self._classes_of_name(scope, expression.id)
         if not isinstance(expression, ast.Call):
@@ -949,6 +959,19 @@ class SubmissionFlow:
         for argument in passed:
             value |= self._read_payload(scope, argument, trail)
         return value
+
+
+def _runs_a_coroutine(expression: ast.expr) -> TypeGuard[ast.Call]:
+    """Whether an expression is ``asyncio.run(...)`` over exactly one coroutine."""
+    return (
+        isinstance(expression, ast.Call)
+        and isinstance(expression.func, ast.Attribute)
+        and expression.func.attr == "run"
+        and isinstance(expression.func.value, ast.Name)
+        and expression.func.value.id == "asyncio"
+        and len(expression.args) == 1
+        and not expression.keywords
+    )
 
 
 def _is_member(target: ast.expr, member: str) -> bool:

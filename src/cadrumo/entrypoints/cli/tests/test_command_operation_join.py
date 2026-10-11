@@ -28,7 +28,11 @@ from ....application.operator_surface.command_ports import CommandNodeKind
 from ....tests.inventory import SRC_CADRUMO, production_python_files, read_source
 from ...operation_composition import build_production_operation_registry
 from ...tests.source_tree_support import SourceTree
-from ..command_operation_table import COMMAND_OPERATION_ROWS, OPERATIONS_WITHOUT_COMMAND
+from ..command_operation_table import (
+    COMMAND_OPERATION_ROWS,
+    COMMAND_RUNTIME_REQUEST_ROWS,
+    OPERATIONS_WITHOUT_COMMAND,
+)
 from ..command_specs import COMMAND_GRAPH
 from ..main import _emit_command_surface_manifest
 from ..operator_surface_reconciliation import recorded_command_operation_join
@@ -45,12 +49,15 @@ from .command_operation_derivation import (
     command_line_files,
     derive_command_operations,
     derive_live_command_operations,
+    derive_live_command_runtime_requests,
     render_command_operation_table,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_REGENERATE = "write it again with: python -m cadrumo.entrypoints.cli.tests.command_operation_derivation"
+_REGENERATE = (
+    "write it again with: python -m cadrumo.entrypoints.cli.tests.command_operation_derivation --runtime-requests"
+)
 
 _GENERIC_SUBMIT_FUNCTIONS = frozenset({"run_registered_operation", "submit_profile_operation"})
 """The two functions nearly every command submits through, read here by name alone."""
@@ -82,7 +89,14 @@ def test_the_recorded_table_is_the_derived_join() -> None:
     assert not stale, f"recorded but no longer derived: {stale}; {_REGENERATE}"
     assert not missing, f"derived but not recorded: {missing}; {_REGENERATE}"
     assert frozenset(OPERATIONS_WITHOUT_COMMAND) == derivation.operations_without_command, _REGENERATE
-    assert TABLE_PATH.read_text(encoding="utf-8") == render_command_operation_table(derivation), (
+    sent = derive_live_command_runtime_requests()
+    derived_requests = {(cli_path, action) for cli_path, actions in sent.items() for action in actions}
+    recorded_requests = set(COMMAND_RUNTIME_REQUEST_ROWS)
+    assert recorded_requests == derived_requests, (
+        f"recorded but no longer derived: {sorted(recorded_requests - derived_requests)}; "
+        f"derived but not recorded: {sorted(derived_requests - recorded_requests)}; {_REGENERATE}"
+    )
+    assert TABLE_PATH.read_text(encoding="utf-8") == render_command_operation_table(derivation, sent), (
         f"the recorded table carries the derived rows in another spelling; {_REGENERATE}"
     )
 

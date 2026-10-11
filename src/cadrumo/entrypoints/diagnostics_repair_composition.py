@@ -29,7 +29,7 @@ from ..application.operations.registry import OperationPublicDefinitionRegistrat
 from .adapter_composition import build_diagnostics_ports
 
 if TYPE_CHECKING:
-    from ..application.connectivity_probe import ObservedSiteHealth
+    from ..application.connectivity_probe import ConnectivityProbePort, ObservedSiteHealth
     from ..application.diagnostics_ports import DiagnosticsPorts
     from ..application.operations.execution_actor import OperationExecutionCallerReader
     from ..domain.user_profile.values import UserProfileRecord
@@ -86,14 +86,18 @@ def read_session_profile_record(*, profile_id: str, bucket_id: str) -> UserProfi
 
 
 def build_diagnostics_repair_operations(
-    *, execution_caller_reader: OperationExecutionCallerReader | None = None
+    *,
+    execution_caller_reader: OperationExecutionCallerReader | None = None,
+    connectivity_probe: ConnectivityProbePort = probe_aeat_sede_connectivity,
 ) -> DiagnosticsRepairOperations:
     """Bind the adapters to the four repair operations that run in a profile's worker.
 
     ``execution_caller_reader`` is the session host's, so a progress reset an
     agent submits records the agent's session as its actor.
+    ``connectivity_probe`` browses to the probed site; a host that must not
+    start a browser binds its own.
     """
-    connectivity = build_connectivity_probe_definition(probe_aeat_sede_connectivity)
+    connectivity = build_connectivity_probe_definition(connectivity_probe)
     check = build_secure_objects_check_definition(build_profile_diagnostics_ports)
     quarantine = build_secure_objects_quarantine_definition(build_profile_diagnostics_ports)
     reset = build_workflow_progress_reset_definition(execution_caller_reader=execution_caller_reader)

@@ -187,16 +187,25 @@ reference when one is configured. It does not translate shell verbs to tool
 names or activate per-domain tool sets.
 
 The workflow skills, and the tables above, name command-line commands. Through
-MCP you run the operations a command submits, and the reference
-`command-operations.md`, kept under `reference/` beside these rules, lists them
-for every command. It is generated from the record the command line publishes
-of itself, so read it there and never from memory. Find the command as the skill
-spells it, `describe` each operation its row lists, and `execute` the one whose
-contract fits the step: a row lists every operation any mode of the command can
-submit, so one command can be a read that resolves an identifier and then the
-write that takes it. A command whose row says `none` submits no operation: a
-read of published reference data is answered by `authority` or `corpus_search`,
-an act on a profile's sessions by `session`, and work that needs no profile by
-`installation`. The command's options are not
-the operation's fields. Fill the described input schema from the same facts the
-options carry.
+MCP you do a command's work with the tools its row names in the reference
+`command-operations.md`, kept under `reference/` beside these rules. It is
+generated from the record the command line publishes of itself, so read it there
+and never from memory. Find the command as the skill spells it. Its row has two
+columns of routes:
+
+- The operations the command submits. `describe` each one and `execute` the one
+  whose contract fits the step: the row lists every operation any mode of the
+  command can submit, so one command can be a read that resolves an identifier
+  and then the write that takes it.
+- Every other route to its work, each a tool and what the tool is given: an
+  operation for `execute`, where the command does that work in its own process
+  and the operation does the same work for you; an act for the `installation`
+  tool, as its `action`; a query for the `authority` tool, as its `query`; an
+  action for the `session` tool; or a tool that takes no such name, such as the
+  `authorization_*` tools that enrol a key.
+
+Four commands have `none` in both columns, because they have no work to do for
+you: `aeat app`, `aeat config` and `aeat app diagnostics` print help, and the
+`app tui` command starts the terminal interface. Every other command has at
+least one route. The command's options are not the operation's fields. Fill the
+described input schema from the same facts the options carry.

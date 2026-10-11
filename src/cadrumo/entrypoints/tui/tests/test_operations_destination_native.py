@@ -200,6 +200,10 @@ class _McpConnection:
         assert self.client is not None
         return self.client
 
+    def held_secret(self, reference: UUID) -> bytearray:
+        """Answer as a connection that holds nothing under any reference."""
+        raise ValueError("no secret is held under that reference")
+
 
 async def _settled_projection(client: RuntimeFrontendClient, operation_id: str) -> OperationPublicProjectionV1:
     """Observe one operation until it has settled, so nothing is left running when the runtime stops."""

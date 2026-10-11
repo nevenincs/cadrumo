@@ -42,8 +42,13 @@ class ProfileWorkerSessionOwner:
         authorization: WorkerAuthorizationOwner | None = None,
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = now,
+        runtime_server_starter: Callable[[], int | None] | None = None,
     ) -> None:
-        """Share the profile denial guard with the existing authority and administration."""
+        """Share the profile denial guard with the existing authority and administration.
+
+        ``runtime_server_starter`` starts the model runtime's server from this
+        process for a worker, which is contained and so cannot keep one alive.
+        """
         self.identity, self.root = identity, storage_root
         self._observe, self._human_secret, self._guard = observe, human_secret, guard
         self._worker: ProfileWorkerProcess | None = None
@@ -51,6 +56,7 @@ class ProfileWorkerSessionOwner:
         self._authorization = authorization
         self._worker_script = worker_script
         self._wall_clock = wall_clock
+        self._runtime_server_starter = runtime_server_starter
         self._retiring: list[ProfileWorkerProcess] = []
         self._lifecycle_guard = RLock()
         self._activity_guard = Lock()
@@ -164,6 +170,7 @@ class ProfileWorkerSessionOwner:
                     authorization=self._authorization,
                     worker_script=self._worker_script,
                     wall_clock=self._wall_clock,
+                    runtime_server_starter=self._runtime_server_starter,
                 )
                 with self._lifecycle_guard:
                     if self._stopping.is_set():

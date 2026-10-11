@@ -14,13 +14,14 @@ act. A second reading names those for each command by the record's action, so
 a command that sends one is not read as a command that sends nothing.
 
 The derivation is the authority and the recorded table is its copy. Run this
-module to write the table again after a command, or the operations a command
-submits, change::
+module to write the table again after a command, or what a command submits or
+sends, changes::
 
-    python -m cadrumo.entrypoints.cli.tests.command_operation_derivation
+    python -m cadrumo.entrypoints.cli.tests.command_operation_derivation --runtime-requests
 
-Pass ``--runtime-requests`` to record the runtime requests each command sends
-beside its operations.
+``--runtime-requests`` records the runtime requests each command sends beside
+its operations, and the recorded table carries them. Without it only the
+operation rows are written.
 """
 
 from __future__ import annotations
@@ -355,16 +356,22 @@ def derive_command_runtime_requests(
     handlers: Mapping[CliPath, Symbol | None],
     flow: SubmissionFlow,
     request_actions: Mapping[Symbol, frozenset[str]],
+    request_package: str,
 ) -> dict[CliPath, frozenset[str]]:
     """Name, for each executable command, the runtime requests its handler can send.
 
     A handler is read as sending every request record its reachable code names
     outside an annotation, because a record is constructed where it is named.
-    Like the operation rows, that is an upper bound on what the source names: a
-    record with several actions contributes all of them, since the source names
-    the record and not which action it was given. A request sent through a
-    method whose receiver the source gives no class for is not followed, so a
-    command that only sends requests that way is read as naming none of them.
+    Only code outside the package that defines the records is read that way:
+    that package names every record in the tables that describe the door, and
+    describing a record sends nothing.
+
+    Like the operation rows, the result is an upper bound on what the source
+    names: a record with several actions contributes all of them, since the
+    source names the record and not which action it was given. A request sent
+    through a method whose receiver the source gives no class for is not
+    followed, so a command that only sends requests that way is read as naming
+    none of them.
 
     Args:
         handlers: Each executable command's handler, or ``None`` for a command
@@ -372,12 +379,19 @@ def derive_command_runtime_requests(
         flow: A reading whose scanned packages include the one that defines
             the request records, so a reference to a record is followed to it.
         request_actions: The actions of each request record, by its symbol.
+        request_package: The package that defines the request records.
     """
     sent: dict[CliPath, frozenset[str]] = {}
     for cli_path in sorted(handlers):
         handler = handlers[cli_path]
         reached = () if handler is None else flow.reach((handler,))
-        sent[cli_path] = frozenset(action for symbol in reached for action in request_actions.get(symbol, ()))
+        named = {
+            target
+            for symbol in reached
+            if not symbol[0].startswith(request_package)
+            for target in flow.named_by(symbol)
+        }
+        sent[cli_path] = frozenset(action for symbol in named for action in request_actions.get(symbol, ()))
     return sent
 
 
@@ -415,17 +429,20 @@ def derive_live_command_runtime_requests() -> Mapping[CliPath, frozenset[str]]:
     tree = SourceTree(SRC_CADRUMO.parent, packages=frozenset({SRC_CADRUMO.name}))
     flow = SubmissionFlow(tree, scanned=(*SCANNED_PACKAGES, RUNTIME_REQUEST_PACKAGE), submission=SUBMISSION_RECORD)
     return derive_command_runtime_requests(
-        handlers=live_command_handlers(), flow=flow, request_actions=live_runtime_request_actions()
+        handlers=live_command_handlers(),
+        flow=flow,
+        request_actions=live_runtime_request_actions(),
+        request_package=RUNTIME_REQUEST_PACKAGE,
     )
 
 
 _TABLE_HEADER: Final[str] = '''"""The registered operations each executable command can submit.
 
 Generated from the command graph, the source of the command handlers and the
-operation registry. Do not edit it by hand. After a command, or the operations
-a command submits, change, write it again with::
+operation registry. Do not edit it by hand. After a command, or what a command
+submits or sends, changes, write it again with::
 
-    python -m cadrumo.entrypoints.cli.tests.command_operation_derivation
+    python -m cadrumo.entrypoints.cli.tests.command_operation_derivation --runtime-requests
 
 Each row pairs one executable command with one operation its handler can
 submit. The command is spelled by its operator path without the executable's
@@ -434,8 +451,13 @@ nothing has one row whose operation is ``None``: that it submits nothing is
 recorded, not left out. A group's rows describe the group's own callback and
 not the commands below it.
 
+A command can also reach the runtime by sending a request of the runtime's own
+door or an installation act. Those rows pair the command with the request's
+action, and a command that sends none has no such row.
+
 The rows are an upper bound on one handler's reachable code. A command with
-several modes lists every operation any mode can submit.
+several modes lists every operation any mode can submit and every request any
+mode can send.
 """
 
 from __future__ import annotations

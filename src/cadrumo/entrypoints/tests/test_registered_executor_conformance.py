@@ -6,7 +6,7 @@ import asyncio
 import csv
 import hashlib
 from collections.abc import Awaitable, Callable, Generator, Iterable, Mapping
-from contextlib import AbstractContextManager, contextmanager, nullcontext
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -503,6 +503,7 @@ from .activity_asset_operation_test_support import (
 )
 from .aggregate_operation_test_support import aggregate_conformance_command
 from .censal_review_test_support import review_censal_with_services
+from .conformance_diagnostics_repair_support import observe_synthetic_site
 from .conformance_families import CONFORMANCE_FAMILIES, conformance_family_for
 from .conformance_family_contract import (
     ConformanceFamily,
@@ -1665,12 +1666,16 @@ _MODEL_RUNTIME_CLOSED_DEFINITIONS = frozenset(
 )
 
 
-def _model_runtime_for(definition_id: str) -> AbstractContextManager[object]:
-    """Close the local model runtime for operations, and families, that would otherwise reach one."""
+@contextmanager
+def _model_runtime_for(definition_id: str) -> Generator[None]:
+    """Close the local model runtime, and enter the family's own environment, for an operation that needs either."""
     family = conformance_family_for(definition_id)
-    if definition_id in _MODEL_RUNTIME_CLOSED_DEFINITIONS or (family is not None and family.closes_model_runtime):
-        return closed_model_runtime()
-    return nullcontext()
+    with ExitStack() as host:
+        if definition_id in _MODEL_RUNTIME_CLOSED_DEFINITIONS or (family is not None and family.closes_model_runtime):
+            host.enter_context(closed_model_runtime())
+        if family is not None and family.host_environment is not None:
+            host.enter_context(family.host_environment())
+        yield
 
 
 def _prepare_family_case(
@@ -3727,6 +3732,7 @@ def _runtime(
             verify_tgvi_definition=verify_definition(VerifySurface.TGVI),
             amendment_action_ports_factory=amendment_action_ports_factory or build_amendment_action_ports,
             execution_caller_reader=execution_caller_reader,
+            connectivity_probe=observe_synthetic_site,
         )
         journal = OperationJournalRepository(storage_root=root / "operations")
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:

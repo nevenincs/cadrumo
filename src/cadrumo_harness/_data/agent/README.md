@@ -21,8 +21,11 @@ Subtrees:
 - `skills/` — executable workflow playbooks (preconditions, command sequence, JSON
   success assertions) for the canonical end-to-end tax flows.
 - `reference/`: generated documents a rule sends the agent to. `command-operations.md`
-  lists, for every command a skill names, the registered operations that command
-  submits, which are what an agent on MCP runs.
+  lists, for every command a skill names, the tools that do its work through MCP: the
+  registered operations the command submits, which `execute` runs, and every other
+  route, which is an operation for `execute`, an act for `installation`, a query for
+  `authority` or an action for `session`. Only the four commands that print help or
+  start the terminal interface have none.
 
 Start with MCP `status`, then `search` and `describe` for the operations of this
 session. Every operation the command line can run is among them, with the same

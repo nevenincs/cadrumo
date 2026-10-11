@@ -19,6 +19,7 @@ from ...adapters.local_runtime.worker_authorization_client import WorkerAuthoriz
 from ...adapters.persistence.storage.errors import RepositoryError
 from ...adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from ...application.auth.operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID
+from ...application.local_reader_provisioning import RuntimeServerOwnerStart
 from ...application.operations.composition import OperationComposedServices, OperationSubmission
 from ...application.operations.drain import OperationDrainResult
 from ...application.operations.errors import OperationSubjectBusyError, OperationUnsettledError
@@ -131,6 +132,7 @@ class ProfileWorkerOperationHost:
                     profile_rotation_finalizer=self._finalize_password_rotation,
                     modelo_profile_resolver=self._modelo_profile,
                     execution_caller_reader=self._execution_caller,
+                    runtime_server_owner_start=RuntimeServerOwnerStart(self._start_runtime_server),
                 )
         return self._services
 
@@ -154,6 +156,12 @@ class ProfileWorkerOperationHost:
         if self._execution is None or self._closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         return self._execution.execution_caller(identity)
+
+    async def _start_runtime_server(self, identity: OperationIdentity) -> int | None:
+        """Ask the runtime that owns this worker to start the model runtime's server for one invocation."""
+        if self._execution is None or self._closed:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        return await self._execution.start_runtime_server(identity)
 
     def _modelo_profile(self, operation: PinnedAuthorityOperation) -> TaxpayerProfile:
         """Read filing facts only from this worker's immutable profile custody."""

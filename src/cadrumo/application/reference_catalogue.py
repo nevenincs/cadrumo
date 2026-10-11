@@ -63,6 +63,7 @@ from .reference_catalogue_contracts import (
     PortalsListResult,
     PortalsViewResult,
     SpendingCategoryFamilyPayload,
+    printed_local_work_status,
 )
 
 
@@ -195,7 +196,7 @@ def _modelo_row_payload(row: ModeloListRow) -> ModeloRowPayload:
         tax_domain=row.tax_domain,
         revision_count=row.revision_count,
         local_work_supported=local_work_supported,
-        local_work_status="supported-model-level" if local_work_supported else "unsupported-local-work",
+        local_work_status=printed_local_work_status(supported=local_work_supported),
         local_work_guidance=None if locale_key is None else tr(locale_key, modelo=row.code),
     )
 

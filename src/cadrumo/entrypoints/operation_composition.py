@@ -12,12 +12,11 @@ from functools import partial
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from ..adapters.inbound.censo.parser import parse_certificado_censal_bytes
 from ..adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope, default_browser_session_factory
 from ..adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
 from ..adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
 from ..adapters.outbound.google.errors import GoogleAuthClientMetadataUnavailableError
-from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
-from ..adapters.outbound.model_runtime.process_control import run_runtime_installer, spawn_runtime_server
 from ..adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
 from ..adapters.outbound.storage.factory import (
     build_google_credentials,
@@ -102,6 +101,7 @@ from ..application.bienes_inversion.registered_operation import (
     build_bienes_inversion_list_registration,
 )
 from ..application.bucket_event_repository import BucketEventHistoryRepositoryFactory
+from ..application.connectivity_probe import ConnectivityProbePort
 from ..application.diagnostics_operation import (
     build_diagnostics_read_definition,
     build_diagnostics_read_registration,
@@ -425,10 +425,7 @@ from ..application.live.verify_read_operation import (
     build_verify_view_registration,
 )
 from ..application.local_reader import read_local_reader_status
-from ..application.local_reader_operation import (
-    build_local_reader_operation_definition,
-    build_local_reader_operation_registration,
-)
+from ..application.local_reader_provisioning import RuntimeServerOwnerStart
 from ..application.modelo.aggregate_operation import (
     build_modelo_aggregate_operation_definition,
     build_modelo_aggregate_operation_registration,
@@ -711,6 +708,7 @@ from ..application.user_profile.automation_operations import (
     build_automation_operation_definitions,
     build_automation_operation_registrations,
 )
+from ..application.user_profile.censal_certificate_operation import censal_certificate_operation
 from ..application.user_profile.censal_file_import_operation import (
     build_censal_file_import_operation_definition,
     build_censal_file_import_operation_registration,
@@ -742,6 +740,7 @@ from ..application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
 )
+from ..application.user_profile.recovery_revoke_operation import recovery_revoke_operation
 from ..application.user_profile.recovery_status_operation import (
     build_recovery_status_definition,
     build_recovery_status_registration,
@@ -802,6 +801,7 @@ from .auth_read_composition import compose_auth_read_ports
 from .calculation_report_verification_operation_composition import build_modelo_calculation_report_verification_ports
 from .calculation_review_xlsx_operation_composition import build_calculation_review_xlsx_ports
 from .diagnostics_operation_composition import build_diagnostics_read_ports
+from .diagnostics_repair_composition import build_diagnostics_repair_operations, probe_aeat_sede_connectivity
 from .evidence_followup_operation_composition import build_ledger_evidence_followup_operation_ports
 from .google_configuration_operation_composition import build_google_configuration_operation_ports
 from .google_review_operation_composition import build_google_review_ports
@@ -827,6 +827,7 @@ from .live_state_composition import (
     preflight_filed_history_provider,
     pull_filed_history_with_shared_composition,
 )
+from .local_reader_operation_composition import build_local_reader_operations
 from .m036_operation_composition import build_m036_operation_ports
 from .modelo_audit_operation_composition import build_modelo_audit_operation_ports
 from .modelo_dependency_composition import build_dependency_read_ports
@@ -1056,8 +1057,16 @@ def build_production_operation_registry(
     modelo_profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
     modelo_workbench_read_ports_factory: ModeloWorkbenchReadPortsFactory = _build_modelo_workbench_read_ports,
     execution_caller_reader: OperationExecutionCallerReader | None = None,
+    runtime_server_owner_start: RuntimeServerOwnerStart | None = None,
+    connectivity_probe: ConnectivityProbePort = probe_aeat_sede_connectivity,
 ) -> OperationRegistry:
-    """Build the sole immutable production inventory from the owner facades."""
+    """Build the sole immutable production inventory from the owner facades.
+
+    ``runtime_server_owner_start`` is bound by a contained process, which asks
+    its owner to start the model runtime's server because one it started
+    itself would end with it. ``connectivity_probe`` browses to the site the
+    connectivity operation observes.
+    """
     resolved_settings = _production_registry_settings(settings)
     # A refused Apply's named prerequisite stays in this registry's worker
     # memory until the workbench reads it once; the journal never holds it.
@@ -1365,10 +1374,13 @@ def build_production_operation_registry(
     )
     justificante_list_definition = build_justificante_list_definition(build_justificante_capture_service)
     justificante_show_definition = build_justificante_show_definition(build_justificante_capture_service)
-    local_reader_definition = build_local_reader_operation_definition(
-        spawn=spawn_runtime_server,
-        run_installer=run_runtime_installer,
-        text_probe=probe_text_extraction_fitness,
+    local_reader_operations = build_local_reader_operations(owner_start=runtime_server_owner_start)
+    diagnostics_repair_operations = build_diagnostics_repair_operations(
+        execution_caller_reader=execution_caller_reader, connectivity_probe=connectivity_probe
+    )
+    recovery_revoke_definition, recovery_revoke_registration = recovery_revoke_operation()
+    censal_certificate_definition, censal_certificate_registration = censal_certificate_operation(
+        parse_certificado_censal_bytes
     )
     resolved_censal_definition = _production_registry_censal(censal_definition, resolved_operator_scope_ports)
     from .censal_readback_composition import read_stored_censal_observation
@@ -1748,7 +1760,10 @@ def build_production_operation_registry(
                 google_review_definition,
                 calculation_review_xlsx_definition,
                 reconciliation_export_xlsx_definition,
-                local_reader_definition,
+                *local_reader_operations.definitions,
+                *diagnostics_repair_operations.definitions,
+                recovery_revoke_definition,
+                censal_certificate_definition,
                 workbench_definition,
                 metadata_definition,
                 wizard_context_definition,
@@ -1960,7 +1975,10 @@ def build_production_operation_registry(
                 build_google_review_operation_registration(google_review_definition),
                 build_calculation_review_xlsx_registration(calculation_review_xlsx_definition),
                 build_reconciliation_export_xlsx_registration(reconciliation_export_xlsx_definition),
-                build_local_reader_operation_registration(local_reader_definition),
+                *local_reader_operations.registrations,
+                *diagnostics_repair_operations.registrations,
+                recovery_revoke_registration,
+                censal_certificate_registration,
                 build_workbench_generation_operation_registration(workbench_definition),
                 build_modelo_metadata_registration(metadata_definition, work_lifecycle_ports_factory),
                 build_modelo_work_wizard_context_registration(wizard_context_definition, work_lifecycle_ports_factory),
@@ -2134,6 +2152,7 @@ def compose_operation_dependencies(
     execution_authority_factory: Callable[[OperationRegistry], OperationExecutionAuthority] | None = None,
     modelo_profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
     execution_caller_reader: OperationExecutionCallerReader | None = None,
+    runtime_server_owner_start: RuntimeServerOwnerStart | None = None,
 ) -> OperationComposedServices:
     """Compose the immutable production registry and all public services.
 
@@ -2180,6 +2199,7 @@ def compose_operation_dependencies(
         workbench_generation_reader=workbench_generation_reader,
         profile_rotation_finalizer=profile_rotation_finalizer,
         execution_caller_reader=execution_caller_reader,
+        runtime_server_owner_start=runtime_server_owner_start,
     )
     journal = OperationJournalRepository(storage_root=storage_root)
     if execution_authority_factory is not None:

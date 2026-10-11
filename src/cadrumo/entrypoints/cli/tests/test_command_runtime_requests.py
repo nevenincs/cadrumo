@@ -137,6 +137,13 @@ class Session:
 
 class NeverSent:
     pass
+
+
+DESCRIBED = (Login, StorageInventory, ProfileDelete, Session, NeverSent)
+
+
+def described(request):
+    return [record for record in DESCRIBED if type(request) is record]
 """
 
 _FIXTURE_CLIENT: Final[str] = """
@@ -153,15 +160,21 @@ class Client:
 
 def open_client() -> Client:
     return Client()
+
+
+async def open_client_later() -> Client:
+    return Client()
 """
 
 _FIXTURE_COMMANDS: Final[str] = """
-from ..runtime.records import Session, StorageInventory
-from .client import open_client
+import asyncio
+
+from ..runtime.records import Session, StorageInventory, described
+from .client import open_client, open_client_later
 
 
 def run_act(request):
-    return request
+    return described(request)
 
 
 def inventory():
@@ -176,6 +189,11 @@ def delete():
 
 def chained():
     open_client().login()
+
+
+def run_to_completion():
+    client = asyncio.run(open_client_later())
+    client.delete()
 
 
 def lock(kind):
@@ -206,6 +224,7 @@ _FIXTURE_HANDLERS: Final[Mapping[CliPath, Symbol | None]] = {
     ("inventory",): ("pkg/cli/commands.py", "inventory"),
     ("delete",): ("pkg/cli/commands.py", "delete"),
     ("chained",): ("pkg/cli/commands.py", "chained"),
+    ("run-to-completion",): ("pkg/cli/commands.py", "run_to_completion"),
     ("lock",): ("pkg/cli/commands.py", "lock"),
     ("annotated",): ("pkg/cli/commands.py", "annotated"),
     ("untyped",): ("pkg/cli/commands.py", "untyped"),
@@ -233,13 +252,18 @@ def test_the_reading_names_the_requests_each_handler_reaches(tmp_path: Path) -> 
         submission=("pkg/runtime/records.py", "Submit"),
     )
 
-    sent = derive_command_runtime_requests(handlers=_FIXTURE_HANDLERS, flow=flow, request_actions=_FIXTURE_ACTIONS)
+    sent = derive_command_runtime_requests(
+        handlers=_FIXTURE_HANDLERS, flow=flow, request_actions=_FIXTURE_ACTIONS, request_package="pkg/runtime/"
+    )
 
     assert sent == {
-        # A record handed to a shared submitter is named where the command builds it.
+        # A record handed to a shared submitter is named where the command builds it. The submitter
+        # reaches a table of the records' own package that names every record, and that sends none.
         ("inventory",): {"storage_inventory"},
         # A method is followed through the class its receiver is declared to return.
         ("delete",): {"profile_login", "profile_delete"},
+        # A receiver that is the result of a coroutine run to completion has the class the coroutine returns.
+        ("run-to-completion",): {"profile_delete"},
         # A record with several actions contributes every one of them.
         ("lock",): {"session_lock", "session_status"},
         # Naming a record in an annotation constructs nothing.

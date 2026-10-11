@@ -15,7 +15,7 @@ related:
   - '[[2026-10-11-mcp-parity-full-parity-adr]]'
 modified: '2026-10-11'
 body_schema: body-v2
-body_hash: 'sha256:12070960a111ec9d72b13eab521b62c47b00ba7b40b2ccd0cc2a6003c7177198'
+body_hash: 'sha256:5262db074737245e99d96160e628df191c809e4112666bdce486266f9073be73'
 ---
 
 <!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
@@ -118,7 +118,7 @@ Delivers statement, invoice-book and evidence intake and the file exports under 
 
 - [x] `P06.S37` - Admit modelo.work.create, modelo.work.calculate and modelo.work.rename with the actor taken from the session and not from the caller; the applicability gate already lives in the create operation, a recalculation deletes nothing and its result names the revision it replaced, and a calculation that states its own inputs, the joint-return election or the Modelo 390 attestation is refused on MCP until the approval step exists; modelo.work.amend moves behind the approval step because it records a local filing; also work_create_operation.py and metadata_operation_access.py; `src/cadrumo/application/modelo/operation_definitions.py`.
 - [x] `P06.S38` - Read the modelo.work.verify executor end to end, record what it reads and what it exchanges while checking provider readiness, and admit it only if it changes nothing and sends nothing that alters remote state; `src/cadrumo/application/modelo/operation_definitions.py`.
-- [ ] `P06.S39` - Remap the packaged skills from command-line verbs to operations through the generated join, and prove one quarterly and one annual declaration prepared through MCP alone equal to the command-line result for the same inputs; `src/cadrumo_harness/_data/agent/skills`.
+- [x] `P06.S39` - Remap the packaged skills from command-line verbs to operations through the generated join, and prove one quarterly and one annual declaration prepared through MCP alone equal to the command-line result for the same inputs; `src/cadrumo_harness/_data/agent/skills`.
 - [x] `P06.S44` - Admit modelo.observation.local, modelo.m145.create and modelo.m145.validate, refusing on MCP the variants that discard a figure or stand for a signature; modelo.filing_record.import moves behind the approval step because it writes a record marked as confirmed by the tax agency from values the caller states; also local_observation_operation.py and m145_communication_operation.py; `src/cadrumo/application/modelo/filing_record_import_operation.py`.
 
 ### Phase `P08` - parity with no frontend-specific refusal
@@ -144,8 +144,9 @@ Delivers the rest of parity: about forty-five command-line commands do their wor
 - [x] `P09.S58` - Build the review-package and report verification acts and move into the reconcile pull and report verify operations what their commands did on the caller's side; `src/cadrumo/application/modelo`.
 - [x] `P09.S59` - Give the MCP harness an installation tool for the installation acts, with secrets on the protected frame and recovery enrolment on the session tool; `src/cadrumo_harness/mcp/protocol_contract.py`.
 - [x] `P09.S60` - Give the terminal interface a destination that runs every registered operation, with typed secrets and the input and choice interactions it refused, and destinations for the installation acts, reachable before sign-in, and the reference reads; `src/cadrumo/entrypoints/tui`.
-- [ ] `P09.S61` - Wire the new operations and acts into composition and the surface facts, regenerate the command table to record runtime-request rows, and prove with one suite that every command-line leaf has an operation or a runtime request and that the three frontends agree on each result; `src/cadrumo/entrypoints/operation_composition.py`.
+- [x] `P09.S61` - Wire the new operations and acts into composition and the surface facts, regenerate the command table to record runtime-request rows, and prove with one suite that every command-line leaf has an operation or a runtime request and that the three frontends agree on each result; `src/cadrumo/entrypoints/operation_composition.py`.
 - [x] `P09.S62` - Let a tool call name a secret the person stored at a terminal by reference beside the typed argument, report an unresolved outcome as an outcome and not a tool error, mark the pure reads read-only, and test the handshake-free protocol revision; `src/cadrumo_harness/mcp/protocol_contract.py`.
+- [ ] `P09.S63` - Carry the request model's faults, without values, on the runtime's invalid refusal so MCP names the field and the rule, and answer search and describe from the public contracts with no session, as the command line's help does; `src/cadrumo/entrypoints/runtime/operation_host.py`.
 
 ## Parallelization
 

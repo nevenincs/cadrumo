@@ -90,6 +90,7 @@ from ...application.user_profile.session_authority_contracts import SessionAutho
 from ...application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
 from ...core.operations import profile_operation_subject
 from ...core.time.clock import now
+from ..local_reader_operation_composition import start_owned_runtime_server
 from .session_owner import ProfileWorkerSessionOwner
 
 
@@ -224,6 +225,7 @@ class RuntimeProfileHost:
             authorization=self,
             worker_script=worker_script,
             wall_clock=wall_clock,
+            runtime_server_starter=start_owned_runtime_server,
         )
         self.authority = ProfileSessionAuthority(
             binding=store.binding,

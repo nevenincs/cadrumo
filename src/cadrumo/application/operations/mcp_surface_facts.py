@@ -49,6 +49,7 @@ _LOCAL_READS: Final = (
     "config.google.folder.view",
     "config.google.status",
     "diagnostics.read",
+    "diagnostics.secure-objects.check",
     "ledger.actividad-asset.filing-handoff",
     "ledger.actividad-asset.forecast",
     "ledger.actividad-asset.inspect",
@@ -153,10 +154,14 @@ _LOCAL_READS: Final = (
 )
 
 _NETWORK_READS: Final = (
-    # Both ask the local model runtime for its inventory at its endpoint
-    # setting, which can name another host.
+    # The probe browses once to the tax agency's public landing page and reads its answer.
+    "diagnostics.connectivity.probe",
+    # The next four ask the local model runtime for its inventory at its
+    # endpoint setting, which can name another host.
     "diagnostics.workstation.check",
     "ledger.evidence.reader-readiness",
+    "local-reader.report",
+    "local-reader.status",
 )
 
 _LOCAL_WRITES: Final = (
@@ -176,6 +181,9 @@ _LOCAL_WRITES: Final = (
     "config.collab.recipient.remove",
     # Sign-out deletes the stored session and contacts nothing.
     "config.google.logout",
+    # Quarantine moves unreadable objects aside within the profile's own store.
+    "diagnostics.secure-objects.quarantine",
+    "diagnostics.workflow-progress.reset",
     "export.calculation-review-xlsx",
     "ledger.actividad-asset.claim",
     "ledger.actividad-asset.correct",
@@ -277,12 +285,15 @@ _LOCAL_WRITES: Final = (
     "user-profile.automation-rotate",
     "user-profile.automation-scope",
     "user-profile.bundle-export",
+    # The certificate is read from a file on this machine and parsed here.
+    "user-profile.censo-certificate-import",
     "user-profile.censo-file-import",
     "user-profile.complete-setup",
     "user-profile.descendants",
     "user-profile.field-mutation",
     "user-profile.patch",
     "user-profile.plantilla-media",
+    "user-profile.recovery.revoke",
     "user-profile.repeatable-row-mutation",
     "user-profile.repeatable-row-remove",
     "user-profile.repeatable-row-update",
@@ -290,6 +301,8 @@ _LOCAL_WRITES: Final = (
 
 _NETWORK_WRITES: Final = (
     "auth.session.acquire",
+    # The browser build is downloaded.
+    "browser-runtime.provision",
     "config.google.folder.organize",
     "config.google.login",
     "config.google.probe",

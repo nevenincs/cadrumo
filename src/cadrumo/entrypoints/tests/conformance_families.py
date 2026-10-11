@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from .conformance_auth_apoderado_support import AUTH_APODERADO_CONFORMANCE_FAMILY
 from .conformance_auth_diagnostic_report_support import AUTH_DIAGNOSTIC_REPORT_CONFORMANCE_FAMILY
+from .conformance_diagnostics_repair_support import DIAGNOSTICS_REPAIR_CONFORMANCE_FAMILY
 from .conformance_diagnostics_support import DIAGNOSTICS_CONFORMANCE_FAMILY
 from .conformance_family_contract import ConformanceFamily
 from .conformance_google_support import GOOGLE_CONFORMANCE_FAMILY
@@ -19,12 +20,14 @@ from .conformance_ledger_evidence_ingestion_support import LEDGER_EVIDENCE_INGES
 from .conformance_ledger_export_link_support import LEDGER_EXPORT_LINK_CONFORMANCE_FAMILY
 from .conformance_ledger_history_support import LEDGER_HISTORY_TYPED_CONFORMANCE_FAMILY
 from .conformance_live_borrador_support import LIVE_BORRADOR_CONFORMANCE_FAMILY
+from .conformance_local_reader_support import LOCAL_READER_CONFORMANCE_FAMILY
 from .conformance_m036_support import M036_CONFORMANCE_FAMILY
 from .conformance_m145_support import M145_CONFORMANCE_FAMILY
 from .conformance_maritime_preview_support import MARITIME_PREVIEW_CONFORMANCE_FAMILY
 from .conformance_modelo_audit_support import MODELO_AUDIT_CONFORMANCE_FAMILY
 from .conformance_modelo_spreadsheet_support import MODELO_SPREADSHEET_CONFORMANCE_FAMILY
 from .conformance_profile_archive_support import PROFILE_ARCHIVE_CONFORMANCE_FAMILY
+from .conformance_profile_custody_support import PROFILE_CUSTODY_CONFORMANCE_FAMILY
 from .conformance_profile_history_support import PROFILE_HISTORY_CONFORMANCE_FAMILY
 from .conformance_quickfile_support import QUICKFILE_CONFORMANCE_FAMILY
 from .conformance_review_package_exchange_support import REVIEW_PACKAGE_EXCHANGE_CONFORMANCE_FAMILY
@@ -35,6 +38,7 @@ CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     AUTH_APODERADO_CONFORMANCE_FAMILY,
     AUTH_DIAGNOSTIC_REPORT_CONFORMANCE_FAMILY,
     DIAGNOSTICS_CONFORMANCE_FAMILY,
+    DIAGNOSTICS_REPAIR_CONFORMANCE_FAMILY,
     GOOGLE_CONFORMANCE_FAMILY,
     INVOICE_INTAKE_CONFORMANCE_FAMILY,
     LEDGER_CLASSIFICATION_CONFORMANCE_FAMILY,
@@ -43,12 +47,14 @@ CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     LEDGER_EXPORT_LINK_CONFORMANCE_FAMILY,
     LEDGER_HISTORY_TYPED_CONFORMANCE_FAMILY,
     LIVE_BORRADOR_CONFORMANCE_FAMILY,
+    LOCAL_READER_CONFORMANCE_FAMILY,
     M036_CONFORMANCE_FAMILY,
     M145_CONFORMANCE_FAMILY,
     MARITIME_PREVIEW_CONFORMANCE_FAMILY,
     MODELO_AUDIT_CONFORMANCE_FAMILY,
     MODELO_SPREADSHEET_CONFORMANCE_FAMILY,
     PROFILE_ARCHIVE_CONFORMANCE_FAMILY,
+    PROFILE_CUSTODY_CONFORMANCE_FAMILY,
     PROFILE_HISTORY_CONFORMANCE_FAMILY,
     QUICKFILE_CONFORMANCE_FAMILY,
     REVIEW_PACKAGE_EXCHANGE_CONFORMANCE_FAMILY,

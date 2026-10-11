@@ -387,8 +387,9 @@ def _plugin_reference_pointer(references: Sequence[Traversable]) -> str:
     )
     return (
         "Reference documents ship with this plugin. The text below names command-line commands; through MCP\n"
-        "you run the operations a command submits. Open the document you need and read it there, never from\n"
-        "memory:\n\n"
+        "you do a command's work with the tools its row names: an operation for `execute`, an act for\n"
+        "`installation`, a query for `authority`, or an action for `session`. Open the document you need and\n"
+        "read it there, never from memory:\n\n"
         f"{listed}\n\n"
     )
 

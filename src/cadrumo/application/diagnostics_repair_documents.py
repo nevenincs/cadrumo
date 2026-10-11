@@ -275,7 +275,8 @@ def printed[DocumentT: BaseModel](document: DocumentT) -> DocumentT:
     own output boundary.
     """
     written = redact_structured_for_cli_output(jsonable_output_payload(document), reveal_identifiers=True)
-    return type(document).model_validate_json(json.dumps(written))
+    document_type: type[DocumentT] = type(document)
+    return document_type.model_validate_json(json.dumps(written))
 
 
 def _action(

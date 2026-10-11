@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:a2e5ff7cd189f2a1bcd29ced95dbad00c643b645cdf87d0cd013c75a061d16df'
+body_hash: 'sha256:7b03d15f2bdeb421debfea1312bb88b08ff14bdd4332053549f1dc9f45485672'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -1864,6 +1864,61 @@ related:
 - `S62` `verify:` `ruff, format, ty on the changed files` -> `pass`
 - `S62` `verify:` `lint-imports (15 contracts)` -> `pass`
 - `S62` `by:` `vaultspec-high-executor`
+- `S39` `A` `src/cadrumo/entrypoints/tests/test_declaration_through_mcp_equals_command_line.py`
+- `S39` `A` `src/cadrumo/entrypoints/cli/tests/command_operation_reference.py`
+- `S39` `A` `src/cadrumo/entrypoints/cli/tests/test_command_operation_reference.py`
+- `S39` `M` `src/cadrumo_harness/_data/agent/README.md`
+- `S39` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
+- `S39` `M` `src/cadrumo_harness/_workspace.py`
+- `S39` `verify:` `pytest executor conformance matrix (335 of 336; the one hit a socket buffer limit under load and passes alone)` -> `pass`
+- `S39` `verify:` `pytest the seven parity suites and surface facts (703 of 704; the one a session expiry under load, passes alone)` -> `pass`
+- `S39` `verify:` `pytest application operations (647), installation runtime tests (107), command table, runtime request and counterpart tests (73)` -> `pass`
+- `S39` `verify:` `pytest declaration through MCP equals command line, alone (2)` -> `pass`
+- `S39` `verify:` `pytest dev/quality (217 of 219; the two are a document privacy check on vault paths and the dependency declaration gate, neither from this work)` -> `pass`
+- `S39` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S39` `verify:` `just check-style` -> `pass`
+- `S39` `by:` `vaultspec-high-executor`
+- `S61` `M` `dev/quality/metadata/application_entrypoint_modules.json`
+- `S61` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S61` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
+- `S61` `M` `src/cadrumo/application/diagnostics_repair_documents.py`
+- `S61` `M` `src/cadrumo/application/operations/mcp_surface_facts.py`
+- `S61` `M` `src/cadrumo/application/reference_catalogue.py`
+- `S61` `M` `src/cadrumo/application/reference_catalogue_contracts.py`
+- `S61` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S61` `M` `src/cadrumo/entrypoints/cli/operator_surface_reconciliation.py`
+- `S61` `M` `src/cadrumo/entrypoints/cli/tests/_operation_submission_flow_support.py`
+- `S61` `M` `src/cadrumo/entrypoints/cli/tests/command_operation_derivation.py`
+- `S61` `M` `src/cadrumo/entrypoints/cli/tests/test_command_operation_join.py`
+- `S61` `M` `src/cadrumo/entrypoints/cli/tests/test_command_runtime_requests.py`
+- `S61` `M` `src/cadrumo/entrypoints/diagnostics_repair_composition.py`
+- `S61` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S61` `M` `src/cadrumo/entrypoints/runtime/installation_composition.py`
+- `S61` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
+- `S61` `M` `src/cadrumo/entrypoints/runtime/session_owner.py`
+- `S61` `M` `src/cadrumo/entrypoints/runtime/tests/installation_registered_runtime.py`
+- `S61` `M` `src/cadrumo/entrypoints/tests/conformance_families.py`
+- `S61` `M` `src/cadrumo/entrypoints/tests/conformance_family_contract.py`
+- `S61` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S61` `M` `src/cadrumo/entrypoints/tui/tests/test_operations_destination_native.py`
+- `S61` `A` `src/cadrumo/application/operations/tests/test_mcp_surface_pins.py`
+- `S61` `A` `src/cadrumo/application/tests/test_reference_catalogue_contracts.py`
+- `S61` `A` `src/cadrumo/entrypoints/cli/tests/command_frontend_counterparts.py`
+- `S61` `A` `src/cadrumo/entrypoints/cli/tests/test_command_frontend_parity.py`
+- `S61` `A` `src/cadrumo/entrypoints/runtime/tests/test_installation_production_composition.py`
+- `S61` `A` `src/cadrumo/entrypoints/tests/conformance_diagnostics_repair_support.py`
+- `S61` `A` `src/cadrumo/entrypoints/tests/conformance_local_reader_support.py`
+- `S61` `A` `src/cadrumo/entrypoints/tests/conformance_profile_custody_support.py`
+- `S61` `M` `src/cadrumo/entrypoints/runtime/profile_host.py`
+- `S61` `M` `dev/quality/metadata/import_load_targets.json`
+- `S61` `verify:` `pytest executor conformance matrix (335 of 336; the one hit a socket buffer limit under load and passes alone)` -> `pass`
+- `S61` `verify:` `pytest the seven parity suites and surface facts (703 of 704; the one a session expiry under load, passes alone)` -> `pass`
+- `S61` `verify:` `pytest application operations (647), installation runtime tests (107), command table, runtime request and counterpart tests (73)` -> `pass`
+- `S61` `verify:` `pytest declaration through MCP equals command line, alone (2)` -> `pass`
+- `S61` `verify:` `pytest dev/quality (217 of 219; the two are a document privacy check on vault paths and the dependency declaration gate, neither from this work)` -> `pass`
+- `S61` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S61` `verify:` `just check-style` -> `pass`
+- `S61` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1925,3 +1980,5 @@ related:
 - `S60` Three native launcher tests and eight sign-in and registration tests fail at the sign-in screen as they did at the last commit. Review interactions were not run on a real runtime here, since each needs Google, a model or a census specimen. The catalogue hunks of another session's two desktop keys are left uncommitted.
 - `S59` The installation tool derives its actions and arguments from the act table and the request models. A recovery code minted through MCP is held under a reference in the protected credential store and is never a tool result. The guide for connecting an agent and its three catalogues describe both.
 - `S62` A secret can be named by reference beside the typed argument, an unknown outcome is a result and not a tool error, each tool declares the protocol hints, and the handshake-free revision is tested beside the legacy one. Logged here too: the result tool returning a refused operation's recorded detail, the fault names on an invalid request, the profile patch vocabulary on describe, the plugin shipping the generated reference, and the absolute path rule of the audit bundle export. Not run on this machine: the two cases against the real Windows credential store, skipped with error 1312 in this logon session and marked for just test-os-keychain. Results carry no source-kind tag; that earlier ruling is not built here.
+- `S39` One quarterly (Modelo 130, 2025 1T) and one annual (Modelo 100, 2025 0A) declaration prepared through MCP tools only equal the command line's on real runtimes with password-protected profiles: ledger rows, every casilla value with its provenance, the verification verdict, a refused verification's code and facts, and the exported bytes. Run alone it passed 2 of 2 here and 2 of 2 in an independent run by another session; beside other native-runtime suites it lost the worker connection at arbitrary steps, never on a comparison. The agent text and the plugin pointer describe the three-column reference.
+- `S61` The registry composes the nine new operations and the installed runtime serves all nineteen acts. The gate over 335 executable commands: 274 submit an operation, 13 send a runtime request or an act, 44 work in process with a declared counterpart, 4 have nothing to share, none is left over; it proves a counterpart exists, and sameness rests on each family's parity test. Each surface name is pinned to its tool list. The entrypoint module inventory was long stale, so its regeneration carries unrelated lines. `profile_host.py` is committed for its two lines only, and the aggregate import inventory without another session's dev lines. Open from this work: five tests of `dev/agent_eval/tests/test_mcp_runtime_authority.py` fail since the authority query was rewritten in S57; they are being repaired next.

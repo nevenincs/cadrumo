@@ -8,14 +8,16 @@ command line's result envelope, the harness's authority tool and the terminal
 interface carry one shape.
 
 The domain reports and catalogues stay authoritative; these classes pin the
-transport shape and hold no behaviour beyond building it from the report.
+transport shape and hold no behaviour beyond building it from the report and
+refusing a row that states one fact two ways.
 """
 
 from __future__ import annotations
 
 from datetime import date
+from typing import Self
 
-from pydantic import Field, NonNegativeInt
+from pydantic import Field, NonNegativeInt, model_validator
 
 from ..core.authority_grade import RegistryAuthorityGrade
 from ..core.casilla_id import CasillaId
@@ -38,8 +40,19 @@ from ..domain.calculations.registry.query_reports import ModeloDescribeReport
 from ..domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 
 
+def printed_local_work_status(*, supported: bool) -> str:
+    """Return the status a modelo row prints for whether local work can be created for the modelo."""
+    return "supported-model-level" if supported else "unsupported-local-work"
+
+
 class ModeloRowPayload(OutputSchema):
-    """One modelo row in the list modelos output."""
+    """One modelo row in the list modelos output.
+
+    Whether local work can be created for the modelo is stated once, by
+    ``local_work_supported``. The status and the guidance say the same thing to
+    a reader of the printed row, so a row whose three members disagree is
+    refused rather than printed.
+    """
 
     code: str
     title: str
@@ -49,6 +62,14 @@ class ModeloRowPayload(OutputSchema):
     local_work_supported: bool
     local_work_status: str
     local_work_guidance: str | None = None
+
+    @model_validator(mode="after")
+    def _status_and_guidance_follow_the_flag(self) -> Self:
+        if self.local_work_status != printed_local_work_status(supported=self.local_work_supported):
+            raise ValueError("a modelo row's local-work status restates its local_work_supported member")
+        if self.local_work_supported != (self.local_work_guidance is None):
+            raise ValueError("a modelo row carries local-work guidance exactly when local work is unsupported")
+        return self
 
 
 class ModeloListResult(OutputSchema):
