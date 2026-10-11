@@ -15,6 +15,7 @@ import pytest
 
 from cadrumo.application.runtime.contracts import (
     RuntimeClientHello,
+    RuntimeEndpointPresence,
     RuntimeRefusalCode,
     RuntimeRefusalError,
     RuntimeServerHello,
@@ -63,6 +64,37 @@ def test_first_instance_survives_client_disconnect_and_releases_on_close(tmp_pat
         replacement.listen()
     finally:
         replacement.close()
+
+
+def test_presence_is_absent_only_while_no_pipe_instance_exists_and_held_when_every_instance_is_busy(
+    tmp_path: Path,
+) -> None:
+    owner = WindowsRuntimeEndpoint(storage_root=tmp_path)
+    observer = WindowsRuntimeEndpoint(storage_root=tmp_path)
+    try:
+        before_listening = observer.presence()
+        owner.listen()
+        free = observer.presence()
+        # Nobody accepts, so the owner's one instance stays taken and no other is provisioned.
+        occupant = observer.connect(timeout=1)
+        try:
+            busy = observer.presence()
+            with pytest.raises(RuntimeRefusalError) as waited_out:
+                observer.connect(timeout=0.2)
+            still_busy = observer.presence()
+        finally:
+            occupant.close()
+    finally:
+        owner.close()
+    released = observer.presence()
+
+    assert before_listening is RuntimeEndpointPresence.ABSENT
+    assert free is RuntimeEndpointPresence.HELD
+    # A connection refused for a busy pipe carries the code an absent pipe carries; the observation tells them apart.
+    assert waited_out.value.reason is RuntimeRefusalCode.ENDPOINT_NOT_READY
+    assert busy is RuntimeEndpointPresence.HELD
+    assert still_busy is RuntimeEndpointPresence.HELD
+    assert released is RuntimeEndpointPresence.ABSENT
 
 
 def test_disconnected_pending_peer_preserves_exclusive_listener_ownership(tmp_path: Path) -> None:

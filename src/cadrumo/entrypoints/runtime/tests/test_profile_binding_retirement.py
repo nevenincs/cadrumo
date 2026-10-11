@@ -6,9 +6,10 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
+from itertools import pairwise
 from pathlib import Path
 from threading import Event
-from typing import Protocol, cast
+from typing import Any, Protocol, cast
 from uuid import uuid4
 
 import pytest
@@ -30,6 +31,7 @@ from cadrumo.application.user_profile.access_contracts import (
     LoginEligibility,
     OsLockState,
     OsLoginContext,
+    ProfileAccessBinding,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.passphrase_rotation import rotate_profile_passphrase
@@ -37,6 +39,7 @@ from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
+from .. import profile_connection_admission
 from ..enrollment_offer import RuntimeEnrollmentOffer
 from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import ProfileConnection, RuntimeProfileHost
@@ -225,6 +228,77 @@ def test_admission_arriving_while_polling_contains_the_old_worker_waits_for_the_
                 worker.require_alive()
         finally:
             release.set()
+            monkeypatch.undo()
+            manager.close()
+
+
+def test_an_admission_waiting_on_a_held_fence_reads_no_binding_and_holds_no_connection_guard(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with profile_adapter_composition(), worker_profiles(tmp_path) as profiles:
+        root, ((identity, key), _) = profiles
+        manager, host, context = _running_host(root=root, identity=identity, key=key)
+        profile_id = identity.binding.profile_id
+        read_binding = profile_connection_admission.current_automation_profile_binding
+        binding_reads: list[float] = []
+
+        def counted_read(**coordinates: Any) -> ProfileAccessBinding:
+            binding_reads.append(time.monotonic())
+            return read_binding(**coordinates)
+
+        monkeypatch.setattr(profile_connection_admission, "current_automation_profile_binding", counted_read)
+        retire = host.retire_replaced_binding
+        held_tries: list[float] = []
+
+        def observed_retire(*, deadline: float) -> bool | None:
+            retired = retire(deadline=deadline)
+            if retired is None:
+                held_tries.append(time.monotonic())
+            return retired
+
+        monkeypatch.setattr(host, "retire_replaced_binding", observed_retire)
+        wait_for_stop = manager.stop.wait
+        guard_free_during_a_wait: list[bool] = []
+
+        def borrow_connection_guard() -> bool:
+            if not manager._guard.acquire(blocking=False):
+                return False
+            manager._guard.release()
+            return True
+
+        def observed_wait(timeout: float | None = None) -> bool:
+            # The guard is reentrant, so only another thread can tell whether the admitting one holds it here.
+            with ThreadPoolExecutor(max_workers=1) as borrower:
+                guard_free_during_a_wait.append(borrower.submit(borrow_connection_guard).result(timeout=3))
+            return wait_for_stop(timeout)
+
+        monkeypatch.setattr(manager.stop, "wait", observed_wait)
+        try:
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                with host.guard:
+                    _commit_successor(root, identity)
+                    admission = pool.submit(manager._host, profile_id, context)
+                    observed_until = time.monotonic() + 10
+                    while len(held_tries) < 5:
+                        assert time.monotonic() < observed_until, "the admission stopped trying the held fence"
+                        assert not admission.done()
+                        time.sleep(0.005)
+                    reads_while_held = len(binding_reads)
+                    tries_while_held = list(held_tries)
+                successor = admission.result(timeout=15)
+
+            assert successor is not host
+            assert successor.store.binding.custody_generation == identity.binding.custody_generation + 1
+            # One read found the binding replaced; the wait for its fence read nothing more.
+            assert reads_while_held == 1
+            # Another connection's work could take the connection-wide guard during every wait.
+            assert guard_free_during_a_wait
+            assert all(guard_free_during_a_wait)
+            # Each wait is at least twice the one before, so a long hold is not polled at a fixed short interval.
+            gaps = [later - earlier for earlier, later in pairwise(tries_while_held)]
+            assert gaps[3] >= 0.07
+            assert gaps[3] > gaps[0]
+        finally:
             monkeypatch.undo()
             manager.close()
 

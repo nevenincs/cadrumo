@@ -47,7 +47,8 @@ from cadrumo.application.runtime.profile_access import RuntimeAccessRefusal, Run
 from cadrumo.application.runtime.transport import RuntimeConnectionContext
 from cadrumo.application.storage_management.errors import StorageReclaimUnconfirmedError
 from cadrumo.application.user_profile.access_contracts import AccessDenialCode, OsLockState
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.storage_taxonomy import StorageArea
@@ -263,6 +264,7 @@ def test_an_act_that_changes_records_runs_under_the_lifecycle_exclusion_and_a_re
     def init(request: RuntimeStorageInitRequest, exchange: InstallationActExchange) -> RuntimeStorageInitReply:
         del request
         roles[exchange.act] = door._drain_guard._owner_role
+        exchange.changes_begin()
         return exchange.reply(RuntimeStorageInitReply, storage_root=str(exchange.storage_root))
 
     def check(request: RuntimeStorageCheckRequest, exchange: InstallationActExchange) -> RuntimeStorageCheckReply:
@@ -273,6 +275,7 @@ def test_an_act_that_changes_records_runs_under_the_lifecycle_exclusion_and_a_re
         roles[exchange.act] = door._drain_guard._owner_role
         if not request.confirmed:
             raise StorageReclaimUnconfirmedError(request.area, entry_count=3)
+        exchange.changes_begin()
         return exchange.reply(
             RuntimeStorageReclaimReply,
             area=request.area,
@@ -410,6 +413,7 @@ def test_an_unexpected_fault_fails_one_act_privately_and_the_door_keeps_serving(
 
 def _init(request: RuntimeStorageInitRequest, exchange: InstallationActExchange) -> RuntimeStorageInitReply:
     del request
+    exchange.changes_begin()
     return exchange.reply(RuntimeStorageInitReply, storage_root=str(exchange.storage_root))
 
 
@@ -459,6 +463,7 @@ def test_an_inbound_secret_arrives_in_one_secret_frame_and_nowhere_else(
     def restore(request: RuntimeArchiveImportRequest, exchange: InstallationActExchange) -> RuntimeArchiveImportReply:
         secrets = exchange.receive_secret(RuntimeInstallationPassphrase)
         received.append(secrets.passphrase.get_secret_value())
+        exchange.changes_begin()
         return exchange.reply(
             RuntimeArchiveImportReply,
             profile_id=_PROFILE,
@@ -596,6 +601,145 @@ def test_a_reserved_profile_refuses_a_second_custody_change_and_is_released_when
     assert refusal.code is AutomationCustodyCode.CONFLICT
     assert door._custody_mutations == set()
     assert door._drain_guard._owner is None
+
+
+def _access_error(kind: str) -> tuple[Exception, object]:
+    """Build one of the three errors a refusal is made from, with the code it carries."""
+    if kind == "custody":
+        return AutomationCustodyError(AutomationCustodyCode.CONFLICT), AutomationCustodyCode.CONFLICT
+    if kind == "runtime":
+        return RuntimeRefusalError(RuntimeRefusalCode.DRAINING), RuntimeRefusalCode.DRAINING
+    return ProfileAccessRefusedError(AccessDenialCode.CUSTODY_CHANGED), AccessDenialCode.CUSTODY_CHANGED
+
+
+@pytest.mark.parametrize("kind", ["custody", "runtime", "access"])
+def test_an_access_error_raised_before_the_change_begins_is_a_refusal_with_its_code(tmp_path: Path, kind: str) -> None:
+    error, code = _access_error(kind)
+    written = tmp_path / "written-by-the-act"
+
+    def init(request: RuntimeStorageInitRequest, exchange: InstallationActExchange) -> RuntimeStorageInitReply:
+        if not exchange.changes_began:
+            raise error
+        written.write_bytes(b"unreachable")
+        return _init(request, exchange)
+
+    registry = InstallationActRegistry()
+    registry.register(RuntimeStorageInitRequest, init)
+    door = _door(tmp_path, registry)
+
+    refusal = _settled(door, RuntimeStorageInitRequest(request_id=uuid4(), frontend=OperationFrontendProjection.MCP))
+
+    assert isinstance(refusal, RuntimeAccessRefusal)
+    assert refusal.code is code
+    assert not written.exists()
+    assert door._drain_guard._owner is None
+
+
+@pytest.mark.parametrize("kind", ["custody", "runtime", "access"])
+def test_an_access_error_raised_after_the_change_began_fails_the_act_with_its_effect_unknown(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture, kind: str
+) -> None:
+    error, _code = _access_error(kind)
+    written = tmp_path / "written-by-the-act"
+
+    def init(request: RuntimeStorageInitRequest, exchange: InstallationActExchange) -> RuntimeStorageInitReply:
+        del request
+        exchange.changes_begin()
+        written.write_bytes(b"a change the caller must not be told did not happen")
+        raise error
+
+    registry = InstallationActRegistry()
+    registry.register(RuntimeStorageInitRequest, init)
+    door = _door(tmp_path, registry)
+    caplog.set_level(logging.DEBUG)
+
+    documents, _channel = _serve(
+        door, RuntimeStorageInitRequest(request_id=uuid4(), frontend=OperationFrontendProjection.MCP)
+    )
+
+    assert written.exists()
+    assert [type(document) for document in documents] == [RuntimeInstallationFailed]
+    failed = documents[0]
+    assert isinstance(failed, RuntimeInstallationFailed)
+    assert failed.act is InstallationAct.STORAGE_INIT
+    failures = [record for record in caplog.records if record.getMessage() == "installation act failed"]
+    assert [record.__dict__["error_type"] for record in failures] == [type(error).__name__]
+    assert door._drain_guard._owner is None
+
+
+def test_one_handler_is_refused_by_its_login_before_its_change_and_failed_by_it_afterwards(tmp_path: Path) -> None:
+    login = _login()
+
+    def reclaim(request: RuntimeStorageReclaimRequest, exchange: InstallationActExchange) -> RuntimeStorageReclaimReply:
+        # The door admitted the act on an unlocked login; the handler finds it locked from here on.
+        login.lock_state = OsLockState.LOCKED
+        if request.area is StorageArea.LOGS:
+            exchange.require_login()
+        exchange.changes_begin()
+        exchange.require_login()
+        return exchange.reply(RuntimeStorageReclaimReply, area=request.area, target_count=1, removed_entries=0)
+
+    registry = InstallationActRegistry()
+    registry.register(RuntimeStorageReclaimRequest, reclaim)
+    door = _door(tmp_path, registry, login)
+
+    def confirmed(area: StorageArea) -> BaseModel:
+        login.lock_state = OsLockState.UNLOCKED
+        return _settled(
+            door,
+            RuntimeStorageReclaimRequest(
+                request_id=uuid4(), frontend=OperationFrontendProjection.CLI, area=area, confirmed=True
+            ),
+        )
+
+    before = confirmed(StorageArea.LOGS)
+    after = confirmed(StorageArea.CACHE)
+
+    assert isinstance(before, RuntimeAccessRefusal)
+    assert before.code is AutomationCustodyCode.NEEDS_USER
+    assert isinstance(after, RuntimeInstallationFailed)
+    assert after.act is InstallationAct.STORAGE_RECLAIM
+
+
+def test_a_handler_that_changes_records_without_saying_where_it_began_fails_its_act(tmp_path: Path) -> None:
+    def init(request: RuntimeStorageInitRequest, exchange: InstallationActExchange) -> RuntimeStorageInitReply:
+        del request
+        return exchange.reply(RuntimeStorageInitReply, storage_root=str(exchange.storage_root))
+
+    registry = InstallationActRegistry()
+    registry.register(RuntimeStorageInitRequest, init)
+    door = _door(tmp_path, registry)
+
+    settled = _settled(door, RuntimeStorageInitRequest(request_id=uuid4(), frontend=OperationFrontendProjection.TUI))
+
+    assert isinstance(settled, RuntimeInstallationFailed)
+    assert settled.act is InstallationAct.STORAGE_INIT
+
+
+def test_an_act_admitted_as_a_read_cannot_begin_changes(tmp_path: Path) -> None:
+    def check(request: RuntimeStorageCheckRequest, exchange: InstallationActExchange) -> RuntimeStorageCheckReply:
+        exchange.changes_begin()
+        return _check(request, exchange)
+
+    def reclaim(request: RuntimeStorageReclaimRequest, exchange: InstallationActExchange) -> RuntimeStorageReclaimReply:
+        exchange.changes_begin()
+        return exchange.reply(RuntimeStorageReclaimReply, area=request.area, target_count=1, removed_entries=0)
+
+    registry = InstallationActRegistry()
+    registry.register(RuntimeStorageCheckRequest, check)
+    registry.register(RuntimeStorageReclaimRequest, reclaim)
+    door = _door(tmp_path, registry)
+    cli = OperationFrontendProjection.CLI
+
+    read = _settled(door, _check_request())
+    unconfirmed = _settled(door, RuntimeStorageReclaimRequest(request_id=uuid4(), frontend=cli, area=StorageArea.CACHE))
+    confirmed = _settled(
+        door, RuntimeStorageReclaimRequest(request_id=uuid4(), frontend=cli, area=StorageArea.CACHE, confirmed=True)
+    )
+
+    assert isinstance(read, RuntimeInstallationFailed)
+    assert isinstance(unconfirmed, RuntimeInstallationFailed)
+    assert isinstance(confirmed, RuntimeStorageReclaimReply)
 
 
 def test_a_handler_is_registered_once_and_only_for_the_request_of_an_act() -> None:

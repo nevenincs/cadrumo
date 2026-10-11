@@ -42,6 +42,21 @@ class RuntimeRefusalError(CadrumoError):
         super().__init__(code.value)
 
 
+class RuntimeEndpointPresence(StrEnum):
+    """What one native observation of a storage root's endpoint says about its owner.
+
+    A refused connection names one code for several states. This observation
+    keeps them apart, so that only proof of absence is read as absence.
+    """
+
+    ABSENT = "absent"
+    """No endpoint exists for the root, so no runtime owns it."""
+    HELD = "held"
+    """An owner holds the endpoint, whether or not it can take a connection now."""
+    INDETERMINATE = "indeterminate"
+    """The observation failed or was ambiguous, so it proves nothing either way."""
+
+
 class RuntimeShutdownIncompleteError(RuntimeRefusalError):
     """The runtime still owns work; its native listener must remain claimed."""
 

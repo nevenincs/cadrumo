@@ -110,6 +110,7 @@ def _acts(served: _Served) -> InstallationActRegistry:
         served.reclaims.append((request.area.value, request.confirmed))
         if not request.confirmed:
             raise StorageReclaimUnconfirmedError(request.area, entry_count=3)
+        exchange.changes_begin()
         return exchange.reply(
             RuntimeStorageReclaimReply,
             area=request.area,
@@ -122,6 +123,7 @@ def _acts(served: _Served) -> InstallationActRegistry:
     ) -> RuntimeArchiveImportReply:
         secrets = exchange.receive_secret(RuntimeInstallationPassphrase)
         served.imports.append((request.label, secrets.passphrase.get_secret_value() == _ARCHIVE_INPUT))
+        exchange.changes_begin()
         return exchange.reply(
             RuntimeArchiveImportReply,
             profile_id=str(uuid4()),

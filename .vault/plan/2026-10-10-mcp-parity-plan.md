@@ -17,7 +17,7 @@ related:
   - '[[2026-07-31-mcp-sdk-major-carry-adr]]'
 modified: '2026-10-11'
 body_schema: body-v2
-body_hash: 'sha256:c594dd00dc29c3fb27206e5051fcd9cca9eb8865420cdc8cc767a4e3ec73c283'
+body_hash: 'sha256:111943325596254d34285f73a142bb1c2faa0bf40f1139f113fcf0e482734631'
 ---
 
 <!-- RETIRED: P03, P07, S20, S21, S22, S23, S24, S25, S26, S31, S32, S36, S40, S41, S43 -->
@@ -140,7 +140,7 @@ Delivers the rest of parity: about forty-five command-line commands do their wor
 - [x] `P09.S52` - Build the sessionless runtime door for installation acts: the request family, its admission as the bootstrap delete handler admits, secrets in and the recovery code out, the client on the verified connection, and the command line's submitter; `src/cadrumo/application/runtime/installation_requests.py`.
 - [x] `P09.S53` - Make provisioning a registered operation for every verb: widen local-reader.provision, add local-reader.status, local-reader.report and browser-runtime.provision, and have the command line submit them; `src/cadrumo/application/local_reader_operation.py`.
 - [x] `P09.S54` - Register the repair operations that need a profile (secure-object check and quarantine, workflow progress reset, connectivity probe) and build the repair acts that need none (report, logs, profile pointer); `src/cadrumo/application/diagnostics.py`.
-- [ ] `P09.S55` - Build the storage acts and the acts of the reset of all profiles, and have the command line send them; `src/cadrumo/application/storage_management/service.py`.
+- [x] `P09.S55` - Build the storage acts and the acts of the reset of all profiles, and have the command line send them; `src/cadrumo/application/storage_management/service.py`.
 - [x] `P09.S56` - Build the profile acts (list, archive inspect and import, recovery enrolment), register recovery revocation, and move into the operations what the censo import, archive export and profile delete commands did on the caller's side; `src/cadrumo/application/user_profile`.
 - [x] `P09.S57` - Serve the reference reads (modelo catalogue, categories, portals, authentication providers, apoderado scopes) from one application service through the extended authority query, for all three frontends; `src/cadrumo_harness/mcp/authority_query.py`.
 - [x] `P09.S58` - Build the review-package and report verification acts and move into the reconcile pull and report verify operations what their commands did on the caller's side; `src/cadrumo/application/modelo`.

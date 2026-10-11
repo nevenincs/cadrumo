@@ -117,6 +117,7 @@ def serve_enroll(
 
     def handover(enrollment: ProfileRecoveryEnrollment) -> str:
         read_back = exchange.deliver_secret(bytearray(enrollment.recovery_key.code, "utf-8"))
+        exchange.changes_begin()
         return read_back.get_secret_value().decode("utf-8")
 
     with (

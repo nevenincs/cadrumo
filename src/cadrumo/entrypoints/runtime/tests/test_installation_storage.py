@@ -133,6 +133,65 @@ def test_check_init_and_inventory_answer_for_the_tree_the_runtime_serves(tmp_pat
     assert inventory.areas == expected.areas
 
 
+def test_the_acts_work_on_the_root_the_runtime_serves_and_leave_the_root_its_process_settings_name(
+    tmp_path: Path,
+) -> None:
+    served = tmp_path / "served-storage"
+    other = tmp_path / "another-storage"
+    served.mkdir()
+    other.mkdir()
+    with derived_storage_settings(other):
+        other_target = _reclaimable_target(StorageArea.CACHE)
+        other_target.mkdir(parents=True)
+        (other_target / "entry.bin").write_bytes(b"another installation's cache entry")
+        other_tree = _tree(other)
+        served_target = served / other_target.relative_to(other)
+        endpoint = WindowsRuntimeEndpoint(storage_root=served)
+        with (
+            serving_registered_runtime(endpoint, served, InstallationLogin(owner=owner_id()), register_storage_acts),
+            _client(endpoint) as client,
+        ):
+            before = client.perform(
+                RuntimeStorageCheckRequest(request_id=uuid4(), frontend=_CLI), RuntimeStorageCheckReply
+            )
+            created = client.perform(
+                RuntimeStorageInitRequest(request_id=uuid4(), frontend=_CLI), RuntimeStorageInitReply
+            )
+            served_target.mkdir(parents=True, exist_ok=True)
+            (served_target / "entry.bin").write_bytes(b"the served root's cache entry")
+            inventory = client.perform(
+                RuntimeStorageInventoryRequest(request_id=uuid4(), frontend=_CLI), RuntimeStorageInventoryReply
+            )
+            reclaimed = client.perform(
+                RuntimeStorageReclaimRequest(request_id=uuid4(), frontend=_CLI, area=StorageArea.CACHE, confirmed=True),
+                RuntimeStorageReclaimReply,
+            )
+            remaining = list(served_target.iterdir())
+        other_tree_after = _tree(other)
+
+    assert isinstance(before, RuntimeStorageCheckReply)
+    assert before.storage_root == str(served)
+    assert isinstance(created, RuntimeStorageInitReply)
+    assert created.storage_root == str(served)
+    assert created.created_count
+    assert served_target.parent.is_dir()
+    assert isinstance(inventory, RuntimeStorageInventoryReply)
+    assert inventory.storage_root == str(served)
+    assert isinstance(reclaimed, RuntimeStorageReclaimReply)
+    assert reclaimed.removed_entries == 1
+    assert remaining == []
+    # Nothing was created, measured away or deleted under the root the process settings name.
+    assert other_tree_after == other_tree
+    assert (other_target / "entry.bin").read_bytes() == b"another installation's cache entry"
+
+
+def _tree(root: Path) -> dict[str, bytes | None]:
+    """Name every entry under ``root``, with each file's bytes."""
+    return {
+        path.relative_to(root).as_posix(): path.read_bytes() if path.is_file() else None for path in root.rglob("*")
+    }
+
+
 def test_one_area_is_reported_alone_as_the_view_command_prints_it(tmp_path: Path) -> None:
     with _installed(tmp_path) as (endpoint, root), _client(endpoint) as client:
         viewed = client.perform(

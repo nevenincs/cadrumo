@@ -4,8 +4,9 @@ Each handler calls the application function the matching ``config storage``
 command calls, so the terminal interface and MCP get the command line's work
 and the command line's refusals. Each reply carries the members of the
 document the command prints, projected by the same function, so an act and its
-command print one document. The runtime's own settings name the storage root,
-as they do for a command run in the same installation.
+command print one document. Every act works on the storage root this runtime
+serves: it runs with settings resolved over that root, whatever root the
+runtime's own process settings name.
 """
 
 from __future__ import annotations
@@ -47,7 +48,8 @@ def _members(document: BaseModel) -> dict[str, object]:
 def _serve_inventory(
     request: RuntimeStorageInventoryRequest, exchange: InstallationActExchange
 ) -> RuntimeStorageInventoryReply:
-    report = collect_storage_area_inventory()
+    with exchange.served_settings():
+        report = collect_storage_area_inventory()
     document = (
         ConfigStorageListResult.from_report(report)
         if request.area is None
@@ -58,24 +60,29 @@ def _serve_inventory(
 
 def _serve_check(request: RuntimeStorageCheckRequest, exchange: InstallationActExchange) -> RuntimeStorageCheckReply:
     del request
-    return exchange.reply(
-        RuntimeStorageCheckReply, **_members(ConfigStorageCheckResult.from_report(inspect_storage_tree()))
-    )
+    with exchange.served_settings():
+        report = inspect_storage_tree()
+    return exchange.reply(RuntimeStorageCheckReply, **_members(ConfigStorageCheckResult.from_report(report)))
 
 
 def _serve_init(request: RuntimeStorageInitRequest, exchange: InstallationActExchange) -> RuntimeStorageInitReply:
     del request
     exchange.require_login()
-    return exchange.reply(
-        RuntimeStorageInitReply, **_members(ConfigStorageInitResult.from_report(materialise_storage_tree()))
-    )
+    with exchange.served_settings():
+        exchange.changes_begin()
+        report = materialise_storage_tree()
+    return exchange.reply(RuntimeStorageInitReply, **_members(ConfigStorageInitResult.from_report(report)))
 
 
 def _serve_reclaim(
     request: RuntimeStorageReclaimRequest, exchange: InstallationActExchange
 ) -> RuntimeStorageReclaimReply:
     exchange.require_login()
-    report = reclaim_storage_area(request.area, confirmed=request.confirmed)
+    with exchange.served_settings():
+        if request.confirmed:
+            # An unconfirmed reclaim deletes nothing: the service refuses it with what a confirmed one would remove.
+            exchange.changes_begin()
+        report = reclaim_storage_area(request.area, confirmed=request.confirmed)
     return exchange.reply(RuntimeStorageReclaimReply, **_members(ConfigStorageReclaimResult.from_report(report)))
 
 

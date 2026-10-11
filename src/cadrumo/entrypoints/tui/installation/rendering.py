@@ -176,13 +176,18 @@ def _refused(reply: RuntimeInstallationRefused, *, preview: bool) -> ActPresenta
     )
 
 
-def _failed(outcome: ActFailed) -> ActPresentation:
+def _failed(outcome: ActFailed, contract: InstallationActContract) -> ActPresentation:
     key_status = (
         tr("tui.installation.status.failed_unknown", act=outcome.reply.act.value)
         if outcome.may_have_changed_records
         else tr("tui.installation.status.failed", act=outcome.reply.act.value)
     )
-    return ActPresentation(tone="error", status=key_status, lines=())
+    return ActPresentation(
+        tone="error",
+        status=key_status,
+        lines=(),
+        outcome_read_by=contract.outcome_read_by if outcome.may_have_changed_records else None,
+    )
 
 
 def _unreachable(outcome: ActUnreachable, contract: InstallationActContract) -> ActPresentation:
@@ -217,7 +222,7 @@ def present_outcome(
     if isinstance(outcome, ActRefused):
         return _refused(outcome.reply, preview=preview)
     if isinstance(outcome, ActFailed):
-        return _failed(outcome)
+        return _failed(outcome, contract)
     if isinstance(outcome, ActSecretDeclined):
         return ActPresentation(tone="warning", status=tr("tui.installation.status.recovery_declined"), lines=())
     return _unreachable(outcome, contract)

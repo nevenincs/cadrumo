@@ -8,6 +8,8 @@ from contextlib import contextmanager
 from threading import Event, RLock, Thread
 from uuid import UUID
 
+from pydantic import BaseModel
+
 from ...application.runtime.access_management import (
     RuntimeSessionInventoryTransfer,
 )
@@ -142,6 +144,33 @@ class RuntimeVerifiedTransport:
             if secret is not None:
                 secret[:] = bytes(len(secret))
 
+    @contextmanager
+    def held_exchange(
+        self, request: BaseModel, request_id: UUID, *, deadline: float, secret: bytearray | None = None
+    ) -> Generator[RuntimeHeldExchange]:
+        """Send ``request`` and hold its exchange until every frame that answers it is read.
+
+        A request answered in steps, with a secret frame or a transfer between
+        them, runs here: no other request interleaves, a failed frame closes
+        the connection as it does for any exchange, and ``secret`` is wiped on
+        every path.
+
+        Args:
+            request: The credential-free document that opens the exchange.
+            request_id: The identity every reply to it must carry.
+            deadline: The bound on the whole exchange, queueing included.
+            secret: A secret buffer the exchange will consume, wiped when it ends.
+        """
+        with self._exchange(deadline=deadline, secret=secret):
+            try:
+                if self._closed:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+                write_document(self._channel, request, deadline=deadline)
+                yield RuntimeHeldExchange(self, request_id, deadline=deadline)
+            except BaseException as error:
+                self._close_after_failure(error)
+                raise
+
     @property
     def connection_id(self) -> UUID | None:
         """Return the last verified non-bearer connection identity, if any."""
@@ -210,3 +239,26 @@ class RuntimeVerifiedTransport:
             if not self._channel_closed:
                 self._channel.close()
                 self._channel_closed = True
+
+
+class RuntimeHeldExchange:
+    """The frames of one request, for as long as its connection's exchange is held for it."""
+
+    def __init__(self, transport: RuntimeVerifiedTransport, request_id: UUID, *, deadline: float) -> None:
+        """Bind the held exchange to the request it answers and to its bound."""
+        self._transport = transport
+        self._request_id = request_id
+        self._deadline = deadline
+
+    @property
+    def channel(self) -> RuntimeByteChannel:
+        """Return the held channel, for the frames a reply announces."""
+        return self._transport._channel
+
+    def reply(self) -> RuntimeReply:
+        """Read the next reply to this exchange's request, verified against its coordinates."""
+        return self._transport._reply(self._request_id, deadline=self._deadline)
+
+    def send_secret(self, secret: bytearray) -> None:
+        """Send one secret frame the peer is ready for; the buffer is consumed and wiped."""
+        self._transport.send_secret(secret, deadline=self._deadline)

@@ -8,6 +8,11 @@ fences every profile it will touch against new admission and drains the ones
 this runtime hosts, and keeps them fenced until the reset settles. A reset
 that is interrupted leaves its own journal, which a resume continues; nothing
 here keeps state of its own.
+
+The profiles fenced and drained are those of the storage root this runtime
+serves, so every act reads and erases that same tree: each runs with settings
+resolved over the served root, whatever root the runtime's own process
+settings name.
 """
 
 from __future__ import annotations
@@ -61,12 +66,14 @@ def _serve_start(request: RuntimeResetStartRequest, exchange: InstallationActExc
         retention_override_reason=request.retention_override_reason,
     )
     with (
+        exchange.served_settings(),
         composed_profile_persistence_ports(automation_secrets_store=exchange.secret_store()) as ports,
         # Listing the profiles reads their capsules, which needs the ports bound first.
         exchange.reserve_profiles(_profiles_to_fence(exchange)) as reservation,
     ):
         reservation.retire_hosted()
         exchange.require_login()
+        exchange.changes_begin()
         operation = start_config_reset(
             certificate_secret_backend_factory=build_certificate_secret_backend,
             operator_scope_ports=build_operator_scope_ports(),
@@ -79,7 +86,8 @@ def _serve_start(request: RuntimeResetStartRequest, exchange: InstallationActExc
 
 
 def _serve_status(request: RuntimeResetStatusRequest, exchange: InstallationActExchange) -> RuntimeResetStatusReply:
-    journal = config_reset_status(request.operation_id)
+    with exchange.served_settings():
+        journal = config_reset_status(request.operation_id)
     return exchange.reply(
         RuntimeResetStatusReply,
         operation=None if journal is None else ConfigResetOperationPayload.from_operation(journal),
@@ -100,16 +108,20 @@ def _serve_resume(request: RuntimeResetResumeRequest, exchange: InstallationActE
         acknowledge_retention_override=request.acknowledge_retention_override,
         retention_override_reason=request.retention_override_reason,
     )
-    operation_id = request.operation_id or latest_incomplete_config_reset_id()
-    journal = _readable_journal(operation_id)
-    # A journal that is already complete is returned as it stands; no profile is touched, so none is drained.
-    settled = journal is not None and journal.status is ConfigResetOperationStatus.COMPLETE
-    journalled = () if journal is None else tuple(target.bucket_id for target in journal.targets)
-    with composed_profile_persistence_ports(automation_secrets_store=exchange.secret_store()) as ports:
+    with (
+        exchange.served_settings(),
+        composed_profile_persistence_ports(automation_secrets_store=exchange.secret_store()) as ports,
+    ):
+        operation_id = request.operation_id or latest_incomplete_config_reset_id()
+        journal = _readable_journal(operation_id)
+        # A journal that is already complete is returned as it stands; no profile is touched, so none is drained.
+        settled = journal is not None and journal.status is ConfigResetOperationStatus.COMPLETE
+        journalled = () if journal is None else tuple(target.bucket_id for target in journal.targets)
         fenced = frozenset[UUID]() if settled else _profiles_to_fence(exchange, journalled=journalled)
         with exchange.reserve_profiles(fenced) as reservation:
             reservation.retire_hosted()
             exchange.require_login()
+            exchange.changes_begin()
             operation = resume_config_reset(
                 operation_id,
                 certificate_secret_backend_factory=build_certificate_secret_backend,

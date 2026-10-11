@@ -5,11 +5,13 @@ from __future__ import annotations
 import base64
 import struct
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from typing import override
 from uuid import uuid4
 
 import pytest
+from pydantic import BaseModel
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.access_management import (
@@ -25,8 +27,10 @@ from cadrumo.application.runtime.contracts import (
     RuntimeServerHello,
 )
 from cadrumo.application.runtime.profile_access import (
+    RuntimeAccessRefusal,
     RuntimeProfileStatus,
     RuntimeProfileStatusTransfer,
+    RuntimeSecretReady,
     RuntimeSessionRequest,
 )
 from cadrumo.application.runtime.submission_payload import SUBMISSION_PAYLOAD_CHUNK_BYTES, SubmissionPayloadChunk
@@ -161,6 +165,94 @@ def test_successful_close_is_idempotent(frontend_owner: bool) -> None:
     owner.close()
     assert channel.close_calls == 1
     assert channel.released is True
+
+
+def _answer(channel: CleanupChannel, *documents: BaseModel) -> None:
+    """Queue the peer's documents as the frames the connection will read next."""
+    peer = CleanupChannel(close_failures=0)
+    for document in documents:
+        write_document(peer, document, deadline=time.monotonic() + 5)
+    channel.inbound.extend(b"".join(peer.writes))
+
+
+def test_a_held_exchange_reads_every_step_of_one_request_and_admits_no_other_until_it_ends() -> None:
+    channel = CleanupChannel(close_failures=0)
+    connection = _connection(channel)
+    request = RuntimeSessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4())
+    coordinates = {
+        "request_id": request.request_id,
+        "runtime_boot_id": connection.hello.boot_id,
+        "connection_id": uuid4(),
+    }
+    _answer(
+        channel,
+        RuntimeSecretReady.model_validate(coordinates),
+        RuntimeAccessRefusal.model_validate({**coordinates, "code": RuntimeRefusalCode.DRAINING}),
+    )
+    secret = bytearray(b"synthetic-held-exchange-secret")
+    sent = bytes(secret)
+    handshake_writes = len(channel.writes)
+    other = RuntimeSessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4())
+
+    with (
+        ThreadPoolExecutor(max_workers=1) as callers,
+        connection.held_exchange(request, request.request_id, deadline=time.monotonic() + 5, secret=secret) as held,
+    ):
+        ready = held.reply().root
+        with pytest.raises(RuntimeRefusalError) as queued:
+            callers.submit(connection.session, other, deadline=time.monotonic() + 0.1).result(timeout=5)
+        held.send_secret(secret)
+        settled = held.reply().root
+        assert held.channel is channel
+
+    assert isinstance(ready, RuntimeSecretReady)
+    assert isinstance(settled, RuntimeAccessRefusal)
+    assert queued.value.reason is RuntimeRefusalCode.DEADLINE_EXCEEDED
+    # Only this request and its one secret frame reached the peer, and the buffer is wiped.
+    request_frame, secret_header, secret_body = channel.writes[handshake_writes:]
+    assert str(request.request_id).encode() in request_frame
+    assert secret_header[:1] == b"S"
+    assert secret_body == sent
+    assert not any(secret)
+    assert channel.close_calls == 0
+    assert connection.connection_id == coordinates["connection_id"]
+
+
+@pytest.mark.parametrize("fault", ["another-request", "caller"])
+def test_a_held_exchange_that_fails_closes_the_connection_and_wipes_its_secret(fault: str) -> None:
+    channel = CleanupChannel(close_failures=0)
+    connection = _connection(channel)
+    request = RuntimeSessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4())
+    _answer(
+        channel,
+        RuntimeSecretReady(
+            request_id=uuid4() if fault == "another-request" else request.request_id,
+            runtime_boot_id=connection.hello.boot_id,
+            connection_id=uuid4(),
+        ),
+    )
+    secret = bytearray(b"synthetic-held-exchange-secret")
+    handshake_writes = len(channel.writes)
+
+    with (
+        pytest.raises(RuntimeRefusalError) as refused,
+        connection.held_exchange(request, request.request_id, deadline=time.monotonic() + 5, secret=secret) as held,
+    ):
+        held.reply()
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+
+    assert refused.value.reason is RuntimeRefusalCode.INVALID_FRAME
+    assert not any(secret)
+    assert channel.close_calls == 1
+    assert channel.released is True
+    with (
+        pytest.raises(RuntimeRefusalError) as closed,
+        connection.held_exchange(request, request.request_id, deadline=time.monotonic() + 5),
+    ):
+        raise AssertionError("a closed connection admits no exchange")
+    assert closed.value.reason is RuntimeRefusalCode.CONNECTION_CLOSED
+    # The failed exchange wrote its request and nothing more; the refused one wrote nothing.
+    assert len(channel.writes) == handshake_writes + 1
 
 
 def _cleanup(error: BaseException) -> AsyncResourceCleanupError:

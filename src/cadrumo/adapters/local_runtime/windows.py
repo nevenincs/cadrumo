@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.contracts import RuntimeEndpointPresence, RuntimeRefusalCode, RuntimeRefusalError
 from ...core.hashing import sha256_hex
 from .windows_channel import WindowsRuntimeChannel
 from .windows_native_io import (
@@ -28,6 +28,12 @@ from .windows_native_io import (
 
 if TYPE_CHECKING:
     pass
+
+_ERROR_FILE_NOT_FOUND = 2
+_ERROR_SEM_TIMEOUT = 121
+_ERROR_PIPE_BUSY = 231
+_PRESENCE_WAIT_MILLISECONDS = 1
+"""The shortest explicit wait: zero would ask for the server's default timeout instead."""
 
 
 class WindowsRuntimeEndpoint:
@@ -138,6 +144,29 @@ class WindowsRuntimeEndpoint:
                         else RuntimeRefusalCode.ENDPOINT_UNTRUSTED
                     )
                     raise RuntimeRefusalError(code) from None
+
+    def presence(self) -> RuntimeEndpointPresence:
+        """Observe whether any instance of this pipe exists, without connecting to one.
+
+        An owner keeps an instance open from the moment it listens until it
+        releases the endpoint, so only a pipe that does not exist proves that
+        nobody owns the root. A pipe whose every instance is taken still has
+        its owner.
+        """
+        import pywintypes
+        import win32pipe
+
+        try:
+            native_windows_call(win32pipe, "WaitNamedPipe", self.pipe_name, _PRESENCE_WAIT_MILLISECONDS)
+        except pywintypes.error as error:
+            if error.winerror == _ERROR_FILE_NOT_FOUND:
+                return RuntimeEndpointPresence.ABSENT
+            if error.winerror in (_ERROR_SEM_TIMEOUT, _ERROR_PIPE_BUSY):
+                return RuntimeEndpointPresence.HELD
+            return RuntimeEndpointPresence.INDETERMINATE
+        except RuntimeRefusalError:
+            return RuntimeEndpointPresence.INDETERMINATE
+        return RuntimeEndpointPresence.HELD
 
     def accept(self, *, timeout: float = 5.0) -> WindowsRuntimeChannel:
         """Provision the next instance before transferring this connected handle."""

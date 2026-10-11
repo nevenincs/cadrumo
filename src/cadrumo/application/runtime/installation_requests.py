@@ -601,8 +601,11 @@ class RuntimeInstallationRefused(_InstallationReply):
 class RuntimeInstallationFailed(_InstallationReply):
     """An act that stopped on a fault with no public facts to give.
 
-    The fault is in the runtime's diagnostic log. An act that changes records
-    may have changed some before it stopped: this reply never says it did not.
+    An access refusal raised after the act began to change records settles
+    here too, because a refusal would say that nothing changed. The fault is in
+    the runtime's diagnostic log. An act that changes records may have changed
+    some before it stopped: this reply never says it did not, and the act's
+    contract names the act that reads its outcome where there is one.
     """
 
     kind: Literal["installation_failed"] = "installation_failed"

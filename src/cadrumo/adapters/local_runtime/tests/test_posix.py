@@ -19,6 +19,7 @@ import pytest
 
 from cadrumo.application.runtime.contracts import (
     RuntimeClientHello,
+    RuntimeEndpointPresence,
     RuntimeRefusalCode,
     RuntimeRefusalError,
     RuntimeServerHello,
@@ -164,6 +165,58 @@ def test_root_aliases_converge_and_owner_lock_survives_client_disconnect(tmp_pat
         replacement.listen()
     finally:
         replacement.close()
+
+
+def test_presence_is_absent_without_a_socket_and_held_while_an_owner_listens(tmp_path: Path, namespace: Path) -> None:
+    owner = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
+    observer = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
+    try:
+        before_listening = observer.presence()
+        owner.listen()
+        listening = observer.presence()
+        still_listening = observer.presence()
+    finally:
+        owner.close()
+    try:
+        released = observer.presence()
+    finally:
+        observer.close()
+
+    assert before_listening is RuntimeEndpointPresence.ABSENT
+    assert listening is RuntimeEndpointPresence.HELD
+    # The observation's own connection is closed at once and leaves the owner listening.
+    assert still_listening is RuntimeEndpointPresence.HELD
+    assert released is RuntimeEndpointPresence.ABSENT
+
+
+def test_presence_of_a_socket_that_outlived_its_owner_is_absent_only_where_a_refusal_proves_it(
+    tmp_path: Path, namespace: Path
+) -> None:
+    observer = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
+    path = namespace / (observer.storage_identity[:32] + ".sock")
+    abandoned = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        abandoned.bind(str(path))
+        abandoned.close()
+        assert path.is_socket()
+        observed = observer.presence()
+    finally:
+        observer.close()
+
+    # Linux refuses a connection only when nobody listens; another kernel also refuses a full queue.
+    proved = sys.platform == "linux"
+    assert observed is (RuntimeEndpointPresence.ABSENT if proved else RuntimeEndpointPresence.INDETERMINATE)
+
+
+def test_presence_without_a_namespace_is_absent_and_creates_none(tmp_path: Path, namespace: Path) -> None:
+    observer = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace, create_namespace=False)
+    try:
+        observed = observer.presence()
+    finally:
+        observer.close()
+
+    assert observed is RuntimeEndpointPresence.ABSENT
+    assert not namespace.exists()
 
 
 @pytest.mark.parametrize("substitution", ["regular_file", "symlink", "live_socket", "stale_socket"])

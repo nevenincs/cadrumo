@@ -47,8 +47,11 @@ if TYPE_CHECKING:
 
 type _ExistingRuntimeAccessRequest = RuntimeAutomationDeny | RuntimeProfileResume | RuntimeSessionInventory
 
-_HELD_FENCE_RECHECK_SECONDS = 0.01
-"""How long an admission leaves a replaced incarnation's held fence before observing it again."""
+_HELD_FENCE_FIRST_WAIT_SECONDS = 0.01
+"""How long an admission first leaves a replaced incarnation's held fence before trying it again."""
+
+_HELD_FENCE_LONGEST_WAIT_SECONDS = 0.25
+"""The wait between tries grows to this: a commit body or a containment holds its fence for a while."""
 
 
 class ProfileConnectionAdmissionMixin:
@@ -110,21 +113,42 @@ class ProfileConnectionAdmissionMixin:
                     return host
             # Retirement needs callbacks that may borrow connection state.
             # Release the connection guard before waiting for containment.
-            if time.monotonic() >= deadline:
-                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-            try:
-                retired = existing.retire_replaced_binding(deadline=deadline)
-            except (RuntimeRefusalError, RuntimeShutdownIncompleteError, ExceptionGroup):
-                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT) from None
+            retired = self._retire_once_fence_is_free(profile_id, existing, deadline=deadline)
             if retired is None:
-                # Another owner holds this incarnation's fence: a commit body, or a
-                # containment already under way. Its hold is not this admission's
-                # refusal, so observe again inside the same bound once it moves on.
-                self.stop.wait(_HELD_FENCE_RECHECK_SECONDS)
                 continue
             if not retired:
                 raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
             self._remove_retired_host(existing)
+
+    def _retire_once_fence_is_free(
+        self: RuntimeProfileConnections, profile_id: UUID, replaced: RuntimeProfileHost, *, deadline: float
+    ) -> bool | None:
+        """Retire a replaced incarnation, waiting out another owner's hold on its fence.
+
+        Another owner holds the fence during a commit body, or during a
+        containment already under way. Its hold is not this admission's
+        refusal, so the retirement is tried again inside the same bound. The
+        wait reads nothing from disk and holds no guard: the profile binding
+        is observed again only when the incarnation has left service, which
+        ``None`` reports.
+        """
+        wait = _HELD_FENCE_FIRST_WAIT_SECONDS
+        while True:
+            if time.monotonic() >= deadline:
+                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+            try:
+                retired = replaced.retire_replaced_binding(deadline=deadline)
+            except (RuntimeRefusalError, RuntimeShutdownIncompleteError, ExceptionGroup):
+                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT) from None
+            if retired is not None:
+                return retired
+            self.stop.wait(min(wait, max(0.0, deadline - time.monotonic())))
+            wait = min(wait * 2, _HELD_FENCE_LONGEST_WAIT_SECONDS)
+            with self._guard:
+                if not self._admitting() or profile_id in self._custody_mutations:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+                if self._profiles.get(profile_id) is not replaced:
+                    return None
 
     def _prepare(
         self: RuntimeProfileConnections,

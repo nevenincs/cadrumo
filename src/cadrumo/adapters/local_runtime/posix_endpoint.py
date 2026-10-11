@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Never
 from uuid import UUID
 
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.contracts import RuntimeEndpointPresence, RuntimeRefusalCode, RuntimeRefusalError
 from ...core.hashing import sha256_hex
 from ...core.runtime_transport import RUNTIME_SOCKET_PATH_LIMIT, runtime_socket_directory
 from .posix import (
@@ -27,6 +27,9 @@ from .posix import (
     posix_storage_identity,
 )
 from .posix_channel import PosixRuntimeChannel
+
+_PRESENCE_PROBE_SECONDS = 0.25
+"""How long the presence probe waits for a listener to take its connection."""
 
 
 def _restore_namespace_descriptor(endpoint: PosixRuntimeEndpoint) -> None:
@@ -94,6 +97,19 @@ def _raise_connect_refusal(error: OSError) -> Never:
     if error.errno in (errno.ENOENT, errno.ECONNREFUSED):
         raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_NOT_READY) from None
     raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
+
+
+def _presence_after_failed_connect(error: OSError) -> RuntimeEndpointPresence:
+    """Read what a failed probe connection proves about the socket's owner."""
+    if error.errno == errno.ENOENT:
+        return RuntimeEndpointPresence.ABSENT
+    if error.errno == errno.ECONNREFUSED:
+        # Linux refuses only a socket nobody listens on. Other kernels also
+        # refuse a listener whose queue is full, so there a refusal proves nothing.
+        return RuntimeEndpointPresence.ABSENT if sys.platform == "linux" else RuntimeEndpointPresence.INDETERMINATE
+    if isinstance(error, TimeoutError | BlockingIOError):
+        return RuntimeEndpointPresence.HELD
+    return RuntimeEndpointPresence.INDETERMINATE
 
 
 def _retain_endpoint_lock(endpoint: PosixRuntimeEndpoint, descriptor: int) -> None:
@@ -236,6 +252,32 @@ class PosixRuntimeEndpoint:
                 raise
         except OSError as error:
             _raise_connect_refusal(error)
+
+    def presence(self) -> RuntimeEndpointPresence:
+        """Observe whether an owner is listening on this endpoint, sending it nothing.
+
+        An endpoint with no socket inode has no owner. An inode that exists is
+        asked by one connection that is closed at once, because a socket can
+        outlive the owner that bound it.
+        """
+        try:
+            self._verify_namespace()
+        except RuntimeRefusalError as refusal:
+            if refusal.reason is RuntimeRefusalCode.ENDPOINT_NOT_READY:
+                return RuntimeEndpointPresence.ABSENT
+            return RuntimeEndpointPresence.INDETERMINATE
+        try:
+            if _socket_metadata(self._directory_fd, self._name) is None:
+                return RuntimeEndpointPresence.ABSENT
+            with _unix_socket() as probe:
+                probe.settimeout(_PRESENCE_PROBE_SECONDS)
+                try:
+                    probe.connect(str(self._path))
+                except OSError as error:
+                    return _presence_after_failed_connect(error)
+        except OSError:
+            return RuntimeEndpointPresence.INDETERMINATE
+        return RuntimeEndpointPresence.HELD
 
     def listen(self, *, backlog: int = 32) -> None:
         """Acquire the persistent lock inode before recovering a proven stale socket."""

@@ -116,6 +116,7 @@ class ServedActs:
         self.reclaims.append((request.area, request.confirmed))
         if not request.confirmed:
             raise StorageReclaimUnconfirmedError(request.area, entry_count=RECLAIMABLE_ENTRIES)
+        exchange.changes_begin()
         return exchange.reply(
             RuntimeStorageReclaimReply, area=request.area, target_count=1, removed_entries=RECLAIMABLE_ENTRIES
         )
@@ -145,6 +146,7 @@ class ServedActs:
         self.import_reached.set()
         if not self.release_import.wait(20):
             raise TimeoutError("the synthetic import was never released")
+        exchange.changes_begin()
         return exchange.reply(
             RuntimeArchiveImportReply,
             profile_id=str(uuid4()),
@@ -159,6 +161,8 @@ class ServedActs:
         self.repairs.append((request.profile, request.clear_active, request.confirmed))
         health = RepairProfileHealthDocument(active_profile=None, source="none", status="no_active_profile")
         cleared = request.clear_active and request.confirmed
+        if cleared:
+            exchange.changes_begin()
         return exchange.reply(
             RuntimeRepairProfileReply,
             dry_run=not cleared,

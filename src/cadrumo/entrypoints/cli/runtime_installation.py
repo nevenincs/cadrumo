@@ -15,7 +15,7 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.contracts import RuntimeEndpointPresence, RuntimeRefusalCode, RuntimeRefusalError
 from ...application.runtime.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
     InstallationAct,
@@ -38,6 +38,9 @@ if TYPE_CHECKING:
 
 _SENT_ACT_REFUSALS: Final = frozenset({RuntimeRefusalCode.DEADLINE_EXCEEDED, RuntimeRefusalCode.CONNECTION_CLOSED})
 """The transport outcomes that arise only after an act was sent, so what it did is not known."""
+
+_UNANSWERED_REFUSALS: Final = frozenset({RuntimeRefusalCode.UNAVAILABLE, RuntimeRefusalCode.DEADLINE_EXCEEDED})
+"""The outcomes of opening a connection that a later attempt can cure: busy, timed out, or unreadable."""
 
 
 def run_installation_act[ReplyT: RuntimeInstallationCompleted](
@@ -83,24 +86,58 @@ def run_installation_act_if_runtime[ReplyT: RuntimeInstallationCompleted](
 ) -> ReplyT | None:
     """Send ``request`` to the runtime when one is running, and say so when none is.
 
-    ``None`` means no runtime answered at its endpoint, and nothing was sent: the
-    caller does the work in this process. Every other outcome stands. A runtime
-    that answered, refused, could not be verified, or stopped answering after the
-    send is reported as such, because the work may have happened there and doing
-    it again here would run it twice.
+    ``None`` means the storage root has no runtime endpoint, and nothing was
+    sent: the caller does the work in this process. Nothing else means that. A
+    refusal to connect is not proof of absence: a runtime whose endpoint is
+    busy, one that did not answer in time and one whose state could not be read
+    all refuse while they host the workers the caller's own work would run
+    beside. Those are reported, with the retry, and every other outcome stands:
+    a runtime that answered, refused, could not be verified, or stopped
+    answering after the send may have done the work.
 
     Raises:
-        As :func:`run_installation_act`.
+        CliRefusedBoundaryError: A runtime may own the root but could not be
+            reached, or refused admission. Nothing was sent in the first case.
+        As :func:`run_installation_act` otherwise.
     """
-    from ...adapters.local_runtime.installation_client import open_installed_installation_client
+    from ...adapters.local_runtime.installation_client import (
+        installed_runtime_presence,
+        open_installed_installation_client,
+    )
 
+    presence = asyncio.run(installed_runtime_presence())
+    if presence is RuntimeEndpointPresence.ABSENT:
+        return None
     try:
         client = asyncio.run(open_installed_installation_client())
     except RuntimeRefusalError as refusal:
-        if refusal.reason is RuntimeRefusalCode.UNAVAILABLE:
-            return None
-        raise
+        if refusal.reason not in _UNANSWERED_REFUSALS:
+            raise
+        raise _unanswered(presence, refusal) from refusal
     return _settle(client, request, reply_type, secret=None, hold_secret=None, timeout=timeout)
+
+
+def _unanswered(presence: RuntimeEndpointPresence, refusal: RuntimeRefusalError) -> CliRefusedBoundaryError:
+    """Report a runtime that was not shown to be absent and gave no connection to send on.
+
+    Nothing was sent, so nothing changed, and the same command may be run
+    again. A release the failed opening still owes stays owned by the report.
+    """
+    from ...core.async_cleanup import async_cleanup_failures, attach_async_cleanup_error
+
+    report = CliRefusedBoundaryError(
+        "a runtime may be serving this storage root but could not be reached, so nothing was sent "
+        "and nothing was changed; run the command again",
+        context={
+            "runtime_endpoint": presence.value,
+            "runtime_refusal": refusal.reason.value,
+            "effect": "none",
+            "retry": "same_command",
+        },
+    )
+    for failure in async_cleanup_failures(refusal):
+        attach_async_cleanup_error(report, failure)
+    return report
 
 
 def _settle[ReplyT: RuntimeInstallationCompleted](
@@ -169,13 +206,14 @@ def _failed(reply: RuntimeInstallationFailed) -> CliRecordedOperationError:
     """Report a fault with no public facts as unexpected, never as a refusal.
 
     An act that changes records may have changed some before it stopped, so the
-    effect is reported as unknown.
+    effect is reported as unknown, with the read that shows how it settled
+    where the act has one.
     """
     from ...core.errors.error_codes import get_registered_error_code
 
     unexpected = get_registered_error_code(CliUnexpectedBoundaryError)
-    return CliRecordedOperationError(
-        unexpected.code,
-        context={"installation_act": reply.act.value, "effect": "unknown"},
-        translated_message=unexpected.message_key,
-    )
+    context: dict[str, object] = {"installation_act": reply.act.value, "effect": "unknown"}
+    reader = INSTALLATION_ACT_CONTRACTS[reply.act].outcome_read_by
+    if reader is not None:
+        context["check_command"] = _OUTCOME_READERS[reader]
+    return CliRecordedOperationError(unexpected.code, context=context, translated_message=unexpected.message_key)

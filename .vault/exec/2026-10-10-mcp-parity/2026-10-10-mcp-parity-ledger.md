@@ -5,7 +5,7 @@ tags:
 date: '2026-10-10'
 modified: '2026-10-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:bb01dafbbdd5959fe6116b61fb55d919e6d0c83fceb239085568b0ba983e4723'
+body_hash: 'sha256:9fae5fcdacf94fbdeba89eea25ce5b664317f768ac79cf7055282f06cdb120cc'
 related:
   - "[[2026-10-10-mcp-parity-plan]]"
 ---
@@ -2004,6 +2004,36 @@ related:
 - `S63` `verify:` `lint-imports (15 contracts)` -> `pass`
 - `S63` `verify:` `ruff, format and ty on the 51 files` -> `pass`
 - `S63` `by:` `vaultspec-high-executor`
+- `S55` `M` `src/cadrumo/adapters/local_runtime/posix_endpoint.py`
+- `S55` `M` `src/cadrumo/adapters/local_runtime/runtime_verified_transport.py`
+- `S55` `M` `src/cadrumo/adapters/local_runtime/tests/test_framing.py`
+- `S55` `M` `src/cadrumo/adapters/local_runtime/tests/test_posix.py`
+- `S55` `M` `src/cadrumo/adapters/local_runtime/tests/test_server.py`
+- `S55` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows.py`
+- `S55` `M` `src/cadrumo/adapters/local_runtime/windows.py`
+- `S55` `M` `src/cadrumo/application/runtime/contracts.py`
+- `S55` `M` `src/cadrumo/application/runtime/installation_requests.py`
+- `S55` `M` `src/cadrumo/entrypoints/runtime/installation_door.py`
+- `S55` `M` `src/cadrumo/entrypoints/runtime/installation_profiles.py`
+- `S55` `M` `src/cadrumo/entrypoints/runtime/installation_repair.py`
+- `S55` `M` `src/cadrumo/entrypoints/runtime/installation_reset.py`
+- `S55` `M` `src/cadrumo/entrypoints/runtime/installation_storage.py`
+- `S55` `M` `src/cadrumo/entrypoints/runtime/profile_connection_admission.py`
+- `S55` `M` `src/cadrumo/entrypoints/runtime/tests/installation_runtime.py`
+- `S55` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_door.py`
+- `S55` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_reset.py`
+- `S55` `M` `src/cadrumo/entrypoints/runtime/tests/test_installation_storage.py`
+- `S55` `M` `src/cadrumo/entrypoints/runtime/tests/test_mcp_installation_tool.py`
+- `S55` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_binding_retirement.py`
+- `S55` `M` `src/cadrumo/entrypoints/tui/installation/rendering.py`
+- `S55` `M` `src/cadrumo/entrypoints/tui/installation/tests/runtime_support.py`
+- `S55` `A` `src/cadrumo/entrypoints/tui/installation/tests/test_failed_act_outcome.py`
+- `S55` `verify:` `pytest runtime installation and binding retirement tests, serial (129)` -> `pass`
+- `S55` `verify:` `pytest command-line installation submitter (7), reset and storage commands (18), reset and storage application tests (33)` -> `pass`
+- `S55` `verify:` `pytest local runtime endpoint, framing and transport tests (118, 11 skipped by platform) and the POSIX presence selection on Linux through WSL (11)` -> `pass`
+- `S55` `verify:` `pytest terminal-interface installation tests (38)` -> `pass`
+- `S55` `verify:` `lint-imports (15 contracts)` -> `pass`
+- `S55` `verify:` `ruff, format and ty on the 25 files` -> `pass`
 
 ## Notes
 
@@ -2068,3 +2098,4 @@ related:
 - `S39` One quarterly (Modelo 130, 2025 1T) and one annual (Modelo 100, 2025 0A) declaration prepared through MCP tools only equal the command line's on real runtimes with password-protected profiles: ledger rows, every casilla value with its provenance, the verification verdict, a refused verification's code and facts, and the exported bytes. Run alone it passed 2 of 2 here and 2 of 2 in an independent run by another session; beside other native-runtime suites it lost the worker connection at arbitrary steps, never on a comparison. The agent text and the plugin pointer describe the three-column reference.
 - `S61` The registry composes the nine new operations and the installed runtime serves all nineteen acts. The gate over 335 executable commands: 274 submit an operation, 13 send a runtime request or an act, 44 work in process with a declared counterpart, 4 have nothing to share, none is left over; it proves a counterpart exists, and sameness rests on each family's parity test. Each surface name is pinned to its tool list. The entrypoint module inventory was long stale, so its regeneration carries unrelated lines. `profile_host.py` is committed for its two lines only, and the aggregate import inventory without another session's dev lines. Open from this work: five tests of `dev/agent_eval/tests/test_mcp_runtime_authority.py` fail since the authority query was rewritten in S57; they are being repaired next.
 - `S63` Discovery with no session answers from a generated contract document of 279 operations in fifteen parts, split because the repository bounds an added file at 500 KB. A sessionless reply carries session none; a call on a dead or denied lease now answers from the document, while execute, observe and result stay fenced. A fault's location carries payload member names, so for a mapping-typed field it carries its keys; the financial-input path still answers a bare invalid. Not rerun: the strict type lane. A full wheel build was not run; inclusion of the document is shown by the build backend's own file listing. Failing in `dev/agent_eval` and not from this step: two session-lock parity tests, three golden files where the command line reports no runtime, and the suggestion command conformance count.
+- `S55` Reopened by the phase review and closed again. The reset and storage acts run on the root the runtime serves; shown with a runtime over one root while ambient settings name another, whose tree stays byte for byte. In an installed runtime the two cannot differ, since the manager clears the child's environment and pins the root. The command line falls back to in-process work only when the endpoint is absent. An error after a handler's change began settles as failed with effect unknown. Not run on macOS, where a socket left by a crashed runtime reads as indeterminate and the reset says to run again until a runtime clears it.

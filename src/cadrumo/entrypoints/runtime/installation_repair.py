@@ -38,7 +38,6 @@ from ...application.runtime.installation_requests import (
     RuntimeRepairReportRequest,
 )
 from ...core.bucket_pointer import corrupt_pointer_reads_as_unselected
-from ...core.config import load_settings, override_settings
 from ..adapter_composition import build_diagnostics_ports
 from ..diagnostics_repair_composition import read_session_profile_record
 
@@ -55,10 +54,6 @@ __all__ = ["register_repair_acts"]
 def _served_root(exchange: InstallationActExchange, *, repairs_pointer: bool = False) -> Generator[None]:
     """Resolve settings over the storage root this runtime serves, for the length of one act.
 
-    A runtime serves the root its own settings name, and then the act reads
-    those settings as a command run in the same installation does. A runtime
-    started over another root has settings composed over the served one.
-
     Composing settings reads the active-profile pointer, so a corrupt pointer
     refuses the act as it refuses a command at startup. Only the act that
     repairs the pointer reads a corrupt record as no selection, so that it can
@@ -67,8 +62,7 @@ def _served_root(exchange: InstallationActExchange, *, repairs_pointer: bool = F
     with ExitStack() as scope:
         if repairs_pointer:
             scope.enter_context(corrupt_pointer_reads_as_unselected())
-        if load_settings().cadrumo_local_storage_root.resolve() != exchange.storage_root.resolve():
-            scope.enter_context(override_settings(cadrumo_local_storage_root=exchange.storage_root))
+        scope.enter_context(exchange.served_settings())
         yield
 
 
@@ -142,6 +136,7 @@ class _RepairActs:
                 raise refusal.recorded()
             if request.clear_active:
                 exchange.require_login()
+                exchange.changes_begin()
             with bundled_indexed_authority().operation() as operation:
                 result = repair_active_profile_pointer(
                     clear_active=request.clear_active, confirmed=request.confirmed, operation=operation

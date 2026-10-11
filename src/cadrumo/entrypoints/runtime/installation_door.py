@@ -69,6 +69,7 @@ from ...application.user_profile.automation_custody_port import (
     AutomationCustodyError,
     AutomationSecretStore,
 )
+from ...core.config import load_settings, override_settings
 from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.logging import get_logger
@@ -90,7 +91,11 @@ class InstallationActHandler[RequestT: BaseModel](Protocol):
 
     The handler builds its reply with :meth:`InstallationActExchange.reply`. It
     may raise a registered error, which reaches the caller as that error on
-    every frontend, or an access refusal, which reaches it as that code.
+    every frontend, or an access refusal, which reaches it as that code for as
+    long as nothing was changed. A handler that changes records calls
+    :meth:`InstallationActExchange.changes_begin` before its first change: an
+    access refusal raised after that no longer proves that nothing changed, and
+    settles as a failure whose effect is unknown.
     """
 
     def __call__(self, request: RequestT, exchange: InstallationActExchange, /) -> RuntimeInstallationCompleted:
@@ -180,6 +185,7 @@ class InstallationActExchange:
         self._lifecycle = lifecycle
         self._secret_received = False
         self._secret_delivered = False
+        self._changes_began = False
 
     @property
     def act(self) -> InstallationAct:
@@ -190,6 +196,40 @@ class InstallationActExchange:
     def storage_root(self) -> Path:
         """Return the storage root this runtime owns."""
         return self._owner.root
+
+    @contextmanager
+    def served_settings(self) -> Generator[None]:
+        """Resolve settings over the storage root this runtime serves, for the length of one act.
+
+        A runtime is started over a root it is told, and admits, fences and
+        drains for that root alone. Its own process settings may name another.
+        An act that reads the tree through settings does so inside this scope,
+        so that what it works on is what the door admitted it for. Where the
+        two already agree the runtime's settings stand, as they do for a
+        command run in the same installation.
+        """
+        if load_settings().cadrumo_local_storage_root.resolve() == self.storage_root.resolve():
+            yield
+            return
+        with override_settings(cadrumo_local_storage_root=self.storage_root):
+            yield
+
+    def changes_begin(self) -> None:
+        """Say that the handler's next step may change records.
+
+        Until this is called a custody, runtime or access error proves that
+        nothing was changed, and reaches the caller as a refusal. From here it
+        does not, and the door settles it as a failure whose effect is unknown.
+        Only an act admitted under the lifecycle exclusion may begin changes.
+        """
+        if not self._lifecycle.held:
+            raise InternalInvariantError("an installation act admitted as a read cannot begin changes")
+        self._changes_began = True
+
+    @property
+    def changes_began(self) -> bool:
+        """Whether the handler has reached the step that may change records."""
+        return self._changes_began
 
     def secret_store(self) -> AutomationSecretStore:
         """Return the runtime's protected credential store."""
@@ -345,6 +385,7 @@ class RuntimeInstallationDoorMixin:
     ) -> InstallationSettledReply:
         act = installation_act_of(request)
         contract = INSTALLATION_ACT_CONTRACTS[act]
+        exchange: InstallationActExchange | None = None
         try:
             if context.runtime_boot_id != self.boot or context.peer != channel.peer:
                 raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
@@ -374,8 +415,15 @@ class RuntimeInstallationDoorMixin:
                 context.connection_id,
             ):
                 raise InternalInvariantError("an installation handler returned another act's reply")
+            if lifecycle.held and not exchange.changes_began:
+                # A handler cannot leave the mark out: without it a refusal
+                # raised after its change would be read as nothing changed.
+                raise InternalInvariantError("an installation handler changed records without saying where it began")
             return reply
         except (AutomationCustodyError, RuntimeRefusalError, ProfileAccessRefusedError) as error:
+            if exchange is not None and exchange.changes_began:
+                # The refusal no longer proves that nothing changed, which is what a refusal tells a caller.
+                return self._installation_failure(context, request, act, error)
             return RuntimeAccessRefusal(
                 request_id=request.request_id,
                 runtime_boot_id=self.boot,

@@ -49,7 +49,6 @@ from ...application.user_profile.capsule_restore import restore_profile_capsule_
 from ...application.user_profile.custody_ports import ProfileCustodyRecordIntegrityError
 from ...application.user_profile.profile_summary import profile_listing, selected_profile_id
 from ...application.user_profile.recovery_custody import ProfileRecoveryError, enroll_profile_recovery
-from ...core.config import override_settings
 from ...core.errors.hierarchy import NoActiveProfileError
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 
@@ -70,7 +69,7 @@ def _installation_scope(exchange: InstallationActExchange, *, changes_custody: b
     changes custody, so a read never opens it.
     """
     with (
-        override_settings(cadrumo_local_storage_root=exchange.storage_root),
+        exchange.served_settings(),
         composed_profile_persistence_ports(
             automation_secrets_store=exchange.secret_store() if changes_custody else None
         ),
@@ -137,6 +136,7 @@ def _serve_archive_import(
             secrets = exchange.receive_secret(RuntimeInstallationPassphrase)
             try:
                 with bundled_indexed_authority().operation() as operation:
+                    exchange.changes_begin()
                     outcome = restore_profile_capsule_with_password(
                         label=request.label,
                         capsule=capsule.source,
@@ -187,7 +187,10 @@ def _serve_recovery_enroll(
 
     def handover(enrollment: ProfileRecoveryEnrollment) -> str:
         read_back = exchange.deliver_secret(bytearray(enrollment.recovery_key.code, "utf-8"))
-        return _read_back_code(read_back.get_secret_value())
+        code = _read_back_code(read_back.get_secret_value())
+        # The service writes nothing before the handover and installs the wrapper once the code read back matches.
+        exchange.changes_begin()
+        return code
 
     with _installation_scope(exchange, changes_custody=True):
         profile_id = _profile_to_enrol(request, exchange)

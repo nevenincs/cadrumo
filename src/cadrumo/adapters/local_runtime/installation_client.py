@@ -12,11 +12,17 @@ import asyncio
 import sys
 from collections.abc import Callable
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 from typing import NoReturn, Self
 
 from pydantic import SecretBytes
 
-from ...application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.contracts import (
+    RuntimeClientHello,
+    RuntimeEndpointPresence,
+    RuntimeRefusalCode,
+    RuntimeRefusalError,
+)
 from ...application.runtime.deadline_budget import deadline_after
 from ...application.runtime.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
@@ -30,7 +36,7 @@ from ...application.runtime.installation_requests import (
     RuntimeInstallationSecretReceipt,
     installation_act_of,
 )
-from ...application.runtime.profile_access import RuntimeAccessRefusal, RuntimeReply, RuntimeSecretReady
+from ...application.runtime.profile_access import RuntimeAccessRefusal, RuntimeSecretReady
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 from ...core.hashing import canonical_json_bytes
@@ -42,6 +48,7 @@ from .installation_frame_io import read_installation_reply
 from .posix_endpoint import PosixRuntimeEndpoint
 from .runtime_frame_io import read_secret, write_document
 from .runtime_transport_cleanup import RuntimeTransportCleanup
+from .runtime_verified_transport import RuntimeHeldExchange
 from .startup import RuntimeLaunchDoor
 from .windows import WindowsRuntimeEndpoint
 
@@ -190,62 +197,54 @@ def _exchange_act(
 ) -> object:
     """Hold one correlated exchange until the act settles, serving its secret frames in between.
 
-    The connection's own exchange primitives are used so that this act cannot
-    interleave with another request on the same connection and a failed frame
-    closes the connection exactly as any other exchange does.
+    The connection holds the exchange, so this act cannot interleave with
+    another request on the same connection and a failed frame closes the
+    connection exactly as any other exchange does.
     """
     act = installation_act_of(request)
-    with connection._exchange(deadline=deadline, secret=secret):
-        try:
-            if connection._closed:
-                raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
-            write_document(connection._channel, request, deadline=deadline)
-            secret_sent = secret_held = False
-            while True:
-                reply: RuntimeReply = connection._reply(request.request_id, deadline=deadline)
-                received = reply.root
-                if isinstance(received, RuntimeSecretReady):
-                    if secret is None or secret_sent:
-                        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                    secret_sent = True
-                    connection.send_secret(secret, deadline=deadline)
-                elif isinstance(received, RuntimeInstallationSecretDelivery):
-                    if hold_secret is None or secret_held or received.act is not act:
-                        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
-                    secret_held = True
-                    _hold_delivered_secret(connection, received, hold_secret, deadline=deadline)
-                elif isinstance(received, RuntimeInstallationReplyTransfer):
-                    return read_installation_reply(connection._channel, received, deadline=deadline).root
-                else:
-                    return received
-        except BaseException as error:
-            connection._close_after_failure(error)
-            raise
+    with connection.held_exchange(request, request.request_id, deadline=deadline, secret=secret) as exchange:
+        secret_sent = secret_held = False
+        while True:
+            received = exchange.reply().root
+            if isinstance(received, RuntimeSecretReady):
+                if secret is None or secret_sent:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                secret_sent = True
+                exchange.send_secret(secret)
+            elif isinstance(received, RuntimeInstallationSecretDelivery):
+                if hold_secret is None or secret_held or received.act is not act:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                secret_held = True
+                _hold_delivered_secret(exchange, received, hold_secret, deadline=deadline)
+            elif isinstance(received, RuntimeInstallationReplyTransfer):
+                return read_installation_reply(exchange.channel, received, deadline=deadline).root
+            else:
+                return received
 
 
 def _hold_delivered_secret(
-    connection: VerifiedRuntimeConnection,
+    exchange: RuntimeHeldExchange,
     delivery: RuntimeInstallationSecretDelivery,
     hold_secret: InstallationSecretHolder,
     *,
     deadline: float,
 ) -> None:
     """Receive one delivered secret, let the holder keep it, and return the copy read back."""
-    with read_secret(connection._channel, deadline=deadline) as delivered:
+    with read_secret(exchange.channel, deadline=deadline) as delivered:
         try:
             held = hold_secret(delivered)
             code = None if held is not None else AutomationCustodyCode.MISSING
         except AutomationCustodyError as error:
             held, code = None, error.reason
     write_document(
-        connection._channel,
+        exchange.channel,
         RuntimeInstallationSecretReceipt(
             delivery_id=delivery.delivery_id, outcome="held" if held is not None else "refused", code=code
         ),
         deadline=deadline,
     )
     if held is not None:
-        connection.send_secret(bytearray(held.get_secret_value()), deadline=deadline)
+        exchange.send_secret(bytearray(held.get_secret_value()))
 
 
 class _OwnedRelease:
@@ -261,22 +260,60 @@ class _OwnedRelease:
             self._released = True
 
 
+def _installed_endpoint(root: Path) -> WindowsRuntimeEndpoint | PosixRuntimeEndpoint:
+    """Name the native endpoint of the runtime that owns ``root``."""
+    return (
+        WindowsRuntimeEndpoint(storage_root=root)
+        if sys.platform == "win32"
+        else PosixRuntimeEndpoint(storage_root=root)
+    )
+
+
+async def installed_runtime_presence() -> RuntimeEndpointPresence:
+    """Observe whether a runtime owns the effective storage root, without opening a connection to use.
+
+    Only ``ABSENT`` proves that none does. A refusal to connect does not: an
+    endpoint whose owner is busy, a wait that ran out and a client that cannot
+    name its own cohort all refuse with one code while a runtime is alive. A
+    caller that would do a runtime's work itself asks this first.
+    """
+    try:
+        root = effective_storage_root().resolve(strict=True)
+    except FileNotFoundError:
+        # An endpoint is named by its root's identity, so a root that does not exist has none.
+        return RuntimeEndpointPresence.ABSENT
+    except OSError:
+        return RuntimeEndpointPresence.INDETERMINATE
+    try:
+        endpoint = _installed_endpoint(root)
+    except RuntimeRefusalError:
+        return RuntimeEndpointPresence.INDETERMINATE
+    endpoint_release = _OwnedRelease(endpoint.close)
+    try:
+        observed = await asyncio.to_thread(endpoint.presence)
+    except BaseException as error:
+        await close_async_resources(
+            endpoint_release, task_name="installation-runtime-presence-close", primary_error=error
+        )
+        raise
+    await close_async_resources(endpoint_release, task_name="installation-runtime-presence-close", primary_error=None)
+    return observed
+
+
 async def open_installed_installation_client(*, timeout: float = 10) -> RuntimeInstallationClient:
     """Connect to the running owner of the effective storage root.
 
     This opens no profile and reads no credential. An absent or untrusted
-    endpoint returns a typed refusal; nothing here starts a runtime.
+    endpoint returns a typed refusal; nothing here starts a runtime. The
+    refusal does not say that no runtime is running:
+    :func:`installed_runtime_presence` answers that.
     """
     try:
         root = effective_storage_root().resolve(strict=True)
         product_version = version("cadrumo")
     except (OSError, PackageNotFoundError):
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
-    endpoint = (
-        WindowsRuntimeEndpoint(storage_root=root)
-        if sys.platform == "win32"
-        else PosixRuntimeEndpoint(storage_root=root)
-    )
+    endpoint = _installed_endpoint(root)
     endpoint_release = _OwnedRelease(endpoint.close)
     try:
         launch = RuntimeLaunchDoor(
