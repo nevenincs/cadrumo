@@ -61,8 +61,18 @@ Cadrumo asks for the current passphrase, shows the code once on the terminal,
 and asks you to type it back before anything is installed. The code looks like
 `XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX`; case, hyphens and spaces do not matter
 when you type it. Write it down and keep it apart from your passphrase and
-apart from the computer holding the data. Cadrumo keeps no copy and cannot show
-it again.
+apart from the computer holding the data. When you enable recovery with this
+command, Cadrumo keeps no copy and cannot show the code again.
+
+The terminal interface does the same from **Installation**, in the **Set up a
+recovery code** task: it shows the code once and asks you to type it back. When
+an agent enables recovery through MCP, there is no terminal to show the code on.
+The MCP server then keeps one copy in this computer's protected credential store
+and gives the agent only a reference to it. You read the code yourself with
+`cadrumo-mcp --show-held-secret REFERENCE` and confirm that you kept it, which
+deletes the stored copy; until you confirm, you can read it again. See [Read a
+recovery code that an agent
+enabled](connect-an-agent.md#read-a-recovery-code-that-an-agent-enabled).
 
 Anyone holding the code can set a new passphrase for the profile, so treat it
 as you would the passphrase itself. To check or remove it:
@@ -95,6 +105,11 @@ before the reset still open with the passphrase they were sealed under. A wrong 
 profile without recovery, a new passphrase that is too short, or two copies
 that do not match all refuse and leave the profile untouched.
 
+An agent connected through MCP does this with the `session` tool's
+`reset_password` action. It takes the recovery code and the new passphrase by
+reference, so that neither passes through the conversation; see [Give an agent a
+secret by reference](connect-an-agent.md#give-an-agent-a-secret-by-reference).
+
 To reset without an interactive prompt, send
 `{"recovery_code": "...", "new_passphrase": "...",
 "new_passphrase_confirmation": "..."}` through `--secrets-stdin` or
@@ -113,6 +128,12 @@ collide with `--secrets-fd`. The process closes each descriptor after its one
 bounded operation. A missing half, malformed proof, mismatch, oversized
 payload, descriptor collision, or I/O failure enrols nothing.
 
+An agent connected through MCP needs neither pipe. It uses the `installation`
+tool's `recovery_enroll` action or the `session` tool's `enable_recovery`
+action, and you read the code afterwards as described in [Read a recovery code
+that an agent
+enabled](connect-an-agent.md#read-a-recovery-code-that-an-agent-enabled).
+
 ## Change your passphrase
 
 Change the passphrase whenever you suspect it has been seen, or on whatever
@@ -130,7 +151,9 @@ The change re-wraps the existing key rather than replacing it, so:
 
 The command reports both facts back to you. If the current passphrase is wrong,
 the new one is too short, or the two copies do not match, it refuses and leaves
-the existing passphrase working.
+the existing passphrase working. The terminal interface changes it from the
+account controls (**Password**), and an agent connected through MCP uses the
+`session` tool's `change_password` action.
 
 To change the passphrase without an interactive prompt, pass the three values as
 one JSON object through a leaf secret channel:
@@ -335,6 +358,20 @@ If legal retention requirements pause the reset, stop if you must keep the
 affected records. Override the pause only after reviewing and accepting the
 legal retention consequence, and always provide a non-empty reason. If you
 provide a reason without the override, the command refuses to continue.
+
+When Cadrumo's runtime is running, `start` and `resume` go through it, so the
+profiles it is hosting are closed before anything is deleted. When none is
+running, the commands do the work in their own process. If the answer is lost
+after the reset began, the reset is reported as unknown, not as failed; read
+`status` before you try again.
+
+The terminal interface offers the same work in **Installation** (**Reset all
+profiles**, **Reset status** and **Resume a reset**), which you can open from
+the sign-in screen with nobody signed in. An agent uses the `installation`
+tool's `reset_start`, `reset_status` and `reset_resume` actions. Both need the
+runtime running, and both ask for the same explicit confirmation as the
+command: the `installation` tool changes nothing until `confirm` is true, and
+reports what it would do instead.
 
 See [Set up your taxpayer profile](profile-setup.md) for sealed archive
 backup instructions.

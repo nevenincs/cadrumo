@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -640,14 +640,23 @@ msgid ""
 "This is a portability gap, not a recovery one. Backup and recovery are "
 "unaffected and run through `aeat config profile archive export` and `aeat"
 " config profile archive import`, which operate on the sealed profile "
-"capsule."
+"capsule. The terminal interface offers inspecting and restoring an "
+"archive in **Installation**, and an agent uses the `installation` tool's "
+"`archive_inspect`, `archive_import_prepare` and `archive_import` actions "
+"with the profile passphrase by reference. Both need Cadrumo's runtime "
+"running and name the archive by its absolute path."
 msgstr ""
 "Esto es una carencia de portabilidad, no de recuperación. La copia de "
 "seguridad y la recuperación no se ven afectadas y funcionan mediante "
 "`aeat config profile archive export` y `aeat config profile archive "
-"import`, que operan sobre la cápsula sellada del perfil."
+"import`, que operan sobre la cápsula sellada del perfil. La interfaz de "
+"terminal ofrece inspeccionar y restaurar un archivo en **Instalación**, y"
+" un agente usa las acciones `archive_inspect`, `archive_import_prepare` y"
+" `archive_import` de la herramienta `installation` con la frase de "
+"contraseña del perfil por referencia. Ambos necesitan el entorno de "
+"ejecución de Cadrumo en marcha e indican el archivo por su ruta absoluta."
 
-#: ../../reference/import-export-and-evidence.md:163
+#: ../../reference/import-export-and-evidence.md:168
 msgid ""
 "The sealed custody archive is an encrypted profile backup, not a "
 "structured, readable copy of one profile's records. It excludes recovery "
@@ -662,11 +671,11 @@ msgstr ""
 "contraseña del perfil. Un perfil restaurado empieza sin código de "
 "recuperación; actívalo de nuevo después si lo deseas."
 
-#: ../../reference/import-export-and-evidence.md:169
+#: ../../reference/import-export-and-evidence.md:174
 msgid "What an audit export is for"
 msgstr "Para qué sirve una exportación de auditoría"
 
-#: ../../reference/import-export-and-evidence.md:171
+#: ../../reference/import-export-and-evidence.md:176
 msgid ""
 "When an audit or professional review is requested, the audit evidence "
 "bundle is intended to let the recipient establish:"
@@ -675,49 +684,55 @@ msgstr ""
 "de evidencia de auditoría está pensado para permitir al destinatario "
 "establecer:"
 
-#: ../../reference/import-export-and-evidence.md:174
+#: ../../reference/import-export-and-evidence.md:179
 msgid "Which original records supported the return."
 msgstr "Qué registros originales respaldaron la declaración."
 
-#: ../../reference/import-export-and-evidence.md:175
+#: ../../reference/import-export-and-evidence.md:180
 msgid "Whether those bytes still match their recorded SHA-256 digests."
 msgstr "Si esos bytes siguen coincidiendo con sus resúmenes SHA-256 registrados."
 
-#: ../../reference/import-export-and-evidence.md:176
+#: ../../reference/import-export-and-evidence.md:181
 msgid "Which entries in your records contributed to which boxes (casillas)."
 msgstr "Qué apuntes de tus registros contribuyeron a qué casillas."
 
-#: ../../reference/import-export-and-evidence.md:177
+#: ../../reference/import-export-and-evidence.md:182
 msgid "Which tax rules and legal references governed the calculation."
 msgstr "Qué reglas fiscales y referencias legales rigieron el cálculo."
 
-#: ../../reference/import-export-and-evidence.md:178
+#: ../../reference/import-export-and-evidence.md:183
 msgid "Which calculation revision and filing record were involved."
 msgstr "Qué revisión de cálculo y qué registro de presentación intervinieron."
 
-#: ../../reference/import-export-and-evidence.md:179
+#: ../../reference/import-export-and-evidence.md:184
 msgid "Whether later revisions superseded the original position."
 msgstr "Si revisiones posteriores sustituyeron la posición original."
 
-#: ../../reference/import-export-and-evidence.md:181
+#: ../../reference/import-export-and-evidence.md:186
 msgid ""
 "The audit evidence bundle ZIP file contains reachable record bytes "
-"followed by `manifest.json`. Failed verification prevents export; "
-"incomplete packages require an explicit override. `audit check` reruns "
-"the bundle checks but never contacts AEAT or recalculates the tax result."
-" Through the current command-line interface, `check` cannot verify "
-"referenced record bytes because no payload loader is supplied."
+"followed by `manifest.json`. The command line resolves a relative "
+"`--output` path from the directory you run it in. The same export from "
+"the terminal interface or MCP needs the absolute path of the file. Failed"
+" verification prevents export; incomplete packages require an explicit "
+"override. `audit check` reruns the bundle checks but never contacts AEAT "
+"or recalculates the tax result. Through the current command-line "
+"interface, `check` cannot verify referenced record bytes because no "
+"payload loader is supplied."
 msgstr ""
 "El fichero ZIP del paquete de evidencia de auditoría contiene los bytes "
-"de los registros accesibles seguidos de `manifest.json`. Una comprobación"
-" fallida impide la exportación; los paquetes incompletos requieren una "
+"de los registros accesibles seguidos de `manifest.json`. La línea de "
+"comandos resuelve una ruta `--output` relativa a partir del directorio "
+"desde el que la ejecutas. La misma exportación desde la interfaz de "
+"terminal o MCP necesita la ruta absoluta del fichero. Una comprobación "
+"fallida impide la exportación; los paquetes incompletos requieren una "
 "anulación explícita. `audit check` vuelve a ejecutar las comprobaciones "
 "del paquete, pero nunca contacta con la AEAT ni recalcula el resultado "
 "fiscal. A través de la interfaz de línea de comandos actual, `check` no "
 "puede comprobar los bytes de los registros referenciados porque no se "
 "suministra ningún cargador de carga útil."
 
-#: ../../reference/import-export-and-evidence.md:188
+#: ../../reference/import-export-and-evidence.md:196
 msgid ""
 "The current audit commands do not yet provide a complete one-command "
 "audit handoff. The command-line audit surface has no payload-loader "
@@ -735,23 +750,23 @@ msgstr ""
 "registros y puede contener solo el manifiesto. No trates esa salida como "
 "un paquete de evidencia completo."
 
-#: ../../reference/import-export-and-evidence.md:195
+#: ../../reference/import-export-and-evidence.md:203
 msgid "What a complete audit handoff means"
 msgstr "Qué significa una entrega de auditoría completa"
 
-#: ../../reference/import-export-and-evidence.md:197
+#: ../../reference/import-export-and-evidence.md:205
 msgid "A genuinely complete audit handoff would normally combine:"
 msgstr "Una entrega de auditoría genuinamente completa combinaría normalmente:"
 
-#: ../../reference/import-export-and-evidence.md:199
+#: ../../reference/import-export-and-evidence.md:207
 msgid "Official AEAT receipt proving submission."
 msgstr "Justificante oficial de la AEAT que prueba la presentación."
 
-#: ../../reference/import-export-and-evidence.md:200
+#: ../../reference/import-export-and-evidence.md:208
 msgid "The exact submitted-file digest or captured filed copy."
 msgstr "El resumen exacto del fichero presentado o la copia presentada capturada."
 
-#: ../../reference/import-export-and-evidence.md:201
+#: ../../reference/import-export-and-evidence.md:209
 msgid ""
 "A verified audit evidence bundle containing every referenced supporting "
 "record."
@@ -759,7 +774,7 @@ msgstr ""
 "Un paquete de evidencia de auditoría comprobado que contenga todos los "
 "registros de respaldo referenciados."
 
-#: ../../reference/import-export-and-evidence.md:202
+#: ../../reference/import-export-and-evidence.md:210
 msgid ""
 "The calculation or review package explaining how those records produced "
 "the declared boxes."
@@ -767,7 +782,7 @@ msgstr ""
 "El paquete de cálculo o de revisión que explica cómo esos registros "
 "produjeron las casillas declaradas."
 
-#: ../../reference/import-export-and-evidence.md:205
+#: ../../reference/import-export-and-evidence.md:213
 msgid ""
 "That combination supports both halves of the audit question: “Was this "
 "actually filed?” and “What facts, rules, and calculations produced it?”"
@@ -776,7 +791,7 @@ msgstr ""
 "«¿Se presentó esto realmente?» y «¿Qué hechos, reglas y cálculos lo "
 "produjeron?»"
 
-#: ../../reference/import-export-and-evidence.md:208
+#: ../../reference/import-export-and-evidence.md:216
 msgid ""
 "The audit evidence bundle does not currently include every item in that "
 "combination. Assemble and verify the missing items separately; a bundle "
@@ -789,11 +804,11 @@ msgstr ""
 "presentes todos los registros de respaldo y las cargas útiles "
 "referenciados."
 
-#: ../../reference/import-export-and-evidence.md:212
+#: ../../reference/import-export-and-evidence.md:220
 msgid "Important limitations"
 msgstr "Limitaciones importantes"
 
-#: ../../reference/import-export-and-evidence.md:214
+#: ../../reference/import-export-and-evidence.md:222
 msgid ""
 "Support is limited to Modelo and revision combinations backed by "
 "registered, authoritative layouts and real evidence. Consequently:"
@@ -802,7 +817,7 @@ msgstr ""
 " por disposiciones registradas y con autoridad y por pruebas reales. En "
 "consecuencia:"
 
-#: ../../reference/import-export-and-evidence.md:217
+#: ../../reference/import-export-and-evidence.md:225
 msgid ""
 "Import and export support must not be described as universal across all "
 "Modelos and periods."
@@ -810,13 +825,13 @@ msgstr ""
 "El soporte de importación y exportación no debe describirse como "
 "universal para todos los modelos y periodos."
 
-#: ../../reference/import-export-and-evidence.md:219
+#: ../../reference/import-export-and-evidence.md:227
 msgid "Filed declaración-PDF extraction requires an exact registered profile."
 msgstr ""
 "La extracción del PDF de una declaración presentada requiere un perfil "
 "registrado exacto."
 
-#: ../../reference/import-export-and-evidence.md:220
+#: ../../reference/import-export-and-evidence.md:228
 msgid ""
 "A local observation you supplied, local export, checksum, Google Sheet, "
 "or review ZIP cannot prove AEAT acceptance. A locally held AEAT receipt "
@@ -829,7 +844,7 @@ msgstr ""
 "puede convertirse en prueba oficial. Impórtalo a través del flujo de "
 "justificantes de la AEAT."
 
-#: ../../reference/import-export-and-evidence.md:224
+#: ../../reference/import-export-and-evidence.md:232
 msgid ""
 "Integrity proves that bytes have not changed; it does not establish "
 "signer identity or independent legal authenticity. Use the separate "
@@ -840,7 +855,7 @@ msgstr ""
 "flujo aparte de firma del paquete de revisión cuando importe la identidad"
 " del autor."
 
-#: ../../reference/import-export-and-evidence.md:227
+#: ../../reference/import-export-and-evidence.md:235
 msgid ""
 "Supporting documents are encrypted in normal custody. Base review and "
 "audit ZIPs are deliberate plaintext exports, so secure delivery becomes "
@@ -850,7 +865,7 @@ msgstr ""
 "y de auditoría son exportaciones en texto plano deliberadas, así que la "
 "entrega segura pasa a ser tu responsabilidad."
 
-#: ../../reference/import-export-and-evidence.md:230
+#: ../../reference/import-export-and-evidence.md:238
 msgid ""
 "A forced incomplete audit evidence bundle export is not a complete "
 "handoff."
@@ -858,7 +873,7 @@ msgstr ""
 "Una exportación forzada e incompleta de un paquete de evidencia de "
 "auditoría no es una entrega completa."
 
-#: ../../reference/import-export-and-evidence.md:231
+#: ../../reference/import-export-and-evidence.md:239
 msgid ""
 "`audit check` reruns bundle checks. Through the current command-line "
 "interface, it cannot verify referenced bytes, and it does not reproduce "
@@ -868,7 +883,7 @@ msgstr ""
 "de la interfaz de línea de comandos actual, no puede verificar los bytes "
 "referenciados y no reproduce ni recalcula la decisión fiscal."
 
-#: ../../reference/import-export-and-evidence.md:235
+#: ../../reference/import-export-and-evidence.md:243
 msgid ""
 "For storage, recovery, and external-access boundaries, see [Protect "
 "access to taxpayer data](../how-to/protect-data-access.md) and "
@@ -878,4 +893,3 @@ msgstr ""
 "consulta [Proteger el acceso a los datos del contribuyente](../how-to"
 "/protect-data-access.md) y [Sistema de ficheros, estado y seguridad"
 "](filesystem-state-and-safety.md)."
-

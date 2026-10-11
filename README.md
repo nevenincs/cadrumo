@@ -69,7 +69,7 @@ Cadrumo encrypts app-managed financial records and evidence in local profile sto
 
 External connections serve specific tasks: authenticated AEAT reads, optional Google Sheets workbooks, and optional hosted AI processing. Sending evidence to a hosted model requires explicit consent. See [data access](docs/how-to/protect-data-access.md) and the [privacy policy](PRIVACY.md).
 
-The CLI, terminal workbench, and MCP integration use the same local runtime and application operations. An assistant can help with permitted tasks while calculation, access checks, and review remain under Cadrumo's application controls. See [connect an agent](docs/how-to/connect-an-agent.md) for setup and permissions.
+The CLI, terminal workbench, and MCP integration use the same local runtime and application operations. All three can do the same work: an assistant can run any operation the command line can, under the session it holds, while calculation and access checks remain under Cadrumo's application controls and you review the result. See [connect an agent](docs/how-to/connect-an-agent.md) for setup and permissions.
 
 ## User documentation
 

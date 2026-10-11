@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 22:21+0200\n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -289,6 +289,22 @@ msgstr ""
 
 #: ../../workstation-setup.md:116
 msgid ""
+"The commands work with or without a signed-in profile and with or without"
+" a running Cadrumo. The same work is also available as the registered "
+"operations `local-reader.provision`, `local-reader.status` and `local-"
+"reader.report`, and the browser build as `browser-runtime.provision`. The"
+" full-screen app lists them under **Operations** and an agent runs them "
+"with `execute`."
+msgstr ""
+"A parancsok bejelentkezett profillal és anélkül, futó Cadrumóval és "
+"anélkül is működnek. Ugyanez a munka regisztrált műveletként is elérhető:"
+" `local-reader.provision`, `local-reader.status` és `local-"
+"reader.report`, a böngészőépítmény pedig `browser-runtime.provision` "
+"néven. A teljes képernyős alkalmazás a **Műveletek** alatt felsorolja "
+"őket, az ügynök pedig az `execute` eszközzel futtatja."
+
+#: ../../workstation-setup.md:122
+msgid ""
 "LLM classification runs only on this local reader; no cloud provider is "
 "involved. See [Classify transactions with an LLM](how-to/classify-with-"
 "llm.md#set-up-the-local-reader)."
@@ -297,7 +313,7 @@ msgstr ""
 "nem vesz részt benne. Lásd: [Tranzakciók besorolása LLM-mel](how-to"
 "/classify-with-llm.md#set-up-the-local-reader)."
 
-#: ../../workstation-setup.md:120
+#: ../../workstation-setup.md:126
 msgid ""
 "Run `aeat config check` again after each change to confirm the gap is "
 "closed."
@@ -305,40 +321,39 @@ msgstr ""
 "Minden változtatás után futtasd újra az `aeat config check` parancsot, "
 "hogy megbizonyosodj róla, a hiányosság megszűnt."
 
-#: ../../workstation-setup.md:122
+#: ../../workstation-setup.md:128
 msgid "Connect an AI assistant"
 msgstr "AI-asszisztens csatlakoztatása"
 
-#: ../../workstation-setup.md:124
+#: ../../workstation-setup.md:130
 msgid ""
 "Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an "
 "agent to registered operations through the local runtime, either under "
-"your own Cadrumo sign-in or under an enrolled key for an explicit profile"
-" ID. Run `cadrumo-mcp --help` to confirm it is on your path. In a source "
-"checkout, check the installed entrypoint with:"
+"your own Cadrumo sign-in or under an enrolled key for one profile. Run "
+"`cadrumo-mcp --help` to confirm it is on your path. In a source checkout,"
+" check the installed entrypoint with:"
 msgstr ""
 "A Cadrumo az `aeat` mellé telepíti a `cadrumo-mcp` parancsot. A "
 "kiszolgáló a helyi futtatókörnyezeten keresztül kapcsol össze egy "
-"ügynököt a regisztrált műveletekkel, vagy a saját "
-"Cadrumo-bejelentkezésed, vagy egy kifejezetten megadott "
-"profilazonosítóhoz regisztrált kulcs alapján. Futtasd a `cadrumo-mcp "
-"--help` parancsot, hogy megerősítsd: szerepel az elérési utadon. "
-"Forráskód-munkapéldányban ezzel ellenőrizd a telepített belépési "
-"pontot:"
+"ügynököt a regisztrált műveletekkel, vagy a saját Cadrumo-"
+"bejelentkezésed, vagy egy egyetlen profilhoz regisztrált kulcs alapján. "
+"Futtasd a `cadrumo-mcp --help` parancsot, hogy megerősítsd: szerepel az "
+"elérési utadon. Forráskód-munkapéldányban ezzel ellenőrizd a telepített "
+"belépési pontot:"
 
-#: ../../workstation-setup.md:135
+#: ../../workstation-setup.md:141
 msgid ""
 "[Connect an agent](how-to/connect-an-agent.md) shows both ways to connect"
 " and the grant request flow."
 msgstr ""
-"Az [Ügynök csatlakoztatása](how-to/connect-an-agent.md) oldal "
-"bemutatja mindkét csatlakozási módot és az engedélykérés folyamatát."
+"Az [Ügynök csatlakoztatása](how-to/connect-an-agent.md) oldal bemutatja "
+"mindkét csatlakozási módot és az engedélykérés folyamatát."
 
-#: ../../workstation-setup.md:138
+#: ../../workstation-setup.md:144
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../workstation-setup.md:140
+#: ../../workstation-setup.md:146
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -346,7 +361,7 @@ msgstr ""
 "[Gyorsindító](how-to/quickstart.md) - az üres profiltól az exportált "
 "modelofájlig."
 
-#: ../../workstation-setup.md:142
+#: ../../workstation-setup.md:148
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -355,11 +370,10 @@ msgstr ""
 "szolgáltatási képességeket (Google-export, LLM-es képfeldolgozás, "
 "felhőbeli bizonyítékfeltöltés)."
 
-#: ../../workstation-setup.md:144
+#: ../../workstation-setup.md:150
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Ügynök csatlakoztatása](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:145
+#: ../../workstation-setup.md:151
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Hibaelhárítás](how-to/troubleshooting.md)"
-

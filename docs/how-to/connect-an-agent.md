@@ -26,7 +26,8 @@ does not install or start a service.
 
 ## Register the server
 
-Find the intended profile ID in Cadrumo. CLI output hides profile IDs by default;
+The `--profile-id` argument is optional; see "Following your sign-in" below. To
+name a profile, find its ID in Cadrumo. CLI output hides profile IDs by default;
 set `CADRUMO_CLI_REVEAL_IDENTIFIERS=1` for the command's process and run
 the following profile-view command to display it. This option reveals opaque
 profile and bucket IDs; credentials remain hidden.
@@ -122,12 +123,19 @@ request vocabulary; omit the query to list them. `describe` shows a registered
 operation's input contract. Both answer before admission too, and while Cadrumo
 is not running: they then cover every registered operation on the connection's
 surface and say `session` `none`, and after admission they cover the operations
-the session may use.
+the session may use. `search` returns ten summaries at a time; pass its
+`next_cursor` back as `cursor` for the next page, and use `describe` for one
+operation's full contract.
 After admission, `execute` submits an operation and `observe`
 tracks its result. The separate `authority` tool reads published tax authority
 data. Operation grants, session locks, profile suspension, provider checks and
 human review still apply. Retain operation IDs and reconcile uncertain effects
-after a disconnect instead of submitting the same effect blindly.
+after a disconnect instead of submitting the same effect blindly. A call whose
+outcome is not known is answered as unknown, not as an error, and its
+`unknown_outcome` member says how to read what happened; do not repeat such a
+call. For an operation that settled refused or failed, `result` returns the
+recorded code, message and context in `error_detail`, as the command line
+prints them.
 
 Read a settled operation's approved projection with `result`. For a large result,
 use `result_page` with the same result request and an initial page offset of zero.
@@ -199,7 +207,8 @@ and verifying a review package or a calculation summary that you hold. The
 `installation` tool does this work through the running local runtime, with one
 `action` for each act, and gives the same result as the matching `aeat` command.
 It is not a registered operation, so `search` does not list it; the tool's own
-description names every action and its arguments.
+description names every action and its arguments. The terminal interface offers
+the same work in **Installation**, which you can open from the sign-in screen.
 
 A destructive action, such as reclaiming storage or resetting all profiles,
 takes `confirm`. Unless `confirm` is true it changes nothing: it reports what it

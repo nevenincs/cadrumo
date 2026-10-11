@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-05 11:08+0200\n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -167,16 +167,29 @@ msgstr ""
 " or is not a readable file.`); corregeix el camí i torna-la a executar."
 
 #: ../../how-to/import-bank-statements.md:69
+msgid ""
+"The command line resolves a relative path from the directory you run it "
+"in. The terminal interface and MCP run the same operation "
+"(`ledger.import`) and need the absolute path of the statement file. The "
+"same holds for the destination of `ledger export` (`ledger.export`)."
+msgstr ""
+"La línia d'ordres resol un camí relatiu a partir del directori des del "
+"qual l'executes. La interfície de terminal i MCP executen la mateixa "
+"operació (`ledger.import`) i necessiten el camí absolut del fitxer de "
+"l'extracte. El mateix val per a la destinació de `ledger export` "
+"(`ledger.export`)."
+
+#: ../../how-to/import-bank-statements.md:74
 msgid "Save imported rows with diagnostics"
 msgstr "Desa les files importades amb diagnòstics"
 
-#: ../../how-to/import-bank-statements.md:71
+#: ../../how-to/import-bank-statements.md:76
 msgid "Add `--verify` when you want import diagnostics alongside the save:"
 msgstr ""
 "Afegeix `--verify` quan vulguis diagnòstics d'importació juntament amb el"
 " desat:"
 
-#: ../../how-to/import-bank-statements.md:77
+#: ../../how-to/import-bank-statements.md:82
 msgid ""
 "If the diagnostics should check the rows against a different original "
 "file, pass it with `--verify-source <original>`. Use `--period` with "
@@ -190,11 +203,11 @@ msgstr ""
 "amb un període de presentació; omet-los tots dos i `aeat` assigna el "
 "període automàticament a partir de la data de cada moviment."
 
-#: ../../how-to/import-bank-statements.md:82
+#: ../../how-to/import-bank-statements.md:87
 msgid "Add one transaction manually"
 msgstr "Afegeix un moviment manualment"
 
-#: ../../how-to/import-bank-statements.md:84
+#: ../../how-to/import-bank-statements.md:89
 msgid ""
 "Use `ledger add` when a transaction is missing from imported statements. "
 "Required fields are date, amount, direction, and description. Write the "
@@ -208,7 +221,7 @@ msgstr ""
 "entrat o han sortit, i l'ordre rebutja un import negatiu. `OUTGOING` és "
 "per a despeses; `INCOMING` és per a ingressos:"
 
-#: ../../how-to/import-bank-statements.md:94
+#: ../../how-to/import-bank-statements.md:99
 msgid ""
 "The third direction, `INTERNAL_TRANSFER`, records money moved between "
 "your own accounts."
@@ -216,11 +229,11 @@ msgstr ""
 "La tercera direcció, `INTERNAL_TRANSFER`, registra diners moguts entre "
 "els teus propis comptes."
 
-#: ../../how-to/import-bank-statements.md:97
+#: ../../how-to/import-bank-statements.md:102
 msgid "Record tax details on a manual transaction"
 msgstr "Registra els detalls fiscals en un moviment manual"
 
-#: ../../how-to/import-bank-statements.md:99
+#: ../../how-to/import-bank-statements.md:104
 msgid ""
 "`ledger add` accepts the same tax fields you set during classification, "
 "so you record a complete transaction in one step. `--amount` is the gross"
@@ -233,19 +246,19 @@ msgstr ""
 "rebutja la fila si la base més l'IVA no coincideix amb el brut fins al "
 "cèntim:"
 
-#: ../../how-to/import-bank-statements.md:108
+#: ../../how-to/import-bank-statements.md:113
 msgid "Useful optional fields:"
 msgstr "Camps opcionals útils:"
 
-#: ../../how-to/import-bank-statements.md:110
+#: ../../how-to/import-bank-statements.md:115
 msgid "`--currency` records a non-euro amount; it defaults to `EUR`."
 msgstr "`--currency` registra un import diferent de l'euro; per defecte és `EUR`."
 
-#: ../../how-to/import-bank-statements.md:111
+#: ../../how-to/import-bank-statements.md:116
 msgid "`--counterparty` records who you paid or were paid by."
 msgstr "`--counterparty` registra a qui has pagat o de qui has cobrat."
 
-#: ../../how-to/import-bank-statements.md:112
+#: ../../how-to/import-bank-statements.md:117
 msgid ""
 "`--category-id` assigns the income or expense category. Run `aeat app "
 "ledger categories` to list the ids."
@@ -253,7 +266,7 @@ msgstr ""
 "`--category-id` assigna la categoria d'ingrés o de despesa. Executa `aeat"
 " app ledger categories` per llistar els ids."
 
-#: ../../how-to/import-bank-statements.md:114
+#: ../../how-to/import-bank-statements.md:119
 msgid ""
 "`--taxable-base`, `--iva-rate`, and `--iva-amount` record the VAT "
 "breakdown."
@@ -261,7 +274,7 @@ msgstr ""
 "`--taxable-base`, `--iva-rate` i `--iva-amount` registren el "
 "desglossament de l'IVA."
 
-#: ../../how-to/import-bank-statements.md:115
+#: ../../how-to/import-bank-statements.md:120
 #, python-brace-format
 msgid ""
 "`--deduction-kind` names the source of a purchase's input VAT deduction, "
@@ -275,13 +288,13 @@ msgstr ""
 "Consulta {ref}`Classifica els moviments <say-where-the-input-iva-comes-"
 "from>`."
 
-#: ../../how-to/import-bank-statements.md:119
+#: ../../how-to/import-bank-statements.md:124
 msgid "`--irpf-category` records the IRPF (personal income tax) category."
 msgstr ""
 "`--irpf-category` registra la categoria d'IRPF (impost sobre la renda de "
 "les persones físiques)."
 
-#: ../../how-to/import-bank-statements.md:120
+#: ../../how-to/import-bank-statements.md:125
 msgid ""
 "`--source-jurisdiction` records the country a movement belongs to, as an "
 "ISO two-letter code, which matters for non-resident scopes."
@@ -290,11 +303,11 @@ msgstr ""
 " a codi ISO de dues lletres, cosa que importa per als àmbits de no "
 "residents."
 
-#: ../../how-to/import-bank-statements.md:122
+#: ../../how-to/import-bank-statements.md:127
 msgid "`--notes` adds a short note."
 msgstr "`--notes` afegeix una nota breu."
 
-#: ../../how-to/import-bank-statements.md:124
+#: ../../how-to/import-bank-statements.md:129
 msgid ""
 "For a part-business, part-personal movement, set `--classification MIXED`"
 " and the business share with `--business-pct`, a value from `0` to `1`. "
@@ -307,7 +320,7 @@ msgstr ""
 "la semàntica de la proporció d'ús que hi ha darrere d'aquests camps, "
 "consulta [Classifica els moviments](classify-transactions.md)."
 
-#: ../../how-to/import-bank-statements.md:129
+#: ../../how-to/import-bank-statements.md:134
 msgid ""
 "Use the invoice commands when you also need to track whether an invoice "
 "exists separately from the bank transaction. Received invoices are "
@@ -322,7 +335,7 @@ msgstr ""
 "percentatge, com ara `--iva-rate 21`, a diferència de `ledger add`, que "
 "rep un decimal:"
 
-#: ../../how-to/import-bank-statements.md:139
+#: ../../how-to/import-bank-statements.md:144
 msgid ""
 "For the full invoice-record workflow, see [Attach invoices and receipts "
 "to transactions](ledger-evidence.md)."
@@ -330,11 +343,11 @@ msgstr ""
 "Per al flux complet de registre de factures, consulta [Adjunta factures i"
 " rebuts als moviments](ledger-evidence.md)."
 
-#: ../../how-to/import-bank-statements.md:142
+#: ../../how-to/import-bank-statements.md:147
 msgid "Review rows"
 msgstr "Revisa les files"
 
-#: ../../how-to/import-bank-statements.md:144
+#: ../../how-to/import-bank-statements.md:149
 msgid ""
 "List rows, narrow the list with filters, inspect one row, and read its "
 "event history. The example starts from the imported quarter and walks the"
@@ -344,7 +357,7 @@ msgstr ""
 "llegeix-ne l'historial d'esdeveniments. L'exemple parteix del trimestre "
 "importat i recorre les ordres de lectura:"
 
-#: ../../how-to/import-bank-statements.md:152
+#: ../../how-to/import-bank-statements.md:157
 msgid ""
 "For a broader review queue, use `ledger review` to inspect selected rows "
 "and `ledger check` to report anomalies across all your records and "
@@ -355,11 +368,11 @@ msgstr ""
 "d'anomalies en tots els teus registres i períodes. Totes dues són només "
 "locals:"
 
-#: ../../how-to/import-bank-statements.md:160
+#: ../../how-to/import-bank-statements.md:165
 msgid "Export rows for review"
 msgstr "Exporta les files per revisar-les"
 
-#: ../../how-to/import-bank-statements.md:162
+#: ../../how-to/import-bank-statements.md:167
 msgid ""
 "Export your records to a file. The `--year` and `--period` filter keeps "
 "the export aligned with the transaction dates. Exports are review "
@@ -370,7 +383,7 @@ msgstr ""
 "exportacions són instantànies de revisió, no una via d'editar i tornar a "
 "importar:"
 
-#: ../../how-to/import-bank-statements.md:170
+#: ../../how-to/import-bank-statements.md:175
 msgid ""
 "Add `--export-format xlsx` to write an XLSX snapshot instead, and use the"
 " annual period code `0A` when a whole year is the review scope."
@@ -379,7 +392,7 @@ msgstr ""
 "seu lloc, i utilitza el codi de període anual `0A` quan l'abast de "
 "revisió sigui tot un any."
 
-#: ../../how-to/import-bank-statements.md:173
+#: ../../how-to/import-bank-statements.md:178
 msgid ""
 "To change saved rows, use `ledger update`, `ledger classify`, `ledger "
 "allocate`, `ledger split`, or `ledger merge`."
@@ -387,11 +400,11 @@ msgstr ""
 "Per canviar files desades, utilitza `ledger update`, `ledger classify`, "
 "`ledger allocate`, `ledger split` o `ledger merge`."
 
-#: ../../how-to/import-bank-statements.md:176
+#: ../../how-to/import-bank-statements.md:181
 msgid "Update a row"
 msgstr "Actualitza una fila"
 
-#: ../../how-to/import-bank-statements.md:178
+#: ../../how-to/import-bank-statements.md:183
 msgid ""
 "Use `ledger update` for editable transaction fields - date, value date, "
 "amount, direction, currency, counterparty, description, taxable base, VAT"
@@ -402,7 +415,7 @@ msgstr ""
 "imposable, tipus d'IVA, import d'IVA, categoria d'IRPF, notes o etiqueta "
 "de grup:"
 
-#: ../../how-to/import-bank-statements.md:186
+#: ../../how-to/import-bank-statements.md:191
 msgid ""
 "An update gives the transaction a new id; an id you wrote down earlier "
 "still resolves in `view`, `history`, and `track`. For the full correction"
@@ -416,11 +429,11 @@ msgstr ""
 " restablir files), consulta [Corregeix els errors dels teus registres"
 "](correct-ledger-entries.md)."
 
-#: ../../how-to/import-bank-statements.md:192
+#: ../../how-to/import-bank-statements.md:197
 msgid "Attach a supporting document to a transaction"
 msgstr "Adjunta un justificant a un moviment"
 
-#: ../../how-to/import-bank-statements.md:194
+#: ../../how-to/import-bank-statements.md:199
 msgid ""
 "Attach a secure supporting document for a purchase to a transaction. The "
 "supporting document's id comes from `aeat app ledger evidence add`, which"
@@ -437,7 +450,7 @@ msgstr ""
 "l'un a l'altra. `evidence add` rep el tipus d'IVA en percentatge (`21`), "
 "mentre que `ledger add` rep un decimal (`0.21`):"
 
-#: ../../how-to/import-bank-statements.md:205
+#: ../../how-to/import-bank-statements.md:210
 msgid ""
 "`attach` is the single door for a purchase's supporting documents. The "
 "`link` command links a transaction to an invoice record only. Its "
@@ -455,11 +468,11 @@ msgstr ""
 "justificants i registre de factures, inclosa l'opció `--attachment-id` i "
 "la seva limitació actual."
 
-#: ../../how-to/import-bank-statements.md:213
+#: ../../how-to/import-bank-statements.md:218
 msgid "Fix a wrong row"
 msgstr "Corregeix una fila incorrecta"
 
-#: ../../how-to/import-bank-statements.md:215
+#: ../../how-to/import-bank-statements.md:220
 msgid ""
 "Splitting a mixed movement into parts, merging a wrong split back, and "
 "archiving, stashing, removing, or resetting rows are all corrections. "
@@ -473,11 +486,11 @@ msgstr ""
 "ledger-entries.md) conté aquest flux de treball, amb un exemple per a "
 "cada ordre i orientació per triar la correcció menys destructiva."
 
-#: ../../how-to/import-bank-statements.md:221
+#: ../../how-to/import-bank-statements.md:226
 msgid "Classify rows"
 msgstr "Classifica les files"
 
-#: ../../how-to/import-bank-statements.md:223
+#: ../../how-to/import-bank-statements.md:228
 msgid ""
 "Classify rows before calculation. At a minimum, imported business rows "
 "need a business/personal/mixed decision, and expense rows need a "
@@ -488,7 +501,7 @@ msgstr ""
 "professional/personal/mixta, i les files de despesa necessiten una "
 "categoria:"
 
-#: ../../how-to/import-bank-statements.md:230
+#: ../../how-to/import-bank-statements.md:235
 msgid ""
 "[Classify transactions](classify-transactions.md) owns the full workflow "
 "- bulk CSV classification, mixed-use allocation, tax fields, stored "
@@ -499,11 +512,11 @@ msgstr ""
 " fiscals, regles desades i [suggeriments assistits per LLM](classify-"
 "with-llm.md)."
 
-#: ../../how-to/import-bank-statements.md:234
+#: ../../how-to/import-bank-statements.md:239
 msgid "Check readiness for a filing period"
 msgstr "Comprova la preparació per a un període de presentació"
 
-#: ../../how-to/import-bank-statements.md:236
+#: ../../how-to/import-bank-statements.md:241
 msgid ""
 "Run preflight before calculating a modelo, then check the overall state "
 "of your records. Preflight looks at each record inside the period and "
@@ -517,7 +530,7 @@ msgstr ""
 "cap suma: una classificació, categoria, base, import d'IVA, tipus d'IVA, "
 "referència de divisió o moneda no convertible que faltin:"
 
-#: ../../how-to/import-bank-statements.md:245
+#: ../../how-to/import-bank-statements.md:250
 msgid ""
 "The check changes nothing; it names the rows that are not ready so you "
 "fix the raw material before trusting any total. Continue to calculation "
@@ -529,7 +542,7 @@ msgstr ""
 "al càlcul només quan el perfil actiu i el període objectiu estiguin prou "
 "a punt per al model que prepares."
 
-#: ../../how-to/import-bank-statements.md:250
+#: ../../how-to/import-bank-statements.md:255
 msgid ""
 "For calculation review in Google Sheets, see [Review calculations with "
 "Google Sheets](review-with-google-sheets.md). That workflow exports a "
@@ -541,11 +554,11 @@ msgstr ""
 " exporta el càlcul d'un model a Sheets; és separat de l'exportació "
 "CSV/XLSX dels teus registres."
 
-#: ../../how-to/import-bank-statements.md:254
+#: ../../how-to/import-bank-statements.md:259
 msgid "If a command stops with an error"
 msgstr "Si una ordre s'atura amb un error"
 
-#: ../../how-to/import-bank-statements.md:256
+#: ../../how-to/import-bank-statements.md:261
 msgid ""
 "If a command reports that no profile is active, the period is invalid, or"
 " your records are not ready, use [Diagnose and repair your local "
@@ -555,11 +568,11 @@ msgstr ""
 "vàlid o que els teus registres no estan a punt, utilitza [Diagnostica i "
 "repara la teva configuració local](troubleshooting.md)."
 
-#: ../../how-to/import-bank-statements.md:259
+#: ../../how-to/import-bank-statements.md:264
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/import-bank-statements.md:261
+#: ../../how-to/import-bank-statements.md:266
 msgid ""
 "[Import, export, and supporting documents](../reference/import-export-"
 "and-evidence.md) - understand what imported rows mean and how they differ"
@@ -569,15 +582,15 @@ msgstr ""
 "evidence.md): entén què signifiquen les files importades i com es "
 "diferencien de les dades fiscals i del justificant de l'AEAT."
 
-#: ../../how-to/import-bank-statements.md:264
+#: ../../how-to/import-bank-statements.md:269
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Classifica els moviments](classify-transactions.md)"
 
-#: ../../how-to/import-bank-statements.md:265
+#: ../../how-to/import-bank-statements.md:270
 msgid "[Classify transactions with an LLM](classify-with-llm.md)"
 msgstr "[Classifica els moviments amb un LLM](classify-with-llm.md)"
 
-#: ../../how-to/import-bank-statements.md:266
+#: ../../how-to/import-bank-statements.md:271
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md)"
@@ -585,18 +598,18 @@ msgstr ""
 "[Com els teus registres es converteixen en xifres "
 "tributàries](../explanation/from-records-to-figures.md)"
 
-#: ../../how-to/import-bank-statements.md:267
+#: ../../how-to/import-bank-statements.md:272
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr "[Revisa càlculs amb Google Sheets](review-with-google-sheets.md)"
 
-#: ../../how-to/import-bank-statements.md:268
+#: ../../how-to/import-bank-statements.md:273
 msgid "[Quickstart: prepare a modelo filing](quickstart.md)"
 msgstr "[Inici ràpid: prepara la presentació d'un model](quickstart.md)"
 
-#: ../../how-to/import-bank-statements.md:269
+#: ../../how-to/import-bank-statements.md:274
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/import-bank-statements.md:270
+#: ../../how-to/import-bank-statements.md:275
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"

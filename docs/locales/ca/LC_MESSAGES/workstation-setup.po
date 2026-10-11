@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 22:21+0200\n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
 "PO-Revision-Date: 2026-07-18 14:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -287,6 +287,22 @@ msgstr ""
 
 #: ../../workstation-setup.md:116
 msgid ""
+"The commands work with or without a signed-in profile and with or without"
+" a running Cadrumo. The same work is also available as the registered "
+"operations `local-reader.provision`, `local-reader.status` and `local-"
+"reader.report`, and the browser build as `browser-runtime.provision`. The"
+" full-screen app lists them under **Operations** and an agent runs them "
+"with `execute`."
+msgstr ""
+"Les ordres funcionen amb o sense un perfil amb la sessió iniciada, i amb "
+"o sense Cadrumo en execució. La mateixa feina està disponible també com "
+"les operacions registrades `local-reader.provision`, `local-"
+"reader.status` i `local-reader.report`, i la baixada del navegador com a "
+"`browser-runtime.provision`. L'aplicació a pantalla completa les enumera "
+"a **Operacions** i un agent les executa amb `execute`."
+
+#: ../../workstation-setup.md:122
+msgid ""
 "LLM classification runs only on this local reader; no cloud provider is "
 "involved. See [Classify transactions with an LLM](how-to/classify-with-"
 "llm.md#set-up-the-local-reader)."
@@ -295,7 +311,7 @@ msgstr ""
 " intervé cap proveïdor al núvol. Consulta [Classifica els moviments amb "
 "un LLM](how-to/classify-with-llm.md#set-up-the-local-reader)."
 
-#: ../../workstation-setup.md:120
+#: ../../workstation-setup.md:126
 msgid ""
 "Run `aeat config check` again after each change to confirm the gap is "
 "closed."
@@ -303,39 +319,38 @@ msgstr ""
 "Torna a executar `aeat config check` després de cada canvi per confirmar "
 "que la mancança està resolta."
 
-#: ../../workstation-setup.md:122
+#: ../../workstation-setup.md:128
 msgid "Connect an AI assistant"
 msgstr "Connecta un assistent d'IA"
 
-#: ../../workstation-setup.md:124
+#: ../../workstation-setup.md:130
 msgid ""
 "Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an "
 "agent to registered operations through the local runtime, either under "
-"your own Cadrumo sign-in or under an enrolled key for an explicit profile"
-" ID. Run `cadrumo-mcp --help` to confirm it is on your path. In a source "
-"checkout, check the installed entrypoint with:"
+"your own Cadrumo sign-in or under an enrolled key for one profile. Run "
+"`cadrumo-mcp --help` to confirm it is on your path. In a source checkout,"
+" check the installed entrypoint with:"
 msgstr ""
 "Cadrumo instal·la `cadrumo-mcp` juntament amb `aeat`. El servidor "
 "connecta un agent amb les operacions registrades a través de l'entorn "
-"d'execució local, ja sigui amb el teu propi inici de sessió a Cadrumo "
-"o amb una clau donada d'alta per a un ID de perfil explícit. Executa "
-"`cadrumo-mcp --help` per confirmar que és al teu camí de cerca. En una "
-"còpia de treball del codi font, comprova el punt d'entrada instal·lat "
-"amb:"
+"d'execució local, ja sigui amb el teu propi inici de sessió a Cadrumo o "
+"amb una clau donada d'alta per a un perfil. Executa `cadrumo-mcp --help` "
+"per confirmar que és al teu camí de cerca. En una còpia de treball del "
+"codi font, comprova el punt d'entrada instal·lat amb:"
 
-#: ../../workstation-setup.md:135
+#: ../../workstation-setup.md:141
 msgid ""
 "[Connect an agent](how-to/connect-an-agent.md) shows both ways to connect"
 " and the grant request flow."
 msgstr ""
-"[Connecta un agent](how-to/connect-an-agent.md) mostra les dues "
-"maneres de connectar-s'hi i el flux de sol·licitud d'autoritzacions."
+"[Connecta un agent](how-to/connect-an-agent.md) mostra les dues maneres "
+"de connectar-s'hi i el flux de sol·licitud d'autoritzacions."
 
-#: ../../workstation-setup.md:138
+#: ../../workstation-setup.md:144
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../workstation-setup.md:140
+#: ../../workstation-setup.md:146
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -343,7 +358,7 @@ msgstr ""
 "[Inici ràpid](how-to/quickstart.md) - d'un perfil buit a un fitxer de "
 "modelo exportat."
 
-#: ../../workstation-setup.md:142
+#: ../../workstation-setup.md:148
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -352,11 +367,10 @@ msgstr ""
 "capacitats de servei per perfil (exportació a Google, visió LLM, pujada "
 "de proves al núvol)."
 
-#: ../../workstation-setup.md:144
+#: ../../workstation-setup.md:150
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Connecta un agent](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:145
+#: ../../workstation-setup.md:151
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolució de problemes](how-to/troubleshooting.md)"
-

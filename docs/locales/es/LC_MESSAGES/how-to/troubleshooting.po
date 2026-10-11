@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:43+0200\n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -481,13 +481,41 @@ msgstr ""
 
 #: ../../how-to/troubleshooting.md:202
 msgid ""
+"The terminal interface and MCP do the same work. In the terminal "
+"interface, **Installation** offers the full report (**Diagnose the "
+"installation**), the log lines, the active-profile repair and the storage"
+" inventory and check. You can open it from the sign-in screen with nobody"
+" signed in, and it needs Cadrumo's runtime running. An agent uses the "
+"`installation` tool's `repair_report`, `repair_logs`, `repair_profile`, "
+"`storage_inventory` and `storage_check` actions. The secure-object check,"
+" the quarantine, the connectivity probe and the clearing of interrupted-"
+"command progress need a signed-in profile; run them from **Operations** "
+"in the terminal interface, or have an agent find them with `search` and "
+"run them with `execute`."
+msgstr ""
+"La interfaz de terminal y MCP hacen el mismo trabajo. En la interfaz de "
+"terminal, **Instalación** ofrece el informe completo (**Diagnosticar la "
+"instalación**), las líneas del registro, la reparación del perfil activo "
+"y el inventario y la comprobación del almacenamiento. Puedes abrirla "
+"desde la pantalla de inicio de sesión sin que nadie haya iniciado sesión,"
+" y necesita el entorno de ejecución de Cadrumo en marcha. Un agente usa "
+"las acciones `repair_report`, `repair_logs`, `repair_profile`, "
+"`storage_inventory` y `storage_check` de la herramienta `installation`. "
+"La comprobación de objetos seguros, la cuarentena, la sonda de "
+"conectividad y el borrado del progreso de comandos interrumpidos "
+"necesitan un perfil con la sesión iniciada; ejecútalos desde "
+"**Operaciones** en la interfaz de terminal, o haz que un agente los "
+"encuentre con `search` y los ejecute con `execute`."
+
+#: ../../how-to/troubleshooting.md:213
+msgid ""
 "When unreadable encrypted records block other commands, move them aside. "
 "Preview first, then apply:"
 msgstr ""
 "Cuando registros cifrados ilegibles bloquean otros comandos, apártalos. "
 "Previsualiza primero y luego aplica:"
 
-#: ../../how-to/troubleshooting.md:208
+#: ../../how-to/troubleshooting.md:219
 msgid ""
 "The preview lists how many records would move, per storage area, without "
 "changing anything. The real run requires `--yes`. Quarantine does not "
@@ -505,7 +533,7 @@ msgstr ""
 " y que luego restauras, los registros archivados siguen existiendo. "
 "Consulta [Proteger el acceso a tus datos](protect-data-access.md)."
 
-#: ../../how-to/troubleshooting.md:210
+#: ../../how-to/troubleshooting.md:221
 msgid ""
 "To find which finalized calculations and filings used a transaction, "
 "query the participation index. Rebuild it first if the lookup appears "
@@ -515,7 +543,7 @@ msgstr ""
 "movimiento, consulta el índice de participación. Recompílalo primero si "
 "la consulta parece incompleta:"
 
-#: ../../how-to/troubleshooting.md:217
+#: ../../how-to/troubleshooting.md:228
 msgid ""
 "The index is a derived cross-reference, safe to regenerate at any time: "
 "`rebuild` rescans the finalized calculation records and rewrites it. Run "
@@ -528,7 +556,7 @@ msgstr ""
 "parece incompleta. La recompilación no cambia ningún dato de tus "
 "registros ni de las presentaciones."
 
-#: ../../how-to/troubleshooting.md:222
+#: ../../how-to/troubleshooting.md:233
 msgid ""
 "Both `participation` verbs read the active profile's encrypted storage, "
 "so they need an unlocked profile session. If either refuses because the "
@@ -541,7 +569,7 @@ msgstr ""
 "inicia sesión primero en el perfil con `aeat config login <profile-"
 "name>`."
 
-#: ../../how-to/troubleshooting.md:224
+#: ../../how-to/troubleshooting.md:235
 msgid ""
 "When nothing else recovers the problem, and only then, clear the saved "
 "progress of interrupted commands. This command is destructive:"
@@ -549,7 +577,7 @@ msgstr ""
 "Cuando nada más resuelve el problema, y solo entonces, borra el progreso "
 "guardado de los comandos interrumpidos. Este comando es destructivo:"
 
-#: ../../how-to/troubleshooting.md:230
+#: ../../how-to/troubleshooting.md:241
 msgid ""
 "It removes saved interrupted-command progress and requires `--yes`. Like "
 "the participation verbs, it reads the active profile's storage, so log in"
@@ -562,11 +590,11 @@ msgstr ""
 "está bloqueado o no hay ninguno activo, inicia primero sesión en el "
 "perfil."
 
-#: ../../how-to/troubleshooting.md:233
+#: ../../how-to/troubleshooting.md:244
 msgid "Prepare a privacy-safe support request"
 msgstr "Prepara una solicitud de soporte respetuosa con la privacidad"
 
-#: ../../how-to/troubleshooting.md:235
+#: ../../how-to/troubleshooting.md:246
 msgid ""
 "When the steps on this page don't resolve the problem, gather this before"
 " asking for help:"
@@ -574,25 +602,25 @@ msgstr ""
 "Cuando los pasos de esta página no resuelvan el problema, reúne esto "
 "antes de pedir ayuda:"
 
-#: ../../how-to/troubleshooting.md:237
+#: ../../how-to/troubleshooting.md:248
 msgid "The exact command you ran."
 msgstr "El comando exacto que ejecutaste."
 
-#: ../../how-to/troubleshooting.md:238
+#: ../../how-to/troubleshooting.md:249
 msgid "The error lines the command printed."
 msgstr "Las líneas de error que imprimió el comando."
 
-#: ../../how-to/troubleshooting.md:239
+#: ../../how-to/troubleshooting.md:250
 msgid "The log path and the relevant recent lines from `aeat config repair logs`."
 msgstr ""
 "La ruta del registro y las líneas recientes relevantes de `aeat config "
 "repair logs`."
 
-#: ../../how-to/troubleshooting.md:240
+#: ../../how-to/troubleshooting.md:251
 msgid "Any report or declaration IDs the output shows."
 msgstr "Cualquier id de informe o de declaración que muestre la salida."
 
-#: ../../how-to/troubleshooting.md:242
+#: ../../how-to/troubleshooting.md:253
 msgid ""
 "Remove personal data first: tax identifiers (NIF, CIF, DNI, NIE, NII), "
 "names, addresses, and file paths that embed your user name. Log lines can"
@@ -603,7 +631,7 @@ msgstr ""
 " nombre de usuario. Las líneas de registro pueden contener datos "
 "personales; léelas antes de pegarlas."
 
-#: ../../how-to/troubleshooting.md:246
+#: ../../how-to/troubleshooting.md:257
 msgid ""
 "Take the request to the [project issue "
 "tracker](https://github.com/nevenincs/cadrumo/issues)."
@@ -611,7 +639,7 @@ msgstr ""
 "Lleva la solicitud al [gestor de incidencias del "
 "proyecto](https://github.com/nevenincs/cadrumo/issues)."
 
-#: ../../how-to/troubleshooting.md:248
+#: ../../how-to/troubleshooting.md:259
 #, python-brace-format
 msgid ""
 "If a term in an error message is unfamiliar, look it up in the "
@@ -620,11 +648,11 @@ msgstr ""
 "Si un término de un mensaje de error te resulta desconocido, búscalo en "
 "el {doc}`glosario </_generated/glossary>`."
 
-#: ../../how-to/troubleshooting.md:250
+#: ../../how-to/troubleshooting.md:261
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/troubleshooting.md:252
+#: ../../how-to/troubleshooting.md:263
 msgid ""
 "[Quickstart: prepare a modelo filing](quickstart.md): follow the first "
 "local filing path."
@@ -632,7 +660,7 @@ msgstr ""
 "[Guía rápida: prepara la presentación de un modelo](quickstart.md): sigue"
 " el primer camino de presentación local."
 
-#: ../../how-to/troubleshooting.md:253
+#: ../../how-to/troubleshooting.md:264
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md): create and switch "
 "profiles."
@@ -640,7 +668,7 @@ msgstr ""
 "[Configurar tu perfil de contribuyente](profile-setup.md): crea y cambia "
 "perfiles."
 
-#: ../../how-to/troubleshooting.md:254
+#: ../../how-to/troubleshooting.md:265
 msgid ""
 "[Authenticate with AEAT](authenticate-with-aeat.md): check read-only live"
 " access setup."
@@ -648,7 +676,7 @@ msgstr ""
 "[Autentícate ante la AEAT](authenticate-with-aeat.md): comprueba la "
 "configuración del acceso en vivo de solo lectura."
 
-#: ../../how-to/troubleshooting.md:256
+#: ../../how-to/troubleshooting.md:267
 msgid ""
 "[Read AEAT notifications](check-aeat-notifications.md): inspect saved "
 "DEHú notification snapshots."
@@ -656,7 +684,7 @@ msgstr ""
 "[Leer notificaciones de la AEAT](check-aeat-notifications.md): "
 "inspecciona las instantáneas guardadas de notificaciones de la DEHú."
 
-#: ../../how-to/troubleshooting.md:257
+#: ../../how-to/troubleshooting.md:268
 msgid ""
 "[How Cadrumo turns your records into a tax "
 "file](../explanation/index.md): what the tax rules, secure storage, and "
@@ -666,7 +694,7 @@ msgstr ""
 "declaración](../explanation/index.md): qué son las reglas fiscales, el "
 "almacenamiento seguro y el estado del flujo de trabajo."
 
-#: ../../how-to/troubleshooting.md:258
+#: ../../how-to/troubleshooting.md:269
 msgid ""
 "[CLI reference](../cli/index.rst): every repair command, flag, and exit "
 "code."

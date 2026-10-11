@@ -113,6 +113,12 @@ Two extras need a further provisioning step after the install:
   `supply_nature_proposal`. `aeat config provision verify` confirms each model
   loads and answers.
 
+  The commands work with or without a signed-in profile and with or without a
+  running Cadrumo. The same work is also available as the registered operations
+  `local-reader.provision`, `local-reader.status` and `local-reader.report`, and
+  the browser build as `browser-runtime.provision`. The full-screen app lists
+  them under **Operations** and an agent runs them with `execute`.
+
 LLM classification runs only on this local reader; no cloud provider is
 involved. See
 [Classify transactions with an LLM](how-to/classify-with-llm.md#set-up-the-local-reader).
@@ -123,7 +129,7 @@ Run `aeat config check` again after each change to confirm the gap is closed.
 
 Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an agent
 to registered operations through the local runtime, either under your own
-Cadrumo sign-in or under an enrolled key for an explicit profile ID. Run
+Cadrumo sign-in or under an enrolled key for one profile. Run
 `cadrumo-mcp --help` to confirm it is on your path. In a source checkout, check
 the installed entrypoint with:
 

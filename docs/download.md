@@ -42,7 +42,7 @@ dependency report, platform checks, and per-extra install commands.
 To let an AI assistant such as Claude drive Cadrumo, continue with
 [Connect an agent (MCP)](how-to/connect-an-agent.md).
 
-## Two ways to work
+## Ways to work
 
 `aeat` runs as ordinary commands that print their results:
 
@@ -58,6 +58,13 @@ aeat app tui
 
 The command starts the independent full-screen app; its navigation and availability
 are managed inside that interface. Both entrypoints use the same local records.
+
+An AI assistant connected through MCP is a third way to work. The command line,
+the full-screen app and an assistant can each do the same work against the same
+local records. In the full-screen app, **Operations** lists every one of
+them, **Installation** covers storage, repair, the reset and the profiles on
+this computer without a sign-in, and **Reference** shows the modelo catalogue,
+casillas, formulas, categories, portals and sign-in methods.
 
 ## Install channels
 

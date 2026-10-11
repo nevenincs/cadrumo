@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-07 04:04+0200\n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -169,18 +169,44 @@ msgid ""
 "terminal, and asks you to type it back before anything is installed. The "
 "code looks like `XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX`; case, hyphens and "
 "spaces do not matter when you type it. Write it down and keep it apart "
-"from your passphrase and apart from the computer holding the data. "
-"Cadrumo keeps no copy and cannot show it again."
+"from your passphrase and apart from the computer holding the data. When "
+"you enable recovery with this command, Cadrumo keeps no copy and cannot "
+"show the code again."
 msgstr ""
 "A Cadrumo bekéri a jelenlegi jelmondatot, egyetlen alkalommal megjeleníti"
 " a kódot a terminálon, és megkér, hogy írd vissza, mielőtt bármi "
 "települne. A kód így néz ki: `XXXXX-XXXXX-XXXXX-XXXXX-XXXXX-XXXXX`; "
 "beírásakor a kis- és nagybetűk, a kötőjelek és a szóközök nem számítanak."
 " Írd le a kódot, és tartsd külön a jelmondatodtól és az adatokat őrző "
-"számítógéptől. A Cadrumo nem tart róla másolatot, és nem tudja újra "
-"megmutatni."
+"számítógéptől. Ha ezzel a paranccsal kapcsolod be a helyreállítást, a "
+"Cadrumo nem tart másolatot a kódról, és nem tudja újra megmutatni."
 
 #: ../../how-to/protect-data-access.md:67
+msgid ""
+"The terminal interface does the same from **Installation**, in the **Set "
+"up a recovery code** task: it shows the code once and asks you to type it"
+" back. When an agent enables recovery through MCP, there is no terminal "
+"to show the code on. The MCP server then keeps one copy in this "
+"computer's protected credential store and gives the agent only a "
+"reference to it. You read the code yourself with `cadrumo-mcp --show-"
+"held-secret REFERENCE` and confirm that you kept it, which deletes the "
+"stored copy; until you confirm, you can read it again. See [Read a "
+"recovery code that an agent enabled](connect-an-agent.md#read-a-recovery-"
+"code-that-an-agent-enabled)."
+msgstr ""
+"A terminálfelület ugyanezt a **Telepítés** alatt végzi el, a "
+"**Helyreállítási kód beállítása** feladatban: egyetlen alkalommal "
+"megjeleníti a kódot, és megkér, hogy írd vissza. Ha egy ügynök MCP-n "
+"keresztül kapcsolja be a helyreállítást, nincs terminál, amelyen a kódot "
+"meg lehetne jeleníteni. Az MCP-kiszolgáló ilyenkor egy másolatot tart a "
+"számítógép védett hitelesítőadat-tárában, az ügynöknek pedig csak egy "
+"hivatkozást ad át. A kódot te olvasod el a `cadrumo-mcp --show-held-"
+"secret REFERENCE` paranccsal, és megerősíted, hogy elmentetted, ami törli"
+" a tárolt másolatot; amíg nem erősíted meg, újra elolvashatod. Lásd: [Az "
+"ügynök által engedélyezett helyreállítási kód elolvasása](connect-an-"
+"agent.md#read-a-recovery-code-that-an-agent-enabled)."
+
+#: ../../how-to/protect-data-access.md:77
 msgid ""
 "Anyone holding the code can set a new passphrase for the profile, so "
 "treat it as you would the passphrase itself. To check or remove it:"
@@ -188,7 +214,7 @@ msgstr ""
 "Aki birtokolja a kódot, új jelmondatot állíthat be a profilhoz, ezért úgy"
 " kezeld, mint a jelmondatodat. Ellenőrzéshez vagy eltávolításhoz:"
 
-#: ../../how-to/protect-data-access.md:75
+#: ../../how-to/protect-data-access.md:85
 msgid ""
 "Disabling asks for the current passphrase. Enabling refuses while a code "
 "is enrolled. To replace a code, disable recovery and enable it again; the"
@@ -199,7 +225,7 @@ msgstr ""
 "helyreállítást, majd kapcsold be újra; az új kód friss, a régi pedig "
 "megszűnik működni."
 
-#: ../../how-to/protect-data-access.md:79
+#: ../../how-to/protect-data-access.md:89
 msgid ""
 "The code stays valid across ordinary passphrase changes. It does not "
 "travel inside a backup archive: a restored profile always starts without "
@@ -211,15 +237,15 @@ msgstr ""
 "nélkül indul, és a visszaállító parancs ezt közli is. Visszaállítás után "
 "kapcsold be újra, ha szeretnéd."
 
-#: ../../how-to/protect-data-access.md:83
+#: ../../how-to/protect-data-access.md:93
 msgid "Reset a forgotten passphrase"
 msgstr "Elfelejtett jelmondat visszaállítása"
 
-#: ../../how-to/protect-data-access.md:85
+#: ../../how-to/protect-data-access.md:95
 msgid "If you have the recovery code and have forgotten the passphrase:"
 msgstr "Ha megvan a helyreállítási kód, és elfelejtette a jelmondatot:"
 
-#: ../../how-to/protect-data-access.md:91
+#: ../../how-to/protect-data-access.md:101
 msgid ""
 "Enter the recovery code, then the new passphrase twice. Nothing is "
 "echoed. The existing key is re-wrapped under the new passphrase, so no "
@@ -238,7 +264,21 @@ msgstr ""
 "jelmondat, illetve a két nem egyező másolat mind elutasításhoz vezet, és "
 "a profilt érintetlenül hagyja."
 
-#: ../../how-to/protect-data-access.md:98
+#: ../../how-to/protect-data-access.md:108
+msgid ""
+"An agent connected through MCP does this with the `session` tool's "
+"`reset_password` action. It takes the recovery code and the new "
+"passphrase by reference, so that neither passes through the conversation;"
+" see [Give an agent a secret by reference](connect-an-agent.md#give-an-"
+"agent-a-secret-by-reference)."
+msgstr ""
+"Az MCP-n keresztül csatlakozott ügynök ezt a `session` eszköz "
+"`reset_password` lépésével végzi el. A helyreállítási kódot és az új "
+"jelmondatot hivatkozással kapja, így egyik sem halad át a beszélgetésen; "
+"lásd: [Titok átadása az ügynöknek hivatkozással](connect-an-agent.md"
+"#give-an-agent-a-secret-by-reference)."
+
+#: ../../how-to/protect-data-access.md:113
 #, python-brace-format
 msgid ""
 "To reset without an interactive prompt, send `{\"recovery_code\": "
@@ -250,11 +290,11 @@ msgstr ""
 "\"new_passphrase_confirmation\": \"...\"}` objektumot a `--secrets-stdin`"
 " vagy a `--secrets-fd FD` csatornán."
 
-#: ../../how-to/protect-data-access.md:103
+#: ../../how-to/protect-data-access.md:118
 msgid "Enable recovery without a terminal"
 msgstr "Helyreállítás bekapcsolása terminál nélkül"
 
-#: ../../how-to/protect-data-access.md:105
+#: ../../how-to/protect-data-access.md:120
 #, python-brace-format
 msgid ""
 "A recovery code can only be shown on a terminal, so a headless caller "
@@ -283,11 +323,26 @@ msgstr ""
 "túl nagy tartalom, a leíróütközés vagy az I/O-hiba miatt semmi sem kerül "
 "beállításra."
 
-#: ../../how-to/protect-data-access.md:116
+#: ../../how-to/protect-data-access.md:131
+msgid ""
+"An agent connected through MCP needs neither pipe. It uses the "
+"`installation` tool's `recovery_enroll` action or the `session` tool's "
+"`enable_recovery` action, and you read the code afterwards as described "
+"in [Read a recovery code that an agent enabled](connect-an-"
+"agent.md#read-a-recovery-code-that-an-agent-enabled)."
+msgstr ""
+"Az MCP-n keresztül csatlakozott ügynöknek egyik csővezetékre sincs "
+"szüksége. Az `installation` eszköz `recovery_enroll` lépését vagy a "
+"`session` eszköz `enable_recovery` lépését használja, a kódot pedig utána"
+" úgy olvasod el, ahogy ez írja le: [Az ügynök által engedélyezett "
+"helyreállítási kód elolvasása](connect-an-agent.md#read-a-recovery-code-"
+"that-an-agent-enabled)."
+
+#: ../../how-to/protect-data-access.md:137
 msgid "Change your passphrase"
 msgstr "A jelmondat módosítása"
 
-#: ../../how-to/protect-data-access.md:118
+#: ../../how-to/protect-data-access.md:139
 msgid ""
 "Change the passphrase whenever you suspect it has been seen, or on "
 "whatever schedule your own policy sets:"
@@ -295,39 +350,45 @@ msgstr ""
 "Változtasd meg a jelmondatot, amikor arra gyanakszol, hogy valaki látta, "
 "vagy a saját szabályzatod által meghatározott ütemezés szerint:"
 
-#: ../../how-to/protect-data-access.md:124
+#: ../../how-to/protect-data-access.md:145
 msgid "Enter the current passphrase, then the new one twice. Nothing is echoed."
 msgstr ""
 "Add meg az aktuális jelmondatot, majd az újat kétszer. A program semmit "
 "sem ír vissza a képernyőre."
 
-#: ../../how-to/protect-data-access.md:126
+#: ../../how-to/protect-data-access.md:147
 msgid "The change re-wraps the existing key rather than replacing it, so:"
 msgstr ""
 "A módosítás újracsomagolja a meglévő kulcsot ahelyett, hogy kicserélné, "
 "így:"
 
-#: ../../how-to/protect-data-access.md:128
+#: ../../how-to/protect-data-access.md:149
 msgid "No record is re-encrypted, and every existing record stays readable."
 msgstr ""
 "Egyetlen tétel sem titkosítódik újra, és minden meglévő tétel olvasható "
 "marad."
 
-#: ../../how-to/protect-data-access.md:129
+#: ../../how-to/protect-data-access.md:150
 msgid "A recovery code you set up earlier stays correct."
 msgstr "A korábban beállított helyreállítási kód továbbra is érvényes."
 
-#: ../../how-to/protect-data-access.md:131
+#: ../../how-to/protect-data-access.md:152
 msgid ""
 "The command reports both facts back to you. If the current passphrase is "
 "wrong, the new one is too short, or the two copies do not match, it "
-"refuses and leaves the existing passphrase working."
+"refuses and leaves the existing passphrase working. The terminal "
+"interface changes it from the account controls (**Password**), and an "
+"agent connected through MCP uses the `session` tool's `change_password` "
+"action."
 msgstr ""
 "A parancs mindkét tényt visszajelzi neked. Ha az aktuális jelmondat "
 "hibás, az új túl rövid, vagy a két másolat nem egyezik, elutasítja a "
-"műveletet, és a meglévő jelmondat továbbra is működik."
+"műveletet, és a meglévő jelmondat továbbra is működik. A "
+"terminálfelületen a fiókvezérlőkből (**Jelszó**) módosíthatod, az MCP-n "
+"keresztül csatlakozott ügynök pedig a `session` eszköz `change_password` "
+"lépését használja."
 
-#: ../../how-to/protect-data-access.md:135
+#: ../../how-to/protect-data-access.md:158
 msgid ""
 "To change the passphrase without an interactive prompt, pass the three "
 "values as one JSON object through a leaf secret channel:"
@@ -336,7 +397,7 @@ msgstr ""
 "át a három értéket egyetlen JSON-objektumként egy parancsszintű "
 "titokcsatornán:"
 
-#: ../../how-to/protect-data-access.md:141
+#: ../../how-to/protect-data-access.md:164
 #, python-brace-format
 msgid ""
 "Use `--secrets-stdin` when standard input is free. Use `--secrets-fd FD` "
@@ -354,11 +415,11 @@ msgstr ""
 "ne adj át parancssori argumentumként: az argumentumok láthatók a "
 "folyamatlistában és a shell előzményeiben."
 
-#: ../../how-to/protect-data-access.md:149
+#: ../../how-to/protect-data-access.md:172
 msgid "Run without a passphrase prompt"
 msgstr "Futtatás jelmondat-bekérés nélkül"
 
-#: ../../how-to/protect-data-access.md:151
+#: ../../how-to/protect-data-access.md:174
 msgid ""
 "Automation cannot answer an interactive passphrase prompt. Supply a "
 "bounded UTF-8 JSON object through an explicit input channel. Do not put a"
@@ -373,11 +434,11 @@ msgstr ""
 " használja a `CADRUMO_SECRET_PASSPHRASE` változót titokbemeneti "
 "tartalékként."
 
-#: ../../how-to/protect-data-access.md:157
+#: ../../how-to/protect-data-access.md:180
 msgid "There are two separate option pairs:"
 msgstr "Két különálló kapcsolópár létezik:"
 
-#: ../../how-to/protect-data-access.md:159
+#: ../../how-to/protect-data-access.md:182
 msgid ""
 "Use leaf `--secrets-stdin` or `--secrets-fd FD` when the command itself "
 "owns the secret. The following table lists the leaf commands and their "
@@ -387,7 +448,7 @@ msgstr ""
 "kapcsolót, ha maga a parancs birtokolja a titkot. Az alábbi táblázat "
 "felsorolja a parancsokat és a pontos objektumaikat."
 
-#: ../../how-to/protect-data-access.md:161
+#: ../../how-to/protect-data-access.md:184
 #, python-brace-format
 msgid ""
 "Use root `--profile-secrets-stdin` or `--profile-secrets-fd FD` before "
@@ -400,7 +461,7 @@ msgstr ""
 "hitelesítenie kell a kijelölt profilt, mert a tartós munkamenet nem "
 "folytatható. Az objektuma: `{\"profile_passphrase\": \"...\"}`."
 
-#: ../../how-to/protect-data-access.md:166
+#: ../../how-to/protect-data-access.md:189
 msgid ""
 "The root options do not replace leaf options. For example, certificate-"
 "secret storage may need a root profile passphrase and a certificate "
@@ -412,47 +473,47 @@ msgstr ""
 " gyökérszintű profiljelmondatra és tanúsítvány-jelmondatra is. Ezeket "
 "két, egymással nem ütköző csatornán add át."
 
-#: ../../how-to/protect-data-access.md:170
+#: ../../how-to/protect-data-access.md:193
 msgid "Supply a secret owned by a leaf command"
 msgstr "Parancsszintű titok megadása"
 
-#: ../../how-to/protect-data-access.md:172
+#: ../../how-to/protect-data-access.md:195
 msgid "Use the same two leaf flags on each scalar-secret command:"
 msgstr ""
 "Ugyanazt a két parancsszintű kapcsolót használd minden skalártitkos "
 "parancsnál:"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 msgid "Command"
 msgstr "Parancs"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 msgid "Strict JSON object"
 msgstr "Szigorú JSON-objektum"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 msgid "`aeat config login`"
 msgstr "`aeat config login`"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 #, python-brace-format
 msgid "`{\"passphrase\": \"...\"}`"
 msgstr "`{\"passphrase\": \"...\"}`"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 msgid "`aeat config profile create`"
 msgstr "`aeat config profile create`"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 #, python-brace-format
 msgid "`{\"passphrase\": \"...\", \"passphrase_confirmation\": \"...\"}`"
 msgstr "`{\"passphrase\": \"...\", \"passphrase_confirmation\": \"...\"}`"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 msgid "`aeat config passphrase change`"
 msgstr "`aeat config passphrase change`"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 #, python-brace-format
 msgid ""
 "`{\"current_passphrase\": \"...\", \"new_passphrase\": \"...\", "
@@ -461,11 +522,11 @@ msgstr ""
 "`{\"current_passphrase\": \"...\", \"new_passphrase\": \"...\", "
 "\"new_passphrase_confirmation\": \"...\"}`"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 msgid "`aeat config passphrase reset PROFILE`"
 msgstr "`aeat config passphrase reset PROFILE`"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 #, python-brace-format
 msgid ""
 "`{\"recovery_code\": \"...\", \"new_passphrase\": \"...\", "
@@ -474,28 +535,28 @@ msgstr ""
 "`{\"recovery_code\": \"...\", \"new_passphrase\": \"...\", "
 "\"new_passphrase_confirmation\": \"...\"}`"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 msgid "`aeat config profile archive import`"
 msgstr "`aeat config profile archive import`"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 msgid "`aeat config profile recovery enable`"
 msgstr "`aeat config profile recovery enable`"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 msgid "`aeat config profile recovery disable`"
 msgstr "`aeat config profile recovery disable`"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 msgid "`aeat config auth certificate secret set`"
 msgstr "`aeat config auth certificate secret set`"
 
-#: ../../how-to/protect-data-access.md:138
+#: ../../how-to/protect-data-access.md:161
 #, python-brace-format
 msgid "`{\"certificate_passphrase\": \"...\"}`"
 msgstr "`{\"certificate_passphrase\": \"...\"}`"
 
-#: ../../how-to/protect-data-access.md:185
+#: ../../how-to/protect-data-access.md:208
 msgid ""
 "Each object must contain exactly the fields shown. Profile creation "
 "through a machine channel never asks about recovery; enable it afterwards"
@@ -510,15 +571,15 @@ msgstr ""
 "ismétlődő, hiányzó, felesleges, túl nagy, hibás vagy nem UTF-8 bemenet "
 "elutasításra kerül."
 
-#: ../../how-to/protect-data-access.md:191
+#: ../../how-to/protect-data-access.md:214
 msgid "Inspect the current flags without supplying a secret:"
 msgstr "Nézd meg az aktuális kapcsolókat titok megadása nélkül:"
 
-#: ../../how-to/protect-data-access.md:197
+#: ../../how-to/protect-data-access.md:220
 msgid "Authenticate a profile for one command"
 msgstr "Profil hitelesítése egy parancshoz"
 
-#: ../../how-to/protect-data-access.md:199
+#: ../../how-to/protect-data-access.md:222
 msgid ""
 "Place a root option before the command path. Name the exact profile on "
 "the target command when it accepts a profile target. For example:"
@@ -526,7 +587,7 @@ msgstr ""
 "Tegyél egy gyökérszintű kapcsolót a parancsútvonal elé. Nevezd meg a "
 "pontos profilt a célparancsban, ha az elfogad profilcélt. Például:"
 
-#: ../../how-to/protect-data-access.md:206
+#: ../../how-to/protect-data-access.md:229
 msgid ""
 "This source is used only after the exact profile is known, the command "
 "requires a profile session, no matching live session exists, and "
@@ -547,7 +608,7 @@ msgstr ""
 "helyreállítás bekapcsolása és kikapcsolása nem fogadja el ezt a "
 "gyökérszintű igazolást."
 
-#: ../../how-to/protect-data-access.md:214
+#: ../../how-to/protect-data-access.md:237
 msgid ""
 "On a host without usable keychain persistence, successful root "
 "authentication continues only the current process. The command emits a "
@@ -562,31 +623,31 @@ msgstr ""
 "szándékos költséget nem gyorsítótárazza gyengébb hitelesítő adatban vagy "
 "átruházható hordozó tokenben."
 
-#: ../../how-to/protect-data-access.md:220
+#: ../../how-to/protect-data-access.md:243
 msgid "Keep two secret sources distinct"
 msgstr "Tartsd külön a két titokforrást."
 
-#: ../../how-to/protect-data-access.md:222
+#: ../../how-to/protect-data-access.md:245
 msgid "Choose sources before either is read:"
 msgstr "Válaszd ki a forrásokat, mielőtt bármelyiket beolvasnák:"
 
-#: ../../how-to/protect-data-access.md:224
+#: ../../how-to/protect-data-access.md:247
 msgid "Do not select both stdin and a descriptor for the same option pair."
 msgstr ""
 "Ne válaszd ki egyszerre az stdint és egy leírót ugyanahhoz a "
 "kapcsolópárhoz."
 
-#: ../../how-to/protect-data-access.md:225
+#: ../../how-to/protect-data-access.md:248
 msgid "Do not assign stdin to both the root and leaf scopes."
 msgstr ""
 "Ne rendeld az stdint egyszerre a gyökérszintű és a parancsszintű "
 "hatókörhöz."
 
-#: ../../how-to/protect-data-access.md:226
+#: ../../how-to/protect-data-access.md:249
 msgid "Do not assign the same descriptor number to both scopes."
 msgstr "Ne rendeld ugyanazt a leírószámot mindkét hatókörhöz."
 
-#: ../../how-to/protect-data-access.md:227
+#: ../../how-to/protect-data-access.md:250
 msgid ""
 "Use root fd plus leaf stdin, root stdin plus leaf fd, or two different "
 "descriptors when one invocation needs both objects."
@@ -595,7 +656,7 @@ msgstr ""
 "leírót és parancsszintű stdint, gyökérszintű stdint és parancsszintű "
 "leírót, vagy két különböző leírót."
 
-#: ../../how-to/protect-data-access.md:230
+#: ../../how-to/protect-data-access.md:253
 msgid ""
 "A selected source that does not apply to the resolved command or exact "
 "profile is refused as unused. This protects scripts from sending a "
@@ -606,11 +667,11 @@ msgstr ""
 "szkripteket attól, hogy parancssori hiba után rossz célnak küldjenek "
 "hitelesítő adatot."
 
-#: ../../how-to/protect-data-access.md:234
+#: ../../how-to/protect-data-access.md:257
 msgid "Pass an inherited descriptor safely"
 msgstr "Örökölt leíró biztonságos átadása"
 
-#: ../../how-to/protect-data-access.md:236
+#: ../../how-to/protect-data-access.md:259
 msgid ""
 "Use an anonymous pipe when standard input already carries another value. "
 "The caller owns the descriptor's backing object and lifetime. Cadrumo "
@@ -626,7 +687,7 @@ msgstr ""
 "megfelelőként engedélyezett; az `1` és `2` leíró, a negatív, a lezárt és "
 "a nem olvasható leírók elutasításra kerülnek."
 
-#: ../../how-to/protect-data-access.md:243
+#: ../../how-to/protect-data-access.md:266
 msgid ""
 "On POSIX, start the process with the pipe's read descriptor in the child "
 "process's `pass_fds` allowlist, then pass that number to `--secrets-fd` "
@@ -645,7 +706,7 @@ msgstr ""
 " A helyreállítás beállítása egy írható átadó HANDLE-t és egy olvasható "
 "ellenőrző HANDLE-t használ:"
 
-#: ../../how-to/protect-data-access.md:256
+#: ../../how-to/protect-data-access.md:279
 msgid ""
 "Omit `--profile-handle` or `--secrets-handle` when the invocation needs "
 "only one scope. The wrapper inserts the matching canonical descriptor "
@@ -658,7 +719,7 @@ msgstr ""
 "közvetlenül elindított hordozható parancshoz az stdin csatornát "
 "részesítsd előnyben."
 
-#: ../../how-to/protect-data-access.md:261
+#: ../../how-to/protect-data-access.md:284
 msgid ""
 "Cadrumo bounds the input, wipes mutable read buffers on a best-effort "
 "basis, and releases secret-bearing references promptly. Python may create"
@@ -674,7 +735,7 @@ msgstr ""
 " csövet, ne irányítsd át egy normál fájlba, és ne naplózd a JSON-"
 "objektumot."
 
-#: ../../how-to/protect-data-access.md:267
+#: ../../how-to/protect-data-access.md:290
 msgid ""
 "Interactive commands may prompt only on a confirmed terminal. A "
 "redirected or non-interactive invocation without the required explicit "
@@ -684,11 +745,11 @@ msgstr ""
 "szükséges explicit csatorna nélküli átirányított vagy nem interaktív "
 "hívás elutasításra kerül."
 
-#: ../../how-to/protect-data-access.md:270
+#: ../../how-to/protect-data-access.md:293
 msgid "Log out of the active profile"
 msgstr "Kijelentkezés az aktív profilból"
 
-#: ../../how-to/protect-data-access.md:272
+#: ../../how-to/protect-data-access.md:295
 msgid ""
 "Run `aeat config logout` when you finish working with a profile. Logout "
 "closes the active storage session, discards in-memory key material, "
@@ -701,7 +762,7 @@ msgstr ""
 "kapcsolatokat, és megtartja a következő pontos bejelentkezéshez "
 "kiválasztott profilt:"
 
-#: ../../how-to/protect-data-access.md:280
+#: ../../how-to/protect-data-access.md:303
 msgid ""
 "Nothing in the profile is deleted. Log in again with `aeat config login` "
 "to use the selected profile, or name another exact profile when you "
@@ -711,11 +772,11 @@ msgstr ""
 " paranccsal a kiválasztott profil használatához, vagy nevezz meg egy "
 "másik pontos profilt, amikor visszatérsz."
 
-#: ../../how-to/protect-data-access.md:283
+#: ../../how-to/protect-data-access.md:306
 msgid "Remove Google access"
 msgstr "A Google-hozzáférés eltávolítása"
 
-#: ../../how-to/protect-data-access.md:285
+#: ../../how-to/protect-data-access.md:308
 msgid ""
 "Profile logout and Google logout serve different purposes. To remove the "
 "saved Google refresh token and account metadata from the active profile, "
@@ -725,7 +786,7 @@ msgstr ""
 "szolgál. Ha el szeretnéd távolítani az aktív profilból a mentett Google "
 "frissítési tokent és a fiók metaadatait, futtasd ezt:"
 
-#: ../../how-to/protect-data-access.md:292
+#: ../../how-to/protect-data-access.md:315
 msgid ""
 "This keeps the Drive folder and exported workbooks. It does not revoke "
 "Google's grant or invalidate a token copied elsewhere. To revoke access, "
@@ -745,7 +806,7 @@ msgstr ""
 "kezelése](https://support.google.com/accounts/answer/13533235) oldalon "
 "írja le."
 
-#: ../../how-to/protect-data-access.md:299
+#: ../../how-to/protect-data-access.md:322
 msgid ""
 "Google Sheets exports contain readable financial data. Review the "
 "workbook's sharing settings in Google Drive; anyone with sufficient "
@@ -762,7 +823,7 @@ msgstr ""
 "határa más: a profil jelmondatát és a helyreállítási anyagot tartsd külön"
 " a biztonsági mentéstől."
 
-#: ../../how-to/protect-data-access.md:305
+#: ../../how-to/protect-data-access.md:328
 msgid ""
 "Install Cadrumo through its published distribution channels. A "
 "counterfeit app can reuse the public Google client metadata and display "
@@ -775,11 +836,11 @@ msgstr ""
 "képernyőn. A PKCE az engedélyezési kód cseréjét védi; a hozzájárulási "
 "képernyő nem bizonyítja, hogy melyik programot telepítetted."
 
-#: ../../how-to/protect-data-access.md:310
+#: ../../how-to/protect-data-access.md:333
 msgid "Reset local state (last resort)"
 msgstr "A helyi állapot visszaállítása (végső eszköz)"
 
-#: ../../how-to/protect-data-access.md:312
+#: ../../how-to/protect-data-access.md:335
 msgid ""
 "Export every profile you want to keep before continuing. Reset "
 "permanently deletes every profile stored locally, related local "
@@ -799,7 +860,7 @@ msgstr ""
 "ellenőrzésén kívül esik, és a Cadrumóban semmi sem tudja visszavonni "
 "őket."
 
-#: ../../how-to/protect-data-access.md:322
+#: ../../how-to/protect-data-access.md:345
 msgid ""
 "Use `start` only when you intend to remove all local profiles. Confirm "
 "the reset explicitly. It checks retention requirements before deleting "
@@ -810,7 +871,7 @@ msgstr ""
 "előtt ellenőrzi a megőrzési követelményeket, és megtagadja az indulást, "
 "amíg egy másik visszaállítás befejezetlen."
 
-#: ../../how-to/protect-data-access.md:325
+#: ../../how-to/protect-data-access.md:348
 msgid ""
 "Use the read-only `status` command to inspect the latest operation "
 "without changing local data. Provide an operation ID to inspect an exact "
@@ -823,7 +884,7 @@ msgstr ""
 "befejezett műveletet jelez. A kimenete tartalmazza a műveletazonosítót és"
 " a szünet okát, ha van."
 
-#: ../../how-to/protect-data-access.md:329
+#: ../../how-to/protect-data-access.md:352
 msgid ""
 "Use `resume` after an interruption or pause. Confirm the reset again. It "
 "continues the same incomplete operation instead of creating another. "
@@ -836,7 +897,7 @@ msgstr ""
 " meg műveletazonosítót. A törlés megkezdése után a visszaállítás "
 "folytatása nem állítja vissza a törölt adatokat."
 
-#: ../../how-to/protect-data-access.md:334
+#: ../../how-to/protect-data-access.md:357
 msgid ""
 "If legal retention requirements pause the reset, stop if you must keep "
 "the affected records. Override the pause only after reviewing and "
@@ -850,7 +911,42 @@ msgstr ""
 "mindig adj meg nem üres indokot. Ha felülírás nélkül adsz meg indokot, a "
 "parancs megtagadja a folytatást."
 
-#: ../../how-to/protect-data-access.md:339
+#: ../../how-to/protect-data-access.md:362
+msgid ""
+"When Cadrumo's runtime is running, `start` and `resume` go through it, so"
+" the profiles it is hosting are closed before anything is deleted. When "
+"none is running, the commands do the work in their own process. If the "
+"answer is lost after the reset began, the reset is reported as unknown, "
+"not as failed; read `status` before you try again."
+msgstr ""
+"Amikor a Cadrumo futtatókörnyezete fut, a `start` és a `resume` rajta "
+"keresztül megy, így a nála futó profilok bezárulnak, mielőtt bármi "
+"törlődne. Ha egy sem fut, a parancsok a saját folyamatukban végzik el a "
+"munkát. Ha az alaphelyzetbe állítás megkezdése után elvész a válasz, az "
+"állítás ismeretlenként szerepel, nem sikertelenként; újrapróbálkozás "
+"előtt olvasd el a `status` kimenetét."
+
+#: ../../how-to/protect-data-access.md:368
+msgid ""
+"The terminal interface offers the same work in **Installation** (**Reset "
+"all profiles**, **Reset status** and **Resume a reset**), which you can "
+"open from the sign-in screen with nobody signed in. An agent uses the "
+"`installation` tool's `reset_start`, `reset_status` and `reset_resume` "
+"actions. Both need the runtime running, and both ask for the same "
+"explicit confirmation as the command: the `installation` tool changes "
+"nothing until `confirm` is true, and reports what it would do instead."
+msgstr ""
+"A terminálfelület ugyanezt a munkát a **Telepítés** alatt kínálja "
+"(**Minden profil visszaállítása**, **Visszaállítás állapota** és "
+"**Visszaállítás folytatása**), amelyet a bejelentkezési képernyőről "
+"nyithatsz meg úgy, hogy senki sincs bejelentkezve. Az ügynök az "
+"`installation` eszköz `reset_start`, `reset_status` és `reset_resume` "
+"lépését használja. Mindkettőhöz futó futtatókörnyezet kell, és mindkettő "
+"ugyanazt a kifejezett megerősítést kéri, mint a parancs: az "
+"`installation` eszköz semmit sem módosít, amíg a `confirm` értéke nem "
+"true, helyette jelzi, mit tenne."
+
+#: ../../how-to/protect-data-access.md:376
 msgid ""
 "See [Set up your taxpayer profile](profile-setup.md) for sealed archive "
 "backup instructions."
@@ -858,11 +954,11 @@ msgstr ""
 "A lezárt archív biztonsági mentés utasításaiért lásd: [Állítsd be az "
 "adózói profilodat](profile-setup.md)."
 
-#: ../../how-to/protect-data-access.md:342
+#: ../../how-to/protect-data-access.md:379
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/protect-data-access.md:344
+#: ../../how-to/protect-data-access.md:381
 msgid ""
 "[Import, export, and supporting documents](../reference/import-export-"
 "and-evidence.md): see where encrypted custody ends and deliberate "
@@ -872,7 +968,7 @@ msgstr ""
 "evidence.md): lásd, hol ér véget a titkosított őrizet, és hol kezdődnek a"
 " szándékos, nyílt szövegű átadások."
 
-#: ../../how-to/protect-data-access.md:347
+#: ../../how-to/protect-data-access.md:384
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md): create, export, and "
 "import profiles."
@@ -880,7 +976,7 @@ msgstr ""
 "[Állítsd be az adózói profilodat](profile-setup.md): profilok "
 "létrehozása, exportálása és importálása."
 
-#: ../../how-to/protect-data-access.md:349
+#: ../../how-to/protect-data-access.md:386
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md): quarantine "
 "unreadable records and fix storage or integrity problems without a reset."
@@ -889,6 +985,6 @@ msgstr ""
 "karanténozd az olvashatatlan tételeket, és javítsd ki a tárolási vagy "
 "integritási problémákat visszaállítás nélkül."
 
-#: ../../how-to/protect-data-access.md:351
+#: ../../how-to/protect-data-access.md:388
 msgid "[CLI reference](../cli/index.rst): full option reference."
 msgstr "[CLI-referencia](../cli/index.rst): a teljes opcióreferencia."

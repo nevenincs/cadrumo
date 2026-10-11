@@ -192,8 +192,8 @@ of the work unit that owns the stored record its `payload_path` names. A
 `subject_ref` that contradicts the contract is refused before anything is
 submitted.
 
-The MCP server takes the profile ID at launch and uses a protected credential
-reference when one is configured. It does not translate shell verbs to tool
+The MCP server may take a profile ID at launch, which an enrolled key requires
+together with its protected credential reference. It does not translate shell verbs to tool
 names or activate per-domain tool sets.
 
 The workflow skills, and the tables above, name command-line commands. Through

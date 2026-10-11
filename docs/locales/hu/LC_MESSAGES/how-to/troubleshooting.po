@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:43+0200\n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -481,6 +481,34 @@ msgstr ""
 
 #: ../../how-to/troubleshooting.md:202
 msgid ""
+"The terminal interface and MCP do the same work. In the terminal "
+"interface, **Installation** offers the full report (**Diagnose the "
+"installation**), the log lines, the active-profile repair and the storage"
+" inventory and check. You can open it from the sign-in screen with nobody"
+" signed in, and it needs Cadrumo's runtime running. An agent uses the "
+"`installation` tool's `repair_report`, `repair_logs`, `repair_profile`, "
+"`storage_inventory` and `storage_check` actions. The secure-object check,"
+" the quarantine, the connectivity probe and the clearing of interrupted-"
+"command progress need a signed-in profile; run them from **Operations** "
+"in the terminal interface, or have an agent find them with `search` and "
+"run them with `execute`."
+msgstr ""
+"A terminálfelület és az MCP ugyanezt a munkát végzi el. A "
+"terminálfelületen a **Telepítés** a teljes jelentést (**Telepítés "
+"diagnosztikája**), a naplósorokat, az aktív profil javítását, valamint a "
+"tárhely leltárát és ellenőrzését kínálja. A bejelentkezési képernyőről "
+"nyithatod meg úgy, hogy senki sincs bejelentkezve, és futó Cadrumo-"
+"futtatókörnyezet kell hozzá. Az ügynök az `installation` eszköz "
+"`repair_report`, `repair_logs`, `repair_profile`, `storage_inventory` és "
+"`storage_check` lépését használja. A biztonságosobjektum-ellenőrzéshez, a"
+" karanténhoz, a kapcsolatpróbához és a megszakadt parancsok mentett "
+"előrehaladásának törléséhez bejelentkezett profil kell; ezeket a "
+"terminálfelületen a **Műveletek** alól futtasd, vagy kérd meg az "
+"ügynököt, hogy a `search` eszközzel keresse meg, az `execute` eszközzel "
+"pedig futtassa őket."
+
+#: ../../how-to/troubleshooting.md:213
+msgid ""
 "When unreadable encrypted records block other commands, move them aside. "
 "Preview first, then apply:"
 msgstr ""
@@ -488,7 +516,7 @@ msgstr ""
 "blokkolnak, tedd félre őket. Előbb nézd meg az előnézetet, majd "
 "alkalmazd:"
 
-#: ../../how-to/troubleshooting.md:208
+#: ../../how-to/troubleshooting.md:219
 msgid ""
 "The preview lists how many records would move, per storage area, without "
 "changing anything. The real run requires `--yes`. Quarantine does not "
@@ -507,7 +535,7 @@ msgstr ""
 "nyilvántartások továbbra is léteznek. Lásd: [Védd az adataidhoz való "
 "hozzáférést](protect-data-access.md)."
 
-#: ../../how-to/troubleshooting.md:210
+#: ../../how-to/troubleshooting.md:221
 msgid ""
 "To find which finalized calculations and filings used a transaction, "
 "query the participation index. Rebuild it first if the lookup appears "
@@ -517,7 +545,7 @@ msgstr ""
 "használtak egy tranzakciót, kérdezd le a részvételi indexet. Ha a keresés"
 " hiányosnak tűnik, előbb építsd újra:"
 
-#: ../../how-to/troubleshooting.md:217
+#: ../../how-to/troubleshooting.md:228
 msgid ""
 "The index is a derived cross-reference, safe to regenerate at any time: "
 "`rebuild` rescans the finalized calculation records and rewrites it. Run "
@@ -530,7 +558,7 @@ msgstr ""
 "keresés hiányosnak tűnik. Az újraépítés nem változtat meg semmilyen "
 "nyilvántartási vagy benyújtási adatot."
 
-#: ../../how-to/troubleshooting.md:222
+#: ../../how-to/troubleshooting.md:233
 msgid ""
 "Both `participation` verbs read the active profile's encrypted storage, "
 "so they need an unlocked profile session. If either refuses because the "
@@ -542,7 +570,7 @@ msgstr ""
 "elutasít, mert a profil zárolt vagy egyik sem aktív, előbb jelentkezz be "
 "a profilba az `aeat config login <profile-name>` paranccsal."
 
-#: ../../how-to/troubleshooting.md:224
+#: ../../how-to/troubleshooting.md:235
 msgid ""
 "When nothing else recovers the problem, and only then, clear the saved "
 "progress of interrupted commands. This command is destructive:"
@@ -550,7 +578,7 @@ msgstr ""
 "Amikor semmi más nem oldja meg a problémát, és csak akkor, töröld a "
 "megszakított parancsok mentett folyamatát. Ez a parancs romboló:"
 
-#: ../../how-to/troubleshooting.md:230
+#: ../../how-to/troubleshooting.md:241
 msgid ""
 "It removes saved interrupted-command progress and requires `--yes`. Like "
 "the participation verbs, it reads the active profile's storage, so log in"
@@ -562,11 +590,11 @@ msgstr ""
 "profil tárolóját olvassa, ezért ha elutasít, mert a profil zárolt vagy "
 "egyik sem aktív, előbb jelentkezz be a profilba."
 
-#: ../../how-to/troubleshooting.md:233
+#: ../../how-to/troubleshooting.md:244
 msgid "Prepare a privacy-safe support request"
 msgstr "Adatvédelmi szempontból biztonságos támogatási kérés előkészítése"
 
-#: ../../how-to/troubleshooting.md:235
+#: ../../how-to/troubleshooting.md:246
 msgid ""
 "When the steps on this page don't resolve the problem, gather this before"
 " asking for help:"
@@ -574,25 +602,25 @@ msgstr ""
 "Amikor az oldalon szereplő lépések nem oldják meg a problémát, gyűjtse "
 "össze ezeket, mielőtt segítséget kér:"
 
-#: ../../how-to/troubleshooting.md:237
+#: ../../how-to/troubleshooting.md:248
 msgid "The exact command you ran."
 msgstr "A pontos parancsot, amelyet futtattál."
 
-#: ../../how-to/troubleshooting.md:238
+#: ../../how-to/troubleshooting.md:249
 msgid "The error lines the command printed."
 msgstr "A hibasorokat, amelyeket a parancs kiírt."
 
-#: ../../how-to/troubleshooting.md:239
+#: ../../how-to/troubleshooting.md:250
 msgid "The log path and the relevant recent lines from `aeat config repair logs`."
 msgstr ""
 "A naplóútvonalat és a releváns legutóbbi sorokat az `aeat config repair "
 "logs` parancsból."
 
-#: ../../how-to/troubleshooting.md:240
+#: ../../how-to/troubleshooting.md:251
 msgid "Any report or declaration IDs the output shows."
 msgstr "Bármely jelentés- vagy bevallás-azonosítót, amelyet a kimenet mutat."
 
-#: ../../how-to/troubleshooting.md:242
+#: ../../how-to/troubleshooting.md:253
 msgid ""
 "Remove personal data first: tax identifiers (NIF, CIF, DNI, NIE, NII), "
 "names, addresses, and file paths that embed your user name. Log lines can"
@@ -603,7 +631,7 @@ msgstr ""
 "felhasználónevedet tartalmazzák. A naplósorok személyes adatokat "
 "tartalmazhatnak: olvasd el őket, mielőtt beilleszted."
 
-#: ../../how-to/troubleshooting.md:246
+#: ../../how-to/troubleshooting.md:257
 msgid ""
 "Take the request to the [project issue "
 "tracker](https://github.com/nevenincs/cadrumo/issues)."
@@ -611,7 +639,7 @@ msgstr ""
 "Vidd a kérést a [projekt "
 "hibakövetőjéhez](https://github.com/nevenincs/cadrumo/issues)."
 
-#: ../../how-to/troubleshooting.md:248
+#: ../../how-to/troubleshooting.md:259
 #, python-brace-format
 msgid ""
 "If a term in an error message is unfamiliar, look it up in the "
@@ -620,11 +648,11 @@ msgstr ""
 "Ha egy hibaüzenetben lévő kifejezés ismeretlen, keresd ki a "
 "{doc}`szójegyzékben </_generated/glossary>`."
 
-#: ../../how-to/troubleshooting.md:250
+#: ../../how-to/troubleshooting.md:261
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/troubleshooting.md:252
+#: ../../how-to/troubleshooting.md:263
 msgid ""
 "[Quickstart: prepare a modelo filing](quickstart.md): follow the first "
 "local filing path."
@@ -632,7 +660,7 @@ msgstr ""
 "[Gyorsindító: nyomtatvány-benyújtás előkészítése](quickstart.md): kövesse"
 " az első helyi benyújtási utat."
 
-#: ../../how-to/troubleshooting.md:253
+#: ../../how-to/troubleshooting.md:264
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md): create and switch "
 "profiles."
@@ -640,7 +668,7 @@ msgstr ""
 "[Állítsd be az adózói profilodat](profile-setup.md): profilok létrehozása"
 " és váltása."
 
-#: ../../how-to/troubleshooting.md:254
+#: ../../how-to/troubleshooting.md:265
 msgid ""
 "[Authenticate with AEAT](authenticate-with-aeat.md): check read-only live"
 " access setup."
@@ -648,7 +676,7 @@ msgstr ""
 "[Hitelesítés az AEAT-nál](authenticate-with-aeat.md): ellenőrizd a csak "
 "olvasható élő hozzáférés beállítását."
 
-#: ../../how-to/troubleshooting.md:256
+#: ../../how-to/troubleshooting.md:267
 msgid ""
 "[Read AEAT notifications](check-aeat-notifications.md): inspect saved "
 "DEHú notification snapshots."
@@ -657,7 +685,7 @@ msgstr ""
 "notifications.md): vizsgálja meg a mentett DEHú értesítési "
 "pillanatképeket."
 
-#: ../../how-to/troubleshooting.md:257
+#: ../../how-to/troubleshooting.md:268
 msgid ""
 "[How Cadrumo turns your records into a tax "
 "file](../explanation/index.md): what the tax rules, secure storage, and "
@@ -667,7 +695,7 @@ msgstr ""
 "adófájllá](../explanation/index.md): mik az adószabályok, a biztonságos "
 "tároló és a munkafolyamat-állapot."
 
-#: ../../how-to/troubleshooting.md:258
+#: ../../how-to/troubleshooting.md:269
 msgid ""
 "[CLI reference](../cli/index.rst): every repair command, flag, and exit "
 "code."
