@@ -47,6 +47,9 @@ if TYPE_CHECKING:
 
 type _ExistingRuntimeAccessRequest = RuntimeAutomationDeny | RuntimeProfileResume | RuntimeSessionInventory
 
+_HELD_FENCE_RECHECK_SECONDS = 0.01
+"""How long an admission leaves a replaced incarnation's held fence before observing it again."""
+
 
 class ProfileConnectionAdmissionMixin:
     """Own the admission behavior of the profile connection service."""
@@ -113,7 +116,13 @@ class ProfileConnectionAdmissionMixin:
                 retired = existing.retire_replaced_binding(deadline=deadline)
             except (RuntimeRefusalError, RuntimeShutdownIncompleteError, ExceptionGroup):
                 raise AutomationCustodyError(AutomationCustodyCode.CONFLICT) from None
-            if retired is not True:
+            if retired is None:
+                # Another owner holds this incarnation's fence: a commit body, or a
+                # containment already under way. Its hold is not this admission's
+                # refusal, so observe again inside the same bound once it moves on.
+                self.stop.wait(_HELD_FENCE_RECHECK_SECONDS)
+                continue
+            if not retired:
                 raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
             self._remove_retired_host(existing)
 

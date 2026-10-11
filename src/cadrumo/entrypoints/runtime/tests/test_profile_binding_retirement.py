@@ -115,6 +115,21 @@ def _commit_successor(root: Path, identity: ProfileWorkerIdentity) -> None:
     assert current.dek_epoch == identity.binding.dek_epoch
 
 
+def _fence_held_against(monkeypatch: pytest.MonkeyPatch, host: RuntimeProfileHost) -> Event:
+    """Say when a later caller finds this incarnation's fence held by another owner."""
+    retire = host.retire_replaced_binding
+    held = Event()
+
+    def observe(*, deadline: float) -> bool | None:
+        retired = retire(deadline=deadline)
+        if retired is None:
+            held.set()
+        return retired
+
+    monkeypatch.setattr(host, "retire_replaced_binding", observe)
+    return held
+
+
 def test_changed_binding_waits_for_guard_then_drains_actual_worker_before_successor(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -138,50 +153,80 @@ def test_changed_binding_waits_for_guard_then_drains_actual_worker_before_succes
             False,
             win32con.DUPLICATE_SAME_ACCESS,
         )
-        release = Event()
-        started = Event()
+        profile_id = identity.binding.profile_id
         try:
             assert host.retire_replaced_binding(deadline=time.monotonic() + 5) is False
-            with host.guard:
-                _commit_successor(root, identity)
-                with ThreadPoolExecutor(max_workers=1) as pool:
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                with host.guard:
+                    _commit_successor(root, identity)
                     manager._last_poll = 0
                     pool.submit(manager.poll).result(timeout=3)
-                    with pytest.raises(AutomationCustodyError) as held:
-                        pool.submit(manager._host, identity.binding.profile_id, context).result(timeout=3)
-                    assert held.value.reason is AutomationCustodyCode.CONFLICT
-                assert manager._profiles[identity.binding.profile_id] is host
+                    assert manager._profiles[profile_id] is host
+                    held = _fence_held_against(monkeypatch, host)
+                    admission = pool.submit(manager._host, profile_id, context)
+                    # The commit body still holds the profile guard: admission neither refuses
+                    # nor admits a successor while the old worker is uncontained.
+                    assert held.wait(5)
+                    assert not admission.done()
+                    assert manager._profiles[profile_id] is host
+                    worker.require_alive()
+                successor = admission.result(timeout=15)
 
-            actual_drain = worker.drain
-
-            def delayed_drain(*, deadline: float | None = None) -> ProfileWorkerDrained:
-                started.set()
-                assert release.wait(5)
-                return actual_drain(deadline=deadline)
-
-            monkeypatch.setattr(worker, "drain", delayed_drain)
-            with ThreadPoolExecutor(max_workers=1) as pool:
-                manager._last_poll = 0
-                polling = pool.submit(manager.poll)
-                assert started.wait(5)
-                assert manager._profiles[identity.binding.profile_id] is host
-                with pytest.raises(AutomationCustodyError) as blocked:
-                    manager._host(identity.binding.profile_id, context)
-                assert blocked.value.reason is AutomationCustodyCode.CONFLICT
-                release.set()
-                polling.result(timeout=15)
-
-            assert identity.binding.profile_id not in manager._profiles
+            assert successor is not host
+            assert manager._profiles[profile_id] is successor
             assert win32event.WaitForSingleObject(retained_handle, 5000) == win32event.WAIT_OBJECT_0
             with pytest.raises(RuntimeRefusalError):
                 worker.require_alive()
-            successor = manager._host(identity.binding.profile_id, context)
             assert successor.store.binding.custody_generation == identity.binding.custody_generation + 1
+        finally:
+            monkeypatch.undo()
+            manager.close()
+            cast(_OwnedNativeHandle, retained_handle).Close()
+
+
+def test_admission_arriving_while_polling_contains_the_old_worker_waits_for_the_successor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with profile_adapter_composition(), worker_profiles(tmp_path) as profiles:
+        root, ((identity, key), _) = profiles
+        manager, host, context = _running_host(root=root, identity=identity, key=key)
+        profile_id = identity.binding.profile_id
+        worker = host.owner.operation_worker()
+        _commit_successor(root, identity)
+        actual_drain = worker.drain
+        release, started = Event(), Event()
+
+        def delayed_drain(*, deadline: float | None = None) -> ProfileWorkerDrained:
+            started.set()
+            assert release.wait(5)
+            return actual_drain(deadline=deadline)
+
+        monkeypatch.setattr(worker, "drain", delayed_drain)
+        try:
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                manager._last_poll = 0
+                polling = pool.submit(manager.poll)
+                assert started.wait(5)
+                held = _fence_held_against(monkeypatch, host)
+                admission = pool.submit(manager._host, profile_id, context)
+                # Polling owns the containment under way. Losing that fence to it is not a
+                # refusal of this admission, and no successor exists before the drain ends.
+                assert held.wait(5)
+                assert not admission.done()
+                assert manager._profiles[profile_id] is host
+                release.set()
+                polling.result(timeout=15)
+                successor = admission.result(timeout=15)
+
+            assert successor is not host
+            assert manager._profiles[profile_id] is successor
+            assert successor.store.binding.custody_generation == identity.binding.custody_generation + 1
+            with pytest.raises(RuntimeRefusalError):
+                worker.require_alive()
         finally:
             release.set()
             monkeypatch.undo()
             manager.close()
-            cast(_OwnedNativeHandle, retained_handle).Close()
 
 
 def test_repeated_containment_failure_keeps_retiring_host_mapped(
